@@ -1,8 +1,9 @@
 {% extends 'struktur.html' %}
 
 {% block body %}
+
 <div class="container-fluid" style="margin-top:30px">
-  <h4>Alle Spieler sind eingewählt.<br>Das Spiel beginnt...</h4>
+  <h4>Alle Spieler sind schon eingewählt.<br>Das Spiel beginnt...</h4>
   <br><br>
   
 
@@ -27,5 +28,11 @@
       </g>
     </g>
     </svg>
-</div>
+</div> -->
+<script>
+  //zurück zur Startseite nach 3 Sekunden
+  setTimeout(function(){
+    window.location.href = "{{ url_for('index') }}";
+  }, 3000);
+</script>
 {% endblock %}

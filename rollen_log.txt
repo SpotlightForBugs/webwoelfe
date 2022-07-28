@@ -1,4 +1,4 @@
 *********************
-ali = Werwolf
-alimert = Seherin
-a = Dorfbewohner
+a = Hexe
+b = Werwolf
+c = Dorfbewohner

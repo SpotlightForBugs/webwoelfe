@@ -1,0 +1,48 @@
+
+
+
+{% extends 'struktur.html' %}
+
+{% block body %}
+
+{%if grund!="Du hast bereits gewählt" %}
+
+<div class="container-fluid" style="margin-top:30px">
+    <h5 style="color: red;">Schön, dass du unser URL System durchschaut hast. Nutzen tut dir das dennoch nichts, denn</h5>
+    <p>Du hast hierfür keine Rechte. Du kannst nur die URL ansehen, die zu Dir gehört.</p>
+    <p>Wenn du "{{ name }}" bist,<br> kannst du hierdurch nicht deine Rolle zu "{{ rolle }}" ändern.</p>
+    <br><br>
+    <p>Wenn du nicht "{{ name }}" bist:</p>
+    <p>Ob "{{name}}" über die Rolle "{{rolle}}" verfügt, wirst du erst mit den Anderen erfahren.</p>
+   
+
+    <p>
+        <a href="javascript:history.back()" class="btn btn-primary">Zurück</a>
+    </p>
+    <script>
+    setTimeout(function(){
+        history.back();
+                }, 10000);
+
+
+    </script>
+</div>
+{%else%}
+<div class="container-fluid" style="margin-top:30px">
+    <h5 style="color: red;">Schön, dass du unser URL System durchschaut hast. Nutzen tut dir dennoch nichts, denn</h5>
+    <p>Du hast hierfür keine Rechte. Du hast nur eine Stimme, so wie alle Andere auch!</p>
+    
+    <p>
+        <a href="javascript:history.back()" class="btn btn-primary">Zurück</a>
+    </p>
+    <script>
+    setTimeout(function(){
+        history.back();
+                }, 10000);
+            </script>
+            </div>
+{% endif %}
+            {% endblock %}
+
+
+

@@ -1,0 +1,15 @@
+{% extends 'struktur.html' %}
+
+{% block body %}
+
+
+<div class="container-fluid" style="margin-top:30px">
+    <h1 id="rot">Fehler</h1>
+<h2>Bitte gehe zurück zum <a style="color:red" href="{{ url_for('index')}}">Start</a></h2>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="../../static/scripts/rot.js"></script>
+{% endblock %}
+

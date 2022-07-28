@@ -1,0 +1,37 @@
+{% extends 'struktur.html' %}
+
+{% block body %}
+
+<h2>Dein Team</h2>
+{% for el in names[1:] %}
+    <script>
+        
+        var text = `{{ el }}`;
+        text = text.replace("=", "war");
+        if (text.includes("Werwolf")){
+            document.write("<div class='team'><p id ='inTag'>"+text+"</p></div><br>");
+        }
+    </script>
+{% endfor %}
+
+    <br/>
+<h2>Gegner Team</h2> 
+{% for el in names[1:] %}
+    <script>
+        var text = `{{ el }}`;
+        text = text.replace("=", "war");
+        if (text.includes("Werwolf") == false){
+            document.write("<div class='enemyteam'><p id ='inTag'>"+text+"</p></div><br>");
+        }
+        
+    </script>
+{% endfor %}
+<br/>
+
+
+    
+</script>
+</body>
+</html>
+
+ {% endblock %} 

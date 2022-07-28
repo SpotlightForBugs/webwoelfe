@@ -1,0 +1,30 @@
+{% extends 'struktur.html' %}
+
+{% block active_b %}
+active
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid" style="margin-top:30px">
+<div class="alert alert-danger">
+  Einstellungen - nur einmal pro neuer Runde ausführen
+</div>
+
+ 
+  <form class='form-control-lg' action="{{ url_for('setPlayerNumber') }}" method="post">
+    <div class="form-group">
+      <label for="anzahl">Anzahl der Spielenden</label>
+      <input id="anzahl" type="number" name='num' placeholder="hier eingeben" min="8" max="18" required default="8">
+    </div>
+    <div class="form-check">
+      <label for="cbx">Soll der Erzähler zufällig ermittelt werden? </label>
+     
+      <input id="cbx" type="checkbox" name="cbx" value="1" unchecked>
+    </div>
+    <input class="btn btn-warning" type="submit" value="Senden">
+  </form>
+  
+
+ 
+
+{% endblock %}

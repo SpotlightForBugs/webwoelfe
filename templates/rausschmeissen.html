@@ -1,0 +1,28 @@
+{% extends 'struktur.html' %}
+
+{% block body %}
+
+<div class="container-fluid">
+<h1>{{ name }}, schlechte Neuigkeiten:</h1>
+<h2>Du wurdest aus dem Spiel entfernt</h2> <br>
+<h3>Du bist nun ausgeloggt</h3>
+
+<script>
+var rolle = "{{ rolle }}";
+if ((rolle == "Dorfbewohner") == false) {
+    document.write("<h3>Deine Rollenfähigkeiten ({{ rolle }})</h3> <br> helfen deinem Team leider nicht mehr weiter"); 
+
+    } else {
+        document.write("<p>Als {{ rolle }} solltest du nicht versuchen, die Spielzeit zu verringern, nur weil Du die häufigste Rolle im Spiel erhalten hast!</p> ");
+    }
+
+    setTimeout(function() {
+        window.location.href = "{{ url_for('index') }}";
+    }, 5000);
+</script>
+</div>
+
+
+
+
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'struktur.html' %}
+
+{% block body %}
+
+
+<div class="container-fluid" style="margin-top:30px">
+    <h1 id="rot">Fehler</h1>
+<h2>Leider gibt es den Namen <i>{{ name }}</i> schon!</h2>
+    <h4> <a class="btn btn-danger" href="{{ url_for('index')}}">Einen anderen Namen aussuchen</a></h4>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="../../static/scripts/rot.js"></script>
+{% endblock %}
+

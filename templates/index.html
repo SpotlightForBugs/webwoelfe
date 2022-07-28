@@ -1,0 +1,41 @@
+{% extends 'struktur.html' %}
+{% block active_a %}
+active
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid" style="margin-top:30px">
+  <h1 id='rot'>Werwolf <br> </h1> <h1>Online</h1>
+  <p class='small '><br>Bitte gebe Deinen Namen an<br>
+    
+    <form class="form-control-lg" action="{{ url_for('get_data') }}" method="POST">
+      
+      <input type="text" id="input" name="name" placeholder="Dein Name" required>
+      <input class='btn btn-dark'  type="submit" value="speichern">
+    </form>
+    <br>
+    
+    
+    <!--<div class="container-audio col-sm-4 col-sm-offset-4 embed-responsive embed-responsive-4by3">
+        <audio controls>
+                   <source src="../static/music/background_music.mp3" type="audio/mp3">
+                   Dein Browser unterstützt das Audio-Element nicht.
+               </audio>
+    </div>-->
+    
+</div>
+
+
+<style>
+
+</style>
+
+
+
+
+{% endblock %}
+
+{% block script %}
+<script src="../static/scripts/rot.js"></script>
+
+{% endblock %}

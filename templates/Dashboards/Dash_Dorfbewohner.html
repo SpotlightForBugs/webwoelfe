@@ -35,12 +35,11 @@
 
                         //document.write(`<a href="/{{ name }}/{{ rolle }}/wahl/`+text+`"> <div class='wahlfeld'><p id ='inTag'>`+text+`</p></div></a><br> 
                         //<br><br>`);
-                        document.write("<li><button onclick=window.location.href='/{{ name }}/{{ rolle }}/wahl/{{ el }} class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br>");
+                        document.write("<li><button onclick=window.location.href='/{{ name }}/{{ rolle }}/wahl/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br>");
                         btn = document.getElementById(text);
                         btn.addEventListener('click', function onClick(event) {
                             console.log(document.activeElement);
                             console.log(text+"");
-                            window.location.replace(127.0.0.1:5000/{{ name }}/{{ rolle }}/wahl/{{ text }}");
                         });
                     }
                 }

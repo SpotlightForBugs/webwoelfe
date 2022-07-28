@@ -1,21 +1,6 @@
 {% extends 'struktur.html' %}
 
 {% block body %}
-    
-<div class="container-fluid">
-    
-    <div class="row">
-        <div class="col-md-12">
-            <h2>{{rolle}}</h2>
-        </div>
-    </div>
-        <div class="col-md-11"> 
-        </div class="col-md-10">
-  <!--Rolleneigenes-->
-     
-<div class="row">
-    <div class="col-md-12">
-        <h3>Abstimmen</h3>
 
         {% for el in nurNamen[] %}
         <script>
@@ -45,10 +30,4 @@
         </script>
         {% endfor %}
 
-</div>
-</div>
-    
-
-
 {% endblock %}
-

@@ -146,11 +146,11 @@ def Dashboard(name, rolle):
                 else:
                     line = line.split(' = ')
                     name = line[0]
-                    #rolle = line[1]
+                    auswahlRolle = line[1]
                     
-                   # print('Name: ' + name + '; Rolle: ' + rolle)
+                   # print('Name: ' + name + '; Rolle: ' + auswahlRolle)
                     
-                    if rolle != 'Tot' and rolle != 'Erzaehler':
+                    if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler':
                         nurNamen.append(name)
                         
            

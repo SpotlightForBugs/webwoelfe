@@ -6,7 +6,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-i = 0
+
 
 
 @app.route('/', methods = ['GET','POST'])   

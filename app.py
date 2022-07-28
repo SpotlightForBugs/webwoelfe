@@ -157,8 +157,8 @@ def Dashboard(name, rolle):
         except:
             print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(frameinfo.lineno - 1))
             
-        #return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen))
-        return (render_template("index.html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen))
+        return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen))
+        #return (render_template("index.html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen))
         
      except:
             return render_template("fehler.html")

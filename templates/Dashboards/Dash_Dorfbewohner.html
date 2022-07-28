@@ -16,34 +16,38 @@
 <div class="row">
     <div class="col-md-12">
         <h3>Abstimmen</h3>
-
-        {% for el in nurNamen[] %}
+<ul>
+        {% for el in nurNamen %}
         <script>
+            
+          
+            console.log("{{el}}");	
+            var text = "{{el}}";    
+                
+                if (text.includes("Erzaehler")==false) {
+                    if (text.includes("{{ name }} =")==false) {
+                        //text = text.replace(" = Dorfbewohner", "");
+                        //text = text.replace(" = Werwolf", "");
+                        //text = text.replace(" = Hexe", "");
+                        //text = text.replace(" = Seherin", "");
+                        //text = text.replace(" = Jäger", "");
+ 
 
-            var text = `{{ el }}`;
-             
-
-            if (text.includes("Erzaehler")==false) {
-                if (text.includes("{{ name }} =")==false) {
-                    //text = text.replace(" = Dorfbewohner", "");
-                    //text = text.replace(" = Werwolf", "");
-                    //text = text.replace(" = Hexe", "");
-                    //text = text.replace(" = Seherin", "");
-                    //text = text.replace(" = Jäger", "");
-                    
-
-                    //document.write("<a href='wahl/"+text+"'> <div class='wahlfeld'><p id ='inTag'>"+text+"</p></div></a><br> ");
-                    document.write("<button onclick='www.youtube.com' class='wahlfeld' id='"+text+"' >"+text+"</p></button>");
-                    document.write("<br><br><br>");
-                    btn = document.getElementById(text);
-                    btn.addEventListener('click', function onClick(event) {
-                        console.log(document.activeElement);
-                        console.log(text+"");
-                    });
+                        //document.write(`<a href="/{{ name }}/{{ rolle }}/wahl/`+text+`"> <div class='wahlfeld'><p id ='inTag'>`+text+`</p></div></a><br> 
+                        //<br><br>`);
+                        document.write("<li><button onclick=window.location.href='/{{ name }}/{{ rolle }}/wahl/{{ el }} class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br>");
+                        btn = document.getElementById(text);
+                        btn.addEventListener('click', function onClick(event) {
+                            console.log(document.activeElement);
+                            console.log(text+"");
+                        });
+                    }
                 }
-            }
+            
         </script>
+
         {% endfor %}
+        </ul>
 <div>
 </div>
 </div>

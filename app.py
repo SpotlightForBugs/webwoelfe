@@ -128,8 +128,8 @@ def Dashboard(name, rolle):
     wort = name+" = "+rolle  
     file = open('rollen_log.txt', "r")
     players_vorhanden = file.read()
-    print (wort) 
-    print (players_vorhanden)
+     #print (wort) 
+     # print (players_vorhanden[:-1])
     
     if wort in players_vorhanden:
      try:
@@ -146,12 +146,17 @@ def Dashboard(name, rolle):
                 else:
                     line = line.split(' = ')
                     name = line[0]
-                    rolle = line[1]
+                    #rolle = line[1]
                     
-                    print('Name: ' + name + '; Rolle: ' + rolle)
+                   # print('Name: ' + name + '; Rolle: ' + rolle)
                     
-                    if rolle != 'Tot':
+                    if rolle != 'Tot' and rolle != 'Erzaehler':
                         nurNamen.append(name)
+                        
+           
+           # nurNamen = ( ''.join(str(nurNamen)))
+            #print(nurNamen)
+                
         except:
             print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1))
             
@@ -227,7 +232,7 @@ def auswahl(name, rolle, auswahl):
                                     print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1))
                             
                                 #return render_template("Dashboards/status/warten.html", name=name, rolle=rolle, auswahl = auswahl)
-                                return render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen) # Statdessen zurück zum Dashboard
+                                return render_template("Dashboards/Dash_"+ rolle +".html", rolle=rolle, nurNamen=nurNamen) # Statdessen zurück zum Dashboard
                         
                 
                             except:

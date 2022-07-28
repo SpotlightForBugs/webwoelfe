@@ -9,14 +9,15 @@
             <h2>{{rolle}}</h2>
         </div>
     </div>
-        <div class="col-md-11"> 
-        </div class="col-md-10">
+         
+        
+  <!--Rolleneigenes-->
      
 <div class="row">
     <div class="col-md-12">
         <h3>Abstimmen</h3>
 
-        {% for el in nurNamen[1:] %} <!--Nicht den ersten Eintrag zeigen-->
+        {% for el in nurNamen[] %}
         <script>
 
             var text = `{{ el }}`;
@@ -39,17 +40,14 @@
                         console.log(document.activeElement);
                         console.log(text+"");
                     });
-                    
-                      
-
                 }
             }
         </script>
-      
         {% endfor %}
-
-
+<div>
+</div>
+</div>
+    
 
 
 {% endblock %}
-

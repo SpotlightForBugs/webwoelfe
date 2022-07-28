@@ -139,8 +139,6 @@ def Dashboard(name, rolle):
         nurNamen = []      
         
         try:
-            frameinfo = getframeinfo(currentframe())
-            
             for line in players_log:
                 
                 if '*' in line:
@@ -155,10 +153,9 @@ def Dashboard(name, rolle):
                     if rolle != 'Tot':
                         nurNamen.append(name)
         except:
-            print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(frameinfo.lineno - 1))
+            print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1))
             
         return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen))
-        #return (render_template("index.html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen))
         
      except:
             return render_template("fehler.html")
@@ -168,7 +165,99 @@ def Dashboard(name, rolle):
         return render_template("url_system.html", name=name, rolle=rolle)
 
 
-  
+@app.route("/<name>/<rolle>/wahl/<auswahl>")
+def auswahl(name, rolle, auswahl):
+    wort = name+" = "+rolle  
+    file = open('rollen_log.txt', "r")
+    players_vorhanden = file.read()
+    print (wort) 
+    print (players_vorhanden)
+    
+    voter = name + ' = '
+    if wort in players_vorhanden:
+        try:
+            with open('hat_gewaehlt.txt', 'a') as text:
+                # Überprüfen, ob der Spieler bereits gewählt hat  
+                for line in text:
+                    if voter in line:   
+                        grund = "Du hast bereits gewählt"
+                        return render_template("url_system.html", name=name, rolle=rolle, grund = grund)
+                        
+                    else:
+                         # Wenn der Spieler noch nicht gewählt hat, wird er in die Datei geschrieben
+                        text.write(voter)
+                        
+                        # Wenn der Spieler noch nicht gewählt hat, wird seine Auswahl in die Datei geschrieben
+                        text.write(voter + auswahl + '\n')
+                        
+                        # Zähler um zur Bestimmung der Anzahl legetimer Stimmen
+                        i = i+1
+                        print("Anzahl Stimmen: " + str(i))
+                        
+                        # Überprüfen, ob alle Spieler gewählt haben
+                        file = open('spieler_anzahl.txt')
+                        spieler_anzahl = file.read()
+                        
+                        if i == spieler_anzahl:
+                            # Wechsel weg von warten
+                            return render_template("Dashboards/status/ergebnis.html", name=name, rolle=rolle, auswahl=auswahl)
+                        
+                        else:
+                            try:
+                                players_log = open('rollen_log.txt')
+                                players_log = players_log.readlines()
+                                
+                                nurNamen = []      
+                                
+                                try:      
+                                    for line in players_log:
+                                        
+                                        if '*' in line:
+                                            pass
+                                        else:
+                                            line = line.split(' = ')
+                                            name = line[0]
+                                            rolle = line[1]
+                                            
+                                            print('Name: ' + name + '; Rolle: ' + rolle)
+                                            
+                                            if rolle != 'Tot':
+                                                nurNamen.append(name)
+                                except:
+                                    print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1))
+                            
+                                #return render_template("Dashboards/status/warten.html", name=name, rolle=rolle, auswahl = auswahl)
+                                return render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen) # Statdessen zurück zum Dashboard
+                        
+                
+                            except:
+                                print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1))
+                                return render_template("fehler.html")
+                            
+        except:
+            print('[Debug] Fehler beim Auslesen der Wahl Logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1))
+            return render_template("fehler.html")
+            
+    ### Braver Copilot. Eines Tages dafst du mal selber entscheiden...
+    # wort = name+" = "+rolle  
+    # file = open('rollen_log.txt', "r")
+    # players_vorhanden = file.read()
+    # print (wort) 
+    # print (players_vorhanden)
+    # if wort in players_vorhanden:
+    #  try:
+    #     players_log = open('rollen_log.txt')
+    #     players_log = players_log.readlines()
+    #     return (render_template("Dashboards/status/TÖTENÖTENTÖTEN.html", name=name, rolle=rolle, names = players_log))
+    #  except: 
+    #         return render_template("fehler.html")
+        
+    # else: 
+    #     print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
+    #     return render_template("fehler.html")
+
+    
+     
 @app.route("/<name>/<rolle>/schlafen")
 def schlafen(name, rolle): 
 
@@ -308,71 +397,7 @@ def resultatWolf(name, rolle):
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
         return render_template("url_system.html", name=name, rolle=rolle)
 
-@app.route("/<name>/<rolle>/wahl/<auswahl>")
-def auswahl(name, rolle, auswahl):
-    wort = name+" = "+rolle  
-    file = open('rollen_log.txt', "r")
-    players_vorhanden = file.read()
-    print (wort) 
-    print (players_vorhanden)
-    
-    voter = name + ' = '
-    if wort in players_vorhanden:
-        try:
-            with open('hat_gewaehlt.txt', 'a') as text:
-                # Überprüfen, ob der Spieler bereits gewählt hat  
-                for line in text:
-                    if voter in line:   
-                        grund = "Du hast bereits gewählt"
-                        return render_template("url_system.html", name=name, rolle=rolle, grund = grund)
-                        
-                    else:
-                        text.write(voter)
-                # Wenn der Spieler noch nicht gewählt hat, wird er in die Datei geschrieben
-                # Zähler um zur Bestimmung der Anzahl legetimer Stimmen
-                
-                        i = i+1
-                        print("i ist: " + str(i))
-                        
-                        # Wenn der Spieler noch nicht gewählt hat, wird seine Auswahl in die Datei geschrieben
-                        text.write(voter + auswahl + '\n')
-                        
-                        # Überprüfen, ob alle Spieler gewählt haben
-                        file = open('spieler_anzahl.txt')
-                        spieler_anzahl = file.read()
-                        if i == spieler_anzahl:
-                            # Wechsel weg von warten
-                            return render_template("Dashboards/status/ergebnis.html", name=name, rolle=rolle, auswahl=auswahl)
-                        else:
-            
-                            players_log = open('rollen_log.txt')
-                            players_log = players_log.readlines()
-                            return render_template("Dashboards/status/warten.html", name=name, rolle=rolle, auswahl = auswahl)
-                        
-                
-        except: 
-            return render_template("fehler.html")
-            
-    ### Braver Copilot. Eines Tages dafst du mal selber entscheiden...
-    # wort = name+" = "+rolle  
-    # file = open('rollen_log.txt', "r")
-    # players_vorhanden = file.read()
-    # print (wort) 
-    # print (players_vorhanden)
-    # if wort in players_vorhanden:
-    #  try:
-    #     players_log = open('rollen_log.txt')
-    #     players_log = players_log.readlines()
-    #     return (render_template("Dashboards/status/TÖTENÖTENTÖTEN.html", name=name, rolle=rolle, names = players_log))
-    #  except: 
-    #         return render_template("fehler.html")
-        
-    # else: 
-    #     print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
-    #     return render_template("fehler.html")
 
-    
-    
     
 
 @app.context_processor

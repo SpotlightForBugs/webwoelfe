@@ -1,12 +1,9 @@
 *********************
-ali = Werwolf
-alimert = Seherin
-a = Dorfbewohner
-EF = Werwolf
-Ferkel = Dorfbewohner
-fredolin = Werwolf
-fredoline = Hexe
-fredolinee = Werwolf
-fredolineee = J�ger
-fredolineeee = Erzaehler
-fredolineeeee = Dorfbewohner
+dffd = Hexe
+ff = Seherin
+kk = Dorfbewohner
+dad = Dorfbewohner
+t = Dorfbewohner
+u = Dorfbewohner
+po = Werwolf
+ds = Werwolf

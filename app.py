@@ -2,10 +2,10 @@
 from flask import Flask, request, url_for, render_template, session, make_response, redirect, Response
 #from flask_session import Session
 import requests, logging, werwolf, datetime, re
+from inspect import currentframe, getframeinfo
 from datetime import datetime
 
 app = Flask(__name__)
-
 
 @app.route('/', methods = ['GET','POST'])   
 def index():
@@ -130,12 +130,37 @@ def Dashboard(name, rolle):
     players_vorhanden = file.read()
     print (wort) 
     print (players_vorhanden)
+    
     if wort in players_vorhanden:
      try:
         players_log = open('rollen_log.txt')
         players_log = players_log.readlines()
-        return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log))
-     except: 
+        
+        nurNamen = []      
+        
+        try:
+            frameinfo = getframeinfo(currentframe())
+            
+            for line in players_log:
+                
+                if '*' in line:
+                    pass
+                else:
+                    line = line.split(' = ')
+                    name = line[0]
+                    rolle = line[1]
+                    
+                    print('Name: ' + name + '; Rolle: ' + rolle)
+                    
+                    if rolle != 'Tot':
+                        nurNamen.append(name)
+        except:
+            print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(frameinfo.lineno - 1))
+            
+        #return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen))
+        return (render_template("index.html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen))
+        
+     except:
             return render_template("fehler.html")
         
     else: 

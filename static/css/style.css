@@ -160,3 +160,29 @@ height: 50px;
   width: 30%;
   margin: 1px;
 }
+
+.wahlfeld{
+  border-radius: 10px;
+  background-color: #27b80e;
+  padding: 15px;
+  width: 30%;
+  height: 50px;
+  border: 0px;
+  float: left;
+  font-weight: bold;
+  font-size: 20px;
+  display: inline;
+}
+
+.wahlfeld:focus{
+  border-radius: 10px;
+  background-color: #9f3a07;
+  padding: 15px;
+  width: 30%;
+  height: 50px;
+  border: 0px;
+  float: left;
+  font-weight: bold;
+  font-size: 20px;
+  display: inline;
+}

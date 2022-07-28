@@ -6,3 +6,6 @@
 * Die Webseite ist noch in der Entwicklung, das Repository ist noch nicht vollständig.
 # Versionsverlauf
 ## 0.1.0
+
+
+OKAY, das ist alles.

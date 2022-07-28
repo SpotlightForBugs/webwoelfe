@@ -1,1 +1,1 @@
-{'Erzaehler': 1, 'Werwolf': 3, 'Hexe': 1, 'Jäger': 1, 'Dorfbewohner': 10}
+{'Erzaehler': 1, 'Werwolf': 2, 'Hexe': 1, 'Jäger': 1, 'Dorfbewohner': 10}

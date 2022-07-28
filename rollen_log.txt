@@ -2,3 +2,4 @@
 ali = Werwolf
 alimert = Seherin
 a = Dorfbewohner
+EF = Werwolf

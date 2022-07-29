@@ -33,7 +33,6 @@
                 
                 if (text.includes("Erzaehler")==false) {
                     if (text.includes("{{ name }} =")==false) {
-                        
                         document.write("<li><button onclick=window.location.href='/{{ name }}/{{ rolle }}/wahl/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br>");
                         btn = document.getElementById(text);
                         btn.addEventListener('click', function onClick(event) {

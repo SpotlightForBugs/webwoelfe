@@ -1,8 +1,7 @@
-<html>
-<head>
-<meta charset="utf-8">
-<link rel="stylesheet" href="../../../../../../../static/css/style.css'">
-</head>
+{% extends 'struktur_wahlbalken.html' %}
+
+{% block body %}
+
 {% for el in names %}
         <script>
             
@@ -19,7 +18,4 @@
 
 {% endfor %}
 
-
-
-
-</html>
+{% endblock %}

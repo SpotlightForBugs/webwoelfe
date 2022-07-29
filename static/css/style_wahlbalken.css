@@ -1,0 +1,210 @@
+
+
+
+.small {
+    color: white;
+  }
+  
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: white;
+  }
+  
+  span {
+    color: white;
+  }
+  
+  div {
+    color: white;
+  }
+  
+  .form-check {
+    padding-left: 0px;
+  }
+  
+  #mark_it {
+    appearance: none;
+    position: relative;
+    cursor: pointer;
+  }
+  
+  
+  #mark_it::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    background-color: rgb(0, 255, 0);
+    border: none;
+    border-radius: 4px;
+    float: left;
+    margin-top: 5px;
+  }
+  
+  
+  #mark_it:checked::after {
+    background-color: rgb(255, 0, 0);
+  }
+  
+  
+  p#alligner {
+    margin-left: 35;
+  }
+  
+  
+  input[type=text] {
+    padding: 5px;
+    border: 2px solid #ccc;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+  }
+  
+  input[type=text]:focus {
+    border-color: #333;
+  }
+  
+  input[type=submit] {
+    padding: 5px 15px;
+    background: red;
+    border: 0 none;
+    cursor: pointer;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+  }
+  
+  
+  
+  
+  /* Global Reset */
+  * {
+    font-family: 'Allerta', arial, Tahoma;
+    box-sizing: border-box;
+  }
+  
+  body,
+  nav,
+  header,
+  footer,
+  .main,
+  .navbar,
+  .container-fluid {
+    background: linear-gradient(to left, #7700aa, #8800ff);
+    text-align: center;
+    color: #fff;
+  }
+  
+  h3 {
+    text-shadow: 1px 1px 1px #fff;
+  }
+  
+  h1 {
+    text-shadow: 1px 1px 1px #fff;
+  }
+  
+  h2 {
+    text-shadow: 1px 1px 1px #fff;
+  }
+  
+  h4 {
+    text-shadow: 1px 1px 1px #fff;
+  }
+  
+  h5 {
+    text-shadow: 1px 1px 1px #fff;
+  }
+  
+  h6 {
+    text-shadow: 1px 1px 1px #fff;
+  }
+  
+  iframe {
+    width: 100%;
+    border: 10px;
+  }
+  
+  .team{
+  border-radius: 25px;
+  background: #27b80e;
+  margin: auto;
+  padding: 20px;
+  width: 90%;
+  height: 50px;
+  }
+  
+  .enemyteam{
+  border-radius: 25px;
+  background: #9f3a07;
+  margin: auto;
+  padding: 20px;
+  width: 90%;
+  height: 50px;
+  }
+  
+  
+  #inTag{
+    font-weight: bold;
+    font-size: 20px;
+    display: inline;
+  }
+  
+  #anzahl{
+   height: max-content;
+    width: 30%;
+    margin: 1px;
+  }
+  
+  .wahlfeld{
+    border-radius: 10px;
+    background-color: #27b80e;
+    padding: 15px;
+    width: 30%;
+    height: 50px;
+    border: 0px;
+    float: left;
+    font-weight: bold;
+    font-size: 20px;
+    display: inline;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .wahlfeld:focus{
+    border-radius: 10px;
+    background-color: #9f3a07;
+    padding: 15px;
+    width: 30%;
+    height: 50px;
+    border: 0px;
+    float: left;
+    font-weight: bold;
+    font-size: 20px;
+    display: inline;
+  }
+  
+  
+  .wahllist{
+    list-style: none;
+  }
+  
+  .wahlbalken{
+  border-radius: 25px;
+  background: #9f3a07;
+  margin: auto;
+  padding: 20px;
+  width: 90%;
+  height: 50px;
+  }
+  
+  .wahlbalkenIframe{
+    width: 60%;
+    height: 60px;
+    margin-left: auto;
+    display: inline;
+  }
+  

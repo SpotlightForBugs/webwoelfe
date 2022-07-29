@@ -131,58 +131,58 @@ def Dashboard(name, rolle):  # Dashboard
      #print (wort) 
      # print (players_vorhanden[:-1])
     
-    if wort in players_vorhanden: 
-     try:
+    if wort in players_vorhanden:  # if the name and the role are in the log file
+     try: # try to get the role
         players_log = open('rollen_log.txt') # open the log file 
         players_log = players_log.readlines()   # read the log file
         
-        nurNamen = []      
+        nurNamen = []      # create a list with the names
         
         try:
-            for line in players_log:
+            for line in players_log: # for every line in the log file
                 
-                if '*' in line:
-                    pass
-                else:
-                    line = line.split(' = ')
-                    name = line[0]
-                    auswahlRolle = line[1]
+                if '*' in line: # if the line contains a *
+                    pass # do nothing
+                else:  # if the line does not contain a *
+                    line = line.split(' = ') # split the line at the =
+                    name = line[0] # set the name to the first part of the line
+                    auswahlRolle = line[1] # set the role to the second part of the line
                     
-                   # print('Name: ' + name + '; Rolle: ' + auswahlRolle)
+                   # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
                     
-                    if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler':
-                        nurNamen.append(name)
+                    if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler': # if the role is not Tot or the role is not the Erzähler
+                        nurNamen.append(name) # append the name to the list
                         
            
            # nurNamen = ( ''.join(str(nurNamen)))
             #print(nurNamen)
                 
         except:
-            print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1))
+            print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1)) # print the error
             
-        return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen))
+        return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen)) # render Dash_rolle.html
         
      except:
-            return render_template("fehler.html")
+            return render_template("fehler.html") # render fehler.html
         
     else: 
-        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
-        return render_template("url_system.html", name=name, rolle=rolle)
+        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!") # print the error
+        return render_template("url_system.html", name=name, rolle=rolle) # render url_system.html
 
 
-@app.route("/<name>/<rolle>/wahl/<auswahl>")
-def auswahl(name, rolle, auswahl):
-    wort = name+" = "+rolle  
-    file = open('rollen_log.txt', "r")
-    players_vorhanden = file.read()
-    print (wort) 
-    print (players_vorhanden)
+@app.route("/<name>/<rolle>/wahl/<auswahl>") # Wahl
+def auswahl(name, rolle, auswahl): # Wahl
+    wort = name+" = "+rolle   # create a string with the name and the role
+    file = open('rollen_log.txt', "r") # open the log file
+    players_vorhanden = file.read() # read the log file
+    print (wort)  # print the string
+    print (players_vorhanden) # print the log file
     
-    voter = name + ' = '
-    if wort in players_vorhanden:
+    voter = name + ' = ' + rolle # create a string with the name and the role
+    if wort in players_vorhanden: # if the name and the role are in the log file
         try:
-            with open('hat_gewaehlt.txt', 'a') as text:
-                # Überprüfen, ob der Spieler bereits gewählt hat  
+            with open('hat_gewaehlt.txt', 'a') as text:  # open the hat_gewaehlt.txt file
+                # Überprüfen, ob der Spieler bereits gewählt hat und wenn nicht, dann wird er hinzugefügt
                 for line in text:
                     if voter in line:   
                         grund = "Du hast bereits gewählt"
@@ -190,58 +190,58 @@ def auswahl(name, rolle, auswahl):
                         
                     else:
                          # Wenn der Spieler noch nicht gewählt hat, wird er in die Datei geschrieben
-                        text.write(voter)
+                        text.write(voter) # write the name and the role to the hat_gewaehlt.txt file
                         
                         # Wenn der Spieler noch nicht gewählt hat, wird seine Auswahl in die Datei geschrieben
-                        text.write(voter + auswahl + '\n')
+                        text.write(voter + auswahl + '\n') # write the name and the role to the hat_gewaehlt.txt file
                         
                         # Zähler um zur Bestimmung der Anzahl legetimer Stimmen
-                        i = i+1
-                        print("Anzahl Stimmen: " + str(i))
+                        i = i+1 # add 1 to the counter
+                        print("Anzahl Stimmen: " + str(i)) # print the counter
                         
                         # Überprüfen, ob alle Spieler gewählt haben
-                        file = open('spieler_anzahl.txt')
-                        spieler_anzahl = file.read()
+                        file = open('spieler_anzahl.txt') # open the spieler_anzahl.txt file
+                        spieler_anzahl = file.read() # read the spieler_anzahl.txt file
                         
-                        if i == spieler_anzahl:
-                            # Wechsel weg von warten
-                            return render_template("Dashboards/status/ergebnis.html", name=name, rolle=rolle, auswahl=auswahl)
+                        if i == spieler_anzahl: # if the counter is equal to the number of players 
+                            # Wechsel weg von warten 
+                            return render_template("Dashboards/status/ergebnis.html", name=name, rolle=rolle, auswahl=auswahl) # render ergebnis.html
                         
-                        else:
-                            try:
-                                players_log = open('rollen_log.txt')
-                                players_log = players_log.readlines()
+                        else: # if the counter is not equal to the number of players
+                            try: # try to get the role
+                                players_log = open('rollen_log.txt') # open the log file
+                                players_log = players_log.readlines()  # read the log file
                                 
-                                nurNamen = []      
+                                nurNamen = []       # create a list with the names
                                 
-                                try:      
-                                    for line in players_log:
+                                try:      # try to get the role
+                                    for line in players_log: # for every line in the log file
                                         
-                                        if '*' in line:
-                                            pass
-                                        else:
-                                            line = line.split(' = ')
-                                            name = line[0]
-                                            rolle = line[1]
+                                        if '*' in line: # if the line contains a *
+                                            pass # do nothing
+                                        else: # if the line does not contain a *
+                                            line = line.split(' = ') # split the line at the =
+                                            name = line[0] # set the name to the first part of the line
+                                            rolle = line[1] # set the role to the second part of the line
                                             
-                                            print('Name: ' + name + '; Rolle: ' + rolle)
+                                            print('Name: ' + name + '; Rolle: ' + rolle) # print the name and the role
                                             
-                                            if rolle != 'Tot':
-                                                nurNamen.append(name)
+                                            if rolle != 'Tot': # if the role is not Tot
+                                                nurNamen.append(name) # append the name to the list
                                 except:
-                                    print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1))
+                                    print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1)) # print the error
                             
-                                #return render_template("Dashboards/status/warten.html", name=name, rolle=rolle, auswahl = auswahl)
-                                return render_template("Dashboards/Dash_"+ rolle +".html", rolle=rolle, nurNamen=nurNamen) # Statdessen zurück zum Dashboard
+                                #return render_template("Dashboards/status/warten.html", name=name, rolle=rolle, auswahl = auswahl) # render warten.html
+                                return render_template("Dashboards/Dash_"+ rolle +".html", rolle=rolle, nurNamen=nurNamen) # Statdessen zurück zum Dashboard des Spielers
                         
                 
-                            except:
-                                print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1))
-                                return render_template("fehler.html")
+                            except: 
+                                print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1)) # print the error
+                                return render_template("fehler.html") # render fehler.html
                             
         except:
-            print('[Debug] Fehler beim Auslesen der Wahl Logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1))
-            return render_template("fehler.html")
+            print('[Debug] Fehler beim Auslesen der Wahl Logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1)) # print the error
+            return render_template("fehler.html") # render fehler.html
             
     ### Braver Copilot. Eines Tages dafst du mal selber entscheiden...
     # wort = name+" = "+rolle  
@@ -263,171 +263,171 @@ def auswahl(name, rolle, auswahl):
 
     
      
-@app.route("/<name>/<rolle>/schlafen")
-def schlafen(name, rolle): 
+@app.route("/<name>/<rolle>/schlafen") # route for the sleep function
+def schlafen(name, rolle):  # function for the sleep function
 
-    wort = name+" = "+rolle  
-    file = open('rollen_log.txt', "r")
-    players_vorhanden = file.read()
-    print (wort) 
-    print (players_vorhanden)
-    if wort in players_vorhanden:
+    wort = name+" = "+rolle   # create a string with the name and the role
+    file = open('rollen_log.txt', "r") # open the log file
+    players_vorhanden = file.read() # read the log file
+    print (wort)  # print the string
+    print (players_vorhanden) # print the log file
+    if wort in players_vorhanden: # if the string is in the log file
      try:
-        players_log = open('rollen_log.txt')
-        players_log = players_log.readlines()
-        return (render_template("Dashboards/status/schlafen.html", name=name, rolle=rolle, names = players_log))
+        players_log = open('rollen_log.txt') # open the log file
+        players_log = players_log.readlines() # read the log file
+        return (render_template("Dashboards/status/schlafen.html", name=name, rolle=rolle, names = players_log))    # render the sleep.html
      except: 
-            return render_template("fehler.html")
+            return render_template("fehler.html")   # render the fehler.html
         
     else: 
-        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
-        return render_template("url_system.html" , name=name, rolle=rolle)
+        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!") # print the error
+        return render_template("url_system.html" , name=name, rolle=rolle) # render the url_system.html
 
 
 
-@app.route("/<name>/<rolle>/warten")
-def warten(name, rolle): 
+@app.route("/<name>/<rolle>/warten") # route for the wait function  
+def warten(name, rolle):     # function for the wait function
 
-    wort = name+" = "+rolle  
-    file = open('rollen_log.txt', "r")
-    players_vorhanden = file.read()
-    print (wort) 
-    print (players_vorhanden)
-    print(rolle)
-    print(name)
-    if wort in players_vorhanden:
-     try:
-        players_log = open('rollen_log.txt')
-        players_log = players_log.readlines()
-        return (render_template("Dashboards/status/warten.html", name=name, rolle=rolle, names = players_log))
+    wort = name+" = "+rolle  # create a string with the name and the role  
+    file = open('rollen_log.txt', "r") # open the log file
+    players_vorhanden = file.read() # read the log file
+    print (wort)  # print the string
+    print (players_vorhanden) # print the log file
+    print(rolle) # print the role
+    print(name) # print the name
+    if wort in players_vorhanden: # if the string is in the log file
+     try: # try to get the role
+        players_log = open('rollen_log.txt') # open the log file
+        players_log = players_log.readlines() # read the log file
+        return (render_template("Dashboards/status/warten.html", name=name, rolle=rolle, names = players_log))  # render the warten.html
      except: 
-            return render_template("fehler.html")
+            return render_template("fehler.html")  # render the fehler.html
         
     else: 
-        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
-        return render_template("url_system.html", name=name, rolle=rolle)
-
+        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!") # print the error
+        return render_template("url_system.html", name=name, rolle=rolle) # render the url_system.html
+ 
  
   
-@app.route("/<name>/<rolle>/<todesgrund>/tot")   
-def tot(name, rolle, todesgrund): 
+@app.route("/<name>/<rolle>/<todesgrund>/tot")     # route for the death function
+def tot(name, rolle, todesgrund):  # function for the death function
 
-    wort = name+" = "+rolle  
-    file = open('rollen_log.txt', "r")
-    players_vorhanden = file.read()
-    print (wort) 
-    print (players_vorhanden)
+    wort = name+" = "+rolle   # create a string with the name and the role
+    file = open('rollen_log.txt', "r") # open the log file
+    players_vorhanden = file.read() # read the log file
+    print (wort)  # print the string
+    print (players_vorhanden) # print the log file
     
-    if wort in players_vorhanden:
-        try:
-            players_log = open('rollen_log.txt')
-            players_log = players_log.readlines()
+    if wort in players_vorhanden: # if the string is in the log file
+        try: # try to get the role
+            players_log = open('rollen_log.txt') # open the log file
+            players_log = players_log.readlines() # read the log file
             
-            if todesgrund == 'Werwolf' or todesgrund == 'werwolf':
-                todesgrund = 'Du wurdest von einem Werwolf getötet'
-            elif todesgrund == 'Abstimung' or todesgrund == 'abstimmung':
-                todesgrund = 'Du wurdest in Folge einer Abstimmung getötet'
-            elif todesgrund == 'Hexe' or todesgrund == 'Hexe':
-                todesgrund = 'Du wurdest von der Hexe getötet'
-            else:
-                todesgrund = 'Du wurdest getötet'
+            if todesgrund == 'Werwolf' or todesgrund == 'werwolf': # if the death reason is a werewolf
+                todesgrund = 'Du wurdest von einem Werwolf getötet' # set the death reason to a werewolf
+            elif todesgrund == 'Abstimung' or todesgrund == 'abstimmung': # if the death reason is a abstimulation
+                todesgrund = 'Du wurdest in Folge einer Abstimmung getötet' # set the death reason to a abstimulation
+            elif todesgrund == 'Hexe' or todesgrund == 'Hexe': # if the death reason is a witch
+                todesgrund = 'Du wurdest von der Hexe getötet' # set the death reason to a witch
+            else: 
+                todesgrund = 'Du wurdest getötet' # set the death reason to a normal death
             return (render_template('Dashboards/status/tot.html', name = name, todesgrund = todesgrund, )) # rendert die Seite zum Status Tot
         
         except: 
-                return render_template("fehler.html")
+                return render_template("fehler.html") # rendert die Seite zum Status Fehler
             
     else: 
-        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
-        return render_template("url_system.html", name=name, rolle=rolle)
-
-@app.route("/<name>/<rolle>/kick/")
-def rausschmeissen(name,rolle):
-    wort = name+" = "+rolle
-    file = open('rollen_log.txt', "r")
-    players_vorhanden = file.read()
-    if wort in players_vorhanden:
-        print("Spieler vorhanden")
+        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!") # print the error
+        return render_template("url_system.html", name=name, rolle=rolle) # render the url_system.html
+ 
+@app.route("/<name>/<rolle>/kick/") # route for the kick function
+def rausschmeissen(name,rolle): # function for the kick function
+    wort = name+" = "+rolle  # create a string with the name and the role
+    file = open('rollen_log.txt', "r") #    open the log file
+    players_vorhanden = file.read() # read the log file
+    if wort in players_vorhanden: # if the string is in the log file
+        print("Spieler vorhanden") # print the string
         try:
-            players_log = open('rollen_log.txt')
-            players_log = players_log.readlines()
-            return (render_template('rausschmeissen.html', name = name, rolle = rolle, names = players_log))
+            players_log = open('rollen_log.txt') # open the log file
+            players_log = players_log.readlines() # read the log file
+            return (render_template('rausschmeissen.html', name = name, rolle = rolle, names = players_log)) # render the rausschmeissen.html
         except:
             
-            return render_template("fehler.html")
+            return render_template("fehler.html")   # render the fehler.html
         
     else:
-        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")    
-        return render_template("url_system.html", name=name, rolle=rolle)
+        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")     # print the error
+        return render_template("url_system.html", name=name, rolle=rolle)   # render the url_system.html
 
  
-@app.route("/<name>/<rolle>/resultat_Dorf")
-def resultatDorf(name, rolle): 
+@app.route("/<name>/<rolle>/resultat_Dorf") # route for the resultat_Dorf function
+def resultatDorf(name, rolle):  # function for the resultat_Dorf function
 
-    wort = name+" = "+rolle  
-    file = open('rollen_log.txt', "r")
-    players_vorhanden = file.read()
-    print (wort) 
-    print (players_vorhanden)
-    if wort in players_vorhanden:
-     try:
-        players_log = open('rollen_log.txt')
-        players_log = players_log.readlines()
-        return (render_template("Dashboards/status/resultat_Dorf.html", name=name, rolle=rolle, names = players_log))
+    wort = name+" = "+rolle     # create a string with the name and the role
+    file = open('rollen_log.txt', "r") # open the log file
+    players_vorhanden = file.read() # read the log file
+    print (wort)  # print the string
+    print (players_vorhanden) # print the log file
+    if wort in players_vorhanden: # if the string is in the log file
+     try: # try to get the role
+        players_log = open('rollen_log.txt') # open the log file
+        players_log = players_log.readlines() # read the log file
+        return (render_template("Dashboards/status/resultat_Dorf.html", name=name, rolle=rolle, names = players_log)) # render the resultat_Dorf.html
      except: 
-            return render_template("fehler.html")
+            return render_template("fehler.html") # render the fehler.html
         
     else: 
-        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
-        return render_template("url_system.html", name=name, rolle=rolle)
+        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!") # print the error
+        return render_template("url_system.html", name=name, rolle=rolle) # render the url_system.html
     
     
 
-@app.route("/<name>/<rolle>/resultat_Wolf")
-def resultatWolf(name, rolle): 
+@app.route("/<name>/<rolle>/resultat_Wolf") # route for the resultat_Wolf function
+def resultatWolf(name, rolle):      # function for the resultat_Wolf function
 
-    wort = name+" = "+rolle  
-    file = open('rollen_log.txt', "r")
-    players_vorhanden = file.read()
-    print (wort) 
-    print (players_vorhanden)
-    if wort in players_vorhanden:
+    wort = name+" = "+rolle   # create a string with the name and the role
+    file = open('rollen_log.txt', "r") # open the log file
+    players_vorhanden = file.read() # read the log file
+    print (wort)  # print the string
+    print (players_vorhanden)   # print the log file
+    if wort in players_vorhanden: # if the string is in the log file
      try:
-        players_log = open('rollen_log.txt')
-        players_log = players_log.readlines()
-        return (render_template("Dashboards/status/resultat_Wolf.html", name=name, rolle=rolle, names = players_log))
+        players_log = open('rollen_log.txt') # open the log file
+        players_log = players_log.readlines() # read the log file
+        return (render_template("Dashboards/status/resultat_Wolf.html", name=name, rolle=rolle, names = players_log)) # render the resultat_Wolf.html
      except: 
-            return render_template("fehler.html")
+            return render_template("fehler.html")   # render the fehler.html
         
     else: 
-        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
-        return render_template("url_system.html", name=name, rolle=rolle)
+        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")    # print the error
+        return render_template("url_system.html", name=name, rolle=rolle) # render the url_system.html
 
-@app.route("/wahlbalken/")
+@app.route("/wahlbalken/") # route for the wahlbalken function
 def wahlbalken():
-     players_log = open('rollen_log.txt')
-     players_log = players_log.readlines()
+     players_log = open('rollen_log.txt') # open the log file
+     players_log = players_log.readlines() # read the log file
         
-     nurNamen = []      
+     nurNamen = []       # create a list for the names
         
      try:
-            for line in players_log:
+            for line in players_log: # for every line in the log file
                 
-                if '*' in line:
-                    pass
-                else:
-                    line = line.split(' = ')
-                    name = line[0]
-                    auswahlRolle = line[1]
+                if '*' in line: # if the line contains a *
+                    pass # do nothing
+                else:   # if the line does not contain a *
+                    line = line.split(' = ') # split the line at the =
+                    name = line[0] # get the name
+                    auswahlRolle = line[1] # get the role
                     
-                   # print('Name: ' + name + '; Rolle: ' + auswahlRolle)
+                   # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
                     
-                    if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler':
-                        nurNamen.append(name)
-                        return (render_template("wahlbalken.html", names = nurNamen))
+                    if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler': # if the role is not dead or the narrator
+                        nurNamen.append(name) # append the name to the list
+                        return (render_template("wahlbalken.html", names = nurNamen)) # render the wahlbalken.html
      except:
-            return render_template("fehler.html")
-                        
-@app.context_processor
+            return render_template("fehler.html") # render the fehler.html
+                         
+@app.context_processor 
 def inject_now():
     return {'now': datetime.utcnow()}
 # inject a variable called 'now' into the template context for use in templates (templates can then access it as {{now}})

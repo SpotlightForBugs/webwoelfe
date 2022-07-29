@@ -7,20 +7,20 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-@app.route('/', methods = ['GET','POST'])   
+@app.route('/', methods = ['GET','POST'])   # Homepage  
 def index():
-    return render_template('index.html') 
+    return render_template('index.html')  # Render index.html
 
 
 
-@app.route('/einstellungen', methods = ['GET','POST'])
+@app.route('/einstellungen', methods = ['GET','POST']) # Einstellungen
 def einstellungen():
-    return render_template('einstellungen.html')
+    return render_template('einstellungen.html') # Render einstellungen.html
 
 
-@app.route('/einstellungen/spieleranzahl', methods = ['GET','POST']) 
-def setPlayerNumber(): # set the number of players
-    spieleranzahl = request.form.get('num')
+@app.route('/einstellungen/spieleranzahl', methods = ['GET','POST']) # Spieleranzahl
+def setPlayerNumber(): # set the number of players 
+    spieleranzahl = request.form.get('num') # get the number of players from the form
     try: 
         spieleranzahl_int = int(spieleranzahl)   #eingabe ist wirklich ein integer
         if spieleranzahl_int < 0:
@@ -29,112 +29,112 @@ def setPlayerNumber(): # set the number of players
         spieleranzahl = 8 #auf 8 defaulten
     
     
-    with open('spieler_anzahl.txt', 'w+') as file: 
+    with open('spieler_anzahl.txt', 'w+') as file: # speichern der spieleranzahl in einer textdatei
         file.write(str(spieleranzahl))
-    if bool(request.form.get('cbx')) == True: 
-        erzaehler_flag = 1
+    if bool(request.form.get('cbx')) == True: # checkbox is checked
+        erzaehler_flag = 1 # set erzaehler_flag to 1
     else:
-        erzaehler_flag = 0
-    with open('erzaehler_ist_zufaellig.txt', 'w+') as flag:
-        flag.write(str(erzaehler_flag))
-    werwolf.createDict()
-    return(render_template('einstellungen_gespeichert.html', spieleranzahl_var = spieleranzahl))
+        erzaehler_flag = 0 # set erzaehler_flag to 0
+    with open('erzaehler_ist_zufaellig.txt', 'w+') as flag: # speichern des erzaehler_flag in einer textdatei
+        flag.write(str(erzaehler_flag)) # speichern des erzaehler_flag in einer textdatei
+    werwolf.createDict() # create the dictionary with the names of the players
+    return(render_template('einstellungen_gespeichert.html', spieleranzahl_var = spieleranzahl)) # render einstellungen_gespeichert.html
 
 
-@app.route('/spieler', methods = ['GET','POST'])
-def get_data():
-    if request.method =='GET':
-        return(render_template('fehler.html')) #fehlerseite
-    else:
-        if request.method == "POST":
-            name = request.form.get("name")
+@app.route('/spieler', methods = ['GET','POST']) # Spieler
+def get_data(): # get the data from the form
+    if request.method =='GET':  # if the request is a GET request
+        return(render_template('fehler.html')) #fehlerseite ausgeben
+    else: 
+        if request.method == "POST": # if the request is a POST request
+            name = request.form.get("name") # get the name from the form
             name = name.replace('1','i') #1 ist immer ein i
             name = name.replace('3','e') #3 ist immer ein e
             name = name.replace('4','a') #4 ist immer ein a 
             name = name.replace('/',"_") #/ ist immer ein _ 
-            players_log = open('rollen_log.txt')
-            players_log = players_log.read()
-            name_ueberpruefung = name + ' = '
-            if name_ueberpruefung in players_log:
-                return(render_template('name_doppelt.html',name = name))    #name doppelt
-            else:
+            players_log = open('rollen_log.txt') # open the log file
+            players_log = players_log.read() # read the log file
+            name_ueberpruefung = name + ' = ' # create a string with the name and =
+            if name_ueberpruefung in players_log: # if the name is already in the log file
+                return(render_template('name_doppelt.html',name = name))    #name doppelt ausgeben
+            else: 
                 try:
-                    if str(re.findall('\s*ivica\s*',name, re.IGNORECASE)[0]).upper() == 'IVICA':
-                        name = 'ivo'
-                except:
-                    pass
+                    if str(re.findall('\s*ivica\s*',name, re.IGNORECASE)[0]).upper() == 'IVICA': # if the name is ivica
+                        name = 'ivo' # set the name to ivo
+                except: # if the name is not ivica
+                    pass # do nothing
                 #date = datetime.datetime.now()
-                file = open('spieler_anzahl.txt')
-                num = file.read()
-                operator = werwolf.deduct()
-                try:
-                    if operator == 0:
-                        code = 'code'
-                        return(render_template('spiel_beginnt.html', code = code))
+                file = open('spieler_anzahl.txt') # open the file with the number of players
+                num = file.read() # read the file
+                operator = werwolf.deduct() # get the operator
+                try: # try to get the operator
+                    if operator == 0: # if the operator is 0
+                        code = 'code' # set the code to code
+                        return(render_template('spiel_beginnt.html', code = code)) # render spiel_beginnt.html
                     else:
-                        with open('rollen_log.txt', 'a') as names:
-                            names.write(f'{name} = {operator}')
+                        with open('rollen_log.txt', 'a') as names: # append the name to the log file
+                            names.write(f'{name} = {operator}') # write the name and the operator to the log file
                             #names.write(f'{date}: {name} = {operator}')
-                            names.write('\n')
-                        
-                            return render_template('rollen_zuweisung.html', players = num, name = name, operator = operator)        
+                            names.write('\n') # write a new line to the log file
+                         
+                            return render_template('rollen_zuweisung.html', players = num, name = name, operator = operator)    # render rollen_zuweisung.html     
                 except:
-                    return render_template('neu_laden.html')
+                    return render_template('neu_laden.html') # render neu_laden.html
 
-@app.route('/erzaehler', methods = ['GET'])
+@app.route('/erzaehler', methods = ['GET']) # Erzähler
 def erzaehler():
     try:
-        players_log = open('rollen_log.txt')
-        players_log = players_log.readlines()
-        return(render_template('erzaehler.html', names = players_log))
+        players_log = open('rollen_log.txt') # open the log file
+        players_log = players_log.readlines() # read the log file
+        return(render_template('erzaehler.html', names = players_log))  # render erzaehler.html
     except:
-        return(404)
-
+        return(404) # if the log file is not found
+ 
 @app.route('/erzaehler/reset', methods = ['GET','POST'])   #reset der rollen_log.txt
 def reset():
     if request.method == 'POST':
         if request.form['reset_button'] == 'Neues Spiel': #wenn neues spiel gewuenscht
             with open('rollen_log.txt','w+') as f: #leere rollen_log.txt
                 f.write('*********************\n') 
-                f.close
+                f.close #schließen der datei
             return(render_template('einstellungen.html')) #zurück zur einstellungen
-    elif request.method == 'GET':
-        return(render_template('index.html')) 
+    elif request.method == 'GET': #wenn reset gewuenscht
+        return(render_template('index.html'))  #zurück zur homepage
 
 
 
-@app.route("/uebersicht/<ist_unschuldig>")
-def overview_all(ist_unschuldig):
+@app.route("/uebersicht/<ist_unschuldig>") # Übersicht
+def overview_all(ist_unschuldig): # Übersicht
  
     try:
-        ist_unschuldig = int(ist_unschuldig)
-        if ist_unschuldig == 1:
-            players_log = open('rollen_log.txt')
-            players_log = players_log.readlines()
-            return (render_template('overview_innocent.html', names = players_log))
-        elif ist_unschuldig == 0:
-            players_log = open('rollen_log.txt')
-            players_log = players_log.readlines()
-            return (render_template('overview_guilty.html', names = players_log))
+        ist_unschuldig = int(ist_unschuldig) #ist_unschuldig ist wirklich ein integer
+        if ist_unschuldig == 1: #wenn ist_unschuldig = 1
+            players_log = open('rollen_log.txt') # open the log file
+            players_log = players_log.readlines() # read the log file
+            return (render_template('overview_innocent.html', names = players_log)) # render overview_innocent.html
+        elif ist_unschuldig == 0: #wenn ist_unschuldig = 0
+            players_log = open('rollen_log.txt') # open the log file
+            players_log = players_log.readlines() # read the log file
+            return (render_template('overview_guilty.html', names = players_log)) # render overview_guilty.html
         else:
-            return(render_template('fehler.html'))
+            return(render_template('fehler.html')) # render fehler.html
     except:
-         return(render_template('fehler.html'))
+         return(render_template('fehler.html')) # render fehler.html
 
 ### Rollen Dashboards
-@app.route("/<name>/<rolle>/Dashboard")
-def Dashboard(name, rolle): 
+@app.route("/<name>/<rolle>/Dashboard") # Dashboard
+def Dashboard(name, rolle):  # Dashboard
 
-    wort = name+" = "+rolle  
-    file = open('rollen_log.txt', "r")
-    players_vorhanden = file.read()
+    wort = name+" = "+rolle    # create a string with the name and the role
+    file = open('rollen_log.txt', "r") # open the log file
+    players_vorhanden = file.read() # read the log file
      #print (wort) 
      # print (players_vorhanden[:-1])
     
-    if wort in players_vorhanden:
+    if wort in players_vorhanden: 
      try:
-        players_log = open('rollen_log.txt')
-        players_log = players_log.readlines()
+        players_log = open('rollen_log.txt') # open the log file 
+        players_log = players_log.readlines()   # read the log file
         
         nurNamen = []      
         

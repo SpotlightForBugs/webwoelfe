@@ -201,8 +201,9 @@ width: 90%;
 height: 50px;
 }
 
-.wahlbalkenifrmae{
+.wahlbalkeniframe{
   width: 60%;
-  height: 600px;
+  height: 60px;
   margin-left: auto;
+  display: inline;
 }

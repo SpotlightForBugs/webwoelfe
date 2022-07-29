@@ -20,7 +20,7 @@
         
     </div>   
 
-    <iframe src="{{ url_for('wahlbalken') }}" width="50%" height="600px"></iframe>
+    <div><iframe src="{{ url_for('wahlbalken') }}" class='wahlbalkenifrmae'></iframe></div>
 
 
 <ul class="wahllist">
@@ -33,7 +33,7 @@
                 
                 if (text.includes("Erzaehler")==false) {
                     if (text.includes("{{ name }} =")==false) {
-                        document.write("<li><button onclick=window.location.href='/{{ name }}/{{ rolle }}/wahl/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br>");
+                        document.write("<li><button onclick=window.location.href='/{{ name }}/{{ rolle }}/wahl/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br><br>");
                         btn = document.getElementById(text);
                         btn.addEventListener('click', function onClick(event) {
                             console.log(document.activeElement);

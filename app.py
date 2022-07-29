@@ -429,10 +429,9 @@ def wahlbalken():
                         
 @app.context_processor
 def inject_now():
-    return {'now': datetime.utcnow()}   # inject a variable called 'now' into the template context for use in templates (templates can then access it as {{now}})
+    return {'now': datetime.utcnow()}
+# inject a variable called 'now' into the template context for use in templates (templates can then access it as {{now}})
 #https://stackoverflow.com/questions/41231290/how-to-display-current-year-in-flask-template   #the source of this code
-#context_processor: Injects a function into the template context.
-
-if __name__ == '__main__':
+if __name__ == '__main__': 
     app.run(debug=True)
     #app.run(debug=True, host='0.0.0.0')

@@ -12,3 +12,6 @@ OKAY, das ist alles.
 Entwicklung ist ein Wort
 Das Repository wird erst in der nächsten Version veröffentlicht.
 in dieser Version müssen noch einige Dinge getan werden.
+
+iframe reloaden für das Wahlsystem
+    --> todo

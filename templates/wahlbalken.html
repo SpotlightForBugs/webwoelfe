@@ -12,6 +12,12 @@
             if (text.includes("{{ name }} =")==false) {
                         
                 document.write("<div class='wahlbalken' id = "+text+">"+text+"</div><br>");
+
+                //neuladen der seite, jede sekunde
+                refresh = setInterval(function() {
+                    location.reload();
+                }, 1000);
+                
                         
             }
             

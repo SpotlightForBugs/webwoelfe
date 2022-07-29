@@ -7,16 +7,20 @@ from datetime import datetime
 
 app = Flask(__name__)
 
+##index page
+
 @app.route('/', methods = ['GET','POST'])   # Homepage  
 def index():
     return render_template('index.html')  # Render index.html
 
-
+##einstellungen
 
 @app.route('/einstellungen', methods = ['GET','POST']) # Einstellungen
 def einstellungen():
     return render_template('einstellungen.html') # Render einstellungen.html
 
+
+##wie viele Spieler sollen vorhanden sein?
 
 @app.route('/einstellungen/spieleranzahl', methods = ['GET','POST']) # Spieleranzahl
 def setPlayerNumber(): # set the number of players 
@@ -40,6 +44,7 @@ def setPlayerNumber(): # set the number of players
     werwolf.createDict() # create the dictionary with the names of the players
     return(render_template('einstellungen_gespeichert.html', spieleranzahl_var = spieleranzahl)) # render einstellungen_gespeichert.html
 
+#namenseingabe spieler
 
 @app.route('/spieler', methods = ['GET','POST']) # Spieler
 def get_data(): # get the data from the form
@@ -81,6 +86,9 @@ def get_data(): # get the data from the form
                 except:
                     return render_template('neu_laden.html') # render neu_laden.html
 
+
+##Pfad des Erzählers
+
 @app.route('/erzaehler', methods = ['GET']) # Erzähler
 def erzaehler():
     try:
@@ -89,6 +97,8 @@ def erzaehler():
         return(render_template('erzaehler.html', names = players_log))  # render erzaehler.html
     except:
         return(404) # if the log file is not found
+ 
+ ##Neues Spiel	
  
 @app.route('/erzaehler/reset', methods = ['GET','POST'])   #reset der rollen_log.txt
 def reset():
@@ -102,6 +112,7 @@ def reset():
         return(render_template('index.html'))  #zurück zur homepage
 
 
+##Übersicht der Spieler
 
 @app.route("/uebersicht/<ist_unschuldig>") # Übersicht
 def overview_all(ist_unschuldig): # Übersicht
@@ -169,6 +180,7 @@ def Dashboard(name, rolle):  # Dashboard
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!") # print the error
         return render_template("url_system.html", name=name, rolle=rolle) # render url_system.html
 
+#auswahl wahl
 
 @app.route("/<name>/<rolle>/wahl/<auswahl>") # Wahl
 def auswahl(name, rolle, auswahl): # Wahl
@@ -261,7 +273,7 @@ def auswahl(name, rolle, auswahl): # Wahl
     #     print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
     #     return render_template("fehler.html")
 
-    
+#schlafen function 
      
 @app.route("/<name>/<rolle>/schlafen") # route for the sleep function
 def schlafen(name, rolle):  # function for the sleep function
@@ -283,7 +295,7 @@ def schlafen(name, rolle):  # function for the sleep function
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!") # print the error
         return render_template("url_system.html" , name=name, rolle=rolle) # render the url_system.html
 
-
+#warten funktion
 
 @app.route("/<name>/<rolle>/warten") # route for the wait function  
 def warten(name, rolle):     # function for the wait function
@@ -308,7 +320,8 @@ def warten(name, rolle):     # function for the wait function
         return render_template("url_system.html", name=name, rolle=rolle) # render the url_system.html
  
  
-  
+#tot function
+
 @app.route("/<name>/<rolle>/<todesgrund>/tot")     # route for the death function
 def tot(name, rolle, todesgrund):  # function for the death function
 
@@ -340,6 +353,8 @@ def tot(name, rolle, todesgrund):  # function for the death function
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!") # print the error
         return render_template("url_system.html", name=name, rolle=rolle) # render the url_system.html
  
+ #kick function
+ 
 @app.route("/<name>/<rolle>/kick/") # route for the kick function
 def rausschmeissen(name,rolle): # function for the kick function
     wort = name+" = "+rolle  # create a string with the name and the role
@@ -359,6 +374,7 @@ def rausschmeissen(name,rolle): # function for the kick function
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")     # print the error
         return render_template("url_system.html", name=name, rolle=rolle)   # render the url_system.html
 
+#Resultat Dorf
  
 @app.route("/<name>/<rolle>/resultat_Dorf") # route for the resultat_Dorf function
 def resultatDorf(name, rolle):  # function for the resultat_Dorf function
@@ -381,6 +397,7 @@ def resultatDorf(name, rolle):  # function for the resultat_Dorf function
         return render_template("url_system.html", name=name, rolle=rolle) # render the url_system.html
     
     
+#resultat_Werwolf
 
 @app.route("/<name>/<rolle>/resultat_Wolf") # route for the resultat_Wolf function
 def resultatWolf(name, rolle):      # function for the resultat_Wolf function
@@ -401,6 +418,8 @@ def resultatWolf(name, rolle):      # function for the resultat_Wolf function
     else: 
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")    # print the error
         return render_template("url_system.html", name=name, rolle=rolle) # render the url_system.html
+
+#wahlbalken
 
 @app.route("/wahlbalken/") # route for the wahlbalken function
 def wahlbalken():
@@ -426,6 +445,9 @@ def wahlbalken():
                         return (render_template("wahlbalken.html", names = nurNamen)) # render the wahlbalken.html
      except:
             return render_template("fehler.html") # render the fehler.html
+  
+#context processor
+  
                          
 @app.context_processor 
 def inject_now():

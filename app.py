@@ -402,8 +402,14 @@ def resultatWolf(name, rolle):
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
         return render_template("url_system.html", name=name, rolle=rolle)
 
-
-    
+@app.route("/wahlbalken/")
+def wahlbalken():
+    try:
+            players_log = open('rollen_log.txt')
+            players_log = players_log.readlines()
+            return render_template("wahlbalken.html", names=players_log)
+    except:
+        return render_template("fehler.html")
 
 @app.context_processor
 def inject_now():

@@ -409,7 +409,7 @@ def wahlbalken():
         
      nurNamen = []      
         
-        try:
+     try:
             for line in players_log:
                 
                 if '*' in line:
@@ -424,7 +424,7 @@ def wahlbalken():
                     if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler':
                         nurNamen.append(name)
                         return (render_template("wahlbalken.html", names = nurNamen))
-        except:
+     except:
             return render_template("fehler.html")
                         
 @app.context_processor

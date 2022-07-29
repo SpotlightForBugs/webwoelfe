@@ -404,13 +404,29 @@ def resultatWolf(name, rolle):
 
 @app.route("/wahlbalken/")
 def wahlbalken():
-    try:
-            players_log = open('rollen_log.txt')
-            players_log = players_log.readlines()
-            return render_template("wahlbalken.html", names=players_log)
-    except:
-        return render_template("fehler.html")
-
+     players_log = open('rollen_log.txt')
+     players_log = players_log.readlines()
+        
+     nurNamen = []      
+        
+     try:
+            for line in players_log:
+                
+                if '*' in line:
+                    pass
+                else:
+                    line = line.split(' = ')
+                    name = line[0]
+                    auswahlRolle = line[1]
+                    
+                   # print('Name: ' + name + '; Rolle: ' + auswahlRolle)
+                    
+                    if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler':
+                        nurNamen.append(name)
+                        return (render_template("wahlbalken.html", names = nurNamen))
+     except:
+            return render_template("fehler.html")
+                        
 @app.context_processor
 def inject_now():
     return {'now': datetime.utcnow()}   # inject a variable called 'now' into the template context for use in templates (templates can then access it as {{now}})

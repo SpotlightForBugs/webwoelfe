@@ -1,22 +1,22 @@
 {% extends 'struktur.html' %}
 
-
 {% block body %}
 
 {% for el in names %}
         <script>
             
+          
             console.log("{{el}}");	
             var text = "{{el}}";    
-                
-                if (text.includes("{{ name }} =")==false) {
-                    document.write("<p>"+text+"</p>");
-                }
-                
+            if (text.includes("{{ name }} =")==false) {
+                        
+                document.write("<div class='wahlbalken' id = "+text+">"+text+"</div><br>");
+                        
+            }
             
         </script>
 
-        {% endfor %}
+{% endfor %}
 
 
 

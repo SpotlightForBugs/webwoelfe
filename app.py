@@ -402,30 +402,38 @@ def resultatWolf(name, rolle):      # function for the resultat_Wolf function
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")    # print the error
         return render_template("url_system.html", name=name, rolle=rolle) # render the url_system.html
 
+
 @app.route("/wahlbalken/") # route for the wahlbalken function
 def wahlbalken():
      players_log = open('rollen_log.txt') # open the log file
      players_log = players_log.readlines() # read the log file
+     
+     print(players_log)
+     
+     print('Test')
         
-     nurNamen = []       # create a list for the names
+     nurNamen = [] # create a list for the names
         
      try:
-            for line in players_log: # for every line in the log file
+        for line in players_log: # for every line in the log file
+                    
+            if '*' in line: # if the line contains a *
+                pass # do nothing
+            else:   # if the line does not contain a *
+                line = line.split(' = ') # split the line at the =
+                name = line[0] # get the name
+                auswahlRolle = line[1] # get the role
                 
-                if '*' in line: # if the line contains a *
-                    pass # do nothing
-                else:   # if the line does not contain a *
-                    line = line.split(' = ') # split the line at the =
-                    name = line[0] # get the name
-                    auswahlRolle = line[1] # get the role
-                    
-                   # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
-                    
-                    if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler': # if the role is not dead or the narrator
-                        nurNamen.append(name) # append the name to the list
-                        return (render_template("wahlbalken.html", names = nurNamen)) # render the wahlbalken.html
+                # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
+                
+                if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler': # if the role is not dead or the narrator
+                    nurNamen.append(name) # append the name to the list
+        
+        return (render_template("wahlbalken.html", names = nurNamen)) # render the wahlbalken.html
+        
      except:
             return render_template("fehler.html") # render the fehler.html
+      
                          
 @app.context_processor 
 def inject_now():

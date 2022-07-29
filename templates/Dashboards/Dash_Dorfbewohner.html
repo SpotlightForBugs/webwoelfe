@@ -27,15 +27,7 @@
                 
                 if (text.includes("Erzaehler")==false) {
                     if (text.includes("{{ name }} =")==false) {
-                        //text = text.replace(" = Dorfbewohner", "");
-                        //text = text.replace(" = Werwolf", "");
-                        //text = text.replace(" = Hexe", "");
-                        //text = text.replace(" = Seherin", "");
-                        //text = text.replace(" = Jäger", "");
- 
-
-                        //document.write(`<a href="/{{ name }}/{{ rolle }}/wahl/`+text+`"> <div class='wahlfeld'><p id ='inTag'>`+text+`</p></div></a><br> 
-                        //<br><br>`);
+                        
                         document.write("<li><button onclick=window.location.href='/{{ name }}/{{ rolle }}/wahl/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br>");
                         btn = document.getElementById(text);
                         btn.addEventListener('click', function onClick(event) {

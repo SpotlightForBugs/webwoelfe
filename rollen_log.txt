@@ -1,9 +1,5 @@
 *********************
-dffd = Hexe
-ff = Seherin
-kk = Dorfbewohner
-dad = Dorfbewohner
-t = Dorfbewohner
-u = Dorfbewohner
-po = Werwolf
-ds = Werwolf
+sd = Dorfbewohner
+da = Dorfbewohner
+dsa = Dorfbewohner
+dhgsa = Hexe

@@ -193,3 +193,12 @@ height: 50px;
 .wahllist{
   list-style: none;
 }
+
+.wahlbalken{
+border-radius: 25px;
+background: #9f3a07;
+margin: auto;
+padding: 20px;
+width: 90%;
+height: 50px;
+}

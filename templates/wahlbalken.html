@@ -1,7 +1,8 @@
-{% extends 'struktur.html' %}
-
-{% block body %}
-
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="{{ url_for('static/css', filename='style.css') }}">
+</head>
 {% for el in names %}
         <script>
             
@@ -21,4 +22,4 @@
 
 
 
-{% endblock %}
+</html>

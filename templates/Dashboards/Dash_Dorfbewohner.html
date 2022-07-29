@@ -19,10 +19,10 @@
         <br>
         
     </div>   
+<div class="col-md-12">
+    <iframe src="{{ url_for('wahlbalken') }}" width="50%" height="600px"></iframe>
 
-    <div><iframe src="{{ url_for('wahlbalken') }}" class='wahlbalkenifrmae'></iframe></div>
-
-
+</div>
 <ul class="wahllist">
         {% for el in nurNamen %}
         <script>
@@ -33,11 +33,13 @@
                 
                 if (text.includes("Erzaehler")==false) {
                     if (text.includes("{{ name }} =")==false) {
-                        document.write("<li><button onclick=window.location.href='/{{ name }}/{{ rolle }}/wahl/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br><br>");
+                        //write a button leading to  '/{{ name }}/{{ rolle }}/wahl/{{ el }}'
+                       // document.write("<li><a href='/{{ name }}/{{ rolle }}/wahl/{{ el }}'>{{ el }}</a></li>");
+                        document.write("<li><button onclick=window.location.href='/{{ name }}/{{ rolle }}/wahl/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br>");
                         btn = document.getElementById(text);
                         btn.addEventListener('click', function onClick(event) {
                             console.log(document.activeElement);
-                            console.log(text+"");
+                            console.log(text+""); 
                         });
                     }
                 }

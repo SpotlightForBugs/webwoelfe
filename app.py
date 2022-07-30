@@ -62,6 +62,7 @@ def get_data(): # get the data from the form
             name = name.replace('4','a') #4 ist immer ein a 
             name = name.replace('/',"_") #/ ist immer ein _ 
             name = name.replace('=',"_") #gleich ist immer _
+            name = name.replace(':',"_") #doppelpunkt ist immer _
             players_log = open('rollen_log.txt') # open the log file
             players_log = players_log.read() # read the log file
             name_ueberpruefung = name + ' = ' # create a string with the name and =
@@ -281,7 +282,7 @@ def warten():     # function for the wait function
             
             
           
-          ###TODO Bei Toten soll die Rolle durch "Tot" ersetzt werden
+
             with open('rollen_log.txt', 'r+') as fileTot:
 
                 file_list = []

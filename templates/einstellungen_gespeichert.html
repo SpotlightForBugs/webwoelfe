@@ -13,4 +13,12 @@ active
 <div class="container-fluid" style="margin-top:30px">
   <h4><span style="color:red;">Alles klar!</span> Es gibt {{ spieleranzahl_var }} Spieler.</h4>
 </div>
+
+<script>
+//weiterleiten zum index nach 2 sekunden
+setTimeout(function(){
+  window.location.href = "{{url_for('index')}}";
+}, 2000);
+
+</script>
 {% endblock %}

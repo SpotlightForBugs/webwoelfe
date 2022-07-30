@@ -1,3 +1,10 @@
 *********************
-g = Werwolf
 a = Dorfbewohner
+v = Dorfbewohner
+rwsr = Werwolf
+alberta = Seherin
+v_ = Hexe
+lö = Dorfbewohner
+öl = Werwolf
+e = Dorfbewohner
+w = Dorfbewohner

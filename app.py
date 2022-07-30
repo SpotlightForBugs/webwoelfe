@@ -42,6 +42,9 @@ def setPlayerNumber(): # set the number of players
     with open('erzaehler_ist_zufaellig.txt', 'w+') as flag: # speichern des erzaehler_flag in einer textdatei
         flag.write(str(erzaehler_flag)) # speichern des erzaehler_flag in einer textdatei
     werwolf.createDict() # create the dictionary with the names of the players
+    with open('rollen_log.txt','w+') as f: #leere rollen_log.txt
+                f.write('*********************\n') 
+                f.close #schließen der datei
     return(render_template('einstellungen_gespeichert.html', spieleranzahl_var = spieleranzahl)) # render einstellungen_gespeichert.html
 
 #namenseingabe spieler
@@ -231,9 +234,9 @@ def schlafen(name, rolle):  # function for the sleep function
 #warten funktion
 
 @app.route("/warten") # route for the wait function  
-def warten(name):     # function for the wait function
+def warten():     # function for the wait function
     i = 0 # set i to 0
-    line_with_name = 0 # set line_with_name to 0
+    
     try:
         
         
@@ -284,7 +287,7 @@ def warten(name):     # function for the wait function
             
            
             
-            return render_template("Dashboards/status/ergebnis.html",name_tot=name)
+            return render_template("Dashboards/status/ergebnis.html",name = name_tot)
         else: 
              return render_template("Dashboards/status/warten.html")
         
@@ -424,6 +427,47 @@ def wahlbalken():
         
      except:
             return render_template("fehler.html") # render the fehler.html
+  
+  
+@app.route("/wahlstatus") # route for the wahlstatus function
+def wahl_stats():  
+     
+            anzahl = 0;  
+            name_tot = "";  
+            maxCount = 0;  
+            words = [];  
+            
+            file = open("abstimmung.txt", "r")  
+                
+            for line in file:
+                 
+                string = line.lower().replace(',','').replace('.','').split(" ");  
+                for s in string:  
+                    words.append(s);  
+            
+            for i in range(0, len(words)):  
+                anzahl = 1;  
+                for j in range(i+1, len(words)):  
+                    if(words[i] == words[j]):  
+                        anzahl = anzahl + 1;  
+                        
+                if(anzahl > maxCount):  
+                    maxCount = anzahl;  
+                    name_tot = words[i];  
+  
+            return render_template("wahlstatus.html", name_tot = name_tot);
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
 #context processor
   

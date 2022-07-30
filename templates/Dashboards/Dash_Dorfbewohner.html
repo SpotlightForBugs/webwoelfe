@@ -6,7 +6,7 @@
     
     <div class="row">
         <div class="col-md-12">
-            <h2>{{rolle}}</h2>
+            <h2>Alle:</h2>
         </div>
     </div>
          
@@ -17,12 +17,14 @@
     <div class="col-md-12">
         <h3>Abstimmen</h3>
         <br>
-        
+
     </div>   
 
     <div  class='wahlbalkenIframe'>
         <iframe src="{{ url_for('wahlbalken') }}" height=1000px scrolling="no"></iframe>
     </div>
+
+    
 
 <ul class="wahllist">
         {% for el in nurNamen %}
@@ -36,7 +38,7 @@
                     if (text.includes("{{ name }} =")==false) {
                         //write a button leading to  '/{{ name }}/{{ rolle }}/wahl/{{ el }}'
                        // document.write("<li><a href='/{{ name }}/{{ rolle }}/wahl/{{ el }}'>{{ el }}</a></li>");
-                        document.write("<li><button onclick=window.location.href='/{{ name }}/{{ rolle }}/wahl/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br><br>");
+                        document.write("<li><button onclick=location.href='../../waehlen/{{ name }}/{{ rolle }}/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br><br>");
                         btn = document.getElementById(text);
                         btn.addEventListener('click', function onClick(event) {
                             console.log(document.activeElement);
@@ -50,6 +52,9 @@
         {% endfor %}
         </ul>
 <div>
+    <div class="container-fluid">
+        <iframe src="{{ url_for('wahl_stats') }}" height=20% scrolling="no"></iframe>
+    </div>
 </div>
 </div>
     

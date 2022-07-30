@@ -1,0 +1,16 @@
+{% extends 'struktur_wahlbalken.html' %}
+
+{% block body %}
+
+
+
+<h1> {{ name_tot }} hat die meisten Stimmen </h1>
+
+<script type="text/javascript">
+    //seite neuladen pro sekunde
+    setInterval(function() {
+        location.reload();
+    }, 1000);
+</script>
+
+{% endblock %}

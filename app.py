@@ -291,13 +291,13 @@ def warten():     # function for the wait function
                 for line in fileTot:
                     file_list.append(line)
                 print(file_list)
-
-
+                
+                name_tot.strip('\n')
 
                 while counter_tot < len(file_list):
                     print(name_tot + ' - File List: ' + file_list[counter_tot])
                     print('Name Tot: ' + name_tot)
-                    if "" in file_list[counter_tot]:
+                    if (name_tot + " =") in file_list[counter_tot]:
                         print("If")
                         dffd = file_list[counter_tot].split(" = ")
                         new_line = dffd[0] + " = Tot \n"

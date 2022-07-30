@@ -1,5 +1,4 @@
 *********************
- = Tot 
-a = Tot 
+a = Dorfbewohner 
 b = Tot 
-c = Tot 
+c = Dorfbewohner

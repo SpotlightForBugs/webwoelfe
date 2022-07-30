@@ -296,7 +296,8 @@ def warten():     # function for the wait function
 
                 while counter_tot < len(file_list):
                     print(name_tot + ' - File List: ' + file_list[counter_tot])
-                    if "v =" in file_list[counter_tot]:
+                    print('Name Tot: ' + name_tot)
+                    if "" in file_list[counter_tot]:
                         print("If")
                         dffd = file_list[counter_tot].split(" = ")
                         new_line = dffd[0] + " = Tot \n"

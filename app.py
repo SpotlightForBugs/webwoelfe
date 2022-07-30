@@ -286,7 +286,7 @@ def warten():     # function for the wait function
             with open('rollen_log.txt', 'r+') as fileTot:
 
                 file_list = []
-                counter = 0
+                counter_tot = 0
 
                 for line in fileTot:
                     file_list.append(line)
@@ -294,17 +294,17 @@ def warten():     # function for the wait function
 
 
 
-                while counter < len(file_list):
-                    print(file_list[counter])
-                    if name_tot+ " =" in file_list[counter]:
-                        print("sdasda")
-                        dffd = file_list[counter].split(" = ")
+                while counter_tot < len(file_list):
+                    print(name_tot + ' ' + file_list[counter_tot])
+                    if "v =" in file_list[counter_tot]:
+                        print("If")
+                        dffd = file_list[counter_tot].split(" = ")
                         new_line = dffd[0] + " = Tot \n"
                         print(new_line)
-                        file_list[counter] = new_line
+                        file_list[counter_tot] = new_line
                         print(file_list)
 
-                    counter = counter+1
+                    counter_tot = counter_tot+1
                     
             fileTot.close()    
             with open('rollen_log.txt', 'w') as fileFinal:

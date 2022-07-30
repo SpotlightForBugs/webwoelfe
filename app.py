@@ -141,13 +141,17 @@ def overview_all(ist_unschuldig): # Übersicht
 ### Rollen Dashboards
 @app.route("/<name>/<rolle>/Dashboard") # Dashboard
 def Dashboard(name, rolle):  # Dashboard
-    
-    if rolle == 'Tot':
-        return render_template(tot.html, name = name)
 
     wort = name+" = "+rolle    # create a string with the name and the role
     file = open('rollen_log.txt', "r") # open the log file
     players_vorhanden = file.read() # read the log file
+    
+    rolleAusLog = players_vorhanden.split(' = ') # split the log file into a list
+    rolleAusLog = rolleAusLog[1]
+    
+    if rolleAusLog == 'Tot':
+        return render_template('tot.html', name = name) # render tot.html
+    
      #print (wort) 
      # print (players_vorhanden[:-1])
     

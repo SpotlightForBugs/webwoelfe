@@ -247,7 +247,7 @@ def warten():     # function for the wait function
             text.close()
         with open ('abstimmung.txt', 'r') as text:
              #empty lines are not counted
-                         anzahl_stimmen = sum(1 for line in text if line.rstrip())
+                         anzahl_stimmen = sum(1 for line in text if line.rstrip()) 
             
             
             
@@ -282,12 +282,12 @@ def warten():     # function for the wait function
             
           
           ###TODO Bei Toten soll die Rolle durch "Tot" ersetzt werden
-            with open('rollen_log.txt', 'r+') as file:
+            with open('rollen_log.txt', 'r+') as fileTot:
 
                 file_list = []
                 counter = 0
 
-                for line in file:
+                for line in fileTot:
                     file_list.append(line)
                 print(file_list)
 
@@ -302,12 +302,13 @@ def warten():     # function for the wait function
                         print(file_list)
 
                     counter = counter+1
-
-                file.close()
-                with open('filename.txt', 'w') as file:
-                    file.writelines(file_list)    
-                                    
-                        
+                    
+            fileTot.close()    
+            with open('rollen_log.txt', 'w') as fileFinal:
+                fileFinal.writelines(file_list)    
+            fileFinal.close()             
+            
+            
                                     
                     
            

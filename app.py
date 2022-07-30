@@ -283,11 +283,34 @@ def warten():     # function for the wait function
             
           
           ###TODO Bei Toten soll die Rolle durch "Tot" ersetzt werden
+            with open('rollen_log.txt', 'r+') as file:
+
+                file_list = []
+                counter = 0
+
+                for line in file:
+                    file_list.append(line)
+                print(file_list)
+
+
+
+                while counter < len(file_list):
+                    if name_tot + " =" in file_list[counter]:
+                        dffd = file_list[counter].split(" = ")
+                        new_line = dffd[0] + " = Tot \n"
+                        print(new_line)
+                        file_list[counter] = new_line
+                        print(file_list)
+
+                    counter = counter+1
+
+                file.close()
+                with open('filename.txt', 'w') as file:
+                    file.writelines(file_list)    
+                                    
+                        
+                                    
                     
-        
-                 
-                            
-            
            
             
             return render_template("Dashboards/status/ergebnis.html",name = name_tot)

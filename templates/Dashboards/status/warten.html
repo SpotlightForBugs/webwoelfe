@@ -20,7 +20,19 @@
         <br>
         <div class="container">
  
+
 </div>
+
+<script>
+//weiterleiten zu einer anderen Seite nach einer Sekunde
+setTimeout(function(){
+    window.location.href = "{{ url_for('warten') }}";
+}, 1000);
+
+
+</script>
+
+
 
 {% endblock %}
 

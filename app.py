@@ -4,8 +4,7 @@ from flask import Flask, request, url_for, render_template, session, make_respon
 import requests, logging, werwolf, datetime, re
 from inspect import currentframe, getframeinfo
 from datetime import datetime
-import sys
-import fileinput
+
 
 app = Flask(__name__)
 
@@ -286,10 +285,7 @@ def warten():     # function for the wait function
           ###TODO Bei Toten soll die Rolle durch "Tot" ersetzt werden
                     
         
-        for line in fileinput.input('rollen_log.txt', inplace=True):
-            if line.strip().startswith(name_tot+' = '):
-                line = name_tot +'= Tot\n'
-            sys.stdout.write(line)            
+                 
                             
             
            

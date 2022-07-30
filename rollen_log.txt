@@ -1,6 +1,3 @@
 *********************
-sd = Dorfbewohner
-sd = Dorfbewohner
-sd = Dorfbewohner
-sd = Dorfbewohner
-sd = Dorfbewohner
+g = Werwolf
+a = Dorfbewohner

@@ -292,11 +292,12 @@ def wahl(name, rolle, auswahl):
             else:
                 text.write(name + " : " + '\n')
                 text.close()
-                with open("abstimmung.txt","r+") as abstimmung:
-                 abstimmung.write(auswahl)
+                with open("abstimmung.txt","a") as abstimmung:
+                 abstimmung.write(auswahl+''+ '\n') 
+                 
                  
                  abstimmung.close()
-                 return render_template("Dashboards/status/warten.html")
+                 return render_template("Dashboards/status/warten.html",name=name)
 
 
     
@@ -326,10 +327,10 @@ def schlafen(name, rolle):  # function for the sleep function
 
 #warten funktion
 
-@app.route("/warten") # route for the wait function  
-def warten():     # function for the wait function
+@app.route("/warten/<name>") # route for the wait function  
+def warten(name):     # function for the wait function
     i = 0 # set i to 0
-    
+    line_with_name = 0 # set line_with_name to 0
     try:
         
         
@@ -339,7 +340,10 @@ def warten():     # function for the wait function
                     i = i + 1
             text.close()
         with open ('abstimmung.txt', 'r') as text:
-            anzahl_stimmen = sum(1 for line in text)
+             #empty lines are not counted
+                         anzahl_stimmen = sum(1 for line in text if line.rstrip())
+            
+            
             
         text.close()
         print(anzahl_stimmen)
@@ -347,13 +351,14 @@ def warten():     # function for the wait function
         if i == anzahl_stimmen:
             print("Alle Spieler haben gewaehlt")
             count = 0;  
-            word = "";  
+            name_tot = "";  
             maxCount = 0;  
             words = [];  
             
             file = open("abstimmung.txt", "r")  
                 
-            for line in file:  
+            for line in file:
+                 
                 string = line.lower().replace(',','').replace('.','').split(" ");  
                 for s in string:  
                     words.append(s);  
@@ -366,10 +371,17 @@ def warten():     # function for the wait function
                         
                 if(count > maxCount):  
                     maxCount = count;  
-                    word = words[i];  
+                    name_tot = words[i];  
             
+            line_with_name = 0;
+          
+          ###TODO Bei Toten soll die Rolle durch "Tot" ersetzt werden
+                        
+                    
             
-            return render_template("Dashboards/status/ergebnis.html",name=word)
+           
+            
+            return render_template("Dashboards/status/ergebnis.html",name_tot=name)
         else: 
              return render_template("Dashboards/status/warten.html")
         

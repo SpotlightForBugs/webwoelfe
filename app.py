@@ -61,6 +61,7 @@ def get_data(): # get the data from the form
             name = name.replace('3','e') #3 ist immer ein e
             name = name.replace('4','a') #4 ist immer ein a 
             name = name.replace('/',"_") #/ ist immer ein _ 
+            name = name.replace('=',"_") #gleich ist immer _
             players_log = open('rollen_log.txt') # open the log file
             players_log = players_log.read() # read the log file
             name_ueberpruefung = name + ' = ' # create a string with the name and =

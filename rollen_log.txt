@@ -1,5 +1,5 @@
 *********************
-g = Dorfbewohner
+g = Tot 
 v = Dorfbewohner
 rwsr = Dorfbewohner
 alberta = Dorfbewohner

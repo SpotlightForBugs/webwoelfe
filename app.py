@@ -141,6 +141,9 @@ def overview_all(ist_unschuldig): # Übersicht
 ### Rollen Dashboards
 @app.route("/<name>/<rolle>/Dashboard") # Dashboard
 def Dashboard(name, rolle):  # Dashboard
+    
+    if rolle == 'Tot':
+        return render_template(tot.html, name = name)
 
     wort = name+" = "+rolle    # create a string with the name and the role
     file = open('rollen_log.txt', "r") # open the log file

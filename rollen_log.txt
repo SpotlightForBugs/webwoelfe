@@ -1,3 +1,6 @@
 *********************
 sd = Dorfbewohner
-a = Dorfbewohner
+sd = Dorfbewohner
+sd = Dorfbewohner
+sd = Dorfbewohner
+sd = Dorfbewohner

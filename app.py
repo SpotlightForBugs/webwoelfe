@@ -161,17 +161,16 @@ def Dashboard(name, rolle):  # Dashboard
                     pass # do nothing
                 else:  # if the line does not contain a *
                     line = line.split(' = ') # split the line at the =
-                    name = line[0] # set the name to the first part of the line
+                    name_line = line[0] 
                     auswahlRolle = line[1] # set the role to the second part of the line
                     
                    # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
                     
                     if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler': # if the role is not Tot or the role is not the Erzähler
-                        nurNamen.append(name) # append the name to the list
+                        nurNamen.append(name_line) # append the name to the list
                         
            
-           # nurNamen = ( ''.join(str(nurNamen)))
-            #print(nurNamen)
+        
                 
         except:
             print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1)) # print the error
@@ -219,8 +218,7 @@ def schlafen(name, rolle):  # function for the sleep function
     wort = name+" = "+rolle   # create a string with the name and the role
     file = open('rollen_log.txt', "r") # open the log file
     players_vorhanden = file.read() # read the log file
-    print (wort)  # print the string
-    print (players_vorhanden) # print the log file
+    
     if wort in players_vorhanden: # if the string is in the log file
      try:
         players_log = open('rollen_log.txt') # open the log file

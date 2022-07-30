@@ -1,0 +1,4 @@
+*********************
+a = Dorfbewohner
+b = Dorfbewohner
+c = Dorfbewohner

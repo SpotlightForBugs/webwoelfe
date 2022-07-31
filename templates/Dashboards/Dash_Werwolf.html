@@ -18,31 +18,16 @@
         <div class="col-md-12">
             <h3>Deine Teammates</h3>
 
-            {% for el in names if "Werwolf" in el %} <!--for EachLine in names...-->
-    <script>
+            {% for el in names if "Werwolf" in el and not name in el %} 
+    
+            <div class='team'><p id ='inTag'>{{el |replace("=", "") |replace("Werwolf", "") }}</p></div><br>
         
-        var text = `{{ el }}`;
-        
-        if (!text.includes("{{ name }}")) {
-            text = text.replace("=", "");
-            text = text.replace("Werwolf", "");
-            document.write("<div class='team'><p id ='inTag'>"+text+"</p></div><br>");
-        }
-    </script>
 {% endfor %}
         </div>
-        {% for el in names if not "Werwolf" in el and not 'Tot' in el and not 'Erzaehler' in el and not '*' in el %} <!--for EachLine in names...-->
-        <script>
+        {% for el in names if not "Werwolf" in el and not 'Tot' in el and not 'Erzaehler' in el and not '*' in el %} 
             
-            var text = `{{ el }}`;
-            
-            if (!text.includes("{{ name }}")) {
-                text = text.replace("=", "");
-                text = text.replace("Hexe", "");
-                
-                document.write("<div class='team'><p id ='inTag'>"+text+"</p></div><br>");
-            }
-        </script>
+    <div class='enemyteam'><p id ='inTag'>{{ el|replace("=", "") |replace("Dorfbewohner", "") |replace("Hexe", "") |replace("Seherin", "") |replace("Jäger", "") }}</p></div><br>
+        <br><br> 
     {% endfor %}
       </div>
 

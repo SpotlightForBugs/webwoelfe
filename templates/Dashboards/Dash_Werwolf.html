@@ -18,12 +18,12 @@
         <div class="col-md-12">
             <h3>Deine Teammates</h3>
 
-            {% for el in names[1:] %} <!--for EachLine in names...-->
+            {% for el in names if "Werwolf" in el %} <!--for EachLine in names...-->
     <script>
         
         var text = `{{ el }}`;
         
-        if (text.includes("Werwolf") && !text.includes("{{ name }}")) {
+        if (!text.includes("{{ name }}")) {
             text = text.replace("=", "");
             text = text.replace("Werwolf", "");
             document.write("<div class='team'><p id ='inTag'>"+text+"</p></div><br>");

@@ -1,8 +1,8 @@
 *********************
-d = Seherin
+d = Tot 
 ff = Hexe
 hh = Dorfbewohner
 kk = Werwolf
 zz = Dorfbewohner
 sss = Dorfbewohner
-koder = Werwolf
+koder = Tot 

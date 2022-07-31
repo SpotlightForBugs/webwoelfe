@@ -23,7 +23,9 @@
             <div class='team'><p id ='inTag'>{{el |replace("=", "") |replace("Werwolf", "") }}</p></div><br>
         
 {% endfor %}
+
         </div>
+        <h3>Wähle eine feindliche Person</h3>
         {% for el in names if not "Werwolf" in el and not 'Tot' in el and not 'Erzaehler' in el and not '*' in el %} 
             
     <div class='enemyteam'>

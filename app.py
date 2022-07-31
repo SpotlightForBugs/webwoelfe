@@ -578,16 +578,79 @@ def wer_tot(name, rolle, auswahl):
               abstimmung.close()
               with open ('hat_gewaehlt.txt', 'r+') as hat_gewaehlt:
                     hat_gewaehlt.write(name +" : ")
-                    wer_anzahl_stimmen = sum(1 for line in hat_gewaehlt if line.rstrip()) 
-                    if wer_anzahl_stimmen < 4:
-                       return render_template("Dashboards/status/wer_wahl_warten.html") 
-                    else:	
-                     return render_template("Dashboards/status/wer_wahl_ergebnis.html",ergebnis = "1")
-        
+                    return render_template("Dashboards/status/wer_wahl_warten.html") 
     
     
 
-  
+@app.route("/wer_wahl_warten")
+def wer_wahl_warten():
+    
+        with open ('hat_gewaehlt.txt', 'r+') as hat_gewaehlt:
+             wer_anzahl_stimmen = sum(1 for line in hat_gewaehlt if line.rstrip()) 
+             if wer_anzahl_stimmen == 4:
+            
+                count = 0;  
+                name_tot = "";  
+                maxCount = 0;  
+                words = [];  
+                
+                file = open("abstimmung.txt", "r")  
+                    
+                for line in file:
+                    
+                    string = line.lower().replace(',','').replace('.','').split(" ");  
+                    for s in string:  
+                        words.append(s);  
+                
+                for i in range(0, len(words)):  
+                    count = 1;  
+                    for j in range(i+1, len(words)):  
+                        if(words[i] == words[j]):  
+                            count = count + 1;  
+                            
+                    if(count > maxCount):  
+                        maxCount = count;  
+                        name_tot = words[i];  
+                
+                
+            
+
+                with open('rollen_log.txt', 'r+') as fileTot:
+
+                    file_list = []
+                    counter_tot = 0
+
+                    for line in fileTot:
+                        file_list.append(line)
+                        
+                    #print(file_list)
+                    
+                    name_tot = name_tot.strip('\n')
+                    name_tot = name_tot.replace('\n', '')
+
+                    while counter_tot < len(file_list):
+                        
+                        #print(name_tot + ' - File List: ' + file_list[counter_tot])
+                        print('Name Tot: ' + name_tot + ' =')
+                        
+                        if name_tot in file_list[counter_tot]:      
+                            #print("If")
+                            dffd = file_list[counter_tot].split(" = ")
+                            new_line = dffd[0] + " = Tot \n"
+                            #print(new_line)
+                            file_list[counter_tot] = new_line
+                            #print(file_list)
+
+                        counter_tot = counter_tot+1
+                        
+                fileTot.close()    
+                with open('rollen_log.txt', 'w') as fileFinal:
+                    fileFinal.writelines(file_list)    
+                fileFinal.close()  
+                name = name_tot
+                return (render_template("Dashboards/status/wer_wahl_ergebnis.html", name=name ))
+             else:
+                  return (render_template("Dashboards/status/wer_wahl_warten.html"))
 #context processor
   
                          

@@ -197,6 +197,9 @@ def Dashboard(name, rolle):  # Dashboard
 @app.route("/waehlen/<name>/<rolle>/<auswahl>")
 def wahl(name, rolle, auswahl):
    
+   if rolle == 'Tot' : 
+       return render_template("warten.html")
+   else :
     wort = name+" = "+rolle  
     wort2 = name+" : "
     file = open('rollen_log.txt', "r")
@@ -222,6 +225,10 @@ def wahl(name, rolle, auswahl):
      
 @app.route("/<name>/<rolle>/schlafen") # route for the sleep function
 def schlafen(name, rolle):  # function for the sleep function
+
+
+    if rolle == 'Tot':
+        return render_template("tot.html", name = name)
 
     wort = name+" = "+rolle   # create a string with the name and the role
     file = open('rollen_log.txt', "r") # open the log file

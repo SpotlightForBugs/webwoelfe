@@ -27,7 +27,7 @@
         {% for el in names if not "Werwolf" in el and not 'Tot' in el and not 'Erzaehler' in el and not '*' in el %} 
             
     <div class='enemyteam'>
-        <a href ="/{{name}}/{{rolle}}/{{ el|replace("=", "")|replace("Dorfbewohner", "")|replace("Hexe", "")|replace("Seherin", "")|replace("Jäger", "") }}/wer_tot">
+        <a href ="/{{name}}/{{rolle}}/{{el|replace("=","")|replace("Dorfbewohner","")|replace("Hexe","")|replace("Seherin","")|replace("Jäger","") }}/wer_tot">
             <p id ='inTag'>{{ el|replace("=", "") |replace("Dorfbewohner", "") |replace("Hexe", "") |replace("Seherin", "") |replace("Jäger", "")|replace("", "")}}</p></a></div><br>
         <br><br> 
     {% endfor %}

@@ -561,14 +561,31 @@ def sehen(name, rolle, auswahl):
 
 @app.route("/<name>/<rolle>/<auswahl>/wer_tot")
 def wer_tot(name, rolle, auswahl):
+    
     wort = name+" = "+rolle  # create a string with the name and the role
     file = open('rollen_log.txt', "r") #    open the log file
     players_vorhanden = file.read() # read the log file
     if wort in players_vorhanden: 
-        pass
+        with open ('hat_gewaehlt.txt', 'r') as f:
+            if name +" : " in f.read():
+                return (render_template("wahl_doppelt.html"))
+            else:
+              auswahl = auswahl.strip()
+            if auswahl in players_vorhanden:
+              print("Eine legetime Auswahl wurde getroffen!")
+              with open('abstimmung.txt','w') as abstimmung:
+               abstimmung.write(auswahl + '\n')
+              abstimmung.close()
+              with open ('hat_gewaehlt.txt', 'r+') as hat_gewaehlt:
+                    hat_gewaehlt.write(name +" : ")
+                    wer_anzahl_stimmen = sum(1 for line in hat_gewaehlt if line.rstrip()) 
+                    if wer_anzahl_stimmen < 4:
+                       return render_template("Dashboards/status/wer_wahl_warten.html") 
+                    else:	
+                     return render_template("Dashboards/status/wer_wahl_ergebnis.html",ergebnis = "1")
+        
     
     
-
 
   
 #context processor

@@ -1,5 +1,3 @@
-
-from tkinter import E
 from flask import Flask, request, url_for, render_template, session, make_response, redirect, Response
 #from flask_session import Session
 import requests, logging, werwolf, datetime, re

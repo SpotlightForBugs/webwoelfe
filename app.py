@@ -1,4 +1,5 @@
 
+from tkinter import E
 from flask import Flask, request, url_for, render_template, session, make_response, redirect, Response
 #from flask_session import Session
 import requests, logging, werwolf, datetime, re
@@ -183,7 +184,7 @@ def Dashboard(name, rolle):  # Dashboard
         except:
             print('[Debug] Fehler beim Auslesen des rollen_logs in app.py line ' + str(getframeinfo(currentframe()).lineno - 1)) # print the error
             
-        return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen)) # render Dash_rolle.html
+        return (render_template("Dashboards/Dash_Dorfbewohner.html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen)) # render Dash_rolle.html
         
      except:
             return render_template("fehler.html") # render fehler.html
@@ -192,6 +193,55 @@ def Dashboard(name, rolle):  # Dashboard
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!") # print the error
         return render_template("url_system.html", name=name, rolle=rolle) # render url_system.html
 
+
+
+@app.route("/<name>/<rolle>/Dashboard_sp")
+def spezielles_Dashboard(name,rolle):
+    if rolle == 'Dorfbewohner' or rolle == 'Tot' or rolle == 'Erzaehler':
+     return render_template("fehler.html")  
+    else:
+         wort = name+" = "+rolle    # create a string with the name and the role
+    file = open('rollen_log.txt', "r") # open the log file
+    players_vorhanden = file.read() # read the log file
+    
+    rolleAusLog = players_vorhanden.split(' = ') # split the log file into a list
+    rolleAusLog = rolleAusLog[1]
+    
+    if rolleAusLog == 'Tot':
+        return render_template('tot.html', name = name) # render tot.html
+    
+     #print (wort) 
+     # print (players_vorhanden[:-1])
+    
+    if wort in players_vorhanden:  # if the name and the role are in the log file
+     
+        players_log = open('rollen_log.txt') # open the log file 
+        players_log = players_log.readlines()   # read the log file
+        
+        nurNamen = []      # create a list with the names
+        
+       
+    for line in players_log: # for every line in the log file
+                
+                if '*' in line: # if the line contains a *
+                    pass # do nothing
+                else:  # if the line does not contain a *
+                    line = line.split(' = ') # split the line at the =
+                    name_line = line[0] 
+                    auswahlRolle = line[1] # set the role to the second part of the line
+                    
+                   # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
+                    
+                    if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler': # if the role is not Tot or the role is not the Erzähler
+                        nurNamen.append(name_line) # append the name to the list
+                        
+        
+        
+    return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen)) # render Dash_rolle.html     
+        
+        
+        
+        
 
 
 @app.route("/waehlen/<name>/<rolle>/<auswahl>")

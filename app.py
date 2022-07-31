@@ -556,16 +556,30 @@ def wahl_stats():
             return render_template("wahlstatus.html", name_tot = name_tot);
   
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+@app.route("/sehen/<name>/<rolle>/<auswahl>")
+def sehen(name, rolle, auswahl):
+    wort = name+" = "+rolle  # create a string with the name and the role
+    file = open('rollen_log.txt', "r") #    open the log file
+    players_vorhanden = file.read() # read the log file
+    if wort in players_vorhanden: # if the string is in the log file
+        players_log = open('rollen_log.txt') # open the log file
+        players_log = players_log.readlines() # read the log file
+        for line in players_log:
+            if auswahl in line:
+                ergebnis = line
+                ergebnis = ergebnis.replace('=', 'hat die Rolle')
+                return (render_template("Dashboards/status/sehen.html", ergebnis = ergebnis)) 
+    
+    
+    
+    
+    
+    else:
+         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")    # print the error
+         return (render_template("url_system.html",name = name, rolle = rolle)) 
+        
+
+
   
 #context processor
   

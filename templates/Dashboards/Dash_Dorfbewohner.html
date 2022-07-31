@@ -27,7 +27,7 @@
     
 
 <ul class="wahllist">
-        {% for el in nurNamen %}
+        {% for el in nurNamen if el != name  %}
         <script>
             
           
@@ -35,7 +35,7 @@
             var text = "{{el}}";    
                 
                 if (text.includes("Erzaehler")==false) {
-                    if (text.includes("{{ name }} =")==false) {
+                    
                         //write a button leading to  '/{{ name }}/{{ rolle }}/wahl/{{ el }}'
                        // document.write("<li><a href='/{{ name }}/{{ rolle }}/wahl/{{ el }}'>{{ el }}</a></li>");
                         document.write("<li><button onclick=location.href='../../waehlen/{{ name }}/{{ rolle }}/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br><br>");

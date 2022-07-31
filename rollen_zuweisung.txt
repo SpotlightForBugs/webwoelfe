@@ -1,1 +1,1 @@
-{}
+{'Werwolf': 1, 'Dorfbewohner': 1}

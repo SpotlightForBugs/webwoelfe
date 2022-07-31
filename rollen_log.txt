@@ -1,4 +1,7 @@
 *********************
-a = Dorfbewohner 
-b = Tot 
-c = Dorfbewohner
+d = Seherin
+ff = Hexe
+hh = Dorfbewohner
+kk = Werwolf
+zz = Dorfbewohner
+sss = Dorfbewohner

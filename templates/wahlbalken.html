@@ -2,7 +2,7 @@
 
 
 {% block body %}
-{% for el in names %}
+{% for el in names if el != name %}
         <script>
             
           
@@ -24,8 +24,9 @@
                 var element = document.getElementById(id);
                 element.style.width = count + "%";
             }
+
             changeStyle("{{el}}", 50);
-            
+
         </script>
 
 {% endfor %}

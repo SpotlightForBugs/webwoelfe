@@ -5,3 +5,4 @@ hh = Dorfbewohner
 kk = Werwolf
 zz = Dorfbewohner
 sss = Dorfbewohner
+koder = Werwolf

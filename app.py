@@ -307,8 +307,8 @@ def warten():     # function for the wait function
                     
                 #print(file_list)
                 
-                name_tot.strip('\n')
-                name_tot.replace('\n', '')
+                name_tot = name_tot.strip('\n')
+                name_tot = name_tot.replace('\n', '')
 
                 while counter_tot < len(file_list):
                     

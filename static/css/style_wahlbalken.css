@@ -194,15 +194,15 @@
   
   .wahlbalken{
   border-radius: 25px;
-  background: #9f3a07;
   margin: auto;
+  background: #9f3a07;
   padding: 20px;
-  width: 90%;
+  width: 100%;
   height: 50px;
   }
   
   .wahlbalkenIframe{
-    width: 60%;
+    width: 70%;
     height: 60px;
     margin-left: auto;
     display: inline;

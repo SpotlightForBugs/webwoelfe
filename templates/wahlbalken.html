@@ -1,7 +1,7 @@
 {% extends 'struktur_wahlbalken.html' %}
 
-{% block body %}
 
+{% block body %}
 {% for el in names %}
         <script>
             
@@ -19,6 +19,12 @@
                 
                         
             }
+
+            function changeStyle(id, count) {
+                var element = document.getElementById(id);
+                element.style.width = count + "%";
+            }
+            changeStyle("{{el}}", 50);
             
         </script>
 

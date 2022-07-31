@@ -31,7 +31,19 @@
     </script>
 {% endfor %}
         </div>
-
+        {% for el in names if not "Werwolf" in el and not 'Tot' in el and not 'Erzaehler' in el and not '*' in el %} <!--for EachLine in names...-->
+        <script>
+            
+            var text = `{{ el }}`;
+            
+            if (!text.includes("{{ name }}")) {
+                text = text.replace("=", "");
+                text = text.replace("Hexe", "");
+                
+                document.write("<div class='team'><p id ='inTag'>"+text+"</p></div><br>");
+            }
+        </script>
+    {% endfor %}
       </div>
 
 

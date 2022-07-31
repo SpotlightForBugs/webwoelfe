@@ -448,27 +448,7 @@ def rausschmeissen(name,rolle): # function for the kick function
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")     # print the error
         return render_template("url_system.html", name=name, rolle=rolle)   # render the url_system.html
 
-#Resultat Dorf
- 
-@app.route("/<name>/<rolle>/resultat_Dorf") # route for the resultat_Dorf function
-def resultatDorf(name, rolle):  # function for the resultat_Dorf function
 
-    wort = name+" = "+rolle     # create a string with the name and the role
-    file = open('rollen_log.txt', "r") # open the log file
-    players_vorhanden = file.read() # read the log file
-    print (wort)  # print the string
-    print (players_vorhanden) # print the log file
-    if wort in players_vorhanden: # if the string is in the log file
-     try: # try to get the role
-        players_log = open('rollen_log.txt') # open the log file
-        players_log = players_log.readlines() # read the log file
-        return (render_template("Dashboards/status/resultat_Dorf.html", name=name, rolle=rolle, names = players_log)) # render the resultat_Dorf.html
-     except: 
-            return render_template("fehler.html") # render the fehler.html
-        
-    else: 
-        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!") # print the error
-        return render_template("url_system.html", name=name, rolle=rolle) # render the url_system.html
     
     
 #resultat_Werwolf

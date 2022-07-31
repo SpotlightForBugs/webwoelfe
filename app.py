@@ -62,8 +62,9 @@ def get_data(): # get the data from the form
             name = name.replace('3','e') #3 ist immer ein e
             name = name.replace('4','a') #4 ist immer ein a 
             name = name.replace('/',"_") #/ ist immer ein _ 
-            name = name.replace('=',"_") #gleich ist immer _
+            name = name.replace('=',"-") #gleich ist immer -
             name = name.replace(':',"_") #doppelpunkt ist immer _
+            name = name.replace('*',"_") #stern ist immer _
             players_log = open('rollen_log.txt') # open the log file
             players_log = players_log.read() # read the log file
             name_ueberpruefung = name + ' = ' # create a string with the name and =
@@ -558,6 +559,17 @@ def sehen(name, rolle, auswahl):
          print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")    # print the error
          return (render_template("url_system.html",name = name, rolle = rolle)) 
         
+
+
+@app.route("/<name>/<rolle>/<auswahl>/wer_tot")
+def wer_tot(name, rolle, auswahl):
+    wort = name+" = "+rolle  # create a string with the name and the role
+    file = open('rollen_log.txt', "r") #    open the log file
+    players_vorhanden = file.read() # read the log file
+    if wort in players_vorhanden: 
+        pass
+    
+    
 
 
   

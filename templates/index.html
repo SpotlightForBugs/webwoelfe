@@ -10,7 +10,7 @@ active
     
     <form class="form-control-lg" action="{{ url_for('get_data') }}" method="POST">
       
-      <input type="text" id="input" name="name" placeholder="Dein Name" required>
+      <input type="text" id="input" maxlength="15"  name="name" placeholder="Dein Name" required>
       <input class='btn btn-dark'  type="submit" value="speichern">
     </form>
     <br>

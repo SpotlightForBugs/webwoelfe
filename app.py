@@ -555,7 +555,7 @@ def wer_tot(name, rolle, auswahl):
                abstimmung.write(auswahl + '\n')
               abstimmung.close()
               with open ('hat_gewaehlt.txt', 'a') as hat_gewaehlt:
-                    hat_gewaehlt.write(name +" : ")
+                    hat_gewaehlt.write(name +" : " +"\n")
                     return render_template("Dashboards/status/wer_wahl_warten.html") 
     
     

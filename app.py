@@ -104,9 +104,13 @@ def get_data(): # get the data from the form
                                 print(soll_anzahl)
                             
                             if soll_anzahl == spieler_zahl:
-                                with open('rollen_log.txt','r') as tritopDasOrginal, open('rollen_orginal.txt','a') as kopie:
-                                        for line in tritopDasOrginal:
+                                with open('rollen_log.txt','r') as original, open('rollen_original.txt','a') as kopie:
+                                        for line in original:
                                             kopie.write(line)
+
+                                # with open('rollen_log.txt','r') as tritopDasOriginal, open('rollen_original.txt','a') as kopie:
+                                #         for line in tritopDasOriginal:
+                                #             kopie.write(line)
 
                             return render_template('rollen_zuweisung.html', players = num, name = name, operator = operator)    # render rollen_zuweisung.html     
                 except:

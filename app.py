@@ -87,6 +87,18 @@ def get_data(): # get the data from the form
                             names.write(f'{name} = {operator}') # write the name and the operator to the log file
                             #names.write(f'{date}: {name} = {operator}')
                             names.write('\n') # write a new line to the log file
+                            
+                            
+                            spieler_zahl = sum(1 for line in names if line.rstrip() and not '*' in names)
+                            
+                            with open('spieler_anzahl.txt', 'r') as anzahl:
+                                soll_anzahl = anzahl.read()
+                                print(soll_anzahl)
+                            
+                            if soll_anzahl == spieler_zahl:
+                                with open('rollen_log.txt','r') as tritopDasOrginal, open('rollen_orginal.txt','a') as kopie:
+                                        for line in tritopDasOrginal:
+                                            kopie.write(line)
 
                             return render_template('rollen_zuweisung.html', players = num, name = name, operator = operator)    # render rollen_zuweisung.html     
                 except:

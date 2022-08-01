@@ -90,7 +90,7 @@ def get_data(): # get the data from the form
                             #names.write(f'{date}: {name} = {operator}')
                             names.write('\n') # write a new line to the log file
                             
-                            print('Spielerzahl:' spieler_zahl) # print the number of players
+                            print('Spielerzahl:' + spieler_zahl) # print the number of players
                             
                             for line in names: # for every line in the log file
                                 spieler_zahl = spieler_zahl + 1

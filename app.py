@@ -89,7 +89,10 @@ def get_data(): # get the data from the form
                             names.write('\n') # write a new line to the log file
                             
                             
-                            spieler_zahl = sum(1 for line in names if line.rstrip() and not '*' in names)
+                            spieler_zahl = sum(1 for line in names if line.rstrip()) # get the number of players
+                            spieler_zahl = spieler_zahl - 1 # subtract 1 from the number of players
+                            
+                            print('Spielerzahl')
                             
                             with open('spieler_anzahl.txt', 'r') as anzahl:
                                 soll_anzahl = anzahl.read()

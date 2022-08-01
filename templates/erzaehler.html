@@ -12,20 +12,39 @@ active
     <div class="col-sm-5">
     {% for el in names[1:] %} <!--Nicht den ersten Eintrag zeigen-->
       <ul style="list-style:none; text-align:left;">
-          <li><input id="mark_it" type="checkbox" onclick="mark(this)"><span></span>{{ el }}</li>
-          <form action="{{ url_for('reset') }}" method="POST" type="submit">
+          <li>{{ el |replace ("="," --> ") }}</li>
+          
       </ul>
     {% endfor %}
     </div>
    
 
+<table class="table">
+  <thead>
+    <tr>
+      <th></th>
+      <th id="rot">Gefahrenzone</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td scope="row"></td>
+      <td>
+        <div>
+          <form action="{{ url_for('reset') }}" method="POST">
+            <input class='btn btn-dark' type="submit" name="reset_button" value="Neues Spiel">
+          </form>
+          </div>
+          <div>
+      </td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
 
-  <div>
-  <form action="{{ url_for('reset') }}" method="POST">
-    <input class='btn btn-dark' type="submit" name="reset_button" value="Neues Spiel">
-  </form>
-  </div>
-  <div>
+
+  
     
   
   <br>

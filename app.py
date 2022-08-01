@@ -87,7 +87,7 @@ def get_data(): # get the data from the form
                             names.write(f'{name} = {operator}') # write the name and the operator to the log file
                             #names.write(f'{date}: {name} = {operator}')
                             names.write('\n') # write a new line to the log file
-                           
+                            ### TODO #14
                             return render_template('rollen_zuweisung.html', players = num, name = name, operator = operator)    # render rollen_zuweisung.html     
                 except:
                     return render_template('neu_laden.html') # render neu_laden.html

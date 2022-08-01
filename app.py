@@ -551,10 +551,10 @@ def wer_tot(name, rolle, auswahl):
               auswahl = auswahl.strip() #erase the whitespace %20
             if auswahl in players_vorhanden:
               print("Eine legetime Auswahl wurde getroffen!")
-              with open('abstimmung.txt','w') as abstimmung:
+              with open('abstimmung.txt','a') as abstimmung:
                abstimmung.write(auswahl + '\n')
               abstimmung.close()
-              with open ('hat_gewaehlt.txt', 'r+') as hat_gewaehlt:
+              with open ('hat_gewaehlt.txt', 'a') as hat_gewaehlt:
                     hat_gewaehlt.write(name +" : ")
                     return render_template("Dashboards/status/wer_wahl_warten.html") 
     

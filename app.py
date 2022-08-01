@@ -94,8 +94,12 @@ def get_data(): # get the data from the form
                                 if not testCharacter:
                                     aktiveSpieler.write('1')
                                     spieler_zahl = 1
+                                    print('Geschrieben: ' + spieler_zahl)
                                 else:
-                                    spieler_zahl = aktiveSpieler.read(1)
+                                    spieler_zahl = int(aktiveSpieler.read(1))
+                                    spieler_zahl += 1
+                                    
+                                    aktiveSpieler.write(spieler_zahl)
                                 
                                 
                             print('Spielerzahl:' + spieler_zahl) # print the number of players

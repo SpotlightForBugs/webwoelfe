@@ -1,8 +1,2 @@
 *********************
-d = Werwolf 
-ff = Hexe
-hh = Tot 
-kk = Werwolf
-zz = Dorfbewohner
-sss = Dorfbewohner
-koder = Tot
+ztzt = Hexe

@@ -240,6 +240,37 @@ def spezielles_Dashboard(name,rolle):
         
         
         
+
+
+@app.route("/<name>/<rolle>/spiel_ende")
+def spiel_ende(name,rolle):
+     wort = name+" = "+rolle 
+     file = open('rollen_log.txt', "r") 
+     players_vorhanden = file.read()
+     print (wort)  
+     print (players_vorhanden) 
+    
+     if wort in players_vorhanden:
+         if 'Werwolf' in players_vorhanden and 'Dorfbewohner' in players_vorhanden or 'Hexe' in players_vorhanden or 'Seherin' in players_vorhanden or 'Jäger' in players_vorhanden or 'Armor' in players_vorhanden:
+           return(f'Spiel ist noch nicht beendet!')  
+         else: 
+            print('Spiel ist beendet!')
+            
+            if rolle == 'Werwolf':
+                if 'Werwolf' in players_vorhanden:
+                    return(render_template('gewonnen.html', name=name, rolle=rolle,unschuldig=0))
+                else:
+                    return(render_template('verloren.html', name=name, rolle=rolle,unschuldig=0))
+                    
+               
+            else :
+               if 'Werwolf' in players_vorhanden:
+                    return(render_template('verloren.html', name=name, rolle=rolle,unschuldig=1))
+               else:
+                    return(render_template('gewonnen.html', name=name, rolle=rolle,unschuldig=1))
+             
+    
+
         
 
 
@@ -629,6 +660,17 @@ def wer_wahl_warten():
                 return (render_template("Dashboards/status/wer_wahl_ergebnis.html", name=name ))
              else:
                   return (render_template("Dashboards/status/wer_wahl_warten.html"))
+
+
+
+
+
+
+
+
+
+
+
 #context processor
   
                          

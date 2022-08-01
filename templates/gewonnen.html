@@ -1,15 +1,20 @@
-<!DOCTYPE html>
-<html>
+{% extends 'struktur.html' %}
 
-    <link rel="stylesheet" href="style.css">
+{% block body %}
+
+
+ 
 
     <title>Du hast Gewonnen!</title>
     <h1>Herzlichen Glueckwunsch, <br/> Ihr habt es geschaft!</h1>
     <br/>
     <h2>Hier findet ihr die Spielenden-Uebersicht</h2>
-    <iframe src="overview_murder.html", scrolling="auto", height="600px"></iframe>
+    <br>
+    <br>
+    <iframe src="{{ url_for('overview_all',ist_unschuldig = unschuldig) }}", scrolling="no", height="1000px"></iframe>
 
-</html>
+
+{% endblock %}
 
 
 

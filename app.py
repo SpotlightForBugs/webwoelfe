@@ -7,6 +7,8 @@ from datetime import datetime
 
 app = Flask(__name__)
 
+spieler_zahl = 0
+
 ##index page
 
 @app.route('/', methods = ['GET','POST'])   # Homepage  
@@ -88,11 +90,14 @@ def get_data(): # get the data from the form
                             #names.write(f'{date}: {name} = {operator}')
                             names.write('\n') # write a new line to the log file
                             
+                            print('Spielerzahl:' spieler_zahl) # print the number of players
                             
-                            spieler_zahl = sum(1 for line in names if line.rstrip()) # get the number of players
-                            spieler_zahl = spieler_zahl - 1 # subtract 1 from the number of players
+                            for line in names: # for every line in the log file
+                                spieler_zahl = spieler_zahl + 1
                             
-                            print('Spielerzahl')
+                            #spieler_zahl = sum(1 for line in names if line.rstrip()) # get the number of players
+                            #spieler_zahl = spieler_zahl - 1 # subtract 1 from the number of players
+                            spieler_zahl = 2
                             
                             with open('spieler_anzahl.txt', 'r') as anzahl:
                                 soll_anzahl = anzahl.read()

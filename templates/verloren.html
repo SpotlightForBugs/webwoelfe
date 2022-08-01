@@ -1,17 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="style.css">
+{% extends 'struktur.html' %}
+
+{% block body %}
 
 
-
-</head>
-
-<body>
     <title>Du hast Verloren!</title>
     <h1>Du Hast Verloren!<br/> Das generische Team hat dich besiegt</h1>
     <br/>
-    <h2>Hier findet ihr die Spielenden-Uebersicht</h2> 
+    <h2>Hier findet ihr die Spielenden-Übersicht</h2> 
+    <br>
+    <br>
 
   
 
@@ -23,6 +20,5 @@
     </script>
 
 
-    <iframe src="overview_innocent.html", scrolling="auto", height="600"></iframe>
-</body>
-</html>
+    <iframe src="{{ url_for('overview_all',ist_unschuldig = unschuldig) }}", scrolling="no", height="1000px"></iframe>
+{%endblock%}

@@ -3,6 +3,7 @@ from flask import Flask, request, url_for, render_template, session, make_respon
 import requests, logging, werwolf, datetime, re
 from inspect import currentframe, getframeinfo
 from datetime import datetime
+from flask_socketio import SocketIO, emit
 
 
 app = Flask(__name__)

@@ -90,7 +90,7 @@ def get_data(): # get the data from the form
                             #names.write(f'{date}: {name} = {operator}')
                             names.write('\n') # write a new line to the log file
                             
-                            print('Spielerzahl:' spieler_zahl) # print the number of players
+                            print('Spielerzahl:' + spieler_zahl) # print the number of players
                             
                             for line in names: # for every line in the log file
                                 spieler_zahl = spieler_zahl + 1
@@ -269,7 +269,7 @@ def spezielles_Dashboard(name,rolle):
 @app.route("/<name>/<rolle>/spiel_ende")
 def spiel_ende(name,rolle):
      wort = name+" = "+rolle 
-     file = open('rollen_log.txt', "r") 
+     file = open('rollen_original.txt', "r") 
      players_vorhanden = file.read()
      print (wort)  
      print (players_vorhanden) 

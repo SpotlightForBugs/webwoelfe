@@ -223,7 +223,7 @@ def Dashboard(name, rolle):  # Dashboard
 
 @app.route("/<name>/<rolle>/Dashboard_sp")
 def spezielles_Dashboard(name,rolle):
-    if rolle == 'Dorfbewohner' or rolle == 'Tot' or rolle == 'Erzaehler':
+    if rolle == 'Tot':
      return render_template("fehler.html")  
     else:
          wort = name+" = "+rolle    # create a string with the name and the role

@@ -147,7 +147,6 @@ def reset():
         return(render_template('index.html'))  #zurück zur homepage
 
 
-#@app.route("/<name>/<rolle>/toeten/<name_kill>") #kill a player
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>") #kill a player
 def kill_player(name,rolle,name_kill):

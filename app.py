@@ -1,3 +1,4 @@
+from cgi import print_form
 from flask import Flask, request, url_for, render_template, session, make_response, redirect, Response
 #from flask_session import Session
 import requests, logging, werwolf, datetime, re
@@ -122,8 +123,25 @@ def reset():
             with open('rollen_log.txt','w+') as f: #leere rollen_log.txt
                 f.write('*********************\n') 
                 f.close #schließen der datei
+            file = open("abstimmung.txt","r+")
+            file.truncate(0)
+            file.close()    
+            file2 = open("rollen_original.txt","r+")
+            file2.truncate(0)
+            file2.close()    
+            file3 = open("hat_gewaehlt.txt","r+")
+            file3.truncate(0)
+            file3.close()    
+            
+            
+                
+                
+                
+                
+                
+                
             return(render_template('einstellungen.html')) #zurück zur einstellungen
-    elif request.method == 'GET': #wenn reset gewuenscht
+    elif request.method == 'GET': 
         return(render_template('index.html'))  #zurück zur homepage
 
 
@@ -261,7 +279,12 @@ def spiel_ende(name,rolle):
     
      if wort in players_vorhanden:
          if 'Werwolf' in players_vorhanden and 'Dorfbewohner' in players_vorhanden or 'Hexe' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Seherin' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Jäger' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Armor' in players_vorhanden and 'Werwolf' in players_vorhanden:
-           return(f'Spiel ist noch nicht beendet!')  
+           
+           
+           
+           print('Spiel nicht zuende')
+           
+           return(render_template("spiel_nicht_zuende.html", name=name, rolle=rolle))
          else: 
             print('Spiel ist beendet!')
             

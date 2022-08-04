@@ -183,7 +183,22 @@ def kill_player(name_kill):
     return(render_template('Dashboards/Dash_Dorfbewohner.html'))
 
 
+@app.route("/<name>/Armor_aktion/<player1>/<player2>") #player auswahl
+def armor_player(player1, player2, name):
+    rolle = "Armor"
     
+    wort = name+" = "+rolle    # create a string with the name and the role
+    file = open('rollen_log.txt', "r") # open the log file
+    players_vorhanden = file.read() # read the log file
+    
+    if wort in players_vorhanden:
+        lover_one = player1
+        lover_two = player2
+        
+        print(lover_one+" LIEBT "+lover_two)
+        
+        return(render_template('Dashboards/Dash_Armor.html'))
+
 
 ##Übersicht der Spieler
 

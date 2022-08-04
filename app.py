@@ -145,6 +145,45 @@ def reset():
         return(render_template('index.html'))  #zurück zur homepage
 
 
+@app.route("/player/kill/<name>") #kill a player
+def kill_player(name):
+    with open('rollen_log.txt', 'r+') as fileTot_kill:
+
+        file_list_kill = []
+        counter_tot = 0
+
+        for line in fileTot_kill:
+            file_list_kill.append(line)
+            
+        #print(file_list)
+        
+        name = name.strip('\n')
+        name = name.replace('\n', '')
+
+        while counter_tot < len(file_list_kill):
+            
+            #print(name_tot + ' - File List: ' + file_list[counter_tot])
+            print('Name Tot: ' + name + ' =')
+            
+            if name in file_list_kill[counter_tot]:      
+                #print("If")
+                dffd = file_list_kill[counter_tot].split(" = ")
+                new_line = dffd[0] + " = Tot \n"
+                #print(new_line)
+                file_list_kill[counter_tot] = new_line
+                #print(file_list)
+
+            counter_tot = counter_tot+1                
+    fileTot_kill.close()    
+    with open('rollen_log.txt', 'w') as fileFinal:
+        fileFinal.writelines(file_list_kill)    
+    fileFinal.close() 
+    
+    return('Dash_Dorfbewohner.html')
+
+
+    
+
 ##Übersicht der Spieler
 
 @app.route("/uebersicht/<ist_unschuldig>") # Übersicht
@@ -247,7 +286,7 @@ def spezielles_Dashboard(name,rolle):
         nurNamen = []      # create a list with the names
         
        
-    for line in players_log: # for every line in the log file
+        for line in players_log: # for every line in the log file
                 
                 if '*' in line: # if the line contains a *
                     pass # do nothing

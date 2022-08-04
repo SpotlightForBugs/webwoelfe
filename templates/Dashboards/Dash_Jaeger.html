@@ -1,0 +1,55 @@
+{% extends 'struktur.html' %}
+
+{% block body %}
+
+<div class="container-fluid">
+    
+    <div class="row">
+        <div class="col-md-12">
+            <h2>{{rolle}}</h2>
+        </div>
+    </div>
+        <div class="col-md-11"> 
+        </div class="col-md-10">
+  <!--Rolleneigenes-->
+    <div class="row">
+        <div class="col-md-12">
+            <p>Als {{ rolle }} darfst du, da du jetzt tot bist noch eine Person in den Tot reissen</p>
+            <p>{{ rolle }} spielen auf der Seite der Dorfbewohner<p/>
+            <p>Töte deshalb vorzugweise Werwölfe</p>
+        </div>	
+        </div>
+        <ul class="wahllist">
+
+        {% for el in nurNamen if el != name %}
+        <script>
+            
+          
+            console.log("{{el}}");	
+            var text = "{{el}}";    
+                
+                if (text.includes("Erzaehler")==false) {
+                    
+                        document.write("<li><button onclick=location.href='{{ url_for('kill_player', name = el) }}' class='chooseplayer' id='"+text+"' >"+text+"</p></button></li><br>");
+                        btn = document.getElementById(text);
+                        btn.addEventListener('click', function onClick(event) {
+                            console.log(document.activeElement);
+                            console.log(text+""); 
+                        });
+                }
+            
+            
+        </script>
+
+        {% endfor %}
+        </ul>
+
+      </div>
+    
+
+
+
+
+
+{% endblock %}
+

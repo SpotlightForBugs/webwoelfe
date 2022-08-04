@@ -25,13 +25,13 @@ def createDict():
     if erzaehler_flag == 1:  
       #  print("erzaehler ist zufaellig")
         if jaeger > 0:
-            assign = {'Erzaehler' : 1, 'Werwolf' : werwolf, 'Armor' : armor,  'Hexe' : hexe, 'Seherin' : seherin, 'Jäger' : jaeger, 'Dorfbewohner' : (spieleranzahl-armor-werwolf-seherin-hexe-jaeger-1)} 
+            assign = {'Erzaehler' : 1, 'Werwolf' : werwolf, 'Armor' : armor,  'Hexe' : hexe, 'Seherin' : seherin, 'Jaeger' : jaeger, 'Dorfbewohner' : (spieleranzahl-armor-werwolf-seherin-hexe-jaeger-1)} 
         else:
             assign = {'Erzaehler' : 1, 'Werwolf' : werwolf, 'Armor' : armor, 'Hexe' : hexe, 'Seherin' : seherin, 'Dorfbewohner' : (spieleranzahl-werwolf-seherin-hexe-armor-1)}
     elif erzaehler_flag == 0:
       #  print("erzaehler ist nicht zufaellig")
         if jaeger > 0:
-            assign = {'Werwolf' : werwolf, 'Hexe' : hexe,'Armor' : armor, 'Seherin' : seherin, 'Jäger' : jaeger, 'Dorfbewohner' : (spieleranzahl-werwolf-seherin-hexe-jaeger-armor)}
+            assign = {'Werwolf' : werwolf, 'Hexe' : hexe,'Armor' : armor, 'Seherin' : seherin, 'Jaeger' : jaeger, 'Dorfbewohner' : (spieleranzahl-werwolf-seherin-hexe-jaeger-armor)}
         else:
             assign = {'Werwolf' : werwolf, 'Hexe' : hexe, 'Armor' : armor, 'Seherin' : seherin, 'Dorfbewohner' : (spieleranzahl-werwolf-seherin-hexe-armor)}
     keys = [ key for key in assign]

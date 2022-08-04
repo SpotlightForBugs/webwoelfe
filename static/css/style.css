@@ -207,3 +207,18 @@ height: 50px;
   margin-left: auto;
   display: inline;
 }
+
+.chooseplayer{
+  border-radius: 10px;
+  background-color: #27b80e;
+  padding: 15px;
+  width: 60%;
+  height: 50px;
+  border: 0px;
+  font-weight: bold;
+  font-size: 20px;
+  display: inline;
+  margin: auto;
+  padding: 0;
+}
+

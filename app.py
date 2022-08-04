@@ -145,8 +145,8 @@ def reset():
         return(render_template('index.html'))  #zurück zur homepage
 
 
-@app.route("/player/kill/<name>") #kill a player
-def kill_player(name):
+@app.route("/player/kill/<name_kill>") #kill a player
+def kill_player(name_kill):
     with open('rollen_log.txt', 'r+') as fileTot_kill:
 
         file_list_kill = []
@@ -157,15 +157,15 @@ def kill_player(name):
             
         #print(file_list)
         
-        name = name.strip('\n')
-        name = name.replace('\n', '')
+        name_kill = name_kill.strip('\n')
+        name_kill = name_kill.replace('\n', '')
 
         while counter_tot < len(file_list_kill):
             
             #print(name_tot + ' - File List: ' + file_list[counter_tot])
-            print('Name Tot: ' + name + ' =')
+            print('Name Tot: ' + name_kill + ' =')
             
-            if name in file_list_kill[counter_tot]:      
+            if name_kill + ' =' in file_list_kill[counter_tot]:      
                 #print("If")
                 dffd = file_list_kill[counter_tot].split(" = ")
                 new_line = dffd[0] + " = Tot \n"
@@ -179,7 +179,7 @@ def kill_player(name):
         fileFinal.writelines(file_list_kill)    
     fileFinal.close() 
     
-    return('Dash_Dorfbewohner.html')
+    return(render_template('Dashboards/Dash_Dorfbewohner.html'))
 
 
     
@@ -288,7 +288,7 @@ def spezielles_Dashboard(name,rolle):
        
         for line in players_log: # for every line in the log file
                 
-                if '*' in line: # if the line contains a *
+                if '*' in line or 'Tot' in line or 'Erzaehler' in line: # if the line contains a *
                     pass # do nothing
                 else:  # if the line does not contain a *
                     line = line.split(' = ') # split the line at the =
@@ -296,9 +296,7 @@ def spezielles_Dashboard(name,rolle):
                     auswahlRolle = line[1] # set the role to the second part of the line
                     
                    # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
-                    
-                    if auswahlRolle != 'Tot' and auswahlRolle != 'Erzaehler': # if the role is not Tot or the role is not the Erzähler
-                        nurNamen.append(name_line) # append the name to the list
+                    nurNamen.append(name_line) # append the name to the list
                         
         
         

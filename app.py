@@ -279,13 +279,11 @@ def spiel_ende(name,rolle):
     
      if wort in players_vorhanden:
          if 'Werwolf' in players_vorhanden and 'Dorfbewohner' in players_vorhanden or 'Hexe' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Seherin' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Jäger' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Armor' in players_vorhanden and 'Werwolf' in players_vorhanden:
+             return(f'Hallo {name}, das Spiel ist noch nicht beendet!')
+         else:
            
            
-           
-           print('Spiel nicht zuende')
-           
-           return(render_template("spiel_nicht_zuende.html", name=name, rolle=rolle))
-         else: 
+
             print('Spiel ist beendet!')
             
             if rolle == 'Werwolf':

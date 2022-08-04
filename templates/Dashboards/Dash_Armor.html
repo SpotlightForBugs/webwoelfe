@@ -7,52 +7,9 @@
   
             <h2>Hallo, {{name}}</h2> <br>
             <p>Als {{rolle}} wählst du nun zwei Personen aus, die sich unsterblich ineinader verlieben.</p>
-    
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header bg-success">
-                            <h3>Person 1</h3>
-                        </div>
-                        <div class="card-body bg-secondary">
-                            <form>
-                                {% for el in nurNamen if not name in el %}
-                            <div class="form-check">
-                                <label for="cbx">{{el}} </label>
-                               
-                                <input id="cbx" type="checkbox" name="cbx" value="{{el}}" unchecked>
-                              </div>
-                              </form>
+            
 
-                           
-                        
-                            {%endfor%}
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header bg-success">
-                            <h3>Person 2</h3>
-                        </div>
-                        <div class="card-body bg-secondary">
-                            <form>
-                                {% for el in nurNamen if not name in el %}
-                            <div class="form-check">
-                                <label for="cbx">{{el}} </label>
-                               
-                                <input id="cbx" type="checkbox" name="cbx" value="{{el}}" unchecked>
-                              </div>
-                              </form>
-
-                           
-                        
-                            {%endfor%}
-                        </div>
-                    </div>
-                </div>
-
-
+<!--TODO- #21 Auswahl der beiden Partner:innen->         
 
 
 {% endblock %}

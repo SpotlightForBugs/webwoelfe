@@ -88,37 +88,15 @@ def get_data(): # get the data from the form
                             names.write(f'{name} = {operator}') # write the name and the operator to the log file
                             #names.write(f'{date}: {name} = {operator}')
                             names.write('\n') # write a new line to the log file
-                            
-                            with open('aktive_spieler.txt', 'r+') as aktiveSpieler: # open the file with the active players
-                                testCharacter = aktiveSpieler.read(1)
-                                
-                                if not testCharacter:
-                                    aktiveSpieler.write('1')
-                                    spieler_zahl = 1
-                                    print('Geschrieben: ' + spieler_zahl)
-                                else:
-                                    spieler_zahl = int(aktiveSpieler.read(1))
-                                    spieler_zahl += 1
-                                    
-                                    aktiveSpieler.write(spieler_zahl)
-                                
-                                
-                            print('Spielerzahl:' + spieler_zahl) # print the number of players
-                            
-                            
-                            with open('spieler_anzahl.txt', 'r') as anzahl:
-                                soll_anzahl = anzahl.read()
-                                print(soll_anzahl)
-                            
-                            if soll_anzahl == spieler_zahl:
-                                with open('rollen_log.txt','r') as original, open('rollen_original.txt','a') as kopie:
-                                        for line in original:
-                                            kopie.write(line)
-
-                                # with open('rollen_log.txt','r') as tritopDasOriginal, open('rollen_original.txt','a') as kopie:
-                                #         for line in tritopDasOriginal:
-                                #             kopie.write(line)
-
+                            names.close()
+                        with open('rollen_original.txt', 'a') as names: # append the name to the log file
+                            names.write(f'{name} = {operator}') # write the name and the operator to the log file
+                            #names.write(f'{date}: {name} = {operator}')
+                            names.write('\n') # write a new line to the log file  
+                          
+                          
+                          
+                          
                             return render_template('rollen_zuweisung.html', players = num, name = name, operator = operator)    # render rollen_zuweisung.html     
                 except:
                     return render_template('neu_laden.html') # render neu_laden.html
@@ -282,7 +260,7 @@ def spiel_ende(name,rolle):
      print (players_vorhanden) 
     
      if wort in players_vorhanden:
-         if 'Werwolf' in players_vorhanden and 'Dorfbewohner' in players_vorhanden or 'Hexe' in players_vorhanden or 'Seherin' in players_vorhanden or 'Jäger' in players_vorhanden or 'Armor' in players_vorhanden:
+         if 'Werwolf' in players_vorhanden and 'Dorfbewohner' in players_vorhanden or 'Hexe' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Seherin' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Jäger' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Armor' in players_vorhanden and 'Werwolf' in players_vorhanden:
            return(f'Spiel ist noch nicht beendet!')  
          else: 
             print('Spiel ist beendet!')

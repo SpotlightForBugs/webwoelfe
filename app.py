@@ -697,6 +697,8 @@ def wer_wahl_warten():
 
 @app.route('/partner/<nummer>/<nummer2>',methods = ['GET','POST'])
 def partner(nummer,nummer2 ):
+    pass
+
     
    
          

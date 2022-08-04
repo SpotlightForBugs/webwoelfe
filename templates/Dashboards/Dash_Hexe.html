@@ -9,8 +9,40 @@
     
 
 
+Als Hexe kannst du zweimal im Spiel einen Zauber wirken.<br>
+
+Du kannst eine Person umbringen, <br>
+eine Person heilen (Auch dich selbst, wenn Du einmal tot bist.) <br>
+
+Du kannst natürlich auch keine Person umbringen oder heilen.
 
 
+<div class="spacer"><br><br></div>
+
+
+    <!--Wenn aktionen erlaubt:-->
+    <div class="btn-group-vertical">
+            
+            <input name="" id="" class="btn btn-success" type="button" value="heilen">
+            <input name="" id="" class="btn btn-info" type="button" value="ignorieren">
+            <input name="" id="" class="btn btn-danger" onclick="document.getElementById('toeten').style.visibility= 'visible'" type="button" value="Eine zusätzliche Person umbringen">
+
+</div>
+
+
+
+<div style="visibility:hidden;" id="toeten">
+
+    <br>
+<ul style="list-style-type :none;">
+{%for el in nurNamen if not name in el%}
+
+<li><button onclick=location.href="{{ url_for('kill_player', name_kill = el,name=name,rolle=rolle) }}" class='wahlfeld' id='"+text+"' >{{el}}</p></button></li><br><br><br>
+
+
+{%endfor%}
+</div>
+</ul>
 
 {% endblock %}
 

@@ -94,6 +94,7 @@ def get_data(): # get the data from the form
                             names.write(f'{name} = {operator}') # write the name and the operator to the log file
                             #names.write(f'{date}: {name} = {operator}')
                             names.write('\n') # write a new line to the log file  
+                            #credits to @joschicraft 
                           
                           
                           
@@ -694,11 +695,16 @@ def wer_wahl_warten():
 
 
 
-
-
-
-
-
+@app.route('/partner/<nummer>/<nummer2>',methods = ['GET','POST'])
+def partner(nummer,nummer2 ):
+    
+   
+         
+         
+         
+         
+     
+    
 
 
 #context processor

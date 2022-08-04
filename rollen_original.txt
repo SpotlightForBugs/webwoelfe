@@ -1,0 +1,5 @@
+a = Hexe
+b = Werwolf
+c = Seherin
+d = Werwolf
+e = Armor

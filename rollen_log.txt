@@ -1,9 +1,6 @@
 *********************
-robert = Werwolf
-aw = Seherin
-EW = Armor
-WE = Hexe
-WER = Werwolf
-RAWE = Dorfbewohner
-WAR = Dorfbewohner
-TAAT = Dorfbewohner
+a = Hexe
+b = Werwolf
+c = Seherin
+d = Werwolf
+e = Armor

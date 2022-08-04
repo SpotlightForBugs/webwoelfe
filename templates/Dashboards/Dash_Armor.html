@@ -10,7 +10,37 @@
             
 
 <!--TODO- #21 Auswahl der beiden Partner:innen-->         
+<script>
+    let link = "";
+    
 
+    function addToLink(nextString) {
+        link = link.concat("/", nextString);
+        console.log(link);
+    }
+</script>
+
+
+<ul class='wahllist'>
+    {% for el in nurNamen if el != name %}
+        <script>
+            
+            //name/rolle/partner1/partner2
+
+            
+                console.log("{{el}}");	
+                var text = "{{el}}";    
+                    
+                    if (text.includes("Erzaehler")==false) {
+                        
+                            document.write("<li><button onclick=addToLink({{el}}) class='chooseplayer' id='"+text+"' >"+text+"</p></button></li><br>");
+                            btn = document.getElementById(text);
+                    }
+                
+                
+        </script>   
+    {% endfor %}
+    </ul>
 
 {% endblock %}
 

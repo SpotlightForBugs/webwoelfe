@@ -1,4 +1,5 @@
 from cgi import print_form
+from traceback import print_tb
 from flask import Flask, request, url_for, render_template, session, make_response, redirect, Response
 #from flask_session import Session
 import requests, logging, werwolf, datetime, re
@@ -146,9 +147,22 @@ def reset():
         return(render_template('index.html'))  #zurück zur homepage
 
 
-@app.route("/player/kill/<name_kill>") #kill a player
-def kill_player(name_kill):
+#@app.route("/<name>/<rolle>/toeten/<name_kill>") #kill a player
+
+@app.route("/<name>/<rolle>/toeten/<name_kill>") #kill a player
+def kill_player(name,rolle,name_kill):
+    wort = name+" = "+rolle    # create a string with the name and the role
+    file = open('rollen_log.txt', "r") # open the log file
+    players_vorhanden = file.read() # read the log file
+    if wort in players_vorhanden: # if the name and the role is in the log file
+        pass
+    else:
+         return(render_template('fehler.html'))
+    
+    
+    
     with open('rollen_log.txt', 'r+') as fileTot_kill:
+       
 
         file_list_kill = []
         counter_tot = 0

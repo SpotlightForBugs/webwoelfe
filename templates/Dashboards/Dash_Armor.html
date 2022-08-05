@@ -11,12 +11,16 @@
 
 <!--TODO- #21 Auswahl der beiden Partner:innen-->         
 <script>
-    let link = "";
-    
+    let link = "../../{{name}}/{{rolle}}_aktion"
+    counter_link = 0;
 
     function addToLink(nextString) {
+        counter_link++;
         link = link.concat("/", nextString);
         console.log(link);
+        if (counter_link == 2) {
+            window.location.href = link;
+        }
     }
 </script>
 
@@ -27,14 +31,18 @@
             
             //name/rolle/partner1/partner2
 
-            
+                console.log("test")
                 console.log("{{el}}");	
                 var text = "{{el}}";    
                     
                     if (text.includes("Erzaehler")==false) {
                         
-                            document.write("<li><button onclick=addToLink({{el}}) class='chooseplayer' id='"+text+"' >"+text+"</p></button></li><br>");
+                            document.write("<li><button class='chooseplayer' id='"+text+"' >"+text+"</p></button></li><br>");
                             btn = document.getElementById(text);
+                            btn.addEventListener("click", function() {
+                                console.log("{{el}}");
+                                addToLink("{{el}}");
+                            });
                     }
                 
                 

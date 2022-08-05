@@ -1,6 +1,3 @@
-from calendar import c
-from cgi import print_form
-from operator import le
 from traceback import print_tb
 from flask import Flask, request, url_for, render_template, session, make_response, redirect, Response
 #from flask_session import Session
@@ -140,17 +137,17 @@ def reset():
             file4.write(str(12))
             file4.close()
             
-            
-                
-                
-                
-                
-                
-                
+         
             return(render_template('einstellungen.html')) #zurück zur einstellungen
     elif request.method == 'GET': 
         return(render_template('index.html'))  #zurück zur homepage
 
+
+
+@app.route("/weiterleitung/<target>")
+def weiterleitung(target):
+    return(redirect(target)) #redirect to the target
+    
 
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>") #kill a player

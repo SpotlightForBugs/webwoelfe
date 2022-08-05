@@ -35,16 +35,30 @@
                     if (text.includes("{{ name }} =")==false) {
                         //write a button leading to  '/{{ name }}/{{ rolle }}/wahl/{{ el }}'
                        // document.write("<li><a href='/{{ name }}/{{ rolle }}/wahl/{{ el }}'>{{ el }}</a></li>");
-                        document.write("<li><button onclick=location.href='../../sehen/{{ name }}/{{ rolle }}/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></button></li><br><br><br>");
-                        btn = document.getElementById(text);
-                        btn.addEventListener('click', function onClick(event) {
-                            console.log(document.activeElement);
-                            console.log(text+""); 
-                        });
+                        document.write("<li><a href='../../sehen/{{ name }}/{{ rolle }}/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></a></li><br><br><br>");
+                      
+                        
                     }
                 }
             
         </script>
+        <style>
+            .wahlfeld:link {
+              text-decoration: none;
+            }
+            
+            .wahlfeld:visited {
+              text-decoration: none;
+            }
+            
+            .wahlfeld:hover {
+              text-decoration: none;
+            }
+            
+            .wahlfeld:active {
+              text-decoration: underline;
+            }
+            </style>
 
         {% endfor %}
         </ul>

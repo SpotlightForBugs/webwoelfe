@@ -20,30 +20,36 @@ Du kannst natürlich auch keine Person umbringen oder heilen.
 <div class="spacer"><br><br></div>
 
 
-    <!--Wenn aktionen erlaubt:-->
-    <div class="btn-group-vertical">
+{% if letzter_tot %}
+<div class="btn-group-vertical">
 
            <div class="alert alert-warning " role="alert">
            
             <strong>Oh nein!</strong>  <i> {{letzter_tot}} </i> ist von den Werwölfen getötet worden.
            </div>
+    
            
            {% if "1" in hexe_kann %}
             <input name="" id="" class="btn btn-success" onclick="document.location.href='{{ url_for('heilen',name=name,rolle=rolle,auswahl=letzter_tot) }}'" type="button" value="heilen">
             {% endif %}
-            <input name="" id="" class="btn btn-info"  type="button" value="ignorieren">
+            <input name="" id="" class="btn btn-info" onclick="" type="button" value="ignorieren">
             {% if "2" in hexe_kann %}
 
             <input name="" id="" class="btn btn-danger" onclick="document.getElementById('toeten').style.visibility= 'visible'" type="button" value="Eine zusätzliche Person umbringen">
            {%endif%}
 </div>
 
+{% endif %}
+    
+    {% if not letzter_tot  %} 
+    Niemand ist gestorben. 
+    {%endif%}
 
-
+    {% if "2" in hexe_kann %}
 <div style="visibility:hidden;" id="toeten">
 
     <br>
-<ul style="list-style-type: none;">
+<ul style="list-style-type: none;text-allign:center;">
 {%for el in nurNamen if not name in el%}
 
 <li><button onclick=location.href="{{ url_for('kill_player', name_kill = el,name=name,rolle=rolle) }}" class='wahlfeld'>{{el}}</p></button></li><br><br><br>
@@ -52,6 +58,6 @@ Du kannst natürlich auch keine Person umbringen oder heilen.
 {%endfor%}
 </div>
 </ul>
-
+{% endif %}
 {% endblock %}
 

@@ -154,6 +154,13 @@ def reset():
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>") #kill a player
 def kill_player(name,rolle,name_kill):
+    if rolle == 'Hexe':
+        with open ('hexe_kann.txt','r') as hexe_kann:
+            hexe_kann_text = hexe_kann.read()
+            hexe_kann_text = hexe_kann_text.replace('2','')
+            hexe_kann.close()
+        with open ('hexe_kann.txt','w') as hexe_kann_schreiben:
+            hexe_kann_schreiben.write(hexe_kann_text)
     wort = name+" = "+rolle    # create a string with the name and the role
     file = open('rollen_log.txt', "r") # open the log file
     players_vorhanden = file.read() # read the log file
@@ -312,21 +319,25 @@ def spezielles_Dashboard(name,rolle):
     
      #print (wort) 
      # print (players_vorhanden[:-1])
-    
-    if wort in players_vorhanden:  # if the name and the role are in the log file
+    else:
+        if wort in players_vorhanden: # if the name and the role are in the log file
      
+        
+            nurNamen = []      # create a list with the names
+        
+            if rolle == 'Hexe': 
+                print('Hexe')
+                with open ('letzter_tot.txt', 'r') as file:
+                    letzter_tot = file.read()
+                    file.close()
+                    with open ('hexe_kann.txt', 'r') as file:
+                        hexe_kann = file.read()
+                        hexe_kann = str(hexe_kann)
+                        file.close()
+        
         players_log = open('rollen_log.txt') # open the log file 
         players_log = players_log.readlines()   # read the log file
-        
-        nurNamen = []      # create a list with the names
-        
-        if rolle == 'Hexe': 
-            with open ('letzter_tot.txt', 'r') as file:
-                letzter_tot = file.read()
-            with open ('hexe_kann.txt', 'r') as file:
-                hexe_kann = file.read()
-                hexe_kann = str(hexe_kann)
-       
+            
         for line in players_log: # for every line in the log file
                 
                 if '*' in line or 'Tot' in line or 'Erzaehler' in line: # if the line contains a *
@@ -339,12 +350,14 @@ def spezielles_Dashboard(name,rolle):
                    # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
                     nurNamen.append(name_line) # append the name to the list
                         
-        
-    if rolle == 'Hexe':  
-        return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen,letzter_tot=letzter_tot,hexe_kann=hexe_kann)) # render Dash_rolle.html     
-    else:
-        return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen)) # render Dash_rolle.html  
-        
+           
+          
+        if rolle == 'Hexe':
+                
+                return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen,letzter_tot=letzter_tot,hexe_kann=hexe_kann)) # render Dash_rolle.html     
+        else:
+                return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen)) # render Dash_rolle.html  
+                    
         
 
 

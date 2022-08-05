@@ -697,6 +697,11 @@ def sehen(name, rolle, auswahl):
          return (render_template("url_system.html",name = name, rolle = rolle)) 
         
 
+@app.route("/weiterleitung/<target>")
+def weiterleitung(target):
+    
+    return(render_template("weiterleitung.html", target = target))
+
 
 @app.route("/<name>/<rolle>/<auswahl>/wer_tot")
 def wer_tot(name, rolle, auswahl):

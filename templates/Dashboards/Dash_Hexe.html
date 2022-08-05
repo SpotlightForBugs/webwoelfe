@@ -31,7 +31,7 @@ Du kannst natürlich auch keine Person umbringen oder heilen.
            {% if "1" in hexe_kann %}
             <input name="" id="" class="btn btn-success" onclick="document.location.href='{{ url_for('heilen',name=name,rolle=rolle,auswahl=letzter_tot) }}'" type="button" value="heilen">
             {% endif %}
-            <input name="" id="" class="btn btn-info"  type="button" value="ignorieren">
+            <input name="" id="" class="btn btn-info"  type="button" value="ignorieren" onclick="document.location.href='{{ url_for('weiterleitung',target='www.google.com') }}" >
             {% if "2" in hexe_kann %}
 
             <input name="" id="" class="btn btn-danger" onclick="document.getElementById('toeten').style.visibility= 'visible'" type="button" value="Eine zusätzliche Person umbringen">

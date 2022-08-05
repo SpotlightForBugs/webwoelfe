@@ -1,3 +1,4 @@
+from calendar import c
 from cgi import print_form
 from operator import le
 from traceback import print_tb
@@ -815,14 +816,51 @@ def heilen(name, rolle, auswahl):
      if wort in players_vorhanden:
          with open ('rollen_original.txt') as f:
              for line in f:
-                 if auswahl in line:
+                 if auswahl + " =" in line:
                      line_zu_schreiben = line.replace(wort, auswahl)
                      
                      with open ('rollen_log.txt', 'r+') as file:
                          for line in file:
                              if wort in line:
-                                 
-                                 
+                                with open('rollen_log.txt', 'r+') as file_heal:
+       
+                                    
+                                    file_heal_list = []
+                                    counter_heal = 0
+
+                                    for line in file_heal:
+                                        file_heal_list.append(line)
+                                        
+
+                                    while counter_heal < len(file_heal_list):
+                                        
+                
+                                        
+                                        if auswahl + ' =' in file_heal_list[counter_heal]:      
+                                            #print("If")
+                        
+                                            new_line = line_zu_schreiben
+                                            #print(new_line)
+                                            file_heal_list[counter_heal] = new_line
+                                            #print(file_list)
+
+                                        counter_heal = counter_heal+1                
+                                file_heal.close()    
+                                with open('rollen_log.txt', 'w') as fileFinal:
+                                    fileFinal.writelines(file_heal_list)    
+                                fileFinal.close() 
+                                
+                                with open ('hexe_kann.txt','r') as hexe_kann:
+                                    hexe_kann_text = hexe_kann.read()
+                                    hexe_kann_text = hexe_kann_text.replace('1','')
+                                    hexe_kann.close()
+                                    
+                                with open ('hexe_kann.txt','w') as hexe_kann_schreiben:
+                                    hexe_kann_schreiben.write(hexe_kann_text)
+                                
+                                return(render_template('Dashboards/Dash_Dorfbewohner.html'))
+                                                            
+                                                            
                                  
                                  
                     

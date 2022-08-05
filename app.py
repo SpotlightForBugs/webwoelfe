@@ -1,4 +1,5 @@
 from cgi import print_form
+from operator import le
 from traceback import print_tb
 from flask import Flask, request, url_for, render_template, session, make_response, redirect, Response
 #from flask_session import Session
@@ -134,6 +135,9 @@ def reset():
             file3 = open("hat_gewaehlt.txt","r+")
             file3.truncate(0)
             file3.close()    
+            file4 = open("hexe_kann.txt","w")
+            file4.write(str(12))
+            file4.close()
             
             
                 
@@ -192,6 +196,8 @@ def kill_player(name,rolle,name_kill):
     with open('rollen_log.txt', 'w') as fileFinal:
         fileFinal.writelines(file_list_kill)    
     fileFinal.close() 
+    with open('letzter_tot.txt', "w") as file:
+            file.write(name_kill)
     
     return(render_template('Dashboards/Dash_Dorfbewohner.html'))
     
@@ -297,6 +303,12 @@ def spezielles_Dashboard(name,rolle):
         
         nurNamen = []      # create a list with the names
         
+        if rolle == 'Hexe': 
+            with open ('letzter_tot.txt', 'r') as file:
+                letzter_tot = file.read()
+            with open ('hexe_kann.txt', 'r') as file:
+                hexe_kann = file.read()
+                hexe_kann = str(hexe_kann)
        
         for line in players_log: # for every line in the log file
                 
@@ -311,9 +323,10 @@ def spezielles_Dashboard(name,rolle):
                     nurNamen.append(name_line) # append the name to the list
                         
         
-        
-    return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen)) # render Dash_rolle.html     
-        
+    if rolle == 'Hexe':  
+        return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen,letzter_tot=letzter_tot,hexe_kann=hexe_kann)) # render Dash_rolle.html     
+    else:
+        return (render_template("Dashboards/Dash_"+ rolle +".html", name=name, rolle=rolle, names = players_log, nurNamen=nurNamen)) # render Dash_rolle.html  
         
         
 
@@ -488,7 +501,8 @@ def warten():     # function for the wait function
             with open('rollen_log.txt', 'w') as fileFinal:
                 fileFinal.writelines(file_list)    
             fileFinal.close()             
-            
+            with open('letzter_tot.txt', "w") as file:
+                    file.write(name_tot)
             
                                     
                     
@@ -595,7 +609,8 @@ def wahlbalken():
   
   
 @app.route("/wahlstatus") # route for the wahlstatus function
-def wahl_stats():  
+def wahl_stats():
+     
      
             anzahl = 0;  
             name_tot = "";  
@@ -619,7 +634,12 @@ def wahl_stats():
                 if(anzahl > maxCount):  
                     maxCount = anzahl;  
                     name_tot = words[i];  
-  
+                    
+
+            
+            with open('letzter_tot.txt', "w") as file:
+                    file.write(name_tot)
+            
             return render_template("wahlstatus.html", name_tot = name_tot);
   
   
@@ -735,6 +755,10 @@ def wer_wahl_warten():
                 with open('rollen_log.txt', 'w') as fileFinal:
                     fileFinal.writelines(file_list)    
                 fileFinal.close()  
+                
+                with open('letzter_tot.txt', "w") as file:
+                    file.write(name_tot)
+                
                 name = name_tot
                 return (render_template("Dashboards/status/wer_wahl_ergebnis.html", name=name ))
              else:

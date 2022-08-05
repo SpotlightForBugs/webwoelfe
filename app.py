@@ -806,7 +806,28 @@ def partner(nummer,nummer2 ):
          
          
          
-         
+@app.route("/<name>/<rolle>/heilen/<auswahl>")
+def heilen(name, rolle, auswahl):
+    if rolle == "Hexe":
+     wort = name+" = "+rolle
+     file = open('rollen_log.txt', "r")
+     players_vorhanden = file.read()
+     if wort in players_vorhanden:
+         with open ('rollen_original.txt') as f:
+             for line in f:
+                 if auswahl in line:
+                     line_zu_schreiben = line.replace(wort, auswahl)
+                     
+                     with open ('rollen_log.txt', 'r+') as file:
+                         for line in file:
+                             if wort in line:
+                                 
+                                 
+                                 
+                                 
+                    
+       
+     
      
     
 

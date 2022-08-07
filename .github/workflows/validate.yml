@@ -1,0 +1,7 @@
+- name: validate-dependabot
+  # You may pin to the exact commit or the version.
+  # uses: marocchino/validate-dependabot@5833f0809015e8208498a5a0d0cc066281a3f63a
+  uses: marocchino/validate-dependabot@v1.1.0
+  with:
+    # path of dependabot yaml file
+    path: # default is .github/dependabot.yml

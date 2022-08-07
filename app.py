@@ -146,15 +146,6 @@ def reset():
         return(render_template('index.html'))  #zurück zur homepage
 
 
-
-@app.route("/weiterleitung/<target>")
-def weiterleitung(target):
-    return(redirect(target)) #redirect to the target
-    
-
-
-
-
 @app.route("/<name>/<rolle>/toeten/<name_kill>") #kill a player
 def kill_player(name,rolle,name_kill):
     if rolle == 'Hexe':

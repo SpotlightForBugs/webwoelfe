@@ -68,3 +68,29 @@ def deduct():
     result = keys[ind]
     return(result)
 
+def validiere_rolle(name,rolle):
+    wort = ("'" + name + " = " +rolle+ "\n'").encode("unicode_escape").decode("utf-8") # create a string with the name and the role
+    file = open('rollen_log.txt', "r") #    open the log file
+    players_vorhanden = str(file.readlines()) # read the log file
+    if wort in players_vorhanden:
+        return(True)
+    else:
+        return (False) 
+    
+def validiere_rolle_original(name,rolle):
+    wort = ("'" + name + " = " +rolle+ "\n'").encode("unicode_escape").decode("utf-8") # create a string with the name and the role
+    file = open('rollen_log.txt', "r") #    open the log file
+    players_vorhanden = str(file.readlines()) # read the log file
+    if wort in players_vorhanden:
+        return(True)
+    else:
+        return (False) 
+    
+def validiere_name(name):
+    wort = ("'" + name + " = ").encode("unicode_escape").decode("utf-8") # create a string with the name and the role
+    file = open('rollen_log.txt', "r") #    open the log file
+    players_vorhanden = str(file.readlines()) # read the log file
+    if wort in players_vorhanden:
+        return(True)
+    else:
+        return (False) 

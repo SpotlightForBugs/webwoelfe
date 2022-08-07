@@ -29,7 +29,7 @@ def setPlayerNumber(): # set the number of players
     spieleranzahl = request.form.get('num') # get the number of players from the form
     try: 
         spieleranzahl_int = int(spieleranzahl)   #eingabe ist wirklich ein integer
-        if spieleranzahl_int < 0:
+        if spieleranzahl_int < 8 or spieleranzahl_int > 18: # Spieleranzahl ist zwischen 8 und 18
                 spieleranzahl = 8 #auf 8 defaulten 
     except ValueError: 
         spieleranzahl = 8 #auf 8 defaulten
@@ -67,8 +67,8 @@ def get_data(): # get the data from the form
             name = name.replace('*',"_") #stern ist immer _
             players_log = open('rollen_log.txt') # open the log file
             players_log = players_log.read() # read the log file
-            name_ueberpruefung = name + ' = ' # create a string with the name and =
-            if name_ueberpruefung in players_log: # if the name is already in the log file
+            if werwolf.validiere_name(name) == True: 
+             # if the name is already in the log file
                 return(render_template('name_doppelt.html',name = name))    #name doppelt ausgeben
             else: 
                 try:
@@ -136,6 +136,9 @@ def reset():
             file4 = open("hexe_kann.txt","w")
             file4.write(str(12))
             file4.close()
+            file5 = open("armor_kann.txt","w")
+            file5.write(str(1))
+            file5.close()
             
          
             return(render_template('einstellungen.html')) #zurück zur einstellungen
@@ -150,6 +153,8 @@ def weiterleitung(target):
     
 
 
+
+
 @app.route("/<name>/<rolle>/toeten/<name_kill>") #kill a player
 def kill_player(name,rolle,name_kill):
     if rolle == 'Hexe':
@@ -159,10 +164,7 @@ def kill_player(name,rolle,name_kill):
             hexe_kann.close()
         with open ('hexe_kann.txt','w') as hexe_kann_schreiben:
             hexe_kann_schreiben.write(hexe_kann_text)
-    wort = name+" = "+rolle    # create a string with the name and the role
-    file = open('rollen_log.txt', "r") # open the log file
-    players_vorhanden = file.read() # read the log file
-    if wort in players_vorhanden: # if the name and the role is in the log file
+    if werwolf.validiere_rolle(name,rolle) == True: # if the name and the role is in the log file
         pass
     else:
          return(render_template('fehler.html'))
@@ -211,17 +213,27 @@ def kill_player(name,rolle,name_kill):
 def armor_player(player1, player2, name):
     rolle = "Armor"
     
-    wort = name+" = "+rolle    # create a string with the name and the role
-    file = open('rollen_log.txt', "r") # open the log file
-    players_vorhanden = file.read() # read the log file
     
-    if wort in players_vorhanden:
-        lover_one = player1
-        lover_two = player2
-        
-        print(lover_one+" LIEBT "+lover_two)
-        
-        return(render_template('Dashboards/Dash_Armor.html'))
+    if werwolf.validiere_rolle(name,rolle) == True:
+           lover_one = player1
+           lover_two = player2
+                
+           print(lover_one+" LIEBT "+lover_two)
+                
+                
+           aktion_check = open("armor_kann.txt","w")
+           aktion_check.write(str(0))
+           aktion_check.close()
+           return(render_template('Dashboards/status/aktion_warten.html'))
+       
+    else:
+        return(render_template('fehler.html')) 
+
+@app.route("/<name>/<rolle>/warten_auf_aktions_ende")
+def aktion_warten(name,rolle):
+    if werwolf.validiere_rolle(name,rolle) == True:
+            return(render_template('Dashboards/status/aktion_warten.html'))
+
 
 
 ##Übersicht der Spieler
@@ -232,11 +244,11 @@ def overview_all(ist_unschuldig): # Übersicht
     try:
         ist_unschuldig = int(ist_unschuldig) #ist_unschuldig ist wirklich ein integer
         if ist_unschuldig == 1: #wenn ist_unschuldig = 1
-            players_log = open('rollen_log.txt') # open the log file
+            players_log = open('rollen_original.txt') # open the log file
             players_log = players_log.readlines() # read the log file
             return (render_template('overview_innocent.html', names = players_log)) # render overview_innocent.html
         elif ist_unschuldig == 0: #wenn ist_unschuldig = 0
-            players_log = open('rollen_log.txt') # open the log file
+            players_log = open('rollen_oriinal.txt') # open the log file
             players_log = players_log.readlines() # read the log file
             return (render_template('overview_guilty.html', names = players_log)) # render overview_guilty.html
         else:
@@ -248,7 +260,7 @@ def overview_all(ist_unschuldig): # Übersicht
 @app.route("/<name>/<rolle>/Dashboard") # Dashboard
 def Dashboard(name, rolle):  # Dashboard
 
-    wort = name+" = "+rolle    # create a string with the name and the role
+    wort = "\n" + name + ' = ' + rolle + "\n"   # create a string with the name and the role
     file = open('rollen_log.txt', "r") # open the log file
     players_vorhanden = file.read() # read the log file
     
@@ -261,7 +273,7 @@ def Dashboard(name, rolle):  # Dashboard
      #print (wort) 
      # print (players_vorhanden[:-1])
     
-    if wort in players_vorhanden:  # if the name and the role are in the log file
+    if werwolf.validiere_rolle(name,rolle) == True:  # if the name and the role are in the log file
      try: # try to get the role
         players_log = open('rollen_log.txt') # open the log file 
         players_log = players_log.readlines()   # read the log file
@@ -305,7 +317,7 @@ def spezielles_Dashboard(name,rolle):
     if rolle == 'Tot':
      return render_template("fehler.html")  
     else:
-         wort = name+" = "+rolle    # create a string with the name and the role
+         wort = "\n" + name + ' = ' + rolle + "\n"   # create a string with the name and the role
     file = open('rollen_log.txt', "r") # open the log file
     players_vorhanden = file.read() # read the log file
     
@@ -318,7 +330,7 @@ def spezielles_Dashboard(name,rolle):
      #print (wort) 
      # print (players_vorhanden[:-1])
     else:
-        if wort in players_vorhanden: # if the name and the role are in the log file
+        if werwolf.validiere_rolle(name,rolle) == True: # if the name and the role are in the log file
      
         
             nurNamen = []      # create a list with the names
@@ -361,37 +373,33 @@ def spezielles_Dashboard(name,rolle):
 
 @app.route("/<name>/<rolle>/spiel_ende")
 def spiel_ende(name,rolle):
-     wort = name+" = "+rolle 
-     file = open('rollen_original.txt', "r") 
-     players_vorhanden = file.read()
-     print (wort)  
-     print (players_vorhanden) 
-    
-     if wort in players_vorhanden:
-         if 'Werwolf' in players_vorhanden and 'Dorfbewohner' in players_vorhanden or 'Hexe' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Seherin' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Jäger' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Armor' in players_vorhanden and 'Werwolf' in players_vorhanden:
-             return(f'Hallo {name}, das Spiel ist noch nicht beendet!')
-         else:
-           
-           
 
-            print('Spiel ist beendet!')
+    with open('rollen_orignal.txt', 'r') as file:
+        players_vorhanden = file.read()
+        file.close()
+    
+        if werwolf.validiere_rolle_original(name,rolle) == True:
+            if 'Werwolf' in players_vorhanden and 'Dorfbewohner' in players_vorhanden or 'Hexe' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Seherin' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Jäger' in players_vorhanden and 'Werwolf' in players_vorhanden or 'Armor' in players_vorhanden and 'Werwolf' in players_vorhanden:
+                return(f'Hallo {name}, das Spiel ist noch nicht beendet!')
+            else:
             
-            if rolle == 'Werwolf':
-                if 'Werwolf' in players_vorhanden:
-                    return(render_template('gewonnen.html', name=name, rolle=rolle,unschuldig=0))
-                else:
-                    return(render_template('verloren.html', name=name, rolle=rolle,unschuldig=0))
-                    
-               
-            else :
-               if 'Werwolf' in players_vorhanden:
-                    return(render_template('verloren.html', name=name, rolle=rolle,unschuldig=1))
-               else:
-                    return(render_template('gewonnen.html', name=name, rolle=rolle,unschuldig=1))
-             
-    
+            
 
-        
+                print('Spiel ist beendet!')
+                
+                if rolle == 'Werwolf':
+                    if 'Werwolf' in players_vorhanden:
+                        return(render_template('gewonnen.html', name=name, rolle=rolle,unschuldig=0))
+                    else:
+                        return(render_template('verloren.html', name=name, rolle=rolle,unschuldig=0))
+                        
+                
+                else :
+                    if 'Werwolf' in players_vorhanden:
+                            return(render_template('verloren.html', name=name, rolle=rolle,unschuldig=1))
+                    else:
+                            return(render_template('gewonnen.html', name=name, rolle=rolle,unschuldig=1))
+                    
 
 
 @app.route("/waehlen/<name>/<rolle>/<auswahl>")
@@ -400,11 +408,10 @@ def wahl(name, rolle, auswahl):
    if rolle == 'Tot' : 
        return render_template("warten.html")
    else :
-    wort = name+" = "+rolle  
+     
     wort2 = name+" : "
-    file = open('rollen_log.txt', "r")
-    players_vorhanden = file.read()
-    if wort in players_vorhanden:
+    
+    if werwolf.validiere_rolle(name,rolle) == True:
         
         with open('hat_gewaehlt.txt', 'r+') as text: 
             contents = text.read()
@@ -430,11 +437,7 @@ def schlafen(name, rolle):  # function for the sleep function
     if rolle == 'Tot':
         return render_template("tot.html", name = name)
 
-    wort = name+" = "+rolle   # create a string with the name and the role
-    file = open('rollen_log.txt', "r") # open the log file
-    players_vorhanden = file.read() # read the log file
-    
-    if wort in players_vorhanden: # if the string is in the log file
+    if werwolf.validiere_rolle(name,rolle) == True: # if the string is in the log file
      try:
         players_log = open('rollen_log.txt') # open the log file
         players_log = players_log.readlines() # read the log file
@@ -549,14 +552,7 @@ def warten():     # function for the wait function
 
 @app.route("/<name>/<rolle>/<todesgrund>/tot")     # route for the death function
 def tot(name, rolle, todesgrund):  # function for the death function
-
-    wort = name+" = "+rolle   # create a string with the name and the role
-    file = open('rollen_log.txt', "r") # open the log file
-    players_vorhanden = file.read() # read the log file
-    print (wort)  # print the string
-    print (players_vorhanden) # print the log file
-    
-    if wort in players_vorhanden: # if the string is in the log file
+    if werwolf.validiere_rolle(name,rolle) == True: # if the string is in the log file
         try: # try to get the role
             players_log = open('rollen_log.txt') # open the log file
             players_log = players_log.readlines() # read the log file
@@ -582,10 +578,7 @@ def tot(name, rolle, todesgrund):  # function for the death function
  
 @app.route("/<name>/<rolle>/kick/") # route for the kick function
 def rausschmeissen(name,rolle): # function for the kick function
-    wort = name+" = "+rolle  # create a string with the name and the role
-    file = open('rollen_log.txt', "r") #    open the log file
-    players_vorhanden = file.read() # read the log file
-    if wort in players_vorhanden: # if the string is in the log file
+   if werwolf.validiere_rolle(name,rolle) == True:
         print("Spieler vorhanden") # print the string
         try:
             players_log = open('rollen_log.txt') # open the log file
@@ -595,7 +588,7 @@ def rausschmeissen(name,rolle): # function for the kick function
             
             return render_template("fehler.html")   # render the fehler.html
         
-    else:
+   else:
         print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")     # print the error
         return render_template("url_system.html", name=name, rolle=rolle)   # render the url_system.html
 
@@ -673,18 +666,15 @@ def wahl_stats():
   
 @app.route("/sehen/<name>/<rolle>/<auswahl>")
 def sehen(name, rolle, auswahl):
-    wort = name+" = "+rolle  # create a string with the name and the role
-    file = open('rollen_log.txt', "r") #    open the log file
-    players_vorhanden = file.read() # read the log file
-    if wort in players_vorhanden: # if the string is in the log file
-        players_log = open('rollen_log.txt') # open the log file
-        players_log = players_log.readlines() # read the log file
-        for line in players_log:
-            if auswahl in line:
-                ergebnis = line
-                ergebnis = ergebnis.replace('=', 'hat die Rolle')
-                return (render_template("Dashboards/status/sehen.html", ergebnis = ergebnis)) 
-    
+    if werwolf.validiere_rolle(name,rolle) == True:
+            players_log = open('rollen_log.txt') # open the log file
+            players_log = players_log.readlines() # read the log file
+            for line in players_log:
+                if auswahl in line:
+                    ergebnis = line
+                    ergebnis = ergebnis.replace('=', 'hat die Rolle')
+                    return (render_template("Dashboards/status/sehen.html", ergebnis = ergebnis)) 
+        
     
     
     
@@ -698,10 +688,10 @@ def sehen(name, rolle, auswahl):
 @app.route("/<name>/<rolle>/<auswahl>/wer_tot")
 def wer_tot(name, rolle, auswahl):
     
-    wort = name+" = "+rolle  # create a string with the name and the role
+    
     file = open('rollen_log.txt', "r") #    open the log file
     players_vorhanden = file.read() # read the log file
-    if wort in players_vorhanden: 
+    if werwolf.validiere_rolle(name,rolle) == True:
         with open ('hat_gewaehlt.txt', 'r') as f:
             if name +" : " in f.read():
                 return (render_template("wahl_doppelt.html"))
@@ -802,7 +792,7 @@ def partner(nummer,nummer2 ):
     
    
          
-         
+### TODO: #27 Auch die Namensverifizierung in die Hexenfunktion einbauen
          
 @app.route("/<name>/<rolle>/heilen/<auswahl>")
 def heilen(name, rolle, auswahl):
@@ -859,14 +849,10 @@ def heilen(name, rolle, auswahl):
                                                             
                                                             
                                  
-                                 
+                                     
                     
-       
-     
-     
+   
     
-
-
 #context processor
   
                          

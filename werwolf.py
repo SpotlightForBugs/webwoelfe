@@ -79,7 +79,7 @@ def validiere_rolle(name: str,rolle: str)->bool:
     
 def validiere_rolle_original(name: str,rolle: str)->bool:
     wort = ("'" + name + " = " +rolle+ "\n'").encode("unicode_escape").decode("utf-8") # create a string with the name and the role
-    file = open('rollen_log.txt', "r") #    open the log file
+    file = open('rollen_original.txt', "r") #    open the log file
     players_vorhanden = str(file.readlines()) # read the log file
     if wort in players_vorhanden:
         return(True)

@@ -29,7 +29,7 @@ def createDict():
         else:
             assign = {'Erzaehler' : 1, 'Werwolf' : werwolf, 'Armor' : armor, 'Hexe' : hexe, 'Seherin' : seherin, 'Dorfbewohner' : (spieleranzahl-werwolf-seherin-hexe-armor-1)}
     elif erzaehler_flag == 0:
-      #  print("erzaehler ist nicht zufaellig")
+      #  print("erzaehler ist nicht vorhanden")
         if jaeger > 0:
             assign = {'Werwolf' : werwolf, 'Hexe' : hexe,'Armor' : armor, 'Seherin' : seherin, 'Jaeger' : jaeger, 'Dorfbewohner' : (spieleranzahl-werwolf-seherin-hexe-jaeger-armor)}
         else:

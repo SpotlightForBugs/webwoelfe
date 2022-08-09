@@ -793,7 +793,6 @@ def partner(nummer,nummer2 ):
     
    
          
-### TODO: #27 Auch die Namensverifizierung in die Hexenfunktion einbauen
          
 @app.route("/<name>/<rolle>/heilen/<auswahl>")
 def heilen(name, rolle, auswahl):

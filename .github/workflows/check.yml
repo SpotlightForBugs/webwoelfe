@@ -1,4 +1,4 @@
-- name: PyAction: linter
+- name: PyAction:linter
   # You may pin to the exact commit or the version.
   # uses: rahul-deepsource/pyaction@9071389c6482762ea0132c23d431a8fe4aa7d0a1
   uses: rahul-deepsource/pyaction@1.4.1

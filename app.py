@@ -148,56 +148,61 @@ def reset():
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>") #kill a player
 def kill_player(name,rolle,name_kill):
-    if rolle == 'Hexe':
-        with open ('hexe_kann.txt','r') as hexe_kann:
-            hexe_kann_text = hexe_kann.read()
-            hexe_kann_text = hexe_kann_text.replace('2','')
-            hexe_kann.close()
-        with open ('hexe_kann.txt','w') as hexe_kann_schreiben:
-            hexe_kann_schreiben.write(hexe_kann_text)
-    if werwolf.validiere_rolle(name,rolle) == True: # if the name and the role is in the log file
-        pass
-    else:
-         return(render_template('fehler.html'))
+    auswahl = name_kill
+    if rolle == "Hexe" or rolle == 'Jaeger': 
+        if rolle == "Hexe":
+            if werwolf.hexe_darf_toeten() == True:
+                pass
     
-    
-    
-    with open('rollen_log.txt', 'r+') as fileTot_kill:
-       
-
-        file_list_kill = []
-        counter_tot = 0
-
-        for line in fileTot_kill:
-            file_list_kill.append(line)
+        if werwolf.validiere_rolle(name,rolle) == True:
             
-        #print(file_list)
+            pass
+        else:
+            return(render_template('fehler.html'))
+    
+    
         
-        name_kill = name_kill.strip('\n')
-        name_kill = name_kill.replace('\n', '')
+        
+        
+        with open('rollen_log.txt', 'r+') as fileTot_kill:
+        
 
-        while counter_tot < len(file_list_kill):
-            
-            #print(name_tot + ' - File List: ' + file_list[counter_tot])
-            print('Name Tot: ' + name_kill + ' =')
-            
-            if name_kill + ' =' in file_list_kill[counter_tot]:      
-                #print("If")
-                dffd = file_list_kill[counter_tot].split(" = ")
-                new_line = dffd[0] + " = Tot \n"
-                #print(new_line)
-                file_list_kill[counter_tot] = new_line
-                #print(file_list)
+            file_list_kill = []
+            counter_tot = 0
 
-            counter_tot = counter_tot+1                
-    fileTot_kill.close()    
-    with open('rollen_log.txt', 'w') as fileFinal:
-        fileFinal.writelines(file_list_kill)    
-    fileFinal.close() 
-    with open('letzter_tot.txt', "w") as file:
-            file.write(name_kill)
-    
-    return(render_template('Dashboards/Dash_Dorfbewohner.html'))
+            for line in fileTot_kill:
+                file_list_kill.append(line)
+                
+            #print(file_list)
+            
+            name_kill = name_kill.strip('\n')
+            name_kill = name_kill.replace('\n', '')
+
+            while counter_tot < len(file_list_kill):
+                
+                #print(name_tot + ' - File List: ' + file_list[counter_tot])
+                print('Name Tot: ' + name_kill + ' =')
+                
+                if name_kill + ' =' in file_list_kill[counter_tot]:      
+                    #print("If")
+                    dffd = file_list_kill[counter_tot].split(" = ")
+                    new_line = dffd[0] + " = Tot \n"
+                    #print(new_line)
+                    file_list_kill[counter_tot] = new_line
+                    #print(file_list)
+
+                counter_tot = counter_tot+1                
+        fileTot_kill.close()    
+        with open('rollen_log.txt', 'w') as fileFinal:
+            fileFinal.writelines(file_list_kill)    
+        fileFinal.close() 
+        with open('letzter_tot.txt', "w") as file:
+                file.write(auswahl)
+                file.close()
+        if rolle == "Hexe":
+            werwolf.hexe_verbraucht("toeten")
+        
+        return(render_template('Dashboards/Dash_Dorfbewohner.html'))
 
 
 @app.route("/<name>/Armor_aktion/<player1>/<player2>") #player auswahl
@@ -365,7 +370,7 @@ def spezielles_Dashboard(name,rolle):
 @app.route("/<name>/<rolle>/spiel_ende")
 def spiel_ende(name,rolle):
 
-    with open('rollen_orignal.txt', 'r') as file:
+    with open('rollen_original.txt', 'r') as file:
         players_vorhanden = file.read()
         file.close()
     
@@ -792,63 +797,47 @@ def partner(nummer,nummer2 ):
          
 @app.route("/<name>/<rolle>/heilen/<auswahl>")
 def heilen(name, rolle, auswahl):
-    if rolle == "Hexe":
-     wort = name+" = "+rolle
-     file = open('rollen_log.txt', "r")
-     players_vorhanden = file.read()
-     if wort in players_vorhanden:
-         with open ('rollen_original.txt') as f:
-             for line in f:
-                 if auswahl + " =" in line:
-                     line_zu_schreiben = line.replace(wort, auswahl)
-                     
-                     with open ('rollen_log.txt', 'r+') as file:
-                         for line in file:
-                             if wort in line:
-                                with open('rollen_log.txt', 'r+') as file_heal:
-       
-                                    
-                                    file_heal_list = []
-                                    counter_heal = 0
+    if werwolf.validiere_rolle(name,rolle) == True and werwolf.hexe_darf_heilen() == True:
+                    counter = 1
+                    with open ('rollen_original.txt', 'r') as file:
+                        file_list = []
+                        file_list.append("*********************\n")
+                    
+                        for line in file:
+                             file_list.append(line)
+                    
+                    while counter < len(file_list):
+                        if auswahl in file_list[counter]:
+                            file_list[counter] = file_list[counter].replace(name, auswahl)
+                            counter = counter+1
+                        else:
+                            counter = counter+1
+                    file = open('rollen_log.txt', 'w')
+                    
+                    file.writelines(file_list)
+                    
+                    werwolf.hexe_verbraucht("heilen")
+                    return(render_template('Dashboards/Dash_Dorfbewohner.html'))
+    else:
+        return(render_template('fehler.html'))
 
-                                    for line in file_heal:
-                                        file_heal_list.append(line)
-                                        
-
-                                    while counter_heal < len(file_heal_list):
-                                        
-                
-                                        
-                                        if auswahl + ' =' in file_heal_list[counter_heal]:      
-                                            #print("If")
-                        
-                                            new_line = line_zu_schreiben
-                                            #print(new_line)
-                                            file_heal_list[counter_heal] = new_line
-                                            #print(file_list)
-
-                                        counter_heal = counter_heal+1                
-                                file_heal.close()    
-                                with open('rollen_log.txt', 'w') as fileFinal:
-                                    fileFinal.writelines(file_heal_list)    
-                                fileFinal.close() 
-                                
-                                with open ('hexe_kann.txt','r') as hexe_kann:
-                                    hexe_kann_text = hexe_kann.read()
-                                    hexe_kann_text = hexe_kann_text.replace('1','')
-                                    hexe_kann.close()
-                                    
-                                with open ('hexe_kann.txt','w') as hexe_kann_schreiben:
-                                    hexe_kann_schreiben.write(hexe_kann_text)
-                                
-                                return(render_template('Dashboards/Dash_Dorfbewohner.html'))
-                                                            
-                                                            
+                    
+                                               
                                  
                                      
 
                      
-   
+
+@app.route("/test/<name>/<rolle>")
+def test(name,rolle):
+    list = []
+    
+    list.append(str(werwolf.validiere_rolle(name,rolle)))
+    list.append(str(werwolf.hexe_darf_heilen()))
+    list.append(str(werwolf.hexe_darf_toeten()))
+    
+    return(str(list))
+
     
 #context processor
   

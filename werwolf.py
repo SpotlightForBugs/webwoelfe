@@ -94,3 +94,55 @@ def validiere_name(name: str)->bool:
         return(True)
     else:
         return (False) 
+    
+def hexe_verbraucht(flag: str):
+    
+    if  "t" in flag or "T" in flag:
+        flag = str(2)
+    elif "h" in flag or "H" in flag:
+        flag = str(1)
+    
+    
+    
+        if str(flag) == "1" or str(flag) == "2":
+            with open ('hexe_kann.txt','r') as hexe_kann:
+                hexe_kann_text = hexe_kann.read()
+                hexe_kann_text = hexe_kann_text.replace(str(flag),'')
+                hexe_kann.close()
+            with open ('hexe_kann.txt','w') as hexe_kann_schreiben:
+                hexe_kann_schreiben.write(hexe_kann_text)
+                hexe_kann_schreiben.close()
+        else:
+            raise ValueError("Die Hexe kann nur über die flags 1 oder 2 verfügen") 
+        
+ 
+  #heilen --> 1
+  #toeten --> 2
+ 
+     
+def hexe_darf_toeten()->bool:
+    with open ('hexe_kann.txt','r') as hexe_kann:
+              hexe_kann_text = hexe_kann.read()
+              if str(2) in hexe_kann_text:
+                  hexe_kann.close()
+                  return(True)
+              else:
+                      hexe_kann.close()                 
+                      return(False)
+                  
+
+
+
+                  
+def hexe_darf_heilen()->bool:
+    with open ('hexe_kann.txt','r') as hexe_kann:
+              hexe_kann_text = hexe_kann.read()
+              if "1" in hexe_kann_text:
+                  hexe_kann.close()
+                  return(True)
+              else:
+                    hexe_kann.close()
+                    return(False)                 
+              
+           
+           

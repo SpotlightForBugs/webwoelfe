@@ -133,6 +133,8 @@ def hexe_verbraucht(flag: str):
   # heilen --> 1
   # toeten --> 2
 
+    """Darf die Hexe töten?"""
+    
 
 def hexe_darf_toeten() -> bool:
     with open('hexe_kann.txt', 'r') as hexe_kann:
@@ -144,6 +146,7 @@ def hexe_darf_toeten() -> bool:
             hexe_kann.close()
             return(False)
 
+""" Darf die Hexe heilen? """
 
 def hexe_darf_heilen() -> bool:
     with open('hexe_kann.txt', 'r') as hexe_kann:

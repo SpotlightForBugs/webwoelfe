@@ -16,6 +16,7 @@ in dieser Version müssen noch einige Dinge getan werden.
 ---
 
 [![Lint Code Base](https://github.com/SpotlightForBugs/werwoelfe/actions/workflows/super-linter.yml/badge.svg)](https://github.com/SpotlightForBugs/werwoelfe/actions/workflows/super-linter.yml)
+[![Build Docs and Open PR](https://github.com/SpotlightForBugs/werwoelfe/actions/workflows/doc.yml/badge.svg)](https://github.com/SpotlightForBugs/werwoelfe/actions/workflows/doc.yml)
 
 ``` clean. code. ```
 

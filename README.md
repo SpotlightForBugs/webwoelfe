@@ -1,4 +1,4 @@
-[![.github/workflows/check.yml](https://github.com/SpotlightForBugs/werwoelfe/actions/workflows/check.yml/badge.svg)](https://github.com/SpotlightForBugs/werwoelfe/actions/workflows/check.yml)
+
 
 # werwoelfe
 

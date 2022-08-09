@@ -4,6 +4,15 @@
 
 
 
+
+
+
+## Mitwirkende
+  @name1
+  ...
+  
+
+
 ---
 
 [![Lint Code Base](https://github.com/SpotlightForBugs/werwoelfe/actions/workflows/super-linter.yml/badge.svg)](https://github.com/SpotlightForBugs/werwoelfe/actions/workflows/super-linter.yml)

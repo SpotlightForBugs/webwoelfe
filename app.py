@@ -356,6 +356,7 @@ def spezielles_Dashboard(name, rolle):
 
         #print (wort)
         # print (players_vorhanden[:-1])
+        
     else:
         # if the name and the role are in the log file
         if werwolf.validiere_rolle(name, rolle) == True:

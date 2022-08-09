@@ -144,5 +144,6 @@ def hexe_darf_heilen()->bool:
                     hexe_kann.close()
                     return(False)                 
               
-           
+def test():
+    print(Hello world)
            

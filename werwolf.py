@@ -134,7 +134,7 @@ def hexe_verbraucht(flag: str):
   # toeten --> 2
 
     """Darf die Hexe töten?"""
-    
+
 
 def hexe_darf_toeten() -> bool:
     with open('hexe_kann.txt', 'r') as hexe_kann:
@@ -146,7 +146,9 @@ def hexe_darf_toeten() -> bool:
             hexe_kann.close()
             return(False)
 
+
 """ Darf die Hexe heilen? """
+
 
 def hexe_darf_heilen() -> bool:
     with open('hexe_kann.txt', 'r') as hexe_kann:
@@ -157,3 +159,53 @@ def hexe_darf_heilen() -> bool:
         else:
             hexe_kann.close()
             return(False)
+
+
+def armor_darf_auswaehlen() -> bool:
+    with open('armor_kann.txt', 'r') as armor_kann:
+        armor_kann_text = armor_kann.read()
+        if "1" in armor_kann_text:
+            armor_kann.close()
+            return(True)
+        else:
+            armor_kann.close()
+            return(False)
+
+
+def armor_fertig(player1: str, player2: str):
+    if player1 != player2 and validiere_name(player1) == True and validiere_name(player2) == True:
+        with open('verliebt.txt', 'r+') as verliebt:
+            verliebt_text = verliebt.read()
+            # wenn nicht in der Liste, dann hinzufügen. Ist wegen wiederholten Aufrufen nicht schön, aber funktioniert insofern, dass die Datei nicht vollgespammt wird.
+            if not (player1 + " + " + player2 + "\n") in verliebt_text:
+                verliebt.write(player1 + " + "+player2 + "\n")
+                verliebt.close()
+          # datei armor_kann.txt mit 0 ersetzen
+            with open('armor_kann.txt', 'w') as armor_kann:
+                armor_kann.write("0")
+                armor_kann.close()
+
+
+def leere_dateien():
+
+    with open('rollen_log.txt', 'w+') as f:  # leere rollen_log.txt
+        f.write('*********************\n')
+        f.close
+    file = open("abstimmung.txt", "r+")
+    file.truncate(0)
+    file.close()
+    file2 = open("rollen_original.txt", "r+")
+    file2.truncate(0)
+    file2.close()
+    file3 = open("hat_gewaehlt.txt", "r+")
+    file3.truncate(0)
+    file3.close()
+    file4 = open("hexe_kann.txt", "w")
+    file4.write(str(12))
+    file4.close()
+    file5 = open("armor_kann.txt", "w")
+    file5.write(str(1))
+    file5.close()
+    file6 = open("verliebt.txt", "w")
+    file6.write(str(1))
+    file6.close()

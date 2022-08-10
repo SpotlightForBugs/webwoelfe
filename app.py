@@ -146,24 +146,7 @@ def erzaehler():
 def reset():
     if request.method == 'POST':
         if request.form['reset_button'] == 'Neues Spiel':  # wenn neues spiel gewuenscht
-            with open('rollen_log.txt', 'w+') as f:  # leere rollen_log.txt
-                f.write('*********************\n')
-                f.close  # schließen der datei
-            file = open("abstimmung.txt", "r+")
-            file.truncate(0)
-            file.close()
-            file2 = open("rollen_original.txt", "r+")
-            file2.truncate(0)
-            file2.close()
-            file3 = open("hat_gewaehlt.txt", "r+")
-            file3.truncate(0)
-            file3.close()
-            file4 = open("hexe_kann.txt", "w")
-            file4.write(str(12))
-            file4.close()
-            file5 = open("armor_kann.txt", "w")
-            file5.write(str(1))
-            file5.close()
+            werwolf.leere_dateien()  # leere die dateien
 
             # zurück zur einstellungen
             return(render_template('einstellungen.html'))
@@ -229,17 +212,22 @@ def kill_player(name, rolle, name_kill):
 def armor_player(player1, player2, name):
     rolle = "Armor"
 
-    if werwolf.validiere_rolle(name, rolle) == True:
+    if werwolf.validiere_rolle(name, rolle) == True and werwolf.armor_darf_auswaehlen() == True:
         lover_one = player1
         lover_two = player2
 
-        print(lover_one+" LIEBT "+lover_two)
-
-        aktion_check = open("armor_kann.txt", "w")
-        aktion_check.write(str(0))
-        aktion_check.close()
+        werwolf.armor_fertig(player1, player2)
         return(render_template('Dashboards/status/aktion_warten.html'))
 
+    elif werwolf.armor_darf_auswaehlen() == False and werwolf.validiere_rolle(name, rolle) == True:
+
+        return(render_template('Dashboards/status/aktion_warten.html'))
+
+    elif werwolf.validiere_rolle(name, rolle) == False:
+        # print the error
+        print("Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!")
+        # render the url_system.html
+        return render_template("url_system.html", name=name, rolle=rolle)
     else:
         return(render_template('fehler.html'))
 
@@ -356,7 +344,7 @@ def spezielles_Dashboard(name, rolle):
 
         #print (wort)
         # print (players_vorhanden[:-1])
-        
+
     else:
         # if the name and the role are in the log file
         if werwolf.validiere_rolle(name, rolle) == True:

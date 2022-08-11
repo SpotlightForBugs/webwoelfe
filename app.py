@@ -381,6 +381,11 @@ def spezielles_Dashboard(name, rolle):
 
             # render Dash_rolle.html
             return (render_template("Dashboards/Dash_" + rolle + ".html", name=name, rolle=rolle, names=players_log, nurNamen=nurNamen, letzter_tot=letzter_tot, hexe_kann=hexe_kann))
+        
+        elif rolle == 'Armor':
+          return (render_template("Dashboards/Dash_" + rolle + ".html", name=name, rolle=rolle, names=players_log, nurNamen=nurNamen,armor_kann=werwolf.armor_darf_auswaehlen()))
+
+        
         else:
             # render Dash_rolle.html
             return (render_template("Dashboards/Dash_" + rolle + ".html", name=name, rolle=rolle, names=players_log, nurNamen=nurNamen))
@@ -826,7 +831,8 @@ def heilen(name, rolle, auswahl):
 
 @app.route("/test/<name>")
 def test(name):
-    return(werwolf.momentane_rolle(name))
+    return_statement = werwolf.spieler_gestorben(name)
+    return(return_statement)
     
 
 

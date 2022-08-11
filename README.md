@@ -14,10 +14,12 @@ Das Spiel Werwölfe kostenlos online spielen
 
 
 
-
 ## Screenshots
 
-![Screenshot](https://via.placeholder.com/468x300?text=Webwoelfe+Screenshot)
+![Werwoelfe Screenshot](https://user-images.githubusercontent.com/73603712/184224122-b1ef3c3a-50de-4552-8a36-1f4d56252d0d.png)
+
+
+
 
 
 ## Features

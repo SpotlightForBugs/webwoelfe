@@ -1,5 +1,9 @@
 import random
 import ast
+import re
+
+liste_tot_mit_aktion = ["Jaeger","Hexe","PLATZHALTER"]
+liste_tot_ohne_aktion = ["Dorfbewohner","Werwolf","Seherin"]
 
 
 def createDict():
@@ -177,13 +181,25 @@ def armor_fertig(player1: str, player2: str):
         with open('verliebt.txt', 'r+') as verliebt:
             verliebt_text = verliebt.read()
             # wenn nicht in der Liste, dann hinzufügen. Ist wegen wiederholten Aufrufen nicht schön, aber funktioniert insofern, dass die Datei nicht vollgespammt wird.
-            if not (player1 + " + " + player2 + "\n") in verliebt_text:
-                verliebt.write(player1 + " + "+player2 + "\n")
+            if not ("+"+player1 + "+"+player2 + "\n") in verliebt_text:
+                verliebt.seek(0)
+                verliebt.write("+"+player1 + "+"+player2 + "\n")
+                verliebt.truncate()
                 verliebt.close()
           # datei armor_kann.txt mit 0 ersetzen
             with open('armor_kann.txt', 'w') as armor_kann:
                 armor_kann.write("0")
                 armor_kann.close()
+                
+def ist_verliebt(name: str) -> bool:
+    with open('verliebt.txt', 'r') as verliebt:
+        verliebt_text = verliebt.read()
+        if ("+"+name) in verliebt_text:
+            verliebt.close()
+            return(True)
+        else:
+            verliebt.close()
+            return(False)
 
 
 def leere_dateien():
@@ -218,7 +234,7 @@ def momentane_rolle(player: str) -> str:
         lines.append("+"+line)
     for line in lines:
         if "+"+player in line:
-            return(line.split("=")[1].split("\n")[0])
+            return((line.split("=")[1].split("\n")[0]).replace(" ", ""))
     return("Ein Fehler ist aufgetreten, die Rolle von "+player+" konnte nicht ermittelt werden.")
 
 
@@ -228,12 +244,28 @@ def fruehere_rolle(player: str) -> str:
         lines.append("+"+line)  # damit die Zeilen mit + beginnen
     for line in lines:
         if "+"+player in line:  # damit ganze Zeilen durchsucht werden können
-            return(line.split("=")[1].split("\n")[0])
+             return((line.split("=")[1].split("\n")[0]).replace(" ", ""))
+            #remove whitespaces from result
+            
     return("Ein Fehler ist aufgetreten, die ursprüngliche Rolle von "+player+" konnte nicht ermittelt werden.")
 
 
 def zufallszahl(min: int, max: int) -> int:
     return random.randint(min, max)
+
+
+def spieler_gestorben(player: str):
+    
+    rolle = momentane_rolle(player)
+    
+    if rolle in liste_tot_mit_aktion or ist_verliebt(player) == True:
+        return("aktion") 
+    elif rolle in liste_tot_ohne_aktion:
+        return("ohne_aktion")
+     
+    
+
+   
 
 
 

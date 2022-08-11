@@ -234,7 +234,3 @@ def fruehere_rolle(player: str) -> str:
 
 def zufallszahl(min: int, max: int) -> int:
     return random.randint(min, max)
-
-
-
-        

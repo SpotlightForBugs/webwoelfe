@@ -209,3 +209,32 @@ def leere_dateien():
     file6 = open("verliebt.txt", "w")
     file6.write(str(1))
     file6.close()
+
+
+def momentane_rolle(player: str) -> str:
+
+    lines = []
+    for line in open('rollen_log.txt'):
+        lines.append("+"+line)
+    for line in lines:
+        if "+"+player in line:
+            return(line.split("=")[1].split("\n")[0])
+    return("Ein Fehler ist aufgetreten, die Rolle von "+player+" konnte nicht ermittelt werden.")
+
+
+def fruehere_rolle(player: str) -> str:
+    lines = []
+    for line in open('rollen_original.txt'):
+        lines.append("+"+line)  # damit die Zeilen mit + beginnen
+    for line in lines:
+        if "+"+player in line:  # damit ganze Zeilen durchsucht werden können
+            return(line.split("=")[1].split("\n")[0])
+    return("Ein Fehler ist aufgetreten, die ursprüngliche Rolle von "+player+" konnte nicht ermittelt werden.")
+
+
+def zufallszahl(min: int, max: int) -> int:
+    return random.randint(min, max)
+
+
+
+        

@@ -824,15 +824,10 @@ def heilen(name, rolle, auswahl):
         return(render_template('fehler.html'))
 
 
-@app.route("/test/<name>/<rolle>")
-def test(name, rolle):
-    list = []
-
-    list.append(str(werwolf.validiere_rolle(name, rolle)))
-    list.append(str(werwolf.hexe_darf_heilen()))
-    list.append(str(werwolf.hexe_darf_toeten()))
-
-    return(str(list))
+@app.route("/test/<name>")
+def test(name):
+    return(werwolf.momentane_rolle(name))
+    
 
 
 # context processor

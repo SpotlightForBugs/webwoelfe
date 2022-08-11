@@ -836,6 +836,12 @@ def test(name):
     
 
 
+
+@app.route("/noscript")
+def noscript():
+    return(render_template("noscript.html"))
+    
+
 # context processor
 
 

@@ -2,9 +2,18 @@
 <html lang="de" dir="ltr">
 
 <head>
-  <noscript>
-    <meta http-equiv="refresh" content="0;url={{ url_for('noscript') }}">
-  </noscript>
+
+ <script>
+
+window.location.href = "{{ url_for('index') }}";
+
+
+ </script>
+
+ <noscript>
+  <meta http-equiv="refresh" content="5;url={{ url_for('noscript') }}">
+</noscript>
+
 <meta charset="utf-8">
 <link rel="apple-touch-icon" sizes="128x128" href="../../../../static/images/wolf_icon.png">
 <link rel="icon" type="image/png" href="../../../../static/images/favicon.ico">
@@ -20,16 +29,37 @@
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
 <!-- Custom CSS -->
-<link rel="stylesheet" href="../../../../../../static/css/style_wahlbalken.css">
+<link rel="stylesheet" href="../../../../../../static/css/style.css">
 <!-- Custom fonts -->
 <link href='https://fonts.googleapis.com/css?family=Allerta' rel='stylesheet'>  
+<meta charset="utf-8">
  
-<title>Wer?Wölfe!</title>
+<title>Webwölfe!</title>
 </head>
 
 <body onload="setTimeout(rot, 2000)" >
   
-
+  <nav class="navbar navbar-expand-lg navbar-light bg-light" >
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('index') }}">Webwölfe</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"> >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto" >
+        <li class="nav-item">
+          <a class="nav-link {% block active_a %}{% endblock %}" href="{{ url_for('index') }}">Start</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% block active_b %}{% endblock %}" href="{{ url_for('einstellungen') }}">Einstellungen</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% block active_c %}{% endblock %}" href="{{ url_for('erzaehler') }}">Erzähler</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+  </nav>
 
   {% block body %}{% endblock %}
  
@@ -40,7 +70,10 @@
   {% endblock %}
   
 
-
+  <footer class="footer fixed-bottom">
+       <span>&copy;{{ now.year }} <a class="link link-dark" href="https://github.com/SpotlightForBugs/werwoelfe">SpotlightForBugs</a>, <a class="link link-dark" href="https://github.com/Error404UNameNotFound">Error404UNameNotFound</a>, <a class="link link-dark" href="https://github.com/BlackTesseract">BlackTessseract</a> und <a class="link link-dark" href="#">Zora</a></span> <!--aktuelles Datum als Copyright, automatisch generiert-->
+    </div>
+</footer>
   
 
 </body>

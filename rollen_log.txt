@@ -1,6 +1,6 @@
 *********************
-a = Hexe
+a = Tot
 b = Werwolf
-c = Seherin
+c = Tot
 d = Werwolf
 e = Armor

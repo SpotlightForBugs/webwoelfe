@@ -1,6 +1,6 @@
 import random
 import ast
-import re
+
 
 liste_tot_mit_aktion = ["Jaeger", "Hexe", "PLATZHALTER"]
 liste_tot_ohne_aktion = ["Dorfbewohner", "Werwolf", "Seherin"]
@@ -297,12 +297,14 @@ def zufallszahl(min: int, max: int) -> int:
     return random.randint(min, max)
 
 
-def verliebte_toeten()-> str:
+def verliebte_toeten() -> str:
     log_liste = []
     with open('verliebt.txt', 'r') as verliebt:
         read = verliebt.read()
-        player1 = str(read.split("+")).encode("utf-8").decode("utf-8").replace("\\n","").replace("'",'').replace("[",'').replace("]",'').replace("'",'').replace(" ", "").split(",")[1]
-        player2 = str(read.split("+")).encode("utf-8").decode("utf-8").replace("\\n","").replace("'",'').replace("[",'').replace("]",'').replace("'",'').replace(" ", "").split(",")[2]
+        player1 = str(read.split("+")).encode("utf-8").decode("utf-8").replace("\\n", "").replace(
+            "'", '').replace("[", '').replace("]", '').replace("'", '').replace(" ", "").split(",")[1]
+        player2 = str(read.split("+")).encode("utf-8").decode("utf-8").replace("\\n", "").replace(
+            "'", '').replace("[", '').replace("]", '').replace("'", '').replace(" ", "").split(",")[2]
         verliebt.close()
     with open('rollen_log.txt', 'r') as rollen_log:
         for line in rollen_log:
@@ -310,40 +312,68 @@ def verliebte_toeten()-> str:
                 log_liste.append("+"+player1 + " = " + "Tot" + "\n")
             elif line == (player2 + " = " + momentane_rolle(player2) + "\n"):
                 log_liste.append("+"+player2 + " = " + "Tot" + "\n")
-            else :
+            else:
                 log_liste.append(line)
-   
+
     with open('rollen_log.txt', 'w') as rollen_log_write:
         for line in log_liste:
-            rollen_log_write.write((line).replace("+",""))
+            rollen_log_write.write((line).replace("+", ""))
         rollen_log_write.close()
         rollen_log.close()
-        
 
-    
-        
-        
-        
     return(player1 + " und " + player2)
-        
-    
-
-    
-    
-    
 
 
-def spieler_gestorben(player: str):
+# Tötet den gewählten Spieler
+
+def toete_spieler(player):
+    player = str(player)
+    rolle = momentane_rolle(player)
+    list_for_the_log = []
+    statement = None  # warum ist das nötig?
+    with open('rollen_log.txt', 'r') as rollen_log:
+        for line in rollen_log:
+            if line == (player + " = " + rolle + "\n"):
+                list_for_the_log.append(player + " = " + "Tot" + "\n")
+                statement = player + " wurde getötet."
+            else:
+                if statement == None:
+                    statement = "Der Spieler " + player + " ist unbekannt."
+                list_for_the_log.append(line)
+
+        rollen_log.close()
+        with open('rollen_log.txt', 'w+') as rollen_log_write:
+            for line in list_for_the_log:
+                rollen_log_write.write(line)
+            rollen_log_write.close()
+
+            return(statement)
+
+
+# Aktionen, die nach dem Töten / währendessen / kurz zuvor eines Spielers ausgeführt werden
+
+def spieler_gestorben(player: str) -> str:
 
     rolle = momentane_rolle(player)
+    if rolle == "Tot": return "err"
 
     if rolle in liste_tot_mit_aktion and aktion_verfuegbar_ist_tot(player) == True:
-        
-        #Hexe mit Trank und Jaeger
-        pass
-    
+
+        # TODO: #33 Aktionen für Hexe und Jaeger während des Todes
+        # aktion
+
+        if rolle == "Hexe":
+            toete_spieler(player)
+            return("h") # hexe_aktion()
+            
+        elif rolle == "Jaeger":
+            return("j") # jaeger_aktion()
+            toete_spieler(player)
+
     elif ist_verliebt(player) == True:
         verliebte_toeten()
-    
+        return("v") # verliebte_sind_tot
+
     elif rolle in liste_tot_ohne_aktion:
-        return("ohne_aktion")
+        toete_spieler(player)
+        return(str(0)) # keine Aktion, player ist jetzt tot

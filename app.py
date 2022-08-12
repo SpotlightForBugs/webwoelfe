@@ -827,9 +827,9 @@ def heilen(name, rolle, auswahl):
         return(render_template('fehler.html'))
 
 
-@app.route("/test")
-def test():
-    return_statement = werwolf.verliebte_toeten()
+@app.route("/test/<name>")
+def test(name):
+    return_statement = werwolf.spieler_gestorben(name)
     return(return_statement)
     
 

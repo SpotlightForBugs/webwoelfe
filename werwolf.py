@@ -2,8 +2,8 @@ import random
 import ast
 import re
 
-liste_tot_mit_aktion = ["Jaeger","Hexe","PLATZHALTER"]
-liste_tot_ohne_aktion = ["Dorfbewohner","Werwolf","Seherin"]
+liste_tot_mit_aktion = ["Jaeger", "Hexe", "PLATZHALTER"]
+liste_tot_ohne_aktion = ["Dorfbewohner", "Werwolf", "Seherin"]
 
 
 def createDict():
@@ -176,6 +176,24 @@ def armor_darf_auswaehlen() -> bool:
             return(False)
 
 
+def jaeger_darf_toeten() -> bool:
+    with open('jaeger_kann.txt', 'r') as jaeger_kann:
+        jaeger_kann_text = jaeger_kann.read()
+        if "1" in jaeger_kann_text:
+            jaeger_kann.close()
+            return(True)
+        else:
+            jaeger_kann.close()
+            return(False)
+
+
+def jaeger_fertig():
+    # jaeger_kann.txt mit 0 ersetzen
+    with open('jaeger_kann.txt', 'w') as jaeger_kann:
+        jaeger_kann.write("0")
+        jaeger_kann.close()
+
+
 def armor_fertig(player1: str, player2: str):
     if player1 != player2 and validiere_name(player1) == True and validiere_name(player2) == True:
         with open('verliebt.txt', 'r+') as verliebt:
@@ -190,7 +208,8 @@ def armor_fertig(player1: str, player2: str):
             with open('armor_kann.txt', 'w') as armor_kann:
                 armor_kann.write("0")
                 armor_kann.close()
-                
+
+
 def ist_verliebt(name: str) -> bool:
     with open('verliebt.txt', 'r') as verliebt:
         verliebt_text = verliebt.read()
@@ -223,8 +242,11 @@ def leere_dateien():
     file5.write(str(1))
     file5.close()
     file6 = open("verliebt.txt", "w")
-    file6.write(str(1))
+    file6.write(str(''))
     file6.close()
+    file7 = open("jaeger_kann.txt", "w")
+    file7.write(str(1))
+    file7.close()
 
 
 def momentane_rolle(player: str) -> str:
@@ -244,29 +266,84 @@ def fruehere_rolle(player: str) -> str:
         lines.append("+"+line)  # damit die Zeilen mit + beginnen
     for line in lines:
         if "+"+player in line:  # damit ganze Zeilen durchsucht werden können
-             return((line.split("=")[1].split("\n")[0]).replace(" ", ""))
-            #remove whitespaces from result
-            
+            return((line.split("=")[1].split("\n")[0]).replace(" ", ""))
+            # remove whitespaces from result
+
     return("Ein Fehler ist aufgetreten, die ursprüngliche Rolle von "+player+" konnte nicht ermittelt werden.")
+
+
+def war_oder_ist_rolle(player: str, rolle: str) -> bool:
+    if momentane_rolle(player) == rolle or fruehere_rolle(player) == rolle:
+        return(True)
+    else:
+        return(False)
+
+
+def aktion_verfuegbar_ist_tot(player: str) -> bool:
+
+    if war_oder_ist_rolle(player, "Hexe") == True:
+        if hexe_darf_toeten() == True:
+            return(True)
+        else:
+            return(False)
+    elif war_oder_ist_rolle(player, "Jaeger") == True:
+        if jaeger_darf_toeten() == True:
+            return(True)
+    else:
+        return(False)
 
 
 def zufallszahl(min: int, max: int) -> int:
     return random.randint(min, max)
 
 
+def verliebte_toeten()-> str:
+    log_liste = []
+    with open('verliebt.txt', 'r') as verliebt:
+        read = verliebt.read()
+        player1 = str(read.split("+")).encode("utf-8").decode("utf-8").replace("\\n","").replace("'",'').replace("[",'').replace("]",'').replace("'",'').replace(" ", "").split(",")[1]
+        player2 = str(read.split("+")).encode("utf-8").decode("utf-8").replace("\\n","").replace("'",'').replace("[",'').replace("]",'').replace("'",'').replace(" ", "").split(",")[2]
+        verliebt.close()
+    with open('rollen_log.txt', 'r') as rollen_log:
+        for line in rollen_log:
+            if line == (player1 + " = " + momentane_rolle(player1) + "\n"):
+                log_liste.append("+"+player1 + " = " + "Tot" + "\n")
+            elif line == (player2 + " = " + momentane_rolle(player2) + "\n"):
+                log_liste.append("+"+player2 + " = " + "Tot" + "\n")
+            else :
+                log_liste.append(line)
+   
+    with open('rollen_log.txt', 'w') as rollen_log_write:
+        for line in log_liste:
+            rollen_log_write.write((line).replace("+",""))
+        rollen_log_write.close()
+        rollen_log.close()
+        
+
+    
+        
+        
+        
+    return(player1 + " und " + player2)
+        
+    
+
+    
+    
+    
+
+
 def spieler_gestorben(player: str):
-    
+
     rolle = momentane_rolle(player)
+
+    if rolle in liste_tot_mit_aktion and aktion_verfuegbar_ist_tot(player) == True:
+        
+        #Hexe mit Trank und Jaeger
+        pass
     
-    if rolle in liste_tot_mit_aktion or ist_verliebt(player) == True:
-        return("aktion") 
+    elif ist_verliebt(player) == True:
+        verliebte_toeten()
+    
     elif rolle in liste_tot_ohne_aktion:
         return("ohne_aktion")
-     
-    
-
-   
-
-
-
-        

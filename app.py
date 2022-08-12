@@ -797,9 +797,7 @@ def wer_wahl_warten():
             return (render_template("Dashboards/status/wer_wahl_warten.html"))
 
 
-@app.route('/partner/<nummer>/<nummer2>', methods=['GET', 'POST'])
-def partner(nummer, nummer2):
-    pass
+
 
 
 @app.route("/<name>/<rolle>/heilen/<auswahl>")
@@ -829,9 +827,9 @@ def heilen(name, rolle, auswahl):
         return(render_template('fehler.html'))
 
 
-@app.route("/test/<name>")
-def test(name):
-    return_statement = werwolf.spieler_gestorben(name)
+@app.route("/test")
+def test():
+    return_statement = werwolf.verliebte_toeten()
     return(return_statement)
     
 

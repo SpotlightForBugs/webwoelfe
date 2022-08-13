@@ -8,7 +8,6 @@ import datetime
 import re
 from inspect import currentframe, getframeinfo
 from datetime import datetime
-from flask_socketio import SocketIO, emit
 
 
 app = Flask(__name__)
@@ -602,6 +601,8 @@ def rausschmeissen(name, rolle):  # function for the kick function
             players_log = open('rollen_log.txt')  # open the log file
             players_log = players_log.readlines()  # read the log file
             # render the rausschmeissen.html
+						
+						werwolf.toete_spieler(name)
             return (render_template('rausschmeissen.html', name=name, rolle=rolle, names=players_log))
         except:
 

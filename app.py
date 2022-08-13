@@ -126,7 +126,7 @@ def get_data():  # get the data from the form
                     return render_template('neu_laden.html')
 
 
-# Pfad des Erzählers
+# Pfad des Erzählers, momentan für debugzwecke auf einem ungeschützten pfad
 
 @app.route('/erzaehler', methods=['GET'])  # Erzähler
 def erzaehler():
@@ -136,7 +136,7 @@ def erzaehler():
         # render erzaehler.html
         return(render_template('erzaehler.html', names=players_log))
     except:
-        return(404)  # if the log file is not found
+        return(str(404))  # if the log file is not found
 
  # Neues Spiel
 

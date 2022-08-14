@@ -8,7 +8,6 @@ import datetime
 import re
 from inspect import currentframe, getframeinfo
 from datetime import datetime
-from flask_socketio import SocketIO, emit
 
 
 app = Flask(__name__)
@@ -126,7 +125,7 @@ def get_data():  # get the data from the form
                     return render_template('neu_laden.html')
 
 
-# Pfad des Erzählers
+# Pfad des Erzählers, momentan für debugzwecke auf einem ungeschützten pfad
 
 @app.route('/erzaehler', methods=['GET'])  # Erzähler
 def erzaehler():
@@ -136,7 +135,7 @@ def erzaehler():
         # render erzaehler.html
         return(render_template('erzaehler.html', names=players_log))
     except:
-        return(404)  # if the log file is not found
+        return(str(404))  # if the log file is not found
 
  # Neues Spiel
 
@@ -602,6 +601,8 @@ def rausschmeissen(name, rolle):  # function for the kick function
             players_log = open('rollen_log.txt')  # open the log file
             players_log = players_log.readlines()  # read the log file
             # render the rausschmeissen.html
+						
+						werwolf.toete_spieler(name)
             return (render_template('rausschmeissen.html', name=name, rolle=rolle, names=players_log))
         except:
 

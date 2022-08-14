@@ -380,11 +380,10 @@ def spezielles_Dashboard(name, rolle):
 
             # render Dash_rolle.html
             return (render_template("Dashboards/Dash_" + rolle + ".html", name=name, rolle=rolle, names=players_log, nurNamen=nurNamen, letzter_tot=letzter_tot, hexe_kann=hexe_kann))
-        
-        elif rolle == 'Armor':
-          return (render_template("Dashboards/Dash_" + rolle + ".html", name=name, rolle=rolle, names=players_log, nurNamen=nurNamen,armor_kann=werwolf.armor_darf_auswaehlen()))
 
-        
+        elif rolle == 'Armor':
+            return (render_template("Dashboards/Dash_" + rolle + ".html", name=name, rolle=rolle, names=players_log, nurNamen=nurNamen, armor_kann=werwolf.armor_darf_auswaehlen()))
+
         else:
             # render Dash_rolle.html
             return (render_template("Dashboards/Dash_" + rolle + ".html", name=name, rolle=rolle, names=players_log, nurNamen=nurNamen))
@@ -601,8 +600,8 @@ def rausschmeissen(name, rolle):  # function for the kick function
             players_log = open('rollen_log.txt')  # open the log file
             players_log = players_log.readlines()  # read the log file
             # render the rausschmeissen.html
-						
-						werwolf.toete_spieler(name)
+
+            werwolf.toete_spieler(name)
             return (render_template('rausschmeissen.html', name=name, rolle=rolle, names=players_log))
         except:
 
@@ -798,9 +797,6 @@ def wer_wahl_warten():
             return (render_template("Dashboards/status/wer_wahl_warten.html"))
 
 
-
-
-
 @app.route("/<name>/<rolle>/heilen/<auswahl>")
 def heilen(name, rolle, auswahl):
     if werwolf.validiere_rolle(name, rolle) == True and werwolf.hexe_darf_heilen() == True:
@@ -832,14 +828,12 @@ def heilen(name, rolle, auswahl):
 def test(name):
     return_statement = werwolf.spieler_gestorben(name)
     return(return_statement)
-    
-
 
 
 @app.route("/noscript")
 def noscript():
     return(render_template("noscript.html"))
-    
+
 
 # context processor
 

@@ -1,8 +1,6 @@
 from traceback import print_tb
 from flask import Flask, request, url_for, render_template, session, make_response, redirect, Response
 #from flask_session import Session
-import requests
-import logging
 import werwolf
 import datetime
 import re
@@ -70,9 +68,7 @@ def get_data():  # get the data from the form
     else:
         if request.method == "POST":  # if the request is a POST request
             name = request.form.get("name")  # get the name from the form
-            name = name.replace('1', 'i')  # 1 ist immer ein i
-            name = name.replace('3', 'e')  # 3 ist immer ein e
-            name = name.replace('4', 'a')  # 4 ist immer ein a
+
             name = name.replace('/', "_")  # / ist immer ein _
             name = name.replace('=', "-")  # gleich ist immer -
             name = name.replace(':', "_")  # doppelpunkt ist immer _
@@ -84,14 +80,7 @@ def get_data():  # get the data from the form
                 # name doppelt ausgeben
                 return(render_template('name_doppelt.html', name=name))
             else:
-                try:
-                    # if the name is ivica
-                    if str(re.findall('\s*ivica\s*', name, re.IGNORECASE)[0]).upper() == 'IVICA':
-                        name = 'ivo'  # set the name to ivo
-                except:  # if the name is not ivica
-                    pass  # do nothing
-                #date = datetime.datetime.now()
-                # open the file with the number of players
+
                 file = open('spieler_anzahl.txt')
                 num = file.read()  # read the file
                 operator = werwolf.deduct()  # get the operator
@@ -135,7 +124,7 @@ def erzaehler():
         # render erzaehler.html
         return(render_template('erzaehler.html', names=players_log))
     except:
-        return(str(404))  # if the log file is not found
+        return(str(404))  # return 404 if the file is not found
 
  # Neues Spiel
 
@@ -167,40 +156,8 @@ def kill_player(name, rolle, name_kill):
         else:
             return(render_template('fehler.html'))
 
-        with open('rollen_log.txt', 'r+') as fileTot_kill:
+        werwolf.toete_spieler(auswahl)
 
-            file_list_kill = []
-            counter_tot = 0
-
-            for line in fileTot_kill:
-                file_list_kill.append(line)
-
-            # print(file_list)
-
-            name_kill = name_kill.strip('\n')
-            name_kill = name_kill.replace('\n', '')
-
-            while counter_tot < len(file_list_kill):
-
-                #print(name_tot + ' - File List: ' + file_list[counter_tot])
-                print('Name Tot: ' + name_kill + ' =')
-
-                if name_kill + ' =' in file_list_kill[counter_tot]:
-                    # print("If")
-                    dffd = file_list_kill[counter_tot].split(" = ")
-                    new_line = dffd[0] + " = Tot \n"
-                    # print(new_line)
-                    file_list_kill[counter_tot] = new_line
-                    # print(file_list)
-
-                counter_tot = counter_tot+1
-        fileTot_kill.close()
-        with open('rollen_log.txt', 'w') as fileFinal:
-            fileFinal.writelines(file_list_kill)
-        fileFinal.close()
-        with open('letzter_tot.txt', "w") as file:
-            file.write(auswahl)
-            file.close()
         if rolle == "Hexe":
             werwolf.hexe_verbraucht("toeten")
 
@@ -352,13 +309,10 @@ def spezielles_Dashboard(name, rolle):
 
             if rolle == 'Hexe':
                 print('Hexe')
-                with open('letzter_tot.txt', 'r') as file:
-                    letzter_tot = file.read()
+                with open('hexe_kann.txt', 'r') as file:
+                    hexe_kann = file.read()
+                    hexe_kann = str(hexe_kann)
                     file.close()
-                    with open('hexe_kann.txt', 'r') as file:
-                        hexe_kann = file.read()
-                        hexe_kann = str(hexe_kann)
-                        file.close()
 
         players_log = open('rollen_log.txt')  # open the log file
         players_log = players_log.readlines()   # read the log file
@@ -544,10 +498,9 @@ def warten():     # function for the wait function
             with open('rollen_log.txt', 'w') as fileFinal:
                 fileFinal.writelines(file_list)
             fileFinal.close()
-            with open('letzter_tot.txt', "w") as file:
-                file.write(name_tot)
+            werwolf.schreibe_zuletzt_gestorben(name_tot)
 
-            return render_template("Dashboards/status/ergebnis.html", name=name_tot)
+            return render_template("Dashboards/status/ergebnis.html", name_tot=name_tot)
         else:
             return render_template("Dashboards/status/warten.html")
 
@@ -675,8 +628,7 @@ def wahl_stats():
             maxCount = anzahl
             name_tot = words[i]
 
-    with open('letzter_tot.txt', "w") as file:
-        file.write(name_tot)
+            werwolf.schreibe_zuletzt_gestorben(name_tot)
 
     return render_template("wahlstatus.html", name_tot=name_tot)
 
@@ -788,11 +740,10 @@ def wer_wahl_warten():
                 fileFinal.writelines(file_list)
             fileFinal.close()
 
-            with open('letzter_tot.txt', "w") as file:
-                file.write(name_tot)
+            werwolf.schreibe_zuletzt_gestorben(name_tot)
 
             name = name_tot
-            return (render_template("Dashboards/status/wer_wahl_ergebnis.html", name=name))
+            return (render_template("Dashboards/status/wer_wahl_ergebnis.html", name_tot=name_tot))
         else:
             return (render_template("Dashboards/status/wer_wahl_warten.html"))
 
@@ -822,12 +773,6 @@ def heilen(name, rolle, auswahl):
         return(render_template('Dashboards/Dash_Dorfbewohner.html'))
     else:
         return(render_template('fehler.html'))
-
-
-@app.route("/test/<name>")
-def test(name):
-    return_statement = werwolf.spieler_gestorben(name)
-    return(return_statement)
 
 
 @app.route("/noscript")

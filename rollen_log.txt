@@ -1,6 +1,1 @@
 *********************
-Justus = Tot
-b = Werwolf
-c = Tot
-d = Werwolf
-e = Armor

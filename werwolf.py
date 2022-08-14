@@ -324,6 +324,11 @@ def verliebte_toeten() -> str:
     return(player1 + " und " + player2)
 
 
+
+def schreibe_zuletzt_gestorben(player):
+    with open('letzter_tot.txt', 'r+') as letzter_tot_w:
+            letzter_tot_w.write(player)
+
 # Tötet den gewählten Spieler
 
 def toete_spieler(player):
@@ -346,8 +351,12 @@ def toete_spieler(player):
             for line in list_for_the_log:
                 rollen_log_write.write(line)
             rollen_log_write.close()
+            schreibe_zuletzt_gestorben(player)
+        
+        
+            
 
-            return(statement)
+        return(statement)
 
 
 # Aktionen, die nach dem Töten / währendessen / kurz zuvor eines Spielers ausgeführt werden
@@ -360,15 +369,16 @@ def spieler_gestorben(player: str) -> str:
     if rolle in liste_tot_mit_aktion and aktion_verfuegbar_ist_tot(player) == True:
 
         # TODO: #33 Aktionen für Hexe und Jaeger während des Todes
-        # aktion
+        
 
         if rolle == "Hexe":
             toete_spieler(player)
             return("h") # hexe_aktion()
             
         elif rolle == "Jaeger":
-            return("j") # jaeger_aktion()
             toete_spieler(player)
+            return("j") # jaeger_aktion()
+            
 
     elif ist_verliebt(player) == True:
         verliebte_toeten()
@@ -377,3 +387,9 @@ def spieler_gestorben(player: str) -> str:
     elif rolle in liste_tot_ohne_aktion:
         toete_spieler(player)
         return(str(0)) # keine Aktion, player ist jetzt tot
+
+def spieler_ist_tot(player: str) -> bool:
+    if momentane_rolle(player) == "Tot":
+        return(True)
+    else:
+        return(False)

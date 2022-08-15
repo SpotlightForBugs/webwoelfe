@@ -2,8 +2,6 @@
 
 # Webwölfe 
 
-Phew.. Das war echt knapp
-
 Das Spiel Werwölfe kostenlos online spielen
 
 [![BCH compliance](https://bettercodehub.com/edge/badge/SpotlightForBugs/werwoelfe?branch=Pro&token=eda8726081f5dcf716efbe9bb64c2a59e2a370cf)](https://bettercodehub.com/)

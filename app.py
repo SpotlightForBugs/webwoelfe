@@ -840,8 +840,7 @@ def heilen(name, rolle, auswahl):
     ):
         counter = 1
         with open("rollen_original.txt", "r") as file:
-            file_list = []
-            file_list.append("*********************\n")
+            file_list = ["*********************\n"]
 
             for line in file:
                 file_list.append(line)

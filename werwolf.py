@@ -223,8 +223,8 @@ def jaeger_fertig():
 def armor_fertig(player1: str, player2: str):
     if (
         player1 != player2
-        and validiere_name(player1) == True
-        and validiere_name(player2) == True
+        and validiere_name(player1) is True
+        and validiere_name(player2) is True
     ):
         with open("verliebt.txt", "r+") as verliebt:
             verliebt_text = verliebt.read()
@@ -319,13 +319,13 @@ def war_oder_ist_rolle(player: str, rolle: str) -> bool:
 
 def aktion_verfuegbar_ist_tot(player: str) -> bool:
 
-    if war_oder_ist_rolle(player, "Hexe") == True:
-        if hexe_darf_toeten() == True:
+    if war_oder_ist_rolle(player, "Hexe") is True:
+        if hexe_darf_toeten() is True:
             return True
         else:
             return False
-    elif war_oder_ist_rolle(player, "Jaeger") == True:
-        if jaeger_darf_toeten() == True:
+    elif war_oder_ist_rolle(player, "Jaeger") is True:
+        if jaeger_darf_toeten() is True:
             return True
     else:
         return False
@@ -401,7 +401,7 @@ def toete_spieler(player):
                 list_for_the_log.append(player + " = " + "Tot" + "\n")
                 statement = player + " wurde getötet."
             else:
-                if statement == None:
+                if statement is None:
                     statement = "Der Spieler " + player + " ist unbekannt."
                 list_for_the_log.append(line)
 
@@ -424,7 +424,7 @@ def spieler_gestorben(player: str) -> str:
     if rolle == "Tot":
         return "err"
 
-    if rolle in liste_tot_mit_aktion and aktion_verfuegbar_ist_tot(player) == True:
+    if rolle in liste_tot_mit_aktion and aktion_verfuegbar_ist_tot(player) is True:
 
         # TODO: #33 Aktionen für Hexe und Jaeger während des Todes
 
@@ -436,7 +436,7 @@ def spieler_gestorben(player: str) -> str:
             toete_spieler(player)
             return "j"  # jaeger_aktion()
 
-    elif ist_verliebt(player) == True:
+    elif ist_verliebt(player) is True:
         verliebte_toeten()
         return "v"  # verliebte_sind_tot
 

@@ -56,7 +56,7 @@ def setPlayerNumber():  # set the number of players
     # speichern der spieleranzahl in einer textdatei
     with open("spieler_anzahl.txt", "w+") as file:
         file.write(str(spieleranzahl))
-    if bool(request.form.get("cbx")) == True:  # checkbox is checked
+    if bool(request.form.get("cbx")) is True:  # checkbox is checked
         erzaehler_flag = 1  # set erzaehler_flag to 1
     else:
         erzaehler_flag = 0  # set erzaehler_flag to 0
@@ -91,7 +91,7 @@ def get_data():  # get the data from the form
             name = name.replace("*", "_")  # stern ist immer _
             players_log = open("rollen_log.txt")  # open the log file
             players_log = players_log.read()  # read the log file
-            if werwolf.validiere_name(name) == True:
+            if werwolf.validiere_name(name) is True:
                 # if the name is already in the log file
                 # name doppelt ausgeben
                 return render_template("name_doppelt.html", name=name)
@@ -170,10 +170,10 @@ def kill_player(name, rolle, name_kill):
     auswahl = name_kill
     if rolle == "Hexe" or rolle == "Jaeger":
         if rolle == "Hexe":
-            if werwolf.hexe_darf_toeten() == True:
+            if werwolf.hexe_darf_toeten() is True:
                 pass
 
-        if werwolf.validiere_rolle(name, rolle) == True:
+        if werwolf.validiere_rolle(name, rolle) is True:
 
             pass
         else:
@@ -192,8 +192,8 @@ def armor_player(player1, player2, name):
     rolle = "Armor"
 
     if (
-        werwolf.validiere_rolle(name, rolle) == True
-        and werwolf.armor_darf_auswaehlen() == True
+        werwolf.validiere_rolle(name, rolle) is True
+        and werwolf.armor_darf_auswaehlen() is True
     ):
         lover_one = player1
         lover_two = player2
@@ -202,13 +202,13 @@ def armor_player(player1, player2, name):
         return render_template("Dashboards/status/aktion_warten.html")
 
     elif (
-        werwolf.armor_darf_auswaehlen() == False
-        and werwolf.validiere_rolle(name, rolle) == True
+        werwolf.armor_darf_auswaehlen() is False
+        and werwolf.validiere_rolle(name, rolle) is True
     ):
 
         return render_template("Dashboards/status/aktion_warten.html")
 
-    elif werwolf.validiere_rolle(name, rolle) == False:
+    elif werwolf.validiere_rolle(name, rolle) is False:
         # print the error
         print(
             "Spieler oder Rolle falsch, zeige ihm den Klobert und leite Ihn nach 10 sekunden zurück!"
@@ -221,7 +221,7 @@ def armor_player(player1, player2, name):
 
 @app.route("/<name>/<rolle>/warten_auf_aktions_ende")
 def aktion_warten(name, rolle):
-    if werwolf.validiere_rolle(name, rolle) == True:
+    if werwolf.validiere_rolle(name, rolle) is True:
         return render_template("Dashboards/status/aktion_warten.html")
 
 
@@ -271,7 +271,7 @@ def Dashboard(name, rolle):  # Dashboard
     # print (players_vorhanden[:-1])
 
     # if the name and the role are in the log file
-    if werwolf.validiere_rolle(name, rolle) == True:
+    if werwolf.validiere_rolle(name, rolle) is True:
         try:  # try to get the role
             players_log = open("rollen_log.txt")  # open the log file
             players_log = players_log.readlines()  # read the log file
@@ -344,7 +344,7 @@ def spezielles_Dashboard(name, rolle):
 
     else:
         # if the name and the role are in the log file
-        if werwolf.validiere_rolle(name, rolle) == True:
+        if werwolf.validiere_rolle(name, rolle) is True:
 
             nurNamen = []  # create a list with the names
 
@@ -414,7 +414,7 @@ def spiel_ende(name, rolle):
         players_vorhanden = file.read()
         file.close()
 
-        if werwolf.validiere_rolle_original(name, rolle) == True:
+        if werwolf.validiere_rolle_original(name, rolle) is True:
             if (
                 "Werwolf" in players_vorhanden
                 and "Dorfbewohner" in players_vorhanden
@@ -462,7 +462,7 @@ def wahl(name, rolle, auswahl):
 
         wort2 = name + " : "
 
-        if werwolf.validiere_rolle(name, rolle) == True:
+        if werwolf.validiere_rolle(name, rolle) is True:
 
             with open("hat_gewaehlt.txt", "r+") as text:
                 contents = text.read()
@@ -489,7 +489,7 @@ def schlafen(name, rolle):  # function for the sleep function
         return render_template("tot.html", name=name)
 
     # if the string is in the log file
-    if werwolf.validiere_rolle(name, rolle) == True:
+    if werwolf.validiere_rolle(name, rolle) is True:
         try:
             players_log = open("rollen_log.txt")  # open the log file
             players_log = players_log.readlines()  # read the log file
@@ -606,7 +606,7 @@ def warten():  # function for the wait function
 @app.route("/<name>/<rolle>/<todesgrund>/tot")
 def tot(name, rolle, todesgrund):  # function for the death function
     # if the string is in the log file
-    if werwolf.validiere_rolle(name, rolle) == True:
+    if werwolf.validiere_rolle(name, rolle) is True:
         try:  # try to get the role
             players_log = open("rollen_log.txt")  # open the log file
             players_log = players_log.readlines()  # read the log file
@@ -656,7 +656,7 @@ def tot(name, rolle, todesgrund):  # function for the death function
 
 @app.route("/<name>/<rolle>/kick/")  # route for the kick function
 def rausschmeissen(name, rolle):  # function for the kick function
-    if werwolf.validiere_rolle(name, rolle) == True:
+    if werwolf.validiere_rolle(name, rolle) is True:
         print("Spieler vorhanden")  # print the string
         try:
             players_log = open("rollen_log.txt")  # open the log file
@@ -751,7 +751,7 @@ def wahl_stats():
 
 @app.route("/sehen/<name>/<rolle>/<auswahl>")
 def sehen(name, rolle, auswahl):
-    if werwolf.validiere_rolle(name, rolle) == True:
+    if werwolf.validiere_rolle(name, rolle) is True:
         players_log = open("rollen_log.txt")  # open the log file
         players_log = players_log.readlines()  # read the log file
         for line in players_log:
@@ -781,7 +781,7 @@ def wer_tot(name, rolle, auswahl):
 
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = file.read()  # read the log file
-    if werwolf.validiere_rolle(name, rolle) == True:
+    if werwolf.validiere_rolle(name, rolle) is True:
         with open("hat_gewaehlt.txt", "r") as f:
             if name + " : " in f.read():
                 return render_template("wahl_doppelt.html")
@@ -873,8 +873,8 @@ def wer_wahl_warten():
 @app.route("/<name>/<rolle>/heilen/<auswahl>")
 def heilen(name, rolle, auswahl):
     if (
-        werwolf.validiere_rolle(name, rolle) == True
-        and werwolf.hexe_darf_heilen() == True
+        werwolf.validiere_rolle(name, rolle) is True
+        and werwolf.hexe_darf_heilen() is True
     ):
         counter = 1
         with open("rollen_original.txt", "r") as file:

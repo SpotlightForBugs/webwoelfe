@@ -164,7 +164,7 @@ def reset():
 @app.route("/<name>/<rolle>/toeten/<name_kill>")  # kill a player
 def kill_player(name, rolle, name_kill):
     auswahl = name_kill
-    if rolle == "Hexe" or rolle == "Jaeger":
+    if rolle in ("Hexe", "Jaeger"):
         if rolle == "Hexe":
             if werwolf.hexe_darf_toeten() is True:
                 pass
@@ -282,7 +282,7 @@ def Dashboard(name, rolle):  # Dashboard
                         auswahlRolle = line[1]
 
                         # if the role is not Tot or the role is not the Erzähler
-                        if auswahlRolle != "Tot" and auswahlRolle != "Erzaehler":
+                        if auswahlRolle not in ("Tot", "Erzaehler"):
                             # append the name to the list
                             nurNamen.append(name_line)
 
@@ -583,18 +583,14 @@ def tot(name, rolle, todesgrund):  # function for the death function
             players_log = open("rollen_log.txt")  # open the log file
             players_log = players_log.readlines()  # read the log file
 
-            if (
-                todesgrund == "Werwolf" or todesgrund == "werwolf"
-            ):  # if the death reason is a werewolf
+            if todesgrund in ("Werwolf", "werwolf"):  # if the death reason is a werewolf
                 # set the death reason to a werewolf
                 todesgrund = "Du wurdest von einem Werwolf getötet"
-            elif (
-                todesgrund == "Abstimung" or todesgrund == "abstimmung"
-            ):  # if the death reason is a abstimulation
+            elif todesgrund in ("Abstimung", "abstimmung"):  # if the death reason is a abstimulation
                 # set the death reason to a abstimulation
                 todesgrund = "Du wurdest in Folge einer Abstimmung getötet"
             elif (
-                todesgrund == "Hexe" or todesgrund == "Hexe"
+                todesgrund == "Hexe"
             ):  # if the death reason is a witch
                 todesgrund = (
                     "Du wurdest von der Hexe getötet"  # set the death reason to a witch
@@ -676,9 +672,7 @@ def wahlbalken():
                 name = line[0]  # get the name
                 auswahlRolle = line[1]  # get the role
 
-                if (
-                    auswahlRolle != "Tot" and auswahlRolle != "Erzaehler"
-                ):  # if the role is not dead or the narrator
+                if auswahlRolle not in ("Tot", "Erzaehler"):  # if the role is not dead or the narrator
                     nurNamen.append(name)  # append the name to the list
 
         # render the wahlbalken.html

@@ -421,15 +421,13 @@ def spiel_ende(name, rolle):
                 return render_template(
                     "verloren.html", name=name, rolle=rolle, unschuldig=0
                 )
-
-            else:
-                if "Werwolf" in players_vorhanden:
-                    return render_template(
-                        "verloren.html", name=name, rolle=rolle, unschuldig=1
-                    )
+            if "Werwolf" in players_vorhanden:
                 return render_template(
-                    "gewonnen.html", name=name, rolle=rolle, unschuldig=1
+                    "verloren.html", name=name, rolle=rolle, unschuldig=1
                 )
+            return render_template(
+                "gewonnen.html", name=name, rolle=rolle, unschuldig=1
+            )
 
 
 @app.route("/waehlen/<name>/<rolle>/<auswahl>")

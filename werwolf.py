@@ -313,7 +313,7 @@ def aktion_verfuegbar_ist_tot(player: str) -> bool:
         if hexe_darf_toeten() is True:
             return True
         return False
-    elif war_oder_ist_rolle(player, "Jaeger") is True:
+    if war_oder_ist_rolle(player, "Jaeger") is True:
         if jaeger_darf_toeten() is True:
             return True
     else:

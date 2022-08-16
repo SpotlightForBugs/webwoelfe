@@ -1,71 +1,73 @@
-{% extends 'struktur.html' %} <!--@generated-->
+{% extends 'struktur.html' %}
+<!--@generated-->
 
 {% block body %}
-    
+
 <div class="container-fluid">
-    
-  
-            <h2>Hallo, {{name}}</h2> <br>
-            {% if armor_kann == False %}
-            <p> Deine Aktion ist bereits abgeschlossen. </p>
-            <input name="" id="" class="btn btn-danger" type="button" value="Zurück" onclick="goBack()">
-            <script>
-                function goBack() {
-                    window.history.back();
-                }
-            </script>
+  <h2>Hallo, {{name}}</h2>
+  <br />
+  {% if armor_kann == False %}
+  <p>Deine Aktion ist bereits abgeschlossen.</p>
+  <input
+    name=""
+    id=""
+    class="btn btn-danger"
+    type="button"
+    value="Zurück"
+    onclick="goBack()"
+  />
+  <script>
+    function goBack() {
+      window.history.back();
+    }
+  </script>
 
-            {% else %}
-            <p>Als {{rolle}} wählst du nun zwei Personen aus, die sich unsterblich ineinader verlieben.</p>
+  {% else %}
+  <p>
+    Als {{rolle}} wählst du nun zwei Personen aus, die sich unsterblich
+    ineinader verlieben.
+  </p>
 
-
-
-
-<!--TODO- #21 Auswahl der beiden Partner:innen-->         
-<script>
-    let link = "../../{{name}}/{{rolle}}_aktion"
+  <!--TODO- #21 Auswahl der beiden Partner:innen-->
+  <script>
+    let link = "../../{{name}}/{{rolle}}_aktion";
     counter_link = 0;
 
     function addToLink(nextString) {
-        counter_link++;
-        link = link.concat("/", nextString);
-        console.log(link);
-        if (counter_link == 2) {
-            window.location.href = link;
-        }
+      counter_link++;
+      link = link.concat("/", nextString);
+      console.log(link);
+      if (counter_link == 2) {
+        window.location.href = link;
+      }
     }
-</script>
+  </script>
 
-
-
-<ul class='wahllist'>
+  <ul class="wahllist">
     {% for el in nurNamen if el != name %}
-        <script>
-            
-            //name/rolle/partner1/partner2
+    <script>
+      //name/rolle/partner1/partner2
 
-                console.log("test")
-                console.log("{{el}}");	
-                var text = "{{el}}";    
-                    
-                    if (text.includes("Erzaehler")==false) {
-                        
-                            document.write("<li><button class='chooseplayer' id='"+text+"' >"+text+"</p></button></li><br>");
-                            btn = document.getElementById(text);
-                            btn.addEventListener("click", function() {
-                                console.log("{{el}}");
-                                addToLink("{{el}}");
-                            });
-                    }
-                
-                
-        </script>   
+      console.log("test");
+      console.log("{{el}}");
+      var text = "{{el}}";
+
+      if (text.includes("Erzaehler") == false) {
+        document.write(
+          "<li><button class='chooseplayer' id='" +
+            text +
+            "' >" +
+            text +
+            "</p></button></li><br>"
+        );
+        btn = document.getElementById(text);
+        btn.addEventListener("click", function () {
+          console.log("{{el}}");
+          addToLink("{{el}}");
+        });
+      }
+    </script>
     {% endfor %}
-    </ul>
-    {% endif %}
-
-
-
-
-{% endblock %}
-
+  </ul>
+  {% endif %} {% endblock %}
+</div>

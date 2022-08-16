@@ -1,20 +1,22 @@
-{% extends 'struktur_noscript.html' %} <!--@generated-->
+{% extends 'struktur_noscript.html' %}
+<!--@generated-->
 
 {% block body %}
 
+<div class="container-fluid" style="margin-top: 30px">
+  <h1 style="color: red">Fehler</h1>
+  <marquee direction="up" scrolldelay="100" scrollamount="100"
+    >Ohne JavaScript sähe unsere Seite vielleicht so aus</marquee
+  >
 
-<div class="container-fluid" style="margin-top:30px">
-    <h1 style="color:red">Fehler</h1>
-    <marquee direction="up" scrolldelay="100" scrollamount="100">Ohne JavaScript sähe unsere Seite vielleicht so aus</marquee>
-
-<h2>Bitte aktiviere <a style="color:red" href="http://www.enable-javascript.com/de/">JavaScript</a></h2>
+  <h2>
+    Bitte aktiviere
+    <a style="color: red" href="http://www.enable-javascript.com/de/"
+      >JavaScript</a
+    >
+  </h2>
 </div>
 
-
-
-{% endblock %}
-
-{% block script %}
+{% endblock %} {% block script %}
 <script src="../../../../static/scripts/rot.js"></script>
 {% endblock %}
-

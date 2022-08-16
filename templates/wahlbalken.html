@@ -1,34 +1,27 @@
-{% extends 'struktur_ohne_nav.html' %}  <!--@generated-->
+{% extends 'struktur_ohne_nav.html' %}
+<!--@generated-->
 
+{% block body %} {% for el in names if el != name %}
+<script>
+  console.log("{{el}}");
+  var text = "{{el}}";
+  if (text.includes("{{ name }} =") == false) {
+    document.write(
+      "<div class='wahlbalken' id = " + text + ">" + text + "</div><br>"
+    );
 
-{% block body %}
-{% for el in names if el != name %}
-        <script>
-            
-          
-            console.log("{{el}}");	
-            var text = "{{el}}";    
-            if (text.includes("{{ name }} =")==false) {
-                        
-                document.write("<div class='wahlbalken' id = "+text+">"+text+"</div><br>");
+    //neuladen der seite, jede sekunde
+    refresh = setInterval(function () {
+      location.reload();
+    }, 1000);
+  }
 
-                //neuladen der seite, jede sekunde
-                refresh = setInterval(function() {
-                    location.reload();
-                }, 1000);
-                
-                        
-            }
+  function changeStyle(id, count) {
+    var element = document.getElementById(id);
+    element.style.width = count + "%";
+  }
 
-            function changeStyle(id, count) {
-                var element = document.getElementById(id);
-                element.style.width = count + "%";
-            }
+  changeStyle("{{el}}", 50);
+</script>
 
-            changeStyle("{{el}}", 50);
-
-        </script>
-
-{% endfor %}
-
-{% endblock %}
+{% endfor %} {% endblock %}

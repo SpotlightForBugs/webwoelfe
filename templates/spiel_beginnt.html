@@ -1,18 +1,19 @@
-{% extends 'struktur.html' %} <!--@generated-->
+{% extends 'struktur.html' %}
+<!--@generated-->
 
 {% block body %}
 
-<div class="container-fluid" style="margin-top:30px">
+<div class="container-fluid" style="margin-top: 30px">
   <h4>Das Spiel hat schon angefangen!</h4>
 
-    <br>
-    Viel Glück in der nächsten Runde!
-    <br>
-  
-</div> -->
+  <br />
+  Viel Glück in der nächsten Runde!
+  <br />
+</div>
+-->
 <script>
   //zurück zur Startseite nach 10 Sekunden
-  setTimeout(function(){
+  setTimeout(function () {
     window.location.href = "{{ url_for('index') }}";
   }, 10000);
 </script>

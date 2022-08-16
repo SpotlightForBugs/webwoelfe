@@ -1,5 +1,5 @@
-from traceback import print_tb
-from flask import (
+from traceback import print_tb  # skipcq: PY-2000
+from flask import (  # skipcq: PY-2000
     Flask,
     request,
     url_for,

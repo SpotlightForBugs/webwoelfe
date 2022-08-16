@@ -10,7 +10,6 @@ from flask import (
     Response,
 )
 
-# from flask_session import Session
 import werwolf
 import datetime
 import re
@@ -267,8 +266,6 @@ def Dashboard(name, rolle):  # Dashboard
     if rolleAusLog == "Tot":
         return render_template("tot.html", name=name)  # render tot.html
 
-    # print (wort)
-    # print (players_vorhanden[:-1])
 
     # if the name and the role are in the log file
     if werwolf.validiere_rolle(name, rolle) is True:
@@ -289,7 +286,6 @@ def Dashboard(name, rolle):  # Dashboard
                         # set the role to the second part of the line
                         auswahlRolle = line[1]
 
-                        # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
 
                         # if the role is not Tot or the role is not the Erzähler
                         if auswahlRolle != "Tot" and auswahlRolle != "Erzaehler":
@@ -339,8 +335,6 @@ def spezielles_Dashboard(name, rolle):
     if rolleAusLog == "Tot":
         return render_template("tot.html", name=name)  # render tot.html
 
-        # print (wort)
-        # print (players_vorhanden[:-1])
 
     else:
         # if the name and the role are in the log file
@@ -370,7 +364,6 @@ def spezielles_Dashboard(name, rolle):
                 # set the role to the second part of the line
                 auswahlRolle = line[1]
 
-                # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
                 nurNamen.append(name_line)  # append the name to the list
 
         if rolle == "Hexe":
@@ -573,11 +566,9 @@ def warten():  # function for the wait function
 
                 while counter_tot < len(file_list):
 
-                    # print(name_tot + ' - File List: ' + file_list[counter_tot])
                     print("Name Tot: " + name_tot + " =")
 
                     if name_tot in file_list[counter_tot]:
-                        # print("If")
                         dffd = file_list[counter_tot].split(" = ")
                         new_line = dffd[0] + " = Tot \n"
                         # print(new_line)
@@ -704,7 +695,6 @@ def wahlbalken():
                 name = line[0]  # get the name
                 auswahlRolle = line[1]  # get the role
 
-                # print('Name: ' + name + '; Rolle: ' + auswahlRolle) # print the name and the role
 
                 if (
                     auswahlRolle != "Tot" and auswahlRolle != "Erzaehler"
@@ -842,11 +832,9 @@ def wer_wahl_warten():
 
                 while counter_tot < len(file_list):
 
-                    # print(name_tot + ' - File List: ' + file_list[counter_tot])
                     print("Name Tot: " + name_tot + " =")
 
                     if name_tot in file_list[counter_tot]:
-                        # print("If")
                         dffd = file_list[counter_tot].split(" = ")
                         new_line = dffd[0] + " = Tot \n"
                         # print(new_line)
@@ -917,4 +905,3 @@ def inject_now():
 # https://stackoverflow.com/questions/41231290/how-to-display-current-year-in-flask-template   #the source of this code
 if __name__ == "__main__":
     app.run(debug=True)
-    # app.run(debug=True, host='0.0.0.0')

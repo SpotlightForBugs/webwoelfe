@@ -94,9 +94,8 @@ def deduct():
                 if assign[keys[num]] == 0:
                     del assign[keys[num]]
                 return num
-            else:
 
-                assignment()
+            assignment()
 
     ind = assignment()
     print(assign)
@@ -114,8 +113,7 @@ def validiere_rolle(name: str, rolle: str) -> bool:
     players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
         return True
-    else:
-        return False
+    return False
 
 
 def validiere_rolle_original(name: str, rolle: str) -> bool:
@@ -126,8 +124,7 @@ def validiere_rolle_original(name: str, rolle: str) -> bool:
     players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
         return True
-    else:
-        return False
+    return False
 
 
 def validiere_name(name: str) -> bool:
@@ -137,8 +134,7 @@ def validiere_name(name: str) -> bool:
     players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
         return True
-    else:
-        return False
+    return False
 
 
 def hexe_verbraucht(flag: str):
@@ -172,9 +168,8 @@ def hexe_darf_toeten() -> bool:
         if str(2) in hexe_kann_text:
             hexe_kann.close()
             return True
-        else:
-            hexe_kann.close()
-            return False
+        hexe_kann.close()
+        return False
 
 
 """ Darf die Hexe heilen? """
@@ -186,9 +181,8 @@ def hexe_darf_heilen() -> bool:
         if "1" in hexe_kann_text:
             hexe_kann.close()
             return True
-        else:
-            hexe_kann.close()
-            return False
+        hexe_kann.close()
+        return False
 
 
 def armor_darf_auswaehlen() -> bool:
@@ -197,9 +191,8 @@ def armor_darf_auswaehlen() -> bool:
         if "1" in armor_kann_text:
             armor_kann.close()
             return True
-        else:
-            armor_kann.close()
-            return False
+        armor_kann.close()
+        return False
 
 
 def jaeger_darf_toeten() -> bool:
@@ -208,9 +201,8 @@ def jaeger_darf_toeten() -> bool:
         if "1" in jaeger_kann_text:
             jaeger_kann.close()
             return True
-        else:
-            jaeger_kann.close()
-            return False
+        jaeger_kann.close()
+        return False
 
 
 def jaeger_fertig():
@@ -246,9 +238,8 @@ def ist_verliebt(name: str) -> bool:
         if ("+" + name) in verliebt_text:
             verliebt.close()
             return True
-        else:
-            verliebt.close()
-            return False
+        verliebt.close()
+        return False
 
 
 def leere_dateien():
@@ -313,8 +304,7 @@ def fruehere_rolle(player: str) -> str:
 def war_oder_ist_rolle(player: str, rolle: str) -> bool:
     if momentane_rolle(player) == rolle or fruehere_rolle(player) == rolle:
         return True
-    else:
-        return False
+    return False
 
 
 def aktion_verfuegbar_ist_tot(player: str) -> bool:
@@ -322,9 +312,8 @@ def aktion_verfuegbar_ist_tot(player: str) -> bool:
     if war_oder_ist_rolle(player, "Hexe") is True:
         if hexe_darf_toeten() is True:
             return True
-        else:
-            return False
-    elif war_oder_ist_rolle(player, "Jaeger") is True:
+        return False
+    if war_oder_ist_rolle(player, "Jaeger") is True:
         if jaeger_darf_toeten() is True:
             return True
     else:
@@ -432,7 +421,7 @@ def spieler_gestorben(player: str) -> str:
             toete_spieler(player)
             return "h"  # hexe_aktion()
 
-        elif rolle == "Jaeger":
+        if rolle == "Jaeger":
             toete_spieler(player)
             return "j"  # jaeger_aktion()
 
@@ -448,5 +437,4 @@ def spieler_gestorben(player: str) -> str:
 def spieler_ist_tot(player: str) -> bool:
     if momentane_rolle(player) == "Tot":
         return True
-    else:
-        return False
+    return False

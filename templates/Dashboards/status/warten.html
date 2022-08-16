@@ -1,5 +1,5 @@
-
-{% extends 'struktur.html' %} <!--@generated-->
+{% extends 'struktur.html' %}
+<!--@generated-->
 
 {% block body %}
 
@@ -14,25 +14,21 @@
     }
 </script>  -->
 
-<div class='container-fluid' style='margin-top:30px'>
-    <h1>Bitte warte bis alle Stimmberechtigten zu einem Ergebnis gekommen sind</h1>
-    <div>
-        <br>
-        <div class="container">
- 
+<div class="container-fluid" style="margin-top: 30px">
+  <h1>
+    Bitte warte bis alle Stimmberechtigten zu einem Ergebnis gekommen sind
+  </h1>
+  <div>
+    <br />
+    <div class="container"></div>
 
+    <script>
+      //weiterleiten zu einer anderen Seite nach einer Sekunde
+      setTimeout(function () {
+        window.location.href = "{{ url_for('warten') }}";
+      }, 1000);
+    </script>
+
+    {% endblock %}
+  </div>
 </div>
-
-<script>
-//weiterleiten zu einer anderen Seite nach einer Sekunde
-setTimeout(function(){
-    window.location.href = "{{ url_for('warten') }}";
-}, 1000);
-
-
-</script>
-
-
-
-{% endblock %}
-

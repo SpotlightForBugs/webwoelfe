@@ -1,30 +1,31 @@
-{% extends 'struktur.html' %} <!--@generated-->
+{% extends 'struktur.html' %}
+<!--@generated-->
 
-{% block active_a %}
-active
-{% endblock %}
-
-{% block body %}
-<div class="container-fluid" style="margin-top:30px">
-  <h3>Hi, <span class='name'>{{ name.upper() }}</span></h3>
+{% block active_a %} active {% endblock %} {% block body %}
+<div class="container-fluid" style="margin-top: 30px">
+  <h3>Hi, <span class="name">{{ name.upper() }}</span></h3>
   <p>Du bist einer von {{ players }} Spielenden</p>
-    <p>Du hast die Rolle <span class='name'>{{ operator.upper() }}</span></p>
+  <p>Du hast die Rolle <span class="name">{{ operator.upper() }}</span></p>
 
-    
   {% if operator.upper() == "Erzaehler" %}
   <script>
     function newLocation() {
-        window.location.href="{{ url_for('erzaehler') }}";
+      window.location.href = "{{ url_for('erzaehler') }}";
     }
   </script>
-  <img src="x" onerror="newLocation()" >
- 
-{% else %}
-  
-<a name="" id="" class="btn btn-danger" href="{{ url_for('spezielles_Dashboard', name=name, rolle=operator) }}" role="button">Als {{ operator }} spielen</a>
-{% endif %}
+  <img src="x" onerror="newLocation()" />
 
+  {% else %}
 
+  <a
+    name=""
+    id=""
+    class="btn btn-danger"
+    href="{{ url_for('spezielles_Dashboard', name=name, rolle=operator) }}"
+    role="button"
+    >Als {{ operator }} spielen</a
+  >
+  {% endif %}
 </div>
 
 {% endblock %}

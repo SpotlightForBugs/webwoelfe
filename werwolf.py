@@ -29,7 +29,6 @@ def createDict():
         jaeger = 1
 
     if erzaehler_flag == 1:
-        #  print("erzaehler ist zufaellig")
         if jaeger > 0:
             assign = {
                 "Erzaehler": 1,
@@ -52,7 +51,6 @@ def createDict():
                 "Dorfbewohner": (spieleranzahl - werwolf - seherin - hexe - armor - 1),
             }
     elif erzaehler_flag == 0:
-        #  print("erzaehler ist nicht vorhanden")
         if jaeger > 0:
             assign = {
                 "Werwolf": werwolf,
@@ -83,7 +81,6 @@ def deduct():
         assign = a.read()
         # print(assign)
         assign = ast.literal_eval(assign)
-        # print(type(assign))
         keys = [key for key in assign]
 
     if sum(assign.values()) == 0:

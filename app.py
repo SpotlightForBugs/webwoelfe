@@ -586,7 +586,8 @@ def tot(name, rolle, todesgrund):  # function for the death function
             if todesgrund in ("Werwolf", "werwolf"):  # if the death reason is a werewolf
                 # set the death reason to a werewolf
                 todesgrund = "Du wurdest von einem Werwolf getötet"
-            elif todesgrund in ("Abstimung", "abstimmung"):  # if the death reason is a abstimulation
+            # if the death reason is a abstimulation
+            elif todesgrund in ("Abstimung", "abstimmung"):
                 # set the death reason to a abstimulation
                 todesgrund = "Du wurdest in Folge einer Abstimmung getötet"
             elif (
@@ -672,7 +673,8 @@ def wahlbalken():
                 name = line[0]  # get the name
                 auswahlRolle = line[1]  # get the role
 
-                if auswahlRolle not in ("Tot", "Erzaehler"):  # if the role is not dead or the narrator
+                # if the role is not dead or the narrator
+                if auswahlRolle not in ("Tot", "Erzaehler"):
                     nurNamen.append(name)  # append the name to the list
 
         # render the wahlbalken.html

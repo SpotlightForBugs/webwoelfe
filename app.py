@@ -66,7 +66,6 @@ def setPlayerNumber():  # set the number of players
     werwolf.createDict()  # create the dictionary with the names of the players
     with open("rollen_log.txt", "w+") as f:  # leere rollen_log.txt
         f.write("*********************\n")
-        f.close  # schließen der datei
     # render einstellungen_gespeichert.html
     return render_template(
         "einstellungen_gespeichert.html", spieleranzahl_var=spieleranzahl

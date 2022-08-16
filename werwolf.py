@@ -243,7 +243,6 @@ def leere_dateien():
 
     with open("rollen_log.txt", "w+") as f:  # leere rollen_log.txt
         f.write("*********************\n")
-        f.close
     file = open("abstimmung.txt", "r+")
     file.truncate(0)
     file.close()

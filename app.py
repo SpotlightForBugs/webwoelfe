@@ -260,12 +260,12 @@ def Dashboard(name, rolle):  # Dashboard
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = file.read()  # read the log file
 
-    rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
+    rolleAusLog = players_vorhanden.split(
+        " = ")  # split the log file into a list
     rolleAusLog = rolleAusLog[1]
 
     if rolleAusLog == "Tot":
         return render_template("tot.html", name=name)  # render tot.html
-
 
     # if the name and the role are in the log file
     if werwolf.validiere_rolle(name, rolle) is True:
@@ -285,7 +285,6 @@ def Dashboard(name, rolle):  # Dashboard
                         name_line = line[0]
                         # set the role to the second part of the line
                         auswahlRolle = line[1]
-
 
                         # if the role is not Tot or the role is not the Erzähler
                         if auswahlRolle != "Tot" and auswahlRolle != "Erzaehler":
@@ -329,12 +328,12 @@ def spezielles_Dashboard(name, rolle):
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = file.read()  # read the log file
 
-    rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
+    rolleAusLog = players_vorhanden.split(
+        " = ")  # split the log file into a list
     rolleAusLog = rolleAusLog[1]
 
     if rolleAusLog == "Tot":
         return render_template("tot.html", name=name)  # render tot.html
-
 
     else:
         # if the name and the role are in the log file
@@ -694,7 +693,6 @@ def wahlbalken():
                 line = line.split(" = ")  # split the line at the =
                 name = line[0]  # get the name
                 auswahlRolle = line[1]  # get the role
-
 
                 if (
                     auswahlRolle != "Tot" and auswahlRolle != "Erzaehler"

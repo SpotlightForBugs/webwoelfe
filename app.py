@@ -255,8 +255,7 @@ def Dashboard(name, rolle):  # Dashboard
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = file.read()  # read the log file
 
-    rolleAusLog = players_vorhanden.split(
-        " = ")  # split the log file into a list
+    rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
     rolleAusLog = rolleAusLog[1]
 
     if rolleAusLog == "Tot":
@@ -322,8 +321,7 @@ def spezielles_Dashboard(name, rolle):
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = file.read()  # read the log file
 
-    rolleAusLog = players_vorhanden.split(
-        " = ")  # split the log file into a list
+    rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
     rolleAusLog = rolleAusLog[1]
 
     if rolleAusLog == "Tot":
@@ -583,16 +581,17 @@ def tot(name, rolle, todesgrund):  # function for the death function
             players_log = open("rollen_log.txt")  # open the log file
             players_log = players_log.readlines()  # read the log file
 
-            if todesgrund in ("Werwolf", "werwolf"):  # if the death reason is a werewolf
+            if todesgrund in (
+                "Werwolf",
+                "werwolf",
+            ):  # if the death reason is a werewolf
                 # set the death reason to a werewolf
                 todesgrund = "Du wurdest von einem Werwolf getötet"
             # if the death reason is a abstimulation
             elif todesgrund in ("Abstimung", "abstimmung"):
                 # set the death reason to a abstimulation
                 todesgrund = "Du wurdest in Folge einer Abstimmung getötet"
-            elif (
-                todesgrund == "Hexe"
-            ):  # if the death reason is a witch
+            elif todesgrund == "Hexe":  # if the death reason is a witch
                 todesgrund = (
                     "Du wurdest von der Hexe getötet"  # set the death reason to a witch
                 )

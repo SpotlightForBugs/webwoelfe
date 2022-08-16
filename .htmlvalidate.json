@@ -1,8 +1,4 @@
 {
-  "elements": [
-    "html5"
-  ],
-  "extends": [
-    "html-validate:recommended"
-  ]
+  "elements": ["html5"],
+  "extends": ["html-validate:recommended"]
 }

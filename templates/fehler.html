@@ -1,23 +1,22 @@
-{% extends 'struktur.html' %} <!--@generated-->
+{% extends 'struktur.html' %}
+<!--@generated-->
 
 {% block body %}
 
-
-<div class="container-fluid" style="margin-top:30px">
-    <h1 id="rot">Fehler</h1>
-<h2>Bitte gehe zurück zum <a style="color:red" href="{{ url_for('index')}}">Start</a></h2>
+<div class="container-fluid" style="margin-top: 30px">
+  <h1 id="rot">Fehler</h1>
+  <h2>
+    Bitte gehe zurück zum
+    <a style="color: red" href="{{ url_for('index')}}">Start</a>
+  </h2>
 </div>
 <script>
-    //weiterleitung zurück zum start
-    setTimeout(function(){
-        window.location.href = "{{ url_for('index')}}";
-    }, 5000);
-    </script>
+  //weiterleitung zurück zum start
+  setTimeout(function () {
+    window.location.href = "{{ url_for('index')}}";
+  }, 5000);
+</script>
 
-
-{% endblock %}
-
-{% block script %}
+{% endblock %} {% block script %}
 <script src="../../../../static/scripts/rot.js"></script>
 {% endblock %}
-

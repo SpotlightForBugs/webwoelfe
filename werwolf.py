@@ -107,8 +107,7 @@ def deduct():
 
 def validiere_rolle(name: str, rolle: str) -> bool:
     # create a string with the name and the role
-    wort = ("'" + name + " = " + rolle +
-            "\n'").encode("unicode_escape").decode("utf-8")
+    wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
@@ -118,8 +117,7 @@ def validiere_rolle(name: str, rolle: str) -> bool:
 
 def validiere_rolle_original(name: str, rolle: str) -> bool:
     # create a string with the name and the role
-    wort = ("'" + name + " = " + rolle +
-            "\n'").encode("unicode_escape").decode("utf-8")
+    wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
     file = open("rollen_original.txt", "r")  # open the log file
     players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
@@ -153,8 +151,7 @@ def hexe_verbraucht(flag: str):
                 hexe_kann_schreiben.write(hexe_kann_text)
                 hexe_kann_schreiben.close()
         else:
-            raise ValueError(
-                "Die Hexe kann nur über die flags 1 oder 2 verfügen")
+            raise ValueError("Die Hexe kann nur über die flags 1 oder 2 verfügen")
 
     # heilen --> 1
     # toeten --> 2

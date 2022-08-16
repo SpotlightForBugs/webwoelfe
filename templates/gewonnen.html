@@ -1,23 +1,23 @@
-{% extends 'struktur.html' %} <!--@generated-->
+{% extends 'struktur.html' %}
+<!--@generated-->
 
 {% block body %}
 
-
- 
-
-    <title>Du hast Gewonnen!</title>
-    <h1>Herzlichen Glueckwunsch, <br/> Ihr habt es geschaft!</h1>
-    <br/>
-    <h2>Hier findet ihr die Spielenden-Uebersicht</h2>
-    <br>
-    <br>
-    <iframe src="{{ url_for('overview_all',ist_unschuldig = unschuldig) }}", scrolling="no", height="1000px"></iframe>
-
+<title>Du hast Gewonnen!</title>
+<h1>
+  Herzlichen Glueckwunsch, <br />
+  Ihr habt es geschaft!
+</h1>
+<br />
+<h2>Hier findet ihr die Spielenden-Uebersicht</h2>
+<br />
+<br />
+<iframe
+  src="{{ url_for('overview_all',ist_unschuldig = unschuldig) }}"
+  ,
+  scrolling="no"
+  ,
+  height="1000px"
+></iframe>
 
 {% endblock %}
-
-
-
-
-
-

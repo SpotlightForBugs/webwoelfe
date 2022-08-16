@@ -1,69 +1,64 @@
-{% extends 'struktur.html' %} <!--@generated-->
+{% extends 'struktur.html' %}
+<!--@generated-->
 
 {% block body %}
-    
+
 <div class="container-fluid">
-    
-    <div class="row">
-        <div class="col-md-12">
-            <h2>Seherin: </h2>
-        </div>
-    </div>
-         
-        
-  <!--Rolleneigenes-->
-     
-<div class="row">
+  <div class="row">
     <div class="col-md-12">
-        <h3>Siehe</h3>
-        <br>
+      <h2>Seherin:</h2>
+    </div>
+  </div>
 
-    </div>   
+  <!--Rolleneigenes-->
 
+  <div class="row">
+    <div class="col-md-12">
+      <h3>Siehe</h3>
+      <br />
+    </div>
 
-    
+    <ul class="wahllist">
+      {% for el in nurNamen if el != name %}
+      <script>
+        console.log("{{el}}");
+        var text = "{{el}}";
 
-<ul class="wahllist">
-        {% for el in nurNamen if el != name  %}
-        <script>
-            
-          
-            console.log("{{el}}");	
-            var text = "{{el}}";    
-                
-                if (text.includes("Erzaehler")==false) {
-                    if (text.includes("{{ name }} =")==false) {
-                        //write a button leading to  '/{{ name }}/{{ rolle }}/wahl/{{ el }}'
-                       // document.write("<li><a href='/{{ name }}/{{ rolle }}/wahl/{{ el }}'>{{ el }}</a></li>");
-                        document.write("<li><a href='../../sehen/{{ name }}/{{ rolle }}/{{ el }}' class='wahlfeld' id='"+text+"' >"+text+"</p></a></li><br><br><br>");
-                      
-                        
-                    }
-                }
-            
-        </script>
-        <style>
-            .wahlfeld:link {
-              text-decoration: none;
-            }
-            
-            .wahlfeld:visited {
-              text-decoration: none;
-            }
-            
-            .wahlfeld:hover {
-              text-decoration: none;
-            }
-            
-            .wahlfeld:active {
-              text-decoration: underline;
-            }
-            </style>
+        if (text.includes("Erzaehler") == false) {
+          if (text.includes("{{ name }} =") == false) {
+            //write a button leading to  '/{{ name }}/{{ rolle }}/wahl/{{ el }}'
+            // document.write("<li><a href='/{{ name }}/{{ rolle }}/wahl/{{ el }}'>{{ el }}</a></li>");
+            document.write(
+              "<li><a href='../../sehen/{{ name }}/{{ rolle }}/{{ el }}' class='wahlfeld' id='" +
+                text +
+                "' >" +
+                text +
+                "</p></a></li><br><br><br>"
+            );
+          }
+        }
+      </script>
+      <style>
+        .wahlfeld:link {
+          text-decoration: none;
+        }
 
-        {% endfor %}
-        </ul>
+        .wahlfeld:visited {
+          text-decoration: none;
+        }
 
-    
+        .wahlfeld:hover {
+          text-decoration: none;
+        }
 
+        .wahlfeld:active {
+          text-decoration: underline;
+        }
+      </style>
 
-{% endblock %}
+      {% endfor %}
+    </ul>
+
+    {% endblock %}
+  </div>
+</div>

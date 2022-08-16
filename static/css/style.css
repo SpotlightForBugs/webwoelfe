@@ -1,6 +1,3 @@
-
-
-
 .small {
   color: white;
 }
@@ -32,9 +29,8 @@ div {
   cursor: pointer;
 }
 
-
 #mark_it::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -47,29 +43,26 @@ div {
   margin-top: 5px;
 }
 
-
 #mark_it:checked::after {
   background-color: rgb(255, 0, 0);
 }
-
 
 p#alligner {
   margin-left: 35;
 }
 
-
-input[type=text] {
+input[type="text"] {
   padding: 5px;
   border: 2px solid #ccc;
   -webkit-border-radius: 5px;
   border-radius: 5px;
 }
 
-input[type=text]:focus {
+input[type="text"]:focus {
   border-color: #333;
 }
 
-input[type=submit] {
+input[type="submit"] {
   padding: 5px 15px;
   background: red;
   border: 0 none;
@@ -78,12 +71,9 @@ input[type=submit] {
   border-radius: 5px;
 }
 
-
-
-
 /* Global Reset */
 * {
-  font-family: 'Allerta', arial, Tahoma;
+  font-family: "Allerta", arial, Tahoma;
   box-sizing: border-box;
 }
 
@@ -128,38 +118,37 @@ iframe {
   border: 10px;
 }
 
-.team{
-border-radius: 25px;
-background: #27b80e;
-margin: auto;
-padding: 20px;
-width: 90%;
-height: 50px;
+.team {
+  border-radius: 25px;
+  background: #27b80e;
+  margin: auto;
+  padding: 20px;
+  width: 90%;
+  height: 50px;
 }
 
-.enemyteam{
-border-radius: 25px;
-background: #9f3a07;
-margin: auto;
-padding: 20px;
-width: 90%;
-height: 50px;
+.enemyteam {
+  border-radius: 25px;
+  background: #9f3a07;
+  margin: auto;
+  padding: 20px;
+  width: 90%;
+  height: 50px;
 }
 
-
-#inTag{
+#inTag {
   font-weight: bold;
   font-size: 20px;
   display: inline;
 }
 
-#anzahl{
- height: max-content;
+#anzahl {
+  height: max-content;
   width: 30%;
   margin: 1px;
 }
 
-.wahlfeld{
+.wahlfeld {
   border-radius: 10px;
   background-color: #27b80e;
   padding: 15px;
@@ -174,7 +163,7 @@ height: 50px;
   padding: 0;
 }
 
-.wahlfeld:focus{
+.wahlfeld:focus {
   border-radius: 10px;
   background-color: #9f3a07;
   padding: 15px;
@@ -187,28 +176,27 @@ height: 50px;
   display: inline;
 }
 
-
-.wahllist{
+.wahllist {
   list-style: none;
 }
 
-.wahlbalken{
-border-radius: 25px;
-background: #9f3a07;
-margin: auto;
-padding: 20px;
-width: 90%;
-height: 50px;
+.wahlbalken {
+  border-radius: 25px;
+  background: #9f3a07;
+  margin: auto;
+  padding: 20px;
+  width: 90%;
+  height: 50px;
 }
 
-.wahlbalkenIframe{
+.wahlbalkenIframe {
   width: 70%;
   height: 60px;
   margin-left: auto;
   display: inline;
 }
 
-.chooseplayer{
+.chooseplayer {
   border-radius: 10px;
   background-color: #27b80e;
   padding: 15px;
@@ -221,4 +209,3 @@ height: 50px;
   margin: auto;
   padding: 0;
 }
-

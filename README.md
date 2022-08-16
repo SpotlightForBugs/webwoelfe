@@ -7,8 +7,10 @@ Das Spiel Werwölfe kostenlos online spielen
 [![BCH compliance](https://bettercodehub.com/edge/badge/SpotlightForBugs/werwoelfe?branch=Pro&token=eda8726081f5dcf716efbe9bb64c2a59e2a370cf)](https://bettercodehub.com/)
 [![Code Quality Check (Black)](https://github.com/SpotlightForBugs/werwoelfe/actions/workflows/black.yml/badge.svg)](https://github.com/SpotlightForBugs/werwoelfe/actions/workflows/black.yml)
 
-![Logo](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/th5xamgrr6se0x5ro4g6.png)
 
+
+
+![twitter_header_photo_2](https://user-images.githubusercontent.com/73603712/184932702-cd33ef9c-b1af-4c01-be6a-311a12ff01c7.png)
 
 
 
@@ -16,7 +18,11 @@ Das Spiel Werwölfe kostenlos online spielen
 
 ## Screenshots
 
-![Werwoelfe Screenshot](https://user-images.githubusercontent.com/73603712/184224122-b1ef3c3a-50de-4552-8a36-1f4d56252d0d.png)
+![Screenshot](https://user-images.githubusercontent.com/73603712/184933634-a9cf5537-57b4-4ade-8bb5-9e7d27b56f82.png)
+
+
+
+
 
 
 

@@ -164,9 +164,8 @@ def reset():
 def kill_player(name, rolle, name_kill):
     auswahl = name_kill
     if rolle in ("Hexe", "Jaeger"):
-        if rolle == "Hexe":
-            if werwolf.hexe_darf_toeten() is True:
-                pass
+        if rolle == "Hexe" and werwolf.hexe_darf_toeten() is True:
+            pass
 
         if werwolf.validiere_rolle(name, rolle) is True:
 

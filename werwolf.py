@@ -70,7 +70,7 @@ def createDict():
                 "Seherin": seherin,
                 "Dorfbewohner": (spieleranzahl - werwolf - seherin - hexe - armor),
             }
-    keys = [key for key in assign]
+    keys = list(assign)
 
     with open("rollen_zuweisung.txt", "w+") as a:
         a.write(str(assign))
@@ -81,7 +81,7 @@ def deduct():
         assign = a.read()
         # print(assign)
         assign = ast.literal_eval(assign)
-        keys = [key for key in assign]
+        keys = list(assign)
 
     if sum(assign.values()) == 0:
         return 0

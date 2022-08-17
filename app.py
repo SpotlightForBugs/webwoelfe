@@ -165,21 +165,26 @@ def reset():
 def kill_player(name, rolle, name_kill):
     auswahl = name_kill
     if rolle in ("Hexe", "Jaeger"):
-        if rolle == "Hexe" and werwolf.hexe_darf_toeten() is True:
-            pass
+        if rolle == "Hexe" and werwolf.hexe_darf_toeten() == True and werwolf.validiere_rolle(name, rolle) == True or rolle == "Jaeger" and werwolf.validiere_rolle(name, rolle) == True:
 
-        if werwolf.validiere_rolle(name, rolle) is True:
+            if rolle == "Jaeger":
+                if werwolf.jaeger_darf_toeten() == True:
+                    werwolf.toete_spieler(auswahl)
+                    werwolf.jaeger_fertig()
+                    return render_template("Dashboards/status/tot.html",)
+                else:
+                    return render_template("Dashboards/status/tot.html")
 
-            pass
+            if rolle == "Hexe":
+                werwolf.hexe_verbraucht("toeten")
+
+            
+                return render_template("Dashboards/Dash_Hexe.html", name=name, rolle=rolle)
         else:
             return render_template("fehler.html")
 
-        werwolf.toete_spieler(auswahl)
-
-        if rolle == "Hexe":
-            werwolf.hexe_verbraucht("toeten")
-
-        return render_template("Dashboards/Dash_Dorfbewohner.html")
+    else:
+        return render_template("fehler.html")
 
 
 @app.route("/<name>/Armor_aktion/<player1>/<player2>")  # player auswahl
@@ -254,7 +259,8 @@ def Dashboard(name, rolle):  # Dashboard
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = file.read()  # read the log file
 
-    rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
+    rolleAusLog = players_vorhanden.split(
+        " = ")  # split the log file into a list
     rolleAusLog = rolleAusLog[1]
 
     if rolleAusLog == "Tot":
@@ -320,7 +326,8 @@ def spezielles_Dashboard(name, rolle):
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = file.read()  # read the log file
 
-    rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
+    rolleAusLog = players_vorhanden.split(
+        " = ")  # split the log file into a list
     rolleAusLog = rolleAusLog[1]
 
     if rolleAusLog == "Tot":

@@ -203,7 +203,6 @@ def armor_player(player1, player2, name):
         werwolf.validiere_rolle(name, rolle) is True
         and werwolf.armor_darf_auswaehlen() is True
     ):
-        
 
         werwolf.armor_fertig(player1, player2)
         return render_template("Dashboards/status/aktion_warten.html")
@@ -359,7 +358,6 @@ def spezielles_Dashboard(name, rolle):
             line = line.split(" = ")  # split the line at the =
             name_line = line[0]
             # set the role to the second part of the line
-            
 
             nurNamen.append(name_line)  # append the name to the list
 

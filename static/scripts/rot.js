@@ -1,4 +1,4 @@
 function rot() {
-  var x = document.getElementById("rot");
-  x.style.color = "red";
+  var element_rot = document.getElementById("rot");
+  element_rot.style.color = "red";
 }

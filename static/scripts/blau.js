@@ -1,4 +1,4 @@
 function blau() {
-  var x = document.getElementById("blau");
-  x.style.color = "blue";
+  var element_blau = document.getElementById("blau");
+  element_blau.style.color = "blue";
 }

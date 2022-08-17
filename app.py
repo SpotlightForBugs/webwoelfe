@@ -203,8 +203,7 @@ def armor_player(player1, player2, name):
         werwolf.validiere_rolle(name, rolle) is True
         and werwolf.armor_darf_auswaehlen() is True
     ):
-        lover_one = player1
-        lover_two = player2
+        
 
         werwolf.armor_fertig(player1, player2)
         return render_template("Dashboards/status/aktion_warten.html")
@@ -262,8 +261,6 @@ def overview_all(ist_unschuldig):  # Übersicht
 @app.route("/<name>/<rolle>/Dashboard")  # Dashboard
 def Dashboard(name, rolle):  # Dashboard
 
-    # create a string with the name and the role
-    wort = "\n" + name + " = " + rolle + "\n"
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = file.read()  # read the log file
 
@@ -329,7 +326,6 @@ def spezielles_Dashboard(name, rolle):
     if rolle == "Tot":
         return render_template("fehler.html")
     # create a string with the name and the role
-    wort = "\n" + name + " = " + rolle + "\n"
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = file.read()  # read the log file
 
@@ -363,7 +359,7 @@ def spezielles_Dashboard(name, rolle):
             line = line.split(" = ")  # split the line at the =
             name_line = line[0]
             # set the role to the second part of the line
-            auswahlRolle = line[1]
+            
 
             nurNamen.append(name_line)  # append the name to the list
 
@@ -835,7 +831,6 @@ def wer_wahl_warten():
 
             werwolf.schreibe_zuletzt_gestorben(name_tot)
 
-            name = name_tot
             return render_template(
                 "Dashboards/status/wer_wahl_ergebnis.html", name_tot=name_tot
             )

@@ -70,7 +70,7 @@ def createDict():
                 "Seherin": seherin,
                 "Dorfbewohner": (spieleranzahl - werwolf - seherin - hexe - armor),
             }
-    keys = list(assign)
+    
 
     with open("rollen_zuweisung.txt", "w+") as a:
         a.write(str(assign))

@@ -1,3 +1,4 @@
+from glob import escape
 from traceback import print_tb  # skipcq: PY-W2000
 from flask import (  # skipcq: PY-W2000
     Flask,
@@ -399,12 +400,14 @@ def spiel_ende(name, rolle):
                 and "Werwolf" in players_vorhanden
                 or "Seherin" in players_vorhanden
                 and "Werwolf" in players_vorhanden
-                or "Jäger" in players_vorhanden
+                or "Jaeger" in players_vorhanden
                 and "Werwolf" in players_vorhanden
                 or "Armor" in players_vorhanden
                 and "Werwolf" in players_vorhanden
             ):
-                return f"Hallo {name}, das Spiel ist noch nicht beendet!"
+                return_String = "Hallo "+name+", dass Spiel ist noch nicht beendet!"
+                return_String = escape(return_String)
+                return return_String
 
             print("Spiel ist beendet!")
 

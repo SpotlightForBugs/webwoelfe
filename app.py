@@ -362,7 +362,6 @@ def spezielles_Dashboard(name, rolle):
             rolle=rolle,
             names=players_log,
             nurNamen=nurNamen,
-            letzter_tot=letzter_tot,
             hexe_kann=hexe_kann,
         )
 

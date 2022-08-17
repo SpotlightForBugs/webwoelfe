@@ -405,10 +405,7 @@ def spiel_ende(name, rolle):
                 or "Armor" in players_vorhanden
                 and "Werwolf" in players_vorhanden
             ):
-                return "Hallo "+escape(name)+", das Spiel ist noch nicht beendet!"
-                
-
-
+                return "Hallo " + escape(name) + ", das Spiel ist noch nicht beendet!"
 
             print("Spiel ist beendet!")
 

@@ -180,8 +180,7 @@ def kill_player(name, rolle, name_kill):
                     return render_template(
                         "Dashboards/status/tot.html",
                     )
-                else:
-                    return render_template("Dashboards/status/tot.html")
+                return render_template("Dashboards/status/tot.html")
 
             if rolle == "Hexe":
                 werwolf.hexe_verbraucht("toeten")

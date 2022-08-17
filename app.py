@@ -8,7 +8,7 @@ from flask import (  # skipcq: PY-W2000
     make_response,
     redirect,
     Response,
-    escape
+    escape,
 )
 
 import werwolf

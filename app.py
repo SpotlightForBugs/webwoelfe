@@ -87,15 +87,15 @@ def get_data():  # get the data from the form
         name = name.replace("=", "-")  # gleich ist immer -
         name = name.replace(":", "_")  # doppelpunkt ist immer _
         name = name.replace("*", "_")  # stern ist immer _
-        players_log = open("rollen_log.txt")  # open the log file
-        players_log = players_log.read()  # read the log file
+        with open("rollen_log.txt") as players_log:  # open the log file
+            players_log = players_log.read()  # read the log file
         if werwolf.validiere_name(name) is True:
             # if the name is already in the log file
             # name doppelt ausgeben
             return render_template("name_doppelt.html", name=name)
 
-        file = open("spieler_anzahl.txt")
-        num = file.read()  # read the file
+        with open("spieler_anzahl.txt") as file:
+            num = file.read()  # read the file
         operator = werwolf.deduct()  # get the operator
         try:  # try to get the operator
             if operator == 0:  # if the operator is 0
@@ -137,8 +137,8 @@ def get_data():  # get the data from the form
 @app.route("/erzaehler", methods=["GET"])  # Erzähler
 def erzaehler():
     try:
-        players_log = open("rollen_log.txt")  # open the log file
-        players_log = players_log.readlines()  # read the log file
+        with open("rollen_log.txt") as players_log:  # open the log file
+            players_log = players_log.readlines()  # read the log file
         # render erzaehler.html
         return render_template("erzaehler.html", names=players_log)
     except:

@@ -1,6 +1,6 @@
 <!--@generated-->
 
-# Webwölfe
+# Webwölfe [WORK IN PROGRESS, NOT PRODUCTION READY]
 
 Das Spiel Werwölfe kostenlos online spielen
 
@@ -34,7 +34,10 @@ Install webwoelfe via git clone and pip
   pip install -r requirements.txt
   #to run
   python3 app.py
+  
 ```
+[SICHERHEITSHINWEIS ZU FLASK UND DEM DEBUG-MODE](https://github.com/SpotlightForBugs/webwoelfe/security/code-scanning/2)
+
 
 ## Tech Stack
 

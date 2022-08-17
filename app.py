@@ -167,14 +167,14 @@ def kill_player(name, rolle, name_kill):
     if rolle in ("Hexe", "Jaeger"):
         if (
             rolle == "Hexe"
-            and werwolf.hexe_darf_toeten() == True
-            and werwolf.validiere_rolle(name, rolle) == True
+            and werwolf.hexe_darf_toeten() is True
+            and werwolf.validiere_rolle(name, rolle) is True
             or rolle == "Jaeger"
-            and werwolf.validiere_rolle(name, rolle) == True
+            and werwolf.validiere_rolle(name, rolle) is True
         ):
 
             if rolle == "Jaeger":
-                if werwolf.jaeger_darf_toeten() == True:
+                if werwolf.jaeger_darf_toeten() is True:
                     werwolf.toete_spieler(auswahl)
                     werwolf.jaeger_fertig()
                     return render_template(

@@ -1,4 +1,3 @@
-from glob import escape
 from traceback import print_tb  # skipcq: PY-W2000
 from flask import (  # skipcq: PY-W2000
     Flask,
@@ -9,6 +8,7 @@ from flask import (  # skipcq: PY-W2000
     make_response,
     redirect,
     Response,
+    escape
 )
 
 import werwolf

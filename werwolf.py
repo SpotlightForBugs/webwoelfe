@@ -310,8 +310,8 @@ def aktion_verfuegbar_ist_tot(player: str) -> bool:
         return False
 
 
-def zufallszahl(min: int, max: int) -> int:
-    return random.randint(min, max)
+def zufallszahl(minimum: int, maximum: int) -> int:
+    return random.randint(minimum, maximum)
 
 
 def verliebte_toeten() -> str:

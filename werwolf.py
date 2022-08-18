@@ -155,7 +155,6 @@ def hexe_verbraucht(flag: str):
     # heilen --> 1
     # toeten --> 2
 
-    """Darf die Hexe töten?"""
 
 
 def hexe_darf_toeten() -> bool:
@@ -168,7 +167,6 @@ def hexe_darf_toeten() -> bool:
         return False
 
 
-""" Darf die Hexe heilen? """
 
 
 def hexe_darf_heilen() -> bool:

@@ -150,12 +150,14 @@ def erzaehler():
 # reset der rollen_log.txt
 @app.route("/erzaehler/reset", methods=["POST"])
 def reset():
-    if request.method == "POST":
-        if request.form["reset_button"] == "Neues Spiel":  # wenn neues spiel gewuenscht
-            werwolf.leere_dateien()  # leere die dateien
+    if (
+        request.method == "POST"
+        and request.form["reset_button"] == "Neues Spiel"
+    ):  # wenn neues spiel gewuenscht
+        werwolf.leere_dateien()  # leere die dateien
 
-            # zurück zur einstellungen
-            return render_template("einstellungen.html")
+        # zurück zur einstellungen
+        return render_template("einstellungen.html")
 
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>")  # kill a player

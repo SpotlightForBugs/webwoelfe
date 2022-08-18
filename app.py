@@ -500,7 +500,7 @@ def warten():  # function for the wait function
 
         with open("rollen_log.txt", "r") as text:
             for line in text:
-                if not "Tot" in line and not "Erzaehler" in line and not "*" in line:
+                if "Tot" not in line and "Erzaehler" not in line and "*" not in line:
                     i = i + 1
             text.close()
         with open("abstimmung.txt", "r") as text:

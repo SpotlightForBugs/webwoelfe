@@ -403,7 +403,7 @@ def spiel_ende(name, rolle):
 
         if werwolf.validiere_rolle_original(name, rolle) is True:
             if (
-                "Werwolf" in players_vorhanden
+                "Werwolf" in  players_vorhanden
                 and "Dorfbewohner" in players_vorhanden
                 or "Hexe" in players_vorhanden
                 and "Werwolf" in players_vorhanden

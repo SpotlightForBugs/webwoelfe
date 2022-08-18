@@ -10,11 +10,13 @@
 
 Das Spiel Werwölfe kostenlos online spielen
 
-![twitter_header_photo_2](https://user-images.githubusercontent.com/73603712/184932702-cd33ef9c-b1af-4c01-be6a-311a12ff01c7.png)
+
+<img width="435" alt="Wolf_watermark" src="https://user-images.githubusercontent.com/73603712/185472606-b5ad525e-924d-4a17-9843-d2a75615a2ee.png">
 
 ## Screenshots
 
-![Screenshot](https://user-images.githubusercontent.com/73603712/184933634-a9cf5537-57b4-4ade-8bb5-9e7d27b56f82.png)
+<img width="435" alt="Placeholder" src="https://via.placeholder.com/435x300.png?text=Webwölfe+Platzhalter">
+
 
 ## Features
 

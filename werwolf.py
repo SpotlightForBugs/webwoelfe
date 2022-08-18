@@ -156,7 +156,6 @@ def hexe_verbraucht(flag: str):
     # toeten --> 2
 
 
-
 def hexe_darf_toeten() -> bool:
     with open("hexe_kann.txt", "r") as hexe_kann:
         hexe_kann_text = hexe_kann.read()
@@ -165,8 +164,6 @@ def hexe_darf_toeten() -> bool:
             return True
         hexe_kann.close()
         return False
-
-
 
 
 def hexe_darf_heilen() -> bool:

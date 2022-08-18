@@ -29,7 +29,7 @@ Die Webseite ist für alle gängigen Bildschirmgrößen optimiert.
 
 ## Installation
 
-Einfach git clonen:
+Einfach über git clonen:
 
 ```bash
   git clone URL
@@ -40,7 +40,7 @@ Einfach git clonen:
 
 ```
 
-[SICHERHEITSHINWEIS ZU FLASK UND DEM DEBUG-MODE](https://github.com/SpotlightForBugs/webwoelfe/security/code-scanning/2)
+[WARNUNG ZU FLASK UND S DEBUG-MODE](https://github.com/SpotlightForBugs/webwoelfe/security/code-scanning/2)
 
 ## Tech Stack
 

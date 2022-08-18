@@ -44,9 +44,8 @@ Einfach über git clonen:
 
 ## Tech Stack
 
-**Client:** Your everyday webbrowser
-
-**Server:** Flask-Webserver
+-Python 3.x
+--Flask
 
 ## Roadmap
 

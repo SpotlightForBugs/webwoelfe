@@ -40,7 +40,7 @@ Einfach über git clonen:
 
 ```
 
-[WARNUNG ZU FLASK UND S DEBUG-MODE](https://github.com/SpotlightForBugs/webwoelfe/security/code-scanning/2)
+[WARNUNG ZU FLASKS DEBUG-MODE (klick)](https://github.com/SpotlightForBugs/webwoelfe/security/code-scanning/2)
 
 ## Tech Stack
 

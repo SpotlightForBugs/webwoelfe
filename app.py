@@ -151,8 +151,7 @@ def erzaehler():
 @app.route("/erzaehler/reset", methods=["POST"])
 def reset():
     if (
-        request.method == "POST"
-        and request.form["reset_button"] == "Neues Spiel"
+        request.method == "POST" and request.form["reset_button"] == "Neues Spiel"
     ):  # wenn neues spiel gewuenscht
         werwolf.leere_dateien()  # leere die dateien
 

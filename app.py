@@ -243,7 +243,7 @@ def overview_all(ist_unschuldig):  # Übersicht
             # render overview_innocent.html
             return render_template("overview_innocent.html", names=players_log)
         if ist_unschuldig == 0:  # wenn ist_unschuldig = 0
-            with open("rollen_oriinal.txt") as players_log:# open the log file
+            with open("rollen_oriinal.txt") as players_log:  # open the log file
                 players_log = players_log.readlines()  # read the log file
             # render overview_guilty.html
             return render_template("overview_guilty.html", names=players_log)
@@ -324,9 +324,8 @@ def spezielles_Dashboard(name, rolle):
     if rolle == "Tot":
         return render_template("fehler.html")
     # create a string with the name and the role
-    with open("rollen_log.txt", "r") as file:# open the log file
+    with open("rollen_log.txt", "r") as file:  # open the log file
         players_vorhanden = file.read()  # read the log file
-
 
     rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
     rolleAusLog = rolleAusLog[1]
@@ -401,7 +400,7 @@ def spiel_ende(name, rolle):
 
         if werwolf.validiere_rolle_original(name, rolle) is True:
             if (
-                "Werwolf" in  players_vorhanden
+                "Werwolf" in players_vorhanden
                 and "Dorfbewohner" in players_vorhanden
                 or "Hexe" in players_vorhanden
                 and "Werwolf" in players_vorhanden

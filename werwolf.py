@@ -218,7 +218,7 @@ def armor_fertig(player1: str, player2: str):
         with open("verliebt.txt", "r+") as verliebt:
             verliebt_text = verliebt.read()
             # wenn nicht in der Liste, dann hinzufügen. Ist wegen wiederholten Aufrufen nicht schön, aber funktioniert insofern, dass die Datei nicht vollgespammt wird.
-            if not ("+" + player1 + "+" + player2 + "\n") in verliebt_text:
+            if not "+" + player1 + "+" + player2 + "\n" in verliebt_text:
                 verliebt.seek(0)
                 verliebt.write("+" + player1 + "+" + player2 + "\n")
                 verliebt.truncate()
@@ -232,7 +232,7 @@ def armor_fertig(player1: str, player2: str):
 def ist_verliebt(name: str) -> bool:
     with open("verliebt.txt", "r") as verliebt:
         verliebt_text = verliebt.read()
-        if ("+" + name) in verliebt_text:
+        if "+" + name in verliebt_text:
             verliebt.close()
             return True
         verliebt.close()

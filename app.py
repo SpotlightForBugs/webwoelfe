@@ -39,7 +39,7 @@ def einstellungen():
 # wie viele Spieler sollen vorhanden sein?
 
 # Spieleranzahl
-@app.route("/einstellungen/spieleranzahl", methods=["GET", "POST"])
+@app.route("/einstellungen/spieleranzahl", methods=["POST"])
 def setPlayerNumber():  # set the number of players
     # get the number of players from the form
     spieleranzahl = request.form.get("num")

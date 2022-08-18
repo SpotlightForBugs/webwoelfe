@@ -76,9 +76,9 @@ def setPlayerNumber():  # set the number of players
 # namenseingabe spieler
 
 
-@app.route("/spieler", methods=[ "POST"])  # Spieler
+@app.route("/spieler", methods=["POST"])  # Spieler
 def get_data():  # get the data from the form
-    
+
     if request.method == "POST":  # if the request is a POST request
         name = request.form.get("name")  # get the name from the form
 
@@ -148,7 +148,7 @@ def erzaehler():
 
 
 # reset der rollen_log.txt
-@app.route("/erzaehler/reset", methods=[ "POST"])
+@app.route("/erzaehler/reset", methods=["POST"])
 def reset():
     if request.method == "POST":
         if request.form["reset_button"] == "Neues Spiel":  # wenn neues spiel gewuenscht
@@ -156,7 +156,6 @@ def reset():
 
             # zurück zur einstellungen
             return render_template("einstellungen.html")
-   
 
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>")  # kill a player

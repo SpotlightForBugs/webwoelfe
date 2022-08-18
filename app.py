@@ -23,7 +23,7 @@ app = Flask(__name__)
 # index page
 
 
-@app.route("/", methods=["GET", "POST"])  # Homepage
+@app.route("/", methods=["GET"])  # Homepage
 def index():
     return render_template("index.html")  # Render index.html
 
@@ -31,7 +31,7 @@ def index():
 # einstellungen
 
 
-@app.route("/einstellungen", methods=["GET", "POST"])  # Einstellungen
+@app.route("/einstellungen", methods=["GET"])  # Einstellungen
 def einstellungen():
     return render_template("einstellungen.html")  # Render einstellungen.html
 
@@ -76,10 +76,9 @@ def setPlayerNumber():  # set the number of players
 # namenseingabe spieler
 
 
-@app.route("/spieler", methods=["GET", "POST"])  # Spieler
+@app.route("/spieler", methods=["POST"])  # Spieler
 def get_data():  # get the data from the form
-    if request.method == "GET":  # if the request is a GET request
-        return render_template("fehler.html")  # fehlerseite ausgeben
+
     if request.method == "POST":  # if the request is a POST request
         name = request.form.get("name")  # get the name from the form
 
@@ -149,16 +148,15 @@ def erzaehler():
 
 
 # reset der rollen_log.txt
-@app.route("/erzaehler/reset", methods=["GET", "POST"])
+@app.route("/erzaehler/reset", methods=["POST"])
 def reset():
-    if request.method == "POST":
-        if request.form["reset_button"] == "Neues Spiel":  # wenn neues spiel gewuenscht
-            werwolf.leere_dateien()  # leere die dateien
+    if (
+        request.method == "POST" and request.form["reset_button"] == "Neues Spiel"
+    ):  # wenn neues spiel gewuenscht
+        werwolf.leere_dateien()  # leere die dateien
 
-            # zurück zur einstellungen
-            return render_template("einstellungen.html")
-    elif request.method == "GET":
-        return render_template("index.html")  # zurück zur homepage
+        # zurück zur einstellungen
+        return render_template("einstellungen.html")
 
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>")  # kill a player

@@ -156,8 +156,6 @@ def hexe_verbraucht(flag: str):
     # heilen --> 1
     # toeten --> 2
 
-    """Darf die Hexe töten?"""
-
 
 def hexe_darf_toeten() -> bool:
     with open("hexe_kann.txt", "r") as hexe_kann:
@@ -167,9 +165,6 @@ def hexe_darf_toeten() -> bool:
             return True
         hexe_kann.close()
         return False
-
-
-""" Darf die Hexe heilen? """
 
 
 def hexe_darf_heilen() -> bool:
@@ -218,7 +213,7 @@ def armor_fertig(player1: str, player2: str):
         with open("verliebt.txt", "r+") as verliebt:
             verliebt_text = verliebt.read()
             # wenn nicht in der Liste, dann hinzufügen. Ist wegen wiederholten Aufrufen nicht schön, aber funktioniert insofern, dass die Datei nicht vollgespammt wird.
-            if not ("+" + player1 + "+" + player2 + "\n") in verliebt_text:
+            if not "+" + player1 + "+" + player2 + "\n" in verliebt_text:
                 verliebt.seek(0)
                 verliebt.write("+" + player1 + "+" + player2 + "\n")
                 verliebt.truncate()
@@ -232,7 +227,7 @@ def armor_fertig(player1: str, player2: str):
 def ist_verliebt(name: str) -> bool:
     with open("verliebt.txt", "r") as verliebt:
         verliebt_text = verliebt.read()
-        if ("+" + name) in verliebt_text:
+        if "+" + name in verliebt_text:
             verliebt.close()
             return True
         verliebt.close()

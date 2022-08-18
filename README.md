@@ -23,13 +23,13 @@ Das Spiel Werwölfe kostenlos online spielen
 - Fullscreen mode
 - Cross platform
 
-## Optimizations
+## Optimierungen
 
 Die Webseite ist für alle gängigen Bildschirmgrößen optimiert.
 
 ## Installation
 
-Install webwoelfe via git clone and pip
+Einfach git clonen:
 
 ```bash
   git clone URL

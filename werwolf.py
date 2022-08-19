@@ -3,7 +3,6 @@ import random
 import ast
 
 
-
 liste_tot_mit_aktion = ["Jaeger", "Hexe", "PLATZHALTER"]
 liste_tot_ohne_aktion = ["Dorfbewohner", "Werwolf", "Seherin"]
 
@@ -396,16 +395,13 @@ def toete_spieler(player):
             schreibe_zuletzt_gestorben(player)
 
         return statement
-    
-    
-    
-def in_log_schreiben(a:any):
+
+
+def in_log_schreiben(a: any):
     with open("logfile.txt", "a", encoding="UTF8") as logfile:
         now = datetime.now().strftime("%H:%M:%S")
 
-
-       
-        logfile.write(str(now)+str(" >> "+a)+"\n")
+        logfile.write(str(now) + str(" >> " + a) + "\n")
         logfile.close()
 
 

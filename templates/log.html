@@ -5,22 +5,17 @@
 <h1>Log</h1>
 
 <div class="container-fluid" style="margin-top: 30px">
-
-  <ul style="list-style: none; text-align: left;
-">
-  {% for line in log %}
+  <ul style="list-style: none; text-align: left">
+    {% for line in log %}
     <li>{{line|replace("ae","ä")}}</li>
-  {% endfor %}
+    {% endfor %}
   </ul>
-  
-
-
 </div>
 <script>
-//seite neu laden nach 1 sekunde
-setTimeout(function(){
-  window.location.reload(1);
-}, 100000);
+  //seite neu laden nach 1 sekunde
+  setTimeout(function () {
+    window.location.reload(1);
+  }, 100000);
 </script>
 
 {% endblock %}

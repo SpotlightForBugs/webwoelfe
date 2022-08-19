@@ -1,5 +1,7 @@
+from datetime import datetime
 import random
 import ast
+
 
 
 liste_tot_mit_aktion = ["Jaeger", "Hexe", "PLATZHALTER"]
@@ -125,7 +127,6 @@ def validiere_rolle_original(name: str, rolle: str) -> bool:
 
 
 def validiere_name(name: str) -> bool:
-    # create a string with the name and the role
     wort = ("'" + name + " = ").encode("unicode_escape").decode("utf-8")
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = str(file.readlines())  # read the log file
@@ -258,6 +259,9 @@ def leere_dateien():
     file7 = open("jaeger_kann.txt", "w")
     file7.write(str(1))
     file7.close()
+    file8 = open("logfile.txt", "w")
+    file8.truncate(0)
+    file8.close()
 
 
 def momentane_rolle(player: str) -> str:
@@ -392,6 +396,17 @@ def toete_spieler(player):
             schreibe_zuletzt_gestorben(player)
 
         return statement
+    
+    
+    
+def in_log_schreiben(a:any):
+    with open("logfile.txt", "a", encoding="UTF8") as logfile:
+        now = datetime.now().strftime("%H:%M:%S")
+
+
+       
+        logfile.write(str(now)+str(" >> "+a)+"\n")
+        logfile.close()
 
 
 # Aktionen, die nach dem Töten / währendessen / kurz zuvor eines Spielers ausgeführt werden

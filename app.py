@@ -963,7 +963,7 @@ def inject_now():
     return {"now": datetime.utcnow()}
 
 
-# inject a variable called 'now' into the template context 
+# inject a variable called 'now' into the template context
 # https://stackoverflow.com
 if __name__ == "__main__":
     app.run(debug=True)

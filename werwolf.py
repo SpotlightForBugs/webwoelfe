@@ -405,9 +405,6 @@ def in_log_schreiben(a: any):
         logfile.close()
 
 
-
-
-
 def spieler_gestorben(player: str) -> str:
 
     rolle = momentane_rolle(player)

@@ -211,7 +211,7 @@ def armor_fertig(player1: str, player2: str):
     ):
         with open("verliebt.txt", "r+") as verliebt:
             verliebt_text = verliebt.read()
-            # wenn nicht in der Liste, dann hinzufügen. Ist wegen wiederholten Aufrufen nicht schön, aber funktioniert insofern, dass die Datei nicht vollgespammt wird.
+            # wenn nicht in der Liste, dann hinzufügen.
             if not "+" + player1 + "+" + player2 + "\n" in verliebt_text:
                 verliebt.seek(0)
                 verliebt.write("+" + player1 + "+" + player2 + "\n")
@@ -405,7 +405,7 @@ def in_log_schreiben(a: any):
         logfile.close()
 
 
-# Aktionen, die nach dem Töten / währendessen / kurz zuvor eines Spielers ausgeführt werden
+
 
 
 def spieler_gestorben(player: str) -> str:

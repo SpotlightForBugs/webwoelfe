@@ -963,7 +963,7 @@ def inject_now():
     return {"now": datetime.utcnow()}
 
 
-# inject a variable called 'now' into the template context for use in templates (templates can then access it as {{now}})
-# https://stackoverflow.com/questions/41231290/how-to-display-current-year-in-flask-template   #the source of this code
+# inject a variable called 'now' into the template context 
+# https://stackoverflow.com
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1006,8 +1006,8 @@ def weiterleitung(target):
 def wer_tot(name, rolle, auswahl):
     """
     The wer_tot function is used to add a player to the list of players who have voted.
-    It takes three arguments: name, rolle and auswahl. 
-    The function checks if the player has already voted, 
+    It takes three arguments: name, rolle and auswahl.
+    The function checks if the player has already voted,
     and if not it adds them to hat_gewaehlt.txt and writes their vote in abstimmung.txt.
 
     :param name: Identify the player

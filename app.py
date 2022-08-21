@@ -69,7 +69,7 @@ def setPlayerNumber():  # set the number of players
     werwolf.createDict()  # create the dictionary with the names of the players
     with open("rollen_log.txt", "w+") as f:  # leere rollen_log.txt
         f.write("*********************\n")
-    werwolf.in_log_schreiben("Spieleranzahl: auf " + str(spieleranzahl) + " gesetzt")
+    werwolf.in_log_schreiben("Spieleranzahl: auf " + str(spieleranzahl)+" gesetzt")
     # render einstellungen_gespeichert.html
     return render_template(
         "einstellungen_gespeichert.html", spieleranzahl_var=spieleranzahl
@@ -120,9 +120,7 @@ def get_data():  # get the data from the form
                 # write a new line to the log file
                 names.write("\n")
                 # credits to @joschicraft
-                werwolf.in_log_schreiben(
-                    f"Neuer Spieler {name} hat die Rolle {operator}"
-                )
+                werwolf.in_log_schreiben(f"Neuer Spieler {name} hat die Rolle {operator}")
                 # render rollen_zuweisung.html
                 return render_template(
                     "rollen_zuweisung.html",
@@ -220,7 +218,9 @@ def armor_player(player1, player2, name):
 
     if werwolf.validiere_rolle(name, rolle) is False:
         # print the error
-        print("Spieler oder Rolle falsch!")
+        print(
+            "Spieler oder Rolle falsch!"
+        )
         # render the url_system.html
         return render_template("url_system.html", name=name, rolle=rolle)
     return render_template("fehler.html")
@@ -303,13 +303,7 @@ def Dashboard(name, rolle):  # Dashboard
                 )  # print the error
 
             # render Dash_rolle.html
-            werwolf.in_log_schreiben(
-                "Dorfbewohner Dashboard für "
-                + name
-                + " mit Rolle "
-                + rolle
-                + " angezeigt"
-            )
+            werwolf.in_log_schreiben("Dorfbewohner Dashboard für " + name+ " mit Rolle " + rolle+ " angezeigt")
             return render_template(
                 "Dashboards/Dash_Dorfbewohner.html",
                 name=name,
@@ -323,7 +317,9 @@ def Dashboard(name, rolle):  # Dashboard
 
     else:
         # print the error
-        print("Spieler oder Rolle falsch!")
+        print(
+            "Spieler oder Rolle falsch!"
+        )
         # render url_system.html
         return render_template("url_system.html", name=name, rolle=rolle)
 
@@ -370,9 +366,7 @@ def spezielles_Dashboard(name, rolle):
             nurNamen.append(name_line)  # append the name to the list
 
     if rolle == "Hexe":
-        werwolf.in_log_schreiben(
-            "Hexe Dashboard für " + name + " mit Rolle " + rolle + " angezeigt"
-        )
+        werwolf.in_log_schreiben("Hexe Dashboard für " + name+ " mit Rolle " + rolle+ " angezeigt")
         # render Dash_rolle.html
         return render_template(
             "Dashboards/Dash_" + rolle + ".html",
@@ -384,9 +378,7 @@ def spezielles_Dashboard(name, rolle):
         )
 
     if rolle == "Armor":
-        werwolf.in_log_schreiben(
-            "Armor Dashboard für " + name + " mit Rolle " + rolle + " angezeigt"
-        )
+        werwolf.in_log_schreiben("Armor Dashboard für " + name+ " mit Rolle " + rolle+ " angezeigt")
         return render_template(
             "Dashboards/Dash_" + rolle + ".html",
             name=name,
@@ -396,16 +388,10 @@ def spezielles_Dashboard(name, rolle):
             armor_kann=werwolf.armor_darf_auswaehlen(),
         )
     # render Dash_rolle.html
-    werwolf.in_log_schreiben(
-        "Dashboard der Rolle "
-        + rolle
-        + " für "
-        + name
-        + " mit Rolle "
-        + rolle
-        + " angezeigt"
-    )
+    werwolf.in_log_schreiben("Dashboard der Rolle "+rolle +
+                             " für " + name + " mit Rolle " + rolle + " angezeigt")
     return render_template(
+        
         "Dashboards/Dash_" + rolle + ".html",
         name=name,
         rolle=rolle,
@@ -433,46 +419,32 @@ def spiel_ende(name, rolle):
                 and "Werwolf" in players_vorhanden
                 or "Armor" in players_vorhanden
                 and "Werwolf" in players_vorhanden
-            ):
-                werwolf.in_log_schreiben(
-                    "Spiel noch nicht zuende für "
-                    + name
-                    + " mit Rolle "
-                    + rolle
-                    + " angezeigt"
-                )
+            ):  
+                werwolf.in_log_schreiben("Spiel noch nicht zuende für " + name+ " mit Rolle " + rolle+ " angezeigt")
                 return "Hallo " + escape(name) + ", das Spiel ist noch nicht beendet!"
+                
 
             print("Spiel ist beendet!")
 
             if rolle == "Werwolf":
                 if "Werwolf" in players_vorhanden:
-                    werwolf.in_log_schreiben(
-                        "Spiel beendet für "
-                        + name
-                        + " mit Rolle "
-                        + rolle
-                        + " angezeigt"
-                    )
+                    werwolf.in_log_schreiben("Spiel beendet für " + name+ " mit Rolle " + rolle+ " angezeigt")
                     return render_template(
                         "gewonnen.html", name=name, rolle=rolle, unschuldig=0
                     )
                 werwolf.in_log_schreiben(
-                    "Spiel beendet für " + name + " mit Rolle " + rolle + " angezeigt"
-                )
+                    "Spiel beendet für " + name + " mit Rolle " + rolle + " angezeigt")
                 return render_template(
                     "verloren.html", name=name, rolle=rolle, unschuldig=0
                 )
             if "Werwolf" in players_vorhanden:
                 werwolf.in_log_schreiben(
-                    "Spiel beendet für " + name + " mit Rolle " + rolle + " angezeigt"
-                )
+                    "Spiel beendet für " + name + " mit Rolle " + rolle + " angezeigt")
                 return render_template(
                     "verloren.html", name=name, rolle=rolle, unschuldig=1
                 )
             werwolf.in_log_schreiben(
-                "Spiel beendet für " + name + " mit Rolle " + rolle + " angezeigt"
-            )
+                "Spiel beendet für " + name + " mit Rolle " + rolle + " angezeigt")
             return render_template(
                 "gewonnen.html", name=name, rolle=rolle, unschuldig=1
             )
@@ -492,24 +464,11 @@ def wahl(name, rolle, auswahl):
             contents = text.read()
 
             if wort2 in contents:
-                werwolf.in_log_schreiben(
-                    "Wahl schon getätigt für "
-                    + name
-                    + " mit Rolle "
-                    + rolle
-                    + " angezeigt"
-                )
+                werwolf.in_log_schreiben("Wahl schon getätigt für " + name+ " mit Rolle " + rolle+ " angezeigt")
                 return render_template("wahl_doppelt.html")
             text.write(name + " : " + "\n")
             text.close()
-            werwolf.in_log_schreiben(
-                "Wahl getätigt für "
-                + name
-                + " mit Rolle "
-                + rolle
-                + " angezeigt, auswahl: "
-                + auswahl
-            )
+            werwolf.in_log_schreiben("Wahl getätigt für " + name+ " mit Rolle " + rolle+ " angezeigt, auswahl: " + auswahl)
             with open("abstimmung.txt", "a") as abstimmung:
                 abstimmung.write(auswahl + "" + "\n")
 
@@ -532,9 +491,7 @@ def schlafen(name, rolle):  # function for the sleep function
             with open("rollen_log.txt") as players_log:  # open the log file
                 players_log = players_log.readlines()  # read the log file
             # render the sleep.html
-            werwolf.in_log_schreiben(
-                "Schlafen für " + name + " mit Rolle " + rolle + " angezeigt"
-            )
+            werwolf.in_log_schreiben("Schlafen für " + name+ " mit Rolle " + rolle+ " angezeigt")
             return render_template(
                 "Dashboards/status/schlafen.html",
                 name=name,
@@ -546,7 +503,9 @@ def schlafen(name, rolle):  # function for the sleep function
 
     else:
         # print the error
-        print("Spieler oder Rolle falsch!")
+        print(
+            "Spieler oder Rolle falsch!"
+        )
         # render the url_system.html
         return render_template("url_system.html", name=name, rolle=rolle)
 
@@ -667,9 +626,7 @@ def tot(name, rolle, todesgrund):  # function for the death function
                     "Du wurdest getötet"  # set the death reason to a normal death
                 )
             # rendert die Seite zum Status Tot
-            werwolf.in_log_schreiben(
-                "Tot für " + name + " mit Rolle " + rolle + " angezeigt"
-            )
+            werwolf.in_log_schreiben("Tot für " + name+ " mit Rolle " + rolle+ " angezeigt")
             return render_template(
                 "Dashboards/status/tot.html",
                 name=name,
@@ -682,7 +639,9 @@ def tot(name, rolle, todesgrund):  # function for the death function
 
     else:
         # print the error
-        print("Spieler oder Rolle falsch!")
+        print(
+            "Spieler oder Rolle falsch!"
+        )
         # render the url_system.html
         return render_template("url_system.html", name=name, rolle=rolle)
 
@@ -700,9 +659,7 @@ def rausschmeissen(name, rolle):  # function for the kick function
             # render the rausschmeissen.html
 
             werwolf.toete_spieler(name)
-            werwolf.in_log_schreiben(
-                "Spieler " + name + " rausgeschmissen, er hatt die Rolle " + rolle
-            )
+            werwolf.in_log_schreiben("Spieler " + name + " rausgeschmissen, er hatt die Rolle " + rolle)
             return render_template(
                 "rausschmeissen.html", name=name, rolle=rolle, names=players_log
             )
@@ -712,7 +669,9 @@ def rausschmeissen(name, rolle):  # function for the kick function
 
     else:
         # print the error
-        print("Spieler oder Rolle falsch!")
+        print(
+            "Spieler oder Rolle falsch!"
+        )
         # render the url_system.html
         return render_template("url_system.html", name=name, rolle=rolle)
 
@@ -792,21 +751,16 @@ def sehen(name, rolle, auswahl):
             if auswahl in line:
                 ergebnis = line
                 ergebnis = ergebnis.replace("=", "hat die Rolle")
-                werwolf.in_log_schreiben(
-                    "Seherin "
-                    + name
-                    + "hat die Rolle von "
-                    + auswahl
-                    + " gesehen "
-                    + ergebnis.replace(name + " hat die Rolle", "")
-                )
+                werwolf.in_log_schreiben("Seherin " + name + "hat die Rolle von "+ auswahl + " gesehen "+ergebnis.replace(name+" hat die Rolle", ""))
                 return render_template(
                     "Dashboards/status/sehen.html", ergebnis=ergebnis
                 )
 
     else:
         # print the error
-        print("Spieler oder Rolle falsch!")
+        print(
+            "Spieler oder Rolle falsch!"
+        )
         return render_template("url_system.html", name=name, rolle=rolle)
 
 
@@ -934,19 +888,20 @@ def heilen(name, rolle, auswahl):
     return render_template("fehler.html")
 
 
-# TODO: #76 Sicherheitsabfrage bei der Anzeige des Logs
+###TODO: #76 Sicherheitsabfrage bei der Anzeige des Logs
 @app.route("/log")
 def log_ansehen():
-    with open("logfile.txt", "r", encoding="UTF8") as file:
-        # put the file into a list
+    with open("logfile.txt", "r",encoding="UTF8") as file:
+        #put the file into a list
         file_list = []
         for line in file:
             file_list.append(line)
-        # print the list
+        #print the list
         print(file_list)
-        # return the list
-
+        #return the list
+        
         return render_template("log.html", log=file_list)
+
 
 
 @app.route("/noscript")
@@ -963,6 +918,7 @@ def inject_now():
     return {"now": datetime.utcnow()}
 
 
-# https://stackoverflow.com
+# inject a variable called 'now' into the template context for use in templates (templates can then access it as {{now}})
+# https://stackoverflow.com/questions/41231290/how-to-display-current-year-in-flask-template   #the source of this code
 if __name__ == "__main__":
     app.run(debug=True)

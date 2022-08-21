@@ -25,6 +25,14 @@ app = Flask(__name__)
 
 @app.route("/", methods=["GET"])  # Homepage
 def index():
+    """
+    The index function is the main page of the application. It is called when a user navigates to
+    the root directory of our web application. The function returns an HTML template that contains
+    a list of links to other pages within our web application.
+    
+    :return: The index
+    
+    """
     werwolf.in_log_schreiben("index geöffnet")
     return render_template("index.html")  # Render index.html
 
@@ -34,6 +42,13 @@ def index():
 
 @app.route("/einstellungen", methods=["GET"])  # Einstellungen
 def einstellungen():
+    """
+    The einstellungen function is used to open the einstellungen page.
+    
+    
+    :return: The einstellungen
+    
+    """
     werwolf.in_log_schreiben("einstellungen geöffnet")
     return render_template("einstellungen.html")  # Render einstellungen.html
 
@@ -43,6 +58,14 @@ def einstellungen():
 # Spieleranzahl
 @app.route("/einstellungen/spieleranzahl", methods=["POST"])
 def setPlayerNumber():  # set the number of players
+    """
+    The setPlayerNumber function is called when the user clicks on the button &quot;Spieleranzahl setzen&quot; in einstellungen.html.
+    It takes a number of players from the form and checks if it is an integer between 8 and 18, otherwise it sets it to 8.
+    If the checkbox &quot;Erzähler ist zufällig&quot; is checked, erzaehler_flag = 1 else 0.
+    
+    :return: The number of players
+    
+    """
     # get the number of players from the form
     spieleranzahl = request.form.get("num")
     try:
@@ -81,6 +104,14 @@ def setPlayerNumber():  # set the number of players
 
 @app.route("/spieler", methods=["POST"])  # Spieler
 def get_data():  # get the data from the form
+    """
+    The get_data function gets the data from the form. If it is a POST request,
+    it gets the name from the form and checks if it is already in use. If so,
+    it renders an error page with a link to go back to index.html.
+
+    :return: The name and the operator from the form
+    
+    """
 
     if request.method == "POST":  # if the request is a POST request
         name = request.form.get("name")  # get the name from the form
@@ -138,6 +169,12 @@ def get_data():  # get the data from the form
 
 @app.route("/erzaehler", methods=["GET"])  # Erzähler
 def erzaehler():
+    """
+    The erzaehler function opens the log file and renders it to erzaehler.html
+    
+    :return: The erzaehler
+    
+    """
     try:
         with open("rollen_log.txt") as players_log:  # open the log file
             players_log = players_log.readlines()  # read the log file
@@ -154,6 +191,12 @@ def erzaehler():
 # reset der rollen_log.txt
 @app.route("/erzaehler/reset", methods=["POST"])
 def reset():
+    """
+    The reset function is called when the user presses the reset button. It resets all files and starts a new game.
+    
+    :return: The reset
+    
+    """
     if (
         request.method == "POST" and request.form["reset_button"] == "Neues Spiel"
     ):  # wenn neues spiel gewuenscht
@@ -165,6 +208,18 @@ def reset():
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>")  # kill a player
 def kill_player(name, rolle, name_kill):
+    """
+    The kill_player function is called when a player is killed.
+    It takes the name of the player who was killed and their role as arguments.
+    If the person who was killed is a Werwolf, it will kill them and return 
+    the template for dead players. If they are not a Werwolf, it will return an error page.
+    
+    :param name: Identify the player that is killed
+    :param rolle: Determine which role the player has
+    :param name_kill: Get the name of the player that is killed
+    :return: The html template &quot;dashboards/status/tot
+    
+    """
     auswahl = name_kill
     if rolle in ("Hexe", "Jaeger"):
         if (
@@ -199,6 +254,17 @@ def kill_player(name, rolle, name_kill):
 
 @app.route("/<name>/Armor_aktion/<player1>/<player2>")  # player auswahl
 def armor_player(player1, player2, name):
+    """
+    The armor_player function is used to protect the player from being killed by the werewolf.
+    The function checks if a player is in the game and if he/she has already selected his/her role.
+    If both conditions are met, it will allow him/her to select armor as a role.
+    
+    :param player1: Store the name of the player who is currently playing
+    :param player2: Determine the player who is attacked
+    :param name: Determine which player is the armor
+    :return: The status of the game
+    
+    """
     rolle = "Armor"
 
     if (
@@ -237,6 +303,13 @@ def aktion_warten(name, rolle):
 
 @app.route("/uebersicht/<ist_unschuldig>")  # Übersicht
 def overview_all(ist_unschuldig):  # Übersicht
+    """
+    The overview_all function renders the overview_innocent.html or overview_guilty.html template, depending on the value of ist_unschuldig.
+
+    :param ist_unschuldig: Distinguish between the innocent and guilty overview
+    :return: The overview_innocent
+    
+    """
 
     try:
         # ist_unschuldig ist wirklich ein integer
@@ -261,6 +334,15 @@ def overview_all(ist_unschuldig):  # Übersicht
 
 @app.route("/<name>/<rolle>/Dashboard")  # Dashboard
 def Dashboard(name, rolle):  # Dashboard
+    """
+    The Dashboard function is called when the user wants to see the Dashboard of Dorfbewohner.
+    It renders Dash_rolle.html and passes all variables to it.
+
+    :param name: Get the name of the player
+    :param rolle: Determine which dashboard is shown
+    :return: The dash_rolle
+    
+    """
 
     # create a string with the name and the role
     with open("rollen_log.txt", "r") as file:  # open the log file
@@ -326,6 +408,15 @@ def Dashboard(name, rolle):  # Dashboard
 
 @app.route("/<name>/<rolle>/Dashboard_sp")
 def spezielles_Dashboard(name, rolle):
+    """
+    The spezielles_Dashboard function is called when a player opens his Dashboard.
+    It takes two arguments: name and rolle. The function checks if the role is valid, then renders the spezielles Dashboard for that role.
+    
+    :param name: Get the name of the player who wants to see his dashboard
+    :param rolle: Determine which dashboard is shown
+    :return: The dashboard of the role
+    
+    """
     if rolle == "Tot":
         return render_template("fehler.html")
     # create a string with the name and the role
@@ -402,6 +493,15 @@ def spezielles_Dashboard(name, rolle):
 
 @app.route("/<name>/<rolle>/spiel_ende")
 def spiel_ende(name, rolle):
+    """
+    The spiel_ende function is called when the game is over. It checks if Werwolf has won or lost and returns a
+    template with the result.
+
+    :param name: Identify the player
+    :param rolle: Determine which template to display
+    :return: The following:
+    
+    """
 
     with open("rollen_original.txt", "r") as file:
         players_vorhanden = file.read()
@@ -452,6 +552,17 @@ def spiel_ende(name, rolle):
 
 @app.route("/waehlen/<name>/<rolle>/<auswahl>")
 def wahl(name, rolle, auswahl):
+    """
+    The wahl function is called when a user has selected a role and wishes to vote for another player.
+    It takes the name of the player, their role and an option from the dropdown menu as arguments.
+    If this is valid it will write that information into hat_gewaehlt.txt which is used by die_wahl() to check if someone has already voted.
+
+    :param name: Identify the player
+    :param rolle: Determine which role the player has
+    :param auswahl: Store the users input
+    :return: The following:
+    
+    """
 
     if rolle == "Tot":
         return render_template("warten.html")
@@ -481,6 +592,16 @@ def wahl(name, rolle, auswahl):
 
 @app.route("/<name>/<rolle>/schlafen")  # route for the sleep function
 def schlafen(name, rolle):  # function for the sleep function
+    """
+    The schlafen function is used to sleep the player.
+    The function takes two parameters: name and rolle.
+    If the string is in the log file, render schlafen.html.
+
+    :param name: Get the name of the player
+    :param rolle: Determine the role of the player
+    :return: The sleep
+    
+    """
 
     if rolle == "Tot":
         return render_template("tot.html", name=name)
@@ -515,6 +636,13 @@ def schlafen(name, rolle):  # function for the sleep function
 
 @app.route("/warten")  # route for the wait function
 def warten():  # function for the wait function
+    """
+    The warten function is used to wait for all players to vote.
+    It checks if all players have voted and then shows the results of the voting.
+    
+    :return: The template warten
+    
+    """
     i = 0  # set i to 0
 
     try:
@@ -601,6 +729,19 @@ def warten():  # function for the wait function
 # route for the death function
 @app.route("/<name>/<rolle>/<todesgrund>/tot")
 def tot(name, rolle, todesgrund):  # function for the death function
+    """
+    The tot function is used to render the status page of a player who has been killed.
+    It takes three arguments: name, rolle and todesgrund.
+    name is the name of the player who was killed.
+    rolle is either Werwolf or Dorfbewohner depending on what role they had in-game.
+    todesgrund can be &quot;Werwolf&quot;, &quot;Abstimung&quot; or &quot;Hexe&quot;. It's used for different death reasons.
+    
+    :param name: Get the name of the player
+    :param rolle: Determine the role of the player
+    :param todesgrund: Set the death reason
+    :return: The death page
+    
+    """
     # if the string is in the log file
     if werwolf.validiere_rolle(name, rolle) is True:
         try:  # try to get the role
@@ -651,6 +792,17 @@ def tot(name, rolle, todesgrund):  # function for the death function
 
 @app.route("/<name>/<rolle>/kick/")  # route for the kick function
 def rausschmeissen(name, rolle):  # function for the kick function
+    """
+    The rausschmeissen function is used to kick a player from the game.
+    It takes two arguments: name and rolle.
+    If the function is called with valid arguments, it will remove the player from 
+    the game and write an entry in log_file.
+    
+    :param name: Render the kick
+    :param rolle: Specify the role of the player that is kicked
+    :return: The kick function
+    
+    """
     if werwolf.validiere_rolle(name, rolle) is True:
         print("Spieler vorhanden")  # print the string
         try:
@@ -681,6 +833,12 @@ def rausschmeissen(name, rolle):  # function for the kick function
 
 @app.route("/wahlbalken/")  # route for the wahlbalken function
 def wahlbalken():
+    """
+    The wahlbalken function renders the wahlbalken.html page, which is used to select a player for the current round.
+    
+    :return: The wahlbalken
+    
+    """
     with open("rollen_log.txt") as players_log:  # open the log file
         players_log = players_log.readlines()  # read the log file
 
@@ -713,6 +871,13 @@ def wahlbalken():
 
 @app.route("/wahlstatus")  # route for the wahlstatus function
 def wahl_stats():
+    """
+    The wahl_stats function counts the number of times a name appears in the abstimmung.txt file and returns
+    the name with the most votes. It also writes this name to wahl_zuletzt_gestorben.txt.
+
+    :return: The most common name in the text
+    
+    """
 
     anzahl = 0
     name_tot = ""
@@ -744,6 +909,18 @@ def wahl_stats():
 
 @app.route("/sehen/<name>/<rolle>/<auswahl>")
 def sehen(name, rolle, auswahl):
+    """
+    The sehen function allows the Seherin to see the role of a player.
+    The function takes three arguments: name, rolle and auswahl.
+    name is the name of the seherin, rolle is her role and auswahl is 
+    the player she wants to check.
+    
+    :param name: Identify the player
+    :param rolle: Check if the player is a werewolf or not
+    :param auswahl: Select the role you want to see
+    :return: The role of the player that was chosen
+    
+    """
     if werwolf.validiere_rolle(name, rolle) is True:
         with open("rollen_log.txt") as players_log:  # open the log file
             players_log = players_log.readlines()  # read the log file
@@ -766,12 +943,32 @@ def sehen(name, rolle, auswahl):
 
 @app.route("/weiterleitung/<target>")
 def weiterleitung(target):
+    """
+    The weiterleitung function is used to redirect the user to another page.
+    It takes one argument, which is the target of the redirection.
+    
+    
+    :param target: Redirect to another page
+    :return: The rendered template &quot;weiterleitung
+    
+    """
     werwolf.in_log_schreiben("Weiterleitung auf " + target)
     return render_template("weiterleitung.html", target=target)
 
 
 @app.route("/<name>/<rolle>/<auswahl>/wer_tot")
 def wer_tot(name, rolle, auswahl):
+    """
+    The wer_tot function is used to add a player to the list of players who have voted.
+    It takes three arguments: name, rolle and auswahl. The function checks if the player has already voted, 
+    and if not it adds them to hat_gewaehlt.txt and writes their vote in abstimmung.txt.
+
+    :param name: Identify the player
+    :param rolle: Check if the player has already chosen a role
+    :param auswahl: Store the selected player
+    :return: A message that the user has already voted
+    
+    """
 
     with open("rollen_log.txt", "r") as file:  # open the log file
         players_vorhanden = file.read()  # read the log file
@@ -792,6 +989,12 @@ def wer_tot(name, rolle, auswahl):
 
 @app.route("/wer_wahl_warten")
 def wer_wahl_warten():
+    """
+    The wer_wahl_warten function is used to display the wer_wahl_warten.html template, which is displayed when a player has voted for a player to be killed.
+
+    :return: The current status of the voting
+    
+    """
 
     with open("hat_gewaehlt.txt", "r+") as hat_gewaehlt:
         wer_anzahl_stimmen = sum(1 for line in hat_gewaehlt if line.rstrip())
@@ -861,6 +1064,17 @@ def wer_wahl_warten():
 
 @app.route("/<name>/<rolle>/heilen/<auswahl>")
 def heilen(name, rolle, auswahl):
+    """
+    The heilen function allows a witch to heal someone.
+    
+    
+    
+    :param name: Identify the witch
+    :param rolle: Check if the person that wants to heal is a witch
+    :param auswahl: Replace the name of the person to be healed in the rollen_original
+    :return: The dashboard dorfbewohner
+    
+    """
     if (
         werwolf.validiere_rolle(name, rolle) is True
         and werwolf.hexe_darf_heilen() is True
@@ -891,6 +1105,12 @@ def heilen(name, rolle, auswahl):
 ###TODO: #76 Sicherheitsabfrage bei der Anzeige des Logs
 @app.route("/log")
 def log_ansehen():
+    """
+    The log_ansehen function will take the logfile.txt and put it into a list, then print out the list in html format.
+    
+    :return: The logfile
+    
+    """
     with open("logfile.txt", "r",encoding="UTF8") as file:
         #put the file into a list
         file_list = []
@@ -906,6 +1126,13 @@ def log_ansehen():
 
 @app.route("/noscript")
 def noscript():
+    """
+    The noscript function is called when the user requests a page that requires JavaScript.
+    It returns a template containing only an information message about this fact.
+    
+    :return: The noscript
+    
+    """
     werwolf.in_log_schreiben("Noscript wurde aufgerufen")
     return render_template("noscript.html")
 
@@ -915,10 +1142,16 @@ def noscript():
 
 @app.context_processor
 def inject_now():
+    """
+    The inject_now function injects the current date and time into the context.
+       This is useful for dynamic data that requires timestamps.
+    
+    :return: A dictionary with a key of now and the value being the current time
+   
+    """
     return {"now": datetime.utcnow()}
 
 
-# inject a variable called 'now' into the template context for use in templates (templates can then access it as {{now}})
-# https://stackoverflow.com/questions/41231290/how-to-display-current-year-in-flask-template   #the source of this code
+
 if __name__ == "__main__":
     app.run(debug=True)

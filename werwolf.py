@@ -9,7 +9,6 @@ liste_tot_ohne_aktion = ["Dorfbewohner", "Werwolf", "Seherin"]
 
 def createDict():
     """Erstellt ein Dictionary mit den Rollen und deren Anzahl"""
-
     with open("spieler_anzahl.txt", "r") as f:
         spieleranzahl = f.read()
     try:
@@ -103,7 +102,6 @@ def deduct():
         :return: The index of a random key in the dictionary
 
         """
-
         while sum(assign.values()) >= 0:
             num = random.randint(0, len(assign) - 1)
             if assign[keys[num]] > 0:
@@ -132,7 +130,6 @@ def validiere_rolle(name: str, rolle: str) -> bool:
     :return: True if the player is already in the log file
 
     """
-
     # create a string with the name and the role
     wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
     file = open("rollen_log.txt", "r")  # open the log file
@@ -152,7 +149,6 @@ def validiere_rolle_original(name: str, rolle: str) -> bool:
     :return: True if the name and role are in the log file
 
     """
-
     # create a string with the name and the role
     wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
     file = open("rollen_original.txt", "r")  # open the log file
@@ -171,7 +167,6 @@ def validiere_name(name: str) -> bool:
     :return: True if the name is in the log file and false otherwise
 
     """
-
     wort = ("'" + name + " = ").encode("unicode_escape").decode("utf-8")
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = str(file.readlines())  # read the log file
@@ -192,7 +187,6 @@ def hexe_verbraucht(flag: str):
     :return: The following:
 
     """
-
     if "t" in flag or "T" in flag:
         flag = str(2)
     elif "h" in flag or "H" in flag:
@@ -241,7 +235,6 @@ def hexe_darf_heilen() -> bool:
     :return: True if the hexe can heal
 
     """
-
     with open("hexe_kann.txt", "r") as hexe_kann:
         hexe_kann_text = hexe_kann.read()
         if "1" in hexe_kann_text:
@@ -261,7 +254,6 @@ def armor_darf_auswaehlen() -> bool:
     :return: True if the armor_kann
 
     """
-
     with open("armor_kann.txt", "r") as armor_kann:
         armor_kann_text = armor_kann.read()
         if "1" in armor_kann_text:
@@ -296,7 +288,6 @@ def jaeger_fertig():
     :return: The string &quot;0&quot;
 
     """
-
     # jaeger_kann.txt mit 0 ersetzen
     with open("jaeger_kann.txt", "w") as jaeger_kann:
         jaeger_kann.write("0")
@@ -312,7 +303,6 @@ def armor_fertig(player1: str, player2: str):
     :return: The following:
 
     """
-
     if (
         player1 != player2
         and validiere_name(player1) is True
@@ -361,7 +351,6 @@ def leere_dateien():
     :return: Nothing
 
     """
-
     with open("rollen_log.txt", "w+") as f:  # leere rollen_log.txt
         f.write("*********************\n")
     file = open("abstimmung.txt", "r+")
@@ -400,7 +389,6 @@ def momentane_rolle(player: str) -> str:
     :return: The current role of the player
 
     """
-
     lines = []
     for line in open("rollen_log.txt"):
         lines.append("+" + line)
@@ -570,7 +558,6 @@ def toete_spieler(player):
     :return: The following:
 
     """
-
     player = str(player)
     rolle = momentane_rolle(player)
     list_for_the_log = []
@@ -603,7 +590,6 @@ def in_log_schreiben(a: str):
     :return: The string &quot;true&quot;
 
     """
-
     with open("logfile.txt", "a", encoding="UTF8") as logfile:
         now = datetime.now().strftime("%H:%M:%S")
 
@@ -621,7 +607,6 @@ def spieler_gestorben(player: str) -> str:
     :return: A string
 
     """
-
     rolle = momentane_rolle(player)
     if rolle == "Tot":
         return "err"

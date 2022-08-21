@@ -245,9 +245,8 @@ def hexe_darf_heilen() -> bool:
 
 
 def armor_darf_auswaehlen() -> bool:
-
-    """
-    The armor_darf_auswaehlen function checks if the player has already selected an armor.
+"""
+The armor_darf_auswaehlen function checks if the player has already selected an armor.
     If not, it returns True and the player can select an armor. If yes, it returns False and
     the player cannot select another armor.
 

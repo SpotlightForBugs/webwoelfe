@@ -30,7 +30,7 @@ def index():
     the root directory of our web application. The function returns an HTML template that contains
     a list of links to other pages within our web application.
     
-    :return: The index
+    :return: The index page of the application.
     
     """
     werwolf.in_log_schreiben("index geöffnet")

@@ -280,9 +280,9 @@ def armor_darf_auswaehlen() -> bool:
 
 def jaeger_darf_toeten() -> bool:
     """
-    The jaeger_darf_toeten function checks whether the Jaeger can eat D'arfs.
+    The jaeger_darf_toeten function checks whether the Jaeger can kill
     
-    :returns: True if the Jaeger can eat D'arfs, False otherwise.
+    :returns: True if the Jaeger can kill, False otherwise.
     
     
     :return: A boolean value
@@ -299,9 +299,7 @@ def jaeger_darf_toeten() -> bool:
 
 def jaeger_fertig():
     """
-    The jaeger_fertig function is used to set the jaeger_kann.txt file to 0, which is interpreted by the 
-    jaeger_start function as a signal that all of the Jaeger agents have been deployed and are ready for use.
-    
+    The jaeger_fertig function is used to set the jaeger_kann.txt file to 0 and the jaeger can not kill somebody anymore
     :return: The string &quot;0&quot;
     
     """

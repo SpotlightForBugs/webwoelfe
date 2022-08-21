@@ -83,7 +83,7 @@ def deduct():
     1. We open the file "rollen_zuweisung.txt" and read the content.
     2. We convert the content to a dictionary.
     3. We convert the dictionary to a list of keys.
-    4. We check if the sum of the values of the dictionary is 0. If it is, we return 0. """
+    4. We check if the sum of the values of the dictionary is 0. If it is, we return 0."""
     with open("rollen_zuweisung.txt", "r+") as a:
         assign = a.read()
         # print(assign)
@@ -94,13 +94,13 @@ def deduct():
         return 0
 
     def assignment():
-        """ Here is the explanation for the code above:
-1. We create a dictionary called assign that has the keys of the list keys and the values of the list values.
-2. We create a while loop that will continue to run as long as the sum of the values of assign is greater than or equal to 0.
-3. We create a random number generator that will generate a random number between 0 and the length of assign minus 1.
-4. If the value of the key of assign at the random number is greater than 0, we subtract 1 from the value of the key of assign.
-5. If the value of the key of assign at the random number is equal to 0, we delete the key of assign at the random number.
-6. We return the random number."""
+        """Here is the explanation for the code above:
+        1. We create a dictionary called assign that has the keys of the list keys and the values of the list values.
+        2. We create a while loop that will continue to run as long as the sum of the values of assign is greater than or equal to 0.
+        3. We create a random number generator that will generate a random number between 0 and the length of assign minus 1.
+        4. If the value of the key of assign at the random number is greater than 0, we subtract 1 from the value of the key of assign.
+        5. If the value of the key of assign at the random number is equal to 0, we delete the key of assign at the random number.
+        6. We return the random number."""
         while sum(assign.values()) >= 0:
             num = random.randint(0, len(assign) - 1)
             if assign[keys[num]] > 0:
@@ -120,15 +120,14 @@ def deduct():
 
 
 def validiere_rolle(name: str, rolle: str) -> bool:
-    """ This function checks if the role is valid:
-1. Creates a string with the name and the role.
-2. Opens the log file.
-3. Reads the log file.
-4. Checks if the string is in the log file.
-5. Returns true if the string is in the log file, false otherwise. """
+    """This function checks if the role is valid:
+    1. Creates a string with the name and the role.
+    2. Opens the log file.
+    3. Reads the log file.
+    4. Checks if the string is in the log file.
+    5. Returns true if the string is in the log file, false otherwise."""
     # create a string with the name and the role
-    wort = ("'" + name + " = " + rolle +
-            "\n'").encode("unicode_escape").decode("utf-8")
+    wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
@@ -138,15 +137,14 @@ def validiere_rolle(name: str, rolle: str) -> bool:
 
 def validiere_rolle_original(name: str, rolle: str) -> bool:
     """
-1. Creates a string with the name and the role.
-2. Encodes the string to a format that can be read by the log file.
-3. Reads the log file.
-4. If the string is in the log file, the function returns True.
-5. If the string is not in the log file, the function returns False. """
+    1. Creates a string with the name and the role.
+    2. Encodes the string to a format that can be read by the log file.
+    3. Reads the log file.
+    4. If the string is in the log file, the function returns True.
+    5. If the string is not in the log file, the function returns False."""
 
     # create a string with the name and the role
-    wort = ("'" + name + " = " + rolle +
-            "\n'").encode("unicode_escape").decode("utf-8")
+    wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
     file = open("rollen_original.txt", "r")  # open the log file
     players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
@@ -155,14 +153,13 @@ def validiere_rolle_original(name: str, rolle: str) -> bool:
 
 
 def validiere_name(name: str) -> bool:
-    """ This function checks if the name is valid:
-    
+    """This function checks if the name is valid:
+
     Keyword arguments:
     argument -- the name to be checked
-    Return: True if the name is valid, False otherwise. 
+    Return: True if the name is valid, False otherwise.
     """
-    
-    
+
     wort = ("'" + name + " = ").encode("unicode_escape").decode("utf-8")
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = str(file.readlines())  # read the log file
@@ -172,15 +169,12 @@ def validiere_name(name: str) -> bool:
 
 
 def hexe_verbraucht(flag: str):
-    """ This function uses up the potion of the hexe:
-    
+    """This function uses up the potion of the hexe:
+
     Keyword arguments:
     flag -- will be either "heal" or "kill", depending on the potion used.
-    
+
     """
-    
-    
-    
 
     if "t" in flag or "T" in flag:
         flag = str(2)
@@ -196,15 +190,14 @@ def hexe_verbraucht(flag: str):
                 hexe_kann_schreiben.write(hexe_kann_text)
                 hexe_kann_schreiben.close()
         else:
-            raise ValueError(
-                "Die Hexe kann nur über die flags 1 oder 2 verfügen")
+            raise ValueError("Die Hexe kann nur über die flags 1 oder 2 verfügen")
 
     # heilen --> 1
     # toeten --> 2
 
 
 def hexe_darf_toeten() -> bool:
-    """ This function checks if the hexe can kill"""
+    """This function checks if the hexe can kill"""
     with open("hexe_kann.txt", "r") as hexe_kann:
         hexe_kann_text = hexe_kann.read()
         if str(2) in hexe_kann_text:
@@ -215,7 +208,7 @@ def hexe_darf_toeten() -> bool:
 
 
 def hexe_darf_heilen() -> bool:
-    """ This function checks if the hexe can heal"""
+    """This function checks if the hexe can heal"""
     with open("hexe_kann.txt", "r") as hexe_kann:
         hexe_kann_text = hexe_kann.read()
         if "1" in hexe_kann_text:
@@ -226,7 +219,7 @@ def hexe_darf_heilen() -> bool:
 
 
 def armor_darf_auswaehlen() -> bool:
-    """ This function checks if the armor can select"""
+    """This function checks if the armor can select"""
     with open("armor_kann.txt", "r") as armor_kann:
         armor_kann_text = armor_kann.read()
         if "1" in armor_kann_text:
@@ -237,7 +230,7 @@ def armor_darf_auswaehlen() -> bool:
 
 
 def jaeger_darf_toeten() -> bool:
-    """ This function checks if the jaeger can kill"""
+    """This function checks if the jaeger can kill"""
     with open("jaeger_kann.txt", "r") as jaeger_kann:
         jaeger_kann_text = jaeger_kann.read()
         if "1" in jaeger_kann_text:
@@ -248,8 +241,8 @@ def jaeger_darf_toeten() -> bool:
 
 
 def jaeger_fertig():
-    """ This function sets the jaeger to be finished"""
-    
+    """This function sets the jaeger to be finished"""
+
     # jaeger_kann.txt mit 0 ersetzen
     with open("jaeger_kann.txt", "w") as jaeger_kann:
         jaeger_kann.write("0")
@@ -257,14 +250,14 @@ def jaeger_fertig():
 
 
 def armor_fertig(player1: str, player2: str):
-    """ This function sets the two lovers and the armor to be finished
-    
+    """This function sets the two lovers and the armor to be finished
+
     Keyword arguments:
     player1 -- the name of the first player
     player2 -- the name of the second player
-    
+
     """
-    
+
     if (
         player1 != player2
         and validiere_name(player1) is True
@@ -285,7 +278,7 @@ def armor_fertig(player1: str, player2: str):
 
 
 def ist_verliebt(name: str) -> bool:
-    """ This function checks if the player is verliebt"""
+    """This function checks if the player is verliebt"""
     with open("verliebt.txt", "r") as verliebt:
         verliebt_text = verliebt.read()
         if "+" + name in verliebt_text:
@@ -296,8 +289,7 @@ def ist_verliebt(name: str) -> bool:
 
 
 def leere_dateien():
-    """" This function empties the files of the game"""
-    
+    """ " This function empties the files of the game"""
 
     with open("rollen_log.txt", "w+") as f:  # leere rollen_log.txt
         f.write("*********************\n")
@@ -328,7 +320,7 @@ def leere_dateien():
 
 
 def momentane_rolle(player: str) -> str:
-    """ This function returns the current role of the player"""
+    """This function returns the current role of the player"""
 
     lines = []
     for line in open("rollen_log.txt"):
@@ -344,7 +336,7 @@ def momentane_rolle(player: str) -> str:
 
 
 def fruehere_rolle(player: str) -> str:
-    """ This function returns the previous role of the player, before dying"""
+    """This function returns the previous role of the player, before dying"""
     lines = []
     for line in open("rollen_original.txt"):
         lines.append("+" + line)  # damit die Zeilen mit + beginnen
@@ -361,14 +353,14 @@ def fruehere_rolle(player: str) -> str:
 
 
 def war_oder_ist_rolle(player: str, rolle: str) -> bool:
-    """ This function checks if the player has been or is the role"""
+    """This function checks if the player has been or is the role"""
     if momentane_rolle(player) == rolle or fruehere_rolle(player) == rolle:
         return True
     return False
 
 
 def aktion_verfuegbar_ist_tot(player: str) -> bool:
-    """ This function checks if the player can do an action"""
+    """This function checks if the player can do an action"""
 
     if war_oder_ist_rolle(player, "Hexe") is True:
         if hexe_darf_toeten() is True:
@@ -382,12 +374,12 @@ def aktion_verfuegbar_ist_tot(player: str) -> bool:
 
 
 def zufallszahl(minimum: int, maximum: int) -> int:
-    """ This function returns a random number between minimum and maximum"""
+    """This function returns a random number between minimum and maximum"""
     return random.randint(minimum, maximum)
 
 
 def verliebte_toeten() -> str:
-    """ This function kills the lovers"""
+    """This function kills the lovers"""
     log_liste = []
     with open("verliebt.txt", "r") as verliebt:
         read = verliebt.read()
@@ -435,7 +427,7 @@ def verliebte_toeten() -> str:
 
 
 def schreibe_zuletzt_gestorben(player: str) -> None:
-    """ This function writes the last dead player to the logfile"""
+    """This function writes the last dead player to the logfile"""
     with open("letzter_tot.txt", "r+") as letzter_tot_w:
         letzter_tot_w.write(player)
 
@@ -449,7 +441,7 @@ def toete_spieler(player):
     Args:
         player (str): the player to kill
 
-    
+
     """
     player = str(player)
     rolle = momentane_rolle(player)
@@ -476,7 +468,7 @@ def toete_spieler(player):
 
 
 def in_log_schreiben(a: str):
-    """ This function writes a line to the logfile
+    """This function writes a line to the logfile
 
     Args:
         a (str): what to write to the logfile
@@ -489,7 +481,7 @@ def in_log_schreiben(a: str):
 
 
 def spieler_gestorben(player: str) -> str:
-    """ This function performs actions if the player is dead"""
+    """This function performs actions if the player is dead"""
 
     rolle = momentane_rolle(player)
     if rolle == "Tot":
@@ -517,7 +509,7 @@ def spieler_gestorben(player: str) -> str:
 
 
 def spieler_ist_tot(player: str) -> bool:
-    """ This function checks if the player is dead"""
+    """This function checks if the player is dead"""
     if momentane_rolle(player) == "Tot":
         return True
     return False

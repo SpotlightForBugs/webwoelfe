@@ -295,13 +295,13 @@ def armor_player(player1, player2, name):
 def aktion_warten(name, rolle):
     """
     The aktion_warten function is used to render the template for the aktion_warten page.
-    It takes two arguments, name and rolle. If name is in werwolf.rolle and rolle is a valid role, 
+    It takes two arguments, name and rolle. If name is in werwolf.rolle and rolle is a valid role,
     then it will return a rendered template of aktion_warten.
-    
+
     :param name: Identify the player
     :param rolle: Determine the role of the player
     :return: The template for the warten page
-    
+
     """
     if werwolf.validiere_rolle(name, rolle) is True:
         return render_template("Dashboards/status/aktion_warten.html")

@@ -459,8 +459,8 @@ def aktion_verfuegbar_ist_tot(player: str) -> bool:
     if war_oder_ist_rolle(player, "Jaeger") is True:
         if jaeger_darf_toeten() is True:
             return True
-    else:
         return False
+    return False
 
 
 def zufallszahl(minimum: int, maximum: int) -> int:
@@ -617,7 +617,7 @@ def spieler_gestorben(player: str) -> str:
             toete_spieler(player)
             return "h"  # hexe_aktion()
 
-        if rolle == "Jaeger":
+        elif rolle == "Jaeger":
             toete_spieler(player)
             return "j"  # jaeger_aktion()
 

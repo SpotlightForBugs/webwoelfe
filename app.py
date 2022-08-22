@@ -235,22 +235,19 @@ def kill_player(name, rolle, name_kill):
             or rolle == "Jaeger"
             and werwolf.validiere_rolle(name, rolle) is True
         ):
+            werwolf.hexe_verbraucht("toeten")
+            werwolf.in_log_schreiben(f"Die Hexe ({name}) hat {name_kill} getötet")
+            return render_template("Dashboards/Dash_Hexe.html", name=name, rolle=rolle)
 
-            if rolle == "Jaeger":
-                if werwolf.jaeger_darf_toeten() is True:
-                    werwolf.toete_spieler(auswahl)
-                    werwolf.jaeger_fertig()
-                    return render_template(
-                        "Dashboards/status/tot.html",
-                    )
-                return render_template("Dashboards/status/tot.html")
-
-            if rolle == "Hexe":
-                werwolf.hexe_verbraucht("toeten")
-
+        elif rolle == "Jaeger":
+            if werwolf.jaeger_darf_toeten() is True:
+                werwolf.toete_spieler(auswahl)
+                werwolf.jaeger_fertig()
                 return render_template(
-                    "Dashboards/Dash_Hexe.html", name=name, rolle=rolle
+                    "Dashboards/status/tot.html",
                 )
+            return render_template("Dashboards/status/tot.html")
+
         else:
             return render_template("fehler.html")
 
@@ -310,8 +307,9 @@ def aktion_warten(name, rolle):
     """
     if werwolf.validiere_rolle(name, rolle) is True:
         return render_template("Dashboards/status/aktion_warten.html")
-    
-    else: return render_template("fehler.html")
+
+    else:
+        return render_template("fehler.html")
 
 
 # Übersicht der Spieler

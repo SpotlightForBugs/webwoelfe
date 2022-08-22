@@ -361,7 +361,7 @@ def overview_all(ist_unschuldig):  # Übersicht
             # render overview_guilty.html
             return render_template("overview_guilty.html", names=players_log)
         return render_template("fehler.html")  # render fehler.html
-    except (ValueError , TypeError , NameError):
+    except (ValueError, TypeError, NameError):
         return render_template("fehler.html")  # render fehler.html
 
 
@@ -697,7 +697,7 @@ def schlafen(name, rolle):  # function for the sleep function
                 rolle=rolle,
                 names=players_log,
             )
-        except (FileNotFoundError , IOError , PermissionError):
+        except (FileNotFoundError, IOError, PermissionError):
             return render_template("fehler.html")  # render the fehler.html
 
     else:
@@ -796,7 +796,7 @@ def warten():  # function for the wait function
             return render_template("Dashboards/status/ergebnis.html", name_tot=name_tot)
         return render_template("Dashboards/status/warten.html")
 
-    except (FileNotFoundError , IOError , PermissionError):
+    except (FileNotFoundError, IOError, PermissionError):
         return render_template("fehler.html")  # render the fehler.html
 
 
@@ -852,7 +852,7 @@ def tot(name, rolle, todesgrund):  # function for the death function
                 todesgrund=todesgrund,
             )
 
-        except (FileNotFoundError,IOError, PermissionError):
+        except (FileNotFoundError, IOError, PermissionError):
             # rendert die Seite zum Status Fehler
             return render_template("fehler.html")
 

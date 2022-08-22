@@ -163,9 +163,10 @@ def get_data():  # get the data from the form
         except:
             # render neu_laden.html
             return render_template("neu_laden.html")
-        
+
     else:
         return render_template("fehler.html")
+
 
 # Pfad des Erzählers, momentan für debugzwecke auf einem ungeschützten pfad
 
@@ -207,7 +208,7 @@ def reset():
         werwolf.in_log_schreiben("Neues Spiel gestartet")
         # zurück zur einstellungen
         return render_template("einstellungen.html")
-    else: 
+    else:
         return render_template("fehler.html")
 
 
@@ -639,7 +640,7 @@ def wahl(name, rolle, auswahl):
 
                 abstimmung.close()
                 return render_template("Dashboards/status/warten.html")
-    else: 
+    else:
         return render_template("fehler.html")
 
 
@@ -995,8 +996,6 @@ def sehen(name, rolle, auswahl):
                 )
     return render_template("fehler.html")
 
-    
-
 
 @app.route("/weiterleitung/<target>")
 def weiterleitung(target):
@@ -1044,7 +1043,8 @@ def wer_tot(name, rolle, auswahl):
                     return render_template("Dashboards/status/wer_wahl_warten.html")
             else:
                 return render_template("fehler.html")
-    else: return render_template("url_system.html", name=name, rolle=rolle)
+    else:
+        return render_template("url_system.html", name=name, rolle=rolle)
 
 
 @app.route("/wer_wahl_warten")

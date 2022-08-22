@@ -50,7 +50,6 @@ Einfach über git clonen:
 - We use [DeepSource](https://deepsource.io/) to analyze the code.
 - We use [Sentry](https://sentry.io/) to report errors.
 
-
 ## Roadmap
 
 - Additional browser support

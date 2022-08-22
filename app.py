@@ -309,6 +309,8 @@ def aktion_warten(name, rolle):
     """
     if werwolf.validiere_rolle(name, rolle) is True:
         return render_template("Dashboards/status/aktion_warten.html")
+    
+    else: return render_template("fehler.html")
 
 
 # Übersicht der Spieler

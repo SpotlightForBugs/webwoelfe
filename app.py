@@ -15,11 +15,6 @@ from flask import (  # skipcq: PY-W2000
 )
 
 
-
-
-
-
-
 import werwolf
 import datetime
 import re
@@ -32,13 +27,11 @@ sentry_sdk.init(
     integrations=[
         FlaskIntegration(),
     ],
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
     # We recommend adjusting this value in production.
-    traces_sample_rate=1.0
+    traces_sample_rate=1.0,
 )
-
 
 
 app = Flask(__name__)
@@ -60,14 +53,12 @@ def index():
     return render_template("index.html")  # Render index.html
 
 
-@app.route('/debug-sentry')
+@app.route("/debug-sentry")
 def trigger_error():
     division_by_zero = 1 / 0
 
 
 # einstellungen
-
-
 
 
 @app.route("/einstellungen", methods=["GET"])  # Einstellungen

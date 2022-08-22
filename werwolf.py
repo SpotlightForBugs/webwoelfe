@@ -16,7 +16,6 @@ def createDict():
     :return: A dictionary that assigns the number of players to each role
 
     """
-
     with open("spieler_anzahl.txt", "r") as f:
         spieleranzahl = f.read()
     try:
@@ -230,7 +229,6 @@ def hexe_darf_toeten() -> bool:
     :return: A boolean value
 
     """
-
     with open("hexe_kann.txt", "r") as hexe_kann:
         hexe_kann_text = hexe_kann.read()
         if str(2) in hexe_kann_text:
@@ -463,7 +461,6 @@ def aktion_verfuegbar_ist_tot(player: str) -> bool:
     :return: True if the player can do an action
 
     """
-
     if war_oder_ist_rolle(player, "Hexe") is True:
         if hexe_darf_toeten() is True:
             return True

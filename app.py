@@ -247,9 +247,7 @@ def kill_player(name, rolle, name_kill):
                 )
             return render_template("Dashboards/status/tot.html")
         return render_template("fehler.html")
-
-    else:
-        return render_template("fehler.html")
+    return render_template("fehler.html")
 
 
 @app.route("/<name>/Armor_aktion/<player1>/<player2>")  # player auswahl

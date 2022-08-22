@@ -44,8 +44,12 @@ Einfach über git clonen:
 
 ## Tech Stack
 
--Python 3.x
---Flask
+We use [Python](https://www.python.org/) and [Flask](https://flask.palletsprojects.com/en/1.1.x/) for the backend.
+We use [Bootstrap](https://getbootstrap.com/) to style the web application.
+We use [CodeQL](https://codeql.com/) to analyze the code.
+We use [DeepSource](https://deepsource.io/) to analyze the code.
+We use [Sentry](https://sentry.io/) to report errors.
+
 
 ## Roadmap
 

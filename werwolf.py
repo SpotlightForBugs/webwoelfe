@@ -259,17 +259,14 @@ def hexe_darf_heilen() -> bool:
 
 
 def armor_darf_auswaehlen() -> bool:
-
-    """
-    The armor_darf_auswaehlen function checks if the player has already selected an armor.
-    If not, it returns True and the player can select an armor. If yes, it returns False and 
-    the player cannot select another armor.
-    
-    :return: True if the armor_kann
-    
-    """
-   
-    with open("armor_kann.txt", "r") as armor_kann:
+  """
+  The armor_darf_auswaehlen function checks if the armor has already selected the lovers.
+  If not, it returns True. Otherwise, it returns False.
+  
+  :return: True if the armor can be selected and false otherwise
+  :doc-author: Trelent
+  """
+  with open("armor_kann.txt", "r") as armor_kann:
         armor_kann_text = armor_kann.read()
         if "1" in armor_kann_text:
             armor_kann.close()

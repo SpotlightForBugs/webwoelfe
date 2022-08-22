@@ -20,7 +20,7 @@ def createDict():
         spieleranzahl = f.read()
     try:
         spieleranzahl = int(spieleranzahl)
-    except:
+    except ValueError:
         spieleranzahl = 8  # auf 8 defaulten
     with open("erzaehler_ist_zufaellig.txt", "r") as fl:
         erzaehler_flag = int(fl.read())

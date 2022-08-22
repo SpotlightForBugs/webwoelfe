@@ -1,3 +1,4 @@
+from shutil import ExecError
 from traceback import print_tb  # skipcq: PY-W2000
 from flask import (  # skipcq: PY-W2000
     Flask,
@@ -160,7 +161,7 @@ def get_data():  # get the data from the form
                     name=name,
                     operator=operator,
                 )
-        except:
+        except Exception as e:
             # render neu_laden.html
             return render_template("neu_laden.html")
 
@@ -185,7 +186,7 @@ def erzaehler():
         # render erzaehler.html
         werwolf.in_log_schreiben("Erzähler geöffnet")
         return render_template("erzaehler.html", names=players_log)
-    except:
+    except Exception as e:
         return str(404)  # return 404 if the file is not found
 
 
@@ -331,7 +332,7 @@ def overview_all(ist_unschuldig):  # Übersicht
             # render overview_guilty.html
             return render_template("overview_guilty.html", names=players_log)
         return render_template("fehler.html")  # render fehler.html
-    except:
+    except ValueError or TypeError or NameError:
         return render_template("fehler.html")  # render fehler.html
 
 
@@ -383,7 +384,7 @@ def Dashboard(name, rolle):  # Dashboard
                             # append the name to the list
                             nurNamen.append(name_line)
 
-            except:
+            except IOError:
                 print(
                     "[Debug] Fehler beim Auslesen des rollen_logs in app.py line "
                     + str(getframeinfo(currentframe()).lineno - 1)
@@ -405,7 +406,7 @@ def Dashboard(name, rolle):  # Dashboard
                 nurNamen=nurNamen,
             )
 
-        except:
+        except Exception as e:
             return render_template("fehler.html")  # render fehler.html
 
     else:
@@ -667,7 +668,7 @@ def schlafen(name, rolle):  # function for the sleep function
                 rolle=rolle,
                 names=players_log,
             )
-        except:
+        except FileNotFoundError or IOError or PermissionError:
             return render_template("fehler.html")  # render the fehler.html
 
     else:
@@ -766,7 +767,7 @@ def warten():  # function for the wait function
             return render_template("Dashboards/status/ergebnis.html", name_tot=name_tot)
         return render_template("Dashboards/status/warten.html")
 
-    except:
+    except FileNotFoundError or IOError or PermissionError:
         return render_template("fehler.html")  # render the fehler.html
 
 
@@ -822,7 +823,7 @@ def tot(name, rolle, todesgrund):  # function for the death function
                 todesgrund=todesgrund,
             )
 
-        except:
+        except FileNotFoundError or IOError or PermissionError:
             # rendert die Seite zum Status Fehler
             return render_template("fehler.html")
 
@@ -863,7 +864,7 @@ def rausschmeissen(name, rolle):  # function for the kick function
             return render_template(
                 "rausschmeissen.html", name=name, rolle=rolle, names=players_log
             )
-        except:
+        except IOError as e:
 
             return render_template("fehler.html")  # render the fehler.html
 
@@ -911,7 +912,7 @@ def wahlbalken():
         # render the wahlbalken.html
         return render_template("wahlbalken.html", names=nurNamen)
 
-    except:
+    except Exception as e:
         return render_template("fehler.html")  # render the fehler.html
 
 

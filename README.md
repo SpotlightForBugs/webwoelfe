@@ -49,7 +49,6 @@ Einfach über git clonen:
 - We use [CodeQL](https://codeql.com/) and [DeepSource](https://deepsource.io/) to analyze the code.
 - We use [Sentry](https://sentry.io/) to report errors.
 
-
 ## Roadmap
 
 - Additional browser support

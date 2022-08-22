@@ -638,8 +638,7 @@ def spieler_gestorben(player: str) -> str:
             toete_spieler(player)
             return str(0)  # keine Aktion, player ist jetzt tot
         return "err"
-    else:
-        return "err"
+    return "err"
 
 
 def spieler_ist_tot(player: str) -> bool:

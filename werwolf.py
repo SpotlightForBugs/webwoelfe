@@ -79,10 +79,15 @@ def createDict():
 
 def deduct():
     """
-    1. We open the file "rollen_zuweisung.txt" and read the content.
-    2. We convert the content to a dictionary.
-    3. We convert the dictionary to a list of keys.
-    4. We check if the sum of the values of the dictionary is 0. If it is, we return 0."""
+    The deduct function is used to deduct a random key from the dictionary.
+    It is called by the main function and returns a value that is then assigned
+    to the variable 'rollen_zuweisung'. The function iterates through each key in 
+    the dictionary, checks if it has been assigned yet, and assigns it if not. If all values are 0 or less, 
+    then no keys remain in the dictionary and an empty string is returned.
+    
+    :return: The index of a random key in the dictionary
+    
+    """
     with open("rollen_zuweisung.txt", "r+") as a:
         assign = a.read()
         # print(assign)

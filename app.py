@@ -1150,7 +1150,7 @@ def heilen(name, rolle, auswahl):
     return render_template("fehler.html")
 
 
-#TODO: #76 Sicherheitsabfrage bei der Anzeige des Logs
+# TODO: #76 Sicherheitsabfrage bei der Anzeige des Logs
 @app.route("/log")
 def log_ansehen():
     """

@@ -617,7 +617,7 @@ def spieler_gestorben(player: str) -> str:
             toete_spieler(player)
             return "h"  # hexe_aktion()
 
-        elif rolle == "Jaeger":
+        if rolle == "Jaeger":
             toete_spieler(player)
             return "j"  # jaeger_aktion()
 

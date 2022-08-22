@@ -208,8 +208,7 @@ def reset():
         werwolf.in_log_schreiben("Neues Spiel gestartet")
         # zurück zur einstellungen
         return render_template("einstellungen.html")
-    else:
-        return render_template("fehler.html")
+    return render_template("fehler.html")
 
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>")  # kill a player
@@ -239,7 +238,7 @@ def kill_player(name, rolle, name_kill):
             werwolf.in_log_schreiben(f"Die Hexe ({name}) hat {name_kill} getötet")
             return render_template("Dashboards/Dash_Hexe.html", name=name, rolle=rolle)
 
-        elif rolle == "Jaeger":
+        if rolle == "Jaeger":
             if werwolf.jaeger_darf_toeten() is True:
                 werwolf.toete_spieler(auswahl)
                 werwolf.jaeger_fertig()
@@ -247,9 +246,7 @@ def kill_player(name, rolle, name_kill):
                     "Dashboards/status/tot.html",
                 )
             return render_template("Dashboards/status/tot.html")
-
-        else:
-            return render_template("fehler.html")
+        return render_template("fehler.html")
 
     else:
         return render_template("fehler.html")
@@ -307,9 +304,7 @@ def aktion_warten(name, rolle):
     """
     if werwolf.validiere_rolle(name, rolle) is True:
         return render_template("Dashboards/status/aktion_warten.html")
-
-    else:
-        return render_template("fehler.html")
+    return render_template("fehler.html")
 
 
 # Übersicht der Spieler
@@ -587,8 +582,7 @@ def spiel_ende(name, rolle):
             return render_template(
                 "gewonnen.html", name=name, rolle=rolle, unschuldig=1
             )
-        else:
-            return render_template("fehler.html")
+        return render_template("fehler.html")
 
 
 @app.route("/waehlen/<name>/<rolle>/<auswahl>")

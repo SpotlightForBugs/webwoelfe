@@ -9,7 +9,6 @@ liste_tot_ohne_aktion = ["Dorfbewohner", "Werwolf", "Seherin"]
 
 def createDict():
     """Erstellt ein Dictionary mit den Rollen und deren Anzahl"""
-
     with open("spieler_anzahl.txt", "r") as f:
         spieleranzahl = f.read()
     try:
@@ -83,7 +82,7 @@ def deduct():
     1. We open the file "rollen_zuweisung.txt" and read the content.
     2. We convert the content to a dictionary.
     3. We convert the dictionary to a list of keys.
-    4. We check if the sum of the values of the dictionary is 0. If it is, we return 0. """
+    4. We check if the sum of the values of the dictionary is 0. If it is, we return 0."""
     with open("rollen_zuweisung.txt", "r+") as a:
         assign = a.read()
         # print(assign)
@@ -95,15 +94,14 @@ def deduct():
 
     def assignment():
         """
-        The assignment function is a helper function that is used to assign the 
-        randomly generated number to the appropriate key in the dictionary. The while loop 
-        continues until all values are assigned and there are no more keys left in the dictionary.  
+        The assignment function is a helper function that is used to assign the
+        randomly generated number to the appropriate key in the dictionary. The while loop
+        continues until all values are assigned and there are no more keys left in the dictionary.
         The for loop iterates through each key, checks if it has been assigned yet, and assigns it if not.
-        
+
         :return: The index of a random key in the dictionary
-        
+
         """
-        
         while sum(assign.values()) >= 0:
             num = random.randint(0, len(assign) - 1)
             if assign[keys[num]] > 0:
@@ -126,16 +124,14 @@ def validiere_rolle(name: str, rolle: str) -> bool:
     """
     The validiere_rolle function checks if the player is already in the log file.
     If so, it returns True. Otherwise, it returns False.
-    
+
     :param name:str: Store the name of the player
     :param rolle:str: Check if the name and role combination is already in the log file
     :return: True if the player is already in the log file
-    
+
     """
-    
     # create a string with the name and the role
-    wort = ("'" + name + " = " + rolle +
-            "\n'").encode("unicode_escape").decode("utf-8")
+    wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
@@ -146,18 +142,15 @@ def validiere_rolle(name: str, rolle: str) -> bool:
 def validiere_rolle_original(name: str, rolle: str) -> bool:
     """
     The validiere_rolle_original function checks if the given name and role are already in the log file.
-        
-    
+
+
     :param name:str: Store the name of the player
     :param rolle:str: Check if the role is already in the log file
     :return: True if the name and role are in the log file
-    
-    """
-    
 
+    """
     # create a string with the name and the role
-    wort = ("'" + name + " = " + rolle +
-            "\n'").encode("unicode_escape").decode("utf-8")
+    wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
     file = open("rollen_original.txt", "r")  # open the log file
     players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
@@ -172,10 +165,8 @@ def validiere_name(name: str) -> bool:
 
     :param name:str: Set the name of the player
     :return: True if the name is in the log file and false otherwise
-    
-    """
 
-    
+    """
     wort = ("'" + name + " = ").encode("unicode_escape").decode("utf-8")
     file = open("rollen_log.txt", "r")  # open the log file
     players_vorhanden = str(file.readlines())  # read the log file
@@ -186,19 +177,16 @@ def validiere_name(name: str) -> bool:
 
 def hexe_verbraucht(flag: str):
     """
-    The hexe_verbraucht function removes the flag from the list of flags that 
-    the hexe can use. The function takes one argument, a string containing either 
-    a 't' or an 'h'. If it contains a 't', then it removes flag 2 from the list of 
-    flags that she can use. If it contains an 'h', then it removes flag 1 from her 
+    The hexe_verbraucht function removes the flag from the list of flags that
+    the hexe can use. The function takes one argument, a string containing either
+    a 't' or an 'h'. If it contains a 't', then it removes flag 2 from the list of
+    flags that she can use. If it contains an 'h', then it removes flag 1 from her
     list of flags.
-    
+
     :param flag:str: Determine the action of the function
     :return: The following:
-    
-    """
-    
-    
 
+    """
     if "t" in flag or "T" in flag:
         flag = str(2)
     elif "h" in flag or "H" in flag:
@@ -213,8 +201,7 @@ def hexe_verbraucht(flag: str):
                 hexe_kann_schreiben.write(hexe_kann_text)
                 hexe_kann_schreiben.close()
         else:
-            raise ValueError(
-                "Die Hexe kann nur über die flags 1 oder 2 verfügen")
+            raise ValueError("Die Hexe kann nur über die flags 1 oder 2 verfügen")
 
     # heilen --> 1
     # toeten --> 2
@@ -223,12 +210,12 @@ def hexe_verbraucht(flag: str):
 def hexe_darf_toeten() -> bool:
     """
     The hexe_darf_toeten function checks if the hexe can kill.
-    
+
     :returns: True if the hexe can kill, False otherwise.
-    
-    
+
+
     :return: A boolean value
-    
+
     """
     """ This function checks if the hexe can kill"""
     with open("hexe_kann.txt", "r") as hexe_kann:
@@ -244,11 +231,10 @@ def hexe_darf_heilen() -> bool:
     """
     The hexe_darf_heilen function checks if the hexe can heal.
     It does this by reading from a file called &quot;hexe_kann.txt&quot; which contains either a 1 or 0, depending on whether or not the hexe can heal.
-    
+
     :return: True if the hexe can heal
-    
+
     """
-   
     with open("hexe_kann.txt", "r") as hexe_kann:
         hexe_kann_text = hexe_kann.read()
         if "1" in hexe_kann_text:
@@ -264,7 +250,7 @@ def armor_darf_auswaehlen() -> bool:
   If not, it returns True. Otherwise, it returns False.
   
   :return: True if the armor can be selected and false otherwise
-  :doc-author: Trelent
+  
   """
   with open("armor_kann.txt", "r") as armor_kann:
         armor_kann_text = armor_kann.read()
@@ -277,13 +263,13 @@ def armor_darf_auswaehlen() -> bool:
 
 def jaeger_darf_toeten() -> bool:
     """
-    The jaeger_darf_toeten function checks whether the Jaeger can eat D'arfs.
-    
-    :returns: True if the Jaeger can eat D'arfs, False otherwise.
-    
-    
+    The jaeger_darf_toeten function checks whether the Jaeger can kill
+
+    :returns: True if the Jaeger can kill, False otherwise.
+
+
     :return: A boolean value
-    
+
     """
     with open("jaeger_kann.txt", "r") as jaeger_kann:
         jaeger_kann_text = jaeger_kann.read()
@@ -296,13 +282,10 @@ def jaeger_darf_toeten() -> bool:
 
 def jaeger_fertig():
     """
-    The jaeger_fertig function is used to set the jaeger_kann.txt file to 0, which is interpreted by the 
-    jaeger_start function as a signal that all of the Jaeger agents have been deployed and are ready for use.
-    
+    The jaeger_fertig function is used to set the jaeger_kann.txt file to 0 and the jaeger can not kill somebody anymore
     :return: The string &quot;0&quot;
-    
+
     """
-    
     # jaeger_kann.txt mit 0 ersetzen
     with open("jaeger_kann.txt", "w") as jaeger_kann:
         jaeger_kann.write("0")
@@ -312,14 +295,12 @@ def jaeger_fertig():
 def armor_fertig(player1: str, player2: str):
     """
     The armor_fertig function adds a line to the verliebt.txt file and replaces the armor_kann.txt file with 0.
-    
+
     :param player1:str: Store the name of the first player
     :param player2:str: Determine the name of the player that is going to be added to the list
     :return: The following:
-    
+
     """
-    
-    
     if (
         player1 != player2
         and validiere_name(player1) is True
@@ -342,10 +323,10 @@ def armor_fertig(player1: str, player2: str):
 def ist_verliebt(name: str) -> bool:
     """
     The ist_verliebt function checks if the player is verliebt
-    
+
     :param name:str: Define the name of the player
     :return: True if the player is verliebt, otherwise it returns false
-    
+
     """
     with open("verliebt.txt", "r") as verliebt:
         verliebt_text = verliebt.read()
@@ -361,16 +342,13 @@ def leere_dateien():
     The leere_dateien function clears the following files:
         - rollen_log.txt
         - abstimmung.txt
-        - rollen_original.txt 
-        - hat_gewaehlt.txt 
-    
-    
-    :return: Nothing
-    
-    """
-    
-    
+        - rollen_original.txt
+        - hat_gewaehlt.txt
 
+
+    :return: Nothing
+
+    """
     with open("rollen_log.txt", "w+") as f:  # leere rollen_log.txt
         f.write("*********************\n")
     file = open("abstimmung.txt", "r+")
@@ -402,14 +380,13 @@ def leere_dateien():
 def momentane_rolle(player: str) -> str:
     """
     The momentane_rolle function returns the current role of a player.
-    
-    
-    
+
+
+
     :param player:str: Get the name of the player whose role is to be returned
     :return: The current role of the player
-    
-    """
 
+    """
     lines = []
     for line in open("rollen_log.txt"):
         lines.append("+" + line)
@@ -426,12 +403,12 @@ def momentane_rolle(player: str) -> str:
 def fruehere_rolle(player: str) -> str:
     """
     The fruehere_rolle function returns the previous role of a player, before dying.
-    
-    
-    
+
+
+
     :param player:str: Pass the name of the player to the function
     :return: The previous role of the player, before dying
-    
+
     """
     lines = []
     for line in open("rollen_original.txt"):
@@ -452,11 +429,11 @@ def war_oder_ist_rolle(player: str, rolle: str) -> bool:
     """
     The war_oder_ist_rolle function checks whether a player is currently or was previously in the given role.
     It returns True if they are, False otherwise.
-    
+
     :param player:str: Specify the player whose role is to be checked
     :param rolle:str: Check if the player is in the specified role
     :return: True if the player is in the role or was in that role before
-    
+
     """
     if momentane_rolle(player) == rolle or fruehere_rolle(player) == rolle:
         return True
@@ -468,10 +445,10 @@ def aktion_verfuegbar_ist_tot(player: str) -> bool:
     The aktion_verfuegbar_ist_tot function checks if the player can do an action.
     It checks if the player is a witch, and if she can kill someone. If not, it checks
     if the player is a hunter and he can kill someone.
-    
+
     :param player:str: Check if the player is a hunter or witch
     :return: True if the player can do an action
-    
+
     """
     """ This function checks if the player can do an action"""
 
@@ -491,11 +468,11 @@ def zufallszahl(minimum: int, maximum: int) -> int:
     The zufallszahl function returns a random integer between the specified minimum and maximum values.
        The function takes two arguments, both integers: minimum and maximum.
        It returns an integer.
-    
+
     :param minimum:int: Set the lowest possible number and the maximum:int parameter is used to set the highest possible number
     :param maximum:int: Set the upper limit of the random number
     :return: A random integer between the minimum and maximum value
-    
+
     """
     return random.randint(minimum, maximum)
 
@@ -505,9 +482,9 @@ def verliebte_toeten() -> str:
     The verliebte_toeten function takes the names of two players and writes them to a file.
     The function then reads the file and checks if either player is in it. If so, it replaces their name with &quot;Tot&quot;.
     Finally, the function returns a string containing both names.
-    
+
     :return: The names of the two players who are dead
-    
+
     """
     log_liste = []
     with open("verliebt.txt", "r") as verliebt:
@@ -558,10 +535,10 @@ def verliebte_toeten() -> str:
 def schreibe_zuletzt_gestorben(player: str) -> None:
     """
     The schreibe_zuletzt_gestorben function writes the last dead player to the logfile
-    
+
     :param player:str: Write the name of the player who died last to a file
     :return: None
-    
+
     """
     with open("letzter_tot.txt", "r+") as letzter_tot_w:
         letzter_tot_w.write(player)
@@ -574,12 +551,11 @@ def toete_spieler(player):
     """
     The toete_spieler function takes a player as an argument and changes the role of that player to &quot;Tot&quot; in the rollen_log.txt file.
     It also writes down when that player was killed.
-    
+
     :param player: Identify the player who is to be killed
     :return: The following:
-    
+
     """
-    
     player = str(player)
     rolle = momentane_rolle(player)
     list_for_the_log = []
@@ -607,12 +583,11 @@ def toete_spieler(player):
 def in_log_schreiben(a: str):
     """
     The in_log_schreiben function writes a string to the logfile.txt file.
-    
+
     :param a:str: Pass the string to be written into the logfile
     :return: The string &quot;true&quot;
-    
+
     """
-    
     with open("logfile.txt", "a", encoding="UTF8") as logfile:
         now = datetime.now().strftime("%H:%M:%S")
 
@@ -623,14 +598,13 @@ def in_log_schreiben(a: str):
 def spieler_gestorben(player: str) -> str:
     """
     The spieler_gestorben function performs actions if the player is dead.
-    
-    
-    
+
+
+
     :param player:str: Identify the player that is dead
     :return: A string
-    
-    """
 
+    """
     rolle = momentane_rolle(player)
     if rolle == "Tot":
         return "err"
@@ -657,7 +631,7 @@ def spieler_gestorben(player: str) -> str:
 
 
 def spieler_ist_tot(player: str) -> bool:
-    """ This function checks if the player is dead"""
+    """This function checks if the player is dead"""
     if momentane_rolle(player) == "Tot":
         return True
     return False

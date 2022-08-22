@@ -112,7 +112,6 @@ def get_data():  # get the data from the form
     :return: The name and the operator from the form
 
     """
-
     if request.method == "POST":  # if the request is a POST request
         name = request.form.get("name")  # get the name from the form
 
@@ -310,7 +309,6 @@ def overview_all(ist_unschuldig):  # Übersicht
     :return: The overview_innocent
 
     """
-
     try:
         # ist_unschuldig ist wirklich ein integer
         ist_unschuldig = int(ist_unschuldig)
@@ -343,7 +341,6 @@ def Dashboard(name, rolle):  # Dashboard
     :return: The dash_rolle
 
     """
-
     # create a string with the name and the role
     with open("rollen_log.txt", "r") as file:  # open the log file
         players_vorhanden = file.read()  # read the log file
@@ -516,7 +513,6 @@ def spiel_ende(name, rolle):
     :return: The following:
 
     """
-
     with open("rollen_original.txt", "r") as file:
         players_vorhanden = file.read()
         file.close()
@@ -591,7 +587,6 @@ def wahl(name, rolle, auswahl):
     :return: The following:
 
     """
-
     if rolle == "Tot":
         return render_template("warten.html")
 
@@ -643,7 +638,6 @@ def schlafen(name, rolle):  # function for the sleep function
     :return: The sleep
 
     """
-
     if rolle == "Tot":
         return render_template("tot.html", name=name)
 
@@ -919,7 +913,6 @@ def wahl_stats():
     :return: The most common name in the text
 
     """
-
     anzahl = 0
     name_tot = ""
     maxCount = 0
@@ -1006,8 +999,8 @@ def weiterleitung(target):
 def wer_tot(name, rolle, auswahl):
     """
     The wer_tot function is used to add a player to the list of players who have voted.
-    It takes three arguments: name, rolle and auswahl. 
-    The function checks if the player has already voted, 
+    It takes three arguments: name, rolle and auswahl.
+    The function checks if the player has already voted,
     and if not it adds them to hat_gewaehlt.txt and writes their vote in abstimmung.txt.
 
     :param name: Identify the player
@@ -1016,7 +1009,6 @@ def wer_tot(name, rolle, auswahl):
     :return: A message that the user has already voted
 
     """
-
     with open("rollen_log.txt", "r") as file:  # open the log file
         players_vorhanden = file.read()  # read the log file
     if werwolf.validiere_rolle(name, rolle) is True:
@@ -1042,7 +1034,6 @@ def wer_wahl_warten():
     :return: The current status of the voting
 
     """
-
     with open("hat_gewaehlt.txt", "r+") as hat_gewaehlt:
         wer_anzahl_stimmen = sum(1 for line in hat_gewaehlt if line.rstrip())
         if wer_anzahl_stimmen == 4:

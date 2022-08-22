@@ -163,7 +163,9 @@ def get_data():  # get the data from the form
         except:
             # render neu_laden.html
             return render_template("neu_laden.html")
-
+        
+    else:
+        return render_template("fehler.html")
 
 # Pfad des Erzählers, momentan für debugzwecke auf einem ungeschützten pfad
 
@@ -205,6 +207,8 @@ def reset():
         werwolf.in_log_schreiben("Neues Spiel gestartet")
         # zurück zur einstellungen
         return render_template("einstellungen.html")
+    else: 
+        return render_template("fehler.html")
 
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>")  # kill a player
@@ -582,6 +586,8 @@ def spiel_ende(name, rolle):
             return render_template(
                 "gewonnen.html", name=name, rolle=rolle, unschuldig=1
             )
+        else:
+            return render_template("fehler.html")
 
 
 @app.route("/waehlen/<name>/<rolle>/<auswahl>")
@@ -631,6 +637,8 @@ def wahl(name, rolle, auswahl):
 
                 abstimmung.close()
                 return render_template("Dashboards/status/warten.html")
+    else: 
+        return render_template("fehler.html")
 
 
 # schlafen function
@@ -983,11 +991,9 @@ def sehen(name, rolle, auswahl):
                 return render_template(
                     "Dashboards/status/sehen.html", ergebnis=ergebnis
                 )
+    return render_template("fehler.html")
 
-    else:
-        # print the error
-        print("Spieler oder Rolle falsch!")
-        return render_template("url_system.html", name=name, rolle=rolle)
+    
 
 
 @app.route("/weiterleitung/<target>")
@@ -1034,6 +1040,9 @@ def wer_tot(name, rolle, auswahl):
                 with open("hat_gewaehlt.txt", "a") as hat_gewaehlt:
                     hat_gewaehlt.write(name + " : " + "\n")
                     return render_template("Dashboards/status/wer_wahl_warten.html")
+            else:
+                return render_template("fehler.html")
+    else: return render_template("url_system.html", name=name, rolle=rolle)
 
 
 @app.route("/wer_wahl_warten")

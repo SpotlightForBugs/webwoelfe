@@ -1,0 +1,21 @@
+name: Check for suspicious forks
+on:
+  schedule:
+    - cron: '0 10 * * 1' # Checks for updates every Monday at 10:00 AM
+
+jobs:
+  fork-sentry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ex0dus-0x/fork-sentry@v1.0
+        with:
+
+          # required for authentication and recovering forks
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          fork_sentry_token: ${{ secrets.FORK_SENTRY_API }}
+
+          # if self-hosting, replace with dispatcher endpoint
+          #infra_endpoint: https://fork-sentry-instance.example.com
+
+          # optional: integrate for VirusTotal Enterprise support
+          vt_token: ${{ secrets.VT_API_TOKEN }}

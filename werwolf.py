@@ -637,9 +637,7 @@ def spieler_gestorben(player: str) -> str:
         if rolle in liste_tot_ohne_aktion:
             toete_spieler(player)
             return str(0)  # keine Aktion, player ist jetzt tot
-
-        else:
-            return "err"
+        return "err"
     else:
         return "err"
 

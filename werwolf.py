@@ -8,7 +8,15 @@ liste_tot_ohne_aktion = ["Dorfbewohner", "Werwolf", "Seherin"]
 
 
 def createDict():
-    """Erstellt ein Dictionary mit den Rollen und deren Anzahl"""
+    """
+    The createDict function creates a dictionary that assigns the number of players to each role.
+    It takes no arguments and returns a dictionary with the keys: Werwolf, Hexe, Seherin, Armor, Jaeger and Dorfbewohner.
+    The values are integers representing how many players have that role.
+    
+    :return: A dictionary that assigns the number of players to each role
+    
+    """
+    
     with open("spieler_anzahl.txt", "r") as f:
         spieleranzahl = f.read()
     try:
@@ -222,7 +230,7 @@ def hexe_darf_toeten() -> bool:
     :return: A boolean value
 
     """
-    """ This function checks if the hexe can kill"""
+    
     with open("hexe_kann.txt", "r") as hexe_kann:
         hexe_kann_text = hexe_kann.read()
         if str(2) in hexe_kann_text:
@@ -455,7 +463,7 @@ def aktion_verfuegbar_ist_tot(player: str) -> bool:
     :return: True if the player can do an action
 
     """
-    """ This function checks if the player can do an action"""
+    
 
     if war_oder_ist_rolle(player, "Hexe") is True:
         if hexe_darf_toeten() is True:
@@ -639,7 +647,13 @@ def spieler_gestorben(player: str) -> str:
 
 
 def spieler_ist_tot(player: str) -> bool:
-    """This function checks if the player is dead"""
+    """
+    The spieler_ist_tot function checks if the player is dead
+    
+    :param player:str: Identify the player
+    :return: A boolean value
+    
+    """
     if momentane_rolle(player) == "Tot":
         return True
     return False

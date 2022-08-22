@@ -629,7 +629,7 @@ def spieler_gestorben(player: str) -> str:
         if rolle == "Jaeger":
             toete_spieler(player)
             return "j"  # jaeger_aktion()
-        else: 
+        else:
             return "err"
 
     elif ist_verliebt(player) is True:

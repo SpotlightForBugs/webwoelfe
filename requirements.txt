@@ -1,2 +1,3 @@
 flask
 requests
+sentry-sdk[flask]

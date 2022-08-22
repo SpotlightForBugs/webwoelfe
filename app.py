@@ -1,3 +1,5 @@
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 from shutil import ExecError
 from traceback import print_tb  # skipcq: PY-W2000
 from flask import (  # skipcq: PY-W2000
@@ -12,11 +14,31 @@ from flask import (  # skipcq: PY-W2000
     escape,
 )
 
+
+
+
+
+
+
 import werwolf
 import datetime
 import re
 from inspect import currentframe, getframeinfo
 from datetime import datetime
+
+
+sentry_sdk.init(
+    dsn="https://78fe9de58a5847ada071bf5f62f9c214@o1363527.ingest.sentry.io/6678492",
+    integrations=[
+        FlaskIntegration(),
+    ],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0
+)
+
 
 
 app = Flask(__name__)
@@ -38,7 +60,14 @@ def index():
     return render_template("index.html")  # Render index.html
 
 
+@app.route('/debug-sentry')
+def trigger_error():
+    division_by_zero = 1 / 0
+
+
 # einstellungen
+
+
 
 
 @app.route("/einstellungen", methods=["GET"])  # Einstellungen

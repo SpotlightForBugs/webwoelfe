@@ -248,9 +248,9 @@ def armor_darf_auswaehlen() -> bool:
   """
   The armor_darf_auswaehlen function checks if the armor has already selected the lovers.
   If not, it returns True. Otherwise, it returns False.
-  
+
   :return: True if the armor can be selected and false otherwise
-  
+
   """
   with open("armor_kann.txt", "r") as armor_kann:
         armor_kann_text = armor_kann.read()

@@ -12,11 +12,11 @@ def createDict():
     The createDict function creates a dictionary that assigns the number of players to each role.
     It takes no arguments and returns a dictionary with the keys: Werwolf, Hexe, Seherin, Armor, Jaeger and Dorfbewohner.
     The values are integers representing how many players have that role.
-    
+
     :return: A dictionary that assigns the number of players to each role
-    
+
     """
-    
+
     with open("spieler_anzahl.txt", "r") as f:
         spieleranzahl = f.read()
     try:
@@ -89,12 +89,12 @@ def deduct():
     """
     The deduct function is used to deduct a random key from the dictionary.
     It is called by the main function and returns a value that is then assigned
-    to the variable 'rollen_zuweisung'. The function iterates through each key in 
-    the dictionary, checks if it has been assigned yet, and assigns it if not. If all values are 0 or less, 
+    to the variable 'rollen_zuweisung'. The function iterates through each key in
+    the dictionary, checks if it has been assigned yet, and assigns it if not. If all values are 0 or less,
     then no keys remain in the dictionary and an empty string is returned.
-    
+
     :return: The index of a random key in the dictionary
-    
+
     """
     with open("rollen_zuweisung.txt", "r+") as a:
         assign = a.read()
@@ -230,7 +230,7 @@ def hexe_darf_toeten() -> bool:
     :return: A boolean value
 
     """
-    
+
     with open("hexe_kann.txt", "r") as hexe_kann:
         hexe_kann_text = hexe_kann.read()
         if str(2) in hexe_kann_text:
@@ -463,7 +463,6 @@ def aktion_verfuegbar_ist_tot(player: str) -> bool:
     :return: True if the player can do an action
 
     """
-    
 
     if war_oder_ist_rolle(player, "Hexe") is True:
         if hexe_darf_toeten() is True:
@@ -649,10 +648,10 @@ def spieler_gestorben(player: str) -> str:
 def spieler_ist_tot(player: str) -> bool:
     """
     The spieler_ist_tot function checks if the player is dead
-    
+
     :param player:str: Identify the player
     :return: A boolean value
-    
+
     """
     if momentane_rolle(player) == "Tot":
         return True

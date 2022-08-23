@@ -145,8 +145,8 @@ def validiere_rolle(name: str, rolle: str) -> bool:
     """
     # create a string with the name and the role
     wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
-    file = open("rollen_log.txt", "r")  # open the log file
-    players_vorhanden = str(file.readlines())  # read the log file
+    with open("rollen_log.txt", "r") as file:  # open the log file
+        players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
         return True
     return False
@@ -164,8 +164,8 @@ def validiere_rolle_original(name: str, rolle: str) -> bool:
     """
     # create a string with the name and the role
     wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
-    file = open("rollen_original.txt", "r")  # open the log file
-    players_vorhanden = str(file.readlines())  # read the log file
+    with open("rollen_original.txt", "r") as file: # open the log file
+        players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
         return True
     return False
@@ -181,8 +181,8 @@ def validiere_name(name: str) -> bool:
 
     """
     wort = ("'" + name + " = ").encode("unicode_escape").decode("utf-8")
-    file = open("rollen_log.txt", "r")  # open the log file
-    players_vorhanden = str(file.readlines())  # read the log file
+    with open("rollen_log.txt", "r") as file:  # open the log file
+        players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
         return True
     return False
@@ -372,17 +372,17 @@ def leere_dateien():
     file3 = open("hat_gewaehlt.txt", "r+", encoding="UTF8")
     file3.truncate(0)
     file3.close()
-    file4 = open("hexe_kann.txt", "w", encoding="UTF8")
-    file4.write(str(12))
+    with open("hexe_kann.txt", "w", encoding="UTF8") as file4:
+        file4.write(str(12))
     file4.close()
-    file5 = open("armor_kann.txt", "w", encoding="UTF8")
-    file5.write(str(1))
+    with open("armor_kann.txt", "w", encoding="UTF8") as file5:
+        file5.write(str(1))
     file5.close()
-    file6 = open("verliebt.txt", "w", encoding="UTF8")
-    file6.write(str(""))
+    with open("verliebt.txt", "w", encoding="UTF8") as file6:
+        file6.write(str(""))
     file6.close()
-    file7 = open("jaeger_kann.txt", "w", encoding="UTF8")
-    file7.write(str(1))
+    with open("jaeger_kann.txt", "w", encoding="UTF8") as file7:
+        file7.write(str(1))
     file7.close()
     file8 = open("logfile.txt", "w", encoding="UTF8")
     file8.truncate(0)

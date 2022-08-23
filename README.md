@@ -2,7 +2,6 @@
 
 ![All](https://badgen.net/github/checks/SpotlightForBugs/webwoelfe)
 
-
 ![dependabot](https://badgen.net/github/dependabot/SpotlightForBugs/webwoelfe)
 [![CodeQL](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml)
 
@@ -12,7 +11,6 @@
 ---
 
 # Webwölfe [WORK IN PROGRESS, NOT PRODUCTION READY]
-
 
 <img width="435" alt="Wolf_watermark" src="https://user-images.githubusercontent.com/73603712/185472606-b5ad525e-924d-4a17-9843-d2a75615a2ee.png">
 

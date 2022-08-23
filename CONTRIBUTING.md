@@ -157,15 +157,9 @@ Updating, improving and correcting the documentation
 
 ### Commit Messages
 
-<!-- TODO
+please use at least three descriptive words in the commit message
 
--->
 
-## Join The Project Team
-
-<!-- TODO -->
-
-<!-- omit in toc -->
 
 ## Attribution
 

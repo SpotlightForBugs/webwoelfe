@@ -1239,7 +1239,7 @@ def server_error_handler(error):
     :return: A template fehler
     
     """
-    return render_template("fehler.html")
+    return render_template("fehler.html"), 500
 
 
 if __name__ == "__main__":

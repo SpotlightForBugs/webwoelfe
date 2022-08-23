@@ -1,4 +1,5 @@
 import sentry_sdk
+from sentry_sdk import last_event_id
 from sentry_sdk.integrations.flask import FlaskIntegration
 from shutil import ExecError
 from traceback import print_tb  # skipcq: PY-W2000
@@ -1227,6 +1228,14 @@ def inject_now():
 
     """
     return {"now": datetime.utcnow()}
+
+
+
+#sentry error handler
+@app.errorhandler(500)
+def server_error_handler(error):
+    return render_template("500.html", sentry_event_id=last_event_id()), 500
+
 
 
 if __name__ == "__main__":

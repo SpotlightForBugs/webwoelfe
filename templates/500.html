@@ -1,0 +1,38 @@
+{% extends 'struktur.html' %}
+<!--@generated-->
+
+{% block body %}
+
+<div class="container-fluid" style="margin-top: 30px">
+  <h1 id="rot">Fehler</h1>
+  <h2>
+    Bitte gehe zurück zum
+    <a style="color: red" href="{{ url_for('index')}}">Start</a>
+  </h2>
+</div>
+
+{% if not sentry_event_id %}
+    
+
+<script>
+  //weiterleitung zurück zum start
+  setTimeout(function () {
+    window.location.href = "{{ url_for('index')}}";
+  }, 5000);
+</script>
+
+{% else %}
+
+<script>
+  Sentry.init({ dsn: "
+
+https://78fe9de58a5847ada071bf5f62f9c214@o1363527.ingest.sentry.io/6678492" });
+  Sentry.showReportDialog({ eventId: "{{ sentry_event_id }}" });
+</script>
+
+{% endif %}
+    
+
+{% endblock %} {% block script %}
+<script src="../../../../static/scripts/rot.js"></script>
+{% endblock %}

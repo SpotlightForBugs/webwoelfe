@@ -12,7 +12,6 @@
 </div>
 
 {% if not sentry_event_id %}
-    
 
 <script>
   //weiterleitung zurück zum start
@@ -24,15 +23,12 @@
 {% else %}
 
 <script>
-  Sentry.init({ dsn: "
+    Sentry.init({ dsn: "
 
-https://78fe9de58a5847ada071bf5f62f9c214@o1363527.ingest.sentry.io/6678492" });
-  Sentry.showReportDialog({ eventId: "{{ sentry_event_id }}" });
+  https://78fe9de58a5847ada071bf5f62f9c214@o1363527.ingest.sentry.io/6678492" });
+    Sentry.showReportDialog({ eventId: "{{ sentry_event_id }}" });
 </script>
 
-{% endif %}
-    
-
-{% endblock %} {% block script %}
+{% endif %} {% endblock %} {% block script %}
 <script src="../../../../static/scripts/rot.js"></script>
 {% endblock %}

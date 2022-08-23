@@ -670,7 +670,6 @@ def name_richtig_schreiben(name: str) -> str:
     :return: The name with the correct spelling
 
     """
-
     name = name.replace("/", "_")
     name = name.replace("=", "-")
     name = name.replace(":", "_")

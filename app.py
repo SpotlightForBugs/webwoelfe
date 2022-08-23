@@ -1234,6 +1234,14 @@ def inject_now():
 # sentry error handler
 @app.errorhandler(500)
 def server_error_handler(error):
+    """
+    The server_error_handler function is used to render a custom error page when the server encounters an error.
+    It is passed as the handler argument to app.register_error_handler
+    
+    :param error: Pass the error message to the template
+    :return: A template fehler
+    
+    """
     return render_template("fehler.html")
 
 

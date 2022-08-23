@@ -1,13 +1,11 @@
 <!--@generated-->
 
-![All](https://badgen.net/github/checks/SpotlightForBugs/webwoelfe)
 
-![dependabot](https://badgen.net/github/dependabot/SpotlightForBugs/webwoelfe)
 [![CodeQL](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml)
-
 [![DeepSource](https://deepsource.io/gh/SpotlightForBugs/webwoelfe.svg/?label=active+issues&show_trend=true&token=38zI19NiOksAJX_tvxXBxqt4)](https://deepsource.io/gh/SpotlightForBugs/webwoelfe/?ref=repository-badge)
 [![DeepSource](https://deepsource.io/gh/SpotlightForBugs/webwoelfe.svg/?label=resolved+issues&show_trend=true&token=38zI19NiOksAJX_tvxXBxqt4)](https://deepsource.io/gh/SpotlightForBugs/webwoelfe/?ref=repository-badge)
-
+---
+![All](https://badgen.net/github/checks/SpotlightForBugs/webwoelfe)
 ![GitHub tag](https://img.shields.io/github/tag/SpotlightForBugs/webwoelfe?include_prereleases=&sort=semver&color=blue)
 [![issues - webwoelfe](https://img.shields.io/github/issues/SpotlightForBugs/webwoelfe)](https://github.com/SpotlightForBugs/webwoelfe/issues)
 

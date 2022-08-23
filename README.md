@@ -2,7 +2,6 @@
 
 ![All](https://badgen.net/github/checks/SpotlightForBugs/webwoelfe)
 
-
 ![dependabot](https://badgen.net/github/dependabot/SpotlightForBugs/webwoelfe)
 [![CodeQL](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml)
 
@@ -11,6 +10,7 @@
 
 ![GitHub tag](https://img.shields.io/github/tag/SpotlightForBugs/webwoelfe?include_prereleases=&sort=semver&color=blue)
 [![issues - webwoelfe](https://img.shields.io/github/issues/SpotlightForBugs/webwoelfe)](https://github.com/SpotlightForBugs/webwoelfe/issues)
+
 ---
 
 # Webwölfe [WORK IN PROGRESS, NOT PRODUCTION READY]

@@ -1231,12 +1231,10 @@ def inject_now():
     return {"now": datetime.utcnow()}
 
 
-
-#sentry error handler
+# sentry error handler
 @app.errorhandler(500)
 def server_error_handler(error):
     return render_template("fehler.html")
-
 
 
 if __name__ == "__main__":

@@ -247,21 +247,24 @@ def kill_player(name, rolle, name_kill):
             rolle == "Hexe"
             and werwolf.hexe_darf_toeten() is True
             and werwolf.validiere_rolle(name, rolle) is True
-            
         ):
             werwolf.toete_spieler(auswahl)
             werwolf.hexe_verbraucht("toeten")
             werwolf.in_log_schreiben(f"Die Hexe ({name}) hat {name_kill} getötet")
-            return render_template("Dashboards/Dash_Hexe.html", name=name, rolle=rolle, name_kill=name_kill)
+            return render_template(
+                "Dashboards/Dash_Hexe.html", name=name, rolle=rolle, name_kill=name_kill
+            )
 
         if rolle == "Jaeger":
             if werwolf.jaeger_darf_toeten() is True:
                 werwolf.toete_spieler(auswahl)
                 werwolf.jaeger_fertig()
                 return render_template(
-                    "Dashboards/status/tot.html",name=name,todesgrund=""
+                    "Dashboards/status/tot.html", name=name, todesgrund=""
                 )
-            return render_template("Dashboards/status/tot.html",name=name,todesgrund="")
+            return render_template(
+                "Dashboards/status/tot.html", name=name, todesgrund=""
+            )
         return render_template("fehler.html")
     return render_template("fehler.html")
 
@@ -482,9 +485,9 @@ def spezielles_Dashboard(name, rolle):
             nurNamen.append(name_line)  # append the name to the list
 
     if rolle == "Hexe":
-        with open ("letzter_tot.txt", "r",encoding="UTF8") as file:
+        with open("letzter_tot.txt", "r", encoding="UTF8") as file:
             letzter_tot = file.read()
-        
+
         werwolf.in_log_schreiben(
             "Hexe Dashboard für " + name + " mit Rolle " + rolle + " angezeigt"
         )

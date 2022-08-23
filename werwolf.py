@@ -777,6 +777,3 @@ def name_richtig_schreiben(name: str) -> str:
     # use regex to replace all non-alphanumeric characters with _
     name = re.sub(r"[^a-zA-Z0-9]", "_", name)
     return name.capitalize()
-
-    # write the first letter of the name in uppercase, the rest in lowercase:
-    return name.capitalize()

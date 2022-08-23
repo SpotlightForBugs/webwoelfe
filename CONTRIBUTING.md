@@ -159,8 +159,6 @@ Updating, improving and correcting the documentation
 
 please use at least three descriptive words in the commit message
 
-
-
 ## Attribution
 
 This guide is based on the **contributing-gen**. [Make your own](https://github.com/bttger/contributing-gen)!

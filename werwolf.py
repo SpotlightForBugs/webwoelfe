@@ -363,14 +363,14 @@ def leere_dateien():
     """
     with open("rollen_log.txt", "w+", encoding="UTF8") as f:  # leere rollen_log.txt
         f.write("*********************\n")
-    file = open("abstimmung.txt", "r+", encoding="UTF8")
-    file.truncate(0)
+    with open("abstimmung.txt", "r+", encoding="UTF8") as file:
+        file.truncate(0)
     file.close()
-    file2 = open("rollen_original.txt", "r+", encoding="UTF8")
-    file2.truncate(0)
+    with open("rollen_original.txt", "r+", encoding="UTF8") as file2:
+        file2.truncate(0)
     file2.close()
-    file3 = open("hat_gewaehlt.txt", "r+", encoding="UTF8")
-    file3.truncate(0)
+    with open("hat_gewaehlt.txt", "r+", encoding="UTF8") as file3:
+        file3.truncate(0)
     file3.close()
     with open("hexe_kann.txt", "w", encoding="UTF8") as file4:
         file4.write(str(12))
@@ -384,8 +384,8 @@ def leere_dateien():
     with open("jaeger_kann.txt", "w", encoding="UTF8") as file7:
         file7.write(str(1))
     file7.close()
-    file8 = open("logfile.txt", "w", encoding="UTF8")
-    file8.truncate(0)
+    with open("logfile.txt", "w", encoding="UTF8") as file8:
+        file8.truncate(0)
     file8.close()
 
 

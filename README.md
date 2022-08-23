@@ -1,6 +1,11 @@
 <!--@generated-->
 
+![All](https://badgen.net/github/checks/SpotlightForBugs/webwoelfe)
+
+
+![dependabot](https://badgen.net/github/dependabot/SpotlightForBugs/webwoelfe)
 [![CodeQL](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml)
+
 [![DeepSource](https://deepsource.io/gh/SpotlightForBugs/webwoelfe.svg/?label=active+issues&show_trend=true&token=38zI19NiOksAJX_tvxXBxqt4)](https://deepsource.io/gh/SpotlightForBugs/webwoelfe/?ref=repository-badge)
 [![DeepSource](https://deepsource.io/gh/SpotlightForBugs/webwoelfe.svg/?label=resolved+issues&show_trend=true&token=38zI19NiOksAJX_tvxXBxqt4)](https://deepsource.io/gh/SpotlightForBugs/webwoelfe/?ref=repository-badge)
 
@@ -8,7 +13,6 @@
 
 # Webwölfe [WORK IN PROGRESS, NOT PRODUCTION READY]
 
-Das Spiel Werwölfe kostenlos online spielen
 
 <img width="435" alt="Wolf_watermark" src="https://user-images.githubusercontent.com/73603712/185472606-b5ad525e-924d-4a17-9843-d2a75615a2ee.png">
 

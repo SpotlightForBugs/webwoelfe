@@ -133,10 +133,7 @@ def get_data():  # get the data from the form
     if request.method == "POST":  # if the request is a POST request
         name = request.form.get("name")  # get the name from the form
         name = werwolf.name_richtig_schreiben(name)  # clean the name
-        
 
-       
-        
         with open("rollen_log.txt") as players_log:  # open the log file
             players_log = players_log.read()  # read the log file
         if werwolf.validiere_name(name) is True:

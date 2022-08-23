@@ -2,20 +2,27 @@
 <!--@generated-->
 
 {% block body %}
-<h1>Log</h1>
+<h1>log</h1>
 
 <div class="container-fluid" style="margin-top: 30px">
   <ul style="list-style: none; text-align: left">
+    <div id="refresh">
     {% for line in log %}
     <li>{{line|replace("ae","ä")}}</li>
     {% endfor %}
   </ul>
+  </div>
 </div>
+
 <script>
-  //seite neu laden nach 1 sekunde
-  setTimeout(function () {
-    window.location.reload(1);
-  }, 1000);
-</script>
+//refresh the div class refresh every 1 second
+setInterval(function(){
+  
+  $('#refresh').load('/log #refresh');
+}, 1000);
+
+
+  </script>
+
 
 {% endblock %}

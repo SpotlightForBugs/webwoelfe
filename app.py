@@ -369,7 +369,7 @@ def Dashboard(name, rolle):  # Dashboard
 
     """
     # create a string with the name and the role
-    with open("rollen_log.txt", "r",encoding="UTF8") as file:  # open the log file
+    with open("rollen_log.txt", "r", encoding="UTF8") as file:  # open the log file
         players_vorhanden = file.read()  # read the log file
 
     rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
@@ -448,7 +448,7 @@ def spezielles_Dashboard(name, rolle):
     if rolle == "Tot":
         return render_template("fehler.html")
     # create a string with the name and the role
-    with open("rollen_log.txt", "r",encoding="UTF8") as file:  # open the log file
+    with open("rollen_log.txt", "r", encoding="UTF8") as file:  # open the log file
         players_vorhanden = file.read()  # read the log file
 
     rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
@@ -463,7 +463,7 @@ def spezielles_Dashboard(name, rolle):
 
         if rolle == "Hexe":
             print("Hexe")
-            with open("hexe_kann.txt", "r",encoding="UTF8") as file:
+            with open("hexe_kann.txt", "r", encoding="UTF8") as file:
                 hexe_kann = file.read()
                 hexe_kann = str(hexe_kann)
                 file.close()
@@ -485,7 +485,7 @@ def spezielles_Dashboard(name, rolle):
             nurNamen.append(name_line)  # append the name to the list
 
     if rolle == "Hexe":
-        with open("letzter_tot.txt", "r",encoding="UTF8") as file:
+        with open("letzter_tot.txt", "r", encoding="UTF8") as file:
             letzter_tot = file.read()
 
         werwolf.in_log_schreiben(
@@ -544,7 +544,7 @@ def spiel_ende(name, rolle):
     :return: The following:
 
     """
-    with open("rollen_original.txt", "r",encoding="UTF8") as file:
+    with open("rollen_original.txt", "r", encoding="UTF8") as file:
         players_vorhanden = file.read()
         file.close()
 
@@ -716,12 +716,12 @@ def warten():  # function for the wait function
 
     try:
 
-        with open("rollen_log.txt", "r",encoding="UTF8") as text:
+        with open("rollen_log.txt", "r", encoding="UTF8") as text:
             for line in text:
                 if "Tot" not in line and "Erzaehler" not in line and "*" not in line:
                     i = i + 1
             text.close()
-        with open("abstimmung.txt", "r",encoding="UTF8") as text:
+        with open("abstimmung.txt", "r", encoding="UTF8") as text:
             # empty lines are not counted
             anzahl_stimmen = sum(1 for line in text if line.rstrip())
 
@@ -736,7 +736,7 @@ def warten():  # function for the wait function
             maxCount = 0
             words = []
 
-            file = open("abstimmung.txt", "r",encoding="UTF8")
+            file = open("abstimmung.txt", "r", encoding="UTF8")
 
             for line in file:
 
@@ -781,7 +781,7 @@ def warten():  # function for the wait function
                     counter_tot = counter_tot + 1
 
             fileTot.close()
-            with open("rollen_log.txt", "w",encoding="UTF8") as fileFinal:
+            with open("rollen_log.txt", "w", encoding="UTF8") as fileFinal:
                 fileFinal.writelines(file_list)
             fileFinal.close()
             werwolf.schreibe_zuletzt_gestorben(name_tot)
@@ -814,7 +814,9 @@ def tot(name, rolle, todesgrund):  # function for the death function
     # if the string is in the log file
     if werwolf.validiere_rolle(name, rolle) is True:
         try:  # try to get the role
-            with open("rollen_log.txt",'r',encoding="UTF8") as players_log:  # open the log file
+            with open(
+                "rollen_log.txt", "r", encoding="UTF8"
+            ) as players_log:  # open the log file
                 players_log = players_log.readlines()  # read the log file
 
             if todesgrund in (
@@ -875,7 +877,9 @@ def rausschmeissen(name, rolle):  # function for the kick function
     if werwolf.validiere_rolle(name, rolle) is True:
         print("Spieler vorhanden")  # print the string
         try:
-            with open("rollen_log.txt",'r',encoding="UTF8") as players_log:  # open the log file
+            with open(
+                "rollen_log.txt", "r", encoding="UTF8"
+            ) as players_log:  # open the log file
                 players_log = players_log.readlines()  # read the log file
             # render the rausschmeissen.html
 
@@ -908,7 +912,7 @@ def wahlbalken():
     :return: The wahlbalken
 
     """
-    with open("rollen_log.txt",encoding="UTF8") as players_log:  # open the log file
+    with open("rollen_log.txt", encoding="UTF8") as players_log:  # open the log file
         players_log = players_log.readlines()  # read the log file
 
     print(players_log)
@@ -952,7 +956,7 @@ def wahl_stats():
     maxCount = 0
     words = []
 
-    file = open("abstimmung.txt",'r',encoding="UTF8")
+    file = open("abstimmung.txt", "r", encoding="UTF8")
 
     for line in file:
 
@@ -990,7 +994,9 @@ def sehen(name, rolle, auswahl):
 
     """
     if werwolf.validiere_rolle(name, rolle) is True:
-        with open("rollen_log.txt",encoding="UTF8") as players_log:  # open the log file
+        with open(
+            "rollen_log.txt", encoding="UTF8"
+        ) as players_log:  # open the log file
             players_log = players_log.readlines()  # read the log file
         for line in players_log:
             if auswahl in line:
@@ -1039,10 +1045,10 @@ def wer_tot(name, rolle, auswahl):
     :return: A message that the user has already voted
 
     """
-    with open("rollen_log.txt", "r",encoding="UTF8") as file:  # open the log file
+    with open("rollen_log.txt", "r", encoding="UTF8") as file:  # open the log file
         players_vorhanden = file.read()  # read the log file
     if werwolf.validiere_rolle(name, rolle) is True:
-        with open("hat_gewaehlt.txt", "r",encoding="UTF8") as f:
+        with open("hat_gewaehlt.txt", "r", encoding="UTF8") as f:
             if name + " : " in f.read():
                 return render_template("wahl_doppelt.html")
             auswahl = auswahl.strip()  # erase the whitespace %20
@@ -1077,7 +1083,7 @@ def wer_wahl_warten():
             maxCount = 0
             words = []
 
-            file = open("abstimmung.txt", "r",encoding="UTF8")
+            file = open("abstimmung.txt", "r", encoding="UTF8")
 
             for line in file:
 
@@ -1152,7 +1158,7 @@ def heilen(name, rolle, auswahl):
         and werwolf.hexe_darf_heilen() is True
     ):
         counter = 1
-        with open("rollen_original.txt", "r",encoding="UTF8") as file:
+        with open("rollen_original.txt", "r", encoding="UTF8") as file:
             file_list = ["*********************\n"]
 
             for line in file:
@@ -1183,7 +1189,7 @@ def log_ansehen():
     :return: The logfile
 
     """
-    with open("logfile.txt", "r",encoding="UTF8") as file:
+    with open("logfile.txt", "r", encoding="UTF8") as file:
         # put the file into a list
         file_list = []
         for line in file:

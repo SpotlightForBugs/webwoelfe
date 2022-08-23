@@ -1230,12 +1230,10 @@ def inject_now():
     return {"now": datetime.utcnow()}
 
 
-
-#sentry error handler
+# sentry error handler
 @app.errorhandler(500)
 def server_error_handler(error):
     return render_template("500.html", sentry_event_id=last_event_id()), 500
-
 
 
 if __name__ == "__main__":

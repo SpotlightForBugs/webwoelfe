@@ -2,6 +2,7 @@ import sentry_sdk
 from sentry_sdk import last_event_id
 from sentry_sdk.integrations.flask import FlaskIntegration
 from shutil import ExecError
+from flask_api import status
 from traceback import print_tb  # skipcq: PY-W2000
 from flask import (  # skipcq: PY-W2000
     Flask,
@@ -131,11 +132,11 @@ def get_data():  # get the data from the form
     """
     if request.method == "POST":  # if the request is a POST request
         name = request.form.get("name")  # get the name from the form
+        name = werwolf.name_richtig_schreiben(name)  # clean the name
+        
 
-        name = name.replace("/", "_")  # / ist immer ein _
-        name = name.replace("=", "-")  # gleich ist immer -
-        name = name.replace(":", "_")  # doppelpunkt ist immer _
-        name = name.replace("*", "_")  # stern ist immer _
+       
+        
         with open("rollen_log.txt") as players_log:  # open the log file
             players_log = players_log.read()  # read the log file
         if werwolf.validiere_name(name) is True:
@@ -182,7 +183,7 @@ def get_data():  # get the data from the form
             return render_template("neu_laden.html")
 
     else:
-        return render_template("fehler.html")
+        return render_template("fehler.html"), 500
 
 
 # Pfad des Erzählers, momentan für debugzwecke auf einem ungeschützten pfad
@@ -225,7 +226,7 @@ def reset():
         werwolf.in_log_schreiben("Neues Spiel gestartet")
         # zurück zur einstellungen
         return render_template("einstellungen.html")
-    return render_template("fehler.html")
+    return render_template("fehler.html"), 500
 
 
 @app.route("/<name>/<rolle>/toeten/<name_kill>")  # kill a player
@@ -266,8 +267,8 @@ def kill_player(name, rolle, name_kill):
             return render_template(
                 "Dashboards/status/tot.html", name=name, todesgrund=""
             )
-        return render_template("fehler.html")
-    return render_template("fehler.html")
+        return render_template("fehler.html"), 500
+    return render_template("fehler.html"), 500
 
 
 @app.route("/<name>/Armor_aktion/<player1>/<player2>")  # player auswahl
@@ -305,7 +306,7 @@ def armor_player(player1, player2, name):
         print("Spieler oder Rolle falsch!")
         # render the url_system.html
         return render_template("url_system.html", name=name, rolle=rolle)
-    return render_template("fehler.html")
+    return render_template("fehler.html"), 500
 
 
 @app.route("/<name>/<rolle>/warten_auf_aktions_ende")
@@ -322,7 +323,7 @@ def aktion_warten(name, rolle):
     """
     if werwolf.validiere_rolle(name, rolle) is True:
         return render_template("Dashboards/status/aktion_warten.html")
-    return render_template("fehler.html")
+    return render_template("fehler.html"), 500
 
 
 # Übersicht der Spieler
@@ -350,9 +351,9 @@ def overview_all(ist_unschuldig):  # Übersicht
                 players_log = players_log.readlines()  # read the log file
             # render overview_guilty.html
             return render_template("overview_guilty.html", names=players_log)
-        return render_template("fehler.html")  # render fehler.html
+        return render_template("fehler.html"), 500  # render fehler.html
     except (ValueError, TypeError, NameError):
-        return render_template("fehler.html")  # render fehler.html
+        return render_template("fehler.html"), 500  # render fehler.html
 
 
 # Rollen Dashboards
@@ -426,7 +427,7 @@ def Dashboard(name, rolle):  # Dashboard
             )
 
         except Exception as e:
-            return render_template("fehler.html")  # render fehler.html
+            return render_template("fehler.html"), 500  # render fehler.html
 
     else:
         # print the error
@@ -447,7 +448,7 @@ def spezielles_Dashboard(name, rolle):
 
     """
     if rolle == "Tot":
-        return render_template("fehler.html")
+        return render_template("fehler.html"), 500
     # create a string with the name and the role
     with open("rollen_log.txt", "r", encoding="UTF8") as file:  # open the log file
         players_vorhanden = file.read()  # read the log file
@@ -604,7 +605,7 @@ def spiel_ende(name, rolle):
             return render_template(
                 "gewonnen.html", name=name, rolle=rolle, unschuldig=1
             )
-        return render_template("fehler.html")
+        return render_template("fehler.html"), 500
 
 
 @app.route("/waehlen/<name>/<rolle>/<auswahl>")
@@ -655,7 +656,7 @@ def wahl(name, rolle, auswahl):
                 abstimmung.close()
                 return render_template("Dashboards/status/warten.html")
     else:
-        return render_template("fehler.html")
+        return render_template("fehler.html"), 500
 
 
 # schlafen function
@@ -692,7 +693,7 @@ def schlafen(name, rolle):  # function for the sleep function
                 names=players_log,
             )
         except (FileNotFoundError, IOError, PermissionError):
-            return render_template("fehler.html")  # render the fehler.html
+            return render_template("fehler.html"), 500  # render the fehler.html
 
     else:
         # print the error
@@ -791,7 +792,7 @@ def warten():  # function for the wait function
         return render_template("Dashboards/status/warten.html")
 
     except (FileNotFoundError, IOError, PermissionError):
-        return render_template("fehler.html")  # render the fehler.html
+        return render_template("fehler.html"), 500  # render the fehler.html
 
 
 # tot function
@@ -850,7 +851,7 @@ def tot(name, rolle, todesgrund):  # function for the death function
 
         except (FileNotFoundError, IOError, PermissionError):
             # rendert die Seite zum Status Fehler
-            return render_template("fehler.html")
+            return render_template("fehler.html"), 500
 
     else:
         # print the error
@@ -893,7 +894,7 @@ def rausschmeissen(name, rolle):  # function for the kick function
             )
         except IOError as e:
 
-            return render_template("fehler.html")  # render the fehler.html
+            return render_template("fehler.html"), 500  # render the fehler.html
 
     else:
         # print the error
@@ -940,7 +941,7 @@ def wahlbalken():
         return render_template("wahlbalken.html", names=nurNamen)
 
     except Exception as e:
-        return render_template("fehler.html")  # render the fehler.html
+        return render_template("fehler.html"), 500  # render the fehler.html
 
 
 @app.route("/wahlstatus")  # route for the wahlstatus function
@@ -1014,7 +1015,7 @@ def sehen(name, rolle, auswahl):
                 return render_template(
                     "Dashboards/status/sehen.html", ergebnis=ergebnis
                 )
-    return render_template("fehler.html")
+    return render_template("fehler.html"), 500
 
 
 @app.route("/weiterleitung/<target>")
@@ -1062,7 +1063,7 @@ def wer_tot(name, rolle, auswahl):
                     hat_gewaehlt.write(name + " : " + "\n")
                     return render_template("Dashboards/status/wer_wahl_warten.html")
             else:
-                return render_template("fehler.html")
+                return render_template("fehler.html"), 500
     else:
         return render_template("url_system.html", name=name, rolle=rolle)
 
@@ -1178,7 +1179,7 @@ def heilen(name, rolle, auswahl):
         werwolf.hexe_verbraucht("heilen")
         werwolf.in_log_schreiben("Hexe " + name + " hat " + auswahl + " geheilt")
         return render_template("Dashboards/Dash_Dorfbewohner.html")
-    return render_template("fehler.html")
+    return render_template("fehler.html"), 500
 
 
 # TODO: #76 Sicherheitsabfrage bei der Anzeige des Logs
@@ -1234,7 +1235,7 @@ def inject_now():
 #sentry error handler
 @app.errorhandler(500)
 def server_error_handler(error):
-    return render_template("500.html", sentry_event_id=last_event_id()), 500
+    return render_template("fehler.html")
 
 
 

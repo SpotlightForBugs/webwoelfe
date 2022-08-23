@@ -1,6 +1,7 @@
 from datetime import datetime
 import random
 import ast
+import re
 
 
 liste_tot_mit_aktion = ["Jaeger", "Hexe", "PLATZHALTER"]
@@ -652,3 +653,136 @@ def spieler_ist_tot(player: str) -> bool:
     if momentane_rolle(player) == "Tot":
         return True
     return False
+
+def name_richtig_schreiben(name: str) -> str:
+        """
+        The name_richtig_schreiben function takes a string as input and returns the same string with 
+        the following changes:
+        - replaces &quot;/&quot; with &quot;_&quot;
+        - replaces &quot;=&quot; with &quot;-&quot;
+        - replaces &quot;:&quot; with &quot;_&quot; 
+        - replaces &quot;*&quot; with &quot;_&quot;
+        
+            - replace &quot;&lt;&quot;, &gt;, ?, &quot;, \, |, . , ' , / , : , * ,&quot; in name by _. 
+        
+        :param name:str: Pass the name of the file to be renamed
+        :return: The name with the correct spelling
+        
+        """
+        
+        name = name.replace("/", "_")  
+        name = name.replace("=", "-")  
+        name = name.replace(":", "_")  
+        name = name.replace("*", "_")  
+
+        name = name.replace("<", "_")
+        name = name.replace(">", "_")
+        name = name.replace("?", "_")
+        name = name.replace("\"", "_")
+        name = name.replace("\\", "_")
+        name = name.replace("|", "_")
+        name = name.replace(".", "_")
+        name = name.replace(" ", "_")
+        name = name.replace("\n", "_")
+        name = name.replace("\t", "_")
+        name = name.replace("\r", "_")
+        name = name.replace("\v", "_")
+        name = name.replace("\f", "_")
+        name = name.replace("\b", "_")
+        name = name.replace("\a", "_")
+        name = name.replace("\e", "_")
+        name = name.replace("\0", "_")
+        name = name.replace("\x0b", "_")
+        name = name.replace("\x0c", "_")
+        name = name.replace("\x0e", "_")
+        name = name.replace("\x0f", "_")
+        name = name.replace("\x10", "_")
+        name = name.replace("\x11", "_")
+        name = name.replace("\x12", "_")
+        name = name.replace("\x13", "_")
+        name = name.replace("\x14", "_")
+        name = name.replace("\x15", "_")
+        name = name.replace("\x16", "_")
+        name = name.replace("\x17", "_")
+        name = name.replace("\x18", "_")
+        name = name.replace("\x19", "_")
+        name = name.replace("\x1a", "_")
+        name = name.replace("\x1b", "_")
+        name = name.replace("\x1c", "_")
+        name = name.replace("\x1d", "_")
+        name = name.replace("\x1e", "_")
+        name = name.replace("\x1f", "_")
+       
+        name = name.replace("ä", "ae")
+        name = name.replace("ö", "oe")
+        name = name.replace("ü", "ue")
+        name = name.replace("Ä", "Ae")
+        name = name.replace("Ö", "Oe")
+        name = name.replace("Ü", "Ue")
+        name = name.replace("ß", "ss")
+        name = name.replace("À", "A")
+        name = name.replace("Á", "A")
+        name = name.replace("Â", "A")
+        name = name.replace("Ã", "A")
+        name = name.replace("Ä", "A")
+        name = name.replace("Å", "A")
+        name = name.replace("Æ", "A")
+        name = name.replace("Ç", "C")
+        name = name.replace("È", "E")
+        name = name.replace("É", "E")
+        name = name.replace("Ê", "E")
+        name = name.replace("Ë", "E")
+        name = name.replace("Ì", "I")
+        name = name.replace("Í", "I")
+        name = name.replace("Î", "I")
+        name = name.replace("Ï", "I")
+        name = name.replace("Ñ", "N")
+        name = name.replace("Ò", "O")
+        name = name.replace("Ó", "O")
+        name = name.replace("Ô", "O")
+        name = name.replace("Õ", "O")
+        name = name.replace("Ö", "O")
+        name = name.replace("Ø", "O")
+        name = name.replace("Ù", "U")
+        name = name.replace("Ú", "U")
+        name = name.replace("Û", "U")
+        name = name.replace("Ü", "U")
+        name = name.replace("Ý", "Y")
+        name = name.replace("à", "a")
+        name = name.replace("á", "a")
+        name = name.replace("â", "a")
+        name = name.replace("ã", "a")
+        name = name.replace("@","at")
+        name = name.replace("€", "EURO")
+        name = name.replace("$", "USD")
+        name = name.replace("£", "GBP")
+        name = name.replace("¥", "JPY")
+        name = name.replace("¤", "USD")
+        name = name.replace("¦", "B")
+        name = name.replace("§", "S")
+        name = name.replace("©", "C")
+        name = name.replace("ª", "A")
+        name = name.replace("«", "<<")
+        name = name.replace("¬", "!")
+        name = name.replace("­", "-")
+        name = name.replace("®", "R")
+        name = name.replace("¯", "^")
+        name = name.replace("°", "o")
+        name = name.replace("±", "+")
+        name = name.replace("²", "2")
+        name = name.replace("³", "3")
+        name = name.replace("´", "'")
+        name = name.replace("µ", "u")
+        
+        
+        
+        
+        #use regex to replace all non-alphanumeric characters with _
+        name = re.sub(r'[^a-zA-Z0-9]', '_', name)
+        return name.capitalize()
+        
+        
+        
+        
+        #write the first letter of the name in uppercase, the rest in lowercase: 
+        return name.capitalize()

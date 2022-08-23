@@ -9,10 +9,11 @@
 [![DeepSource](https://deepsource.io/gh/SpotlightForBugs/webwoelfe.svg/?label=active+issues&show_trend=true&token=38zI19NiOksAJX_tvxXBxqt4)](https://deepsource.io/gh/SpotlightForBugs/webwoelfe/?ref=repository-badge)
 [![DeepSource](https://deepsource.io/gh/SpotlightForBugs/webwoelfe.svg/?label=resolved+issues&show_trend=true&token=38zI19NiOksAJX_tvxXBxqt4)](https://deepsource.io/gh/SpotlightForBugs/webwoelfe/?ref=repository-badge)
 
+![GitHub tag](https://img.shields.io/github/tag/SpotlightForBugs/webwoelfe?include_prereleases=&sort=semver&color=blue)
+[![issues - webwoelfe](https://img.shields.io/github/issues/SpotlightForBugs/webwoelfe)](https://github.com/SpotlightForBugs/webwoelfe/issues)
 ---
 
 # Webwölfe [WORK IN PROGRESS, NOT PRODUCTION READY]
-
 
 <img width="435" alt="Wolf_watermark" src="https://user-images.githubusercontent.com/73603712/185472606-b5ad525e-924d-4a17-9843-d2a75615a2ee.png">
 

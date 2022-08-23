@@ -691,7 +691,7 @@ def name_richtig_schreiben(name: str) -> str:
     name = name.replace("\f", "_")
     name = name.replace("\b", "_")
     name = name.replace("\a", "_")
-    name = name.replace("\e", "_")
+    name = name.replace(r"\e", "_")
     name = name.replace("\0", "_")
     name = name.replace("\x0b", "_")
     name = name.replace("\x0c", "_")

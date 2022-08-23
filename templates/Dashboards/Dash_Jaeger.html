@@ -30,7 +30,7 @@
                 
                 if (text.includes("Erzaehler")==false) {
                     
-                        document.write("<li><button onclick=location.href='{{ url_for('kill_player', name_kill = el,name=name,rolle=rolle) }}' class='chooseplayer' id='"+text+"' >"+text+"</p></button></li><br>");
+                        document.write("<li><button onclick=location.href='{{ url_for('kill_player',name=name,rolle=rolle,name_kill=el) }}' class='chooseplayer' id='"+text+"' >"+text+"</p></button></li><br>");
                         btn = document.getElementById(text);
                         btn.addEventListener('click', function onClick(event) {
                             console.log(document.activeElement);

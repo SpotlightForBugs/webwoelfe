@@ -259,9 +259,9 @@ def kill_player(name, rolle, name_kill):
                 werwolf.toete_spieler(auswahl)
                 werwolf.jaeger_fertig()
                 return render_template(
-                    "Dashboards/status/tot.html",
+                    "Dashboards/status/tot.html",name=name,todesgrund=""
                 )
-            return render_template("Dashboards/status/tot.html")
+            return render_template("Dashboards/status/tot.html",name=name,todesgrund="")
         return render_template("fehler.html")
     return render_template("fehler.html")
 

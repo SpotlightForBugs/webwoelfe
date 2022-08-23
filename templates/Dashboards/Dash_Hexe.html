@@ -19,6 +19,7 @@ Du kannst natürlich auch keine Person umbringen oder heilen.
 
 <div class="spacer"><br><br></div>
 
+<div class ="refresh">
 
 {% if letzter_tot %}
 <div class="btn-group-vertical">
@@ -41,7 +42,7 @@ Du kannst natürlich auch keine Person umbringen oder heilen.
 
 {% endif %}
     
-    {% if not letzter_tot  %} 
+    {% if not letzter_tot and not name_kill  %} 
     Niemand ist gestorben. 
     {%endif%}
 
@@ -59,5 +60,29 @@ Du kannst natürlich auch keine Person umbringen oder heilen.
 </div>
 </ul>
 {% endif %}
+
+
+{% if name_kill %}
+    
+Du hast {{name_kill}} getötet.
+
+
+
+{% endif %}
+    
+
+
+
+
+</div>
+
+<script>
+    //refresh the div class refresh every 5 seconds
+    setInterval(function(){
+        $('.refresh').load(location.href ' .refresh');
+    }, 1000);
+    </script>
+
+
 {% endblock %}
 

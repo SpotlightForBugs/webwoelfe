@@ -18,7 +18,7 @@
             <p>{{ rolle }} spielen auf der Seite der Dorfbewohner<p/>
             <p>Töte deshalb vorzugweise Werwölfe</p>
         </div>	
-        </div>
+        </div class="refresh">
         <ul class="wahllist">
 
         {% for el in nurNamen if el != name %}
@@ -45,7 +45,15 @@
         </ul>
 
       </div>
-    
+    </div>
+    <script>
+//load the content of div class refresh
+        setInterval(function(){
+            $('.refresh').load('{{ url_for('Dashboard',name=name,rolle=rolle) }} #refresh');
+        }, 1000);
+
+
+        </script>
 
 
 

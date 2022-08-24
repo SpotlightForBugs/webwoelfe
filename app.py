@@ -15,6 +15,7 @@ from flask import (  # skipcq: PY-W2000
     Response,
     escape,
 )
+import jsonify
 
 
 import werwolf
@@ -29,10 +30,8 @@ sentry_sdk.init(
     integrations=[
         FlaskIntegration(),
     ],
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production.
-    traces_sample_rate=1.0,
+    
+    traces_sample_rate=0.5,
 )
 
 
@@ -1213,6 +1212,38 @@ def noscript():
     return render_template("noscript.html")
 
 
+
+
+@app.route("/API/<name>/<rolle>/is_valid_role_and_name")
+def rollen_namen_check_api(name, rolle):
+    """
+    The rollen_namen_check_api function is used to check if the name and the role are valid.
+    It is used in the API.
+
+    :param name: The name of the player
+    :param rolle: The role of the player
+    :return: True if the name and the role are valid, False if not
+
+    """
+    if werwolf.validiere_rolle(name, rolle) is True:
+        return jsonify({"valid": True})
+    else:
+        return jsonify({"valid": False})
+    """
+    The rollen_namen_check_api function checks if the name is in the list of names for a role.
+    It returns True if it is, and False otherwise.
+    
+    :param name: Check if the name is in the role
+    :param rolle: Check if the name is in the role
+    :return: boolean as json
+    
+    """
+    werwolf.in_log_schreiben("API (Ist "+ name +" passend zu"+rolle+") wurde aufgerufen")
+    
+    
+    
+
+
 # context processor
 
 
@@ -1240,6 +1271,19 @@ def server_error_handler(error):
 
     """
     return render_template("fehler.html"), 500
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    """
+    The page_not_found function is used to render a custom error page when the server encounters an error.
+    It is passed as the handler argument to app.register_error_handler
+
+    :param error: Pass the error message to the template
+    :return: A template 404
+
+    """
+    return render_template("404.html"), 404
 
 
 if __name__ == "__main__":

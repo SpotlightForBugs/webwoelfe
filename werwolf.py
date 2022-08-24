@@ -777,3 +777,12 @@ def name_richtig_schreiben(name: str) -> str:
     # use regex to replace all non-alphanumeric characters with _
     name = re.sub(r"[^a-zA-Z0-9]", "_", name)
     return name.capitalize()
+
+def suche_spieler()-> bool:
+    # if the int in the first line of spieler_anzahl.txt is smaller than  the lines of the file rollen_original.txt, then return True, else False
+    with open("spieler_anzahl.txt", "r") as file:
+        for line in file:
+            if int(line) > len(open("rollen_original.txt", "r").readlines()):
+                return True
+            else:
+                return False

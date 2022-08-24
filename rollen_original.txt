@@ -1,0 +1,10 @@
+Gki = Seherin
+Klo = Hexe
+Hallo = Werwolf
+Fdg = Dorfbewohner
+Eew = Armor
+Fdzhfd = Erzaehler
+Jolkhjuno = Dorfbewohner
+Hallo_cookie = Werwolf
+Hallocookie = Werwolf
+Re = Werwolf

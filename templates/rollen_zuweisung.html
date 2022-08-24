@@ -7,13 +7,40 @@
   <p>Du bist einer von {{ players }} Spielenden</p>
   <p>Du hast die Rolle <span class="name">{{ operator.upper() }}</span></p>
 
+
+
+
+
+<script>
+
+
+//delete all cookies
+function deleteAllCookies() {
+    var cookies = document.cookie.split(";");
+
+    for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i];
+        var eqPos = cookie.indexOf("=");
+        var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    }
+}
+// call the function to delete all cookies
+deleteAllCookies();
+
+
+//Set Cookie to {{ name }} + " = " + {{ operator }}
+document.cookie = "{{ name }} = {{ operator }}";
+
+</script>
+
+
   {% if operator.upper() == "Erzaehler" %}
   <script>
-    function newLocation() {
-      window.location.href = "{{ url_for('erzaehler') }}";
-    }
+    //redirect to "{{ url_for('erzaehler') }}"
+    window.location.href = "{{ url_for('erzaehler') }}";
   </script>
-  <img src="x" onerror="newLocation()" />
+  
 
   {% else %}
 

@@ -46,23 +46,23 @@
       {% endfor %}
     </ul>
     <div>
-      <div class="container-fluid refresh">
+      <div class="container-fluid">
           <div class="refresh">
-        <iframe
-          src="{{ url_for('wahl_stats') }}"
-          height="20%"
-          scrolling="no"
-        ></iframe>
+
+            
+           <h2>Live-Ergebnisse werden automatisch aktualisiert, bitte warten...<h2>
+           
+        
           </div>
       </div>
-    
+     
 
         <script>
-          //load div class refresh every 5 seconds
+          
           setInterval(function(){
   
   $('.refresh').load('{{ url_for('wahl_stats') }}');
-}, 1000);
+}, 10000);
 
 
         </script>

@@ -52,7 +52,7 @@ def index():
 
     """
     werwolf.in_log_schreiben("index geöffnet")
-    return render_template("index.html")  # Render index.html
+    return render_template("index.html",spieler_suche=bool(werwolf.suche_spieler()))  # Render index.html
 
 
 # einstellungen

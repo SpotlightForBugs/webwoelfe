@@ -47,10 +47,10 @@
       </div>
     </div>
     <script>
-//load the content of div class refresh
+
         setInterval(function(){
             $('.refresh').load('{{ url_for('Dashboard',name=name,rolle=rolle) }} #refresh');
-        }, 1000);
+        }, 10000);
 
 
         </script>

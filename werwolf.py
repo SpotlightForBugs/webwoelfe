@@ -778,7 +778,8 @@ def name_richtig_schreiben(name: str) -> str:
     name = re.sub(r"[^a-zA-Z0-9]", "_", name)
     return name.capitalize()
 
-def suche_spieler()-> bool:
+
+def suche_spieler() -> bool:
     # if the int in the first line of spieler_anzahl.txt is smaller than  the lines of the file rollen_original.txt, then return True, else False
     with open("spieler_anzahl.txt", "r") as file:
         for line in file:

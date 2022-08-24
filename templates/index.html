@@ -6,58 +6,44 @@
   <h1 id="rot">Werwolf <br /></h1>
   <h1>Online</h1>
   <div class="refresh">
-    
     {% if spieler_suche %}
-      
-    
-      
-  <p class="small"><br />Bitte gebe Deinen Namen an<br /></p>
 
-  <form
-    class="form-control-lg"
-    action="{{ url_for('get_data') }}"
-    method="POST"
-  >
-    <input
-      type="text"
-      id="input"
-      maxlength="15"
-      name="name"
-      placeholder="Dein Name"
-      required
-    />
-    <input class="btn btn-dark" type="submit" value="speichern" />
-  </form>
-  <br />
+    <p class="small"><br />Bitte gebe Deinen Namen an<br /></p>
 
-  <!--<div class="container-audio col-sm-4 col-sm-offset-4 embed-responsive embed-responsive-4by3">
+    <form
+      class="form-control-lg"
+      action="{{ url_for('get_data') }}"
+      method="POST"
+    >
+      <input
+        type="text"
+        id="input"
+        maxlength="15"
+        name="name"
+        placeholder="Dein Name"
+        required
+      />
+      <input class="btn btn-dark" type="submit" value="speichern" />
+    </form>
+    <br />
+
+    <!--<div class="container-audio col-sm-4 col-sm-offset-4 embed-responsive embed-responsive-4by3">
         <audio controls>
                    <source src="../../static/music/background_music.mp3" type="audio/mp3">
                    Dein Browser unterstützt das Audio-Element nicht.
                </audio>
     </div>-->
-</div>
-{% endif %}
-{% if not spieler_suche %}
-
-Das Spiel hat bereits begonnen.
-{% endif %}
-
+  </div>
+  {% endif %} {% if not spieler_suche %} Das Spiel hat bereits begonnen. {%
+  endif %}
 </div>
 
 <script>
-
-//laod div class refresh every second into the div class refresh
-setInterval(function() {
-  $(".refresh").load(window.location.href + " .refresh");
-} , 10000);
-
-
-
-
+  //laod div class refresh every second into the div class refresh
+  setInterval(function () {
+    $(".refresh").load(window.location.href + " .refresh");
+  }, 10000);
 </script>
-
-
 
 {% endblock %} {% block script %}
 <script src="../../static/scripts/rot.js"></script>

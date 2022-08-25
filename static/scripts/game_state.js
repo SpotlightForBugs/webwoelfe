@@ -1,1 +1,1 @@
-//check if with name token cookie exists 
+//check if with name token cookie exists

@@ -790,7 +790,7 @@ def suche_spieler() -> bool:
                 return False
 
 
-def generiere_token(name: str, rolle: str)-> str:
+def generiere_token(name: str, rolle: str) -> str:
     """
     The generiere_token function generates a token for the user.
     It checks if the role is valid and if it is not already in use.
@@ -990,11 +990,12 @@ def setze_status(token: str, status: str):
                                 + "\n"
                             )
                         else:
-                            if line != "\n": # if the line is not empty
-                                file.write(line) # write the line to the file
+                            if line != "\n":  # if the line is not empty
+                                file.write(line)  # write the line to the file
                             else:
-                                file.write("") # if the line is empty, write nothing
-   
+                                file.write("")  # if the line is empty, write nothing
+
+
 def setze_status_fuer_rolle(rolle: str, status: str):
     # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
@@ -1022,7 +1023,7 @@ def setze_status_fuer_rolle(rolle: str, status: str):
                                 + "\n"
                             )
                         else:
-                            if line != "\n": # if the line is not empty
-                                file.write(line) # write the line to the file
+                            if line != "\n":  # if the line is not empty
+                                file.write(line)  # write the line to the file
                             else:
-                                file.write("") # if the line is empty, write nothing
+                                file.write("")  # if the line is empty, write nothing

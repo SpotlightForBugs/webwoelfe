@@ -165,19 +165,17 @@ def get_data():  # get the data from the form
                 # write a new line to the log file
                 names.write("\n")
                 # credits to @joschicraft
-                
-            token = werwolf.generiere_token(name, operator) 
-            werwolf.in_log_schreiben(
-                    f"Neuer Spieler {name} hat die Rolle {operator}"
-                )
-                # render rollen_zuweisung.html
+
+            token = werwolf.generiere_token(name, operator)
+            werwolf.in_log_schreiben(f"Neuer Spieler {name} hat die Rolle {operator}")
+            # render rollen_zuweisung.html
             return render_template(
-                    "rollen_zuweisung.html",
-                    players=num,
-                    name=name,
-                    operator=operator,
-                    token = token
-                )
+                "rollen_zuweisung.html",
+                players=num,
+                name=name,
+                operator=operator,
+                token=token,
+            )
         except Exception as e:
             # render neu_laden.html
             return render_template("neu_laden.html")
@@ -1206,8 +1204,8 @@ def log_ansehen():
 @app.route("/<token>/status")
 def get_status(token):
     if werwolf.validiere_token(token):
-       status = werwolf.status_aus_token(token)
-       return jsonify(status)
+        status = werwolf.status_aus_token(token)
+        return jsonify(status)
     return render_template("fehler.html"), 403
 
 
@@ -1253,9 +1251,6 @@ def server_error_handler(error):
     return render_template("fehler.html"), 500
 
 
-
-
-
 @app.errorhandler(404)
 def page_not_found(error):
     """
@@ -1280,11 +1275,6 @@ def forbidden(error):
 
     """
     return render_template("403.html"), 403
-
-
-
-
-
 
 
 if __name__ == "__main__":

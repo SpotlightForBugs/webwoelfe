@@ -1,1 +1,1 @@
-//connect to 
+//check if with name token cookie exists 

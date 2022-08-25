@@ -165,15 +165,18 @@ def get_data():  # get the data from the form
                 # write a new line to the log file
                 names.write("\n")
                 # credits to @joschicraft
-                werwolf.in_log_schreiben(
+                
+            token = werwolf.generiere_token(name, operator) 
+            werwolf.in_log_schreiben(
                     f"Neuer Spieler {name} hat die Rolle {operator}"
                 )
                 # render rollen_zuweisung.html
-                return render_template(
+            return render_template(
                     "rollen_zuweisung.html",
                     players=num,
                     name=name,
                     operator=operator,
+                    token = token
                 )
         except Exception as e:
             # render neu_laden.html
@@ -1200,8 +1203,12 @@ def log_ansehen():
         return render_template("log.html", log=file_list)
 
 
-
-
+@app.route("/<token>/status")
+def get_status(token):
+    if werwolf.validiere_token(token):
+       status = werwolf.status_aus_token(token)
+       return jsonify(status)
+    return render_template("fehler.html"), 403
 
 
 @app.route("/noscript")
@@ -1260,6 +1267,24 @@ def page_not_found(error):
 
     """
     return render_template("404.html"), 404
+
+
+@app.errorhandler(403)
+def forbidden(error):
+    """
+    The forbidden function is used to render a custom error page when the server encounters an error.
+    It is passed as the handler argument to app.register_error_handler
+
+    :param error: Pass the error message to the template
+    :return: A template 403
+
+    """
+    return render_template("403.html"), 403
+
+
+
+
+
 
 
 if __name__ == "__main__":

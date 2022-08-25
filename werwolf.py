@@ -790,7 +790,7 @@ def suche_spieler() -> bool:
                 return False
 
 
-def generiere_token(name: str, rolle: str):
+def generiere_token(name: str, rolle: str)-> str:
     """
     The generiere_token function generates a token for the user.
     It checks if the role is valid and if it is not already in use.
@@ -808,6 +808,7 @@ def generiere_token(name: str, rolle: str):
             # write the token and the name and the role to the file tokens.txt
             with open("tokens.txt", "a", encoding="UTF8") as file:
                 file.write("+" + token + "+" + name + "+" + rolle + "+start+ \n")
+                return token
 
 
 def validiere_token(token: str) -> bool:

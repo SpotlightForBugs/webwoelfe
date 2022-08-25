@@ -30,7 +30,6 @@ sentry_sdk.init(
     integrations=[
         FlaskIntegration(),
     ],
-    
     traces_sample_rate=0.5,
 )
 
@@ -51,7 +50,9 @@ def index():
 
     """
     werwolf.in_log_schreiben("index geöffnet")
-    return render_template("index.html",spieler_suche=bool(werwolf.suche_spieler()))  # Render index.html
+    return render_template(
+        "index.html", spieler_suche=bool(werwolf.suche_spieler())
+    )  # Render index.html
 
 
 # einstellungen
@@ -1212,8 +1213,6 @@ def noscript():
     return render_template("noscript.html")
 
 
-
-
 @app.route("/API/<name>/<rolle>/is_valid_role_and_name")
 def rollen_namen_check_api(name, rolle):
     """
@@ -1238,10 +1237,9 @@ def rollen_namen_check_api(name, rolle):
     :return: boolean as json
     
     """
-    werwolf.in_log_schreiben("API (Ist "+ name +" passend zu"+rolle+") wurde aufgerufen")
-    
-    
-    
+    werwolf.in_log_schreiben(
+        "API (Ist " + name + " passend zu" + rolle + ") wurde aufgerufen"
+    )
 
 
 # context processor

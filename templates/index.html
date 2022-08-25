@@ -1,6 +1,6 @@
 {% extends 'struktur.html' %}
 <!--@generated-->
-{% block active_a %} active {% endblock %} {% block body %}
+{% block body %}
 
 <div class="container-fluid" style="margin-top: 30px">
   <h1 id="rot">Werwolf <br /></h1>
@@ -59,7 +59,12 @@ setInterval(function() {
 
 
 
-{% endblock %} {% block script %}
-<script src="../../static/scripts/rot.js"></script>
 
+
+
+{% block script %}
+<script src="../../static/scripts/rot.js"></script>
+<script	src="../../static/scripts/game_state.js"></script>
 {% endblock %}
+{% endblock %}
+

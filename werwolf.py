@@ -773,7 +773,14 @@ def name_richtig_schreiben(name: str) -> str:
     return name.capitalize()
 
 def suche_spieler()-> bool:
-    # if the int in the first line of spieler_anzahl.txt is smaller than  the lines of the file rollen_original.txt, then return True, else False
+    """
+    The suche_spieler function checks if the number of players is bigger than the number of lines in rollen_original.txt.
+    If this is true, then it returns True, else False.
+    
+    :return: True if the number of players is greater than the number of roles
+    
+    """
+    
     with open("spieler_anzahl.txt", "r") as file:
         for line in file:
             if int(line) > len(open("rollen_original.txt", "r").readlines()):
@@ -782,6 +789,16 @@ def suche_spieler()-> bool:
                 return False
             
 def generiere_token(name: str,rolle: str):
+    """
+    The generiere_token function generates a token for the user.
+    It checks if the role is valid and if it is not already in use.
+    If this condition is met, a new token will be generated and written to tokens.txt
+    
+    :param name:str: Specify the name of the user
+    :param rolle:str: Check if the role is valid
+    :return: A token
+    
+    """
     if validiere_rolle_original(name,rolle):
         if not ist_token_vorhandem(name,rolle):
         
@@ -795,6 +812,14 @@ def generiere_token(name: str,rolle: str):
  
          
 def validiere_token(token: str)-> bool:
+    """
+    The validiere_token function checks if the token is in the file tokens.txt
+       and returns True if it is, False otherwise.
+    
+    :param token:str: Check if the token is in the file
+    :return: True if the token is in the file, otherwise it returns false
+    
+    """
     #read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
@@ -805,6 +830,15 @@ def validiere_token(token: str)-> bool:
             
             
 def name_und_rollen_aus_token(token: str):
+    """
+    The name_und_rollen_aus_token function takes a token as input and returns the name and role of the user who has this token.
+    The function reads the file tokens.txt, checks if the given token is in this file and splits it at every + to return 
+    the name and role of that user.
+    
+    :param token:str: Check if the token is in the file tokens
+    :return: The name and the role of a token
+    
+    """
     #read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
@@ -813,6 +847,14 @@ def name_und_rollen_aus_token(token: str):
                 return line.split("+")[1],line.split("+")[2]
             
 def loesche_token(token):
+    """
+    The loesche_token function deletes a token from the file tokens.txt
+        
+    
+    :param token: Check if the token is in the file
+    :return: The name and the role of the token
+    
+    """
     #read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
@@ -830,13 +872,21 @@ def loesche_token(token):
 
 
 
-#every player has a status, which is
+
 
 
 
 
 
 def rolle_aus_token(token: str):
+    """
+    The rolle_aus_token function takes a token as an argument and returns the role of the user associated with that token.
+    The function reads from a file called tokens.txt, which contains all valid tokens and their corresponding roles.
+    
+    :param token:str: Check if the token is in the file
+    :return: The role of the token
+    
+    """
     #read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
@@ -844,6 +894,14 @@ def rolle_aus_token(token: str):
                 #split the line at the + and return the name and the role
                 return line.split("+")[3]
 def name_aus_token(token: str):
+    """
+    The name_aus_token function takes a token and returns the name of the person who has that token.
+       If no one has that token, it returns None.
+    
+    :param token:str: Pass the token of a user to the function
+    :return: The name of the token if it is in tokens
+    
+    """
     #read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
@@ -852,6 +910,14 @@ def name_aus_token(token: str):
                 return line.split("+")[2]
             
 def status_aus_token(token: str):
+    """
+    The status_aus_token function checks if the token is in the file tokens.txt and returns 
+    the name of the user and his role
+    
+    :param token:str: Pass the token of the user that is checked
+    :return: The name and the role of a given token
+    
+    """
     #read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
@@ -860,6 +926,15 @@ def status_aus_token(token: str):
                 return line.split("+")[4]
             
 def token_aus_name_und_rolle(name: str,rolle: str)-> str:
+    """
+    The token_aus_name_und_rolle function takes a name and a role as input. It checks if the given name and role are valid, 
+    and returns the token of that player if it is. If not, it returns an error message.
+    
+    :param name:str: Specify the name of the player
+    :param rolle:str: Check if the rolle is valid
+    :return: The token for the player name and role
+    
+    """
     if validiere_rolle_original(name,rolle):
         #read the file tokens.txt and check if the token is in the file
         with open("tokens.txt", "r") as file:
@@ -874,6 +949,14 @@ def token_aus_name_und_rolle(name: str,rolle: str)-> str:
     return ("Kein Token gefunden")
 
 def ist_token_vorhandem(name,rolle):
+    """
+    The ist_token_vorhandem function checks if the token is in the file tokens.txt
+    
+    :param name: Check if the token is in the file
+    :param rolle: Check if the token is in the file
+    :return: True if the token is in the file, otherwise false
+    
+    """
     #read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:

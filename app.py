@@ -1213,34 +1213,21 @@ def noscript():
     return render_template("noscript.html")
 
 
-@app.route("/API/<name>/<rolle>/is_valid_role_and_name")
-def rollen_namen_check_api(name, rolle):
-    """
-    The rollen_namen_check_api function is used to check if the name and the role are valid.
-    It is used in the API.
-
-    :param name: The name of the player
-    :param rolle: The role of the player
-    :return: True if the name and the role are valid, False if not
-
-    """
-    if werwolf.validiere_rolle(name, rolle) is True:
-        return jsonify({"valid": True})
-    else:
-        return jsonify({"valid": False})
-    """
-    The rollen_namen_check_api function checks if the name is in the list of names for a role.
-    It returns True if it is, and False otherwise.
+@app.route("/test/<name>/<rolle>")
+def test(name, rolle):
+    werwolf.generiere_token(name, rolle)
+    result = []
+    result.append(werwolf.token_aus_name_und_rolle(name, rolle))
+    result.append(werwolf.setze_status(result[0],"test_status"))
+    result.append(werwolf.ist_token_vorhandem(name, rolle))
+    result.append(werwolf.status_aus_token(result[0]))
+    result.append(werwolf.name_aus_token(result[0]))
+    result.append(werwolf.rolle_aus_token(result[0]))
     
-    :param name: Check if the name is in the role
-    :param rolle: Check if the name is in the role
-    :return: boolean as json
+    return str(result)
     
-    """
-    werwolf.in_log_schreiben(
-        "API (Ist " + name + " passend zu" + rolle + ") wurde aufgerufen"
-    )
-
+    
+  
 
 # context processor
 

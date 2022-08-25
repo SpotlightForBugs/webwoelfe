@@ -295,3 +295,22 @@
 19:16:31 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
 19:17:02 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
 19:17:13 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
+15:09:16 >> index geöffnet
+15:09:23 >> index geöffnet
+15:09:33 >> index geöffnet
+15:09:43 >> index geöffnet
+15:09:53 >> index geöffnet
+15:10:03 >> index geöffnet
+15:10:13 >> index geöffnet
+15:10:23 >> index geöffnet
+15:10:33 >> index geöffnet
+15:10:43 >> index geöffnet
+15:11:18 >> index geöffnet
+15:11:20 >> Neuer Spieler _ hat die Rolle Jaeger
+15:11:22 >> index geöffnet
+15:11:32 >> index geöffnet
+15:11:42 >> index geöffnet
+15:11:52 >> index geöffnet
+15:25:41 >> Erzähler geöffnet
+15:25:44 >> index geöffnet
+15:25:54 >> index geöffnet

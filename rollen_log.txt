@@ -9,3 +9,4 @@ Jolkhjuno = Dorfbewohner
 Hallo_cookie = Werwolf
 Hallocookie = Werwolf
 Re = Werwolf
+_ = Jaeger

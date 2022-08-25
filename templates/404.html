@@ -5,29 +5,32 @@
 
 <div class="container-fluid" style="margin-top: 30px">
   <h1 id="rot">Fehler | 404</h1>
-  <h4>
-    Die Seite konnte nicht gefunden werden. </h4>
-    <button type="button" class="btn btn-danger" data-bs-toggle="button" aria-pressed="false" autocomplete="off" onClick="goBack();">Zurück</button>
- 
+  <h4>Die Seite konnte nicht gefunden werden.</h4>
+  <button
+    type="button"
+    class="btn btn-danger"
+    data-bs-toggle="button"
+    aria-pressed="false"
+    autocomplete="off"
+    onClick="goBack();"
+  >
+    Zurück
+  </button>
 </div>
 
-
 <script>
-function goBack() {
+  function goBack() {
     window.history.back();
-}
-
-
+  }
 </script>
 
-{%endblock%}
-    
-    {% block footer %}
-    
-<small><a href="https://github.com/Error404UNameNotFound">Error404UNameNotFound</a></small>
-{% endblock %}
+{%endblock%} {% block footer %}
 
-
-{% endblock %} {% block script %}
+<small
+  ><a href="https://github.com/Error404UNameNotFound"
+    >Error404UNameNotFound</a
+  ></small
+>
+{% endblock %} {% endblock %} {% block script %}
 <script src="../../../../static/scripts/rot.js"></script>
 {% endblock %}

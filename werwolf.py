@@ -825,8 +825,8 @@ def validiere_token(token: str)-> bool:
         for line in file:
             if "+"+token+"+" in line:
                 return True
-            else:
-                return False
+            
+        return False
             
             
 def name_und_rollen_aus_token(token: str):

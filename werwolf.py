@@ -352,17 +352,7 @@ def ist_verliebt(name: str) -> bool:
 
 
 def leere_dateien():
-    """
-    The leere_dateien function clears the following files:
-        - rollen_log.txt
-        - abstimmung.txt
-        - rollen_original.txt
-        - hat_gewaehlt.txt
-
-
-    :return: Nothing
-
-    """
+ 
     with open("rollen_log.txt", "w+", encoding="UTF8") as f:  # leere rollen_log.txt
         f.write("*********************\n")
     with open("abstimmung.txt", "r+", encoding="UTF8") as file:
@@ -389,6 +379,8 @@ def leere_dateien():
     with open("logfile.txt", "w", encoding="UTF8") as file8:
         file8.truncate(0)
     file8.close()
+    with open("tokens.txt", "w", encoding="UTF8") as file9:
+        file9.truncate(0)
 
 
 def momentane_rolle(player: str) -> str:
@@ -795,8 +787,8 @@ def generiere_token(name: str,rolle: str):
         
             token = secrets.token_hex(16)
             #write the token and the name and the role to the file tokens.txt
-            with open("tokens.txt", "a") as file:
-                file.write("+"+token + "+" + name + "+" + rolle + "+unbekannt+ \n")
+            with open("tokens.txt", "a",encoding="UTF8") as file:
+                file.write("+"+token + "+" + name + "+" + rolle + "+start+ \n")
                 
  
  
@@ -904,7 +896,8 @@ def setze_status(token: str,status: str):
                         if "+"+token+"+" in line:
                             file.write(line.split("+")[0]+"+"+line.split("+")[1]+"+"+line.split("+")[2]+"+"+line.split("+")[3]+"+"+status+"+"+line.split("+")[5]+"\n")
                         else:
-                            file.write(line)
+                            if line != "\n": file.write(line)
+                            else: file.write("")
     #in the file tokens.txt, the format is +token+name+rolle+status+
     #we have multiple tokens, so we have to read the file line by line
     #we change the status of the token to the input status, we get the token from input

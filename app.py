@@ -1213,18 +1213,7 @@ def noscript():
     return render_template("noscript.html")
 
 
-@app.route("/test/<name>/<rolle>")
-def test(name, rolle):
-    werwolf.generiere_token(name, rolle)
-    result = []
-    result.append(werwolf.token_aus_name_und_rolle(name, rolle))
-    result.append(werwolf.setze_status(result[0],"kleopatra war eine Koenigin aus dem alten Ägypten"))
-    result.append(werwolf.ist_token_vorhandem(name, rolle))
-    result.append(werwolf.status_aus_token(result[0]))
-    result.append(werwolf.name_aus_token(result[0]))
-    result.append(werwolf.rolle_aus_token(result[0]))
-    
-    return str(result)
+
     
     
   

@@ -780,7 +780,8 @@ def name_richtig_schreiben(name: str) -> str:
     name = re.sub(r"[^a-zA-Z0-9]", "_", name)
     return name.capitalize()
 
-def suche_spieler()-> bool:
+
+def suche_spieler() -> bool:
     # if the int in the first line of spieler_anzahl.txt is smaller than  the lines of the file rollen_original.txt, then return True, else False
     with open("spieler_anzahl.txt", "r") as file:
         for line in file:
@@ -788,109 +789,119 @@ def suche_spieler()-> bool:
                 return True
             else:
                 return False
-            
-def generiere_token(name: str,rolle: str):
-    if validiere_rolle_original(name,rolle):
-        if not ist_token_vorhandem(name,rolle):
-        
+
+
+def generiere_token(name: str, rolle: str):
+    if validiere_rolle_original(name, rolle):
+        if not ist_token_vorhandem(name, rolle):
+
             token = secrets.token_hex(16)
-            #write the token and the name and the role to the file tokens.txt
+            # write the token and the name and the role to the file tokens.txt
             with open("tokens.txt", "a") as file:
-                file.write("+"+token + "+" + name + "+" + rolle + "+ \n")
-                
-         
-def validiere_token(token: str)-> bool:
-    #read the file tokens.txt and check if the token is in the file
+                file.write("+" + token + "+" + name + "+" + rolle + "+ \n")
+
+
+def validiere_token(token: str) -> bool:
+    # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if "+"+token+"+" in line:
+            if "+" + token + "+" in line:
                 return True
             else:
                 return False
-            
-            
+
+
 def name_und_rollen_aus_token(token: str):
-    #read the file tokens.txt and check if the token is in the file
+    # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if "+"+token+"+" in line:
-                #split the line at the + and return the name and the role
-                return line.split("+")[1],line.split("+")[2]
-            
+            if "+" + token + "+" in line:
+                # split the line at the + and return the name and the role
+                return line.split("+")[1], line.split("+")[2]
+
+
 def loesche_token(token):
-    #read the file tokens.txt and check if the token is in the file
+    # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if "+"+token+"+" in line:
-                #split the line at the + and return the name and the role
+            if "+" + token + "+" in line:
+                # split the line at the + and return the name and the role
                 file.close()
                 with open("tokens.txt", "r") as file:
                     lines = file.readlines()
                 with open("tokens.txt", "w") as file:
                     for line in lines:
-                        if "+"+token+"+" not in line:
+                        if "+" + token + "+" not in line:
                             file.write(line)
-                            
 
-#every player , identified by the token, the name and the role has his own status. 
-# This funtion changes the status 
+
+# every player , identified by the token, the name and the role has his own status.
+# This funtion changes the status
 # with the format: +token+name+role+status+
-def setze_status(token: str,status: str):
-    #read the file tokens.txt and check if the token is in the file
+def setze_status(token: str, status: str):
+    # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if "+"+token+"+" in line:
-                #split the line at the + and return the name and the role
+            if "+" + token + "+" in line:
+                # split the line at the + and return the name and the role
                 name = line.split("+")[2]
                 rolle = line.split("+")[3]
-                #write the token, the name and the role to the file tokens.txt
+                # write the token, the name and the role to the file tokens.txt
                 with open("tokens.txt", "a") as file:
-                    file.write("+"+token + "+" + name + "+" + rolle + "+" + status + "+ \n")
+                    file.write(
+                        "+" + token + "+" + name + "+" + rolle + "+" + status + "+ \n"
+                    )
                     return str(status)
         return "error"
+
+
 def rolle_aus_token(token: str):
-    #read the file tokens.txt and check if the token is in the file
+    # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if "+"+token+"+" in line:
-                #split the line at the + and return the name and the role
+            if "+" + token + "+" in line:
+                # split the line at the + and return the name and the role
                 return line.split("+")[3]
+
+
 def name_aus_token(token: str):
-    #read the file tokens.txt and check if the token is in the file
+    # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if "+"+token+"+" in line:
-                #split the line at the + and return the name and the role
+            if "+" + token + "+" in line:
+                # split the line at the + and return the name and the role
                 return line.split("+")[2]
-            
+
+
 def status_aus_token(token: str):
-    #read the file tokens.txt and check if the token is in the file
+    # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if "+"+token+"+" in line and line.count("+") == 5:
-                #split the line at the + and return the name and the role
+            if "+" + token + "+" in line and line.count("+") == 5:
+                # split the line at the + and return the name and the role
                 return line.split("+")[4]
-            
-def token_aus_name_und_rolle(name: str,rolle: str)-> str:
-    if validiere_rolle_original(name,rolle):
-        #read the file tokens.txt and check if the token is in the file
+
+
+def token_aus_name_und_rolle(name: str, rolle: str) -> str:
+    if validiere_rolle_original(name, rolle):
+        # read the file tokens.txt and check if the token is in the file
         with open("tokens.txt", "r") as file:
             for line in file:
-                if "+"+name+"+"+rolle+"+" in line:
-                    
-                    #split the line at the + and return the name and the role
-                    
+                if "+" + name + "+" + rolle + "+" in line:
+
+                    # split the line at the + and return the name and the role
+
                     return line.split("+")[1]
     else:
         return "Spieler nicht gefunden"
-    return ("Kein Token gefunden")
+    return "Kein Token gefunden"
 
-def ist_token_vorhandem(name,rolle):
-    #read the file tokens.txt and check if the token is in the file
+
+def ist_token_vorhandem(name, rolle):
+    # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if "+"+name+"+"+rolle+"+" in line:
+            if "+" + name + "+" + rolle + "+" in line:
                 return True
             else:
                 return False
-     

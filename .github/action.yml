@@ -1,0 +1,125 @@
+# The following workflow provides an opinionated template you can customize for your own needs.
+#
+# If you are not an Octopus user, the "Push to Octopus", "Generate Octopus Deploy build information",
+# and "Create Octopus Release" steps can be safely deleted.
+#
+# To configure Octopus, set the OCTOPUS_API_TOKEN secret to the Octopus API key, and
+# set the OCTOPUS_SERVER_URL secret to the Octopus URL.
+#
+# Double check the "project" and "deploy_to" properties in the "Create Octopus Release" step
+# match your Octopus projects and environments.
+#
+# Get a trial Octopus instance from https://octopus.com/start
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: '0'
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.7
+      with:
+        versionSpec: 5.x
+    - id: determine_version
+      name: Determine Version
+      uses: gittools/actions/gitversion/execute@v0.9.7
+      with:
+        additionalArguments: /overrideconfig mode=Mainline
+    - name: Install Octopus Deploy CLI
+      uses: OctopusDeploy/install-octocli@v1.1.1
+      with:
+        version: latest
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
+      shell: bash
+    - name: List Dependencies
+      run: pip install pipdeptree; pipdeptree > dependencies.txt
+      shell: bash
+    - name: Collect Dependencies
+      uses: actions/upload-artifact@v2
+      with:
+        name: Dependencies
+        path: dependencies.txt
+    - name: List Dependency Updates
+      run: pip list --outdated --format=freeze > dependencyUpdates.txt || true
+      shell: bash
+    - name: Collect Dependency Updates
+      uses: actions/upload-artifact@v2
+      with:
+        name: Dependencies Updates
+        path: dependencyUpdates.txt
+    - name: Test
+      run: pip install pytest; pytest --junitxml=results.xml
+      shell: bash
+    - if: always()
+      name: Report
+      uses: dorny/test-reporter@v1
+      with:
+        name: Python Tests
+        path: results.xml
+        reporter: java-junit
+        fail-on-error: 'false'
+    - name: Package
+      run: |-
+        SOURCEPATH=.
+        OUTPUTPATH=.
+        octo pack \
+         --basePath ${SOURCEPATH} \
+         --outFolder ${OUTPUTPATH} \
+         --id webwoelfe \
+         --version ${{ steps.determine_version.outputs.semVer }} \
+         --format zip \
+         --overwrite \
+         --include '**/*.py' \
+         --include '**/*.pyc' \
+         --include '**/*.html' \
+         --include '**/*.htm' \
+         --include '**/*.css' \
+         --include '**/*.js' \
+         --include '**/*.min' \
+         --include '**/*.map' \
+         --include '**/*.sql' \
+         --include '**/*.png' \
+         --include '**/*.jpg' \
+         --include '**/*.jpeg' \
+         --include '**/*.gif' \
+         --include '**/*.json' \
+         --include '**/*.env' \
+         --include '**/*.txt' \
+         --include '**/*.Procfile'
+      shell: bash
+    - name: Tag Release
+      uses: mathieudutour/github-tag-action@v6.0
+      with:
+        custom_tag: ${{ steps.determine_version.outputs.semVer }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      id: create_release
+      name: Create Release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ steps.determine_version.outputs.semVer }}+run${{ github.run_number }}-attempt${{ github.run_attempt }}
+        release_name: Release ${{ steps.determine_version.outputs.semVer }} Run ${{ github.run_number }} Attempt ${{ github.run_attempt }}
+        draft: 'false'
+        prerelease: 'false'
+    - env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: webwoelfe.${{ steps.determine_version.outputs.semVer }}.zip
+        asset_name: webwoelfe.${{ steps.determine_version.outputs.semVer }}.zip
+        asset_content_type: application/octet-stream
+    
+name: Python Build
+'on':
+  workflow_dispatch: {}
+  push: {}

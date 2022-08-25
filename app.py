@@ -1213,11 +1213,6 @@ def noscript():
     return render_template("noscript.html")
 
 
-
-    
-    
-  
-
 # context processor
 
 

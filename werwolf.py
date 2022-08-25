@@ -989,11 +989,39 @@ def setze_status(token: str, status: str):
                                 + "\n"
                             )
                         else:
-                            if line != "\n":
-                                file.write(line)
+                            if line != "\n": # if the line is not empty
+                                file.write(line) # write the line to the file
                             else:
-                                file.write("")
-    # in the file tokens.txt, the format is +token+name+rolle+status+
-    # we have multiple tokens, so we have to read the file line by line
-    # we change the status of the token to the input status, we get the token from input
-    # we write the new status to the file by overwriting the old line with the new line.
+                                file.write("") # if the line is empty, write nothing
+   
+def setze_status_fuer_rolle(rolle: str, status: str):
+    # read the file tokens.txt and check if the token is in the file
+    with open("tokens.txt", "r") as file:
+        for line in file:
+            if "+" + rolle + "+" in line:
+                # split the line at the + and return the name and the role
+
+                with open("tokens.txt", "r") as file:
+                    lines = file.readlines()
+                with open("tokens.txt", "w") as file:
+                    for line in lines:
+                        if "+" + rolle + "+" in line:
+                            file.write(
+                                line.split("+")[0]
+                                + "+"
+                                + line.split("+")[1]
+                                + "+"
+                                + line.split("+")[2]
+                                + "+"
+                                + line.split("+")[3]
+                                + "+"
+                                + status
+                                + "+"
+                                + line.split("+")[5]
+                                + "\n"
+                            )
+                        else:
+                            if line != "\n": # if the line is not empty
+                                file.write(line) # write the line to the file
+                            else:
+                                file.write("") # if the line is empty, write nothing

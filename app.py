@@ -1200,6 +1200,10 @@ def log_ansehen():
         return render_template("log.html", log=file_list)
 
 
+
+
+
+
 @app.route("/noscript")
 def noscript():
     """
@@ -1240,6 +1244,9 @@ def server_error_handler(error):
 
     """
     return render_template("fehler.html"), 500
+
+
+
 
 
 @app.errorhandler(404)

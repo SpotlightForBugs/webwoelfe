@@ -887,8 +887,8 @@ def ist_token_vorhandem(name,rolle):
         for line in file:
             if "+"+name+"+"+rolle+"+" in line:
                 return True
-            else:
-                return False
+            
+    return False
 
 def setze_status(token: str,status: str):
     #read the file tokens.txt and check if the token is in the file

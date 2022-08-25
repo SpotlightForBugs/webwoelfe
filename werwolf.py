@@ -989,11 +989,12 @@ def setze_status(token: str, status: str):
                                 + "\n"
                             )
                         else:
-                            if line != "\n": # if the line is not empty
-                                file.write(line) # write the line to the file
+                            if line != "\n":  # if the line is not empty
+                                file.write(line)  # write the line to the file
                             else:
-                                file.write("") # if the line is empty, write nothing
-   
+                                file.write("")  # if the line is empty, write nothing
+
+
 def setze_status_fuer_rolle(rolle: str, status: str):
     # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
@@ -1021,7 +1022,7 @@ def setze_status_fuer_rolle(rolle: str, status: str):
                                 + "\n"
                             )
                         else:
-                            if line != "\n": # if the line is not empty
-                                file.write(line) # write the line to the file
+                            if line != "\n":  # if the line is not empty
+                                file.write(line)  # write the line to the file
                             else:
-                                file.write("") # if the line is empty, write nothing
+                                file.write("")  # if the line is empty, write nothing

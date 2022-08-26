@@ -1213,9 +1213,8 @@ def get_status(token: str):
 
 @app.route("/test/<token>")
 def ziel(token: str):
-    
-    return redirect(werwolf.erhalte_ziel(token))
 
+    return redirect(werwolf.erhalte_ziel(token))
 
 
 @app.route("/noscript")

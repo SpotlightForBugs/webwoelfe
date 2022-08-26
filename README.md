@@ -84,8 +84,6 @@ Answer 2
 
 [GNU General Public License v3.0](https://github.com/SpotlightForBugs/webwoelfe/blob/Pro/LICENSE)
 
-
 ---
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe?ref=badge_large)
-

@@ -1115,7 +1115,7 @@ def actions(action: str):
     # ARMOR After this, the status of the player with the role of the Armor is set to action
     elif action == "armor_aktion":
         setze_status_fuer_rolle("Armor", "2")
-        
+
     elif action =="armor_schlafen":
         setze_status_fuer_rolle("Armor", "1")
 
@@ -1160,15 +1160,15 @@ def actions(action: str):
 def erhalte_ziel(token: str):
     #1. get the role of the player
     rolle = rolle_aus_token(token)
-    
+
     #2. get the name of the player
     name = name_aus_token(token)
     #3. get the status of the token
     status = status_aus_token(token)
-    
-    
+
+
     #  0 = dead, 1 = sleep, 2 = action, 3 = vote, 4 = information
-    
+
     if status == "0":
         return (f'"/{name}/{rolle}/_/tot"')
     elif status == "1":
@@ -1179,7 +1179,7 @@ def erhalte_ziel(token: str):
         return (f'/{name}/{rolle}/Dashboard')
     elif status == "4":
         return (f'/{name}/{rolle}/info')
-        
-    
-    
-        
+
+
+
+

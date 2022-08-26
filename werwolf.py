@@ -1205,5 +1205,5 @@ def erhalte_ziel(token: str):
         return f"/{name}/{rolle}/Dashboard"
     if status == "4":
         return f"/{name}/{rolle}/info_der_verliebten"
-    elif status == "5":
+    if status == "5":
         return f"/{name}/{rolle}/warten_auf_andere_spieler"

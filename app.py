@@ -1202,20 +1202,15 @@ def log_ansehen():
 
 
 @app.route("/<token>/status")
-def get_status(token: str):
+def zum_ziel(token: str):
     if werwolf.validiere_token(token):
-        status = werwolf.status_aus_token(token)
+
         # send the status as a response
-        return werwolf.erhalte_ziel(token)
-    else:
-        return "Fehler", 500
+        try:
+            return redirect(werwolf.erhalte_ziel(token))
+        except AttributeError:
 
-
-@app.route("/test/<token>")
-def ziel(token: str):
-    
-    return redirect(werwolf.erhalte_ziel(token))
-
+            return "Fehler", 500
 
 
 @app.route("/noscript")

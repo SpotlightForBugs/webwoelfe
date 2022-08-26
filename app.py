@@ -1195,7 +1195,6 @@ def auf_andere_warten(name, rolle):
         )
 
 
-
 @app.route("/log")
 def log_ansehen():
     """

@@ -850,11 +850,7 @@ def validiere_token(token: str) -> bool:
     """
     # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
-        for line in file:
-            if "+" + token + "+" in line:
-                return True
-
-        return False
+        return any("+" + token + "+" in line for line in file)
 
 
 def name_und_rolle_aus_token(token: str):

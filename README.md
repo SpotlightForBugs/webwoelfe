@@ -85,3 +85,5 @@ Answer 2
 ---
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe?ref=badge_large)
+
+[License Report](https://app.fossa.com/reports/453739f4-1f96-485d-920d-91550b171239)

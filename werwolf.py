@@ -1183,6 +1183,3 @@ def erhalte_ziel(token: str):
         return f"/{name}/{rolle}/Dashboard"
     elif status == "4":
         return f"/{name}/{rolle}/info"
-    
-
-

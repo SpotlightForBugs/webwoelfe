@@ -25,7 +25,8 @@
     <script>
       //weiterleiten zu einer anderen Seite nach einer Sekunde
       setTimeout(function () {
-        window.location.href = "{{ url_for('auf_andere_warten',name=name,rolle=rolle) }}";
+        window.location.href =
+          "{{ url_for('auf_andere_warten',name=name,rolle=rolle) }}";
       }, 10000);
     </script>
 

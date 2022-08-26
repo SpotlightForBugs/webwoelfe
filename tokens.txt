@@ -1,4 +1,7 @@
-+edb8d1b1c2d62dfd95970fbba6b34388+Klobert+Seherin+1+ 
-+6e7e5a1ec632ef79e4a948920af3fccf+rolf+Werwolf+1+
-+b62e45132b9e9db88751c0d1942736b4+Ewe+Werwolf+start+ 
-+a60f11e81607d7dfb50ce4a8f020194a+Weqwe+Werwolf+1+ 
++3b4f374ca937b85c1758318f9c825760+Welt+Erzaehler+1+ 
++e42e50d87d4bb9eeab1952cd8699a02b+Klobert+Werwolf+1+ 
++f6b5a3229566f8164cbede22ba60c296+Klo_oder_kein+Armor+1+ 
++d0c5cc2e14d95302e04d1ee7f6eb7663+Drewr+Werwolf+1+ 
++c47cf9c1d74e05cbeb533fec6013e199+Etre+Dorfbewohner+1+ 
++bfa5515a75274b7774e47ff22f69f5f7+Fes+Dorfbewohner+1+ 
++439d2ae654f0af645813f45236f7abdd+Ewe+Jaeger+1+ 

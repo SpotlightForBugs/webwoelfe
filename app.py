@@ -1,4 +1,5 @@
 import sentry_sdk
+from sentry_sdk import set_user
 from sentry_sdk import last_event_id
 from sentry_sdk.integrations.flask import FlaskIntegration
 from shutil import ExecError
@@ -165,10 +166,11 @@ def get_data():  # get the data from the form
                 # write a new line to the log file
                 names.write("\n")
                 # credits to @joschicraft
-
+            set_user({"username": name+" = "+str(operator)})
             token = werwolf.generiere_token(name, operator)
             werwolf.in_log_schreiben(f"Neuer Spieler {name} hat die Rolle {operator}")
             # render rollen_zuweisung.html
+            
             return render_template(
                 "rollen_zuweisung.html",
                 players=num,
@@ -1201,16 +1203,15 @@ def log_ansehen():
         return render_template("log.html", log=file_list)
 
 
-@app.route("/<token>/status")
+@app.route("/<token>/zum_ziel")
 def zum_ziel(token: str):
     if werwolf.validiere_token(token):
 
         # send the status as a response
-        try:
-            return redirect(werwolf.erhalte_ziel(token))
-        except AttributeError:
-
-            return render_template("403.html"), 403
+       
+            
+        return redirect(werwolf.erhalte_ziel(token))
+    return render_template("403.html"), 403
 
 
 @app.route("/noscript")

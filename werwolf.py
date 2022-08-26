@@ -1107,6 +1107,7 @@ def setze_status_fuer_alle(status: str):
                         + line.split("+")[5]
                         + "\n"
                     )
+            setze_status_fuer_rolle("Erzaehler", "2")
 
 
 def actions(action: str):
@@ -1182,3 +1183,6 @@ def erhalte_ziel(token: str):
         return f"/{name}/{rolle}/Dashboard"
     elif status == "4":
         return f"/{name}/{rolle}/info"
+    
+
+

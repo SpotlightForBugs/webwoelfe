@@ -344,7 +344,13 @@ def verliebte_ausgeben() -> str:
     with open("verliebt.txt", "r") as verliebt:
         verliebt_text = verliebt.read()
         if verliebt_text.count("+") == 2:
-            return "+" + verliebt_text.split("+")[1] +"+"+ verliebt_text.split("+")[2] + "+"
+            return (
+                "+"
+                + verliebt_text.split("+")[1]
+                + "+"
+                + verliebt_text.split("+")[2]
+                + "+"
+            )
 
 
 def ist_verliebt(name: str) -> bool:
@@ -1115,21 +1121,20 @@ def actions(action: str):
     # ARMOR After this, the status of the player with the role of the Armor is set to action
     elif action == "armor_aktion":
         setze_status_fuer_rolle("Armor", "2")
-        
-    elif action =="armor_schlafen":
+
+    elif action == "armor_schlafen":
         setze_status_fuer_rolle("Armor", "1")
 
     elif action == "verliebte_informieren":
-        verliebte_ausgeben() # the function verliebte_ausgeben() returns the names in the following format: +lover1+lover2+
+        verliebte_ausgeben()  # the function verliebte_ausgeben() returns the names in the following format: +lover1+lover2+
         lover1 = verliebte_ausgeben().split("+")[1]
         lover2 = verliebte_ausgeben().split("+")[2]
         setze_status_fuer_name(lover1, "4")
         setze_status_fuer_name(lover2, "4")
 
+    # After this, all players are set to sleep.
 
-# After this, all players are set to sleep.
-
-# SEHERIN The seherin is set to action
+    # SEHERIN The seherin is set to action
     elif action == "seherin_aktion":
         setze_status_fuer_rolle("Seherin", "2")
 
@@ -1138,48 +1143,42 @@ def actions(action: str):
 
     elif action == "werwolf_abstimmung":
         setze_status_fuer_rolle("Werwolf", "2")
-# WERWOLF All werewolves are set to  vote
+    # WERWOLF All werewolves are set to  vote
 
-# All werewolves are set to sleep
+    # All werewolves are set to sleep
     elif action == "werwolf_schlafen":
         setze_status_fuer_rolle("Werwolf", "1")
 
-# The witch is set to action
+    # The witch is set to action
     elif action == "hexe_aktion":
         setze_status_fuer_rolle("Hexe", "2")
-# The witch is set to sleep
+    # The witch is set to sleep
     elif action == "hexe_schlafen":
         setze_status_fuer_rolle("Hexe", "1")
 
-# Everyone is set to vote
+    # Everyone is set to vote
     elif action == "alle_abstimmen":
         setze_status_fuer_alle("3")
 
 
-
 def erhalte_ziel(token: str):
-    #1. get the role of the player
+    # 1. get the role of the player
     rolle = rolle_aus_token(token)
-    
-    #2. get the name of the player
+
+    # 2. get the name of the player
     name = name_aus_token(token)
-    #3. get the status of the token
+    # 3. get the status of the token
     status = status_aus_token(token)
-    
-    
+
     #  0 = dead, 1 = sleep, 2 = action, 3 = vote, 4 = information
-    
+
     if status == "0":
-        return (f'"/{name}/{rolle}/_/tot"')
+        return f'"/{name}/{rolle}/_/tot"'
     elif status == "1":
-        return (f'/{name}/{rolle}/schlafen')
+        return f"/{name}/{rolle}/schlafen"
     elif status == "2":
-        return (f'/{name}/{rolle}/Dashboard_sp')
+        return f"/{name}/{rolle}/Dashboard_sp"
     elif status == "3":
-        return (f'/{name}/{rolle}/Dashboard')
+        return f"/{name}/{rolle}/Dashboard"
     elif status == "4":
-        return (f'/{name}/{rolle}/info')
-        
-    
-    
-        
+        return f"/{name}/{rolle}/info"

@@ -206,6 +206,7 @@ def hexe_verbraucht(flag: str):
         flag = str(2)
     elif "h" in flag or "H" in flag:
         flag = str(1)
+    
 
         if str(flag) == "1" or str(flag) == "2":
             with open("hexe_kann.txt", "r") as hexe_kann:
@@ -670,122 +671,134 @@ def spieler_ist_tot(player: str) -> bool:
 
 def name_richtig_schreiben(name: str) -> str:
     """
-    The name_richtig_schreiben function takes a string as input and returns the same string with
-    the following changes:
-    - replaces &quot;/&quot; with &quot;_&quot;
-    - replaces &quot;=&quot; with &quot;-&quot;
-    - replaces &quot;:&quot; with &quot;_&quot;
-    - replaces &quot;*&quot; with &quot;_&quot;
-
-        - replace &quot;&lt;&quot;, &gt;, ?, &quot;, \, |, . , ' , / , : , * ,&quot; in name by _.
-
+    The name_richtig_schreiben function takes a string and returns the same string with all non-alphanumeric characters replaced by underscores.
+   
+   
     :param name:str: Pass the name of the file to be renamed
-    :return: The name with the correct spelling
-
+    :return: The name with the correct capitalization
+    
     """
-    name = name.replace("/", "_")
-    name = name.replace("=", "-")
-    name = name.replace(":", "_")
-    name = name.replace("*", "_")
-
-    name = name.replace("<", "_")
-    name = name.replace(">", "_")
-    name = name.replace("?", "_")
-    name = name.replace('"', "_")
-    name = name.replace("\\", "_")
-    name = name.replace("|", "_")
-    name = name.replace(".", "_")
-    name = name.replace(" ", "_")
-    name = name.replace("\n", "_")
-    name = name.replace("\t", "_")
-    name = name.replace("\r", "_")
-    name = name.replace("\v", "_")
-    name = name.replace("\f", "_")
-    name = name.replace("\b", "_")
-    name = name.replace("\a", "_")
-    name = name.replace("\e", "_")
-    name = name.replace("\0", "_")
-    name = name.replace("\x0b", "_")
-    name = name.replace("\x0c", "_")
-    name = name.replace("\x0e", "_")
-    name = name.replace("\x0f", "_")
-    name = name.replace("\x10", "_")
-    name = name.replace("\x11", "_")
-    name = name.replace("\x12", "_")
-    name = name.replace("\x13", "_")
-    name = name.replace("\x14", "_")
-    name = name.replace("\x15", "_")
-    name = name.replace("\x16", "_")
-    name = name.replace("\x17", "_")
-    name = name.replace("\x18", "_")
-    name = name.replace("\x19", "_")
-    name = name.replace("\x1a", "_")
-    name = name.replace("\x1b", "_")
-    name = name.replace("\x1c", "_")
-    name = name.replace("\x1d", "_")
-    name = name.replace("\x1e", "_")
-    name = name.replace("\x1f", "_")
-
-    name = name.replace("ä", "ae")
-    name = name.replace("ö", "oe")
-    name = name.replace("ü", "ue")
-    name = name.replace("Ä", "Ae")
-    name = name.replace("Ö", "Oe")
-    name = name.replace("Ü", "Ue")
-    name = name.replace("ß", "ss")
-    name = name.replace("À", "A")
-    name = name.replace("Á", "A")
-    name = name.replace("Â", "A")
-    name = name.replace("Ã", "A")
-    name = name.replace("Ä", "A")
-    name = name.replace("Å", "A")
-    name = name.replace("Æ", "A")
-    name = name.replace("Ç", "C")
-    name = name.replace("È", "E")
-    name = name.replace("É", "E")
-    name = name.replace("Ê", "E")
-    name = name.replace("Ë", "E")
-    name = name.replace("Ì", "I")
-    name = name.replace("Í", "I")
-    name = name.replace("Î", "I")
-    name = name.replace("Ï", "I")
-    name = name.replace("Ñ", "N")
-    name = name.replace("Ò", "O")
-    name = name.replace("Ó", "O")
-    name = name.replace("Ô", "O")
-    name = name.replace("Õ", "O")
-    name = name.replace("Ö", "O")
-    name = name.replace("Ø", "O")
-    name = name.replace("Ù", "U")
-    name = name.replace("Ú", "U")
-    name = name.replace("Û", "U")
-    name = name.replace("Ü", "U")
-    name = name.replace("Ý", "Y")
-    name = name.replace("à", "a")
-    name = name.replace("á", "a")
-    name = name.replace("â", "a")
-    name = name.replace("ã", "a")
-    name = name.replace("@", "at")
-    name = name.replace("€", "EURO")
-    name = name.replace("$", "USD")
-    name = name.replace("£", "GBP")
-    name = name.replace("¥", "JPY")
-    name = name.replace("¤", "USD")
-    name = name.replace("¦", "B")
-    name = name.replace("§", "S")
-    name = name.replace("©", "C")
-    name = name.replace("ª", "A")
-    name = name.replace("«", "<<")
-    name = name.replace("¬", "!")
-    name = name.replace("­", "-")
-    name = name.replace("®", "R")
-    name = name.replace("¯", "^")
-    name = name.replace("°", "o")
-    name = name.replace("±", "+")
-    name = name.replace("²", "2")
-    name = name.replace("³", "3")
-    name = name.replace("´", "'")
-    name = name.replace("µ", "u")
+   
+   
+    
+    P = 'USD'
+    O = 'C'
+    N = '\xc3\x9c'
+    M = '\xc3\x96'
+    L = '\xc3\x84'
+    K = '\x0c'
+    J = '\x0b'
+    I = '-'
+    H = 'a'
+    G = 'U'
+    F = 'I'
+    E = 'E'
+    D = 'O'
+    C = 'A'
+    B = '_'
+    A = name
+    A = A.replace('/', B)
+    A = A.replace('=', I)
+    A = A.replace(':', B)
+    A = A.replace('*', B)
+    A = A.replace('<', B)
+    A = A.replace('>', B)
+    A = A.replace('?', B)
+    A = A.replace('"', B)
+    A = A.replace('\\', B)
+    A = A.replace('|', B)
+    A = A.replace('.', B)
+    A = A.replace(' ', B)
+    A = A.replace('\n', B)
+    A = A.replace('\t', B)
+    A = A.replace('\r', B)
+    A = A.replace(J, B)
+    A = A.replace(K, B)
+    A = A.replace('\x08', B)
+    A = A.replace('\x07', B)
+    A = A.replace('\\e', B)
+    A = A.replace('\x00', B)
+    A = A.replace(J, B)
+    A = A.replace(K, B)
+    A = A.replace('\x0e', B)
+    A = A.replace('\x0f', B)
+    A = A.replace('\x10', B)
+    A = A.replace('\x11', B)
+    A = A.replace('\x12', B)
+    A = A.replace('\x13', B)
+    A = A.replace('\x14', B)
+    A = A.replace('\x15', B)
+    A = A.replace('\x16', B)
+    A = A.replace('\x17', B)
+    A = A.replace('\x18', B)
+    A = A.replace('\x19', B)
+    A = A.replace('\x1a', B)
+    A = A.replace('\x1b', B)
+    A = A.replace('\x1c', B)
+    A = A.replace('\x1d', B)
+    A = A.replace('\x1e', B)
+    A = A.replace('\x1f', B)
+    A = A.replace('\xc3\xa4', 'ae')
+    A = A.replace('\xc3\xb6', 'oe')
+    A = A.replace('\xc3\xbc', 'ue')
+    A = A.replace(L, 'Ae')
+    A = A.replace(M, 'Oe')
+    A = A.replace(N, 'Ue')
+    A = A.replace('\xc3\x9f', 'ss')
+    A = A.replace('\xc3\x80', C)
+    A = A.replace('\xc3\x81', C)
+    A = A.replace('\xc3\x82', C)
+    A = A.replace('\xc3\x83', C)
+    A = A.replace(L, C)
+    A = A.replace('\xc3\x85', C)
+    A = A.replace('\xc3\x86', C)
+    A = A.replace('\xc3\x87', O)
+    A = A.replace('\xc3\x88', E)
+    A = A.replace('\xc3\x89', E)
+    A = A.replace('\xc3\x8a', E)
+    A = A.replace('\xc3\x8b', E)
+    A = A.replace('\xc3\x8c', F)
+    A = A.replace('\xc3\x8d', F)
+    A = A.replace('\xc3\x8e', F)
+    A = A.replace('\xc3\x8f', F)
+    A = A.replace('\xc3\x91', 'N')
+    A = A.replace('\xc3\x92', D)
+    A = A.replace('\xc3\x93', D)
+    A = A.replace('\xc3\x94', D)
+    A = A.replace('\xc3\x95', D)
+    A = A.replace(M, D)
+    A = A.replace('\xc3\x98', D)
+    A = A.replace('\xc3\x99', G)
+    A = A.replace('\xc3\x9a', G)
+    A = A.replace('\xc3\x9b', G)
+    A = A.replace(N, G)
+    A = A.replace('\xc3\x9d', 'Y')
+    A = A.replace('\xc3\xa0', H)
+    A = A.replace('\xc3\xa1', H)
+    A = A.replace('\xc3\xa2', H)
+    A = A.replace('\xc3\xa3', H)
+    A = A.replace('@', 'at')
+    A = A.replace('\xe2\x82\xac', 'EURO')
+    A = A.replace('$', P)
+    A = A.replace('\xc2\xa3', 'GBP')
+    A = A.replace('\xc2\xa5', 'JPY')
+    A = A.replace('\xc2\xa4', P)
+    A = A.replace('\xc2\xa6', 'B')
+    A = A.replace('\xc2\xa7', 'S')
+    A = A.replace('\xc2\xa9', O)
+    A = A.replace('\xc2\xaa', C)
+    A = A.replace('\xc2\xab', '<<')
+    A = A.replace('\xc2\xac', '!')
+    A = A.replace('\xad', I)
+    A = A.replace('\xc2\xae', 'R')
+    A = A.replace('\xc2\xaf', '^')
+    A = A.replace('\xc2\xb0', 'o')
+    A = A.replace('\xc2\xb1', '+')
+    A = A.replace('\xc2\xb2', '2')
+    A = A.replace('\xc2\xb3', '3')
+    A = A.replace('\xc2\xb4', "'")
+    A = A.replace('\xc2\xb5', 'u')
+    name = A
 
     # use regex to replace all non-alphanumeric characters with _
     name = re.sub(r"[^a-zA-Z0-9]", "_", name)
@@ -1124,7 +1137,7 @@ def actions(action: str):
     # ARMOR After this, the status of the player with the role of the Armor is set to action
     elif action == "armor_aktion":
         setze_status_fuer_rolle("Armor", "2")
-
+        
     elif action == "armor_warten":
         setze_status_fuer_rolle("Armor", "5")
 
@@ -1143,7 +1156,7 @@ def actions(action: str):
     # SEHERIN The seherin is set to action
     elif action == "seherin_aktion":
         setze_status_fuer_rolle("Seherin", "2")
-
+    
     elif action == "seherin_warten":
         setze_status_fuer_rolle("Seherin", "5")
 
@@ -1153,9 +1166,10 @@ def actions(action: str):
     elif action == "werwolf_abstimmung":
         setze_status_fuer_rolle("Werwolf", "2")
     # WERWOLF All werewolves are set to  action
-
+    
     elif action == "werwolf_warten":
-        setze_status_fuer_rolle("Werwolf", "5")
+        setze_status_fuer_rolle("Werwolf", "5")    
+    
 
     # All werewolves are set to sleep
     elif action == "werwolf_schlafen":
@@ -1197,4 +1211,7 @@ def erhalte_ziel(token: str):
     elif status == "4":
         return f"/{name}/{rolle}/info_der_verliebten"
     elif status == "5":
-        return f"/{name}/{rolle}/warten_auf_andere_spieler"
+        return f"/{name}/{rolle}/warten_auf_andere_spieler"  
+    
+
+

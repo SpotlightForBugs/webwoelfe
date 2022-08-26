@@ -1,3 +1,4 @@
 *********************
 Armor_pls = Hexe
 Ar_ = Seherin
+Dss__ = Erzaehler

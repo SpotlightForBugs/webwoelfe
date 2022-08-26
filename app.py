@@ -1033,6 +1033,11 @@ def weiterleitung(target):
     return render_template("weiterleitung.html", target=target)
 
 
+@app.route("/<name>/<rolle>/info_der_verliebten")
+def verliebte_info(name, rolle):
+    return werwolf.verliebte_ausgeben()
+
+
 @app.route("/<name>/<rolle>/<auswahl>/wer_tot")
 def wer_tot(name, rolle, auswahl):
     """
@@ -1182,6 +1187,14 @@ def heilen(name, rolle, auswahl):
     return render_template("fehler.html"), 500
 
 
+@app.route("/<name>/<rolle>/warten_auf_andere_spieler")
+def auf_andere_warten(name, rolle):
+    if werwolf.validiere_rolle(name, rolle) is True:
+        return render_template(
+            "Dashboards/status/auf_andere_warten.html", name=name, rolle=rolle
+        )
+
+
 # TODO: #76 Sicherheitsabfrage bei der Anzeige des Logs
 @app.route("/log")
 def log_ansehen():
@@ -1191,17 +1204,27 @@ def log_ansehen():
     :return: The logfile
 
     """
-    with open("logfile.txt", "r", encoding="UTF8") as file:
-        # put the file into a list
-        file_list = []
-        for line in file:
-            file_list.append(line)
-        # print the list
-        print(file_list)
-        # return the list
 
-        return render_template("log.html", log=file_list)
+    value_of_cookie_token = request.cookies.get("token")
+    token = value_of_cookie_token
+    
+    if  werwolf.name_und_rolle_aus_token(token) and "Erzaehler" in werwolf.name_und_rolle_aus_token(token):
+        
+    
 
+
+        with open("logfile.txt", "r", encoding="UTF8") as file:
+            # put the file into a list
+            file_list = []
+            for line in file:
+                file_list.append(line)
+            # print the list
+            
+            # return the list
+
+            return render_template("log.html", log=file_list)
+
+    return render_template("403.html"), 403
 
 @app.route("/<token>/zum_ziel")
 def zum_ziel(token: str):

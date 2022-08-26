@@ -1,7 +1,2 @@
-Welt = Erzaehler
-Klobert = Werwolf
-Klo_oder_kein = Armor
-Drewr = Werwolf
-Etre = Dorfbewohner
-Fes = Dorfbewohner
-Ewe = Jaeger
+Armor_pls = Hexe
+Ar_ = Seherin

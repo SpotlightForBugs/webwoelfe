@@ -1,7 +1,2 @@
-+3b4f374ca937b85c1758318f9c825760+Welt+Erzaehler+1+ 
-+e42e50d87d4bb9eeab1952cd8699a02b+Klobert+Werwolf+1+ 
-+f6b5a3229566f8164cbede22ba60c296+Klo_oder_kein+Armor+1+ 
-+d0c5cc2e14d95302e04d1ee7f6eb7663+Drewr+Werwolf+1+ 
-+c47cf9c1d74e05cbeb533fec6013e199+Etre+Dorfbewohner+1+ 
-+bfa5515a75274b7774e47ff22f69f5f7+Fes+Dorfbewohner+1+ 
-+439d2ae654f0af645813f45236f7abdd+Ewe+Jaeger+1+ 
++3a2d66152a535614f2c17accedfbfd5e+Armor_pls+Hexe+1+ 
++101c23c2a6b0f8ab1da34ed62fe882dc+Ar_+Seherin+1+ 

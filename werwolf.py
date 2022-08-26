@@ -216,7 +216,7 @@ def hexe_verbraucht(flag: str):
                 hexe_kann_schreiben.write(hexe_kann_text)
                 hexe_kann_schreiben.close()
         else:
-            raise ValueError("Die Hexe kann nur über die flags 1 oder 2 verfügen")
+            actions("")
 
     # heilen --> 1
     # toeten --> 2
@@ -848,9 +848,9 @@ def validiere_token(token: str) -> bool:
         return False
 
 
-def name_und_rollen_aus_token(token: str):
+def name_und_rolle_aus_token(token: str):
     """
-    The name_und_rollen_aus_token function takes a token as input and returns the name and role of the user who has this token.
+    The name_und_rolle_aus_token function takes a token as input and returns the name and role of the user who has this token.
     The function reads the file tokens.txt, checks if the given token is in this file and splits it at every + to return
     the name and role of that user.
 
@@ -1113,15 +1113,20 @@ def setze_status_fuer_alle(status: str):
 def actions(action: str):
     # es gibt verschiedene Stadien in denen sich ein Spieler befinden kann. Er kann schlafen, tot sein,eine information bekommen, eine Aktion haben oder Abstimmung haben.
     # Die Funktionen setze_status_fuer_rolle, setze_status_fuer_name und setze_status setzen den Status eines Spielers auf einen der oben genannten Stadien.
-    # The following order is used: 0 = dead, 1 = sleep, 2 = action, 3 = vote, 4 = information
+    # The following order is used: 0 = dead, 1 = sleep, 2 = action, 3 = vote, 4 = information, 5 = idle
 
     if action == "alle_schlafen":
         setze_status_fuer_alle("1")
+    elif action == "alle_warten":
+        setze_status_fuer_alle("5")
     # STARTUP On startup, the status of all players is set to sleeping
 
     # ARMOR After this, the status of the player with the role of the Armor is set to action
     elif action == "armor_aktion":
         setze_status_fuer_rolle("Armor", "2")
+
+    elif action == "armor_warten":
+        setze_status_fuer_rolle("Armor", "5")
 
     elif action == "armor_schlafen":
         setze_status_fuer_rolle("Armor", "1")
@@ -1139,12 +1144,18 @@ def actions(action: str):
     elif action == "seherin_aktion":
         setze_status_fuer_rolle("Seherin", "2")
 
+    elif action == "seherin_warten":
+        setze_status_fuer_rolle("Seherin", "5")
+
     elif action == "seherin_schlafen":
         setze_status_fuer_rolle("Seherin", "1")
 
     elif action == "werwolf_abstimmung":
         setze_status_fuer_rolle("Werwolf", "2")
-    # WERWOLF All werewolves are set to  vote
+    # WERWOLF All werewolves are set to  action
+
+    elif action == "werwolf_warten":
+        setze_status_fuer_rolle("Werwolf", "5")
 
     # All werewolves are set to sleep
     elif action == "werwolf_schlafen":
@@ -1153,6 +1164,8 @@ def actions(action: str):
     # The witch is set to action
     elif action == "hexe_aktion":
         setze_status_fuer_rolle("Hexe", "2")
+    elif action == "hexe_warten":
+        setze_status_fuer_rolle("Hexe", "5")
     # The witch is set to sleep
     elif action == "hexe_schlafen":
         setze_status_fuer_rolle("Hexe", "1")
@@ -1171,7 +1184,7 @@ def erhalte_ziel(token: str):
     # 3. get the status of the token
     status = status_aus_token(token)
 
-    #  0 = dead, 1 = sleep, 2 = action, 3 = vote, 4 = information
+    #  0 = dead, 1 = sleep, 2 = action, 3 = vote, 4 = information der verliebten, 5 = idle
 
     if status == "0":
         return f'"/{name}/{rolle}/_/tot"'
@@ -1182,7 +1195,6 @@ def erhalte_ziel(token: str):
     elif status == "3":
         return f"/{name}/{rolle}/Dashboard"
     elif status == "4":
-        return f"/{name}/{rolle}/info"
-    
-
-
+        return f"/{name}/{rolle}/info_der_verliebten"
+    elif status == "5":
+        return f"/{name}/{rolle}/warten_auf_andere_spieler"

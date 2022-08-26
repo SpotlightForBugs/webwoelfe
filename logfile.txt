@@ -1,262 +1,30 @@
-18:04:23 >> Neues Spiel gestartet
-18:04:28 >> Spieleranzahl: auf 12 gesetzt
-18:04:31 >> index geöffnet
-18:04:33 >> Neuer Spieler Welt hat die Rolle Erzaehler
-18:06:26 >> index geöffnet
-18:06:29 >> Neuer Spieler Klobert hat die Rolle Werwolf
-18:07:29 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:12 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:13 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:13 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:14 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:14 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:14 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:15 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:15 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:15 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:16 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:16 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:16 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:17 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-18:09:17 >> Dashboard der Rolle Werwolf für Klobert mit Rolle Werwolf angezeigt
-19:38:23 >> index geöffnet
-19:38:31 >> Neuer Spieler Klo_oder_kein hat die Rolle Armor
-19:38:33 >> Armor Dashboard für Klo_oder_kein mit Rolle Armor angezeigt
-19:39:25 >> Armor Dashboard für Klo_oder_kein mit Rolle Armor angezeigt
-19:39:25 >> Schlafen für Klo_oder_kein mit Rolle Armor angezeigt
-19:39:26 >> Armor Dashboard für Klo_oder_kein mit Rolle Armor angezeigt
-19:39:26 >> Schlafen für Klo_oder_kein mit Rolle Armor angezeigt
-19:39:44 >> Schlafen für Klo_oder_kein mit Rolle Armor angezeigt
-19:39:48 >> Schlafen für Klo_oder_kein mit Rolle Armor angezeigt
-19:40:39 >> Armor Dashboard für Klo_oder_kein mit Rolle Armor angezeigt
-19:40:39 >> Schlafen für Klo_oder_kein mit Rolle Armor angezeigt
-19:40:45 >> Armor Dashboard für Klo_oder_kein mit Rolle Armor angezeigt
-19:40:45 >> Schlafen für Klo_oder_kein mit Rolle Armor angezeigt
-19:40:55 >> index geöffnet
-19:40:56 >> einstellungen geöffnet
-19:40:56 >> Schlafen für Klo_oder_kein mit Rolle Armor angezeigt
-19:40:57 >> Erzähler geöffnet
-19:41:07 >> Erzähler geöffnet
-19:41:17 >> Erzähler geöffnet
-19:41:27 >> Erzähler geöffnet
-19:41:30 >> index geöffnet
-19:41:40 >> index geöffnet
-19:41:45 >> Neuer Spieler Drewr hat die Rolle Werwolf
-19:41:46 >> Schlafen für Drewr mit Rolle Werwolf angezeigt
-19:43:20 >> Schlafen für Drewr mit Rolle Werwolf angezeigt
-19:43:21 >> Schlafen für Drewr mit Rolle Werwolf angezeigt
-19:52:07 >> index geöffnet
-19:52:09 >> index geöffnet
-19:52:13 >> Neuer Spieler Etre hat die Rolle Dorfbewohner
-19:52:13 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:13 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:14 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:14 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:14 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:15 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:15 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:15 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:15 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:15 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:16 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:16 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:16 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:16 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:16 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:16 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:16 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:17 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:17 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:17 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:18 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:18 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:20 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:20 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:20 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:20 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:20 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:20 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:21 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:21 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:21 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:21 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:21 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:22 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:23 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:23 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:23 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:24 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:24 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:52:24 >> Schlafen für Etre mit Rolle Dorfbewohner angezeigt
-19:53:24 >> index geöffnet
-19:53:34 >> index geöffnet
-19:53:34 >> index geöffnet
-19:53:39 >> Neuer Spieler Fes hat die Rolle Dorfbewohner
-19:53:39 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:39 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:39 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:39 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:39 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:40 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:41 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:41 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:41 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:41 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:41 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:41 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:41 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:41 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:42 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:42 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:42 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:42 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:42 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:42 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:43 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:43 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:43 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:43 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:43 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:43 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:43 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:43 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:43 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:43 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:44 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:44 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:44 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:44 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:44 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:44 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:44 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:44 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:44 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:44 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:45 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:45 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:45 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:45 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:45 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:45 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:46 >> index geöffnet
-19:53:46 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:46 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:46 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:46 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:46 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:46 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:46 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:46 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:47 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:47 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:47 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:47 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:47 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:48 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:48 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:48 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:48 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:48 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:48 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:48 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:49 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:49 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:49 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:49 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:49 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:49 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:49 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:49 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:49 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:50 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:50 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:50 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:50 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:50 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:50 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:50 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:50 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:51 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:51 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:51 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:51 >> Schlafen für Fes mit Rolle Dorfbewohner angezeigt
-19:53:55 >> index geöffnet
-19:54:05 >> index geöffnet
-19:54:15 >> index geöffnet
-19:54:25 >> index geöffnet
-19:54:35 >> index geöffnet
-19:54:45 >> index geöffnet
-19:54:55 >> index geöffnet
-19:55:05 >> index geöffnet
-19:55:15 >> index geöffnet
-19:55:25 >> index geöffnet
-19:55:35 >> index geöffnet
-19:55:45 >> index geöffnet
-19:55:56 >> index geöffnet
-19:56:06 >> index geöffnet
-19:56:16 >> index geöffnet
-19:56:26 >> index geöffnet
-19:56:31 >> index geöffnet
-19:56:33 >> Neuer Spieler Ewe hat die Rolle Jaeger
-19:56:33 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:33 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:33 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:33 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:34 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:40 >> Erzähler geöffnet
-19:56:45 >> Erzähler geöffnet
-19:56:48 >> Erzähler geöffnet
-19:56:54 >> einstellungen geöffnet
-19:56:54 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:54 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:54 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:54 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:54 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:56 >> index geöffnet
-19:56:57 >> einstellungen geöffnet
-19:56:57 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:57 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:57 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:58 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:58 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:56:59 >> Erzähler geöffnet
-19:57:00 >> einstellungen geöffnet
-19:57:00 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:00 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:00 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:00 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:00 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:01 >> einstellungen geöffnet
-19:57:01 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:01 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:01 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:02 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:02 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:02 >> einstellungen geöffnet
-19:57:03 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:03 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:03 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:03 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:03 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:03 >> einstellungen geöffnet
-19:57:03 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:03 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:04 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:04 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:04 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:04 >> einstellungen geöffnet
-19:57:04 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:04 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:05 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:05 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
-19:57:05 >> Schlafen für Ewe mit Rolle Jaeger angezeigt
+20:18:34 >> Neues Spiel gestartet
+20:29:34 >> index geöffnet
+20:29:44 >> index geöffnet
+20:29:54 >> index geöffnet
+20:29:55 >> index geöffnet
+20:30:02 >> Neuer Spieler Armor_pls hat die Rolle Hexe
+20:30:06 >> index geöffnet
+20:30:09 >> Neuer Spieler Ar_ hat die Rolle Seherin
+20:30:10 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:30:10 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:30:10 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:30:10 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:30:10 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:37:29 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:37:29 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:37:29 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:47:56 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:47:56 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:47:56 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:47:57 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:47:57 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:47:57 >> Schlafen für Armor_pls mit Rolle Hexe angezeigt
+20:51:17 >> index geöffnet
+20:51:27 >> index geöffnet
+20:51:37 >> index geöffnet
+20:51:47 >> index geöffnet
+20:51:57 >> index geöffnet
+20:52:07 >> index geöffnet
+20:52:17 >> index geöffnet
+20:52:27 >> index geöffnet

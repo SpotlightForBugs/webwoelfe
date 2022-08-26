@@ -1195,7 +1195,7 @@ def auf_andere_warten(name, rolle):
         )
 
 
-# TODO: #76 Sicherheitsabfrage bei der Anzeige des Logs
+
 @app.route("/log")
 def log_ansehen():
     """

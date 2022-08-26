@@ -1210,7 +1210,7 @@ def zum_ziel(token: str):
             return redirect(werwolf.erhalte_ziel(token))
         except AttributeError:
 
-            return "Fehler", 500
+            return render_template("403.html"), 403
 
 
 @app.route("/noscript")

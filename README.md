@@ -3,12 +3,14 @@
 [![CodeQL](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml)
 [![DeepSource](https://deepsource.io/gh/SpotlightForBugs/webwoelfe.svg/?label=active+issues&show_trend=true&token=38zI19NiOksAJX_tvxXBxqt4)](https://deepsource.io/gh/SpotlightForBugs/webwoelfe/?ref=repository-badge)
 [![DeepSource](https://deepsource.io/gh/SpotlightForBugs/webwoelfe.svg/?label=resolved+issues&show_trend=true&token=38zI19NiOksAJX_tvxXBxqt4)](https://deepsource.io/gh/SpotlightForBugs/webwoelfe/?ref=repository-badge)
+[![CodeScene System Mastery](https://codescene.io/projects/29010/status-badges/system-mastery)](https://codescene.io/projects/29010)
 
 ---
 
 ![All](https://badgen.net/github/checks/SpotlightForBugs/webwoelfe)
 ![GitHub tag](https://img.shields.io/github/tag/SpotlightForBugs/webwoelfe?include_prereleases=&sort=semver&color=blue)
 [![issues - webwoelfe](https://img.shields.io/github/issues/SpotlightForBugs/webwoelfe)](https://github.com/SpotlightForBugs/webwoelfe/issues)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe?ref=badge_shield)
 
 ---
 
@@ -79,3 +81,7 @@ Answer 2
 ## License
 
 [GNU General Public License v3.0](https://github.com/SpotlightForBugs/webwoelfe/blob/Pro/LICENSE)
+
+---
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe?ref=badge_large)

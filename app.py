@@ -1207,11 +1207,10 @@ def log_ansehen():
 
     value_of_cookie_token = request.cookies.get("token")
     token = value_of_cookie_token
-    
-    if  werwolf.name_und_rolle_aus_token(token) and "Erzaehler" in werwolf.name_und_rolle_aus_token(token):
-        
-    
 
+    if werwolf.name_und_rolle_aus_token(
+        token
+    ) and "Erzaehler" in werwolf.name_und_rolle_aus_token(token):
 
         with open("logfile.txt", "r", encoding="UTF8") as file:
             # put the file into a list
@@ -1219,12 +1218,13 @@ def log_ansehen():
             for line in file:
                 file_list.append(line)
             # print the list
-            
+
             # return the list
 
             return render_template("log.html", log=file_list)
 
     return render_template("403.html"), 403
+
 
 @app.route("/<token>/zum_ziel")
 def zum_ziel(token: str):

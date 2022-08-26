@@ -1,316 +1,112 @@
-18:22:21 >> Neues Spiel gestartet
-18:22:31 >> Spieleranzahl: auf 18 gesetzt
-18:22:33 >> index geöffnet
-18:22:40 >> Neuer Spieler Gki hat die Rolle Seherin
-18:27:56 >> index geöffnet
-18:27:59 >> Neuer Spieler Klo hat die Rolle Hexe
-18:28:13 >> index geöffnet
-18:28:16 >> Neuer Spieler Hallo hat die Rolle Werwolf
-18:29:01 >> index geöffnet
-18:29:04 >> Neuer Spieler Fdg hat die Rolle Dorfbewohner
-18:30:20 >> index geöffnet
-18:30:22 >> index geöffnet
-18:30:24 >> Neuer Spieler Eew hat die Rolle Armor
-18:30:50 >> index geöffnet
-18:31:22 >> Neuer Spieler Fdzhfd hat die Rolle Erzaehler
-18:31:50 >> index geöffnet
-18:31:54 >> Neuer Spieler Jolkhjuno hat die Rolle Dorfbewohner
-18:34:18 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-18:34:22 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-18:36:38 >> index geöffnet
-18:36:46 >> Neuer Spieler Hallo_cookie hat die Rolle Werwolf
-18:36:51 >> Neuer Spieler Hallocookie hat die Rolle Werwolf
-18:41:11 >> index geöffnet
-18:41:14 >> Neuer Spieler Re hat die Rolle Werwolf
-18:41:43 >> Dashboard der Rolle Werwolf für Re mit Rolle Werwolf angezeigt
-18:41:51 >> Dashboard der Rolle Werwolf für Re mit Rolle Werwolf angezeigt
-18:41:51 >> Dashboard der Rolle Werwolf für Re mit Rolle Werwolf angezeigt
-18:55:51 >> index geöffnet
-18:55:52 >> index geöffnet
-18:55:53 >> index geöffnet
-18:55:54 >> index geöffnet
-18:55:55 >> index geöffnet
-18:55:56 >> index geöffnet
-18:55:57 >> index geöffnet
-18:55:58 >> index geöffnet
-18:55:59 >> index geöffnet
-18:56:00 >> index geöffnet
-18:56:01 >> index geöffnet
-18:56:02 >> index geöffnet
-18:56:03 >> index geöffnet
-18:56:04 >> index geöffnet
-18:56:05 >> index geöffnet
-18:56:06 >> index geöffnet
-18:56:07 >> index geöffnet
-18:56:08 >> index geöffnet
-18:56:09 >> index geöffnet
-18:56:10 >> index geöffnet
-18:56:11 >> index geöffnet
-18:56:12 >> index geöffnet
-18:56:13 >> index geöffnet
-18:56:14 >> index geöffnet
-18:56:15 >> index geöffnet
-18:56:16 >> index geöffnet
-18:56:17 >> index geöffnet
-18:56:18 >> index geöffnet
-18:56:19 >> index geöffnet
-18:56:20 >> index geöffnet
-18:56:21 >> index geöffnet
-18:56:22 >> index geöffnet
-18:56:23 >> index geöffnet
-18:56:24 >> index geöffnet
-18:56:25 >> index geöffnet
-18:56:26 >> index geöffnet
-18:56:27 >> index geöffnet
-18:56:28 >> index geöffnet
-18:56:29 >> index geöffnet
-18:56:30 >> index geöffnet
-18:56:31 >> index geöffnet
-18:56:32 >> index geöffnet
-18:56:33 >> index geöffnet
-18:56:34 >> index geöffnet
-18:56:35 >> index geöffnet
-18:56:36 >> index geöffnet
-18:56:37 >> index geöffnet
-18:56:38 >> index geöffnet
-18:56:39 >> index geöffnet
-18:56:40 >> index geöffnet
-18:56:41 >> index geöffnet
-18:56:42 >> index geöffnet
-18:56:43 >> index geöffnet
-18:56:44 >> index geöffnet
-18:56:45 >> index geöffnet
-18:56:47 >> index geöffnet
-18:56:48 >> index geöffnet
-18:56:49 >> index geöffnet
-18:56:50 >> index geöffnet
-18:56:51 >> index geöffnet
-18:56:52 >> index geöffnet
-18:56:53 >> index geöffnet
-18:56:54 >> index geöffnet
-18:56:55 >> index geöffnet
-18:56:56 >> index geöffnet
-18:56:57 >> index geöffnet
-18:56:58 >> index geöffnet
-18:57:14 >> index geöffnet
-18:57:14 >> index geöffnet
-18:57:14 >> index geöffnet
-18:57:14 >> index geöffnet
-18:57:14 >> index geöffnet
-18:57:14 >> index geöffnet
-18:57:15 >> index geöffnet
-18:57:16 >> index geöffnet
-18:57:17 >> index geöffnet
-18:57:18 >> index geöffnet
-18:57:19 >> index geöffnet
-18:57:20 >> index geöffnet
-18:57:21 >> index geöffnet
-18:57:22 >> index geöffnet
-18:57:23 >> index geöffnet
-18:57:24 >> index geöffnet
-18:57:25 >> index geöffnet
-18:57:26 >> index geöffnet
-18:57:27 >> index geöffnet
-18:57:28 >> index geöffnet
-18:57:29 >> index geöffnet
-18:57:30 >> index geöffnet
-18:57:31 >> index geöffnet
-18:57:32 >> index geöffnet
-18:57:33 >> index geöffnet
-18:57:34 >> index geöffnet
-18:57:35 >> index geöffnet
-18:57:36 >> index geöffnet
-18:57:37 >> index geöffnet
-18:57:38 >> index geöffnet
-18:57:39 >> index geöffnet
-18:57:40 >> index geöffnet
-18:57:41 >> index geöffnet
-18:57:42 >> index geöffnet
-18:57:43 >> index geöffnet
-18:57:44 >> index geöffnet
-18:57:45 >> index geöffnet
-18:57:46 >> index geöffnet
-18:57:47 >> index geöffnet
-18:57:48 >> index geöffnet
-18:57:49 >> index geöffnet
-18:57:50 >> index geöffnet
-18:57:51 >> index geöffnet
-18:57:52 >> index geöffnet
-18:57:53 >> index geöffnet
-18:57:54 >> index geöffnet
-18:57:55 >> index geöffnet
-18:57:56 >> index geöffnet
-18:57:57 >> index geöffnet
-18:57:58 >> index geöffnet
-18:57:59 >> index geöffnet
-18:58:00 >> index geöffnet
-18:58:01 >> index geöffnet
-18:58:03 >> index geöffnet
-18:58:04 >> index geöffnet
-18:58:05 >> index geöffnet
-18:58:06 >> index geöffnet
-18:58:07 >> index geöffnet
-18:58:08 >> index geöffnet
-18:58:09 >> index geöffnet
-18:58:10 >> index geöffnet
-18:58:11 >> index geöffnet
-18:58:12 >> index geöffnet
-18:58:13 >> index geöffnet
-18:58:14 >> index geöffnet
-18:58:15 >> index geöffnet
-18:58:16 >> index geöffnet
-18:58:17 >> index geöffnet
-18:58:18 >> index geöffnet
-18:58:19 >> index geöffnet
-18:58:20 >> index geöffnet
-18:58:21 >> index geöffnet
-18:58:22 >> index geöffnet
-18:58:23 >> index geöffnet
-18:58:24 >> index geöffnet
-18:58:25 >> index geöffnet
-18:58:26 >> index geöffnet
-18:58:27 >> index geöffnet
-18:58:28 >> index geöffnet
-18:58:29 >> index geöffnet
-18:58:29 >> index geöffnet
-18:58:30 >> index geöffnet
-18:58:31 >> index geöffnet
-18:58:32 >> index geöffnet
-18:58:33 >> index geöffnet
-18:58:34 >> index geöffnet
-18:58:35 >> index geöffnet
-18:58:37 >> index geöffnet
-18:58:38 >> index geöffnet
-18:58:39 >> index geöffnet
-18:58:40 >> index geöffnet
-18:58:41 >> index geöffnet
-18:58:42 >> index geöffnet
-18:58:43 >> index geöffnet
-18:58:45 >> index geöffnet
-18:58:46 >> index geöffnet
-18:58:47 >> index geöffnet
-18:58:48 >> index geöffnet
-18:58:49 >> index geöffnet
-18:58:50 >> index geöffnet
-18:58:51 >> index geöffnet
-18:58:52 >> index geöffnet
-18:58:53 >> index geöffnet
-18:58:54 >> index geöffnet
-18:58:55 >> index geöffnet
-18:58:56 >> index geöffnet
-18:58:57 >> index geöffnet
-18:58:58 >> index geöffnet
-18:58:59 >> index geöffnet
-18:59:00 >> index geöffnet
-18:59:01 >> index geöffnet
-18:59:02 >> index geöffnet
-18:59:03 >> index geöffnet
-18:59:04 >> index geöffnet
-18:59:05 >> index geöffnet
-18:59:06 >> index geöffnet
-18:59:07 >> index geöffnet
-18:59:08 >> index geöffnet
-18:59:09 >> index geöffnet
-18:59:10 >> index geöffnet
-18:59:11 >> index geöffnet
-18:59:12 >> index geöffnet
-18:59:13 >> index geöffnet
-18:59:14 >> index geöffnet
-18:59:15 >> index geöffnet
-18:59:16 >> index geöffnet
-18:59:17 >> index geöffnet
-18:59:19 >> index geöffnet
-18:59:20 >> index geöffnet
-18:59:21 >> index geöffnet
-18:59:22 >> index geöffnet
-19:00:06 >> Erzähler geöffnet
-19:00:06 >> index geöffnet
-19:00:06 >> index geöffnet
-19:00:06 >> index geöffnet
-19:00:06 >> index geöffnet
-19:00:08 >> Erzähler geöffnet
-19:00:09 >> Erzähler geöffnet
-19:00:10 >> Erzähler geöffnet
-19:00:11 >> Erzähler geöffnet
-19:00:12 >> Erzähler geöffnet
-19:00:13 >> Erzähler geöffnet
-19:00:14 >> Erzähler geöffnet
-19:00:15 >> Erzähler geöffnet
-19:00:16 >> Erzähler geöffnet
-19:00:17 >> Erzähler geöffnet
-19:00:18 >> Erzähler geöffnet
-19:00:19 >> Erzähler geöffnet
-19:00:20 >> Erzähler geöffnet
-19:00:21 >> Erzähler geöffnet
-19:00:22 >> Erzähler geöffnet
-19:00:23 >> Erzähler geöffnet
-19:00:24 >> Erzähler geöffnet
-19:00:25 >> Erzähler geöffnet
-19:00:26 >> Erzähler geöffnet
-19:00:27 >> Erzähler geöffnet
-19:00:28 >> Erzähler geöffnet
-19:00:29 >> Erzähler geöffnet
-19:00:30 >> Erzähler geöffnet
-19:00:47 >> Erzähler geöffnet
-19:00:47 >> Erzähler geöffnet
-19:00:47 >> Erzähler geöffnet
-19:00:47 >> Erzähler geöffnet
-19:00:47 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:00:47 >> Erzähler geöffnet
-19:00:51 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:00:55 >> Wahl getätigt für Jolkhjuno mit Rolle Dorfbewohner angezeigt, auswahl: Fdg
-19:01:01 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:08:47 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:08:52 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:08:56 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:09:22 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:09:24 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:09:25 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:09:26 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:09:27 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:09:28 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:09:29 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:09:30 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:09:31 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:10:24 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:10:24 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:10:24 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:10:24 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:10:24 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:10:24 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:10:25 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:10:26 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:10:26 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:10:30 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:11:14 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:11:16 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:11:23 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:11:30 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:11:49 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:11:51 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:12:36 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:13:27 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:13:31 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:14:06 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:16:31 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:17:02 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-19:17:13 >> Dashboard der Rolle Dorfbewohner für Jolkhjuno mit Rolle Dorfbewohner angezeigt
-15:09:16 >> index geöffnet
-15:09:23 >> index geöffnet
-15:09:33 >> index geöffnet
-15:09:43 >> index geöffnet
-15:09:53 >> index geöffnet
-15:10:03 >> index geöffnet
-15:10:13 >> index geöffnet
-15:10:23 >> index geöffnet
-15:10:33 >> index geöffnet
-15:10:43 >> index geöffnet
-15:11:18 >> index geöffnet
-15:11:20 >> Neuer Spieler _ hat die Rolle Jaeger
-15:11:22 >> index geöffnet
-15:11:32 >> index geöffnet
-15:11:42 >> index geöffnet
-15:11:52 >> index geöffnet
-15:25:41 >> Erzähler geöffnet
-15:25:44 >> index geöffnet
-15:25:54 >> index geöffnet
+22:57:05 >> Neues Spiel gestartet
+22:57:12 >> Spieleranzahl: auf 12 gesetzt
+22:57:14 >> index geöffnet
+22:57:20 >> Neuer Spieler Klobert hat die Rolle Seherin
+22:58:00 >> index geöffnet
+22:58:03 >> Neuer Spieler Thtf hat die Rolle Armor
+23:04:42 >> index geöffnet
+23:04:48 >> Neuer Spieler Dfgg hat die Rolle Erzaehler
+23:05:46 >> index geöffnet
+23:05:57 >> index geöffnet
+23:06:07 >> index geöffnet
+23:06:17 >> index geöffnet
+23:06:27 >> index geöffnet
+23:06:38 >> index geöffnet
+23:06:48 >> index geöffnet
+23:06:58 >> index geöffnet
+23:07:08 >> index geöffnet
+23:07:18 >> index geöffnet
+23:07:28 >> index geöffnet
+23:07:38 >> index geöffnet
+23:07:48 >> index geöffnet
+23:07:56 >> index geöffnet
+23:08:06 >> index geöffnet
+23:08:16 >> index geöffnet
+23:08:26 >> index geöffnet
+23:08:36 >> index geöffnet
+23:08:46 >> index geöffnet
+23:08:49 >> index geöffnet
+23:08:59 >> index geöffnet
+23:09:09 >> index geöffnet
+23:09:19 >> index geöffnet
+23:09:29 >> index geöffnet
+23:09:33 >> index geöffnet
+23:09:43 >> index geöffnet
+23:09:53 >> index geöffnet
+23:09:57 >> Neuer Spieler Ef hat die Rolle Hexe
+07:54:47 >> index geöffnet
+07:54:50 >> Neuer Spieler Iu hat die Rolle Jaeger
+07:55:13 >> index geöffnet
+07:55:23 >> index geöffnet
+07:55:33 >> index geöffnet
+07:55:43 >> index geöffnet
+07:55:46 >> index geöffnet
+07:55:56 >> index geöffnet
+07:56:06 >> index geöffnet
+07:56:16 >> index geöffnet
+07:56:26 >> index geöffnet
+07:56:36 >> index geöffnet
+07:56:46 >> index geöffnet
+07:56:56 >> index geöffnet
+07:57:06 >> index geöffnet
+07:57:16 >> index geöffnet
+07:57:26 >> index geöffnet
+07:57:36 >> index geöffnet
+07:57:46 >> index geöffnet
+07:57:48 >> index geöffnet
+07:57:58 >> index geöffnet
+07:58:08 >> index geöffnet
+07:58:18 >> index geöffnet
+07:58:28 >> index geöffnet
+07:58:38 >> index geöffnet
+07:58:48 >> index geöffnet
+07:58:58 >> index geöffnet
+07:59:08 >> index geöffnet
+07:59:18 >> index geöffnet
+07:59:28 >> index geöffnet
+07:59:38 >> index geöffnet
+07:59:48 >> index geöffnet
+07:59:58 >> index geöffnet
+08:00:08 >> index geöffnet
+08:00:10 >> index geöffnet
+08:00:20 >> index geöffnet
+08:00:30 >> index geöffnet
+08:00:40 >> index geöffnet
+08:00:47 >> index geöffnet
+08:00:57 >> index geöffnet
+08:01:07 >> index geöffnet
+08:01:17 >> index geöffnet
+08:01:27 >> index geöffnet
+08:01:37 >> index geöffnet
+08:01:40 >> index geöffnet
+08:01:50 >> index geöffnet
+08:02:44 >> index geöffnet
+08:02:48 >> index geöffnet
+08:02:59 >> index geöffnet
+08:03:09 >> index geöffnet
+08:03:19 >> index geöffnet
+08:03:19 >> index geöffnet
+08:03:25 >> Neuer Spieler Rwe8jqar hat die Rolle Werwolf
+08:04:24 >> index geöffnet
+08:04:27 >> Neuer Spieler Retete hat die Rolle Dorfbewohner
+08:05:35 >> einstellungen geöffnet
+08:06:29 >> einstellungen geöffnet
+08:06:35 >> index geöffnet
+08:06:40 >> Erzähler geöffnet
+08:06:51 >> Erzähler geöffnet
+08:07:01 >> Erzähler geöffnet
+08:07:08 >> index geöffnet
+08:32:19 >> index geöffnet
+08:32:24 >> Neuer Spieler K hat die Rolle Dorfbewohner
+08:33:03 >> Neuer Spieler Erqw3ewr hat die Rolle Dorfbewohner
+08:33:04 >> Erzähler geöffnet
+08:33:15 >> Erzähler geöffnet
+08:33:20 >> Armor Dashboard für Thtf mit Rolle Armor angezeigt
+09:07:42 >> index geöffnet
+09:07:44 >> Neuer Spieler Wedwe hat die Rolle Dorfbewohner
+09:17:06 >> index geöffnet
+09:17:07 >> Neuer Spieler Ewe hat die Rolle Werwolf
+09:18:11 >> index geöffnet
+09:18:13 >> Neuer Spieler Weqwe hat die Rolle Werwolf
+09:18:55 >> Schlafen für Weqwe mit Rolle Werwolf angezeigt
+09:19:04 >> Schlafen für Weqwe mit Rolle Werwolf angezeigt

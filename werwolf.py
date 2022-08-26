@@ -334,6 +334,19 @@ def armor_fertig(player1: str, player2: str):
                 armor_kann.close()
 
 
+def verliebte_ausgeben() -> str:
+    """
+    The verliebte_ausgeben function reads the verliebt.txt file and returns its content.
+
+    :return: The content of the verliebt.txt file
+
+    """
+    with open("verliebt.txt", "r") as verliebt:
+        verliebt_text = verliebt.read()
+        if verliebt_text.count("+") == 2:
+            return "+" + verliebt_text.split("+")[1] +"+"+ verliebt_text.split("+")[2] + "+"
+
+
 def ist_verliebt(name: str) -> bool:
     """
     The ist_verliebt function checks if the player is verliebt
@@ -790,7 +803,7 @@ def suche_spieler() -> bool:
                 return False
 
 
-def generiere_token(name: str, rolle: str)-> str:
+def generiere_token(name: str, rolle: str) -> str:
     """
     The generiere_token function generates a token for the user.
     It checks if the role is valid and if it is not already in use.
@@ -807,7 +820,7 @@ def generiere_token(name: str, rolle: str)-> str:
             token = secrets.token_hex(16)
             # write the token and the name and the role to the file tokens.txt
             with open("tokens.txt", "a", encoding="UTF8") as file:
-                file.write("+" + token + "+" + name + "+" + rolle + "+start+ \n")
+                file.write("+" + token + "+" + name + "+" + rolle + "+1+ \n")
                 return token
 
 
@@ -907,18 +920,20 @@ def name_aus_token(token: str):
 def status_aus_token(token: str):
     """
     The status_aus_token function checks if the token is in the file tokens.txt and returns
-    the name of the user and his role
+    the status of the token if it is in the file.
 
     :param token:str: Pass the token of the user that is checked
-    :return: The name and the role of a given token
+    :return: The status of the token
 
     """
     # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if "+" + token + "+" in line and line.count("+") == 5:
-                # split the line at the + and return the name and the role
-                return line.split("+")[4]
+            if line != "\n":
+                if "+" + token + "+" in line and line.count("+") == 5:
+                    # split the line at the + and return the name and the role
+                    return line.split("+")[4]
+        return "Fehler"
 
 
 def token_aus_name_und_rolle(name: str, rolle: str) -> str:
@@ -990,11 +1005,12 @@ def setze_status(token: str, status: str):
                                 + "\n"
                             )
                         else:
-                            if line != "\n": # if the line is not empty
-                                file.write(line) # write the line to the file
+                            if line != "\n":  # if the line is not empty
+                                file.write(line)  # write the line to the file
                             else:
-                                file.write("") # if the line is empty, write nothing
-   
+                                file.write("")  # if the line is empty, write nothing
+
+
 def setze_status_fuer_rolle(rolle: str, status: str):
     # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
@@ -1022,7 +1038,148 @@ def setze_status_fuer_rolle(rolle: str, status: str):
                                 + "\n"
                             )
                         else:
-                            if line != "\n": # if the line is not empty
-                                file.write(line) # write the line to the file
+                            if line != "\n":  # if the line is not empty
+                                file.write(line)  # write the line to the file
                             else:
-                                file.write("") # if the line is empty, write nothing
+                                file.write("")  # if the line is empty, write nothing
+
+
+def setze_status_fuer_name(name: str, status: str):
+    # read the file tokens.txt and check if the token is in the file
+    with open("tokens.txt", "r") as file:
+        for line in file:
+            if "+" + name + "+" in line:
+                # split the line at the + and return the name and the role
+
+                with open("tokens.txt", "r") as file:
+                    lines = file.readlines()
+                with open("tokens.txt", "w") as file:
+                    for line in lines:
+                        if "+" + name + "+" in line:
+                            file.write(
+                                line.split("+")[0]
+                                + "+"
+                                + line.split("+")[1]
+                                + "+"
+                                + line.split("+")[2]
+                                + "+"
+                                + line.split("+")[3]
+                                + "+"
+                                + status
+                                + "+"
+                                + line.split("+")[5]
+                                + "\n"
+                            )
+                        else:
+                            if line != "\n":  # if the line is not empty
+                                file.write(line)  # write the line to the file
+                            else:
+                                file.write("")  # if the line is empty, write nothing
+
+
+def setze_status_fuer_alle(status: str):
+    # read the file tokens.txt and check if the token is in the file
+    with open("tokens.txt", "r") as file:
+        for line in file:
+            # split the line at the + and return the name and the role
+
+            with open("tokens.txt", "r") as file:
+                lines = file.readlines()
+            with open("tokens.txt", "w") as file:
+                for line in lines:
+                    file.write(
+                        line.split("+")[0]
+                        + "+"
+                        + line.split("+")[1]
+                        + "+"
+                        + line.split("+")[2]
+                        + "+"
+                        + line.split("+")[3]
+                        + "+"
+                        + status
+                        + "+"
+                        + line.split("+")[5]
+                        + "\n"
+                    )
+
+
+def actions(action: str):
+    # es gibt verschiedene Stadien in denen sich ein Spieler befinden kann. Er kann schlafen, tot sein,eine information bekommen, eine Aktion haben oder Abstimmung haben.
+    # Die Funktionen setze_status_fuer_rolle, setze_status_fuer_name und setze_status setzen den Status eines Spielers auf einen der oben genannten Stadien.
+    # The following order is used: 0 = dead, 1 = sleep, 2 = action, 3 = vote, 4 = information
+
+    if action == "alle_schlafen":
+        setze_status_fuer_alle("1")
+    # STARTUP On startup, the status of all players is set to sleeping
+
+    # ARMOR After this, the status of the player with the role of the Armor is set to action
+    elif action == "armor_aktion":
+        setze_status_fuer_rolle("Armor", "2")
+        
+    elif action =="armor_schlafen":
+        setze_status_fuer_rolle("Armor", "1")
+
+    elif action == "verliebte_informieren":
+        verliebte_ausgeben() # the function verliebte_ausgeben() returns the names in the following format: +lover1+lover2+
+        lover1 = verliebte_ausgeben().split("+")[1]
+        lover2 = verliebte_ausgeben().split("+")[2]
+        setze_status_fuer_name(lover1, "4")
+        setze_status_fuer_name(lover2, "4")
+
+
+# After this, all players are set to sleep.
+
+# SEHERIN The seherin is set to action
+    elif action == "seherin_aktion":
+        setze_status_fuer_rolle("Seherin", "2")
+
+    elif action == "seherin_schlafen":
+        setze_status_fuer_rolle("Seherin", "1")
+
+    elif action == "werwolf_abstimmung":
+        setze_status_fuer_rolle("Werwolf", "2")
+# WERWOLF All werewolves are set to  vote
+
+# All werewolves are set to sleep
+    elif action == "werwolf_schlafen":
+        setze_status_fuer_rolle("Werwolf", "1")
+
+# The witch is set to action
+    elif action == "hexe_aktion":
+        setze_status_fuer_rolle("Hexe", "2")
+# The witch is set to sleep
+    elif action == "hexe_schlafen":
+        setze_status_fuer_rolle("Hexe", "1")
+
+# Everyone is set to vote
+    elif action == "alle_abstimmen":
+        setze_status_fuer_alle("3")
+
+
+
+def erhalte_ziel(token: str):
+    #1. get the role of the player
+    rolle = rolle_aus_token(token)
+    
+    #2. get the name of the player
+    name = name_aus_token(token)
+    #3. get the status of the token
+    status = status_aus_token(token)
+    
+    
+    #  0 = dead, 1 = sleep, 2 = action, 3 = vote, 4 = information
+    
+    if status == "0":
+        return (f'"/{name}/{rolle}/_/tot"')
+    elif status == "1":
+        return (f'/{name}/{rolle}/schlafen')
+    elif status == "2":
+        return (f'/{name}/{rolle}/Dashboard_sp')
+    elif status == "3":
+        return (f'/{name}/{rolle}/Dashboard')
+    elif status == "4":
+        return (f'/{name}/{rolle}/info')
+        
+    
+    
+        

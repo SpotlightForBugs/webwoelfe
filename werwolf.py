@@ -206,7 +206,7 @@ def hexe_verbraucht(flag: str):
         flag = str(2)
     elif "h" in flag or "H" in flag:
         flag = str(1)
-    
+
 
         if str(flag) == "1" or str(flag) == "2":
             with open("hexe_kann.txt", "r") as hexe_kann:
@@ -672,15 +672,15 @@ def spieler_ist_tot(player: str) -> bool:
 def name_richtig_schreiben(name: str) -> str:
     """
     The name_richtig_schreiben function takes a string and returns the same string with all non-alphanumeric characters replaced by underscores.
-   
-   
+
+
     :param name:str: Pass the name of the file to be renamed
     :return: The name with the correct capitalization
-    
+
     """
-   
-   
-    
+
+
+
     P = 'USD'
     O = 'C'
     N = '\xc3\x9c'
@@ -1137,7 +1137,7 @@ def actions(action: str):
     # ARMOR After this, the status of the player with the role of the Armor is set to action
     elif action == "armor_aktion":
         setze_status_fuer_rolle("Armor", "2")
-        
+
     elif action == "armor_warten":
         setze_status_fuer_rolle("Armor", "5")
 
@@ -1156,7 +1156,7 @@ def actions(action: str):
     # SEHERIN The seherin is set to action
     elif action == "seherin_aktion":
         setze_status_fuer_rolle("Seherin", "2")
-    
+
     elif action == "seherin_warten":
         setze_status_fuer_rolle("Seherin", "5")
 
@@ -1166,10 +1166,10 @@ def actions(action: str):
     elif action == "werwolf_abstimmung":
         setze_status_fuer_rolle("Werwolf", "2")
     # WERWOLF All werewolves are set to  action
-    
+
     elif action == "werwolf_warten":
         setze_status_fuer_rolle("Werwolf", "5")    
-    
+
 
     # All werewolves are set to sleep
     elif action == "werwolf_schlafen":
@@ -1212,6 +1212,6 @@ def erhalte_ziel(token: str):
         return f"/{name}/{rolle}/info_der_verliebten"
     elif status == "5":
         return f"/{name}/{rolle}/warten_auf_andere_spieler"  
-    
+
 
 

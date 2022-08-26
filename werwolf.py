@@ -820,8 +820,7 @@ def suche_spieler() -> bool:
         for line in file:
             if int(line) > len(open("rollen_original.txt", "r").readlines()):
                 return True
-            else:
-                return False
+            return False
 
 
 def generiere_token(name: str, rolle: str) -> str:
@@ -1204,13 +1203,13 @@ def erhalte_ziel(token: str):
 
     if status == "0":
         return f'"/{name}/{rolle}/_/tot"'
-    elif status == "1":
+    if status == "1":
         return f"/{name}/{rolle}/schlafen"
-    elif status == "2":
+    if status == "2":
         return f"/{name}/{rolle}/Dashboard_sp"
-    elif status == "3":
+    if status == "3":
         return f"/{name}/{rolle}/Dashboard"
-    elif status == "4":
+    if status == "4":
         return f"/{name}/{rolle}/info_der_verliebten"
     elif status == "5":
         return f"/{name}/{rolle}/warten_auf_andere_spieler"  

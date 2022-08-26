@@ -1194,6 +1194,7 @@ def auf_andere_warten(name, rolle):
             "Dashboards/status/auf_andere_warten.html", name=name, rolle=rolle
         )
 
+
 @app.route("/log")
 def log_ansehen():
     """

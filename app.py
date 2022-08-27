@@ -917,9 +917,7 @@ def wahlbalken():
     with open("rollen_log.txt", encoding="UTF8") as players_log:  # open the log file
         players_log = players_log.readlines()  # read the log file
 
-    print(players_log)
-
-    print("Test")
+    
 
     nurNamen = []  # create a list for the names
 
@@ -980,6 +978,12 @@ def wahl_stats():
 
     return render_template("wahlstatus.html", name_tot=name_tot)
 
+
+
+
+@app.route("/test")
+def test():
+    return render_template("uebersicht.html")
 
 @app.route("/sehen/<name>/<rolle>/<auswahl>")
 def sehen(name, rolle, auswahl):

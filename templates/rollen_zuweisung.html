@@ -5,7 +5,7 @@
 <div class="container-fluid" style="margin-top: 30px">
   <h3>Hi, <span class="name">{{ name.upper() }}</span></h3>
   <p>Du bist einer von {{ players }} Spielenden</p>
-  
+
   <p>Du hast die Rolle <span class="name">{{ operator.upper() }}</span></p>
 
   <script>
@@ -23,14 +23,12 @@
     // call the function to delete all cookies
     deleteAllCookies();
 
-   //set Cookie to with name token to value {{ token }}
+    //set Cookie to with name token to value {{ token }}
     function setCookie(name, value) {
       document.cookie = name + "=" + value + "; path=/";
     }
     // call the function to set a cookie
     setCookie("token", "{{ token }}");
-    
-
   </script>
 
   {% if operator.upper() == "Erzaehler" %}

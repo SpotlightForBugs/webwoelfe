@@ -23,14 +23,12 @@
     // call the function to delete all cookies
     deleteAllCookies();
 
-   //set Cookie to with name token to value {{ token }}
+    //set Cookie to with name token to value {{ token }}
     function setCookie(name, value) {
       document.cookie = name + "=" + value + "; path=/";
     }
     // call the function to set a cookie
     setCookie("token", "{{ token }}");
-    
-
   </script>
 
   {% if operator.upper() == "Erzaehler" %}

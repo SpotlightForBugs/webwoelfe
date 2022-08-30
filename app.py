@@ -34,6 +34,7 @@ sentry_sdk.init(
     traces_sample_rate=0.5,
 )
 
+werwolf.log(debug=False)
 
 app = Flask(__name__)
 
@@ -1305,4 +1306,6 @@ def forbidden(error):
 
 
 if __name__ == "__main__":
+   
     app.run(debug=True)
+    

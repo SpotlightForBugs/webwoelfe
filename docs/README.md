@@ -1,4 +1,4 @@
-# Nextgenerationfarmingweb Index
+# Webwoelfe Index
 
 > Auto-generated documentation index.
 

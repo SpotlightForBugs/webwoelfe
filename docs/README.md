@@ -2,5 +2,5 @@
 
 > Auto-generated documentation index.
 
-A full list of [Nextgenerationfarmingweb](https://github.com/spotlightforbugs/webwoelfe) project modules.
+A full list of [our](https://github.com/spotlightforbugs/webwoelfe) project modules.
 

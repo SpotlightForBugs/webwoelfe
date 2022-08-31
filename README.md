@@ -54,6 +54,8 @@ Einfach über git clonen:
 - We use [Bootstrap](https://getbootstrap.com/) to style the web application.
 - We use [CodeQL](https://codeql.com/) and [DeepSource](https://deepsource.io/) to analyze the code.
 - We use [Sentry](https://sentry.io/) to report errors.
+- We use [Freshpaint.io](https://freshpaint.io/) to analyze user behavoir.
+- We use [CodeScene](https://codescene.io/) to analyze the code quality.
 
 ## Roadmap
 

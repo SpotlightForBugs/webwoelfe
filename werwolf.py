@@ -602,7 +602,6 @@ def toete_spieler(player):
         return statement
 
 
-
 def log(debug: bool):
     """
     The log function writes a string to the logfile.txt file, which is used by the
@@ -615,34 +614,31 @@ def log(debug: bool):
 
     """
     if debug == False:
-        with open("logfile.txt",'w',encoding="UTF8") as logfile_schreiben:
-            logfile_schreiben.write('FALSE')
+        with open("logfile.txt", "w", encoding="UTF8") as logfile_schreiben:
+            logfile_schreiben.write("FALSE")
     else:
         pass
 
 
+def in_log_schreiben(a: str):
+    """
+    The in_log_schreiben function writes a string to the logfile.txt file.
+    It takes one argument, which is a string.
 
+    :param a:str: Pass the message to be logged
+    :return: The result of the function
 
-def in_log_schreiben(a: str): 
-        """
-        The in_log_schreiben function writes a string to the logfile.txt file.
-        It takes one argument, which is a string.
+    """
 
-        :param a:str: Pass the message to be logged
-        :return: The result of the function
+    with open("logfile.txt", "r", encoding="UTF8") as logfile_lesen:
+        if "FALSE" in logfile_lesen.read():
+            logfile_lesen.close()
+        else:
+            with open("logfile.txt", "a", encoding="UTF8") as logfile:
+                now = datetime.now().strftime("%H:%M:%S")
 
-        """
-
-
-        with open("logfile.txt",'r',encoding="UTF8") as logfile_lesen:
-            if  'FALSE' in logfile_lesen.read():
-                logfile_lesen.close()
-            else:     
-                with open("logfile.txt", "a", encoding="UTF8") as logfile:
-                    now = datetime.now().strftime("%H:%M:%S")
-
-                    logfile.write(str(now) + str(" >> " + a) + "\n")
-                    logfile.close()
+                logfile.write(str(now) + str(" >> " + a) + "\n")
+                logfile.close()
 
 
 def spieler_gestorben(player: str) -> str:
@@ -1230,5 +1226,5 @@ def erhalte_ziel(token: str):
         return f"/{name}/{rolle}/info_der_verliebten"
     if status == "5":
         return f"/{name}/{rolle}/warten_auf_andere_spieler"
-    else :
+    else:
         return f"falscher Status"

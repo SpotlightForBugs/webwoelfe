@@ -449,7 +449,7 @@ def spezielles_Dashboard(name, rolle):
     rolleAusLog = rolleAusLog[1]
 
     if rolleAusLog == "Tot":
-        werwolf.setze_status_fuer_name(name,"0")  # render tot.html
+        werwolf.setze_status_fuer_name(name, "0")  # render tot.html
     # if the name and the role are in the log file
     if werwolf.validiere_rolle(name, rolle) is True:
 
@@ -681,7 +681,7 @@ def schlafen(name, rolle):  # function for the sleep function
             werwolf.in_log_schreiben(
                 "Schlafen für " + name + " mit Rolle " + rolle + " angezeigt"
             )
-            werwolf.setze_status_fuer_name(name,"1")
+            werwolf.setze_status_fuer_name(name, "1")
             return render_template(
                 "Dashboards/status/schlafen.html",
                 name=name,
@@ -1305,4 +1305,3 @@ def forbidden(error):
 if __name__ == "__main__":
 
     app.run(debug=True)
-

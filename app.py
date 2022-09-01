@@ -274,17 +274,7 @@ def kill_player(name, rolle, name_kill):
 
 @app.route("/<name>/Armor_aktion/<player1>/<player2>")  # player auswahl
 def armor_player(player1, player2, name):
-    """
-    The armor_player function is used to protect the player from being killed by the werewolf.
-    The function checks if a player is in the game and if he/she has already selected his/her role.
-    If both conditions are met, it will allow him/her to select armor as a role.
-
-    :param player1: Store the name of the player who is currently playing
-    :param player2: Determine the player who is attacked
-    :param name: Determine which player is the armor
-    :return: The status of the game
-
-    """
+    
     rolle = "Armor"
 
     if (
@@ -449,6 +439,7 @@ def spezielles_Dashboard(name, rolle):
 
     """
     if rolle == "Tot":
+        werwolf.setze_status_fuer_name(name, "0")
         return render_template("fehler.html"), 500
     # create a string with the name and the role
     with open("rollen_log.txt", "r", encoding="UTF8") as file:  # open the log file
@@ -458,7 +449,7 @@ def spezielles_Dashboard(name, rolle):
     rolleAusLog = rolleAusLog[1]
 
     if rolleAusLog == "Tot":
-        return render_template("tot.html", name=name)  # render tot.html
+        werwolf.setze_status_fuer_name(name,"0")  # render tot.html
     # if the name and the role are in the log file
     if werwolf.validiere_rolle(name, rolle) is True:
 
@@ -494,6 +485,7 @@ def spezielles_Dashboard(name, rolle):
         werwolf.in_log_schreiben(
             "Hexe Dashboard für " + name + " mit Rolle " + rolle + " angezeigt"
         )
+        werwolf.setze_status_fuer_name(name, "2")
         # render Dash_rolle.html
         return render_template(
             "Dashboards/Dash_" + rolle + ".html",
@@ -509,6 +501,7 @@ def spezielles_Dashboard(name, rolle):
         werwolf.in_log_schreiben(
             "Armor Dashboard für " + name + " mit Rolle " + rolle + " angezeigt"
         )
+        werwolf.setze_status_fuer_rolle("Armor", "2")
         return render_template(
             "Dashboards/Dash_" + rolle + ".html",
             name=name,
@@ -527,6 +520,7 @@ def spezielles_Dashboard(name, rolle):
         + rolle
         + " angezeigt"
     )
+    werwolf.setze_status_fuer_name(name, "2")
     return render_template(
         "Dashboards/Dash_" + rolle + ".html",
         name=name,
@@ -687,6 +681,7 @@ def schlafen(name, rolle):  # function for the sleep function
             werwolf.in_log_schreiben(
                 "Schlafen für " + name + " mit Rolle " + rolle + " angezeigt"
             )
+            werwolf.setze_status_fuer_name(name,"1")
             return render_template(
                 "Dashboards/status/schlafen.html",
                 name=name,
@@ -844,6 +839,7 @@ def tot(name, rolle, todesgrund):  # function for the death function
             werwolf.in_log_schreiben(
                 "Tot für " + name + " mit Rolle " + rolle + " angezeigt"
             )
+            werwolf.setze_status_fuer_name(name, "0")
             return render_template(
                 "Dashboards/status/tot.html",
                 name=name,
@@ -1037,6 +1033,7 @@ def weiterleitung(target):
 
 @app.route("/<name>/<rolle>/info_der_verliebten")
 def verliebte_info(name, rolle):
+    werwolf.setze_status_fuer_name(name, "4")
     return werwolf.verliebte_ausgeben()
 
 

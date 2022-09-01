@@ -15,6 +15,7 @@
 ---
 
 # Webwölfe [WORK IN PROGRESS, NOT PRODUCTION READY]
+[Werwölfe von Düsterwald Wikipedia](https://de.wikipedia.org/wiki/Die_Werw%C3%B6lfe_von_D%C3%BCsterwald)
 
 <img width="435" alt="Wolf_watermark" src="https://user-images.githubusercontent.com/73603712/185472606-b5ad525e-924d-4a17-9843-d2a75615a2ee.png">
 

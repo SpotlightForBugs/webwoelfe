@@ -849,14 +849,13 @@ def generiere_token(name: str, rolle: str) -> str:
     :return: A token
 
     """
-    if validiere_rolle_original(name, rolle):
-        if not ist_token_vorhandem(name, rolle):
+    if validiere_rolle_original(name, rolle) and not ist_token_vorhandem(name, rolle):
 
-            token = secrets.token_hex(16)
-            # write the token and the name and the role to the file tokens.txt
-            with open("tokens.txt", "a", encoding="UTF8") as file:
-                file.write("+" + token + "+" + name + "+" + rolle + "+1+ \n")
-                return token
+        token = secrets.token_hex(16)
+        # write the token and the name and the role to the file tokens.txt
+        with open("tokens.txt", "a", encoding="UTF8") as file:
+            file.write("+" + token + "+" + name + "+" + rolle + "+1+ \n")
+            return token
 
 
 def validiere_token(token: str) -> bool:
@@ -960,10 +959,9 @@ def status_aus_token(token: str):
     # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if line != "\n":
-                if "+" + token + "+" in line and line.count("+") == 5:
-                    # split the line at the + and return the name and the role
-                    return line.split("+")[4]
+            if line != "\n" and "+" + token + "+" in line and line.count("+") == 5:
+                # split the line at the + and return the name and the role
+                return line.split("+")[4]
         return "Fehler"
 
 

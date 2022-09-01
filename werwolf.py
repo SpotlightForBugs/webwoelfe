@@ -1227,4 +1227,4 @@ def erhalte_ziel(token: str):
     if status == "5":
         return f"/{name}/{rolle}/warten_auf_andere_spieler"
     else:
-        return f"falscher Status"
+        return "falscher Status"

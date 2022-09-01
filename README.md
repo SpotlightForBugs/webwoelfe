@@ -38,7 +38,7 @@ Die Webseite ist für alle gängigen Bildschirmgrößen optimiert.
 Einfach über git clonen:
 
 ```bash
-  git clone URL
+  git clone https://github.com/SpotlightForBugs/webwoelfe.git
   cd webwoelfe
   pip install -r requirements.txt
   #to run

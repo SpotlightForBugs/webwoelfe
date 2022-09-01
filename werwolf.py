@@ -613,7 +613,7 @@ def log(debug: bool):
     :return: A none object
 
     """
-    if debug == False:
+    if debug is False:
         with open("logfile.txt", "w", encoding="UTF8") as logfile_schreiben:
             logfile_schreiben.write("FALSE")
     else:

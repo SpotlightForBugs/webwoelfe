@@ -1202,7 +1202,6 @@ def log_ansehen():
     :return: The logfile
 
     """
-
     value_of_cookie_token = request.cookies.get("token")
     token = value_of_cookie_token
 

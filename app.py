@@ -274,7 +274,7 @@ def kill_player(name, rolle, name_kill):
 
 @app.route("/<name>/Armor_aktion/<player1>/<player2>")  # player auswahl
 def armor_player(player1, player2, name):
-    
+
     rolle = "Armor"
 
     if (
@@ -1303,6 +1303,6 @@ def forbidden(error):
 
 
 if __name__ == "__main__":
-   
+
     app.run(debug=True)
-    
+

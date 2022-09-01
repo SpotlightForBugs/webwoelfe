@@ -605,21 +605,21 @@ def toete_spieler(player):
 
 def log(debug: bool):
     """
-    The log function writes a string to the logfile.txt file, which is used by the 
-    debug function to determine whether or not debug mode is on. If it's off, then 
-    the logfile will be wiped clean so that way it doesn't interfere with any future 
+    The log function writes a string to the logfile.txt file, which is used by the
+    debug function to determine whether or not debug mode is on. If it's off, then
+    the logfile will be wiped clean so that way it doesn't interfere with any future
     debugging efforts.
-    
+
     :param debug:bool: Decide whether or not to write a logfile
     :return: A none object
-    
+
     """
     if debug == False:
         with open("logfile.txt",'w',encoding="UTF8") as logfile_schreiben:
             logfile_schreiben.write('FALSE')
     else:
         pass
-    
+
 
 
 
@@ -627,13 +627,13 @@ def in_log_schreiben(a: str):
         """
         The in_log_schreiben function writes a string to the logfile.txt file.
         It takes one argument, which is a string.
-        
+
         :param a:str: Pass the message to be logged
         :return: The result of the function
-        
+
         """
-        
-    
+
+
         with open("logfile.txt",'r',encoding="UTF8") as logfile_lesen:
             if  'FALSE' in logfile_lesen.read():
                 logfile_lesen.close()

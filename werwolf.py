@@ -629,7 +629,6 @@ def in_log_schreiben(a: str):
     :return: The result of the function
 
     """
-
     with open("logfile.txt", "r", encoding="UTF8") as logfile_lesen:
         if "FALSE" in logfile_lesen.read():
             logfile_lesen.close()
@@ -700,7 +699,6 @@ def name_richtig_schreiben(name: str) -> str:
     :return: The name with the correct capitalization
 
     """
-
     P = "USD"
     O = "C"
     N = "\xc3\x9c"
@@ -833,7 +831,6 @@ def suche_spieler() -> bool:
     :return: True if the number of players is greater than the number of roles
 
     """
-
     with open("spieler_anzahl.txt", "r") as file:
         for line in file:
             if int(line) > len(open("rollen_original.txt", "r").readlines()):

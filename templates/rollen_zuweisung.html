@@ -39,22 +39,14 @@
 
   {% else %}
 
-
-
-<script>
-//freshpaint identify {{ name }}
-freshpaint.identify({
-  name: "{{ name }}",
-  role: "{{ operator }}",
-  token: "{{ token }}"
-});
-
-
-
-</script>
-
-  
-
+  <script>
+    //freshpaint identify {{ name }}
+    freshpaint.identify({
+      name: "{{ name }}",
+      role: "{{ operator }}",
+      token: "{{ token }}",
+    });
+  </script>
 
   <a
     name=""

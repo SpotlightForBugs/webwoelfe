@@ -42,13 +42,22 @@
 </div>
 
 <script>
-  //laod div class refresh every second into the div class refresh
-  setInterval(function () {
-    $(".refresh").load(window.location.href + " .refresh");
-  }, 10000);
+  //laod div class refresh every second into the div class refresh if the text input is not empty
+  $(document).ready(function () {
+    setInterval(function () {
+      if ($("#input").val() == "") {
+        $(".refresh").load(window.location.href + " .refresh");
+      }
+    }, 1000);
+  });
+  
 </script>
 
 {% block script %}
 <script src="../../static/scripts/rot.js"></script>
 <script src="../../static/scripts/game_state.js"></script>
+<script src="../../static/scripts/cookie_promt.js"></script>
+
+
+
 {% endblock %} {% endblock %}

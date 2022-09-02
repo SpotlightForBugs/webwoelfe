@@ -2,7 +2,9 @@
 if (window.location.pathname != "/") {
   if (document.cookie.indexOf("token") !== -1) {
     //token is the first part of the cookie, delimited by a semicolon
-    token = document.cookie.split(";")[0].split("=")[1];
+    
+    var token = document.cookie.split(";")[0].split("=")[1];
+  }
     token = token.replace("token=", "");
 
     //save the http code of the page /{token}/zum_ziel to the variable status_code and the url to the variable url
@@ -43,4 +45,4 @@ if (window.location.pathname != "/") {
       }
     }
   }
-}
+

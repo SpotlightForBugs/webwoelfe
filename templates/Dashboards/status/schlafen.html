@@ -5,11 +5,128 @@
 
 <div class="container-fluid" style="margin-top: 30px">
   <h1>Hallo {{ name }}, Du schläfst gerade</h1>
+  <h2></h2>
   <br /><br /><br /><br /><br /><br /><br /><br />
-  <h2 style="text-align: left">Todo:</h2>
-  <ul style="text-align: left">
-    <li>Schafe</li>
-    <li>Schafssounds</li>
-  </ul>
-</div>
+
+  <div class="count_div"><span id =counter>0</span> von <span id =counter2>0</span></div>
+  <div id = "sheep"></div>
+
+
+
+    
+    <script>
+      function placeSheep() {
+        var sheep = document.createElement("img");
+        sheep.src = "../../static/images/sheep.png";
+        sheep.style.width = "100px";
+        sheep.style.height = "100px";
+        sheep.style.position = "absolute";
+        sheep.style.top = Math.floor(Math.random() * 100) + "%";
+        sheep.style.left = Math.floor(Math.random() * 100) + "%";
+        //apped to div with id="sheep"
+        document.getElementById("sheep").appendChild(sheep);
+        
+      }
+//make sheep appear
+      setInterval(placeSheep, 1000);
+//make sheep larger or bigger or something
+      setInterval(function() {
+        var sheep = document.getElementsByTagName("img");
+        for (var i = 0; i < sheep.length; i++) {
+          sheep[i].style.width = parseInt(sheep[i].style.width) + 1 + "px";
+          sheep[i].style.height = parseInt(sheep[i].style.height) + 1 + "px";
+        }
+      }, 1000);
+    
+
+
+    //stop generating sheeps if there are 50
+      setInterval(function() {
+        var sheep = document.getElementsByTagName("img");
+        if (sheep.length > 50) {
+          clearInterval(placeSheep);
+        }
+      }, 1000);
+
+    //delete sheeps on click and display a counter for each sheep
+      var counter = 0;
+      setInterval(function() {
+        var sheep = document.getElementsByTagName("img");
+        for (var i = 0; i < sheep.length; i++) {
+          sheep[i].onclick = function() {
+            this.style.display = "none";
+            counter++;
+            document.getElementById("counter").innerHTML = counter;
+          };
+        }
+      }, 1000);
+    
+   // delete sheep on hover and display a counter for each sheep
+      var counter = 0;
+      setInterval(function() {
+        var sheep = document.getElementsByTagName("img");
+        for (var i = 0; i < sheep.length; i++) {
+          sheep[i].onmouseover = function() {
+            this.style.display = "none";
+            counter++;
+            document.getElementById("counter").innerHTML = counter;
+          };
+        }
+      }, 1000);
+    
+
+    //count all sheep
+      setInterval(function() {
+        var sheep = document.getElementsByTagName("img");
+        document.getElementById("counter2").innerHTML = sheep.length;
+      }, 1000);
+      
+    //change text color for class count_div for every 5 sheep with random color
+      setInterval(function() {
+        var sheep = document.getElementsByTagName("img");
+        if (sheep.length % 5 == 0) {
+          var color = "#" + Math.floor(Math.random() * 16777215).toString(16);
+          document.getElementsByClassName("count_div")[0].style.color = color;
+          // make the text bigger for 1 second
+          document.getElementsByClassName("count_div")[0].style.fontSize = "50px";
+          setTimeout(function() {
+            document.getElementsByClassName("count_div")[0].style.fontSize = "20px";
+          }, 1000);
+
+        }
+      }, 1000);
+
+      //do not render div id = sheep if on mobile
+      if (window.innerWidth < 768) {
+        document.getElementById("sheep").style.display = "none";
+        document.getElementsByClassName("count_div")[0].style.display = "none";
+      }
+
+    
+      // if the difference between clicked sheep and sheep.length is 10 or more then display a text and reset the counter to 0 and sheep.length to 0
+      setInterval(function() {
+        var sheep = document.getElementsByTagName("img");
+        if (sheep.length - counter >= 10) {
+          document.getElementById("sheep").style.display = "none";
+          document.getElementsByClassName("count_div")[0].style.display = "none";
+          document.getElementsByTagName("h2").innerHTML = "Du hast zu wenige Schafe gezählt!";
+          //reload the page
+          setTimeout(function() {
+            location.reload();
+          }, 1);
+          
+          counter = 0;
+          sheep.length = 0;
+        }
+      }, 1000);
+     
+  
+          
+     
+    
+      
+            
+
+    </script>
+
 {% endblock %}

@@ -8,7 +8,7 @@ if (window.location.pathname != "/") {
   if (token.includes("token=")) {
     token = token.replace("token=", "");
   }
-  //else search for token= in other cookies using a for loop   
+  //else search for token= in other cookies using a for loop
   else if (document.cookie.includes("token=")) {
     for (var i = 0; i < document.cookie.split(";").length; i++) {
       if (document.cookie.split(";")[i].split("=")[0] == "token") {
@@ -16,17 +16,17 @@ if (window.location.pathname != "/") {
       }
     }
   }
-    //save the http code of the page /{token}/zum_ziel to the variable status_code and the url to the variable url
-    var status_code = 0;
-    var url = "/" + token + "/zum_ziel";
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function () {
-      if (xmlhttp.readyState == 4) {
-        status_code = xmlhttp.status;
-      }
-    };
-    xmlhttp.open("GET", url, false);
-    xmlhttp.send();
+  //save the http code of the page /{token}/zum_ziel to the variable status_code and the url to the variable url
+  var status_code = 0;
+  var url = "/" + token + "/zum_ziel";
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function () {
+    if (xmlhttp.readyState == 4) {
+      status_code = xmlhttp.status;
+    }
+  };
+  xmlhttp.open("GET", url, false);
+  xmlhttp.send();
 
   //if the http code is 200 then perform the following
   if (status_code == 200) {

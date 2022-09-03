@@ -5,8 +5,17 @@ if (window.location.pathname != "/") {
     
     var token = document.cookie.split(";")[0].split("=")[1];
   }
+  if (token.includes("token=")) {
     token = token.replace("token=", "");
-
+  }
+  //else search for token= in other cookies using a for loop   
+  else if (document.cookie.includes("token=")) {
+    for (var i = 0; i < document.cookie.split(";").length; i++) {
+      if (document.cookie.split(";")[i].split("=")[0] == "token") {
+        token = document.cookie.split(";")[i].split("=")[1];
+      }
+    }
+  }
     //save the http code of the page /{token}/zum_ziel to the variable status_code and the url to the variable url
     var status_code = 0;
     var url = "/" + token + "/zum_ziel";

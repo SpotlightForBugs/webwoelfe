@@ -976,7 +976,7 @@ def wahl_stats():
 
 @app.route("/test")
 def test():
-    return render_template("uebersicht.html",nurNamen=werwolf.nurNamen())
+    return render_template("uebersicht.html", nurNamen=werwolf.nurNamen())
 
 
 @app.route("/sehen/<name>/<rolle>/<auswahl>")

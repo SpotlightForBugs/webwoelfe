@@ -1224,26 +1224,25 @@ def erhalte_ziel(token: str):
     return "falscher Status"
 
 
-def nurNamen()-> list:
-     with open("rollen_log.txt") as players_log:  # open the log file
-                players_log = players_log.readlines()  # read the log file
+def nurNamen() -> list:
+    with open("rollen_log.txt") as players_log:  # open the log file
+        players_log = players_log.readlines()  # read the log file
 
-                nurNamen = []  # create a list with the names
+        nurNamen = []  # create a list with the names
 
-            
-                for line in players_log:  # for every line in the log file
+        for line in players_log:  # for every line in the log file
 
-                    if "*" in line:  # if the line contains a *
-                        pass  # do nothing
-                    else:  # if the line does not contain a *
-                        line = line.split(" = ")  # split the line at the =
-                        name_line = line[0]
-                        # set the role to the second part of the line
-                        auswahlRolle = line[1]
+            if "*" in line:  # if the line contains a *
+                pass  # do nothing
+            else:  # if the line does not contain a *
+                line = line.split(" = ")  # split the line at the =
+                name_line = line[0]
+                # set the role to the second part of the line
+                auswahlRolle = line[1]
 
-                        # if the role is not Tot or the role is not the Erzähler
-                        if auswahlRolle not in ("Tot", "Erzaehler"):
-                            # append the name to the list
-                            nurNamen.append(name_line)
-                            
-                return nurNamen
+                # if the role is not Tot or the role is not the Erzähler
+                if auswahlRolle not in ("Tot", "Erzaehler"):
+                    # append the name to the list
+                    nurNamen.append(name_line)
+
+        return nurNamen

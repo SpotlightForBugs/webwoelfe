@@ -1,9 +1,8 @@
-from datetime import datetime
-import random
 import ast
+import random
 import re
 import secrets
-
+from datetime import datetime
 
 liste_tot_mit_aktion = ["Jaeger", "Hexe", "PLATZHALTER"]
 liste_tot_ohne_aktion = ["Dorfbewohner", "Werwolf", "Seherin"]

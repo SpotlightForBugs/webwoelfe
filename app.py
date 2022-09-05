@@ -1,30 +1,19 @@
-import sentry_sdk
-from sentry_sdk import set_user
-from sentry_sdk import last_event_id
-from sentry_sdk.integrations.flask import FlaskIntegration
-from shutil import ExecError
-from flask_api import status
-from traceback import print_tb  # skipcq: PY-W2000
-from flask import (  # skipcq: PY-W2000
-    Flask,
-    request,
-    url_for,
-    render_template,
-    session,
-    make_response,
-    redirect,
-    Response,
-    escape,
-)
-import jsonify
-
-
-import werwolf
 import datetime
 import re
-from inspect import currentframe, getframeinfo
 from datetime import datetime
+from inspect import currentframe, getframeinfo
+from shutil import ExecError
+from traceback import print_tb  # skipcq: PY-W2000
 
+import jsonify
+import sentry_sdk
+from flask import (Flask, Response, escape, make_response,  # skipcq: PY-W2000
+                   redirect, render_template, request, session, url_for)
+from flask_api import status
+from sentry_sdk import last_event_id, set_user
+from sentry_sdk.integrations.flask import FlaskIntegration
+
+import werwolf
 
 sentry_sdk.init(
     dsn="https://78fe9de58a5847ada071bf5f62f9c214@o1363527.ingest.sentry.io/6678492",

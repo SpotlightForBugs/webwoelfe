@@ -21,7 +21,7 @@ if (window.location.pathname != "/") {
   var status_code = 0;
   var url = "/" + token + "/zum_ziel";
   var xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() {
+  xmlhttp.onreadystatechange = function () {
     if (xmlhttp.readyState == 4) {
       status_code = xmlhttp.status;
     }
@@ -41,7 +41,7 @@ if (window.location.pathname != "/") {
       // the variable redirect_url
       var redirect_url = "";
       var xmlhttp = new XMLHttpRequest();
-      xmlhttp.onreadystatechange = function() {
+      xmlhttp.onreadystatechange = function () {
         if (xmlhttp.readyState == 4) {
           redirect_url = xmlhttp.responseURL;
         }

@@ -47,41 +47,20 @@ jobs:
           extensions.append('sphinx_autodoc_typehints')
           " >> conf.py;
           make markdown
-
-
-name: Create Pull Request
-on:
-  push:
-    branches: [ Pro ]
-  pull_request:
-    branches: [ Pro ]
-jobs:
-  create-pull-request:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run a multi-line script
-        run: |
-          mv _build/markdown/* ../; rm -rf _build
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add -A
-          git commit -m "Update Markdown Documentation"
+          #create pull request
+          mv _build/markdown/* ../
+          rm -r _build
+          rm -r Sphinx-docs
+          git config --global user.email "mail@spotlightforbugs.eu"
+          git config --global user.name "SpotlightForBugs"
+          git add .
+          git commit -m "Update Sphinx docs"
           git push
-          git checkout Pro
-          git merge master
-          git push
-          git checkout master
-          git merge Pro
-          git push
-      - uses: peter-evans/create-pull-request@v3
-        with:
-          commit-message: Update Markdown Documentation
-          title: Update Markdown Documentation
-          body: Update Markdown Documentation
-          branch: Pro
-          base: Pro
-          labels: documentation
           
+
+    
+
+
+            
 
 

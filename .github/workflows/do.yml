@@ -1,42 +1,50 @@
-#generate documenation for the  python files in the root directory and output to the file Documenation.md
+#workflow will run on push to Pro branch and on pull request to Pro branch
+#it will run the following bash commands: 
+# pip install sphinx sphinx-markdown-builder;
+#sphinx-apidoc -o Sphinx-docs . sphinx-apidoc --full -A 'SpotlightForBugs'; cd Sphinx-docs;
+# echo " import os
+# import sys
+# sys.path.insert(0,os.path.abspath('../'))
+# def skip(app, what, name, obj,would_skip, options):
+#     if name in ( '__init__',):
+#         return False
+#     return would_skip
+# def setup(app):
+#     app.connect('autodoc-skip-member', skip)
+# extensions.append('sphinx_autodoc_typehints')
+#  " >> conf.py;
+# make markdown;
+#mv _build/markdown/* ../; rm -r Sphinx-docs;
 
-name: Documentation
-
+name: bash commands
 on:
   push:
     branches: [ Pro ]
   pull_request:
     branches: [ Pro ]
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.6
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.6
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pydoc-markdown
-        pip install pydoc-markdown[linkcheck]
-        pip install pydoc-markdown[coverage]
-        pip install pydoc-markdown[mermaid]
-        pip install pydocmd 
-    - name: Generate Documentation
-      run: |
-        pydocmd *.py > Documentation.md
-    - name: Commit files
-      run: |
-        git config --local user.email "
-        git config --local user.name "github-actions[bot]"
-        git add .
-        git commit -m "Update Documentation.md" -a
-    - name: generate documentation
-      run: |
-        git push  
+      - uses: actions/checkout@v2
+      - name: Run a multi-line script
+        run: |
+          pip install sphinx sphinx-markdown-builder
+          sphinx-apidoc -o Sphinx-docs . sphinx-apidoc --full -A 'SpotlightForBugs'
+          cd Sphinx-docs
+          echo " import os
+          import sys
+          sys.path.insert(0,os.path.abspath('../'))
+          def skip(app, what, name, obj,would_skip, options):
+              if name in ( '__init__',):
+                  return False
+              return would_skip
+          def setup(app):
+              app.connect('autodoc-skip-member', skip)
+          extensions.append('sphinx_autodoc_typehints')
+           " >> conf.py
+          make markdown
+          mv _build/markdown/* ../
+          rm -r Sphinx-docs
+
+

@@ -32,7 +32,8 @@ jobs:
           pip install sphinx sphinx-markdown-builder
           sphinx-apidoc -o Sphinx-docs . sphinx-apidoc --full -A 'SpotlightForBugs'
           cd Sphinx-docs
-          echo " import os
+          echo " 
+          import os
           import sys
           sys.path.insert(0,os.path.abspath('../'))
           def skip(app, what, name, obj,would_skip, options):
@@ -42,7 +43,7 @@ jobs:
           def setup(app):
               app.connect('autodoc-skip-member', skip)
           extensions.append('sphinx_autodoc_typehints')
-           " >> conf.py
+          " >> conf.py;
           make markdown
           mv _build/markdown/* ../
           rm -r Sphinx-docs

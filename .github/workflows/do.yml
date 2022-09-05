@@ -27,6 +27,7 @@ jobs:
         pip install pydoc-markdown[linkcheck]
         pip install pydoc-markdown[coverage]
         pip install pydoc-markdown[mermaid]
+        pip install pydocmd 
     - name: Generate Documentation
       run: |
         pydocmd *.py > Documentation.md

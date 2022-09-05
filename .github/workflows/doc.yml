@@ -18,8 +18,8 @@ jobs:
 
       - name: Generate docs
         run: |
-          pip install pydoc-markdown
-          pydocmd simple > docs.md
+          pip3 install pydoc-markdown
+          python3 -m pydocmd simple > docs.md
 
       - name: Commit docs
         run: |
@@ -27,4 +27,3 @@ jobs:
           git config --local user.name ""
           git add docs.md
           git commit -m "Update docs" -a || true
-          

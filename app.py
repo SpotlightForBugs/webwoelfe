@@ -22,7 +22,15 @@ from sentry_sdk import last_event_id
 from sentry_sdk import set_user
 from sentry_sdk.integrations.flask import FlaskIntegration
 
-import werwolf
+
+import importlib.util
+import sys
+spec = importlib.util.spec_from_file_location("werwolf", "werwolf.py")
+werwolf = importlib.util.module_from_spec(spec)
+sys.modules["werwolf"] = werwolf
+spec.loader.exec_module(werwolf)
+
+
 
 sentry_sdk.init(
     dsn="https://78fe9de58a5847ada071bf5f62f9c214@o1363527.ingest.sentry.io/6678492",

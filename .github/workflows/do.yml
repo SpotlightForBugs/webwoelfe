@@ -4,9 +4,9 @@ name: Documentation
 
 on:
   push:
-    branches: [ pro ]
+    branches: [ Pro ]
   pull_request:
-    branches: [ pro ]
+    branches: [ Pro ]
 
 jobs:
   build:

@@ -15,7 +15,7 @@ jobs:
           pip install -r requirements.txt
           pip install lazydocs
           lazydocs werwolf.py
-          mv werwolf.py.md werwolf.md
+          
 
           #create pull request
           

@@ -112,7 +112,8 @@ def setPlayerNumber():  # set the number of players
     werwolf.createDict()  # create the dictionary with the names of the players
     with open("rollen_log.txt", "w+") as f:  # leere rollen_log.txt
         f.write("*********************\n")
-    werwolf.in_log_schreiben("Spieleranzahl: auf " + str(spieleranzahl) + " gesetzt")
+    werwolf.in_log_schreiben("Spieleranzahl: auf " +
+                             str(spieleranzahl) + " gesetzt")
     # render einstellungen_gespeichert.html
     return render_template(
         "einstellungen_gespeichert.html", spieleranzahl_var=spieleranzahl
@@ -169,7 +170,8 @@ def get_data():  # get the data from the form
                 # credits to @joschicraft
             set_user({"username": name + " = " + str(operator)})
             token = werwolf.generiere_token(name, operator)
-            werwolf.in_log_schreiben(f"Neuer Spieler {name} hat die Rolle {operator}")
+            werwolf.in_log_schreiben(
+                f"Neuer Spieler {name} hat die Rolle {operator}")
             # render rollen_zuweisung.html
 
             return render_template(
@@ -253,7 +255,8 @@ def kill_player(name, rolle, name_kill):
         ):
             werwolf.toete_spieler(auswahl)
             werwolf.hexe_verbraucht("toeten")
-            werwolf.in_log_schreiben(f"Die Hexe ({name}) hat {name_kill} getötet")
+            werwolf.in_log_schreiben(
+                f"Die Hexe ({name}) hat {name_kill} getötet")
             return render_template(
                 "Dashboards/Dash_Hexe.html", name=name, rolle=rolle, name_kill=name_kill
             )
@@ -365,7 +368,8 @@ def Dashboard(name, rolle):  # Dashboard
     with open("rollen_log.txt", "r", encoding="UTF8") as file:  # open the log file
         players_vorhanden = file.read()  # read the log file
 
-    rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
+    rolleAusLog = players_vorhanden.split(
+        " = ")  # split the log file into a list
     rolleAusLog = rolleAusLog[1]
 
     if rolleAusLog == "Tot":
@@ -445,7 +449,8 @@ def spezielles_Dashboard(name, rolle):
     with open("rollen_log.txt", "r", encoding="UTF8") as file:  # open the log file
         players_vorhanden = file.read()  # read the log file
 
-    rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
+    rolleAusLog = players_vorhanden.split(
+        " = ")  # split the log file into a list
     rolleAusLog = rolleAusLog[1]
 
     if rolleAusLog == "Tot":
@@ -689,7 +694,8 @@ def schlafen(name, rolle):  # function for the sleep function
                 names=players_log,
             )
         except (FileNotFoundError, IOError, PermissionError):
-            return render_template("fehler.html"), 500  # render the fehler.html
+            # render the fehler.html
+            return render_template("fehler.html"), 500
 
     else:
         # print the error
@@ -891,7 +897,8 @@ def rausschmeissen(name, rolle):  # function for the kick function
             )
         except IOError as e:
 
-            return render_template("fehler.html"), 500  # render the fehler.html
+            # render the fehler.html
+            return render_template("fehler.html"), 500
 
     else:
         # print the error
@@ -1181,7 +1188,8 @@ def heilen(name, rolle, auswahl):
         file.writelines(file_list)
 
         werwolf.hexe_verbraucht("heilen")
-        werwolf.in_log_schreiben("Hexe " + name + " hat " + auswahl + " geheilt")
+        werwolf.in_log_schreiben(
+            "Hexe " + name + " hat " + auswahl + " geheilt")
         return render_template("Dashboards/Dash_Dorfbewohner.html")
     return render_template("fehler.html"), 500
 

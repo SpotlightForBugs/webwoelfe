@@ -145,7 +145,8 @@ def validiere_rolle(name: str, rolle: str) -> bool:
 
     """
     # create a string with the name and the role
-    wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
+    wort = ("'" + name + " = " + rolle +
+            "\n'").encode("unicode_escape").decode("utf-8")
     with open("rollen_log.txt", "r") as file:  # open the log file
         players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
@@ -164,7 +165,8 @@ def validiere_rolle_original(name: str, rolle: str) -> bool:
 
     """
     # create a string with the name and the role
-    wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
+    wort = ("'" + name + " = " + rolle +
+            "\n'").encode("unicode_escape").decode("utf-8")
     with open("rollen_original.txt", "r") as file:  # open the log file
         players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
@@ -1037,7 +1039,8 @@ def setze_status(token: str, status: str):
                             if line != "\n":  # if the line is not empty
                                 file.write(line)  # write the line to the file
                             else:
-                                file.write("")  # if the line is empty, write nothing
+                                # if the line is empty, write nothing
+                                file.write("")
 
 
 def setze_status_fuer_rolle(rolle: str, status: str):
@@ -1070,7 +1073,8 @@ def setze_status_fuer_rolle(rolle: str, status: str):
                             if line != "\n":  # if the line is not empty
                                 file.write(line)  # write the line to the file
                             else:
-                                file.write("")  # if the line is empty, write nothing
+                                # if the line is empty, write nothing
+                                file.write("")
 
 
 def setze_status_fuer_name(name: str, status: str):
@@ -1103,7 +1107,8 @@ def setze_status_fuer_name(name: str, status: str):
                             if line != "\n":  # if the line is not empty
                                 file.write(line)  # write the line to the file
                             else:
-                                file.write("")  # if the line is empty, write nothing
+                                # if the line is empty, write nothing
+                                file.write("")
 
 
 def setze_status_fuer_alle(status: str):
@@ -1155,7 +1160,8 @@ def actions(action: str):
         setze_status_fuer_rolle("Armor", "1")
 
     elif action == "verliebte_informieren":
-        verliebte_ausgeben()  # the function verliebte_ausgeben() returns the names in the following format: +lover1+lover2+
+        # the function verliebte_ausgeben() returns the names in the following format: +lover1+lover2+
+        verliebte_ausgeben()
         lover1 = verliebte_ausgeben().split("+")[1]
         lover2 = verliebte_ausgeben().split("+")[2]
         setze_status_fuer_name(lover1, "4")

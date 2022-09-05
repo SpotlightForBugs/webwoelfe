@@ -1,14 +1,14 @@
-//if current page is not / then perform the following
+// if current page is not / then perform the following
 if (window.location.pathname != "/") {
   if (document.cookie.indexOf("token") !== -1) {
-    //token is the first part of the cookie, delimited by a semicolon
+    // token is the first part of the cookie, delimited by a semicolon
 
     var token = document.cookie.split(";")[0].split("=")[1];
   }
   if (token.includes("token=")) {
     token = token.replace("token=", "");
   }
-  //else search for token= in other cookies using a for loop
+  // else search for token= in other cookies using a for loop
   else if (document.cookie.includes("token=")) {
     for (var i = 0; i < document.cookie.split(";").length; i++) {
       if (document.cookie.split(";")[i].split("=")[0] == "token") {
@@ -16,7 +16,8 @@ if (window.location.pathname != "/") {
       }
     }
   }
-  //save the http code of the page /{token}/zum_ziel to the variable status_code and the url to the variable url
+  // save the http code of the page /{token}/zum_ziel to the variable
+  // status_code and the url to the variable url
   var status_code = 0;
   var url = "/" + token + "/zum_ziel";
   var xmlhttp = new XMLHttpRequest();
@@ -28,14 +29,16 @@ if (window.location.pathname != "/") {
   xmlhttp.open("GET", url, false);
   xmlhttp.send();
 
-  //if the http code is 200 then perform the following
+  // if the http code is 200 then perform the following
   if (status_code == 200) {
-    //get the url of the current page
+    // get the url of the current page
     var current_url = window.location.href;
 
-    //if the current page is not the page /{token}/zum_ziel then perform the following
+    // if the current page is not the page /{token}/zum_ziel then perform the
+    // following
     if (current_url.indexOf("/" + token + "/zum_ziel") == -1) {
-      //get where the page /{token}/zum_ziel is redirecting to and save it to the variable redirect_url
+      // get where the page /{token}/zum_ziel is redirecting to and save it to
+      // the variable redirect_url
       var redirect_url = "";
       var xmlhttp = new XMLHttpRequest();
       xmlhttp.onreadystatechange = function () {
@@ -46,9 +49,10 @@ if (window.location.pathname != "/") {
       xmlhttp.open("GET", url, false);
       xmlhttp.send();
 
-      //if the redirect_url is not the same as the current page then perform the following
+      // if the redirect_url is not the same as the current page then perform
+      // the following
       if (redirect_url != current_url) {
-        //redirect the user to the page /{token}/zum_ziel
+        // redirect the user to the page /{token}/zum_ziel
         window.location.href = redirect_url;
       }
     }

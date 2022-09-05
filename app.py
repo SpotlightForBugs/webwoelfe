@@ -1,30 +1,28 @@
-import sentry_sdk
-from sentry_sdk import set_user
-from sentry_sdk import last_event_id
-from sentry_sdk.integrations.flask import FlaskIntegration
-from shutil import ExecError
-from flask_api import status
-from traceback import print_tb  # skipcq: PY-W2000
-from flask import (  # skipcq: PY-W2000
-    Flask,
-    request,
-    url_for,
-    render_template,
-    session,
-    make_response,
-    redirect,
-    Response,
-    escape,
-)
-import jsonify
-
-
-import werwolf
 import datetime
 import re
-from inspect import currentframe, getframeinfo
 from datetime import datetime
+from inspect import currentframe
+from inspect import getframeinfo
+from shutil import ExecError
+from traceback import print_tb  # skipcq: PY-W2000
 
+import jsonify
+import sentry_sdk
+from flask import escape
+from flask import Flask
+from flask import make_response
+from flask import redirect
+from flask import render_template
+from flask import request
+from flask import Response
+from flask import session
+from flask import url_for
+from flask_api import status
+from sentry_sdk import last_event_id
+from sentry_sdk import set_user
+from sentry_sdk.integrations.flask import FlaskIntegration
+
+import werwolf
 
 sentry_sdk.init(
     dsn="https://78fe9de58a5847ada071bf5f62f9c214@o1363527.ingest.sentry.io/6678492",
@@ -74,6 +72,7 @@ def einstellungen():
 
 
 # wie viele Spieler sollen vorhanden sein?
+
 
 # Spieleranzahl
 @app.route("/einstellungen/spieleranzahl", methods=["POST"])
@@ -689,7 +688,8 @@ def schlafen(name, rolle):  # function for the sleep function
                 names=players_log,
             )
         except (FileNotFoundError, IOError, PermissionError):
-            return render_template("fehler.html"), 500  # render the fehler.html
+            # render the fehler.html
+            return render_template("fehler.html"), 500
 
     else:
         # print the error
@@ -793,6 +793,7 @@ def warten():  # function for the wait function
 
 # tot function
 
+
 # route for the death function
 @app.route("/<name>/<rolle>/<todesgrund>/tot")
 def tot(name, rolle, todesgrund):  # function for the death function
@@ -891,7 +892,8 @@ def rausschmeissen(name, rolle):  # function for the kick function
             )
         except IOError as e:
 
-            return render_template("fehler.html"), 500  # render the fehler.html
+            # render the fehler.html
+            return render_template("fehler.html"), 500
 
     else:
         # print the error

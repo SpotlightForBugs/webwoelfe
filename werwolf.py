@@ -1,9 +1,8 @@
-from datetime import datetime
-import random
 import ast
+import random
 import re
 import secrets
-
+from datetime import datetime
 
 liste_tot_mit_aktion = ["Jaeger", "Hexe", "PLATZHALTER"]
 liste_tot_ohne_aktion = ["Dorfbewohner", "Werwolf", "Seherin"]
@@ -1037,7 +1036,8 @@ def setze_status(token: str, status: str):
                             if line != "\n":  # if the line is not empty
                                 file.write(line)  # write the line to the file
                             else:
-                                file.write("")  # if the line is empty, write nothing
+                                # if the line is empty, write nothing
+                                file.write("")
 
 
 def setze_status_fuer_rolle(rolle: str, status: str):
@@ -1070,7 +1070,8 @@ def setze_status_fuer_rolle(rolle: str, status: str):
                             if line != "\n":  # if the line is not empty
                                 file.write(line)  # write the line to the file
                             else:
-                                file.write("")  # if the line is empty, write nothing
+                                # if the line is empty, write nothing
+                                file.write("")
 
 
 def setze_status_fuer_name(name: str, status: str):
@@ -1103,7 +1104,8 @@ def setze_status_fuer_name(name: str, status: str):
                             if line != "\n":  # if the line is not empty
                                 file.write(line)  # write the line to the file
                             else:
-                                file.write("")  # if the line is empty, write nothing
+                                # if the line is empty, write nothing
+                                file.write("")
 
 
 def setze_status_fuer_alle(status: str):
@@ -1155,7 +1157,8 @@ def actions(action: str):
         setze_status_fuer_rolle("Armor", "1")
 
     elif action == "verliebte_informieren":
-        verliebte_ausgeben()  # the function verliebte_ausgeben() returns the names in the following format: +lover1+lover2+
+        # the function verliebte_ausgeben() returns the names in the following format: +lover1+lover2+
+        verliebte_ausgeben()
         lover1 = verliebte_ausgeben().split("+")[1]
         lover2 = verliebte_ausgeben().split("+")[2]
         setze_status_fuer_name(lover1, "4")

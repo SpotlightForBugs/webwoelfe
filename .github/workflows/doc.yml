@@ -21,7 +21,8 @@ jobs:
       - name: Generate docs
         run: |
           pip3 install pydocmd
-          pydocmd simple > docs.md
+          pydocmd app.py > docs.md
+          pydocmd werwolf.py >> docs.md
 
       - name: Commit docs
         run: |

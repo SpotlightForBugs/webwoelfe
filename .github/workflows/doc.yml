@@ -32,13 +32,10 @@ jobs:
         pydocmd *.py > Documentation.md
     - name: Commit files
       run: |
-        git config --local user.email 
-        git config --local user.name
+        git config --local user.email "
+        git config --local user.name "github-actions[bot]"
         git add .
         git commit -m "Update Documentation.md" -a
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: pro
-        
+    - name: generate documentation
+      run: |
+        git push  

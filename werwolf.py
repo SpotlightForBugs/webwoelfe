@@ -1201,7 +1201,7 @@ def actions(action: str):
         setze_status_fuer_alle("3")
 
 
-def erhalte_ziel(token: str)->str:
+def erhalte_ziel(token: str) -> str:
     # 1. get the role of the player
     rolle = rolle_aus_token(token)
 

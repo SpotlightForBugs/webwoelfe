@@ -4,11 +4,8 @@
 
 # <kbd>module</kbd> `werwolf.py`
 
+## **Global Variables**
 
-
-
-**Global Variables**
----------------
 - **liste_tot_mit_aktion**
 - **liste_tot_ohne_aktion**
 
@@ -22,10 +19,9 @@
 createDict()
 ```
 
-The createDict function creates a dictionary that assigns the number of players to each role. It takes no arguments and returns a dictionary with the keys: Werwolf, Hexe, Seherin, Armor, Jaeger and Dorfbewohner. The values are integers representing how many players have that role. 
+The createDict function creates a dictionary that assigns the number of players to each role. It takes no arguments and returns a dictionary with the keys: Werwolf, Hexe, Seherin, Armor, Jaeger and Dorfbewohner. The values are integers representing how many players have that role.
 
-:return: A dictionary that assigns the number of players to each role 
-
+:return: A dictionary that assigns the number of players to each role
 
 ---
 
@@ -37,10 +33,9 @@ The createDict function creates a dictionary that assigns the number of players 
 deduct()
 ```
 
-The deduct function is used to deduct a random key from the dictionary. It is called by the main function and returns a value that is then assigned to the variable 'rollen_zuweisung'. The function iterates through each key in the dictionary, checks if it has been assigned yet, and assigns it if not. If all values are 0 or less, then no keys remain in the dictionary and an empty string is returned. 
+The deduct function is used to deduct a random key from the dictionary. It is called by the main function and returns a value that is then assigned to the variable 'rollen_zuweisung'. The function iterates through each key in the dictionary, checks if it has been assigned yet, and assigns it if not. If all values are 0 or less, then no keys remain in the dictionary and an empty string is returned.
 
-:return: The index of a random key in the dictionary 
-
+:return: The index of a random key in the dictionary
 
 ---
 
@@ -52,10 +47,9 @@ The deduct function is used to deduct a random key from the dictionary. It is ca
 validiere_rolle(name: str, rolle: str) → bool
 ```
 
-The validiere_rolle function checks if the player is already in the log file. If so, it returns True. Otherwise, it returns False. 
+The validiere_rolle function checks if the player is already in the log file. If so, it returns True. Otherwise, it returns False.
 
-:param name:str: Store the name of the player :param rolle:str: Check if the name and role combination is already in the log file :return: True if the player is already in the log file 
-
+:param name:str: Store the name of the player :param rolle:str: Check if the name and role combination is already in the log file :return: True if the player is already in the log file
 
 ---
 
@@ -67,12 +61,9 @@ The validiere_rolle function checks if the player is already in the log file. If
 validiere_rolle_original(name: str, rolle: str) → bool
 ```
 
-The validiere_rolle_original function checks if the given name and role are already in the log file. 
+The validiere_rolle_original function checks if the given name and role are already in the log file.
 
-
-
-:param name:str: Store the name of the player :param rolle:str: Check if the role is already in the log file :return: True if the name and role are in the log file 
-
+:param name:str: Store the name of the player :param rolle:str: Check if the role is already in the log file :return: True if the name and role are in the log file
 
 ---
 
@@ -84,10 +75,9 @@ The validiere_rolle_original function checks if the given name and role are alre
 validiere_name(name: str) → bool
 ```
 
-The validiere_name function checks if the name of a player is already in use. It returns True if the name is already used and False otherwise. 
+The validiere_name function checks if the name of a player is already in use. It returns True if the name is already used and False otherwise.
 
-:param name:str: Set the name of the player :return: True if the name is in the log file and false otherwise 
-
+:param name:str: Set the name of the player :return: True if the name is in the log file and false otherwise
 
 ---
 
@@ -99,10 +89,9 @@ The validiere_name function checks if the name of a player is already in use. It
 hexe_verbraucht(flag: str)
 ```
 
-The hexe_verbraucht function removes the flag from the list of flags that the hexe can use. The function takes one argument, a string containing either a 't' or an 'h'. If it contains a 't', then it removes flag 2 from the list of flags that she can use. If it contains an 'h', then it removes flag 1 from her list of flags. 
+The hexe_verbraucht function removes the flag from the list of flags that the hexe can use. The function takes one argument, a string containing either a 't' or an 'h'. If it contains a 't', then it removes flag 2 from the list of flags that she can use. If it contains an 'h', then it removes flag 1 from her list of flags.
 
-:param flag:str: Determine the action of the function :return: The following: 
-
+:param flag:str: Determine the action of the function :return: The following:
 
 ---
 
@@ -114,14 +103,11 @@ The hexe_verbraucht function removes the flag from the list of flags that the he
 hexe_darf_toeten() → bool
 ```
 
-The hexe_darf_toeten function checks if the hexe can kill. 
+The hexe_darf_toeten function checks if the hexe can kill.
 
-:returns: True if the hexe can kill, False otherwise. 
+:returns: True if the hexe can kill, False otherwise.
 
-
-
-:return: A boolean value 
-
+:return: A boolean value
 
 ---
 
@@ -133,10 +119,9 @@ The hexe_darf_toeten function checks if the hexe can kill.
 hexe_darf_heilen() → bool
 ```
 
-The hexe_darf_heilen function checks if the hexe can heal. It does this by reading from a file called &quot;hexe_kann.txt&quot; which contains either a 1 or 0, depending on whether or not the hexe can heal. 
+The hexe_darf_heilen function checks if the hexe can heal. It does this by reading from a file called &quot;hexe_kann.txt&quot; which contains either a 1 or 0, depending on whether or not the hexe can heal.
 
-:return: True if the hexe can heal 
-
+:return: True if the hexe can heal
 
 ---
 
@@ -148,10 +133,9 @@ The hexe_darf_heilen function checks if the hexe can heal. It does this by readi
 armor_darf_auswaehlen() → bool
 ```
 
-The armor_darf_auswaehlen function checks if the armor has already selected the lovers. If not, it returns True. Otherwise, it returns False. 
+The armor_darf_auswaehlen function checks if the armor has already selected the lovers. If not, it returns True. Otherwise, it returns False.
 
-:return: True if the armor can be selected and false otherwise 
-
+:return: True if the armor can be selected and false otherwise
 
 ---
 
@@ -163,14 +147,11 @@ The armor_darf_auswaehlen function checks if the armor has already selected the 
 jaeger_darf_toeten() → bool
 ```
 
-The jaeger_darf_toeten function checks whether the Jaeger can kill 
+The jaeger_darf_toeten function checks whether the Jaeger can kill
 
-:returns: True if the Jaeger can kill, False otherwise. 
+:returns: True if the Jaeger can kill, False otherwise.
 
-
-
-:return: A boolean value 
-
+:return: A boolean value
 
 ---
 
@@ -182,8 +163,7 @@ The jaeger_darf_toeten function checks whether the Jaeger can kill
 jaeger_fertig()
 ```
 
-The jaeger_fertig function is used to set the jaeger_kann.txt file to 0 and the jaeger can not kill somebody anymore :return: The string &quot;0&quot; 
-
+The jaeger_fertig function is used to set the jaeger_kann.txt file to 0 and the jaeger can not kill somebody anymore :return: The string &quot;0&quot;
 
 ---
 
@@ -195,10 +175,9 @@ The jaeger_fertig function is used to set the jaeger_kann.txt file to 0 and the 
 armor_fertig(player1: str, player2: str)
 ```
 
-The armor_fertig function adds a line to the verliebt.txt file and replaces the armor_kann.txt file with 0. 
+The armor_fertig function adds a line to the verliebt.txt file and replaces the armor_kann.txt file with 0.
 
-:param player1:str: Store the name of the first player :param player2:str: Determine the name of the player that is going to be added to the list :return: The following: 
-
+:param player1:str: Store the name of the first player :param player2:str: Determine the name of the player that is going to be added to the list :return: The following:
 
 ---
 
@@ -210,10 +189,9 @@ The armor_fertig function adds a line to the verliebt.txt file and replaces the 
 verliebte_ausgeben() → str
 ```
 
-The verliebte_ausgeben function reads the verliebt.txt file and returns its content. 
+The verliebte_ausgeben function reads the verliebt.txt file and returns its content.
 
-:return: The content of the verliebt.txt file 
-
+:return: The content of the verliebt.txt file
 
 ---
 
@@ -225,10 +203,9 @@ The verliebte_ausgeben function reads the verliebt.txt file and returns its cont
 ist_verliebt(name: str) → bool
 ```
 
-The ist_verliebt function checks if the player is verliebt 
+The ist_verliebt function checks if the player is verliebt
 
-:param name:str: Define the name of the player :return: True if the player is verliebt, otherwise it returns false 
-
+:param name:str: Define the name of the player :return: True if the player is verliebt, otherwise it returns false
 
 ---
 
@@ -240,11 +217,6 @@ The ist_verliebt function checks if the player is verliebt
 leere_dateien()
 ```
 
-
-
-
-
-
 ---
 
 <a href="../werwolf.py#L403"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
@@ -255,14 +227,9 @@ leere_dateien()
 momentane_rolle(player: str) → str
 ```
 
-The momentane_rolle function returns the current role of a player. 
+The momentane_rolle function returns the current role of a player.
 
-
-
-
-
-:param player:str: Get the name of the player whose role is to be returned :return: The current role of the player 
-
+:param player:str: Get the name of the player whose role is to be returned :return: The current role of the player
 
 ---
 
@@ -274,14 +241,9 @@ The momentane_rolle function returns the current role of a player.
 fruehere_rolle(player: str) → str
 ```
 
-The fruehere_rolle function returns the previous role of a player, before dying. 
+The fruehere_rolle function returns the previous role of a player, before dying.
 
-
-
-
-
-:param player:str: Pass the name of the player to the function :return: The previous role of the player, before dying 
-
+:param player:str: Pass the name of the player to the function :return: The previous role of the player, before dying
 
 ---
 
@@ -293,10 +255,9 @@ The fruehere_rolle function returns the previous role of a player, before dying.
 war_oder_ist_rolle(player: str, rolle: str) → bool
 ```
 
-The war_oder_ist_rolle function checks whether a player is currently or was previously in the given role. It returns True if they are, False otherwise. 
+The war_oder_ist_rolle function checks whether a player is currently or was previously in the given role. It returns True if they are, False otherwise.
 
-:param player:str: Specify the player whose role is to be checked :param rolle:str: Check if the player is in the specified role :return: True if the player is in the role or was in that role before 
-
+:param player:str: Specify the player whose role is to be checked :param rolle:str: Check if the player is in the specified role :return: True if the player is in the role or was in that role before
 
 ---
 
@@ -308,10 +269,9 @@ The war_oder_ist_rolle function checks whether a player is currently or was prev
 aktion_verfuegbar_ist_tot(player: str) → bool
 ```
 
-The aktion_verfuegbar_ist_tot function checks if the player can do an action. It checks if the player is a witch, and if she can kill someone. If not, it checks if the player is a hunter and he can kill someone. 
+The aktion_verfuegbar_ist_tot function checks if the player can do an action. It checks if the player is a witch, and if she can kill someone. If not, it checks if the player is a hunter and he can kill someone.
 
-:param player:str: Check if the player is a hunter or witch :return: True if the player can do an action 
-
+:param player:str: Check if the player is a hunter or witch :return: True if the player can do an action
 
 ---
 
@@ -323,10 +283,9 @@ The aktion_verfuegbar_ist_tot function checks if the player can do an action. It
 zufallszahl(minimum: int, maximum: int) → int
 ```
 
-The zufallszahl function returns a random integer between the specified minimum and maximum values.  The function takes two arguments, both integers: minimum and maximum.  It returns an integer. 
+The zufallszahl function returns a random integer between the specified minimum and maximum values. The function takes two arguments, both integers: minimum and maximum. It returns an integer.
 
-:param minimum:int: Set the lowest possible number and the maximum:int parameter is used to set the highest possible number :param maximum:int: Set the upper limit of the random number :return: A random integer between the minimum and maximum value 
-
+:param minimum:int: Set the lowest possible number and the maximum:int parameter is used to set the highest possible number :param maximum:int: Set the upper limit of the random number :return: A random integer between the minimum and maximum value
 
 ---
 
@@ -338,10 +297,9 @@ The zufallszahl function returns a random integer between the specified minimum 
 verliebte_toeten() → str
 ```
 
-The verliebte_toeten function takes the names of two players and writes them to a file. The function then reads the file and checks if either player is in it. If so, it replaces their name with &quot;Tot&quot;. Finally, the function returns a string containing both names. 
+The verliebte_toeten function takes the names of two players and writes them to a file. The function then reads the file and checks if either player is in it. If so, it replaces their name with &quot;Tot&quot;. Finally, the function returns a string containing both names.
 
-:return: The names of the two players who are dead 
-
+:return: The names of the two players who are dead
 
 ---
 
@@ -353,10 +311,9 @@ The verliebte_toeten function takes the names of two players and writes them to 
 schreibe_zuletzt_gestorben(player: str) → None
 ```
 
-The schreibe_zuletzt_gestorben function writes the last dead player to the logfile 
+The schreibe_zuletzt_gestorben function writes the last dead player to the logfile
 
-:param player:str: Write the name of the player who died last to a file :return: None 
-
+:param player:str: Write the name of the player who died last to a file :return: None
 
 ---
 
@@ -368,10 +325,9 @@ The schreibe_zuletzt_gestorben function writes the last dead player to the logfi
 toete_spieler(player)
 ```
 
-The toete_spieler function takes a player as an argument and changes the role of that player to &quot;Tot&quot; in the rollen_log.txt file. It also writes down when that player was killed. 
+The toete_spieler function takes a player as an argument and changes the role of that player to &quot;Tot&quot; in the rollen_log.txt file. It also writes down when that player was killed.
 
-:param player: Identify the player who is to be killed :return: The following: 
-
+:param player: Identify the player who is to be killed :return: The following:
 
 ---
 
@@ -383,10 +339,9 @@ The toete_spieler function takes a player as an argument and changes the role of
 log(debug: bool)
 ```
 
-The log function writes a string to the logfile.txt file, which is used by the debug function to determine whether or not debug mode is on. If it's off, then the logfile will be wiped clean so that way it doesn't interfere with any future debugging efforts. 
+The log function writes a string to the logfile.txt file, which is used by the debug function to determine whether or not debug mode is on. If it's off, then the logfile will be wiped clean so that way it doesn't interfere with any future debugging efforts.
 
-:param debug:bool: Decide whether or not to write a logfile :return: A none object 
-
+:param debug:bool: Decide whether or not to write a logfile :return: A none object
 
 ---
 
@@ -398,10 +353,9 @@ The log function writes a string to the logfile.txt file, which is used by the d
 in_log_schreiben(a: str)
 ```
 
-The in_log_schreiben function writes a string to the logfile.txt file. It takes one argument, which is a string. 
+The in_log_schreiben function writes a string to the logfile.txt file. It takes one argument, which is a string.
 
-:param a:str: Pass the message to be logged :return: The result of the function 
-
+:param a:str: Pass the message to be logged :return: The result of the function
 
 ---
 
@@ -413,14 +367,9 @@ The in_log_schreiben function writes a string to the logfile.txt file. It takes 
 spieler_gestorben(player: str) → str
 ```
 
-The spieler_gestorben function performs actions if the player is dead. 
+The spieler_gestorben function performs actions if the player is dead.
 
-
-
-
-
-:param player:str: Identify the player that is dead :return: A string 
-
+:param player:str: Identify the player that is dead :return: A string
 
 ---
 
@@ -432,10 +381,9 @@ The spieler_gestorben function performs actions if the player is dead.
 spieler_ist_tot(player: str) → bool
 ```
 
-The spieler_ist_tot function checks if the player is dead 
+The spieler_ist_tot function checks if the player is dead
 
-:param player:str: Identify the player :return: A boolean value 
-
+:param player:str: Identify the player :return: A boolean value
 
 ---
 
@@ -447,12 +395,9 @@ The spieler_ist_tot function checks if the player is dead
 name_richtig_schreiben(name: str) → str
 ```
 
-The name_richtig_schreiben function takes a string and returns the same string with all non-alphanumeric characters replaced by underscores. 
+The name_richtig_schreiben function takes a string and returns the same string with all non-alphanumeric characters replaced by underscores.
 
-
-
-:param name:str: Pass the name of the file to be renamed :return: The name with the correct capitalization 
-
+:param name:str: Pass the name of the file to be renamed :return: The name with the correct capitalization
 
 ---
 
@@ -464,10 +409,9 @@ The name_richtig_schreiben function takes a string and returns the same string w
 suche_spieler() → bool
 ```
 
-The suche_spieler function checks if the number of players is bigger than the number of lines in rollen_original.txt. If this is true, then it returns True, else False. 
+The suche_spieler function checks if the number of players is bigger than the number of lines in rollen_original.txt. If this is true, then it returns True, else False.
 
-:return: True if the number of players is greater than the number of roles 
-
+:return: True if the number of players is greater than the number of roles
 
 ---
 
@@ -479,10 +423,9 @@ The suche_spieler function checks if the number of players is bigger than the nu
 generiere_token(name: str, rolle: str) → str
 ```
 
-The generiere_token function generates a token for the user. It checks if the role is valid and if it is not already in use. If this condition is met, a new token will be generated and written to tokens.txt 
+The generiere_token function generates a token for the user. It checks if the role is valid and if it is not already in use. If this condition is met, a new token will be generated and written to tokens.txt
 
-:param name:str: Specify the name of the user :param rolle:str: Check if the role is valid :return: A token 
-
+:param name:str: Specify the name of the user :param rolle:str: Check if the role is valid :return: A token
 
 ---
 
@@ -494,10 +437,9 @@ The generiere_token function generates a token for the user. It checks if the ro
 validiere_token(token: str) → bool
 ```
 
-The validiere_token function checks if the token is in the file tokens.txt  and returns True if it is, False otherwise. 
+The validiere_token function checks if the token is in the file tokens.txt and returns True if it is, False otherwise.
 
-:param token:str: Check if the token is in the file :return: True if the token is in the file, otherwise it returns false 
-
+:param token:str: Check if the token is in the file :return: True if the token is in the file, otherwise it returns false
 
 ---
 
@@ -509,10 +451,9 @@ The validiere_token function checks if the token is in the file tokens.txt  and 
 name_und_rolle_aus_token(token: str)
 ```
 
-The name_und_rolle_aus_token function takes a token as input and returns the name and role of the user who has this token. The function reads the file tokens.txt, checks if the given token is in this file and splits it at every + to return the name and role of that user. 
+The name_und_rolle_aus_token function takes a token as input and returns the name and role of the user who has this token. The function reads the file tokens.txt, checks if the given token is in this file and splits it at every + to return the name and role of that user.
 
-:param token:str: Check if the token is in the file tokens :return: The name and the role of a token 
-
+:param token:str: Check if the token is in the file tokens :return: The name and the role of a token
 
 ---
 
@@ -524,12 +465,9 @@ The name_und_rolle_aus_token function takes a token as input and returns the nam
 loesche_token(token)
 ```
 
-The loesche_token function deletes a token from the file tokens.txt 
+The loesche_token function deletes a token from the file tokens.txt
 
-
-
-:param token: Check if the token is in the file :return: The name and the role of the token 
-
+:param token: Check if the token is in the file :return: The name and the role of the token
 
 ---
 
@@ -541,10 +479,9 @@ The loesche_token function deletes a token from the file tokens.txt
 rolle_aus_token(token: str)
 ```
 
-The rolle_aus_token function takes a token as an argument and returns the role of the user associated with that token. The function reads from a file called tokens.txt, which contains all valid tokens and their corresponding roles. 
+The rolle_aus_token function takes a token as an argument and returns the role of the user associated with that token. The function reads from a file called tokens.txt, which contains all valid tokens and their corresponding roles.
 
-:param token:str: Check if the token is in the file :return: The role of the token 
-
+:param token:str: Check if the token is in the file :return: The role of the token
 
 ---
 
@@ -556,10 +493,9 @@ The rolle_aus_token function takes a token as an argument and returns the role o
 name_aus_token(token: str)
 ```
 
-The name_aus_token function takes a token and returns the name of the person who has that token.  If no one has that token, it returns None. 
+The name_aus_token function takes a token and returns the name of the person who has that token. If no one has that token, it returns None.
 
-:param token:str: Pass the token of a user to the function :return: The name of the token if it is in tokens 
-
+:param token:str: Pass the token of a user to the function :return: The name of the token if it is in tokens
 
 ---
 
@@ -571,10 +507,9 @@ The name_aus_token function takes a token and returns the name of the person who
 status_aus_token(token: str)
 ```
 
-The status_aus_token function checks if the token is in the file tokens.txt and returns the status of the token if it is in the file. 
+The status_aus_token function checks if the token is in the file tokens.txt and returns the status of the token if it is in the file.
 
-:param token:str: Pass the token of the user that is checked :return: The status of the token 
-
+:param token:str: Pass the token of the user that is checked :return: The status of the token
 
 ---
 
@@ -586,10 +521,9 @@ The status_aus_token function checks if the token is in the file tokens.txt and 
 token_aus_name_und_rolle(name: str, rolle: str) → str
 ```
 
-The token_aus_name_und_rolle function takes a name and a role as input. It checks if the given name and role are valid, and returns the token of that player if it is. If not, it returns an error message. 
+The token_aus_name_und_rolle function takes a name and a role as input. It checks if the given name and role are valid, and returns the token of that player if it is. If not, it returns an error message.
 
-:param name:str: Specify the name of the player :param rolle:str: Check if the rolle is valid :return: The token for the player name and role 
-
+:param name:str: Specify the name of the player :param rolle:str: Check if the rolle is valid :return: The token for the player name and role
 
 ---
 
@@ -601,10 +535,9 @@ The token_aus_name_und_rolle function takes a name and a role as input. It check
 ist_token_vorhandem(name, rolle)
 ```
 
-The ist_token_vorhandem function checks if the token is in the file tokens.txt 
+The ist_token_vorhandem function checks if the token is in the file tokens.txt
 
-:param name: Check if the token is in the file :param rolle: Check if the token is in the file :return: True if the token is in the file, otherwise false 
-
+:param name: Check if the token is in the file :param rolle: Check if the token is in the file :return: True if the token is in the file, otherwise false
 
 ---
 
@@ -616,11 +549,6 @@ The ist_token_vorhandem function checks if the token is in the file tokens.txt
 setze_status(token: str, status: str)
 ```
 
-
-
-
-
-
 ---
 
 <a href="../werwolf.py#L1043"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
@@ -630,11 +558,6 @@ setze_status(token: str, status: str)
 ```python
 setze_status_fuer_rolle(rolle: str, status: str)
 ```
-
-
-
-
-
 
 ---
 
@@ -646,11 +569,6 @@ setze_status_fuer_rolle(rolle: str, status: str)
 setze_status_fuer_name(name: str, status: str)
 ```
 
-
-
-
-
-
 ---
 
 <a href="../werwolf.py#L1111"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
@@ -660,11 +578,6 @@ setze_status_fuer_name(name: str, status: str)
 ```python
 setze_status_fuer_alle(status: str)
 ```
-
-
-
-
-
 
 ---
 
@@ -676,11 +589,6 @@ setze_status_fuer_alle(status: str)
 actions(action: str)
 ```
 
-
-
-
-
-
 ---
 
 <a href="../werwolf.py#L1204"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
@@ -691,11 +599,6 @@ actions(action: str)
 erhalte_ziel(token: str) → str
 ```
 
-
-
-
-
-
 ---
 
 <a href="../werwolf.py#L1230"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
@@ -705,13 +608,6 @@ erhalte_ziel(token: str) → str
 ```python
 nurNamen() → list
 ```
-
-
-
-
-
-
-
 
 ---
 

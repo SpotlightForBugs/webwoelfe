@@ -41,36 +41,51 @@ def createDict():
     if erzaehler_flag == 1:
         if jaeger > 0:
             assign = {
-                "Erzaehler": 1,
-                "Werwolf": werwolf,
-                "Armor": armor,
-                "Hexe": hexe,
-                "Seherin": seherin,
-                "Jaeger": jaeger,
-                "Dorfbewohner": (
-                    spieleranzahl - armor - werwolf - seherin - hexe - jaeger - 1
-                ),
+                "Erzaehler":
+                1,
+                "Werwolf":
+                werwolf,
+                "Armor":
+                armor,
+                "Hexe":
+                hexe,
+                "Seherin":
+                seherin,
+                "Jaeger":
+                jaeger,
+                "Dorfbewohner": (spieleranzahl - armor - werwolf - seherin -
+                                 hexe - jaeger - 1),
             }
         else:
             assign = {
-                "Erzaehler": 1,
-                "Werwolf": werwolf,
-                "Armor": armor,
-                "Hexe": hexe,
-                "Seherin": seherin,
-                "Dorfbewohner": (spieleranzahl - werwolf - seherin - hexe - armor - 1),
+                "Erzaehler":
+                1,
+                "Werwolf":
+                werwolf,
+                "Armor":
+                armor,
+                "Hexe":
+                hexe,
+                "Seherin":
+                seherin,
+                "Dorfbewohner":
+                (spieleranzahl - werwolf - seherin - hexe - armor - 1),
             }
     elif erzaehler_flag == 0:
         if jaeger > 0:
             assign = {
-                "Werwolf": werwolf,
-                "Hexe": hexe,
-                "Armor": armor,
-                "Seherin": seherin,
-                "Jaeger": jaeger,
-                "Dorfbewohner": (
-                    spieleranzahl - werwolf - seherin - hexe - jaeger - armor
-                ),
+                "Werwolf":
+                werwolf,
+                "Hexe":
+                hexe,
+                "Armor":
+                armor,
+                "Seherin":
+                seherin,
+                "Jaeger":
+                jaeger,
+                "Dorfbewohner":
+                (spieleranzahl - werwolf - seherin - hexe - jaeger - armor),
             }
         else:
             assign = {
@@ -78,7 +93,8 @@ def createDict():
                 "Hexe": hexe,
                 "Armor": armor,
                 "Seherin": seherin,
-                "Dorfbewohner": (spieleranzahl - werwolf - seherin - hexe - armor),
+                "Dorfbewohner":
+                (spieleranzahl - werwolf - seherin - hexe - armor),
             }
 
     with open("rollen_zuweisung.txt", "w+") as a:
@@ -144,7 +160,8 @@ def validiere_rolle(name: str, rolle: str) -> bool:
 
     """
     # create a string with the name and the role
-    wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
+    wort = ("'" + name + " = " + rolle +
+            "\n'").encode("unicode_escape").decode("utf-8")
     with open("rollen_log.txt", "r") as file:  # open the log file
         players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
@@ -163,7 +180,8 @@ def validiere_rolle_original(name: str, rolle: str) -> bool:
 
     """
     # create a string with the name and the role
-    wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
+    wort = ("'" + name + " = " + rolle +
+            "\n'").encode("unicode_escape").decode("utf-8")
     with open("rollen_original.txt", "r") as file:  # open the log file
         players_vorhanden = str(file.readlines())  # read the log file
     if wort in players_vorhanden:
@@ -313,11 +331,8 @@ def armor_fertig(player1: str, player2: str):
     :return: The following:
 
     """
-    if (
-        player1 != player2
-        and validiere_name(player1) is True
-        and validiere_name(player2) is True
-    ):
+    if (player1 != player2 and validiere_name(player1) is True
+            and validiere_name(player2) is True):
         with open("verliebt.txt", "r+") as verliebt:
             verliebt_text = verliebt.read()
             # wenn nicht in der Liste, dann hinzufügen.
@@ -342,13 +357,8 @@ def verliebte_ausgeben() -> str:
     with open("verliebt.txt", "r") as verliebt:
         verliebt_text = verliebt.read()
         if verliebt_text.count("+") == 2:
-            return (
-                "+"
-                + verliebt_text.split("+")[1]
-                + "+"
-                + verliebt_text.split("+")[2]
-                + "+"
-            )
+            return ("+" + verliebt_text.split("+")[1] + "+" +
+                    verliebt_text.split("+")[2] + "+")
 
 
 def ist_verliebt(name: str) -> bool:
@@ -370,7 +380,8 @@ def ist_verliebt(name: str) -> bool:
 
 def leere_dateien():
 
-    with open("rollen_log.txt", "w+", encoding="UTF8") as f:  # leere rollen_log.txt
+    with open("rollen_log.txt", "w+",
+              encoding="UTF8") as f:  # leere rollen_log.txt
         f.write("*********************\n")
     with open("abstimmung.txt", "r+", encoding="UTF8") as file:
         file.truncate(0)
@@ -416,11 +427,8 @@ def momentane_rolle(player: str) -> str:
     for line in lines:
         if "+" + player in line:
             return (line.split("=")[1].split("\n")[0]).replace(" ", "")
-    return (
-        "Ein Fehler ist aufgetreten, die Rolle von "
-        + player
-        + " konnte nicht ermittelt werden."
-    )
+    return ("Ein Fehler ist aufgetreten, die Rolle von " + player +
+            " konnte nicht ermittelt werden.")
 
 
 def fruehere_rolle(player: str) -> str:
@@ -441,11 +449,8 @@ def fruehere_rolle(player: str) -> str:
             return (line.split("=")[1].split("\n")[0]).replace(" ", "")
             # remove whitespaces from result
 
-    return (
-        "Ein Fehler ist aufgetreten, die ursprüngliche Rolle von "
-        + player
-        + " konnte nicht ermittelt werden."
-    )
+    return ("Ein Fehler ist aufgetreten, die ursprüngliche Rolle von " +
+            player + " konnte nicht ermittelt werden.")
 
 
 def war_oder_ist_rolle(player: str, rolle: str) -> bool:
@@ -510,30 +515,16 @@ def verliebte_toeten() -> str:
     log_liste = []
     with open("verliebt.txt", "r") as verliebt:
         read = verliebt.read()
-        player1 = (
-            str(read.split("+"))
-            .encode("utf-8")
-            .decode("utf-8")
-            .replace("\\n", "")
-            .replace("'", "")
-            .replace("[", "")
-            .replace("]", "")
-            .replace("'", "")
-            .replace(" ", "")
-            .split(",")[1]
-        )
-        player2 = (
-            str(read.split("+"))
-            .encode("utf-8")
-            .decode("utf-8")
-            .replace("\\n", "")
-            .replace("'", "")
-            .replace("[", "")
-            .replace("]", "")
-            .replace("'", "")
-            .replace(" ", "")
-            .split(",")[2]
-        )
+        player1 = (str(
+            read.split("+")).encode("utf-8").decode("utf-8").replace(
+                "\\n",
+                "").replace("'", "").replace("[", "").replace("]", "").replace(
+                    "'", "").replace(" ", "").split(",")[1])
+        player2 = (str(
+            read.split("+")).encode("utf-8").decode("utf-8").replace(
+                "\\n",
+                "").replace("'", "").replace("[", "").replace("]", "").replace(
+                    "'", "").replace(" ", "").split(",")[2])
         verliebt.close()
     with open("rollen_log.txt", "r") as rollen_log:
         for line in rollen_log:
@@ -653,7 +644,8 @@ def spieler_gestorben(player: str) -> str:
     if rolle == "Tot":
         return "err"
 
-    if rolle in liste_tot_mit_aktion and aktion_verfuegbar_ist_tot(player) is True:
+    if rolle in liste_tot_mit_aktion and aktion_verfuegbar_ist_tot(
+            player) is True:
 
         # TODO: #33 Aktionen für Hexe und Jaeger während des Todes
 
@@ -848,7 +840,8 @@ def generiere_token(name: str, rolle: str) -> str:
     :return: A token
 
     """
-    if validiere_rolle_original(name, rolle) and not ist_token_vorhandem(name, rolle):
+    if validiere_rolle_original(
+            name, rolle) and not ist_token_vorhandem(name, rolle):
 
         token = secrets.token_hex(16)
         # write the token and the name and the role to the file tokens.txt
@@ -958,7 +951,8 @@ def status_aus_token(token: str):
     # read the file tokens.txt and check if the token is in the file
     with open("tokens.txt", "r") as file:
         for line in file:
-            if line != "\n" and "+" + token + "+" in line and line.count("+") == 5:
+            if line != "\n" and "+" + token + "+" in line and line.count(
+                    "+") == 5:
                 # split the line at the + and return the name and the role
                 return line.split("+")[4]
         return "Fehler"
@@ -1019,19 +1013,10 @@ def setze_status(token: str, status: str):
                     for line in lines:
                         if "+" + token + "+" in line:
                             file.write(
-                                line.split("+")[0]
-                                + "+"
-                                + line.split("+")[1]
-                                + "+"
-                                + line.split("+")[2]
-                                + "+"
-                                + line.split("+")[3]
-                                + "+"
-                                + status
-                                + "+"
-                                + line.split("+")[5]
-                                + "\n"
-                            )
+                                line.split("+")[0] + "+" + line.split("+")[1] +
+                                "+" + line.split("+")[2] + "+" +
+                                line.split("+")[3] + "+" + status + "+" +
+                                line.split("+")[5] + "\n")
                         else:
                             if line != "\n":  # if the line is not empty
                                 file.write(line)  # write the line to the file
@@ -1053,19 +1038,10 @@ def setze_status_fuer_rolle(rolle: str, status: str):
                     for line in lines:
                         if "+" + rolle + "+" in line:
                             file.write(
-                                line.split("+")[0]
-                                + "+"
-                                + line.split("+")[1]
-                                + "+"
-                                + line.split("+")[2]
-                                + "+"
-                                + line.split("+")[3]
-                                + "+"
-                                + status
-                                + "+"
-                                + line.split("+")[5]
-                                + "\n"
-                            )
+                                line.split("+")[0] + "+" + line.split("+")[1] +
+                                "+" + line.split("+")[2] + "+" +
+                                line.split("+")[3] + "+" + status + "+" +
+                                line.split("+")[5] + "\n")
                         else:
                             if line != "\n":  # if the line is not empty
                                 file.write(line)  # write the line to the file
@@ -1087,19 +1063,10 @@ def setze_status_fuer_name(name: str, status: str):
                     for line in lines:
                         if "+" + name + "+" in line:
                             file.write(
-                                line.split("+")[0]
-                                + "+"
-                                + line.split("+")[1]
-                                + "+"
-                                + line.split("+")[2]
-                                + "+"
-                                + line.split("+")[3]
-                                + "+"
-                                + status
-                                + "+"
-                                + line.split("+")[5]
-                                + "\n"
-                            )
+                                line.split("+")[0] + "+" + line.split("+")[1] +
+                                "+" + line.split("+")[2] + "+" +
+                                line.split("+")[3] + "+" + status + "+" +
+                                line.split("+")[5] + "\n")
                         else:
                             if line != "\n":  # if the line is not empty
                                 file.write(line)  # write the line to the file
@@ -1119,19 +1086,9 @@ def setze_status_fuer_alle(status: str):
             with open("tokens.txt", "w") as file:
                 for line in lines:
                     file.write(
-                        line.split("+")[0]
-                        + "+"
-                        + line.split("+")[1]
-                        + "+"
-                        + line.split("+")[2]
-                        + "+"
-                        + line.split("+")[3]
-                        + "+"
-                        + status
-                        + "+"
-                        + line.split("+")[5]
-                        + "\n"
-                    )
+                        line.split("+")[0] + "+" + line.split("+")[1] + "+" +
+                        line.split("+")[2] + "+" + line.split("+")[3] + "+" +
+                        status + "+" + line.split("+")[5] + "\n")
             setze_status_fuer_rolle("Erzaehler", "2")
 
 

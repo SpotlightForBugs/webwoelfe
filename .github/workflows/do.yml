@@ -16,7 +16,7 @@ jobs:
           lazydocs werwolf.py
           #create pull request
           
-          rm -r _build
+          
           git config --global user.email ""
           git config --global user.name "A lazy Bot"
           git add .

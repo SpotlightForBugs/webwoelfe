@@ -30,6 +30,7 @@ jobs:
       - name: Run a multi-line script
         run: |
           pip install sphinx sphinx-markdown-builder
+          pip install sphinx-autodoc-typehints
           sphinx-apidoc -o Sphinx-docs . sphinx-apidoc --full -A 'SpotlightForBugs'
           cd Sphinx-docs
           echo " 

@@ -1,0 +1,32 @@
+#this code genrates documentation for the python code in the whole repository. Its a github action that runs on every push to the repository. 
+#The documentation is put into a markdown file in the docs folder of the repository.
+name: Documentation
+on:
+  push:
+    branches: [ pro ]
+  pull_request:
+    branches: [ pro ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pdoc3
+    - name: Generate documentation
+      run: |
+        pdoc --html --output-dir docs ./
+    - name: Commit files
+      uses: EndBug/add-and-commit@v4
+      with:
+        message: 'Update documentation'
+        add: 'docs'
+        author_name: 'GitHub Actions'
+        author_email: '41898282+github-actions[bot]@users.noreply.github.com'

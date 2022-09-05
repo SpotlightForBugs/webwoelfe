@@ -3,3 +3,4 @@ requests
 sentry-sdk[flask]
 flask-api
 jsonify
+pydocmd

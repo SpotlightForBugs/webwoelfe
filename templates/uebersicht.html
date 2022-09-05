@@ -1,4 +1,74 @@
 {% extends 'struktur.html' %}
 <!--@generated-->
 
-{% block body %} {% endblock body %}
+{% block body %} 
+
+<div id="myDiv"></div>
+
+<script>
+
+    //create a new array to hold the Strings
+
+var myArray = new Array();
+//add the Strings to the array
+
+{% for i in nurNamen %}
+
+myArray.push("{{i}}");
+
+
+
+{% endfor %}
+
+
+//create a table with the array elements
+//each element is a colum in the table
+//after each element follows a blank colum
+
+var table = document.createElement("table");
+var row = table.insertRow(0);
+var cell = row.insertCell(0);
+cell.innerHTML = myArray[0];
+var cell = row.insertCell(1);
+cell.innerHTML = myArray[1];
+var cell = row.insertCell(2);
+cell.innerHTML = myArray[2];
+var cell = row.insertCell(3);
+cell.innerHTML = myArray[3];
+var cell = row.insertCell(4);
+cell.innerHTML = myArray[4];
+var cell = row.insertCell(5);
+cell.innerHTML = myArray[5];
+
+//add the table to the div element
+
+document.getElementById("myDiv").appendChild(table);
+
+</script>
+
+<div id="myDiv"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+
+
+{% endblock body %}

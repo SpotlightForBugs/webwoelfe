@@ -26,7 +26,6 @@ jobs:
           
           git config --global user.email ""
           git config --global user.name "A lazy Bot"
-          git config --global image "https://avatars.githubusercontent.com/u/45807407?v=4"
           git add .
           git commit -m "Update lazy docs"
           git push

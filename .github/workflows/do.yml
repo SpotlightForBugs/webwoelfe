@@ -30,30 +30,16 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run a multi-line script
         run: |
-          pip install sphinx sphinx-markdown-builder
-          pip install sphinx-autodoc-typehints
-          sphinx-apidoc -o Sphinx-docs . sphinx-apidoc --full -A 'SpotlightForBugs'
-          cd Sphinx-docs
-          echo " 
-          import os
-          import sys
-          sys.path.insert(0,os.path.abspath('../'))
-          def skip(app, what, name, obj,would_skip, options):
-              if name in ( '__init__',):
-                  return False
-              return would_skip
-          def setup(app):
-              app.connect('autodoc-skip-member', skip)
-          extensions.append('sphinx_autodoc_typehints')
-          " >> conf.py;
-          make markdown
+          pip install lazydocs
+          lazydocs werwolf.py
+          lazydocs app.py
           #create pull request
           mv _build/markdown/* ../
           rm -r _build
-          git config --global user.email "mail@spotlightforbugs.eu"
-          git config --global user.name "SpotlightForBugs"
+          git config --global user.email ""
+          git config --global user.name "A lazy Bot"
           git add .
-          git commit -m "Update Sphinx docs"
+          git commit -m "Update lazy docs"
           git push
           
 

@@ -50,7 +50,6 @@ jobs:
           #create pull request
           mv _build/markdown/* ../
           rm -r _build
-          rm -r Sphinx-docs
           git config --global user.email "mail@spotlightforbugs.eu"
           git config --global user.name "SpotlightForBugs"
           git add .

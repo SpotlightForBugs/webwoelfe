@@ -15,7 +15,7 @@ jobs:
           pip install lazydocs
           lazydocs werwolf.py
           #create pull request
-          mv _build/markdown/* ../
+          
           rm -r _build
           git config --global user.email ""
           git config --global user.name "A lazy Bot"

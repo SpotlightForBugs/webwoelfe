@@ -25,11 +25,11 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 
 import importlib.util
 import sys
+
 spec = importlib.util.spec_from_file_location("werwolf", "werwolf.py")
 werwolf = importlib.util.module_from_spec(spec)
 sys.modules["werwolf"] = werwolf
 spec.loader.exec_module(werwolf)
-
 
 
 sentry_sdk.init(

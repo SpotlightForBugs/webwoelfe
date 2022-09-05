@@ -1,16 +1,25 @@
 import datetime
 import re
 from datetime import datetime
-from inspect import currentframe, getframeinfo
+from inspect import currentframe
+from inspect import getframeinfo
 from shutil import ExecError
 from traceback import print_tb  # skipcq: PY-W2000
 
 import jsonify
 import sentry_sdk
-from flask import (Flask, Response, escape, make_response,  # skipcq: PY-W2000
-                   redirect, render_template, request, session, url_for)
+from flask import escape
+from flask import Flask
+from flask import make_response
+from flask import redirect
+from flask import render_template
+from flask import request
+from flask import Response
+from flask import session
+from flask import url_for
 from flask_api import status
-from sentry_sdk import last_event_id, set_user
+from sentry_sdk import last_event_id
+from sentry_sdk import set_user
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 import werwolf

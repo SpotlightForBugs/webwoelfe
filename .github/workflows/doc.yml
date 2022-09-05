@@ -1,29 +1,41 @@
-#this code genrates documentation for the python code in the whole repository. Its a github action that runs on every push to the repository. We can also configure it to run on a schedule.
-name: Docs
+#this code genrates documentation for the python code in the whole repository. 
+#Its a github action that runs on every push to the repository. 
 
-#on every push to the repository
+name: Documentation
+
 on:
   push:
-    branches: [ "Pro" ]
+    branches: [ pro ]
   pull_request:
-    branches: [ "Pro" ]
+    branches: [ pro ]
 
 jobs:
-  docs:
-    name: Docs
+  build:
+
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Generate documentation
+      run: |
+        pip install sphinx
+        pip install sphinx_rtd_theme
+        sphinx-apidoc -f -o docs/ .
+        make -C docs/ html
 
-      - name: Generate docs
-        run: |
-          pip3 install pydoc-markdown
-          python3 -m pydocmd simple > docs.md
+    - name: Publish documentation
+      uses: JamesIves/github-pages-deploy-action@releases/v3
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages # The branch the action should deploy to.
+        FOLDER: docs/_build/html # The folder the action should deploy.
+        CLEAN: true # Automatically remove deleted files from the deploy branch
 
-      - name: Commit docs
-        run: |
-          git config --local user.email ""
-          git config --local user.name ""
-          git add docs.md
-          git commit -m "Update docs" -a || true

@@ -8,4 +8,4 @@ jobs:
       # Builds the documentation package using the standard configuration
       - uses: cascode-labs/build-sphinx-action@v0.2.3
         with:
-          docs_path: '/docs/'
+          docs_path: 'docs'

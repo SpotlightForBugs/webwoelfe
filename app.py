@@ -1,31 +1,19 @@
 import datetime
-import re
 from datetime import datetime
 from inspect import currentframe
 from inspect import getframeinfo
-from shutil import ExecError
-from traceback import print_tb  # skipcq: PY-W2000
-
-import jsonify
 import sentry_sdk
 from flask import escape
 from flask import Flask
-from flask import make_response
 from flask import redirect
 from flask import render_template
 from flask import request
-from flask import Response
-from flask import session
-from flask import url_for
-from flask_api import status
-from sentry_sdk import last_event_id
 from sentry_sdk import set_user
 from sentry_sdk.integrations.flask import FlaskIntegration
 from flask import app
-
-
 import importlib.util
 import sys
+import flask
 
 spec = importlib.util.spec_from_file_location("werwolf", "werwolf.py")
 werwolf = importlib.util.module_from_spec(spec)
@@ -43,7 +31,7 @@ sentry_sdk.init(
 
 werwolf.log(debug=False)
 
-app = Flask(__name__) 
+app = flask.Flask(__name__) 
 
 # index page
 

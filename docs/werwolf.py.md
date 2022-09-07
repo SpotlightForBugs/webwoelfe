@@ -616,14 +616,14 @@ The ist_token_vorhandem function checks if the token is in the file tokens.txt
 setze_status(token: str, status: str)
 ```
 
+The setze_status function sets the status of a user to active or inactive. It takes two arguments: token and status. The token is the unique identifier for each user,  and it is used to find the correct line in tokens.txt where their information is stored.  The status argument can be either &quot;active&quot; or &quot;inactive&quot;. If it's set to active, then all lines containing that token will have their last column changed from an inactive string (e.g., 'inactive') to an active string (e.g., 'active'). If it's set to inactive, then all lines containing that token will have their 
 
-
-
+:param token:str: Check if the token is in the file :param status:str: Set the status of a user :return: Nothing 
 
 
 ---
 
-<a href="../werwolf.py#L1043"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../werwolf.py#L1053"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `setze_status_fuer_rolle`
 
@@ -631,14 +631,14 @@ setze_status(token: str, status: str)
 setze_status_fuer_rolle(rolle: str, status: str)
 ```
 
+The setze_status_fuer_rolle function sets the status of a role to active or inactive. It takes two arguments: rolle and status. The function reads the file tokens.txt and checks if  the token is in the file, then it splits the line at + signs, returning only name, role and  status from that line. 
 
-
-
+:param rolle:str: Specify the role that should be set to a specific status :param status:str: Set the status of a role :return: The status of the specified role 
 
 
 ---
 
-<a href="../werwolf.py#L1077"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../werwolf.py#L1097"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `setze_status_fuer_name`
 
@@ -646,14 +646,14 @@ setze_status_fuer_rolle(rolle: str, status: str)
 setze_status_fuer_name(name: str, status: str)
 ```
 
+The setze_status_fuer_name function sets the status of a user to active or inactive. It takes two arguments: name and status. The function reads the file tokens.txt and checks if  the token is in the file, then it splits the line at + and returns name and role. 
 
-
-
+:param name:str: Specify the name of the user that should be changed :param status:str: Set the status of a user :return: None 
 
 
 ---
 
-<a href="../werwolf.py#L1111"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../werwolf.py#L1140"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `setze_status_fuer_alle`
 
@@ -661,14 +661,14 @@ setze_status_fuer_name(name: str, status: str)
 setze_status_fuer_alle(status: str)
 ```
 
+The setze_status_fuer_alle function sets the status of all roles to a given value. It reads the file tokens.txt and checks if the token is in the file, then it sets  the status for that role to a given value. 
 
-
-
+:param status:str: Set the status for all roles to a given value :return: None 
 
 
 ---
 
-<a href="../werwolf.py#L1138"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../werwolf.py#L1175"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `actions`
 
@@ -676,14 +676,14 @@ setze_status_fuer_alle(status: str)
 actions(action: str)
 ```
 
+The actions function is used to set the status of all players. The following order is used: 0 = dead, 1 = sleep, 2 = action, 3 = vote, 4 = information 
 
-
-
+:param action:str: Call the function actions(action:str) :return: The following: 
 
 
 ---
 
-<a href="../werwolf.py#L1204"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../werwolf.py#L1248"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `erhalte_ziel`
 
@@ -691,14 +691,16 @@ actions(action: str)
 erhalte_ziel(token: str) → str
 ```
 
+The erhalte_ziel function returns the URL of the dashboard for a given player. The function takes one argument, which is a token string. 
 
 
 
+:param token:str: Get the role of the player :return: The path to the next page of the player 
 
 
 ---
 
-<a href="../werwolf.py#L1230"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../werwolf.py#L1282"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `nurNamen`
 
@@ -706,9 +708,9 @@ erhalte_ziel(token: str) → str
 nurNamen() → list
 ```
 
+The nurNamen function creates a list of all the names in the log file. It does this by reading every line in the log file and checking if it contains a * or not. If it does contain a *, nothing happens. If it doesn't contain one, then we split at = and take  the first part of that line (which is always the name) and append that to our nurNamen list. 
 
-
-
+:return: A list with the names of all players that are not dead or the narrator 
 
 
 

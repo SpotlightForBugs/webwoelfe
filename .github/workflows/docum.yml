@@ -1,0 +1,16 @@
+name: "Pull Request Docs Check"
+on:
+- pull_request
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: andreasofthings/doc-build@v13
+      with:
+        docs: 'docs'
+        dest: 'build'
+        
+        
+
+  

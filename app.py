@@ -42,7 +42,7 @@ sentry_sdk.init(
 
 werwolf.log(debug=False)
 
-app = Flask(__name__) 
+app = Flask(__name__)
 
 # index page
 

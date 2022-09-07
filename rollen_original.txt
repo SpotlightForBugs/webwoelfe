@@ -3,3 +3,4 @@ Ar_ = Seherin
 Dss__ = Erzaehler
 We = Werwolf
 Hallo_welt = Werwolf
+Ewe = Armor

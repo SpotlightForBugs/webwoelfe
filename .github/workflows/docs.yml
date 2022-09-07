@@ -14,25 +14,11 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install lazydocs
-          lazydocs werwolf.py
-  wiki:         
-#new step: add the file to the wiki
-    - name: Checkout base code
-      uses: actions/checkout@v2
-      with:
-        path: base-code
-    - name: Checkout wiki code
-      uses: actions/checkout@v2
-      with:
-        repository: ${{github.repository}}.wiki
-        path: markdown
-    - name: Push to wiki
-      run: |
-        cd markdown
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add .
-        git diff-index --quiet HEAD || git commit -m "Add changes" && git push
+          lazydocs werwolf.py -o werwolf.md
+          lazydocs app.py -o app.md
+
+
+  
           
 
 

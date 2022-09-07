@@ -43,12 +43,12 @@ sentry_sdk.init(
 werwolf.log(debug=False)
 
 try:
-        app = Flask(__name__)
+    app = Flask(__name__)
 except Exception as e:
-        sentry_sdk.capture_exception(e)
-        werwolf.log("Error: " + str(e))
-        sys.exit(1)
-    
+    sentry_sdk.capture_exception(e)
+    werwolf.log("Error: " + str(e))
+    sys.exit(1)
+
 # index page
 
 

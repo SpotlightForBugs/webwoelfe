@@ -14,9 +14,17 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install lazydocs
-          lazydocs werwolf.py -o werwolf.md
-          lazydocs app.py -o app.md
-
+          lazydocs werwolf.py 
+          lazydocs app.py 
+          sleep 5
+          mv werwolf.py.md werwolf.md
+          mv app.py.md app.md
+          git config --global user.email "
+          git config --global user.name "github-actions[bot]"
+          git add .
+          git commit -m "Update documentation"
+          git push
+          
 
   
           

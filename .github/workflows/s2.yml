@@ -1,38 +1,12 @@
-name: Sphinx docs to gh-pages
-
-on:
-  push:
-    branches:
-      - Pro
-
-# workflow_dispatch:        # Un comment line if you also want to trigger action manually
+name: sphinx
+on: [push]
 
 jobs:
-  sphinx_docs_to_gh-pages:
+  build:
+    name: Push Sphinx Pages
     runs-on: ubuntu-latest
-    name: Sphinx docs to gh-pages
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Make conda environment
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          python-version: 3.7    # Python version to build the html sphinx documentation
-          environment-file: .github/workflows/conda.yml    # Path to the documentation conda environment
-          auto-update-conda: false
-          auto-activate-base: false
-          show-channel-urls: true
-      - name: Installing the library
-        run: |
-          find . -name "setup*"
-          
-          python setup.py install
-      - name: Running the Sphinx to gh-pages Action
-        uses: uibcdf/action-sphinx-docs-to-gh-pages@v1.0.0
-        with:
-          branch: Pro
-          dir_docs: docs
-          sphinxapiopts: '--separate -o . ../'
-          sphinxapiexclude: '../*setup* ../*.ipynb'
-          sphinxopts: ''
+    - uses: seanzhengw/sphinx-pages@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        create_readme: true

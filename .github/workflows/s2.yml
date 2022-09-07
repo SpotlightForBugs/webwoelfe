@@ -25,6 +25,10 @@ jobs:
           show-channel-urls: true
       - name: Installing the library
         run: |
+          ls -a
+          cd
+          ls -a
+          conda activate docs
           python setup.py install
       - name: Running the Sphinx to gh-pages Action
         uses: uibcdf/action-sphinx-docs-to-gh-pages@v1.0.0

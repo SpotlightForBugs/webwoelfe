@@ -24,13 +24,14 @@ jobs:
           auto-activate-base: false
           show-channel-urls: true
       - name: Installing the library
-        shell: bash -l {0}
+        #shell: bash -l {0}
         run: |
+          bash -l {0}
           python setup.py install
       - name: Running the Sphinx to gh-pages Action
         uses: uibcdf/action-sphinx-docs-to-gh-pages@v1.0.0
         with:
-          branch: main
+          branch: Pro
           dir_docs: docs
           sphinxapiopts: '--separate -o . ../'
           sphinxapiexclude: '../*setup* ../*.ipynb'

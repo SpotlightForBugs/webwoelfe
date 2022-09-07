@@ -3,14 +3,13 @@ from datetime import datetime
 from inspect import currentframe
 from inspect import getframeinfo
 import sentry_sdk
-from flask import escape
+from flask import app, escape
 from flask import Flask
 from flask import redirect
 from flask import render_template
 from flask import request
 from sentry_sdk import set_user
 from sentry_sdk.integrations.flask import FlaskIntegration
-from flask import app
 import importlib.util
 import sys
 import flask

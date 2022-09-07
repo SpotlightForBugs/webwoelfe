@@ -21,6 +21,7 @@ from flask_api import status
 from sentry_sdk import last_event_id
 from sentry_sdk import set_user
 from sentry_sdk.integrations.flask import FlaskIntegration
+from flask import app
 
 
 import importlib.util

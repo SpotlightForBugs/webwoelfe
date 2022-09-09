@@ -369,6 +369,13 @@ def ist_verliebt(name: str) -> bool:
 
 
 def leere_dateien():
+    """
+    The leere_dateien function is used to clear all the files that are used in the game.
+    It is called at the beginning of each new game.
+
+    :return: None
+
+    """
 
     with open("rollen_log.txt", "w+", encoding="UTF8") as f:  # leere rollen_log.txt
         f.write("*********************\n")

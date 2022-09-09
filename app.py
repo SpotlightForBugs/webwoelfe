@@ -271,6 +271,16 @@ def kill_player(name, rolle, name_kill):
 
 @app.route("/<name>/Armor_aktion/<player1>/<player2>")  # player auswahl
 def armor_player(player1, player2, name):
+    """
+    The armor_player function is used to protect the player from being killed by the werewolf.
+    The function checks if a player is allowed to use this ability and if so, it will set the 
+    armor_used variable in Werwolf Class to True. If not, it will return an error message.
+
+    :param player1: Determine the player who is currently playing
+    :param player2: Determine the player who is going to be protected by the armor
+    :param name: Check if the player is a werewolf or not
+    :return: The html code of the page that is shown when the armor player wants to use their ability
+    """
 
     rolle = "Armor"
 
@@ -1033,6 +1043,15 @@ def weiterleitung(target):
 
 @app.route("/<name>/<rolle>/info_der_verliebten")
 def verliebte_info(name, rolle):
+    """
+    The verliebte_info function returns a list of names of the players who are in love.
+    
+    
+    
+    :param name: Set the name of the player
+    :param rolle: Set the role of a player
+    :return: The names of the lovers
+    """
     werwolf.setze_status_fuer_name(name, "4")
     return werwolf.verliebte_ausgeben()
 
@@ -1188,6 +1207,14 @@ def heilen(name, rolle, auswahl):
 
 @app.route("/<name>/<rolle>/warten_auf_andere_spieler")
 def auf_andere_warten(name, rolle):
+    """
+    The auf_andere_warten function is used to render the auf_andere_warten.html template, which is used to display 
+    the status of the game when it is in its initial state.
+    
+    :param name: Identify the player
+    :param rolle: Determine the role of the player
+    :return: The html template for the status page when a player is waiting for another player to make an action
+    """
     if werwolf.validiere_rolle(name, rolle) is True:
         return render_template(
             "Dashboards/status/auf_andere_warten.html", name=name, rolle=rolle
@@ -1225,6 +1252,14 @@ def log_ansehen():
 
 @app.route("/<token>/zum_ziel")
 def zum_ziel(token: str):
+    """
+    The zum_ziel function is used to redirect the user to the target of a token.
+    If the token is valid, it will return a 302 response with an empty body and 
+    the Location header set to the target URL. If not, it will return a 403 Forbidden error.
+    
+    :param token:str: Identify the user
+    :return: The url of the target site
+    """
     if werwolf.validiere_token(token):
 
         # send the status as a response
@@ -1263,9 +1298,23 @@ def inject_now():
 
 @app.context_processor
 def inject_template_scope():
+    """
+    The inject_template_scope function injects the cookies_check function into the template scope.
+    
+    The cookies_check function checks to see if the user has accepted cookies. If they have, it returns True. If not, it returns False.
+    
+    :return: A dictionary with a single key, cookies_check
+    """
     injections = dict()
 
     def cookies_check():
+        """
+        The cookies_check function checks to see if the user has accepted cookies.
+        If they have, it returns True. If not, it returns False.
+        
+        :return: A boolean value
+        
+        """
         value = request.cookies.get('cookie_consent')
                
         return value == 'true'

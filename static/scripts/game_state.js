@@ -1,6 +1,6 @@
 
 /**
- * The game_state function checks if the user is logged in and has a valid token.
+ * This script checks if the user is logged in and has a valid token.
  * If so, it checks if the current page is /{token}/zum_ziel. If not, it redirects
  * to that page.
  
@@ -9,7 +9,7 @@
  * @return The http code of the page /{token}/zum_ziel
  *
  */
-function game_state(){
+
 // if current page is not / then perform the following
 if (window.location.pathname != "/") {
   if (
@@ -66,4 +66,4 @@ if (window.location.pathname != "/") {
     }
   }
   }
-}
+

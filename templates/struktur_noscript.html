@@ -2,65 +2,134 @@
 <html lang="de" dir="ltr">
 
 <head>
+   <meta charset="utf-8">
+  <noscript>
+    <meta http-equiv="refresh" content="0;url={{ url_for('noscript') }}">
+  </noscript>
 
- <script>
+  <link rel="apple-touch-icon" sizes="180x180" href="../../../../../../static/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../../../../../static/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../../../../../../static/images/favicon-16x16.png">
+  <link rel="manifest" href="../../../../../../static/webmanifest/site.webmanifest">
+  <link rel="mask-icon" href="../../../../../../static/images/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="apple-mobile-web-app-title" content="WebWoelfe">
+  <meta name="application-name" content="WebWoelfe">
+  <meta name="msapplication-TileColor" content="#b91d47">
+  <meta name="theme-color" content="#c63737">
 
-window.location.href = "{{ url_for('index') }}";
-
-
- </script>
-
- <noscript>
-  <meta http-equiv="refresh" content="5;url={{ url_for('noscript') }}">
-</noscript>
-
-<meta charset="utf-8">
-
-<script
-  src="https://browser.sentry-cdn.com/7.11.1/bundle.min.js"
-  integrity="sha384-qcYSo5+/E8hEkPmHFa79GRDsGT84SRhBJHRw3+dbQyh0UwueiFP1jCsRBClEREcs"
-  crossorigin="anonymous"
-></script>
-<script type="text/javascript">
-(function(c,a){if(!a.__SV){var b=window;try{var d,m,j,k=b.location,f=k.hash;d=function(a,b){return(m=a.match(RegExp(b+"=([^&]*)")))?m[1]:null};f&&d(f,"fpState")&&(j=JSON.parse(decodeURIComponent(d(f,"fpState"))),"fpeditor"===j.action&&(b.sessionStorage.setItem("_fpcehash",f),history.replaceState(j.desiredHash||"",c.title,k.pathname+k.search)))}catch(n){}var l,h;window.freshpaint=a;a._i=[];a.init=function(b,d,g){function c(b,i){var a=i.split(".");2==a.length&&(b=b[a[0]],i=a[1]);b[i]=function(){b.push([i].concat(Array.prototype.slice.call(arguments,
-0)))}}var e=a;"undefined"!==typeof g?e=a[g]=[]:g="freshpaint";e.people=e.people||[];e.toString=function(b){var a="freshpaint";"freshpaint"!==g&&(a+="."+g);b||(a+=" (stub)");return a};e.people.toString=function(){return e.toString(1)+".people (stub)"};l="disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove people group page alias ready addEventProperties addInitialEventProperties removeEventProperty addPageviewProperties".split(" ");
-for(h=0;h<l.length;h++)c(e,l[h]);var f="set set_once union unset remove delete".split(" ");e.get_group=function(){function a(c){b[c]=function(){call2_args=arguments;call2=[c].concat(Array.prototype.slice.call(call2_args,0));e.push([d,call2])}}for(var b={},d=["get_group"].concat(Array.prototype.slice.call(arguments,0)),c=0;c<f.length;c++)a(f[c]);return b};a._i.push([b,d,g])};a.__SV=1.4;b=c.createElement("script");b.type="text/javascript";b.async=!0;b.src="undefined"!==typeof FRESHPAINT_CUSTOM_LIB_URL?
-FRESHPAINT_CUSTOM_LIB_URL:"//perfalytics.com/static/js/freshpaint.js";(d=c.getElementsByTagName("script")[0])?d.parentNode.insertBefore(b,d):c.head.appendChild(b)}})(document,window.freshpaint||[]);
-freshpaint.init("fc2c280a-b541-4aff-bfcf-d241f3b85b63");
-freshpaint.page();
-</script>
-
-<link rel="apple-touch-icon" sizes="180x180" href="../../../../../../static/images/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../../../../../../static/images/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="../../../../../../static/images/favicon-16x16.png">
-<link rel="manifest" href="../../../../../../static/webmanifest/site.webmanifest">
-<link rel="mask-icon" href="../../../../../../static/images/safari-pinned-tab.svg" color="#5bbad5">
-<meta name="apple-mobile-web-app-title" content="WebWoelfe">
-<meta name="application-name" content="WebWoelfe">
-<meta name="msapplication-TileColor" content="#b91d47">
-<meta name="theme-color" content="#c63737">
+  <!--Custom Scripts-->
+  <script type="text/javascript" src="../../../../../../static/scripts/sort_cookies.js"></script>
+  <!--End of Custom Scripts-->
 
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=yes"> 
-<!-- Bootstrap CSS v5.2.0-beta1 -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"  integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
-<!-- Bootstrap JavaScript Libraries -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js" integrity="sha384-Xe+8cL9oJa6tN/veChSP7q+mnSPaj5Bcu9mPX5F5xIGE0DVittaqT5lorf0EI7Vk" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.min.js" integrity="sha384-kjU+l4N0Yf4ZOJErLsIcvOU2qSb74wXpOhqTvwVx3OElZRweTnQ6d31fXEoRD1Jy" crossorigin="anonymous"></script> 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
-<!-- Custom CSS -->
-<link rel="stylesheet" href="../../../../../../static/css/style.css">
-<!-- Custom fonts -->
-<link href='https://fonts.googleapis.com/css?family=Allerta' rel='stylesheet'>  
-<meta charset="utf-8">
- 
-<title>Webwölfe!</title>
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Allerta' rel='stylesheet'>
+ <!--End of Custom Fonts-->
+
+ <!--look and feel-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=yes">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
+  <!--End of look and feel--> 
+<!-- Bootstrap style cdns-->
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
+
+<!--End of Bootstrap style cdns-->
+  <!--Custom Styles-->
+  <link rel="stylesheet" href="../../../../../../static/css/style.css">
+    <!--End of Custom Styles-->
+<!-- Bootstrap script cdns-->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+<!--End of Bootstrap script cdns-->
+
+<!-- jQuery -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.js" integrity="sha512-CX7sDOp7UTAq+i1FYIlf9Uo27x4os+kGeoT7rgwvY+4dmjqV0IuE/Bl5hVsjnQPQiTOhAX1O2r2j5bjsFBvv/A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!--End of jQuery-->
+
+
+
+
+
+
+
+
+  
+  
+<!--Tracker-->
+
+  <script src="../../../../../../static/scripts/game_state.js"></script>
+    <script src="https://browser.sentry-cdn.com/7.11.1/bundle.min.js" integrity="sha384-qcYSo5+/E8hEkPmHFa79GRDsGT84SRhBJHRw3+dbQyh0UwueiFP1jCsRBClEREcs" crossorigin="anonymous"></script>
+
+  <script type="text/javascript">
+    (function(c, a) {
+      if (!a.__SV) {
+        var b = window;
+        try {
+          var d, m, j, k = b.location,
+            f = k.hash;
+          d = function(a, b) {
+            return (m = a.match(RegExp(b + "=([^&]*)"))) ? m[1] : null
+          };
+          f && d(f, "fpState") && (j = JSON.parse(decodeURIComponent(d(f, "fpState"))), "fpeditor" === j.action && (b.sessionStorage.setItem("_fpcehash", f), history.replaceState(j.desiredHash || "", c.title, k.pathname + k.search)))
+        } catch (n) {}
+        var l, h;
+        window.freshpaint = a;
+        a._i = [];
+        a.init = function(b, d, g) {
+          function c(b, i) {
+            var a = i.split(".");
+            2 == a.length && (b = b[a[0]], i = a[1]);
+            b[i] = function() {
+              b.push([i].concat(Array.prototype.slice.call(arguments, 0)))
+            }
+          }
+          var e = a;
+          "undefined" !== typeof g ? e = a[g] = [] : g = "freshpaint";
+          e.people = e.people || [];
+          e.toString = function(b) {
+            var a = "freshpaint";
+            "freshpaint" !== g && (a += "." + g);
+            b || (a += " (stub)");
+            return a
+          };
+          e.people.toString = function() {
+            return e.toString(1) + ".people (stub)"
+          };
+          l = "disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove people group page alias ready addEventProperties addInitialEventProperties removeEventProperty addPageviewProperties".split(" ");
+          for (h = 0; h < l.length; h++) c(e, l[h]);
+          var f = "set set_once union unset remove delete".split(" ");
+          e.get_group = function() {
+            function a(c) {
+              b[c] = function() {
+                call2_args = arguments;
+                call2 = [c].concat(Array.prototype.slice.call(call2_args, 0));
+                e.push([d, call2])
+              }
+            }
+            for (var b = {}, d = ["get_group"].concat(Array.prototype.slice.call(arguments, 0)), c = 0; c < f.length; c++) a(f[c]);
+            return b
+          };
+          a._i.push([b, d, g])
+        };
+        a.__SV = 1.4;
+        b = c.createElement("script");
+        b.type = "text/javascript";
+        b.async = !0;
+        b.src = "undefined" !== typeof FRESHPAINT_CUSTOM_LIB_URL ? FRESHPAINT_CUSTOM_LIB_URL : "//perfalytics.com/static/js/freshpaint.js";
+        (d = c.getElementsByTagName("script")[0]) ? d.parentNode.insertBefore(b, d): c.head.appendChild(b)
+      }
+    })(document, window.freshpaint || []);
+    freshpaint.init("fc2c280a-b541-4aff-bfcf-d241f3b85b63");
+    freshpaint.page();
+  </script>
+
+  <!-- End of Tracker -->
+  <title>Webwölfe! FEHLER: KEIN JAVASCRIPT</title>
 </head>
-
 <body onload="setTimeout(rot, 2000)" >
   
   <nav class="navbar navbar-expand-lg navbar-light bg-light" >

@@ -27,7 +27,6 @@ sentry_sdk.init(
         FlaskIntegration(),
     ],
     traces_sample_rate=1.0,
-    
 )
 
 werwolf.log(debug=False)
@@ -1305,7 +1304,7 @@ def inject_template_scope():
     
     :return: A dictionary with a single key, cookies_check
     """
-    injections = dict()
+    injections = {}
 
     def cookies_check():
         """

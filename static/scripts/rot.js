@@ -1,4 +1,3 @@
-
 /**
  * The rot function rotates the text in the rot div.
  

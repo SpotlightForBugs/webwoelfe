@@ -1,4 +1,3 @@
-
 /**
  * The blau function changes the color of the element with id &quot;blau&quot; to blue.
  

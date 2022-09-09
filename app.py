@@ -1263,7 +1263,7 @@ def inject_now():
 
 @app.context_processor
 def inject_template_scope():
-    injections = dict()
+    injections = {}
 
     def cookies_check():
         value = request.cookies.get('cookie_consent')

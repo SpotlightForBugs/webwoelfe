@@ -27,7 +27,6 @@ sentry_sdk.init(
         FlaskIntegration(),
     ],
     traces_sample_rate=1.0,
-    
 )
 
 werwolf.log(debug=False)
@@ -1266,9 +1265,10 @@ def inject_template_scope():
     injections = {}
 
     def cookies_check():
-        value = request.cookies.get('cookie_consent')
-               
-        return value == 'true'
+        value = request.cookies.get("cookie_consent")
+
+        return value == "true"
+
     injections.update(cookies_check=cookies_check)
 
     return injections

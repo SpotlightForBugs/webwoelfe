@@ -1,6 +1,6 @@
 // if current page is not / then perform the following
 if (window.location.pathname != "/") {
-  if (document.cookie.indexOf("token") !== -1) {
+  if (document.cookie.indexOf("token") !== -1 && document.cookie.indexOf("cookie_consent") !== -1) {
   //Search for the token in all cookies
     var token = document.cookie
       .split("; ")

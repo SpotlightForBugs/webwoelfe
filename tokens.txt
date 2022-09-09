@@ -6,6 +6,8 @@
 +999742dde740339963bfb02f2bd27964+Tewst+Werwolf+1+ 
 +460de1f2e91d0d2dc15d5f807a447891+Ere+Werwolf+1+ 
 +492c9555af71c748f33af917f135a9d1+Hdf+Dorfbewohner+2+ 
-
 +97cba7f7d9249321b2a7613e89f201c6+Dfdfd+Dorfbewohner+1+ 
 +71426348e296fba506be6e27949460bd+Vdfv+Dorfbewohner+1+ 
++847d0a9361e9ddfba8da3b797f10bdc9+54534+Werwolf+1+ 
++23e2ae6549961cd8629efe56c232cdec+_cy+Dorfbewohner+1+ 
+

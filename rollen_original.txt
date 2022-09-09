@@ -8,3 +8,5 @@ Ere = Werwolf
 Hdf = Dorfbewohner
 Dfdfd = Dorfbewohner
 Vdfv = Dorfbewohner
+54534 = Werwolf
+_cy = Dorfbewohner

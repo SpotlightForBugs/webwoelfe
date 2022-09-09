@@ -137,9 +137,20 @@
 
           {# then user has already consented so no requirement for consent banner #}
 {% else %}
+
+
+
         {# show a cookie consent banner #}
        
    <script>
+if (window.location.pathname != "/") {
+  window.location.pathname = "/";
+}
+
+
+
+
+
             //function fn to set cookie cookie_consent=true
             //and to set the id of the cookie-consent-container to hidden
             function fn(x){

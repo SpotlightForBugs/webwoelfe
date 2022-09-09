@@ -2,6 +2,7 @@ import datetime
 from datetime import datetime
 from inspect import currentframe
 from inspect import getframeinfo
+import trace
 import sentry_sdk
 from flask import app, escape
 from flask import Flask
@@ -25,7 +26,8 @@ sentry_sdk.init(
     integrations=[
         FlaskIntegration(),
     ],
-    traces_sample_rate=0.5,
+    traces_sample_rate=1.0,
+    
 )
 
 werwolf.log(debug=False)
@@ -1257,6 +1259,19 @@ def inject_now():
 
     """
     return {"now": datetime.utcnow()}
+
+
+@app.context_processor
+def inject_template_scope():
+    injections = dict()
+
+    def cookies_check():
+        value = request.cookies.get('cookie_consent')
+               
+        return value == 'true'
+    injections.update(cookies_check=cookies_check)
+
+    return injections
 
 
 # sentry error handler

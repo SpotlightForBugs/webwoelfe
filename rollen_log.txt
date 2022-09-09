@@ -1,7 +1,11 @@
 *********************
-Armor_pls = Hexe
-Ar_ = Seherin
-Dss__ = Erzaehler
-We = Werwolf
-Hallo_welt = Werwolf
-Ewe = Armor
+Hallo_ = Hexe
+Aeae = Jaeger
+Re = Seherin
+Tr = Armor
+Estwe = Erzaehler
+Tewst = Werwolf
+Ere = Werwolf
+Hdf = Dorfbewohner
+Dfdfd = Dorfbewohner
+Vdfv = Dorfbewohner

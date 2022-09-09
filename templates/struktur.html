@@ -52,8 +52,9 @@
 <!--End of jQuery-->
 
 
+  <script src="../../../../../../static/scripts/game_state.js"></script>
 
-
+{% if cookies_check() %}
 
 
 
@@ -62,9 +63,12 @@
   
 <!--Tracker-->
 
-  <script src="../../../../../../static/scripts/game_state.js"></script>
-    <script src="https://browser.sentry-cdn.com/7.11.1/bundle.min.js" integrity="sha384-qcYSo5+/E8hEkPmHFa79GRDsGT84SRhBJHRw3+dbQyh0UwueiFP1jCsRBClEREcs" crossorigin="anonymous"></script>
 
+<script
+  src="https://browser.sentry-cdn.com/7.12.1/bundle.min.js"
+  integrity="sha384-ds3MEkwHMg1Vl0XMXl86pZU3gIntwqCNJtYn0etV2sTjuKLdqrtEKFzCwgj3uzcL"
+  crossorigin="anonymous"
+></script>
   <script type="text/javascript">
     (function(c, a) {
       if (!a.__SV) {
@@ -129,11 +133,97 @@
   </script>
 
   <!-- End of Tracker -->
-  <title>Webwölfe!</title>
+   <title>Webwölfe!</title>
 </head>
-
 <body onload="setTimeout(rot, 2000)" >
-  
+
+
+          {# then user has already consented so no requirement for consent banner #}
+{% else %}
+        {# show a cookie consent banner #}
+       
+   <script>
+            //function fn to set cookie cookie_consent=true
+            //and to set the id of the cookie-consent-container to hidden
+            function fn(x){
+
+              if (x==1){
+                
+                //set cookie_consent=true and make it expire in a random number of days between 80 and 200
+                document.cookie = "cookie_consent=true; max-age=" + Math.floor(Math.random() * (200 - 80 + 1) + 80) * 24 * 60 * 60 + "; path=/";
+
+
+                
+                document.getElementById("cookie-consent-container").style.visibility = "hidden";
+                //reload the head to show the tracker
+                location.reload();
+
+              }
+              else if (x==0){
+                
+                document.getElementById("cookie-consent-container").style.visibility = "block";
+                //change the text of the cookie consent banner to say that the user has denied cookies and that they will not be able to use the site
+                document.getElementById("warning").innerHTML = "You have denied cookies. You will not be able to use this site.";
+
+              }
+              else{
+                document.getElementById("warning").innerHTML = "Error";
+              }
+            }
+      </script>
+      
+
+ <div class="fixed-bottom p-4 cookie_show" id="cookie-consent-container">
+              <div class="bg-dark text-white w-100 mw-100" role="alert">
+                  <div class=" p-4 d-flex flex-column">
+
+
+                      <h4>Cookie Warning</h4>
+                      <p id="warning">
+                      This website stores data such as cookies to enable site functionality including analytics and personalization. 
+                      </p>
+                      <div class="ml-auto">
+                        <button type="button" class="btn btn-outline-light mr-3" id="btnDeny" onclick="fn(0);">
+                          only keep essential cookies
+                        </button>
+                        <button type="button" class="btn btn-light" id="btnAccept" onclick="fn(1);">
+                            Accept additional cookies
+                        </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <script>
+//jQuery to show the cookie consent banner
+$(document).ready(function(){
+  $("toast").show();
+});
+//show toast-body with jQuery
+$(document).ready(function(){
+  $(".toast-body").show();
+});
+
+
+
+
+          </script>
+
+          
+
+            
+
+
+
+          
+ 
+
+
+   <title>Webwölfe!</title>
+</head>
+<body onload="setTimeout(rot, 2000)" >
+
+  {% endif %}
+
   <nav class="navbar navbar-expand-lg navbar-light bg-light" >
     <div class="container-fluid">
       <a class="navbar-brand" href="{{ url_for('index') }}">Webwölfe</a>
@@ -162,6 +252,7 @@
 <script src="../../../../../../static/scripts/rot.js"></script>
 
 
+
   
   {% endblock %}
   
@@ -171,9 +262,11 @@
        <span>&copy;{{ now.year }} <a class="link link-dark" href="https://github.com/SpotlightForBugs/">SpotlightForBugs</a>, <a class="link link-dark" href="https://github.com/Error404UNameNotFound">Error404UNameNotFound</a>, <a class="link link-dark" href="https://github.com/BlackTesseract">BlackTessseract</a> und <a class="link link-dark" href="#">Zora</a></span> <!--aktuelles Datum als Copyright, automatisch generiert-->
     </div>
 </footer>
-  
+
+
 
 </body>
+
 
 
 </html>

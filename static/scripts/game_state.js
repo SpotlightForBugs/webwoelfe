@@ -1,21 +1,16 @@
 // if current page is not / then perform the following
 if (window.location.pathname != "/") {
   if (document.cookie.indexOf("token") !== -1) {
-    // token is the first part of the cookie, delimited by a semicolon
-
-    var token = document.cookie.split(";")[0].split("=")[1];
-  }
-  if (token.includes("token=")) {
+  //Search for the token in all cookies
+    var token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      .split("=")[1];
     token = token.replace("token=", "");
-  }
-  // else search for token= in other cookies using a for loop
-  else if (document.cookie.includes("token=")) {
-    for (var i = 0; i < document.cookie.split(";").length; i++) {
-      if (document.cookie.split(";")[i].split("=")[0] == "token") {
-        token = document.cookie.split(";")[i].split("=")[1];
-      }
-    }
-  }
+
+
+
+
   // save the http code of the page /{token}/zum_ziel to the variable
   // status_code and the url to the variable url
   var status_code = 0;
@@ -57,4 +52,5 @@ if (window.location.pathname != "/") {
       }
     }
   }
-}
+  }
+}	

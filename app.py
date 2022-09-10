@@ -280,7 +280,6 @@ def armor_player(player1, player2, name):
     :param name: Check if the player is a werewolf or not
     :return: The html code of the page that is shown when the armor player wants to use their ability
     """
-
     rolle = "Armor"
 
     if (

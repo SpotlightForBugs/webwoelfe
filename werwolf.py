@@ -376,7 +376,6 @@ def leere_dateien():
     :return: None
 
     """
-
     with open("rollen_log.txt", "w+", encoding="UTF8") as f:  # leere rollen_log.txt
         f.write("*********************\n")
     with open("abstimmung.txt", "r+", encoding="UTF8") as file:

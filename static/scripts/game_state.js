@@ -1,4 +1,3 @@
-
 /**
  * This script checks if the user is logged in and has a valid token.
  * If so, it checks if the current page is /{token}/zum_ziel. If not, it redirects
@@ -65,5 +64,4 @@ if (window.location.pathname != "/") {
       }
     }
   }
-  }
-
+}

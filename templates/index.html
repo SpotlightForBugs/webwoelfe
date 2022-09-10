@@ -42,14 +42,21 @@
 </div>
 
 <script>
-  //laod div class refresh every second into the div class refresh if the text input is not empty
+  //load div class refresh every second into the div class refresh if the field is empty and there is no cursor in the field
   $(document).ready(function () {
     setInterval(function () {
-      if ($("#input").val() == "") {
+      if (
+        $("#input").val() == "" &&
+        !$("#input").is(":focus") &&
+        $("#input").is(":visible")
+      ) {
         $(".refresh").load(window.location.href + " .refresh");
+      console.log("refresh"); //for debugging
       }
     }, 1000);
   });
+ 
+  
 </script>
 
 {% block script %}

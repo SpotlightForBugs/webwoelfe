@@ -118,6 +118,31 @@
       }
     }, 1000);
 
+
+    //if the sheep are out of the screen then delete them and place them again on the screen
+    setInterval(function () {
+      var sheep = document.getElementsByTagName("img");
+      for (var i = 0; i < sheep.length; i++) {
+        if (
+          sheep[i].offsetTop > window.innerHeight ||
+          sheep[i].offsetLeft > window.innerWidth
+        ) {
+          sheep[i].style.display = "none";
+          sheep[i].style.top = Math.floor(Math.random() * 100) + "%";
+          sheep[i].style.left = Math.floor(Math.random() * 100) + "%";
+          sheep[i].style.display = "block";
+        }
+      }
+    }, 1000);
+//disable scroll bars to left and right, resize window to full screen and disable zooming
+    document.body.style.overflow = "hidden";
+    document.body.style.zoom = "reset";
+    window.onresize = function () {
+      document.body.style.zoom = "reset";
+    };
+
+    
+
     
 
   </script>

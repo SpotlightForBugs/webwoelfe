@@ -70,9 +70,6 @@
       }
     }, 1000);
 
-
-   
-
     //count all sheep
     setInterval(function () {
       var sheep = document.getElementsByTagName("img");
@@ -118,7 +115,6 @@
       }
     }, 1000);
 
-
     //if the sheep are out of the screen then delete them and place them again on the screen
     setInterval(function () {
       var sheep = document.getElementsByTagName("img");
@@ -134,17 +130,12 @@
         }
       }
     }, 1000);
-//disable scroll bars to left and right, resize window to full screen and disable zooming
+    //disable scroll bars to left and right, resize window to full screen and disable zooming
     document.body.style.overflow = "hidden";
     document.body.style.zoom = "reset";
     window.onresize = function () {
       document.body.style.zoom = "reset";
     };
-
-    
-
-    
-
   </script>
 
   {% endblock %}

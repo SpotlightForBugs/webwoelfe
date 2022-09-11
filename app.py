@@ -350,8 +350,8 @@ def overview_all(ist_unschuldig):  # Übersicht
         return render_template("fehler.html"), 500  # render fehler.html
     except (ValueError, TypeError, NameError):
         return render_template("fehler.html"), 500  # render fehler.html
-    
-    
+
+
 # Rollen Dashboards
 @app.route("/<name>/<rolle>/Dashboard")  # Dashboard
 def Dashboard(name, rolle):  # Dashboard

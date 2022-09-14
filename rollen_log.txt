@@ -1,13 +1,3 @@
 *********************
-Hallo_ = Hexe
-Aeae = Jaeger
-Re = Seherin
-Tr = Armor
-Estwe = Erzaehler
-Tewst = Werwolf
-Ere = Werwolf
-Hdf = Dorfbewohner
-Dfdfd = Dorfbewohner
-Vdfv = Dorfbewohner
-54534 = Werwolf
-_cy = Dorfbewohner
+Hello = Erzaehler
+Hello2 = Seherin

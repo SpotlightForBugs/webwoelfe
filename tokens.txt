@@ -1,13 +1,3 @@
-+20367b1cd2162c066785b20004e8a54b+Hallo_+Hexe+2+ 
-+59fa52891c7fbe70682bf02bfb431800+Aeae+Jaeger+2+ 
-+268ce60f83d6a85891b3cf8dcefdfb9a+Re+Seherin+1+ 
-+8e255f8e406b7b54fc51f5852112d056+Tr+Armor+1+ 
-+a542f3983e5515019f456557f4e08493+Estwe+Erzaehler+1+ 
-+999742dde740339963bfb02f2bd27964+Tewst+Werwolf+1+ 
-+460de1f2e91d0d2dc15d5f807a447891+Ere+Werwolf+1+ 
-+492c9555af71c748f33af917f135a9d1+Hdf+Dorfbewohner+2+ 
-+97cba7f7d9249321b2a7613e89f201c6+Dfdfd+Dorfbewohner+1+ 
-+71426348e296fba506be6e27949460bd+Vdfv+Dorfbewohner+1+ 
-+847d0a9361e9ddfba8da3b797f10bdc9+54534+Werwolf+1+ 
-+23e2ae6549961cd8629efe56c232cdec+_cy+Dorfbewohner+1+ 
++5842e5096478d1f07c49de1a90f11169+Hello+Erzaehler+1+ 
 
++e8807140033e382152aa049eebbcdb9c+Hello2+Seherin+1+ 

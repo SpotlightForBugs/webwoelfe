@@ -1273,7 +1273,9 @@ def newOverview():
     with open("rollen_log.txt", encoding="UTF8") as players_log2:  # open the log file
         players_log2 = players_log2.readlines()  # read the log file
 
-    with open("rollen_original.txt", encoding="UTF8") as players_log_original:  # open the log file
+    with open(
+        "rollen_original.txt", encoding="UTF8"
+    ) as players_log_original:  # open the log file
         players_log_original = players_log_original.readlines()  # read the log file
 
     nurNamen = []  # create a list for the names
@@ -1321,14 +1323,13 @@ def newOverview():
                 if "Erzaehler" not in auswahlRolle2:
                     nurRollen.append(name2)  # append the name to the list
 
-
         # render the wahlbalken.html
-        return render_template("newOverview.html", nurListen=zip(nurNamen, nurRollen, nurStatus))
+        return render_template(
+            "newOverview.html", nurListen=zip(nurNamen, nurRollen, nurStatus)
+        )
 
     except Exception as e:
         return render_template("fehler.html"), 500  # render the fehler.html
-
-
 
 
 @app.route("/noscript")

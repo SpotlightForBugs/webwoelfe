@@ -1266,22 +1266,22 @@ def zum_ziel(token: str):
 
 @app.route("/newOverview")
 def newOverview():
-    
+
     with open("rollen_log.txt", encoding="UTF8") as players_log:  # open the log file
         players_log = players_log.readlines()  # read the log file
-        
+
     with open("rollen_log.txt", encoding="UTF8") as players_log2:  # open the log file
         players_log2 = players_log2.readlines()  # read the log file
 
     with open("rollen_original.txt", encoding="UTF8") as players_log_original:  # open the log file
         players_log_original = players_log_original.readlines()  # read the log file
-    
+
     nurNamen = []  # create a list for the names
     nurRollen = []  # create a list for the names
     nurStatus = []  # create a list for the names
-    
+
     try:
-        
+
         for line in players_log:  # for every line in the log file
 
             if "*" in line:  # if the line contains a *
@@ -1303,7 +1303,7 @@ def newOverview():
                 line3 = line3.split(" = ")  # split the line at the =
                 name3 = line3[1]  # get the name
                 auswahlRolle3 = line[1]  # get the role
-                
+
                 # if the role is not dead or the narrator
                 if "Erzaehler" not in name3:
                     nurStatus.append(name3)  #
@@ -1320,15 +1320,15 @@ def newOverview():
                 # if the role is not dead or the narrator
                 if "Erzaehler" not in auswahlRolle2:
                     nurRollen.append(name2)  # append the name to the list
-        
-        
+
+
         # render the wahlbalken.html
         return render_template("newOverview.html", nurListen=zip(nurNamen, nurRollen, nurStatus))
 
     except Exception as e:
         return render_template("fehler.html"), 500  # render the fehler.html
-        
-    
+
+
 
 
 @app.route("/noscript")

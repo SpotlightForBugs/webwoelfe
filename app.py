@@ -1264,6 +1264,73 @@ def zum_ziel(token: str):
     return render_template("403.html"), 403
 
 
+@app.route("/newOverview")
+def newOverview():
+    
+    with open("rollen_log.txt", encoding="UTF8") as players_log:  # open the log file
+        players_log = players_log.readlines()  # read the log file
+        
+    with open("rollen_log.txt", encoding="UTF8") as players_log2:  # open the log file
+        players_log2 = players_log2.readlines()  # read the log file
+
+    with open("rollen_original.txt", encoding="UTF8") as players_log_original:  # open the log file
+        players_log_original = players_log_original.readlines()  # read the log file
+    
+    nurNamen = []  # create a list for the names
+    nurRollen = []  # create a list for the names
+    nurStatus = []  # create a list for the names
+    
+    try:
+        
+        for line in players_log:  # for every line in the log file
+
+            if "*" in line:  # if the line contains a *
+                pass  # do nothing
+            else:  # if the line does not contain a *
+                line = line.split(" = ")  # split the line at the =
+                name = line[0]  # get the name
+                auswahlRolle = line[1]  # get the role
+
+                # if the role is not dead or the narrator
+                if "Erzaehler" not in auswahlRolle:
+                    nurNamen.append(name)  # append the name to the list
+
+        for line3 in players_log2:  # for every line in the log file
+
+            if "*" in line3:  # if the line contains a *
+                pass  # do nothing
+            else:  # if the line does not contain a *
+                line3 = line3.split(" = ")  # split the line at the =
+                name3 = line3[1]  # get the name
+                auswahlRolle3 = line[1]  # get the role
+                
+                # if the role is not dead or the narrator
+                if "Erzaehler" not in name3:
+                    nurStatus.append(name3)  #
+
+        for line2 in players_log_original:  # for every line in the log file
+
+            if "*" in line2:  # if the line contains a *
+                pass  # do nothing
+            else:  # if the line does not contain a *
+                line2 = line2.split(" = ")  # split the line at the =
+                name2 = line2[1]  # get the name
+                auswahlRolle2 = line2[1]  # get the role
+
+                # if the role is not dead or the narrator
+                if "Erzaehler" not in auswahlRolle2:
+                    nurRollen.append(name2)  # append the name to the list
+        
+        
+        # render the wahlbalken.html
+        return render_template("newOverview.html", nurListen=zip(nurNamen, nurRollen, nurStatus))
+
+    except Exception as e:
+        return render_template("fehler.html"), 500  # render the fehler.html
+        
+    
+
+
 @app.route("/noscript")
 def noscript():
     """

@@ -4,46 +4,38 @@
 {% block body %}
 
 <div class="container">
-    <div class="row g-3">
+  <div class="row g-3">
+    {% for name,rolle,status in nurListen %}
 
+    <div
+      class="col-md-3 border offset-md-1 offset-xl-1 offset-sm-0 offset-0 rounded-2"
+    >
+      <h3>Rolle</h3>
 
-            
-        {% for name,rolle,status in nurListen %}
+      <img
+        src="../static/images/sheep.png"
+        class="img-fluid rounded-top"
+        alt="Image"
+      />
 
-        <div class='col-md-3 border offset-md-1 offset-xl-1 offset-sm-0 offset-0 rounded-2'>
-            <h3>Rolle</h3>
+      <ul class="list-group">
+        <li class="list" style="list-style: none">Name: {{name}}</li>
+        <li class="list" style="list-style: none">Rolle: {{rolle}}</li>
 
-            <img src='../static/images/sheep.png' class='img-fluid rounded-top' alt='Image'>
-            
-            
+        {% if rolle == status %}
 
-            <ul class='list-group'>
-                <li class='list' style='list-style: none'>Name: {{name}}</li>
-                <li class='list' style='list-style: none'>Rolle: {{rolle}}</li>
+        <li class="list" style="list-style: none">Status: Lebend</li>
 
-                {% if rolle == status %}
+        {% else %}
 
-                <li class='list' style='list-style: none'>Status: Lebend</li>
+        <li class="list" style="list-style: none">Status: {{status}}</li>
 
-                {% else %}
-
-                <li class='list' style='list-style: none'>Status: {{status}}</li>
-
-                {% endif %}
-
-
-
-            </ul>
-        </div>
-
-        {% endfor %}
-                
-
-
-        
+        {% endif %}
+      </ul>
     </div>
+
+    {% endfor %}
+  </div>
 </div>
-
-
 
 {% endblock %}

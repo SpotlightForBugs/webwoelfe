@@ -4,25 +4,38 @@
 {% block body %}
 
 <div class="container">
-    <div class="row">
+    <div class="row g-3">
 
 
-        <div class="col-md-3 border rounded-2">
-            <h3>Rolle</h3>
-
-            <img src="../static/images/sheep.png" class="img-fluid rounded-top" alt="Image">
-
-            <ul class="list-group">
-                <li class="list" style="list-style: none">Name:</li>
-                <li class="list" style="list-style: none">Status:</li>
-                <li class="list" style="list-style: none">Leben:</li>
-
-            
-
-        </div>
             
         {% for name,rolle,status in nurListen %}
+
+        <div class='col-md-3 border offset-md-1 offset-xl-1 offset-sm-0 offset-0 rounded-2'>
+            <h3>Rolle</h3>
+
+            <img src='../static/images/sheep.png' class='img-fluid rounded-top' alt='Image'>
             
+            
+
+            <ul class='list-group'>
+                <li class='list' style='list-style: none'>Name: {{name}}</li>
+                <li class='list' style='list-style: none'>Rolle: {{rolle}}</li>
+
+                {% if rolle == status %}
+
+                <li class='list' style='list-style: none'>Status: Lebend</li>
+
+                {% else %}
+
+                <li class='list' style='list-style: none'>Status: {{status}}</li>
+
+                {% endif %}
+
+
+
+            </ul>
+        </div>
+
         {% endfor %}
                 
 

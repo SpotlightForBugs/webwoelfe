@@ -34,13 +34,32 @@ def createDict():
         hexe = 1
     if seherin == 0:
         seherin = 1
-    jaeger = 0
-    if spieleranzahl >= 10:
-        jaeger = 1
+    jaeger = 1 if spieleranzahl >= 10 else 0
+    if erzaehler_flag == 0:
+        assign = (
+            {
+                "Werwolf": werwolf,
+                "Hexe": hexe,
+                "Armor": armor,
+                "Seherin": seherin,
+                "Jaeger": jaeger,
+                "Dorfbewohner": (
+                    spieleranzahl - werwolf - seherin - hexe - jaeger - armor
+                ),
+            }
+            if jaeger > 0
+            else {
+                "Werwolf": werwolf,
+                "Hexe": hexe,
+                "Armor": armor,
+                "Seherin": seherin,
+                "Dorfbewohner": (spieleranzahl - werwolf - seherin - hexe - armor),
+            }
+        )
 
-    if erzaehler_flag == 1:
-        if jaeger > 0:
-            assign = {
+    elif erzaehler_flag == 1:
+        assign = (
+            {
                 "Erzaehler": 1,
                 "Werwolf": werwolf,
                 "Armor": armor,
@@ -51,8 +70,8 @@ def createDict():
                     spieleranzahl - armor - werwolf - seherin - hexe - jaeger - 1
                 ),
             }
-        else:
-            assign = {
+            if jaeger > 0
+            else {
                 "Erzaehler": 1,
                 "Werwolf": werwolf,
                 "Armor": armor,
@@ -60,26 +79,7 @@ def createDict():
                 "Seherin": seherin,
                 "Dorfbewohner": (spieleranzahl - werwolf - seherin - hexe - armor - 1),
             }
-    elif erzaehler_flag == 0:
-        if jaeger > 0:
-            assign = {
-                "Werwolf": werwolf,
-                "Hexe": hexe,
-                "Armor": armor,
-                "Seherin": seherin,
-                "Jaeger": jaeger,
-                "Dorfbewohner": (
-                    spieleranzahl - werwolf - seherin - hexe - jaeger - armor
-                ),
-            }
-        else:
-            assign = {
-                "Werwolf": werwolf,
-                "Hexe": hexe,
-                "Armor": armor,
-                "Seherin": seherin,
-                "Dorfbewohner": (spieleranzahl - werwolf - seherin - hexe - armor),
-            }
+        )
 
     with open("rollen_zuweisung.txt", "w+") as a:
         a.write(str(assign))
@@ -147,9 +147,7 @@ def validiere_rolle(name: str, rolle: str) -> bool:
     wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
     with open("rollen_log.txt", "r") as file:  # open the log file
         players_vorhanden = str(file.readlines())  # read the log file
-    if wort in players_vorhanden:
-        return True
-    return False
+    return wort in players_vorhanden
 
 
 def validiere_rolle_original(name: str, rolle: str) -> bool:
@@ -166,9 +164,7 @@ def validiere_rolle_original(name: str, rolle: str) -> bool:
     wort = ("'" + name + " = " + rolle + "\n'").encode("unicode_escape").decode("utf-8")
     with open("rollen_original.txt", "r") as file:  # open the log file
         players_vorhanden = str(file.readlines())  # read the log file
-    if wort in players_vorhanden:
-        return True
-    return False
+    return wort in players_vorhanden
 
 
 def validiere_name(name: str) -> bool:
@@ -183,9 +179,7 @@ def validiere_name(name: str) -> bool:
     wort = ("'" + name + " = ").encode("unicode_escape").decode("utf-8")
     with open("rollen_log.txt", "r") as file:  # open the log file
         players_vorhanden = str(file.readlines())  # read the log file
-    if wort in players_vorhanden:
-        return True
-    return False
+    return wort in players_vorhanden
 
 
 def hexe_verbraucht(flag: str):
@@ -205,10 +199,10 @@ def hexe_verbraucht(flag: str):
     elif "h" in flag or "H" in flag:
         flag = str(1)
 
-        if str(flag) == "1" or str(flag) == "2":
+        if flag in {"1", "2"}:
             with open("hexe_kann.txt", "r") as hexe_kann:
                 hexe_kann_text = hexe_kann.read()
-                hexe_kann_text = hexe_kann_text.replace(str(flag), "")
+                hexe_kann_text = hexe_kann_text.replace(flag, "")
                 hexe_kann.close()
             with open("hexe_kann.txt", "w") as hexe_kann_schreiben:
                 hexe_kann_schreiben.write(hexe_kann_text)
@@ -314,22 +308,23 @@ def armor_fertig(player1: str, player2: str):
 
     """
     if (
-        player1 != player2
-        and validiere_name(player1) is True
-        and validiere_name(player2) is True
+        player1 == player2
+        or validiere_name(player1) is not True
+        or validiere_name(player2) is not True
     ):
-        with open("verliebt.txt", "r+") as verliebt:
-            verliebt_text = verliebt.read()
-            # wenn nicht in der Liste, dann hinzufügen.
-            if not "+" + player1 + "+" + player2 + "\n" in verliebt_text:
-                verliebt.seek(0)
-                verliebt.write("+" + player1 + "+" + player2 + "\n")
-                verliebt.truncate()
-                verliebt.close()
-            # datei armor_kann.txt mit 0 ersetzen
-            with open("armor_kann.txt", "w") as armor_kann:
-                armor_kann.write("0")
-                armor_kann.close()
+        return
+    with open("verliebt.txt", "r+") as verliebt:
+        verliebt_text = verliebt.read()
+        # wenn nicht in der Liste, dann hinzufügen.
+        if f"+{player1}+{player2}" + "\n" not in verliebt_text:
+            verliebt.seek(0)
+            verliebt.write(f"+{player1}+{player2}" + "\n")
+            verliebt.truncate()
+            verliebt.close()
+        # datei armor_kann.txt mit 0 ersetzen
+        with open("armor_kann.txt", "w") as armor_kann:
+            armor_kann.write("0")
+            armor_kann.close()
 
 
 def verliebte_ausgeben() -> str:
@@ -361,7 +356,7 @@ def ist_verliebt(name: str) -> bool:
     """
     with open("verliebt.txt", "r") as verliebt:
         verliebt_text = verliebt.read()
-        if "+" + name in verliebt_text:
+        if f"+{name}" in verliebt_text:
             verliebt.close()
             return True
         verliebt.close()
@@ -394,7 +389,7 @@ def leere_dateien():
         file5.write(str(1))
     file5.close()
     with open("verliebt.txt", "w", encoding="UTF8") as file6:
-        file6.write(str(""))
+        file6.write("")
     file6.close()
     with open("jaeger_kann.txt", "w", encoding="UTF8") as file7:
         file7.write(str(1))
@@ -416,16 +411,14 @@ def momentane_rolle(player: str) -> str:
     :return: The current role of the player
 
     """
-    lines = []
-    for line in open("rollen_log.txt"):
-        lines.append("+" + line)
-    for line in lines:
-        if "+" + player in line:
-            return (line.split("=")[1].split("\n")[0]).replace(" ", "")
-    return (
-        "Ein Fehler ist aufgetreten, die Rolle von "
-        + player
-        + " konnte nicht ermittelt werden."
+    lines = [f"+{line}" for line in open("rollen_log.txt")]
+    return next(
+        (
+            (line.split("=")[1].split("\n")[0]).replace(" ", "")
+            for line in lines
+            if f"+{player}" in line
+        ),
+        f"Ein Fehler ist aufgetreten, die Rolle von {player} konnte nicht ermittelt werden.",
     )
 
 
@@ -439,18 +432,14 @@ def fruehere_rolle(player: str) -> str:
     :return: The previous role of the player, before dying
 
     """
-    lines = []
-    for line in open("rollen_original.txt"):
-        lines.append("+" + line)  # damit die Zeilen mit + beginnen
-    for line in lines:
-        if "+" + player in line:  # damit ganze Zeilen durchsucht werden können
-            return (line.split("=")[1].split("\n")[0]).replace(" ", "")
-            # remove whitespaces from result
-
-    return (
-        "Ein Fehler ist aufgetreten, die ursprüngliche Rolle von "
-        + player
-        + " konnte nicht ermittelt werden."
+    lines = [f"+{line}" for line in open("rollen_original.txt")]
+    return next(
+        (
+            (line.split("=")[1].split("\n")[0]).replace(" ", "")
+            for line in lines
+            if f"+{player}" in line
+        ),
+        f"Ein Fehler ist aufgetreten, die ursprüngliche Rolle von {player} konnte nicht ermittelt werden.",
     )
 
 
@@ -464,9 +453,7 @@ def war_oder_ist_rolle(player: str, rolle: str) -> bool:
     :return: True if the player is in the role or was in that role before
 
     """
-    if momentane_rolle(player) == rolle or fruehere_rolle(player) == rolle:
-        return True
-    return False
+    return momentane_rolle(player) == rolle or fruehere_rolle(player) == rolle
 
 
 def aktion_verfuegbar_ist_tot(player: str) -> bool:
@@ -480,13 +467,9 @@ def aktion_verfuegbar_ist_tot(player: str) -> bool:
 
     """
     if war_oder_ist_rolle(player, "Hexe") is True:
-        if hexe_darf_toeten() is True:
-            return True
-        return False
+        return hexe_darf_toeten() is True
     if war_oder_ist_rolle(player, "Jaeger") is True:
-        if jaeger_darf_toeten() is True:
-            return True
-        return False
+        return jaeger_darf_toeten() is True
     return False
 
 
@@ -543,10 +526,10 @@ def verliebte_toeten() -> str:
         verliebt.close()
     with open("rollen_log.txt", "r") as rollen_log:
         for line in rollen_log:
-            if line == (player1 + " = " + momentane_rolle(player1) + "\n"):
-                log_liste.append("+" + player1 + " = " + "Tot" + "\n")
-            elif line == (player2 + " = " + momentane_rolle(player2) + "\n"):
-                log_liste.append("+" + player2 + " = " + "Tot" + "\n")
+            if line == f"{player1} = {momentane_rolle(player1)}" + "\n":
+                log_liste.append(f"+{player1} = Tot" + "\n")
+            elif line == f"{player2} = {momentane_rolle(player2)}" + "\n":
+                log_liste.append(f"+{player2} = Tot" + "\n")
             else:
                 log_liste.append(line)
 
@@ -556,7 +539,7 @@ def verliebte_toeten() -> str:
         rollen_log_write.close()
         rollen_log.close()
 
-    return player1 + " und " + player2
+    return f"{player1} und {player2}"
 
 
 def schreibe_zuletzt_gestorben(player: str) -> None:
@@ -589,12 +572,12 @@ def toete_spieler(player):
     statement = None  # warum ist das nötig?
     with open("rollen_log.txt", "r") as rollen_log:
         for line in rollen_log:
-            if line == (player + " = " + rolle + "\n"):
-                list_for_the_log.append(player + " = " + "Tot" + "\n")
-                statement = player + " wurde getötet."
+            if line == f"{player} = {rolle}" + "\n":
+                list_for_the_log.append(f"{player} = Tot" + "\n")
+                statement = f"{player} wurde getötet."
             else:
                 if statement is None:
-                    statement = "Der Spieler " + player + " ist unbekannt."
+                    statement = f"Der Spieler {player} ist unbekannt."
                 list_for_the_log.append(line)
 
         rollen_log.close()
@@ -618,11 +601,9 @@ def log(debug: bool):
     :return: A none object
 
     """
-    if debug is False:
+    if not debug:
         with open("logfile.txt", "w", encoding="UTF8") as logfile_schreiben:
             logfile_schreiben.write("FALSE")
-    else:
-        pass
 
 
 def in_log_schreiben(a: str):
@@ -641,7 +622,7 @@ def in_log_schreiben(a: str):
             with open("logfile.txt", "a", encoding="UTF8") as logfile:
                 now = datetime.now().strftime("%H:%M:%S")
 
-                logfile.write(str(now) + str(" >> " + a) + "\n")
+                logfile.write(str(now) + str(f" >> {a}") + "\n")
                 logfile.close()
 
 
@@ -690,9 +671,7 @@ def spieler_ist_tot(player: str) -> bool:
     :return: A boolean value
 
     """
-    if momentane_rolle(player) == "Tot":
-        return True
-    return False
+    return momentane_rolle(player) == "Tot"
 
 
 def name_richtig_schreiben(name: str) -> str:

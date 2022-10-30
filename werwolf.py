@@ -53,9 +53,7 @@ def createDict():
                 "Hexe": hexe,
                 "Armor": armor,
                 "Seherin": seherin,
-                "Dorfbewohner": (
-                    spieleranzahl - werwolf - seherin - hexe - armor
-                ),
+                "Dorfbewohner": (spieleranzahl - werwolf - seherin - hexe - armor),
             }
         )
 
@@ -69,13 +67,7 @@ def createDict():
                 "Seherin": seherin,
                 "Jaeger": jaeger,
                 "Dorfbewohner": (
-                    spieleranzahl
-                    - armor
-                    - werwolf
-                    - seherin
-                    - hexe
-                    - jaeger
-                    - 1
+                    spieleranzahl - armor - werwolf - seherin - hexe - jaeger - 1
                 ),
             }
             if jaeger > 0
@@ -85,9 +77,7 @@ def createDict():
                 "Armor": armor,
                 "Hexe": hexe,
                 "Seherin": seherin,
-                "Dorfbewohner": (
-                    spieleranzahl - werwolf - seherin - hexe - armor - 1
-                ),
+                "Dorfbewohner": (spieleranzahl - werwolf - seherin - hexe - armor - 1),
             }
         )
 
@@ -325,7 +315,7 @@ def armor_fertig(player1: str, player2: str):
         return
     with open("verliebt.txt", "r+") as verliebt:
         verliebt_text = verliebt.read()
-            # wenn nicht in der Liste, dann hinzufügen.
+        # wenn nicht in der Liste, dann hinzufügen.
         if f"+{player1}+{player2}" + "\n" not in verliebt_text:
             verliebt.seek(0)
             verliebt.write(f"+{player1}+{player2}" + "\n")

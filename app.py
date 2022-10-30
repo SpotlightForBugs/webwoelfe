@@ -73,7 +73,7 @@ def einstellungen():
 
 # Spieleranzahl
 @app.route("/einstellungen/spieleranzahl", methods=["POST"])
-def setPlayerNumber():    # set the number of players
+def setPlayerNumber():  # set the number of players
     """
     The setPlayerNumber function is called when the user clicks on the button &quot;Spieleranzahl setzen&quot; in einstellungen.html.
     It takes a number of players from the form and checks if it is an integer between 8 and 18, otherwise it sets it to 8.
@@ -116,7 +116,7 @@ def setPlayerNumber():    # set the number of players
 
 
 @app.route("/spieler", methods=["POST"])  # Spieler
-def get_data():    # get the data from the form
+def get_data():  # get the data from the form
     """
     The get_data function gets the data from the form. If it is a POST request,
     it gets the name from the form and checks if it is already in use. If so,
@@ -349,7 +349,7 @@ def overview_all(ist_unschuldig):  # Übersicht
 
 # Rollen Dashboards
 @app.route("/<name>/<rolle>/Dashboard")  # Dashboard
-def Dashboard(name, rolle):    # Dashboard
+def Dashboard(name, rolle):  # Dashboard
     """
     The Dashboard function is called when the user wants to see the Dashboard of Dorfbewohner.
     It renders Dash_rolle.html and passes all variables to it.
@@ -489,7 +489,6 @@ def spezielles_Dashboard(name, rolle):
             hexe_kann=hexe_kann,
             letzter_tot=letzter_tot,
         )
-
 
     if rolle == "Armor":
         werwolf.in_log_schreiben(
@@ -648,7 +647,7 @@ def wahl(name, rolle, auswahl):
 
 
 @app.route("/<name>/<rolle>/schlafen")  # route for the sleep function
-def schlafen(name, rolle):    # function for the sleep function
+def schlafen(name, rolle):  # function for the sleep function
     """
     The schlafen function is used to sleep the player.
     The function takes two parameters: name and rolle.
@@ -691,7 +690,7 @@ def schlafen(name, rolle):    # function for the sleep function
 
 
 @app.route("/warten")  # route for the wait function
-def warten():    # function for the wait function
+def warten():  # function for the wait function
     """
     The warten function is used to wait for all players to vote.
     It checks if all players have voted and then shows the results of the voting.
@@ -780,7 +779,7 @@ def warten():    # function for the wait function
 
 # route for the death function
 @app.route("/<name>/<rolle>/<todesgrund>/tot")
-def tot(name, rolle, todesgrund):    # function for the death function
+def tot(name, rolle, todesgrund):  # function for the death function
     """
     The tot function is used to render the status page of a player who has been killed.
     It takes three arguments: name, rolle and todesgrund.
@@ -844,7 +843,7 @@ def tot(name, rolle, todesgrund):    # function for the death function
 
 
 @app.route("/<name>/<rolle>/kick/")  # route for the kick function
-def rausschmeissen(name, rolle):    # function for the kick function
+def rausschmeissen(name, rolle):  # function for the kick function
     """
     The rausschmeissen function is used to kick a player from the game.
     It takes two arguments: name and rolle.

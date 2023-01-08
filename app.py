@@ -728,15 +728,15 @@ def warten():  # function for the wait function
 
                 string = line.lower().replace(",", "").replace(".", "").split(" ")
                 words.extend(iter(string))
-            for i in range(len(words)):
+            for i, item in enumerate(words):
                 count = 1
                 for j in range(i + 1, len(words)):
-                    if words[i] == words[j]:
+                    if item == words[j]:
                         count = count + 1
 
                 if count > maxCount:
                     maxCount = count
-                    name_tot = words[i]
+                    name_tot = item
 
             with open("rollen_log.txt", "r+") as fileTot:
 
@@ -939,15 +939,15 @@ def wahl_stats():
 
         string = line.lower().replace(",", "").replace(".", "").split(" ")
         words.extend(iter(string))
-    for i in range(len(words)):
+    for i, item in enumerate(words):
         anzahl = 1
         for j in range(i + 1, len(words)):
-            if words[i] == words[j]:
+            if item == words[j]:
                 anzahl = anzahl + 1
 
         if anzahl > maxCount:
             maxCount = anzahl
-            name_tot = words[i]
+            name_tot = item
 
             werwolf.schreibe_zuletzt_gestorben(name_tot)
 
@@ -1086,15 +1086,15 @@ def wer_wahl_warten():
 
                 string = line.lower().replace(",", "").replace(".", "").split(" ")
                 words.extend(iter(string))
-            for i in range(len(words)):
+            for i, item in enumerate(words):
                 count = 1
                 for j in range(i + 1, len(words)):
-                    if words[i] == words[j]:
+                    if item == words[j]:
                         count = count + 1
 
                 if count > maxCount:
                     maxCount = count
-                    name_tot = words[i]
+                    name_tot = item
 
             with open("rollen_log.txt", "r+") as fileTot:
 

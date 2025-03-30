@@ -26,11 +26,13 @@ sentry_sdk.init(
 class Game(db.Model):
     id = db.Column(db.String(36), primary_key=True)
     status = db.Column(db.String(20), default='setup')  # setup, running, ended
-    phase = db.Column(db.String(20))  # night, day, voting
+    phase = db.Column(db.String(20))  # night, day, voting, waiting
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     player_count = db.Column(db.Integer, default=8)
     random_storyteller = db.Column(db.Boolean, default=False)
     last_killed = db.Column(db.String(36), nullable=True)
+    lover1_id = db.Column(db.String(36), nullable=True)
+    lover2_id = db.Column(db.String(36), nullable=True)
     players = db.relationship('Player', backref='game', lazy=True)
     
     def to_dict(self):
@@ -78,8 +80,9 @@ class Action(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.String(36), db.ForeignKey('game.id'), nullable=False)
     player_id = db.Column(db.String(36), db.ForeignKey('player.id'), nullable=False)
-    action_type = db.Column(db.String(20))  # kill, protect, see, heal
+    action_type = db.Column(db.String(20))  # kill, protect, see, heal, create_lovers
     target_id = db.Column(db.String(36), db.ForeignKey('player.id'), nullable=True)
+    second_target_id = db.Column(db.String(36), db.ForeignKey('player.id'), nullable=True)  # For lover pairing
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class GameLog(db.Model):
@@ -144,9 +147,13 @@ def add_player(game_id, name):
     if player_count + 1 == game.player_count:
         assign_roles(game_id)
         game.status = 'running'
-        game.phase = 'night'
         db.session.commit()
         log_event(game_id, "Game started, roles assigned")
+        # Notify all players via websocket that the game has started
+        socketio.emit('game_started', {
+            'game_id': game_id,
+            'phase': 'waiting'
+        }, room=game_id)
     
     return player, None
 
@@ -162,10 +169,9 @@ def assign_roles(game_id):
     roles.extend(['Werwolf'] * 2)  # Werewolves
     roles.append('Seherin')  # Seer
     roles.append('Hexe')  # Witch
+    roles.append('Amor')  # Cupid (always included now)
     
     # Add more roles based on player count
-    if game.player_count >= 10:
-        roles.append('Armor')  # Armor
     if game.player_count >= 12:
         roles.append('Jaeger')  # Hunter
     if game.player_count >= 14:
@@ -184,6 +190,27 @@ def assign_roles(game_id):
         log_event(game_id, f"Player {player.name} assigned role: {player.role}")
     
     db.session.commit()
+    
+    # Get a list of werewolves to inform them of each other
+    werewolves = [p for p in players if p.role == 'Werwolf']
+    
+    # Notify each werewolf about other werewolves
+    for werewolf in werewolves:
+        other_werewolves = [{'id': w.id, 'name': w.name} for w in werewolves if w.id != werewolf.id]
+        if other_werewolves:
+            socketio.emit('werewolf_info', {
+                'other_werewolves': other_werewolves
+            }, room=werewolf.id)
+    
+    # Set up the first night phase for Amor (Cupid)
+    game.phase = 'waiting'
+    db.session.commit()
+    
+    # Notify all players
+    socketio.emit('phase_change', {
+        'game_id': game_id,
+        'phase': 'waiting'
+    }, room=game_id)
 
 def log_event(game_id, message):
     log = GameLog(game_id=game_id, message=message)
@@ -202,6 +229,9 @@ def kill_player(game_id, player_id, killer_type):
     if not player or player.status == 'dead':
         return False
     
+    game = Game.query.get(game_id)
+    
+    # Mark player as dead
     player.status = 'dead'
     db.session.commit()
     
@@ -212,7 +242,23 @@ def kill_player(game_id, player_id, killer_type):
         death_message += " by the witch"
     elif killer_type == 'vote':
         death_message += " by village vote"
+    elif killer_type == 'lover':
+        death_message += " by lover's death"
     log_event(game_id, death_message)
+    
+    # Check if this player is part of a lover couple
+    is_lover = (game.lover1_id == player_id or game.lover2_id == player_id)
+    
+    # If player is a lover, kill the other lover too
+    if is_lover:
+        other_lover_id = game.lover2_id if game.lover1_id == player_id else game.lover1_id
+        if other_lover_id:
+            other_lover = Player.query.get(other_lover_id)
+            if other_lover and other_lover.status == 'alive':
+                # Kill the other lover
+                other_lover.status = 'dead'
+                db.session.commit()
+                log_event(game_id, f"Player {other_lover.name} ({other_lover.role}) died of a broken heart 💔")
     
     # Check if game is over
     check_game_end(game_id)
@@ -221,9 +267,29 @@ def kill_player(game_id, player_id, killer_type):
 
 def check_game_end(game_id):
     game = Game.query.get(game_id)
+    
+    # Count alive players by type
     werewolves = Player.query.filter_by(game_id=game_id, role='Werwolf', status='alive').count()
     villagers = Player.query.filter_by(game_id=game_id, status='alive').filter(Player.role != 'Werwolf').count()
+    total_alive = werewolves + villagers
     
+    # Check if lovers are the only ones alive (and both are alive)
+    lovers_win = False
+    if game.lover1_id and game.lover2_id:
+        lover1 = Player.query.get(game.lover1_id)
+        lover2 = Player.query.get(game.lover2_id)
+        
+        if (lover1 and lover2 and 
+            lover1.status == 'alive' and lover2.status == 'alive' and 
+            total_alive == 2):
+            lovers_win = True
+            game.status = 'ended'
+            game.phase = 'lovers_win'
+            log_event(game_id, "Game over! The lovers win! Love conquers all! ❤️")
+            db.session.commit()
+            return True
+    
+    # Normal win conditions
     if werewolves == 0:
         game.status = 'ended'
         game.phase = 'villagers_win'
@@ -269,21 +335,11 @@ def process_night_actions(game_id):
         if targets:
             werewolf_target = random.choice(targets)
             
-            # Check if target is protected by armor
-            armor_action = Action.query.filter_by(
-                game_id=game_id,
-                action_type='protect',
-                target_id=werewolf_target
-            ).filter(
-                Action.timestamp > datetime.now(timezone.utc).replace(hour=0, minute=0, second=0)
-            ).first()
+            kill_player(game_id, werewolf_target, 'werewolf')
             
-            if not armor_action:
-                kill_player(game_id, werewolf_target, 'werewolf')
-                
-                # Store last killed for witch
-                game.last_killed = werewolf_target
-                db.session.commit()
+            # Store last killed for witch
+            game.last_killed = werewolf_target
+            db.session.commit()
     
     # Process witch actions
     witch = Player.query.filter_by(game_id=game_id, role='Hexe', status='alive').first()
@@ -423,7 +479,9 @@ def join_game(game_id):
     
     if error:
         return jsonify({'success': False, 'error': error}), 400
-    
+    if not player:
+        return jsonify({'success': False, 'error': 'Player not found'}), 404
+     
     return jsonify({
         'success': True,
         'player': player.to_dict(),
@@ -528,13 +586,54 @@ def handle_action(data):
     player_token = data.get('token')
     action_type = data.get('action_type')
     target_id = data.get('target_id')
+    second_target = data.get('second_target')
     
     player = Player.query.filter_by(token=player_token).first()
     if not player or player.status != 'alive':
         return False
     
     game = Game.query.get(player.game_id)
-    if not game or game.status != 'running' or game.phase != 'night':
+    if not game or game.status != 'running':
+        return False
+    
+    # Special handling for the first night (Cupid's action)
+    if game.phase == 'waiting' and player.role == 'Amor' and action_type == 'create_lovers':
+        if not target_id or not second_target:
+            return False
+        
+        # Set the lovers in the game
+        game.lover1_id = target_id
+        game.lover2_id = second_target
+        db.session.commit()
+        
+        # Get the lovers' names
+        lover1 = Player.query.get(target_id)
+        lover2 = Player.query.get(second_target)
+        
+        if lover1 and lover2:
+            # Log the lovers creation
+            log_event(player.game_id, f"Amor ({player.name}) created a love bond between {lover1.name} and {lover2.name} ❤️")
+            
+            # Notify the lovers
+            socketio.emit('lover_paired', {
+                'lover_id': lover2.id,
+                'lover_name': lover2.name
+            }, room=lover1.id)
+            
+            socketio.emit('lover_paired', {
+                'lover_id': lover1.id,
+                'lover_name': lover1.name
+            }, room=lover2.id)
+            
+            # Transition to normal night phase
+            start_first_regular_night(game.id)
+            
+            return True
+        
+        return False
+    
+    # Normal night actions
+    if game.phase != 'night':
         return False
     
     # Validate action based on role
@@ -543,8 +642,7 @@ def handle_action(data):
         valid_action = True
     elif player.role == 'Seherin' and action_type == 'see':
         valid_action = True
-    elif player.role == 'Armor' and action_type == 'protect':
-        valid_action = True
+    # Remove the invalid "Armor" role check - there is no armor role
     
     if not valid_action:
         return False
@@ -579,6 +677,22 @@ def handle_action(data):
     
     return True
 
+def start_first_regular_night(game_id):
+    """
+    Transition from first night (Cupid phase) to the regular night phase
+    """
+    game = Game.query.get(game_id)
+    game.phase = 'night'
+    db.session.commit()
+    
+    log_event(game_id, "The waiting phase has ended. The lovers have been chosen. The regular night phase begins.")
+    
+    # Notify all players
+    socketio.emit('phase_change', {
+        'game_id': game_id,
+        'phase': 'night'
+    }, room=game_id)
+
 # Error handlers
 @app.errorhandler(404)
 def page_not_found(e):
@@ -593,7 +707,30 @@ def server_error(e):
 def inject_now():
     return {'now': datetime.now(timezone.utc)}
 
+def reset_db():
+    """Drop all tables and recreate them"""
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        print("Database has been reset successfully.")
+
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        # Check if we need to reset the database
+        try:
+            # Try to query the Game table to see if it has the required columns
+            Game.query.first()
+            db.create_all()  # Just ensure all tables exist
+            print("Database schema is up to date.")
+        except Exception as e:
+            error_str = str(e)
+            # Check for missing column errors more comprehensively
+            if "no column named lover1_id" in error_str or "no column named lover2_id" in error_str or "no such column" in error_str:
+                print("Database schema is outdated. Resetting database...")
+                reset_db()
+            else:
+                # Just create all tables if they don't exist
+                db.create_all()
+                print("Tables created.")
+    
     socketio.run(app, debug=True)

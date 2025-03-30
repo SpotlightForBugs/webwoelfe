@@ -5,10 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Werewolf Game</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <!-- Atmospheric elements -->
+    <div class="full-moon"></div>
+    <div class="fog"></div>
+    
+    <!-- Audio elements -->
+    <audio id="background-music" loop>
+        <source src="/static/music/background_music.mp3" type="audio/mp3">
+    </audio>
+    
+    <div id="music-controls" title="Toggle background music">
+        <i class="fas fa-volume-up" id="music-icon"></i>
+    </div>
+    
     <div class="container">
-        <h1>Werewolf Game</h1>
+        <h1>Werewolf</h1>
         
         <div class="card">
             <h2>Create New Game</h2>
@@ -25,7 +39,7 @@
                     </label>
                 </div>
                 
-                <button type="submit" class="btn primary">Create Game</button>
+                <button type="submit" class="btn primary">Create Game <i class="fas fa-paw"></i></button>
             </form>
         </div>
         
@@ -37,8 +51,25 @@
                     <input type="text" id="game_id" name="game_id" required>
                 </div>
                 
-                <button type="submit" class="btn secondary">Join Game</button>
+                <button type="submit" class="btn secondary">Join Game <i class="fas fa-sign-in-alt"></i></button>
             </form>
+        </div>
+        
+        <div class="card">
+            <h2>About the Game</h2>
+            <p>Welcome to Werewolf, a game of deception, strategy, and survival. In this deadly village, 
+               werewolves hide among innocent villagers, hunting at night while the village seeks to identify 
+               and eliminate the threat during the day.</p>
+            <p>Each player is assigned a role:</p>
+            <ul>
+                <li>🐺 <strong>Werewolf</strong> - Your goal is to eliminate the villagers</li>
+                <li>👁️ <strong>Seer</strong> - You can reveal the true identity of one player each night</li>
+                <li>🧙‍♀️ <strong>Witch</strong> - You possess potions to heal or kill</li>
+                <li>💘 <strong>Cupid</strong> - You link two players in love who will share the same fate</li>
+                <li>🏹 <strong>Hunter</strong> - You take someone with you when you die</li>
+                <li>👨‍👩‍👧‍👦 <strong>Villager</strong> - Your goal is to identify and eliminate the werewolves</li>
+            </ul>
+            <p>Will you survive the night, or succumb to the werewolves' hunger?</p>
         </div>
     </div>
     
@@ -48,6 +79,29 @@
             const gameId = document.getElementById('game_id').value;
             window.location.href = '/game/' + gameId;
         });
+        
+        // Background music controls
+        const backgroundMusic = document.getElementById('background-music');
+        const musicIcon = document.getElementById('music-icon');
+        const musicControls = document.getElementById('music-controls');
+        let musicPlaying = false;
+        
+        // Toggle background music
+        function toggleMusic() {
+            if (musicPlaying) {
+                backgroundMusic.pause();
+                musicIcon.className = 'fas fa-volume-mute';
+            } else {
+                backgroundMusic.play().catch(e => {
+                    console.warn('Auto-play prevented. User must interact with the document first.', e);
+                });
+                musicIcon.className = 'fas fa-volume-up';
+            }
+            musicPlaying = !musicPlaying;
+        }
+        
+        // Setup music toggle
+        musicControls.addEventListener('click', toggleMusic);
     </script>
 </body>
 </html>

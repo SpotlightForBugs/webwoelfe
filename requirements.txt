@@ -3,4 +3,12 @@ requests
 sentry-sdk[flask]
 flask-api
 jsonify
+flask-sqlalchemy
+flask-socketio
+pytest
+pytest-flask
+pytest-mock
+coverage
+selenium
+webdriver-manager
 

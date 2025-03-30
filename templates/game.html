@@ -6,9 +6,25 @@
     <title>Werewolf Game</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <!-- Atmospheric elements -->
+    <div class="full-moon"></div>
+    <div class="fog"></div>
+    
+    <!-- Audio elements -->
+    <audio id="background-music" loop>
+        <source src="/static/music/background_music.mp3" type="audio/mp3">
+    </audio>
+    
+    <div id="music-controls" title="Toggle background music">
+        <i class="fas fa-volume-up" id="music-icon"></i>
+    </div>
+
     <div class="container">
+        <h1>Werewolf</h1>
+        
         <div id="join-section" class="card">
             <h2>Join Game</h2>
             <div id="game-info">
@@ -72,6 +88,7 @@
         </div>
         
         <div id="game-over" class="card hidden">
+            <div class="blood-drip"></div>
             <h2>Game Over</h2>
             <p id="winner-message"></p>
             <button id="new-game" class="btn primary">Start New Game</button>
@@ -86,6 +103,11 @@
         let socket = null;
         let currentPhase = null;
         let players = [];
+        let otherWerewolves = [];
+        let lovers = [];
+        let backgroundMusic = document.getElementById('background-music');
+        let musicIcon = document.getElementById('music-icon');
+        let musicPlaying = false;
         
         // DOM Elements
         const joinSection = document.getElementById('join-section');
@@ -108,9 +130,13 @@
         const voteSelect = document.getElementById('vote-select');
         const playerList = document.getElementById('player-list');
         const logContainer = document.getElementById('log-container');
+        const musicControls = document.getElementById('music-controls');
         
         // Initialize game
         function init() {
+            // Set up music toggle
+            musicControls.addEventListener('click', toggleMusic);
+            
             // If player already joined
             if (playerToken) {
                 fetch(`/api/player/${playerToken}`)
@@ -136,12 +162,35 @@
             refreshGameInfo();
         }
         
+        // Toggle background music
+        function toggleMusic() {
+            if (musicPlaying) {
+                backgroundMusic.pause();
+                musicIcon.className = 'fas fa-volume-mute';
+            } else {
+                backgroundMusic.play().catch(e => {
+                    console.warn('Auto-play prevented. User must interact with the document first.', e);
+                });
+                musicIcon.className = 'fas fa-volume-up';
+            }
+            musicPlaying = !musicPlaying;
+        }
+        
         // Refresh game info
         function refreshGameInfo() {
             fetch(`/api/games/${gameId}`)
                 .then(response => response.json())
                 .then(data => {
                     gameStatusDisplay.textContent = data.status;
+                    
+                    // If the game has started, update the phase
+                    if (data.status === 'running' && data.phase) {
+                        currentPhase = data.phase;
+                        if (displayPhase) {
+                            displayPhase.textContent = currentPhase;
+                        }
+                        updatePhaseUI();
+                    }
                     
                     fetch(`/api/games/${gameId}/players`)
                         .then(response => response.json())
@@ -196,6 +245,11 @@
                     joinSection.classList.add('hidden');
                     gameSection.classList.remove('hidden');
                     setupGame();
+                    
+                    // Try to play music when the user joins
+                    if (!musicPlaying) {
+                        toggleMusic();
+                    }
                 } else {
                     alert(data.error);
                 }
@@ -213,6 +267,11 @@
             displayRole.textContent = player.role || 'Waiting for role assignment...';
             displayStatus.textContent = player.status;
             
+            // Add role-specific class to body
+            if (player.role) {
+                document.body.classList.add('role-' + player.role.toLowerCase());
+            }
+            
             // Connect to socket
             socket = io();
             
@@ -228,6 +287,32 @@
                 refreshGameInfo();
             });
             
+            socket.on('game_started', function(data) {
+                console.log('Game started', data);
+                // Refresh player data to get role assignment
+                fetch(`/api/player/${playerToken}`)
+                    .then(response => response.json())
+                    .then(updatedPlayer => {
+                        player = updatedPlayer;
+                        displayRole.textContent = player.role;
+                        
+                        // Add role-specific class to body
+                        if (player.role) {
+                            document.body.classList.add('role-' + player.role.toLowerCase());
+                        }
+                        
+                        // Update current phase
+                        currentPhase = data.phase;
+                        displayPhase.textContent = currentPhase;
+                        
+                        // Update body class for styling
+                        document.body.classList.remove('day-phase', 'night-phase');
+                        document.body.classList.add(currentPhase + '-phase');
+                        
+                        updatePhaseUI();
+                    });
+            });
+            
             socket.on('game_log', function(data) {
                 const logEntry = document.createElement('div');
                 logEntry.classList.add('log-entry');
@@ -237,22 +322,75 @@
                 
                 logEntry.innerHTML = `<span class="log-time">[${timeStr}]</span> ${data.message}`;
                 logContainer.prepend(logEntry);
+                
+                // Add a howl for werewolf actions
+                if (data.message.includes('werewolves')) {
+                    playSound('howl');
+                }
+                
+                // Add a scream for killing
+                if (data.message.includes('killed')) {
+                    playSound('scream');
+                }
             });
             
             socket.on('phase_change', function(data) {
                 currentPhase = data.phase;
                 displayPhase.textContent = currentPhase;
+                
+                // Update body class for styling
+                document.body.classList.remove('day-phase', 'night-phase');
+                document.body.classList.add(currentPhase + '-phase');
+                
                 updatePhaseUI();
                 refreshGameInfo();
+                
+                // Play phase change sound
+                playSound(currentPhase);
             });
             
             socket.on('seer_result', function(data) {
-                alert(`${data.target_name} is a ${data.role}`);
+                const roleEmoji = data.role === 'Werwolf' ? '🐺' : '👨‍👩‍👧‍👦';
+                alert(`${data.target_name} is a ${data.role} ${roleEmoji}`);
+            });
+            
+            socket.on('werewolf_info', function(data) {
+                otherWerewolves = data.other_werewolves || [];
+                if (otherWerewolves.length > 0) {
+                    // Create a message about other werewolves
+                    const werewolfNames = otherWerewolves.map(w => w.name).join(', ');
+                    const message = `Your werewolf allies are: ${werewolfNames} 🐺`;
+                    
+                    // Add to log
+                    const logEntry = document.createElement('div');
+                    logEntry.classList.add('log-entry', 'werewolf-info');
+                    logEntry.innerHTML = message;
+                    logContainer.prepend(logEntry);
+                    
+                    // Also show an alert
+                    alert(message);
+                }
+            });
+            
+            socket.on('lover_paired', function(data) {
+                if (data.lover_id === player.id) {
+                    alert(`You are now in love with ${data.lover_name} ❤️`);
+                    // Add lover info to player display
+                    const loverInfo = document.createElement('p');
+                    loverInfo.innerHTML = `Lover: <span class="lover-name">${data.lover_name} ❤️</span>`;
+                    document.querySelector('.player-info').appendChild(loverInfo);
+                }
             });
             
             // Refresh initially and then every 5 seconds
             refreshGameInfo();
             setInterval(refreshGameInfo, 5000);
+        }
+        
+        // Play sound effects
+        function playSound(type) {
+            // Add custom sound effects here if you expand the game
+            console.log('Sound effect:', type);
         }
         
         // Update player list
@@ -261,14 +399,45 @@
             
             players.forEach(p => {
                 const li = document.createElement('li');
-                li.textContent = `${p.name} (${p.status})`;
+                
+                // Add role emoji if known (only for self or if dead)
+                let roleEmoji = '';
+                if (player && player.id === p.id && p.role) {
+                    roleEmoji = getRoleEmoji(p.role);
+                } else if (p.status === 'dead' && p.role) {
+                    roleEmoji = getRoleEmoji(p.role);
+                } else if (player && player.role === 'Werwolf' && otherWerewolves.some(w => w.id === p.id)) {
+                    // Show werewolf emoji for other werewolves if the player is a werewolf
+                    roleEmoji = '🐺';
+                }
+                
+                li.textContent = `${p.name} ${roleEmoji} (${p.status})`;
                 
                 if (p.status === 'dead') {
                     li.classList.add('dead');
                 }
                 
+                // Show lover emoji if this player is in a lover relationship
+                if (lovers.includes(p.id)) {
+                    li.innerHTML += ' ❤️';
+                }
+                
                 playerList.appendChild(li);
             });
+        }
+        
+        // Get emoji for role
+        function getRoleEmoji(role) {
+            switch(role) {
+                case 'Werwolf': return '🐺';
+                case 'Seherin': return '👁️';
+                case 'Hexe': return '🧙‍♀️';
+                case 'Erzaehler': return '📚';
+                case 'Armor': return '🛡️';
+                case 'Jaeger': return '🏹';
+                case 'Dorfbewohner': return '👨‍👩‍👧‍👦';
+                default: return '';
+            }
         }
         
         // Update UI based on game phase
@@ -278,13 +447,13 @@
             
             if (!player || !player.role || player.status === 'dead') {
                 phaseMessage.textContent = player.status === 'dead' 
-                    ? 'You are dead. Watch the game unfold.' 
+                    ? 'You are dead. Watch the game unfold as a ghost. 👻' 
                     : 'Waiting for the game to start...';
                 return;
             }
             
             if (currentPhase === 'night') {
-                phaseMessage.textContent = 'It is night. The village sleeps...';
+                phaseMessage.textContent = 'It is night. The village sleeps while dark forces lurk in the shadows...';
                 
                 // Only show actions for roles with night actions
                 if (['Werwolf', 'Hexe', 'Seherin', 'Armor'].includes(player.role)) {
@@ -292,7 +461,7 @@
                     setupNightActions();
                 }
             } else if (currentPhase === 'day') {
-                phaseMessage.textContent = 'It is day. The village must decide who to execute...';
+                phaseMessage.textContent = 'It is day. The village awakens to discover a new victim. Who among you is a werewolf?';
                 votingSection.classList.remove('hidden');
                 setupDayVoting();
             }
@@ -303,21 +472,29 @@
             actionButtons.innerHTML = '';
             
             if (player.role === 'Werwolf') {
+                // Show werewolf allies if there are any
+                if (otherWerewolves.length > 0) {
+                    const allyInfo = document.createElement('div');
+                    allyInfo.classList.add('werewolf-allies');
+                    allyInfo.innerHTML = `<p>Your werewolf allies: ${otherWerewolves.map(w => w.name).join(', ')} 🐺</p>`;
+                    actionButtons.appendChild(allyInfo);
+                }
+                
                 const killBtn = document.createElement('button');
-                killBtn.textContent = 'Choose victim';
+                killBtn.textContent = '🩸 Choose victim';
                 killBtn.classList.add('btn', 'danger');
                 killBtn.addEventListener('click', () => showTargetSelection('kill'));
                 actionButtons.appendChild(killBtn);
             } 
             else if (player.role === 'Hexe') {
                 const killBtn = document.createElement('button');
-                killBtn.textContent = 'Kill someone';
+                killBtn.textContent = '☠️ Kill someone';
                 killBtn.classList.add('btn', 'danger');
                 killBtn.addEventListener('click', () => showTargetSelection('kill'));
                 actionButtons.appendChild(killBtn);
                 
                 const healBtn = document.createElement('button');
-                healBtn.textContent = 'Heal the victim';
+                healBtn.textContent = '💉 Heal the victim';
                 healBtn.classList.add('btn', 'success');
                 healBtn.addEventListener('click', () => {
                     // Automatically send heal action on the last killed player
@@ -332,18 +509,103 @@
             }
             else if (player.role === 'Seherin') {
                 const seeBtn = document.createElement('button');
-                seeBtn.textContent = 'See someone\'s role';
+                seeBtn.textContent = '👁️ See someone\'s role';
                 seeBtn.classList.add('btn', 'info');
                 seeBtn.addEventListener('click', () => showTargetSelection('see'));
                 actionButtons.appendChild(seeBtn);
             }
             else if (player.role === 'Armor') {
                 const protectBtn = document.createElement('button');
-                protectBtn.textContent = 'Protect someone';
+                protectBtn.textContent = '🛡️ Protect someone';
                 protectBtn.classList.add('btn', 'success');
                 protectBtn.addEventListener('click', () => showTargetSelection('protect'));
                 actionButtons.appendChild(protectBtn);
+                
+                // Add button for creating lovers (Verliebte)
+                const loverBtn = document.createElement('button');
+                loverBtn.textContent = '❤️ Create Lovers';
+                loverBtn.classList.add('btn', 'info');
+                loverBtn.addEventListener('click', () => showLoverSelection());
+                actionButtons.appendChild(loverBtn);
             }
+        }
+        
+        // Show lover selection for Armor
+        function showLoverSelection() {
+            targetSelection.classList.remove('hidden');
+            targetSelect.innerHTML = '';
+            
+            // We need exactly 2 lovers
+            const possibleLovers = players.filter(p => p.status === 'alive');
+            
+            // Create first selection
+            const firstLoverSelect = document.createElement('select');
+            firstLoverSelect.id = 'first-lover-select';
+            firstLoverSelect.classList.add('lover-select');
+            
+            // Create second selection
+            const secondLoverSelect = document.createElement('select');
+            secondLoverSelect.id = 'second-lover-select';
+            secondLoverSelect.classList.add('lover-select');
+            
+            // Populate both dropdowns
+            possibleLovers.forEach(p => {
+                const option1 = document.createElement('option');
+                option1.value = p.id;
+                option1.textContent = p.name;
+                firstLoverSelect.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = p.id;
+                option2.textContent = p.name;
+                secondLoverSelect.appendChild(option2);
+            });
+            
+            // Replace the normal target select with two lover selects
+            targetSelect.style.display = 'none';
+            const selectionContainer = document.createElement('div');
+            selectionContainer.classList.add('lover-selection');
+            selectionContainer.innerHTML = `
+                <p>Select first lover:</p>
+                <p>Select second lover:</p>
+            `;
+            selectionContainer.querySelector('p:first-child').appendChild(firstLoverSelect);
+            selectionContainer.querySelector('p:last-child').appendChild(secondLoverSelect);
+            
+            targetSelection.insertBefore(selectionContainer, document.getElementById('confirm-action'));
+            
+            // Update confirm action button
+            document.getElementById('confirm-action').onclick = function() {
+                const lover1 = firstLoverSelect.value;
+                const lover2 = secondLoverSelect.value;
+                
+                if (lover1 === lover2) {
+                    alert('You must choose two different players!');
+                    return;
+                }
+                
+                // Add the lovers to our tracked list
+                lovers = [lover1, lover2];
+                
+                // Emit an event to set up lovers
+                socket.emit('action', {
+                    token: playerToken,
+                    action_type: 'create_lovers',
+                    target_id: lover1,
+                    second_target: lover2
+                });
+                
+                // Get the names for the alert
+                const lover1Name = possibleLovers.find(p => p.id === lover1).name;
+                const lover2Name = possibleLovers.find(p => p.id === lover2).name;
+                
+                alert(`You've created a love bond between ${lover1Name} and ${lover2Name} ❤️`);
+                
+                // Hide and clean up
+                targetSelection.classList.add('hidden');
+                selectionContainer.remove();
+                targetSelect.style.display = '';
+            };
         }
         
         // Show target selection UI
@@ -352,11 +614,16 @@
             targetSelect.innerHTML = '';
             
             // Filter out dead players and self
-            const targets = players.filter(p => 
+            let targets = players.filter(p => 
                 p.status === 'alive' && 
-                p.id !== player.id &&
-                (player.role !== 'Werwolf' || p.role !== 'Werwolf') // Werewolves can't kill other werewolves
+                p.id !== player.id
             );
+            
+            // Special filtering for werewolves
+            if (player.role === 'Werwolf') {
+                // Werewolves can't kill other werewolves
+                targets = targets.filter(p => !otherWerewolves.some(w => w.id === p.id));
+            }
             
             targets.forEach(p => {
                 const option = document.createElement('option');
@@ -412,14 +679,20 @@
             gameSection.classList.add('hidden');
             gameOverSection.classList.remove('hidden');
             
+            // Add specific class for styling
+            gameOverSection.className = 'card';
+            gameOverSection.classList.add(result);
+            
             const winnerMessage = document.getElementById('winner-message');
             if (result === 'villagers_win') {
                 winnerMessage.textContent = 'The villagers have won! All werewolves have been eliminated.';
+                gameOverSection.classList.add('villagers-win');
                 if (player.role !== 'Werwolf') {
                     winnerMessage.textContent += ' Congratulations!';
                 }
             } else {
-                winnerMessage.textContent = 'The werewolves have won! They have devoured enough villagers to take over.';
+                winnerMessage.textContent = 'The werewolves have won! They have devoured enough villagers to take over the village.';
+                gameOverSection.classList.add('werewolves-win');
                 if (player.role === 'Werwolf') {
                     winnerMessage.textContent += ' Congratulations!';
                 }

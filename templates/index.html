@@ -1,64 +1,53 @@
-{% extends 'struktur.html' %}
-<!--@generated-->
-{% block body %}
-
-<div class="container-fluid" style="margin-top: 30px">
-  <h1 id="rot">Werwolf <br /></h1>
-  <h1>Online</h1>
-  <div class="refresh">
-    {% if spieler_suche %}
-
-    <p class="small">
-      <br />Bitte gebe Deinen Namen hier ein. Sonderzeichen werden
-      herausgefiltert<br />
-    </p>
-
-    <form
-      class="form-control-lg"
-      action="{{ url_for('get_data') }}"
-      method="POST"
-    >
-      <input
-        type="text"
-        id="input"
-        maxlength="15"
-        name="name"
-        placeholder="Dein Name"
-        required
-      />
-      <input class="btn btn-dark" type="submit" value="speichern" />
-    </form>
-    <br />
-
-    <!--<div class="container-audio col-sm-4 col-sm-offset-4 embed-responsive embed-responsive-4by3">
-        <audio controls>
-                   <source src="../../static/music/background_music.mp3" type="audio/mp3">
-                   Dein Browser unterstützt das Audio-Element nicht.
-               </audio>
-    </div>-->
-  </div>
-  {% endif %} {% if not spieler_suche %} Das Spiel hat bereits begonnen. {%
-  endif %}
-</div>
-
-<script>
-  //load div class refresh every second into the div class refresh if the field is empty and there is no cursor in the field
-  $(document).ready(function () {
-    setInterval(function () {
-      if (
-        $("#input").val() == "" &&
-        !$("#input").is(":focus") &&
-        $("#input").is(":visible")
-      ) {
-        $(".refresh").load(window.location.href + " .refresh");
-        console.log("refresh"); //for debugging
-      }
-    }, 1000);
-  });
-</script>
-
-{% block script %}
-<script src="../../static/scripts/rot.js"></script>
-<script src="../../static/scripts/game_state.js"></script>
-
-{% endblock %} {% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Werewolf Game</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Werewolf Game</h1>
+        
+        <div class="card">
+            <h2>Create New Game</h2>
+            <form action="/games" method="post">
+                <div class="form-group">
+                    <label for="player_count">Number of Players (8-18):</label>
+                    <input type="number" id="player_count" name="player_count" min="8" max="18" value="8">
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="random_storyteller"> 
+                        Random Storyteller
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn primary">Create Game</button>
+            </form>
+        </div>
+        
+        <div class="card">
+            <h2>Join Existing Game</h2>
+            <form id="join-form">
+                <div class="form-group">
+                    <label for="game_id">Game ID:</label>
+                    <input type="text" id="game_id" name="game_id" required>
+                </div>
+                
+                <button type="submit" class="btn secondary">Join Game</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('join-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const gameId = document.getElementById('game_id').value;
+            window.location.href = '/game/' + gameId;
+        });
+    </script>
+</body>
+</html>

@@ -1,211 +1,211 @@
-.small {
-  color: white;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  color: white;
-}
-
-span {
-  color: white;
-}
-
-div {
-  color: white;
-}
-
-.form-check {
-  padding-left: 0px;
-}
-
-#mark_it {
-  appearance: none;
-  position: relative;
-  cursor: pointer;
-}
-
-#mark_it::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 20px;
-  height: 20px;
-  background-color: rgb(0, 255, 0);
-  border: none;
-  border-radius: 4px;
-  float: left;
-  margin-top: 5px;
-}
-
-#mark_it:checked::after {
-  background-color: rgb(255, 0, 0);
-}
-
-p#alligner {
-  margin-left: 35;
-}
-
-input[type="text"] {
-  padding: 5px;
-  border: 2px solid #ccc;
-  -webkit-border-radius: 5px;
-  border-radius: 5px;
-}
-
-input[type="text"]:focus {
-  border-color: #333;
-}
-
-input[type="submit"] {
-  padding: 5px 15px;
-  background: red;
-  border: 0 none;
-  cursor: pointer;
-  -webkit-border-radius: 5px;
-  border-radius: 5px;
-}
-
-/* Global Reset */
-* {
-  font-family: "Allerta", arial, Tahoma;
-  box-sizing: border-box;
-}
-
-body,
-nav,
-header,
-footer,
-.main,
-.navbar,
-.container-fluid {
-  background: linear-gradient(to left, #7700aa, #8800ff);
-  text-align: center;
-  color: #fff;
-}
-
-h3 {
-  text-shadow: 1px 1px 1px #fff;
-}
-
-h1 {
-  text-shadow: 1px 1px 1px #fff;
-}
-
-h2 {
-  text-shadow: 1px 1px 1px #fff;
-}
-
-h4 {
-  text-shadow: 1px 1px 1px #fff;
-}
-
-h5 {
-  text-shadow: 1px 1px 1px #fff;
-}
-
-h6 {
-  text-shadow: 1px 1px 1px #fff;
-}
-
-iframe {
-  width: 100%;
-  border: 10px;
-}
-
-.team {
-  border-radius: 25px;
-  background: #27b80e;
-  margin: auto;
-  padding: 20px;
-  width: 90%;
-  height: 50px;
-}
-
-.enemyteam {
-  border-radius: 25px;
-  background: #9f3a07;
-  margin: auto;
-  padding: 20px;
-  width: 90%;
-  height: 50px;
-}
-
-#inTag {
-  font-weight: bold;
-  font-size: 20px;
-  display: inline;
-}
-
-#anzahl {
-  height: max-content;
-  width: 30%;
-  margin: 1px;
-}
-
-.wahlfeld {
-  border-radius: 10px;
-  background-color: #27b80e;
-  padding: 15px;
-  width: 30%;
-  height: 50px;
-  border: 0px;
-  float: left;
-  font-weight: bold;
-  font-size: 20px;
-  display: inline;
-  margin: 0;
-  padding: 0;
-}
-
-.wahlfeld:focus {
-  border-radius: 10px;
-  background-color: #9f3a07;
-  padding: 15px;
-  width: 30%;
-  height: 50px;
-  border: 0px;
-  float: left;
-  font-weight: bold;
-  font-size: 20px;
-  display: inline;
-}
-
-.wahllist {
-  list-style: none;
-}
-
-.wahlbalken {
-  border-radius: 25px;
-  background: #9f3a07;
-  margin: auto;
-  padding: 20px;
-  width: 90%;
-  height: 50px;
-}
-
-.wahlbalkenIframe {
-  width: 70%;
-  height: 60px;
-  margin-left: auto;
-  display: inline;
-}
-
-.chooseplayer {
-  border-radius: 10px;
-  background-color: #27b80e;
-  padding: 15px;
-  width: 60%;
-  height: 50px;
-  border: 0px;
-  font-weight: bold;
-  font-size: 20px;
-  display: inline;
-  margin: auto;
-  padding: 0;
-}
+/* static/css/style.css */
+:root {
+    --primary-color: #3f51b5;
+    --secondary-color: #f50057;
+    --background-color: #f5f5f5;
+    --card-background: #ffffff;
+    --text-color: #333333;
+    --border-color: #dddddd;
+    --success-color: #4caf50;
+    --danger-color: #f44336;
+    --info-color: #2196f3;
+    --warning-color: #ff9800;
+  }
+  
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    padding: 20px;
+  }
+  
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  h1, h2, h3, h4 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+  }
+  
+  .card {
+    background-color: var(--card-background);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+  }
+  
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+  
+  .btn:active {
+    transform: translateY(1px);
+  }
+  
+  .primary {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .primary:hover {
+    background-color: #303f9f;
+  }
+  
+  .secondary {
+    background-color: var(--secondary-color);
+    color: white;
+  }
+  
+  .secondary:hover {
+    background-color: #c51162;
+  }
+  
+  .success {
+    background-color: var(--success-color);
+    color: white;
+  }
+  
+  .success:hover {
+    background-color: #388e3c;
+  }
+  
+  .danger {
+    background-color: var(--danger-color);
+    color: white;
+  }
+  
+  .danger:hover {
+    background-color: #d32f2f;
+  }
+  
+  .info {
+    background-color: var(--info-color);
+    color: white;
+  }
+  
+  .info:hover {
+    background-color: #1976d2;
+  }
+  
+  .warning {
+    background-color: var(--warning-color);
+    color: white;
+  }
+  
+  .warning:hover {
+    background-color: #f57c00;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .player-info {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+  }
+  
+  #player-list {
+    list-style-type: none;
+  }
+  
+  #player-list li {
+    padding: 8px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  #player-list li:last-child {
+    border-bottom: none;
+  }
+  
+  #player-list li.dead {
+    text-decoration: line-through;
+    color: #888;
+  }
+  
+  #log-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #fafafa;
+  }
+  
+  .log-entry {
+    margin-bottom: 5px;
+    font-size: 14px;
+  }
+  
+  .log-time {
+    color: #888;
+    font-weight: 500;
+  }
+  
+  #target-selection, #voting-section {
+    margin-top: 15px;
+  }
+  
+  #action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  #phase-info {
+    background-color: #e3f2fd;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+  
+  #winner-message {
+    font-size: 18px;
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 4px;
+    background-color: #e8f5e9;
+  }
+  

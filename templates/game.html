@@ -1,74 +1,437 @@
-{% extends 'struktur.html' %}
-<!--@generated-->
-
-{% block body %}
-
-<div id="myDiv"></div>
-
-<script>
-
-    //create a new array to hold the Strings
-
-var myArray = new Array();
-//add the Strings to the array
-
-{% for i in nurNamen %}
-
-myArray.push("{{i}}");
-
-
-
-{% endfor %}
-
-
-//create a table with the array elements
-//each element is a colum in the table
-//after each element follows a blank colum
-
-var table = document.createElement("table");
-var row = table.insertRow(0);
-var cell = row.insertCell(0);
-cell.innerHTML = myArray[0];
-var cell = row.insertCell(1);
-cell.innerHTML = myArray[1];
-var cell = row.insertCell(2);
-cell.innerHTML = myArray[2];
-var cell = row.insertCell(3);
-cell.innerHTML = myArray[3];
-var cell = row.insertCell(4);
-cell.innerHTML = myArray[4];
-var cell = row.insertCell(5);
-cell.innerHTML = myArray[5];
-
-//add the table to the div element
-
-document.getElementById("myDiv").appendChild(table);
-
-</script>
-
-<div id="myDiv"></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</script>
-
-
-
-
-
-
-
-
-
-{% endblock body %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Werewolf Game</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div id="join-section" class="card">
+            <h2>Join Game</h2>
+            <div id="game-info">
+                <p>Game ID: <span id="game-id">{{ game.id }}</span></p>
+                <p>Players: <span id="player-count">0</span> / {{ game.player_count }}</p>
+                <p>Status: <span id="game-status">{{ game.status }}</span></p>
+            </div>
+            
+            <form id="player-join-form">
+                <div class="form-group">
+                    <label for="player-name">Your Name:</label>
+                    <input type="text" id="player-name" required>
+                </div>
+                
+                <button type="submit" class="btn primary">Join Game</button>
+            </form>
+        </div>
+        
+        <div id="game-section" class="hidden">
+            <div class="card">
+                <h2>Game <span id="display-game-id"></span></h2>
+                <div class="player-info">
+                    <p>Name: <span id="display-name"></span></p>
+                    <p>Role: <span id="display-role"></span></p>
+                    <p>Status: <span id="display-status"></span></p>
+                </div>
+                
+                <div id="phase-info">
+                    <h3>Current Phase: <span id="display-phase"></span></h3>
+                    <p id="phase-message"></p>
+                </div>
+            </div>
+            
+            <div id="action-section" class="card hidden">
+                <h3>Your Actions</h3>
+                <div id="action-buttons"></div>
+                
+                <div id="target-selection" class="hidden">
+                    <h4>Select a target:</h4>
+                    <select id="target-select"></select>
+                    <button id="confirm-action" class="btn primary">Confirm</button>
+                </div>
+            </div>
+            
+            <div id="voting-section" class="card hidden">
+                <h3>Vote</h3>
+                <p>Select a player to vote for execution:</p>
+                <select id="vote-select"></select>
+                <button id="confirm-vote" class="btn primary">Vote</button>
+            </div>
+            
+            <div id="players-list" class="card">
+                <h3>Players</h3>
+                <ul id="player-list"></ul>
+            </div>
+            
+            <div id="game-log" class="card">
+                <h3>Game Log</h3>
+                <div id="log-container"></div>
+            </div>
+        </div>
+        
+        <div id="game-over" class="card hidden">
+            <h2>Game Over</h2>
+            <p id="winner-message"></p>
+            <button id="new-game" class="btn primary">Start New Game</button>
+        </div>
+    </div>
+    
+    <script>
+        // Game state
+        let playerToken = localStorage.getItem('player_token');
+        let gameId = '{{ game.id }}';
+        let player = null;
+        let socket = null;
+        let currentPhase = null;
+        let players = [];
+        
+        // DOM Elements
+        const joinSection = document.getElementById('join-section');
+        const gameSection = document.getElementById('game-section');
+        const gameOverSection = document.getElementById('game-over');
+        const actionSection = document.getElementById('action-section');
+        const votingSection = document.getElementById('voting-section');
+        const targetSelection = document.getElementById('target-selection');
+        const playerJoinForm = document.getElementById('player-join-form');
+        const playerCountDisplay = document.getElementById('player-count');
+        const gameStatusDisplay = document.getElementById('game-status');
+        const displayGameId = document.getElementById('display-game-id');
+        const displayName = document.getElementById('display-name');
+        const displayRole = document.getElementById('display-role');
+        const displayStatus = document.getElementById('display-status');
+        const displayPhase = document.getElementById('display-phase');
+        const phaseMessage = document.getElementById('phase-message');
+        const actionButtons = document.getElementById('action-buttons');
+        const targetSelect = document.getElementById('target-select');
+        const voteSelect = document.getElementById('vote-select');
+        const playerList = document.getElementById('player-list');
+        const logContainer = document.getElementById('log-container');
+        
+        // Initialize game
+        function init() {
+            // If player already joined
+            if (playerToken) {
+                fetch(`/api/player/${playerToken}`)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Player not found');
+                    })
+                    .then(data => {
+                        player = data;
+                        joinSection.classList.add('hidden');
+                        gameSection.classList.remove('hidden');
+                        setupGame();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        localStorage.removeItem('player_token');
+                    });
+            }
+            
+            // Refresh game info
+            refreshGameInfo();
+        }
+        
+        // Refresh game info
+        function refreshGameInfo() {
+            fetch(`/api/games/${gameId}`)
+                .then(response => response.json())
+                .then(data => {
+                    gameStatusDisplay.textContent = data.status;
+                    
+                    fetch(`/api/games/${gameId}/players`)
+                        .then(response => response.json())
+                        .then(playerData => {
+                            players = playerData;
+                            playerCountDisplay.textContent = players.length;
+                            updatePlayerList();
+                            
+                            if (data.status === 'ended') {
+                                showGameOver(data.phase);
+                            }
+                        });
+                });
+            
+            // Refresh logs
+            fetch(`/api/games/${gameId}/logs`)
+                .then(response => response.json())
+                .then(logs => {
+                    logContainer.innerHTML = '';
+                    logs.forEach(log => {
+                        const logEntry = document.createElement('div');
+                        logEntry.classList.add('log-entry');
+                        
+                        const time = new Date(log.timestamp);
+                        const timeStr = time.toLocaleTimeString();
+                        
+                        logEntry.innerHTML = `<span class="log-time">[${timeStr}]</span> ${log.message}`;
+                        logContainer.prepend(logEntry);
+                    });
+                });
+        }
+        
+        // Join game form submission
+        playerJoinForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const playerName = document.getElementById('player-name').value;
+            
+            fetch(`/api/games/${gameId}/join`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `name=${encodeURIComponent(playerName)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    player = data.player;
+                    playerToken = data.token;
+                    localStorage.setItem('player_token', playerToken);
+                    
+                    joinSection.classList.add('hidden');
+                    gameSection.classList.remove('hidden');
+                    setupGame();
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to join game');
+            });
+        });
+        
+        // Setup game after joining
+        function setupGame() {
+            displayGameId.textContent = gameId;
+            displayName.textContent = player.name;
+            displayRole.textContent = player.role || 'Waiting for role assignment...';
+            displayStatus.textContent = player.status;
+            
+            // Connect to socket
+            socket = io();
+            
+            socket.on('connect', function() {
+                socket.emit('join_game', {
+                    game_id: gameId,
+                    token: playerToken
+                });
+            });
+            
+            socket.on('joined', function(data) {
+                console.log('Joined game', data);
+                refreshGameInfo();
+            });
+            
+            socket.on('game_log', function(data) {
+                const logEntry = document.createElement('div');
+                logEntry.classList.add('log-entry');
+                
+                const time = new Date(data.timestamp);
+                const timeStr = time.toLocaleTimeString();
+                
+                logEntry.innerHTML = `<span class="log-time">[${timeStr}]</span> ${data.message}`;
+                logContainer.prepend(logEntry);
+            });
+            
+            socket.on('phase_change', function(data) {
+                currentPhase = data.phase;
+                displayPhase.textContent = currentPhase;
+                updatePhaseUI();
+                refreshGameInfo();
+            });
+            
+            socket.on('seer_result', function(data) {
+                alert(`${data.target_name} is a ${data.role}`);
+            });
+            
+            // Refresh initially and then every 5 seconds
+            refreshGameInfo();
+            setInterval(refreshGameInfo, 5000);
+        }
+        
+        // Update player list
+        function updatePlayerList() {
+            playerList.innerHTML = '';
+            
+            players.forEach(p => {
+                const li = document.createElement('li');
+                li.textContent = `${p.name} (${p.status})`;
+                
+                if (p.status === 'dead') {
+                    li.classList.add('dead');
+                }
+                
+                playerList.appendChild(li);
+            });
+        }
+        
+        // Update UI based on game phase
+        function updatePhaseUI() {
+            actionSection.classList.add('hidden');
+            votingSection.classList.add('hidden');
+            
+            if (!player || !player.role || player.status === 'dead') {
+                phaseMessage.textContent = player.status === 'dead' 
+                    ? 'You are dead. Watch the game unfold.' 
+                    : 'Waiting for the game to start...';
+                return;
+            }
+            
+            if (currentPhase === 'night') {
+                phaseMessage.textContent = 'It is night. The village sleeps...';
+                
+                // Only show actions for roles with night actions
+                if (['Werwolf', 'Hexe', 'Seherin', 'Armor'].includes(player.role)) {
+                    actionSection.classList.remove('hidden');
+                    setupNightActions();
+                }
+            } else if (currentPhase === 'day') {
+                phaseMessage.textContent = 'It is day. The village must decide who to execute...';
+                votingSection.classList.remove('hidden');
+                setupDayVoting();
+            }
+        }
+        
+        // Setup night actions based on role
+        function setupNightActions() {
+            actionButtons.innerHTML = '';
+            
+            if (player.role === 'Werwolf') {
+                const killBtn = document.createElement('button');
+                killBtn.textContent = 'Choose victim';
+                killBtn.classList.add('btn', 'danger');
+                killBtn.addEventListener('click', () => showTargetSelection('kill'));
+                actionButtons.appendChild(killBtn);
+            } 
+            else if (player.role === 'Hexe') {
+                const killBtn = document.createElement('button');
+                killBtn.textContent = 'Kill someone';
+                killBtn.classList.add('btn', 'danger');
+                killBtn.addEventListener('click', () => showTargetSelection('kill'));
+                actionButtons.appendChild(killBtn);
+                
+                const healBtn = document.createElement('button');
+                healBtn.textContent = 'Heal the victim';
+                healBtn.classList.add('btn', 'success');
+                healBtn.addEventListener('click', () => {
+                    // Automatically send heal action on the last killed player
+                    socket.emit('action', {
+                        token: playerToken,
+                        action_type: 'heal',
+                        target_id: 'last_killed' // Backend will resolve this
+                    });
+                    alert('You have used your healing potion!');
+                });
+                actionButtons.appendChild(healBtn);
+            }
+            else if (player.role === 'Seherin') {
+                const seeBtn = document.createElement('button');
+                seeBtn.textContent = 'See someone\'s role';
+                seeBtn.classList.add('btn', 'info');
+                seeBtn.addEventListener('click', () => showTargetSelection('see'));
+                actionButtons.appendChild(seeBtn);
+            }
+            else if (player.role === 'Armor') {
+                const protectBtn = document.createElement('button');
+                protectBtn.textContent = 'Protect someone';
+                protectBtn.classList.add('btn', 'success');
+                protectBtn.addEventListener('click', () => showTargetSelection('protect'));
+                actionButtons.appendChild(protectBtn);
+            }
+        }
+        
+        // Show target selection UI
+        function showTargetSelection(actionType) {
+            targetSelection.classList.remove('hidden');
+            targetSelect.innerHTML = '';
+            
+            // Filter out dead players and self
+            const targets = players.filter(p => 
+                p.status === 'alive' && 
+                p.id !== player.id &&
+                (player.role !== 'Werwolf' || p.role !== 'Werwolf') // Werewolves can't kill other werewolves
+            );
+            
+            targets.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.name;
+                targetSelect.appendChild(option);
+            });
+            
+            document.getElementById('confirm-action').onclick = function() {
+                const targetId = targetSelect.value;
+                
+                socket.emit('action', {
+                    token: playerToken,
+                    action_type: actionType,
+                    target_id: targetId
+                });
+                
+                alert(`Action ${actionType} confirmed on ${targets.find(t => t.id === targetId).name}`);
+                targetSelection.classList.add('hidden');
+            };
+        }
+        
+        // Setup day voting
+        function setupDayVoting() {
+            voteSelect.innerHTML = '';
+            
+            // Filter out dead players and self
+            const targets = players.filter(p => p.status === 'alive' && p.id !== player.id);
+            
+            targets.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.name;
+                voteSelect.appendChild(option);
+            });
+            
+            document.getElementById('confirm-vote').onclick = function() {
+                const targetId = voteSelect.value;
+                
+                socket.emit('vote', {
+                    token: playerToken,
+                    target_id: targetId
+                });
+                
+                alert(`You voted to execute ${targets.find(t => t.id === targetId).name}`);
+                votingSection.classList.add('hidden');
+                phaseMessage.textContent = 'Waiting for other players to vote...';
+            };
+        }
+        
+        // Show game over screen
+        function showGameOver(result) {
+            gameSection.classList.add('hidden');
+            gameOverSection.classList.remove('hidden');
+            
+            const winnerMessage = document.getElementById('winner-message');
+            if (result === 'villagers_win') {
+                winnerMessage.textContent = 'The villagers have won! All werewolves have been eliminated.';
+                if (player.role !== 'Werwolf') {
+                    winnerMessage.textContent += ' Congratulations!';
+                }
+            } else {
+                winnerMessage.textContent = 'The werewolves have won! They have devoured enough villagers to take over.';
+                if (player.role === 'Werwolf') {
+                    winnerMessage.textContent += ' Congratulations!';
+                }
+            }
+            
+            document.getElementById('new-game').addEventListener('click', function() {
+                window.location.href = '/';
+            });
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

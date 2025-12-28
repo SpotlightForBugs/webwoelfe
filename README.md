@@ -139,7 +139,7 @@ Dieses Projekt steht unter der GNU General Public License v3.0 - siehe [LICENSE]
 ## Autoren
 
 - [@SpotlightForBugs](https://www.github.com/SpotlightForBugs)
-- [@Error404UNameNotFound](https://www.github.com/Error404UNameNotFound)
+- [@Heizkoerper](https://www.github.com/Heizkoerper)
 - [@BlackTesseract](https://www.github.com/BlackTesseract)
 - @Zora
 

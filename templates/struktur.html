@@ -1,279 +1,505 @@
 <!DOCTYPE html>
-<html lang="de" dir="ltr">
-
-
+<html lang="de">
 <head>
-   <meta charset="utf-8">
-  <noscript>
-    <meta http-equiv="refresh" content="0;url={{ url_for('noscript') }}">
-  </noscript>
-
-  <link rel="apple-touch-icon" sizes="180x180" href="../../../../../../static/images/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="../../../../../../static/images/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="../../../../../../static/images/favicon-16x16.png">
-  <link rel="manifest" href="../../../../../../static/webmanifest/site.webmanifest">
-  <link rel="mask-icon" href="../../../../../../static/images/safari-pinned-tab.svg" color="#5bbad5">
-  <meta name="apple-mobile-web-app-title" content="WebWoelfe">
-  <meta name="application-name" content="WebWoelfe">
-  <meta name="msapplication-TileColor" content="#b91d47">
-  <meta name="theme-color" content="#c63737">
-
-  <!--Custom Scripts-->
-  <script type="text/javascript" src="../../../../../../static/scripts/sort_cookies.js"></script>
-  <!--End of Custom Scripts-->
-
-
-
-  <!-- Custom fonts -->
-  <link href='https://fonts.googleapis.com/css?family=Allerta' rel='stylesheet'>
- <!--End of Custom Fonts-->
-
- <!--look and feel-->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=yes">
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
-  <!--End of look and feel--> 
-<!-- Bootstrap style cdns-->
-
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
-
-<!--End of Bootstrap style cdns-->
-  <!--Custom Styles-->
-  <link rel="stylesheet" href="../../../../../../static/css/style.css">
-    <!--End of Custom Styles-->
-<!-- Bootstrap script cdns-->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-<!--End of Bootstrap script cdns-->
-
-<!-- jQuery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.js" integrity="sha512-CX7sDOp7UTAq+i1FYIlf9Uo27x4os+kGeoT7rgwvY+4dmjqV0IuE/Bl5hVsjnQPQiTOhAX1O2r2j5bjsFBvv/A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<!--End of jQuery-->
-
-
-  <script src="../../../../../../static/scripts/game_state.js"></script>
-
-{% if cookies_check() %}
-
-
-
-
-  
-  
-<!--Tracker-->
-
-
-<script
-  src="https://browser.sentry-cdn.com/7.12.1/bundle.min.js"
-  integrity="sha384-ds3MEkwHMg1Vl0XMXl86pZU3gIntwqCNJtYn0etV2sTjuKLdqrtEKFzCwgj3uzcL"
-  crossorigin="anonymous"
-></script>
-  <script type="text/javascript">
-    (function(c, a) {
-      if (!a.__SV) {
-        var b = window;
-        try {
-          var d, m, j, k = b.location,
-            f = k.hash;
-          d = function(a, b) {
-            return (m = a.match(RegExp(b + "=([^&]*)"))) ? m[1] : null
-          };
-          f && d(f, "fpState") && (j = JSON.parse(decodeURIComponent(d(f, "fpState"))), "fpeditor" === j.action && (b.sessionStorage.setItem("_fpcehash", f), history.replaceState(j.desiredHash || "", c.title, k.pathname + k.search)))
-        } catch (n) {}
-        var l, h;
-        window.freshpaint = a;
-        a._i = [];
-        a.init = function(b, d, g) {
-          function c(b, i) {
-            var a = i.split(".");
-            2 == a.length && (b = b[a[0]], i = a[1]);
-            b[i] = function() {
-              b.push([i].concat(Array.prototype.slice.call(arguments, 0)))
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ spiel_name }}{% endblock %}</title>
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <meta name="theme-color" content="#1a1a2e">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Hint System CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hints.css') }}">
+    
+    <style>
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #252540;
+            --text-primary: #e8e8f0;
+            --text-secondary: #a0a0b0;
+            --accent-red: #c41e3a;
+            --accent-red-glow: rgba(196, 30, 58, 0.4);
+            --accent-gold: #d4a574;
+            --accent-blue: #4a6fa5;
+            --accent-green: #2d8659;
+            --border-color: #3a3a5c;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Crimson Pro', Georgia, serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 0 8px var(--accent-red-glow));
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover, nav a.active {
+            color: var(--accent-gold);
+        }
+        
+        /* Main Content */
+        main {
+            padding-top: 100px;
+            min-height: calc(100vh - 60px);
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .card-header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Buttons */
+        .btn {
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-red) 0%, #8b1525 100%);
+            color: white;
+            box-shadow: 0 4px 16px var(--accent-red-glow);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px var(--accent-red-glow);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent-gold);
+            border: 2px solid var(--accent-gold);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+        }
+        
+        .btn-ghost {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-green) 0%, #1e5e3d 100%);
+            color: white;
+        }
+        
+        .btn-lg {
+            padding: 1.25rem 3rem;
+            font-size: 1.125rem;
+        }
+        
+        .btn-block {
+            width: 100%;
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+        }
+        
+        .form-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+        
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+        
+        .form-checkbox input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent-red);
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid;
+        }
+        
+        .alert-error {
+            background: rgba(196, 30, 58, 0.15);
+            border-color: var(--accent-red);
+            color: #ff6b6b;
+        }
+        
+        .alert-success {
+            background: rgba(45, 134, 89, 0.15);
+            border-color: var(--accent-green);
+            color: #6bcf8e;
+        }
+        
+        .alert-info {
+            background: rgba(74, 111, 165, 0.15);
+            border-color: var(--accent-blue);
+            color: #7ba3d4;
+        }
+        
+        /* Grid */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
             }
-          }
-          var e = a;
-          "undefined" !== typeof g ? e = a[g] = [] : g = "freshpaint";
-          e.people = e.people || [];
-          e.toString = function(b) {
-            var a = "freshpaint";
-            "freshpaint" !== g && (a += "." + g);
-            b || (a += " (stub)");
-            return a
-          };
-          e.people.toString = function() {
-            return e.toString(1) + ".people (stub)"
-          };
-          l = "disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove people group page alias ready addEventProperties addInitialEventProperties removeEventProperty addPageviewProperties".split(" ");
-          for (h = 0; h < l.length; h++) c(e, l[h]);
-          var f = "set set_once union unset remove delete".split(" ");
-          e.get_group = function() {
-            function a(c) {
-              b[c] = function() {
-                call2_args = arguments;
-                call2 = [c].concat(Array.prototype.slice.call(call2_args, 0));
-                e.push([d, call2])
-              }
-            }
-            for (var b = {}, d = ["get_group"].concat(Array.prototype.slice.call(arguments, 0)), c = 0; c < f.length; c++) a(f[c]);
-            return b
-          };
-          a._i.push([b, d, g])
-        };
-        a.__SV = 1.4;
-        b = c.createElement("script");
-        b.type = "text/javascript";
-        b.async = !0;
-        b.src = "undefined" !== typeof FRESHPAINT_CUSTOM_LIB_URL ? FRESHPAINT_CUSTOM_LIB_URL : "//perfalytics.com/static/js/freshpaint.js";
-        (d = c.getElementsByTagName("script")[0]) ? d.parentNode.insertBefore(b, d): c.head.appendChild(b)
-      }
-    })(document, window.freshpaint || []);
-    freshpaint.init("fc2c280a-b541-4aff-bfcf-d241f3b85b63");
-    freshpaint.page();
-  </script>
-
-  <!-- End of Tracker -->
-   <title>Webwölfe!</title>
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px var(--accent-red-glow); }
+            50% { box-shadow: 0 0 40px var(--accent-red-glow); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            padding: 1.5rem 0;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 3rem;
+        }
+        
+        footer a {
+            color: var(--accent-gold);
+            text-decoration: none;
+        }
+        
+        /* Utilities */
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-secondary); }
+        .text-accent { color: var(--accent-gold); }
+        .text-danger { color: var(--accent-red); }
+        .text-success { color: var(--accent-green); }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        .mb-4 { margin-bottom: 2rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mt-4 { margin-top: 2rem; }
+        .flex { display: flex; }
+        .flex-center { justify-content: center; align-items: center; }
+        .gap-1 { gap: 0.5rem; }
+        .gap-2 { gap: 1rem; }
+        .gap-3 { gap: 1.5rem; }
+        
+        /* Rollen-Badges */
+        .rolle-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+    </style>
+    
+    {% block head %}{% endblock %}
 </head>
-<body onload="setTimeout(rot, 2000)" >
+<body>
+    <header>
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <svg class="logo-icon" viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="2" fill="none"/>
+                    <path d="M30 60 Q35 40 50 35 Q65 40 70 60 Q65 70 50 75 Q35 70 30 60" fill="currentColor"/>
+                    <circle cx="40" cy="50" r="5" fill="#fff"/>
+                    <circle cx="60" cy="50" r="5" fill="#fff"/>
+                </svg>
+                {{ spiel_name }}
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('index') }}" class="{% block nav_home %}{% endblock %}">Start</a></li>
+                    <li><a href="{{ url_for('rollen_uebersicht') }}" class="{% block nav_rollen %}{% endblock %}">Rollen</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p style="margin-bottom: 0.5rem;">
+                <i class="fa-solid fa-paw" style="color: var(--accent-red);"></i>
+                {{ spiel_name }} - Das klassische Werwolf-Partyspiel digital!
+            </p>
+            <p style="font-size: 0.8rem; margin-bottom: 0.5rem;">
+                Erstellt von 
+                <a href="https://github.com/SpotlightForBugs" target="_blank">@SpotlightForBugs</a>,
+                <a href="https://github.com/Error404UNameNotFound" target="_blank">@Error404UNameNotFound</a>,
+                <a href="https://github.com/BlackTesseract" target="_blank">@BlackTesseract</a>
+                und <span style="color: var(--accent-gold);">@Zora</span>
+            </p>
+            <p style="font-size: 0.75rem;">
+                Inspiriert von "Werwölfe von Düsterwald" | 
+                Rollen basierend auf der <a href="https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung" target="_blank">Werwolf Wiki</a>
+            </p>
+    </div>
+    </footer>
 
-
-          {# then user has already consented so no requirement for consent banner #}
-{% else %}
-
-   <script>
-if (window.location.pathname != "/") {
-  //redirect to homepage
-  window.location.href = "/";
-}
-</script>
-        {# show a cookie consent banner #}
-       
-   <script>
-            //function fn to set cookie cookie_consent=true
-            //and to set the id of the cookie-consent-container to hidden
-            function fn(x){
-
-              if (x==1){
-                
-                //set cookie_consent=true and make it expire in a random number of days between 80 and 200
-                document.cookie = "cookie_consent=true; max-age=" + Math.floor(Math.random() * (200 - 80 + 1) + 80) * 24 * 60 * 60 + "; path=/";
-
-
-                
-                document.getElementById("cookie-consent-container").style.visibility = "hidden";
-                //reload the head to show the tracker
-                location.reload();
-
-              }
-              else if (x==0){
-                
-                document.getElementById("cookie-consent-container").style.visibility = "block";
-                //change the text of the cookie consent banner to say that the user has denied cookies and that they will not be able to use the site
-                document.getElementById("warning").innerHTML = "You have denied cookies. You will not be able to use this site.";
-
-              }
-              else{
-                document.getElementById("warning").innerHTML = "Error";
-              }
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/hints.js') }}"></script>
+    
+    <!-- Anti-DevTools Schutz - Verhindert Spicken via F12 -->
+    <script>
+    (function() {
+        'use strict';
+        
+        // Rechtsklick deaktivieren
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // F12 und andere Shortcuts blockieren
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === 'F12' || e.keyCode === 123) {
+                e.preventDefault();
+                return false;
             }
-      </script>
-      
-
- <div class="fixed-bottom p-4 cookie_show" id="cookie-consent-container">
-              <div class="bg-dark text-white w-100 mw-100" role="alert">
-                  <div class=" p-4 d-flex flex-column">
-
-
-                      <h4>Cookie Warnung</h4>
-                      <p id="warning">
-                       Diese Website speichert Daten wie z. B. Cookies, um die Funktionalität der Website, einschließlich Analyse und Personalisierung, zu ermöglichen.  
-                      </p>
-                      <div class="ml-auto">
-                        <button type="button" class="btn btn-outline-light mr-3" id="btnDeny" onclick="fn(0);">
-                          Nur notwendige Cookies zulassen
-                        </button>
-                        <button type="button" class="btn btn-light" id="btnAccept" onclick="fn(1);">
-                            Alle Cookies zulassen
-                        </button>
-                      </div>
-                  </div>
-              </div>
-          </div>
-          <script>
-//jQuery to show the cookie consent banner
-$(document).ready(function(){
-  $("toast").show();
-});
-//show toast-body with jQuery
-$(document).ready(function(){
-  $(".toast-body").show();
-});
-
-
-
-
-          </script>
-
-          
-
+            // Ctrl+Shift+I (DevTools)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+J (Console)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+C (Element Picker)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c' || e.keyCode === 67)) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+U (View Source)
+            if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
+                e.preventDefault();
+                return false;
+            }
+            // Cmd+Option+I (Mac DevTools)
+            if (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) {
+                e.preventDefault();
+                return false;
+            }
+            // Cmd+Option+J (Mac Console)
+            if (e.metaKey && e.altKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) {
+                e.preventDefault();
+                return false;
+            }
+            // Cmd+Option+C (Mac Element Picker)
+            if (e.metaKey && e.altKey && (e.key === 'C' || e.key === 'c' || e.keyCode === 67)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        // DevTools-Erkennung via Timing
+        let devtoolsOpen = false;
+        const threshold = 160;
+        
+        setInterval(function() {
+            const start = performance.now();
+            debugger;
+            const end = performance.now();
             
-
-
-
-          
- 
-
-
-   <title>Webwölfe!</title>
-</head>
-<body onload="setTimeout(rot, 2000)" >
-
-  {% endif %}
-
-  <nav class="navbar navbar-expand-lg navbar-light bg-light" >
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{{ url_for('index') }}">Webwölfe</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"> >
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav mr-auto" >
-        <li class="nav-item">
-          <a class="nav-link {% block active_a %}{% endblock %}" href="{{ url_for('index') }}">Start</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% block active_b %}{% endblock %}" href="{{ url_for('einstellungen') }}">Einstellungen</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% block active_c %}{% endblock %}" href="{{ url_for('erzaehler') }}">Erzähler</a>
-        </li>
-      </ul>
-    </div>
-    </div>
-  </nav>
-
-  {% block body %}{% endblock %}
- 
-  {% block script %}
-<script src="../../../../../../static/scripts/rot.js"></script>
-
-
-
-  
-  {% endblock %}
-  
-
-  <footer class="footer fixed-bottom">
-    {% block footer %}{% endblock %}
-       <span>&copy;{{ now.year }} <a class="link link-dark" href="https://github.com/SpotlightForBugs/">SpotlightForBugs</a>, <a class="link link-dark" href="https://github.com/Error404UNameNotFound">Error404UNameNotFound</a>, <a class="link link-dark" href="https://github.com/BlackTesseract">BlackTessseract</a> und <a class="link link-dark" href="#">Zora</a></span> <!--aktuelles Datum als Copyright, automatisch generiert-->
-    </div>
-</footer>
-
-
-
+            if (end - start > threshold) {
+                if (!devtoolsOpen) {
+                    devtoolsOpen = true;
+                    // Warnung anzeigen
+                    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f0f1a;color:#c41e3a;font-family:Cinzel,serif;font-size:2rem;text-align:center;padding:2rem;"><div><i class="fa-solid fa-paw"></i> Spicken ist nicht erlaubt! <i class="fa-solid fa-paw"></i><br><span style="font-size:1rem;color:#a0a0b0;">Schliesse die Entwicklerkonsole und lade die Seite neu.</span></div></div>';
+                }
+            }
+        }, 1000);
+        
+        // Console.log überschreiben
+        const noop = function() {};
+        const methods = ['log', 'debug', 'info', 'warn', 'error', 'table', 'trace', 'dir', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'countReset', 'assert', 'profile', 'profileEnd', 'time', 'timeLog', 'timeEnd', 'timeStamp'];
+        
+        methods.forEach(function(method) {
+            console[method] = noop;
+        });
+        
+        // Warnung in Console
+        Object.defineProperty(console, '_commandLineAPI', {
+            get: function() {
+                throw new Error('Spicken ist nicht erlaubt!');
+            }
+        });
+    })();
+    </script>
+    
+    {% block scripts %}{% endblock %}
 </body>
-
-
-
 </html>

@@ -1,1392 +1,962 @@
-import datetime
+"""
+Webwoelfe - Das Online Werwolf-Spiel
+Ein Echtzeit-Multiplayer Werwolf-Spiel mit WebSocket-Unterstuetzung
+"""
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify
+from flask_socketio import SocketIO, emit, join_room, leave_room
+from models import db, Raum, Spieler, SpielAktion, SpielLog, ROLLEN, PHASEN, TEAMS, ERZAEHLER_TEXTE, get_rollen_nach_kategorie, get_rollen_nach_kategorie_liste, get_rollen_anzahl
+import game_logic
+import secrets
+import os
+import asyncio
 from datetime import datetime
-from inspect import currentframe
-from inspect import getframeinfo
-import trace
-import sentry_sdk
-from flask import app, escape
-from flask import Flask
-from flask import redirect
-from flask import render_template
-from flask import request
-from sentry_sdk import set_user
-from sentry_sdk.integrations.flask import FlaskIntegration
-import importlib.util
-import sys
-import flask
 
-spec = importlib.util.spec_from_file_location("werwolf", "werwolf.py")
-werwolf = importlib.util.module_from_spec(spec)
-sys.modules["werwolf"] = werwolf
-spec.loader.exec_module(werwolf)
+# App Konfiguration
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///webwoelfe.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Spielname als Konstante
+SPIEL_NAME = 'Webwölfe'
+
+# Initialisierung
+db.init_app(app)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+
+# Datenbank erstellen
+with app.app_context():
+    db.create_all()
 
 
-sentry_sdk.init(
-    dsn="https://78fe9de58a5847ada071bf5f62f9c214@o1363527.ingest.sentry.io/6678492",
-    integrations=[
-        FlaskIntegration(),
-    ],
-    traces_sample_rate=1.0,
-)
+# ============================================================================
+# KONTEXT-PROZESSOR - Globale Template-Variablen
+# ============================================================================
 
-werwolf.log(debug=False)
+@app.context_processor
+def inject_globals():
+    """Stellt globale Variablen fuer alle Templates bereit"""
+    return {
+        'spiel_name': SPIEL_NAME,
+        'alle_rollen': ROLLEN,
+        'alle_teams': TEAMS,
+        'rollen_nach_kategorie': get_rollen_nach_kategorie()
+    }
 
-app = flask.Flask(__name__)
 
-# index page
+# ============================================================================
+# AUDIO-HELPER - Text-to-Speech Funktionen
+# ============================================================================
+
+def generiere_erzaehler_audio(text: str, stil: str = 'normal') -> str | None:
+    """
+    Generiert Audio für Erzähler-Text mittels Edge-TTS.
+    
+    Args:
+        text: Der zu sprechende Text
+        stil: Der Sprechstil (normal, dramatisch, etc.)
+    
+    Returns:
+        URL-Pfad zur Audio-Datei oder None bei Fehler
+    """
+    try:
+        from audio import text_zu_audio_sync
+        audio_path = text_zu_audio_sync(text, stil=stil)
+        if audio_path:
+            # Konvertiere relativen Pfad zu URL-Pfad
+            url_path = '/' + audio_path.replace('\\', '/')
+            print(f"[Audio] Generated: {url_path}")
+            return url_path
+        return None
+    except Exception as e:
+        print(f"Fehler bei Audio-Generierung: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 
-@app.route("/", methods=["GET"])  # Homepage
+# ============================================================================
+# HTTP ROUTEN
+# ============================================================================
+
+@app.route('/')
 def index():
-    """
-    The index function is the main page of the application. It is called when a user navigates to
-    the root directory of our web application. The function returns an HTML template that contains
-    a list of links to other pages within our web application.
-
-    :return: The index page of the application.
-
-    """
-    werwolf.in_log_schreiben("index geöffnet")
-    return render_template(
-        "index.html", spieler_suche=bool(werwolf.suche_spieler())
-    )  # Render index.html
+    """Startseite mit Spielmodus-Auswahl"""
+    return render_template('index.html')
 
 
-# einstellungen
+@app.route('/rollen')
+def rollen_uebersicht():
+    """Uebersicht aller Rollen"""
+    kategorien = get_rollen_nach_kategorie_liste()
+    return render_template('rollen.html', kategorien=kategorien, rollen_anzahl=get_rollen_anzahl())
 
 
-@app.route("/einstellungen", methods=["GET"])  # Einstellungen
-def einstellungen():
-    """
-    The einstellungen function is used to open the einstellungen page.
-
-
-    :return: The einstellungen
-
-    """
-    werwolf.in_log_schreiben("einstellungen geöffnet")
-    return render_template("einstellungen.html")  # Render einstellungen.html
-
-
-# wie viele Spieler sollen vorhanden sein?
-
-
-# Spieleranzahl
-@app.route("/einstellungen/spieleranzahl", methods=["POST"])
-def setPlayerNumber():  # set the number of players
-    """
-    The setPlayerNumber function is called when the user clicks on the button &quot;Spieleranzahl setzen&quot; in einstellungen.html.
-    It takes a number of players from the form and checks if it is an integer between 8 and 18, otherwise it sets it to 8.
-    If the checkbox &quot;Erzähler ist zufällig&quot; is checked, erzaehler_flag = 1 else 0.
-
-    :return: The number of players
-
-    """
-    # get the number of players from the form
-    spieleranzahl = request.form.get("num")
-    try:
-        # eingabe ist wirklich ein integer
-        spieleranzahl_int = int(spieleranzahl)
-        if (
-            spieleranzahl_int < 8 or spieleranzahl_int > 18
-        ):  # Spieleranzahl ist zwischen 8 und 18
-            spieleranzahl = 8  # auf 8 defaulten
-    except ValueError:
-        spieleranzahl = 8  # auf 8 defaulten
-
-    # speichern der spieleranzahl in einer textdatei
-    with open("spieler_anzahl.txt", "w+") as file:
-        file.write(str(spieleranzahl))
-    erzaehler_flag = 1 if bool(request.form.get("cbx")) else 0
-    # speichern des erzaehler_flag in einer textdatei
-    with open("erzaehler_ist_zufaellig.txt", "w+") as flag:
-        # speichern des erzaehler_flag in einer textdatei
-        flag.write(str(erzaehler_flag))
-    werwolf.createDict()  # create the dictionary with the names of the players
-    with open("rollen_log.txt", "w+") as f:  # leere rollen_log.txt
-        f.write("*********************\n")
-    werwolf.in_log_schreiben(f"Spieleranzahl: auf {spieleranzahl} gesetzt")
-    # render einstellungen_gespeichert.html
-    return render_template(
-        "einstellungen_gespeichert.html", spieleranzahl_var=spieleranzahl
-    )
-
-
-# namenseingabe spieler
-
-
-@app.route("/spieler", methods=["POST"])  # Spieler
-def get_data():  # get the data from the form
-    """
-    The get_data function gets the data from the form. If it is a POST request,
-    it gets the name from the form and checks if it is already in use. If so,
-    it renders an error page with a link to go back to index.html.
-
-    :return: The name and the operator from the form
-
-    """
-    if request.method != "POST":
-        return render_template("fehler.html"), 500
-    name = request.form.get("name")  # get the name from the form
-    name = werwolf.name_richtig_schreiben(name)  # clean the name
-
-    with open("rollen_log.txt") as players_log:  # open the log file
-        players_log = players_log.read()  # read the log file
-    if werwolf.validiere_name(name) is True:
-        # if the name is already in the log file
-        # name doppelt ausgeben
-        return render_template("name_doppelt.html", name=name)
-
-    with open("spieler_anzahl.txt") as file:
-        num = file.read()  # read the file
-    operator = werwolf.deduct()  # get the operator
-    try:  # try to get the operator
-        if operator == 0:  # if the operator is 0
-            code = "code"  # set the code to code
-            # render spiel_beginnt.html
-            return render_template("spiel_beginnt.html", code=code)
-        # append the name to the log file
-        with open("rollen_log.txt", "a") as names:
-            # write the name and the operator to the log file
-            names.write(f"{name} = {operator}")
-            # names.write(f'{date}: {name} = {operator}')
-            # write a new line to the log file
-            names.write("\n")
-            names.close()
-        # append the name to the log file
-        with open("rollen_original.txt", "a") as names:
-            # write the name and the operator to the log file
-            names.write(f"{name} = {operator}")
-            # names.write(f'{date}: {name} = {operator}')
-            # write a new line to the log file
-            names.write("\n")
-            # credits to @joschicraft
-        set_user({"username": f"{name} = {str(operator)}"})
-        token = werwolf.generiere_token(name, operator)
-        werwolf.in_log_schreiben(f"Neuer Spieler {name} hat die Rolle {operator}")
-        # render rollen_zuweisung.html
-
-        return render_template(
-            "rollen_zuweisung.html",
-            players=num,
+@app.route('/raum/erstellen', methods=['POST'])
+def raum_erstellen():
+    """Erstellt einen neuen Spielraum"""
+    modus = request.form.get('modus', 'online')
+    name = request.form.get('raum_name', 'Webwölfe Runde')
+    spieler_anzahl = int(request.form.get('spieler_anzahl', 8))
+    spieler_name = request.form.get('spieler_name', 'Spielleiter')
+    ist_erzaehler = request.form.get('ist_erzaehler') == 'on'
+    
+    # Raum erstellen
+    raum = Raum(
+        code=Raum.generiere_code(),
             name=name,
-            operator=operator,
-            token=token,
-        )
-    except Exception as e:
-        # render neu_laden.html
-        return render_template("neu_laden.html")
-
-
-# Pfad des Erzählers, momentan für debugzwecke auf einem ungeschützten pfad
-
-
-@app.route("/erzaehler", methods=["GET"])  # Erzähler
-def erzaehler():
-    """
-    The erzaehler function opens the log file and renders it to erzaehler.html
-
-    :return: The erzaehler
-
-    """
-    try:
-        with open("rollen_log.txt") as players_log:  # open the log file
-            players_log = players_log.readlines()  # read the log file
-        # render erzaehler.html
-        werwolf.in_log_schreiben("Erzähler geöffnet")
-        return render_template("erzaehler.html", names=players_log)
-    except Exception as e:
-        return str(404)  # return 404 if the file is not found
-
-
-# Neues Spiel
-
-
-# reset der rollen_log.txt
-@app.route("/erzaehler/reset", methods=["POST"])
-def reset():
-    """
-    The reset function is called when the user presses the reset button. It resets all files and starts a new game.
-
-    :return: The reset
-
-    """
-    if (
-        request.method == "POST" and request.form["reset_button"] == "Neues Spiel"
-    ):  # wenn neues spiel gewuenscht
-        werwolf.leere_dateien()  # leere die dateien
-        werwolf.in_log_schreiben("Neues Spiel gestartet")
-        # zurück zur einstellungen
-        return render_template("einstellungen.html")
-    return render_template("fehler.html"), 500
-
-
-@app.route("/<name>/<rolle>/toeten/<name_kill>")  # kill a player
-def kill_player(name, rolle, name_kill):
-    """
-    The kill_player function is called when a player is killed.
-    It takes the name of the player who was killed and their role as arguments.
-    If the person who was killed is a Werwolf, it will kill them and return
-    the template for dead players. If they are not a Werwolf, it will return an error page.
-
-    :param name: Identify the player that is killed
-    :param rolle: Determine which role the player has
-    :param name_kill: Get the name of the player that is killed
-    :return: The html template &quot;dashboards/status/tot
-
-    """
-    auswahl = name_kill
-    if rolle in ("Hexe", "Jaeger"):
-        if (
-            rolle == "Hexe"
-            and werwolf.hexe_darf_toeten() is True
-            and werwolf.validiere_rolle(name, rolle) is True
-        ):
-            werwolf.toete_spieler(auswahl)
-            werwolf.hexe_verbraucht("toeten")
-            werwolf.in_log_schreiben(f"Die Hexe ({name}) hat {name_kill} getötet")
-            return render_template(
-                "Dashboards/Dash_Hexe.html", name=name, rolle=rolle, name_kill=name_kill
-            )
-
-        if rolle == "Jaeger":
-            if werwolf.jaeger_darf_toeten() is True:
-                werwolf.toete_spieler(auswahl)
-                werwolf.jaeger_fertig()
-                return render_template(
-                    "Dashboards/status/tot.html", name=name, todesgrund=""
-                )
-            return render_template(
-                "Dashboards/status/tot.html", name=name, todesgrund=""
-            )
-        return render_template("fehler.html"), 500
-    return render_template("fehler.html"), 500
-
-
-@app.route("/<name>/Armor_aktion/<player1>/<player2>")  # player auswahl
-def armor_player(player1, player2, name):
-    """
-    The armor_player function is used to protect the player from being killed by the werewolf.
-    The function checks if a player is allowed to use this ability and if so, it will set the
-    armor_used variable in Werwolf Class to True. If not, it will return an error message.
-
-    :param player1: Determine the player who is currently playing
-    :param player2: Determine the player who is going to be protected by the armor
-    :param name: Check if the player is a werewolf or not
-    :return: The html code of the page that is shown when the armor player wants to use their ability
-    """
-    rolle = "Armor"
-
-    if (
-        werwolf.validiere_rolle(name, rolle) is True
-        and werwolf.armor_darf_auswaehlen() is True
-    ):
-
-        werwolf.armor_fertig(player1, player2)
-        return render_template("Dashboards/status/aktion_warten.html")
-
-    if (
-        werwolf.armor_darf_auswaehlen() is False
-        and werwolf.validiere_rolle(name, rolle) is True
-    ):
-
-        return render_template("Dashboards/status/aktion_warten.html")
-
-    if werwolf.validiere_rolle(name, rolle) is False:
-        # print the error
-        print("Spieler oder Rolle falsch!")
-        # render the url_system.html
-        return render_template("url_system.html", name=name, rolle=rolle)
-    return render_template("fehler.html"), 500
-
-
-@app.route("/<name>/<rolle>/warten_auf_aktions_ende")
-def aktion_warten(name, rolle):
-    """
-    The aktion_warten function is used to render the template for the aktion_warten page.
-    It takes two arguments, name and rolle. If name is in werwolf.rolle and rolle is a valid role,
-    then it will return a rendered template of aktion_warten.
-
-    :param name: Identify the player
-    :param rolle: Determine the role of the player
-    :return: The template for the warten page
-
-    """
-    if werwolf.validiere_rolle(name, rolle) is True:
-        return render_template("Dashboards/status/aktion_warten.html")
-    return render_template("fehler.html"), 500
-
-
-# Übersicht der Spieler
-
-
-@app.route("/uebersicht/<ist_unschuldig>")  # Übersicht
-def overview_all(ist_unschuldig):  # Übersicht
-    """
-    The overview_all function renders the overview_innocent.html or overview_guilty.html template, depending on the value of ist_unschuldig.
-
-    :param ist_unschuldig: Distinguish between the innocent and guilty overview
-    :return: The overview_innocent
-
-    """
-    try:
-        # ist_unschuldig ist wirklich ein integer
-        ist_unschuldig = int(ist_unschuldig)
-        if ist_unschuldig == 1:  # wenn ist_unschuldig = 1
-            with open("rollen_original.txt") as players_log:  # open the log file
-                players_log = players_log.readlines()  # read the log file
-            # render overview_innocent.html
-            return render_template("overview_innocent.html", names=players_log)
-        if ist_unschuldig == 0:  # wenn ist_unschuldig = 0
-            with open("rollen_oriinal.txt") as players_log:  # open the log file
-                players_log = players_log.readlines()  # read the log file
-            # render overview_guilty.html
-            return render_template("overview_guilty.html", names=players_log)
-        return render_template("fehler.html"), 500  # render fehler.html
-    except (ValueError, TypeError, NameError):
-        return render_template("fehler.html"), 500  # render fehler.html
-
-
-# Rollen Dashboards
-@app.route("/<name>/<rolle>/Dashboard")  # Dashboard
-def Dashboard(name, rolle):  # Dashboard
-    """
-    The Dashboard function is called when the user wants to see the Dashboard of Dorfbewohner.
-    It renders Dash_rolle.html and passes all variables to it.
-
-    :param name: Get the name of the player
-    :param rolle: Determine which dashboard is shown
-    :return: The dash_rolle
-
-    """
-    # create a string with the name and the role
-    with open("rollen_log.txt", "r", encoding="UTF8") as file:  # open the log file
-        players_vorhanden = file.read()  # read the log file
-
-    rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
-    rolleAusLog = rolleAusLog[1]
-
-    if rolleAusLog == "Tot":
-        return render_template("tot.html", name=name)  # render tot.html
-
-    # if the name and the role are in the log file
-    if werwolf.validiere_rolle(name, rolle) is True:
-        try:  # try to get the role
-            with open("rollen_log.txt") as players_log:  # open the log file
-                players_log = players_log.readlines()  # read the log file
-
-            nurNamen = []  # create a list with the names
-
-            try:
-                for line in players_log:  # for every line in the log file
-
-                    if "*" not in line:
-                        line = line.split(" = ")  # split the line at the =
-                        # set the role to the second part of the line
-                        auswahlRolle = line[1]
-
-                        # if the role is not Tot or the role is not the Erzähler
-                        if auswahlRolle not in ("Tot", "Erzaehler"):
-                            name_line = line[0]
-                            # append the name to the list
-                            nurNamen.append(name_line)
-
-            except IOError:
-                print(
-                    "[Debug] Fehler beim Auslesen des rollen_logs in app.py line "
-                    + str(getframeinfo(currentframe()).lineno - 1)
-                )  # print the error
-
-            # render Dash_rolle.html
-            werwolf.in_log_schreiben(
-                "Dorfbewohner Dashboard für "
-                + name
-                + " mit Rolle "
-                + rolle
-                + " angezeigt"
-            )
-            return render_template(
-                "Dashboards/Dash_Dorfbewohner.html",
-                name=name,
-                rolle=rolle,
-                names=players_log,
-                nurNamen=nurNamen,
-            )
-
-        except Exception as e:
-            return render_template("fehler.html"), 500  # render fehler.html
-
-    else:
-        # print the error
-        print("Spieler oder Rolle falsch!")
-        # render url_system.html
-        return render_template("url_system.html", name=name, rolle=rolle)
-
-
-@app.route("/<name>/<rolle>/Dashboard_sp")
-def spezielles_Dashboard(name, rolle):
-    """
-    The spezielles_Dashboard function is called when a player opens his Dashboard.
-    It takes two arguments: name and rolle. The function checks if the role is valid, then renders the spezielles Dashboard for that role.
-
-    :param name: Get the name of the player who wants to see his dashboard
-    :param rolle: Determine which dashboard is shown
-    :return: The dashboard of the role
-
-    """
-    if rolle == "Tot":
-        werwolf.setze_status_fuer_name(name, "0")
-        return render_template("fehler.html"), 500
-    # create a string with the name and the role
-    with open("rollen_log.txt", "r", encoding="UTF8") as file:  # open the log file
-        players_vorhanden = file.read()  # read the log file
-
-    rolleAusLog = players_vorhanden.split(" = ")  # split the log file into a list
-    rolleAusLog = rolleAusLog[1]
-
-    if rolleAusLog == "Tot":
-        werwolf.setze_status_fuer_name(name, "0")  # render tot.html
-    # if the name and the role are in the log file
-    if werwolf.validiere_rolle(name, rolle) is True:
-
-        nurNamen = []  # create a list with the names
-
-        if rolle == "Hexe":
-            print("Hexe")
-            with open("hexe_kann.txt", "r", encoding="UTF8") as file:
-                hexe_kann = file.read()
-                hexe_kann = str(hexe_kann)
-                file.close()
-
-    with open("rollen_log.txt") as players_log:  # open the log file
-        players_log = players_log.readlines()  # read the log file
-
-    for line in players_log:  # for every line in the log file
-
-        if "*" not in line and "Tot" not in line and "Erzaehler" not in line:
-            line = line.split(" = ")  # split the line at the =
-            name_line = line[0]
-            # set the role to the second part of the line
-
-            nurNamen.append(name_line)  # append the name to the list
-
-    if rolle == "Hexe":
-        with open("letzter_tot.txt", "r", encoding="UTF8") as file:
-            letzter_tot = file.read()
-
-        werwolf.in_log_schreiben(
-            f"Hexe Dashboard für {name} mit Rolle {rolle} angezeigt"
-        )
-
-        werwolf.setze_status_fuer_name(name, "2")
-        # render Dash_rolle.html
-        return render_template(
-            f"Dashboards/Dash_{rolle}.html",
-            name=name,
-            rolle=rolle,
-            names=players_log,
-            nurNamen=nurNamen,
-            hexe_kann=hexe_kann,
-            letzter_tot=letzter_tot,
-        )
-
-    if rolle == "Armor":
-        werwolf.in_log_schreiben(
-            f"Armor Dashboard für {name} mit Rolle {rolle} angezeigt"
-        )
-
-        werwolf.setze_status_fuer_rolle("Armor", "2")
-        return render_template(
-            f"Dashboards/Dash_{rolle}.html",
-            name=name,
-            rolle=rolle,
-            names=players_log,
-            nurNamen=nurNamen,
-            armor_kann=werwolf.armor_darf_auswaehlen(),
-        )
-
-    # render Dash_rolle.html
-    werwolf.in_log_schreiben(
-        "Dashboard der Rolle "
-        + rolle
-        + " für "
-        + name
-        + " mit Rolle "
-        + rolle
-        + " angezeigt"
+        modus=modus,
+        spieler_anzahl=max(5, min(18, spieler_anzahl))
     )
-    werwolf.setze_status_fuer_name(name, "2")
-    return render_template(
-        f"Dashboards/Dash_{rolle}.html",
-        name=name,
-        rolle=rolle,
-        names=players_log,
-        nurNamen=nurNamen,
+    db.session.add(raum)
+    db.session.flush()
+    
+    # Ersteller als ersten Spieler hinzufuegen
+    session_id = Spieler.generiere_session()
+    spieler = Spieler(
+        name=spieler_name[:30],
+        session_id=session_id,
+        raum_id=raum.id,
+        ist_erzaehler=ist_erzaehler
     )
+    db.session.add(spieler)
+    
+    if ist_erzaehler:
+        raum.erzaehler_id = spieler.id
+    
+    db.session.commit()
+    
+    # Session setzen
+    session['spieler_session'] = session_id
+    session['raum_code'] = raum.code
+    
+    return redirect(url_for('lobby', code=raum.code))
 
 
-@app.route("/<name>/<rolle>/spiel_ende")
-def spiel_ende(name, rolle):
-    """
-    The spiel_ende function is called when the game is over. It checks if Werwolf has won or lost and returns a
-    template with the result.
-
-    :param name: Identify the player
-    :param rolle: Determine which template to display
-    :return: The following:
-
-    """
-    with open("rollen_original.txt", "r", encoding="UTF8") as file:
-        players_vorhanden = file.read()
-        file.close()
-
-        if werwolf.validiere_rolle_original(name, rolle) is True:
-            if (
-                "Werwolf" in players_vorhanden
-                and "Dorfbewohner" in players_vorhanden
-                or "Hexe" in players_vorhanden
-                and "Werwolf" in players_vorhanden
-                or "Seherin" in players_vorhanden
-                and "Werwolf" in players_vorhanden
-                or "Jaeger" in players_vorhanden
-                and "Werwolf" in players_vorhanden
-                or "Armor" in players_vorhanden
-                and "Werwolf" in players_vorhanden
-            ):
-                werwolf.in_log_schreiben(
-                    "Spiel noch nicht zuende für "
-                    + name
-                    + " mit Rolle "
-                    + rolle
-                    + " angezeigt"
-                )
-                return f"Hallo {escape(name)}, das Spiel ist noch nicht beendet!"
-
-            print("Spiel ist beendet!")
-
-            if rolle == "Werwolf":
-                if "Werwolf" in players_vorhanden:
-                    werwolf.in_log_schreiben(
-                        "Spiel beendet für "
-                        + name
-                        + " mit Rolle "
-                        + rolle
-                        + " angezeigt"
-                    )
-                    return render_template(
-                        "gewonnen.html", name=name, rolle=rolle, unschuldig=0
-                    )
-                werwolf.in_log_schreiben(
-                    f"Spiel beendet für {name} mit Rolle {rolle} angezeigt"
-                )
-
-                return render_template(
-                    "verloren.html", name=name, rolle=rolle, unschuldig=0
-                )
-            if "Werwolf" in players_vorhanden:
-                werwolf.in_log_schreiben(
-                    f"Spiel beendet für {name} mit Rolle {rolle} angezeigt"
-                )
-
-                return render_template(
-                    "verloren.html", name=name, rolle=rolle, unschuldig=1
-                )
-            werwolf.in_log_schreiben(
-                f"Spiel beendet für {name} mit Rolle {rolle} angezeigt"
-            )
-
-            return render_template(
-                "gewonnen.html", name=name, rolle=rolle, unschuldig=1
-            )
-        return render_template("fehler.html"), 500
+@app.route('/raum/beitreten', methods=['POST'])
+def raum_beitreten():
+    """Tritt einem existierenden Raum bei"""
+    code = request.form.get('code', '').upper().strip()
+    spieler_name = request.form.get('spieler_name', 'Spieler')
+    
+    raum = Raum.query.filter_by(code=code).first()
+    
+    if not raum:
+        return render_template('index.html', fehler='Raum nicht gefunden!')
+    
+    if raum.spiel_gestartet:
+        return render_template('index.html', fehler='Das Spiel hat bereits begonnen!')
+    
+    # Pruefen ob Name bereits vergeben
+    existiert = Spieler.query.filter_by(raum_id=raum.id, name=spieler_name[:30]).first()
+    if existiert:
+        return render_template('index.html', fehler='Dieser Name ist bereits vergeben!')
+    
+    # Spieler erstellen
+    session_id = Spieler.generiere_session()
+    spieler = Spieler(
+        name=spieler_name[:30],
+        session_id=session_id,
+        raum_id=raum.id
+    )
+    db.session.add(spieler)
+    db.session.commit()
+    
+    session['spieler_session'] = session_id
+    session['raum_code'] = raum.code
+    
+    return redirect(url_for('lobby', code=raum.code))
 
 
-@app.route("/waehlen/<name>/<rolle>/<auswahl>")
-def wahl(name, rolle, auswahl):
-    """
-    The wahl function is called when a user has selected a role and wishes to vote for another player.
-    It takes the name of the player, their role and an option from the dropdown menu as arguments.
-    If this is valid it will write that information into hat_gewaehlt.txt which is used by die_wahl() to check if someone has already voted.
-
-    :param name: Identify the player
-    :param rolle: Determine which role the player has
-    :param auswahl: Store the users input
-    :return: The following:
-
-    """
-    if rolle == "Tot":
-        return render_template("warten.html")
-
-    wort2 = f"{name} : "
-
-    if werwolf.validiere_rolle(name, rolle) is not True:
-        return render_template("fehler.html"), 500
-    with open("hat_gewaehlt.txt", "r+") as text:
-        contents = text.read()
-
-        if wort2 in contents:
-            werwolf.in_log_schreiben(
-                f"Wahl schon getätigt für {name} mit Rolle {rolle} angezeigt"
-            )
-
-            return render_template("wahl_doppelt.html")
-        text.write(f"{name} : " + "\n")
-        text.close()
-        werwolf.in_log_schreiben(
-            f"Wahl getätigt für {name} mit Rolle {rolle} angezeigt, auswahl: {auswahl}"
-        )
-
-        with open("abstimmung.txt", "a") as abstimmung:
-            abstimmung.write(f"{auswahl}" + "\n")
-
-            abstimmung.close()
-            return render_template("Dashboards/status/warten.html")
+@app.route('/lobby/<code>')
+def lobby(code):
+    """Lobby-Ansicht eines Raums"""
+    raum = Raum.query.filter_by(code=code).first_or_404()
+    spieler = hole_aktuellen_spieler()
+    
+    if not spieler or spieler.raum_id != raum.id:
+        return redirect(url_for('index'))
+    
+    if raum.spiel_gestartet:
+        return redirect(url_for('spiel', code=code))
+    
+    alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
+    
+    return render_template('lobby.html', 
+                         raum=raum, 
+                         spieler=spieler,
+                         alle_spieler=alle_spieler,
+                         rollen=ROLLEN)
 
 
-# schlafen function
-
-
-@app.route("/<name>/<rolle>/schlafen")  # route for the sleep function
-def schlafen(name, rolle):  # function for the sleep function
-    """
-    The schlafen function is used to sleep the player.
-    The function takes two parameters: name and rolle.
-    If the string is in the log file, render schlafen.html.
-
-    :param name: Get the name of the player
-    :param rolle: Determine the role of the player
-    :return: The sleep
-
-    """
-    if rolle == "Tot":
-        return render_template("tot.html", name=name)
-
-    # if the string is in the log file
-    if werwolf.validiere_rolle(name, rolle) is True:
-        try:
-            with open("rollen_log.txt") as players_log:  # open the log file
-                players_log = players_log.readlines()  # read the log file
-            # render the sleep.html
-            werwolf.in_log_schreiben(f"Schlafen für {name} mit Rolle {rolle} angezeigt")
-            werwolf.setze_status_fuer_name(name, "1")
-            return render_template(
-                "Dashboards/status/schlafen.html",
-                name=name,
-                rolle=rolle,
-                names=players_log,
-            )
-        except (FileNotFoundError, IOError, PermissionError):
-            # render the fehler.html
-            return render_template("fehler.html"), 500
-
+@app.route('/spiel/<code>')
+def spiel(code):
+    """Hauptspielansicht"""
+    raum = Raum.query.filter_by(code=code).first_or_404()
+    spieler = hole_aktuellen_spieler()
+    
+    if not spieler or spieler.raum_id != raum.id:
+        return redirect(url_for('index'))
+    
+    if not raum.spiel_gestartet:
+        return redirect(url_for('lobby', code=code))
+    
+    alle_spieler = Spieler.query.filter_by(raum_id=raum.id).order_by(Spieler.name).all()
+    lebende = [s for s in alle_spieler if s.ist_am_leben]
+    
+    # Rolle-Info holen - SICHER: Nur eigene Rolle wird mitgegeben
+    rolle_info = ROLLEN.get(spieler.rolle, {})
+    
+    # Logs fuer Spieler - SICHER: Nur fuer den Spieler sichtbare Logs
+    if spieler.ist_erzaehler:
+        logs = SpielLog.query.filter_by(raum_id=raum.id).order_by(SpielLog.zeitpunkt.desc()).limit(50).all()
     else:
-        # print the error
-        print("Spieler oder Rolle falsch!")
-        # render the url_system.html
-        return render_template("url_system.html", name=name, rolle=rolle)
+        logs = SpielLog.query.filter(
+            SpielLog.raum_id == raum.id,
+            db.or_(
+                SpielLog.sichtbar_fuer == 'alle',
+                SpielLog.sichtbar_fuer == str(spieler.id),
+                SpielLog.sichtbar_fuer == spieler.rolle
+            )
+        ).order_by(SpielLog.zeitpunkt.desc()).limit(20).all()
+    
+    # SICHER: Spieler-Daten werden OHNE Rollen (ausser eigene) gesendet
+    sichere_spieler = []
+    for s in alle_spieler:
+        spieler_data = {
+            'id': s.id,
+            'name': s.name,
+            'ist_am_leben': s.ist_am_leben,
+            'ist_erzaehler': s.ist_erzaehler
+        }
+        # Rolle nur fuer sich selbst oder tote Spieler (nach Tod enthüllt)
+        if s.id == spieler.id:
+            spieler_data['rolle'] = s.rolle
+        elif not s.ist_am_leben:
+            spieler_data['rolle'] = s.rolle
+        # Werwoelfe sehen sich gegenseitig
+        elif spieler.rolle == 'Werwolf' and s.rolle == 'Werwolf':
+            spieler_data['ist_werwolf'] = True
+        sichere_spieler.append(spieler_data)
+    
+    # Erzähler-Text für Gruppen-Modus
+    erzaehler_text = None
+    if spieler.ist_erzaehler and raum.modus == 'gruppe':
+        phase_key = raum.aktuelle_phase
+        if phase_key in ERZAEHLER_TEXTE:
+            erzaehler_text = ERZAEHLER_TEXTE[phase_key]
+    
+    return render_template('spiel.html',
+                         raum=raum,
+                         spieler=spieler,
+                         sichere_spieler=sichere_spieler,
+                         alle_spieler=alle_spieler,
+                         lebende=lebende,
+                         rolle_info=rolle_info,
+                         logs=logs,
+                         phasen=PHASEN,
+                         erzaehler_text=erzaehler_text)
 
 
-# warten funktion
+# ============================================================================
+# HILFSFUNKTIONEN
+# ============================================================================
+
+def hole_aktuellen_spieler():
+    """Holt den aktuellen Spieler basierend auf der Session"""
+    session_id = session.get('spieler_session')
+    if not session_id:
+        return None
+    return Spieler.query.filter_by(session_id=session_id).first()
 
 
-@app.route("/warten")  # route for the wait function
-def warten():  # function for the wait function
+# ============================================================================
+# SERVER-SIDE VILLAGE RENDERING - Komplett serverseitig!
+# Clients erhalten NUR fertige Bilder, KEINEN Zugriff auf Spielzustand!
+# ============================================================================
+
+# Hinweis-Cache pro Raum (temporär, wird nach Anzeige gelöscht)
+_aktive_hinweise = {}  # raum_id -> {spieler_id: (hinweis_typ, intensitaet)}
+
+
+@app.route('/api/village/<code>')
+def api_village(code):
     """
-    The warten function is used to wait for all players to vote.
-    It checks if all players have voted and then shows the results of the voting.
-
-    :return: The template warten
-
+    Rendert das Dorf server-seitig und gibt ein Bild zurück.
+    
+    SICHERHEIT: 
+    - Keine Rollen-Information im Bild
+    - Nur öffentliche Daten (Namen, lebendig/tot, Sitzplatz)
+    - Hinweise werden vom Server kontrolliert
     """
-    i = 0  # set i to 0
-
+    raum = Raum.query.filter_by(code=code).first()
+    if not raum:
+        return jsonify({'error': 'Raum nicht gefunden'}), 404
+    
+    spieler = hole_aktuellen_spieler()
+    if not spieler or spieler.raum_id != raum.id:
+        return jsonify({'error': 'Nicht autorisiert'}), 403
+    
+    # Hole aktive Hinweise für diesen Raum
+    hinweise = _aktive_hinweise.get(raum.id, {})
+    
     try:
-
-        with open("rollen_log.txt", "r", encoding="UTF8") as text:
-            for line in text:
-                if "Tot" not in line and "Erzaehler" not in line and "*" not in line:
-                    i = i + 1
-            text.close()
-        with open("abstimmung.txt", "r", encoding="UTF8") as text:
-            # empty lines are not counted
-            anzahl_stimmen = sum(bool(line.rstrip()) for line in text)
-
-        text.close()
-        print(anzahl_stimmen)
-        print(i)
-        if i == anzahl_stimmen:
-            print("Alle Spieler haben gewaehlt")
-            werwolf.in_log_schreiben("Alle Spieler haben gewaehlt")
-            count = 0
-            name_tot = ""
-            maxCount = 0
-            words = []
-
-            file = open("abstimmung.txt", "r", encoding="UTF8")
-
-            for line in file:
-
-                string = line.lower().replace(",", "").replace(".", "").split(" ")
-                words.extend(iter(string))
-            for i, item in enumerate(words):
-                count = 1
-                for j in range(i + 1, len(words)):
-                    if item == words[j]:
-                        count = count + 1
-
-                if count > maxCount:
-                    maxCount = count
-                    name_tot = item
-
-            with open("rollen_log.txt", "r+") as fileTot:
-
-                counter_tot = 0
-
-                file_list = list(fileTot)
-                # print(file_list)
-
-                name_tot = name_tot.strip("\n")
-                name_tot = name_tot.replace("\n", "")
-
-                while counter_tot < len(file_list):
-
-                    print(f"Name Tot: {name_tot} =")
-
-                    if name_tot in file_list[counter_tot]:
-                        dffd = file_list[counter_tot].split(" = ")
-                        new_line = dffd[0] + " = Tot \n"
-                        # print(new_line)
-                        file_list[counter_tot] = new_line
-                        # print(file_list)
-
-                    counter_tot += 1
-
-            fileTot.close()
-            with open("rollen_log.txt", "w", encoding="UTF8") as fileFinal:
-                fileFinal.writelines(file_list)
-            fileFinal.close()
-            werwolf.schreibe_zuletzt_gestorben(name_tot)
-            werwolf.in_log_schreiben(f"Ergebnis angezeigt für {name_tot}")
-            return render_template("Dashboards/status/ergebnis.html", name_tot=name_tot)
-        return render_template("Dashboards/status/warten.html")
-
-    except (FileNotFoundError, IOError, PermissionError):
-        return render_template("fehler.html"), 500  # render the fehler.html
-
-
-# tot function
-
-
-# route for the death function
-@app.route("/<name>/<rolle>/<todesgrund>/tot")
-def tot(name, rolle, todesgrund):  # function for the death function
-    """
-    The tot function is used to render the status page of a player who has been killed.
-    It takes three arguments: name, rolle and todesgrund.
-    name is the name of the player who was killed.
-    rolle is either Werwolf or Dorfbewohner depending on what role they had in-game.
-    todesgrund can be &quot;Werwolf&quot;, &quot;Abstimung&quot; or &quot;Hexe&quot;. It's used for different death reasons.
-
-    :param name: Get the name of the player
-    :param rolle: Determine the role of the player
-    :param todesgrund: Set the death reason
-    :return: The death page
-
-    """
-    # if the string is in the log file
-    if werwolf.validiere_rolle(name, rolle) is True:
-        try:  # try to get the role
-            with open(
-                "rollen_log.txt", "r", encoding="UTF8"
-            ) as players_log:  # open the log file
-                players_log = players_log.readlines()  # read the log file
-
-            if todesgrund in (
-                "Werwolf",
-                "werwolf",
-            ):  # if the death reason is a werewolf
-                # set the death reason to a werewolf
-                todesgrund = "Du wurdest von einem Werwolf getötet"
-            # if the death reason is a abstimulation
-            elif todesgrund in ("Abstimung", "abstimmung"):
-                # set the death reason to a abstimulation
-                todesgrund = "Du wurdest in Folge einer Abstimmung getötet"
-            elif todesgrund == "Hexe":  # if the death reason is a witch
-                todesgrund = (
-                    "Du wurdest von der Hexe getötet"  # set the death reason to a witch
-                )
-            else:
-                todesgrund = (
-                    "Du wurdest getötet"  # set the death reason to a normal death
-                )
-            # rendert die Seite zum Status Tot
-            werwolf.in_log_schreiben(f"Tot für {name} mit Rolle {rolle} angezeigt")
-            werwolf.setze_status_fuer_name(name, "0")
-            return render_template(
-                "Dashboards/status/tot.html",
-                name=name,
-                todesgrund=todesgrund,
-            )
-
-        except (FileNotFoundError, IOError, PermissionError):
-            # rendert die Seite zum Status Fehler
-            return render_template("fehler.html"), 500
-
-    else:
-        # print the error
-        print("Spieler oder Rolle falsch!")
-        # render the url_system.html
-        return render_template("url_system.html", name=name, rolle=rolle)
-
-
-# kick function
-
-
-@app.route("/<name>/<rolle>/kick/")  # route for the kick function
-def rausschmeissen(name, rolle):  # function for the kick function
-    """
-    The rausschmeissen function is used to kick a player from the game.
-    It takes two arguments: name and rolle.
-    If the function is called with valid arguments, it will remove the player from
-    the game and write an entry in log_file.
-
-    :param name: Render the kick
-    :param rolle: Specify the role of the player that is kicked
-    :return: The kick function
-
-    """
-    if werwolf.validiere_rolle(name, rolle) is True:
-        print("Spieler vorhanden")  # print the string
-        try:
-            with open(
-                "rollen_log.txt", "r", encoding="UTF8"
-            ) as players_log:  # open the log file
-                players_log = players_log.readlines()  # read the log file
-            # render the rausschmeissen.html
-
-            werwolf.toete_spieler(name)
-            werwolf.in_log_schreiben(
-                f"Spieler {name} rausgeschmissen, er hatt die Rolle {rolle}"
-            )
-
-            return render_template(
-                "rausschmeissen.html", name=name, rolle=rolle, names=players_log
-            )
-        except IOError as e:
-
-            # render the fehler.html
-            return render_template("fehler.html"), 500
-
-    else:
-        # print the error
-        print("Spieler oder Rolle falsch!")
-        # render the url_system.html
-        return render_template("url_system.html", name=name, rolle=rolle)
-
-
-# wahlbalken
-
-
-@app.route("/wahlbalken/")  # route for the wahlbalken function
-def wahlbalken():
-    """
-    The wahlbalken function renders the wahlbalken.html page, which is used to select a player for the current round.
-
-    :return: The wahlbalken
-
-    """
-    with open("rollen_log.txt", encoding="UTF8") as players_log:  # open the log file
-        players_log = players_log.readlines()  # read the log file
-
-    nurNamen = []  # create a list for the names
-
-    try:
-        for line in players_log:  # for every line in the log file
-
-            if "*" not in line:
-                line = line.split(" = ")  # split the line at the =
-                auswahlRolle = line[1]  # get the role
-
-                # if the role is not dead or the narrator
-                if auswahlRolle not in ("Tot", "Erzaehler"):
-                    name = line[0]  # get the name
-                    nurNamen.append(name)  # append the name to the list
-
-        # render the wahlbalken.html
-        return render_template("wahlbalken.html", names=nurNamen)
-
+        from village_renderer import render_village_for_room
+        base64_img = render_village_for_room(raum.id, hinweise)
+        
+        return jsonify({
+            'image': base64_img,
+            'phase': raum.aktuelle_phase,
+            'runde': raum.runde,
+        })
+    except ImportError:
+        # Pillow nicht installiert - Fallback
+        return jsonify({
+            'error': 'Renderer nicht verfügbar',
+            'phase': raum.aktuelle_phase,
+            'runde': raum.runde,
+        }), 503
     except Exception as e:
-        return render_template("fehler.html"), 500  # render the fehler.html
+        return jsonify({'error': str(e)}), 500
 
 
-@app.route("/wahlstatus")  # route for the wahlstatus function
-def wahl_stats():
+@app.route('/api/village/test')
+def api_village_test():
+    """Test-Endpoint für Village Rendering (nur Entwicklung)"""
+    try:
+        from village_renderer import generate_test_village
+        base64_img = generate_test_village()
+        return f'''
+        <!DOCTYPE html>
+        <html>
+        <head><title>Village Test</title></head>
+        <body style="background: #1a1a2e; display: flex; flex-direction: column; align-items: center; padding: 40px; font-family: sans-serif;">
+            <h1 style="color: #c41e3a;">Server-Side Village Rendering</h1>
+            <p style="color: #888;">Dieses Bild wurde komplett auf dem Server gerendert. Der Client hat keinen Zugriff auf Spielzustand!</p>
+            <img src="{base64_img}" style="border: 3px solid #333; border-radius: 12px; max-width: 100%;">
+        </body>
+        </html>
+        '''
+    except ImportError as e:
+        return f'<h1>Pillow nicht installiert!</h1><p>pip install pillow</p><pre>{e}</pre>', 503
+
+
+# ============================================================================
+# WEBSOCKET EVENTS - SICHER: Keine sensiblen Daten werden gebroadcastet
+# ============================================================================
+
+@socketio.on('connect')
+def handle_connect():
+    """Spieler verbindet sich"""
+    spieler = hole_aktuellen_spieler()
+    if spieler and spieler.raum_id:
+        raum = Raum.query.get(spieler.raum_id)
+        if raum:
+            join_room(raum.code)
+            # SICHER: Nur Name und ID werden geteilt, keine Rolle
+            emit('spieler_verbunden', {
+                'spieler': {
+                    'id': spieler.id,
+                    'name': spieler.name,
+                    'ist_erzaehler': spieler.ist_erzaehler
+                },
+                'spieler_id': spieler.id,
+                'spieler_name': spieler.name
+            }, room=raum.code)
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Spieler trennt Verbindung"""
+    spieler = hole_aktuellen_spieler()
+    if spieler and spieler.raum_id:
+        raum = Raum.query.get(spieler.raum_id)
+        if raum:
+            leave_room(raum.code)
+            emit('spieler_getrennt', {
+                'spieler_id': spieler.id,
+                'spieler_name': spieler.name
+            }, room=raum.code)
+
+
+@socketio.on('raum_beitreten')
+def handle_raum_beitreten(data):
+    """Spieler tritt Raum-Channel bei"""
+    code = data.get('code')
+    if code:
+        join_room(code)
+        raum = Raum.query.filter_by(code=code).first()
+        if raum:
+            alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
+            # SICHER: Keine Rollen werden geteilt
+            emit('spieler_liste', {
+                'spieler': [{'id': s.id, 'name': s.name, 'ist_erzaehler': s.ist_erzaehler} for s in alle_spieler]
+            }, room=code)
+
+
+@socketio.on('spiel_starten')
+def handle_spiel_starten(data):
+    """Startet das Spiel (nur Erzaehler/Ersteller)"""
+    spieler = hole_aktuellen_spieler()
+    if not spieler:
+        emit('fehler', {'nachricht': 'Nicht angemeldet'})
+        return
+    
+    raum = Raum.query.get(spieler.raum_id)
+    if not raum:
+        emit('fehler', {'nachricht': 'Raum nicht gefunden'})
+        return
+    
+    # Pruefen ob genug Spieler
+    anzahl = Spieler.query.filter_by(raum_id=raum.id).count()
+    if anzahl < 5:
+        emit('fehler', {'nachricht': f'Mindestens 5 Spieler benoetigt (aktuell: {anzahl})'})
+        return
+    
+    if game_logic.starte_spiel(raum):
+        # SICHER: Jeder Spieler bekommt NUR seine eigene Rolle
+        alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
+        
+        # Spiel gestartet - alle werden zur Spielseite weitergeleitet
+        emit('spiel_gestartet', {
+            'phase': raum.aktuelle_phase,
+            'runde': raum.runde
+        }, room=raum.code)
+    else:
+        emit('fehler', {'nachricht': 'Spiel konnte nicht gestartet werden'})
+
+
+@socketio.on('phase_weiter')
+def handle_phase_weiter():
+    """Wechselt zur naechsten Phase (Erzaehler)"""
+    spieler = hole_aktuellen_spieler()
+    if not spieler or not spieler.ist_erzaehler:
+        emit('fehler', {'nachricht': 'Nur der Erzaehler kann die Phase wechseln'})
+        return
+    
+    raum = Raum.query.get(spieler.raum_id)
+    if not raum:
+        return
+    
+    alte_phase = raum.aktuelle_phase
+    neue_phase = game_logic.naechste_phase(raum)
+    
+    # Phase-spezifische Aktionen
+    handle_phase_wechsel(raum, alte_phase, neue_phase)
+    
+    # Erzähler-Text für Gruppen-Modus
+    erzaehler_text = None
+    if raum.modus == 'gruppe' and neue_phase in ERZAEHLER_TEXTE:
+        erzaehler_text = ERZAEHLER_TEXTE[neue_phase]
+    
+    # Online-Modus: Automatische Erzählung mit Audio senden
+    if raum.modus == 'online' and neue_phase in ERZAEHLER_TEXTE:
+        erzaehler_info = ERZAEHLER_TEXTE[neue_phase]
+        erzaehlung_text = erzaehler_info.get('text', '')
+        
+        # Generiere Audio für die Erzählung
+        audio_path = None
+        if erzaehlung_text:
+            # Bestimme Stil basierend auf Phase
+            stil = 'normal'
+            if 'werwolf' in neue_phase.lower():
+                stil = 'dramatisch'
+            elif 'tot' in erzaehlung_text.lower() or 'stirbt' in erzaehlung_text.lower():
+                stil = 'dramatisch'
+            
+            audio_path = generiere_erzaehler_audio(erzaehlung_text, stil=stil)
+        
+        emit('erzaehlung', {
+            'text': erzaehlung_text,
+            'audio': audio_path
+        }, room=raum.code)
+    
+    emit('phase_geaendert', {
+        'phase': neue_phase,
+        'runde': raum.runde,
+        'alte_phase': alte_phase,
+        'erzaehler_text': erzaehler_text
+    }, room=raum.code)
+
+
+@socketio.on('aktion_ausfuehren')
+def handle_aktion(data):
+    """Fuehrt eine Spielaktion aus"""
+    spieler = hole_aktuellen_spieler()
+    if not spieler:
+        emit('fehler', {'nachricht': 'Nicht angemeldet'})
+        return
+    
+    raum = Raum.query.get(spieler.raum_id)
+    if not raum:
+        return
+    
+    aktion_typ = data.get('aktion')
+    ziel_id = data.get('ziel_id')
+    
+    # Validierung
+    if not spieler.ist_am_leben and aktion_typ != 'jaeger_schuss':
+        emit('fehler', {'nachricht': 'Du bist tot und kannst nicht handeln'})
+        return
+    
+    # Aktion basierend auf Phase und Rolle verarbeiten
+    erfolg = verarbeite_aktion(spieler, raum, aktion_typ, ziel_id)
+    
+    if erfolg:
+        emit('aktion_bestaetigt', {'aktion': aktion_typ})
+        
+        # Pruefen ob alle fertig sind
+        pruefe_phase_abschluss(raum)
+    else:
+        emit('fehler', {'nachricht': 'Aktion konnte nicht ausgefuehrt werden'})
+
+
+@socketio.on('chat_nachricht')
+def handle_chat(data):
+    """Verarbeitet Chat-Nachrichten"""
+    spieler = hole_aktuellen_spieler()
+    if not spieler:
+        return
+    
+    raum = Raum.query.get(spieler.raum_id)
+    if not raum:
+        return
+    
+    nachricht = data.get('nachricht', '')[:500]
+    
+    # SICHER: Keine sensiblen Daten im Chat
+    if not spieler.ist_am_leben:
+        # Tote chatten nur mit Toten
+        emit('chat_tot', {
+            'von': spieler.name,
+            'nachricht': nachricht
+        }, room=raum.code)
+    else:
+        emit('chat', {
+            'von': spieler.name,
+            'nachricht': nachricht
+        }, room=raum.code)
+
+
+@socketio.on('navigiere_zur_lobby')
+def handle_navigiere_lobby():
+    """Sendet Navigation zur Startseite"""
+    emit('gehe_zu_startseite')
+
+
+@socketio.on('navigiere')
+def handle_navigiere(data):
+    """Sendet Navigation zu angegebenem Ziel"""
+    ziel = data.get('ziel', '/')
+    emit('navigiere', {'ziel': ziel})
+
+
+# ============================================================================
+# HINWEIS-SYSTEM - Server-kontrollierte synchronisierte Hinweise
+# ============================================================================
+
+@socketio.on('hinweis_senden')
+def handle_hinweis_senden(data):
     """
-    The wahl_stats function counts the number of times a name appears in the abstimmung.txt file and returns
-    the name with the most votes. It also writes this name to wahl_zuletzt_gestorben.txt.
-
-    :return: The most common name in the text
-
+    Verarbeitet Hinweis-Anfragen (z.B. Selbstmörder macht sich verdächtig)
+    
+    Der Server:
+    1. Validiert, dass der Spieler den Hinweis senden darf
+    2. Broadcastet den Hinweis an ALLE Spieler im Raum gleichzeitig
+    3. Speichert den Hinweis für das Village-Rendering
     """
-    anzahl = 0
-    name_tot = ""
-    maxCount = 0
-    words = []
+    from models import SPEZIAL_HINWEISE
+    import random
+    
+    spieler = hole_aktuellen_spieler()
+    if not spieler or not spieler.raum_id:
+        return
+    
+    raum = Raum.query.get(spieler.raum_id)
+    if not raum or not raum.spiel_gestartet:
+        return
+    
+    hinweis_typ = data.get('hintTyp')
+    selbst_ausgeloest = data.get('selbst_ausgeloest', False)
+    
+    # Validierung: Darf dieser Spieler Hinweise senden?
+    if selbst_ausgeloest:
+        # Nur bestimmte Rollen dürfen sich selbst verdächtig machen
+        spezial = SPEZIAL_HINWEISE.get(spieler.rolle)
+        if not spezial or not spezial.get('kann_hinweis_senden'):
+            emit('fehler', {'nachricht': 'Du kannst keine Hinweise senden!'})
+            return
+        
+        # Prüfe verfügbare Hinweise
+        if hinweis_typ not in spezial.get('verfuegbare_hinweise', []):
+            hinweis_typ = random.choice(spezial['verfuegbare_hinweise'])
+    
+    # Speichere Hinweis für Village-Rendering
+    if raum.id not in _aktive_hinweise:
+        _aktive_hinweise[raum.id] = {}
+    
+    # Intensität: selbst-ausgelöst = stark, automatisch = variabel
+    intensitaet = 0.8 if selbst_ausgeloest else random.uniform(0.4, 0.7)
+    _aktive_hinweise[raum.id][spieler.id] = (hinweis_typ, intensitaet)
+    
+    # Broadcaste Hinweis an ALLE Spieler im Raum (synchronisiert!)
+    socketio.emit('hinweis_zeigen', {
+        'spielerId': spieler.id,
+        'spielerName': spieler.name,
+        'hintTyp': hinweis_typ,
+        'timestamp': datetime.utcnow().isoformat(),
+    }, room=raum.code)
+    
+    # Log für Erzähler
+    log = SpielLog(
+        raum_id=raum.id,
+        nachricht=f'[HINWEIS] {spieler.name} zeigte: {hinweis_typ}',
+        sichtbar_fuer='erzaehler'
+    )
+    db.session.add(log)
+    db.session.commit()
+    
+    # Lösche Hinweis nach 5 Sekunden aus dem Cache
+    def clear_hint():
+        import time
+        time.sleep(5)
+        if raum.id in _aktive_hinweise and spieler.id in _aktive_hinweise[raum.id]:
+            del _aktive_hinweise[raum.id][spieler.id]
+    
+    # In Background ausführen (eventlet-kompatibel)
+    socketio.start_background_task(clear_hint)
 
-    file = open("abstimmung.txt", "r", encoding="UTF8")
 
-    for line in file:
-
-        string = line.lower().replace(",", "").replace(".", "").split(" ")
-        words.extend(iter(string))
-    for i, item in enumerate(words):
-        anzahl = 1
-        for j in range(i + 1, len(words)):
-            if item == words[j]:
-                anzahl = anzahl + 1
-
-        if anzahl > maxCount:
-            maxCount = anzahl
-            name_tot = item
-
-            werwolf.schreibe_zuletzt_gestorben(name_tot)
-
-    return render_template("wahlstatus.html", name_tot=name_tot)
-
-
-@app.route("/test")
-def test():
-    return render_template("game.html", nurNamen=werwolf.nurNamen())
-
-
-@app.route("/sehen/<name>/<rolle>/<auswahl>")
-def sehen(name, rolle, auswahl):
+def generiere_zufalls_hinweis(raum_id: int):
     """
-    The sehen function allows the Seherin to see the role of a player.
-    The function takes three arguments: name, rolle and auswahl.
-    name is the name of the seherin, rolle is her role and auswahl is
-    the player she wants to check.
-
-    :param name: Identify the player
-    :param rolle: Check if the player is a werewolf or not
-    :param auswahl: Select the role you want to see
-    :return: The role of the player that was chosen
-
+    Generiert zufällige Hinweise basierend auf Rollen-Teams.
+    Wird vom Server aufgerufen, z.B. bei Phasenwechsel.
+    
+    WICHTIG: Diese Hinweise werden vom SERVER gewürfelt und
+    an ALLE Spieler gleichzeitig gesendet!
     """
-    if werwolf.validiere_rolle(name, rolle) is True:
-        with open(
-            "rollen_log.txt", encoding="UTF8"
-        ) as players_log:  # open the log file
-            players_log = players_log.readlines()  # read the log file
-        for line in players_log:
-            if auswahl in line:
-                ergebnis = line
-                ergebnis = ergebnis.replace("=", "hat die Rolle")
-                werwolf.in_log_schreiben(
-                    (
-                        "Seherin "
-                        + name
-                        + "hat die Rolle von "
-                        + auswahl
-                        + " gesehen "
-                        + ergebnis.replace(f"{name} hat die Rolle", "")
-                    )
-                )
-
-                return render_template(
-                    "Dashboards/status/sehen.html", ergebnis=ergebnis
-                )
-    return render_template("fehler.html"), 500
-
-
-@app.route("/weiterleitung/<target>")
-def weiterleitung(target):
-    """
-    The weiterleitung function is used to redirect the user to another page.
-    It takes one argument, which is the target of the redirection.
-
-
-    :param target: Redirect to another page
-    :return: The rendered template &quot;weiterleitung
-
-    """
-    werwolf.in_log_schreiben(f"Weiterleitung auf {target}")
-    return render_template("weiterleitung.html", target=target)
-
-
-@app.route("/<name>/<rolle>/info_der_verliebten")
-def verliebte_info(name, rolle):
-    """
-    The verliebte_info function returns a list of names of the players who are in love.
+    from models import HINWEIS_CHANCEN
+    import random
+    
+    raum = Raum.query.get(raum_id)
+    if not raum:
+        return
+    
+    spieler_liste = Spieler.query.filter_by(
+        raum_id=raum_id, 
+        ist_am_leben=True,
+        ist_erzaehler=False
+    ).all()
+    
+    for spieler in spieler_liste:
+        rolle_info = ROLLEN.get(spieler.rolle, {})
+        team = rolle_info.get('team', 'dorf')
+        
+        config = HINWEIS_CHANCEN.get(team, HINWEIS_CHANCEN['dorf'])
+        
+        # Würfle ob Hinweis generiert wird
+        if random.random() > config['basis_chance']:
+            continue
+        
+        # Wähle zufälligen Hinweis
+        hinweis_typ = random.choice(config['hinweise'])
+        intensitaet = random.uniform(0.3, 0.6)
+        
+        # Speichere für Rendering
+        if raum_id not in _aktive_hinweise:
+            _aktive_hinweise[raum_id] = {}
+        _aktive_hinweise[raum_id][spieler.id] = (hinweis_typ, intensitaet)
+        
+        # Broadcaste an alle
+        socketio.emit('hinweis_zeigen', {
+            'spielerId': spieler.id,
+            'spielerName': spieler.name,
+            'hintTyp': hinweis_typ,
+            'timestamp': datetime.utcnow().isoformat(),
+        }, room=raum.code)
 
 
+# ============================================================================
+# SPIELLOGIK HELFER
+# ============================================================================
 
-    :param name: Set the name of the player
-    :param rolle: Set the role of a player
-    :return: The names of the lovers
-    """
-    werwolf.setze_status_fuer_name(name, "4")
-    return werwolf.verliebte_ausgeben()
+def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
+    """Verarbeitet eine Spielaktion"""
+    
+    if aktion_typ == 'werwolf_wahl':
+        if spieler.rolle != 'Werwolf' or raum.aktuelle_phase != 'werwolf_phase':
+            return False
+        if game_logic.hat_spieler_gewaehlt(spieler, raum, 'werwolf_phase'):
+            return False
+        game_logic.registriere_aktion(
+            raum.id, raum.runde, 'werwolf_phase', 
+            'werwolf_wahl', spieler.id, ziel_id
+        )
+        return True
+    
+    elif aktion_typ == 'seherin_sehen':
+        if spieler.rolle != 'Seherin' or raum.aktuelle_phase != 'seherin_phase':
+            return False
+        ziel = Spieler.query.get(ziel_id)
+        if ziel:
+            # SICHER: Ergebnis nur an anfragenden Spieler senden
+            ist_werwolf = ziel.rolle in ['Werwolf', 'Urwolf', 'Wolfsjunge', 'Weisser_Wolf']
+            socketio.emit('seherin_ergebnis', {
+                'ziel_name': ziel.name,
+                'ist_werwolf': ist_werwolf
+            }, room=request.sid)
+            game_logic.registriere_aktion(
+                raum.id, raum.runde, 'seherin_phase',
+                'sehen', spieler.id, ziel_id
+            )
+            return True
+        return False
+    
+    elif aktion_typ == 'heiler_schuetzen':
+        if spieler.rolle != 'Heiler' or raum.aktuelle_phase != 'heiler_phase':
+            return False
+        # Nicht zweimal denselben schuetzen
+        if spieler.heiler_geschuetzt == ziel_id:
+            emit('fehler', {'nachricht': 'Du kannst nicht zweimal hintereinander denselben Spieler schuetzen!'})
+            return False
+        spieler.heiler_geschuetzt = ziel_id
+        ziel = Spieler.query.get(ziel_id)
+        if ziel:
+            ziel.ist_beschuetzt = True
+        game_logic.registriere_aktion(
+            raum.id, raum.runde, 'heiler_phase',
+            'schuetzen', spieler.id, ziel_id
+        )
+        db.session.commit()
+        return True
+    
+    elif aktion_typ == 'hexe_heilen':
+        if spieler.rolle != 'Hexe' or raum.aktuelle_phase != 'hexe_phase':
+            return False
+        if not spieler.hexe_heiltrank:
+            return False
+        spieler.hexe_heiltrank = False
+        game_logic.registriere_aktion(
+            raum.id, raum.runde, 'hexe_phase',
+            'heilen', spieler.id, ziel_id
+        )
+        db.session.commit()
+        return True
+    
+    elif aktion_typ == 'hexe_toeten':
+        if spieler.rolle != 'Hexe' or raum.aktuelle_phase != 'hexe_phase':
+            return False
+        if not spieler.hexe_gifttrank:
+            return False
+        spieler.hexe_gifttrank = False
+        game_logic.registriere_aktion(
+            raum.id, raum.runde, 'hexe_phase',
+            'vergiften', spieler.id, ziel_id
+        )
+        db.session.commit()
+        return True
+    
+    elif aktion_typ == 'armor_verlieben':
+        if spieler.rolle != 'Armor' or raum.aktuelle_phase != 'armor_phase':
+            return False
+        if not spieler.armor_verliebt:
+            return False
+        
+        ziel_ids = ziel_id if isinstance(ziel_id, list) else [ziel_id]
+        if len(ziel_ids) != 2:
+            return False
+        
+        spieler1 = Spieler.query.get(ziel_ids[0])
+        spieler2 = Spieler.query.get(ziel_ids[1])
+        
+        if spieler1 and spieler2:
+            spieler1.verliebt_mit_id = spieler2.id
+            spieler2.verliebt_mit_id = spieler1.id
+            spieler.armor_verliebt = False
+            db.session.commit()
+            
+            # SICHER: Verliebte werden privat informiert
+            game_logic.log_eintrag(
+                raum.id,
+                f"Du bist verliebt in {spieler2.name}!",
+                sichtbar_fuer=str(spieler1.id)
+            )
+            game_logic.log_eintrag(
+                raum.id,
+                f"Du bist verliebt in {spieler1.name}!",
+                sichtbar_fuer=str(spieler2.id)
+            )
+            return True
+        return False
+    
+    elif aktion_typ == 'tag_wahl':
+        if raum.aktuelle_phase != 'abstimmung':
+            return False
+        if game_logic.hat_spieler_gewaehlt(spieler, raum, 'abstimmung'):
+            return False
+        game_logic.registriere_aktion(
+            raum.id, raum.runde, 'abstimmung',
+            'tag_wahl', spieler.id, ziel_id
+        )
+        return True
+    
+    elif aktion_typ == 'jaeger_schuss':
+        if spieler.rolle != 'Jaeger' or not spieler.jaeger_schuss:
+            return False
+        spieler.jaeger_schuss = False
+        ziel = Spieler.query.get(ziel_id)
+        if ziel:
+            ergebnis = game_logic.toete_spieler(ziel, 'jaeger')
+            # SICHER: Nur Name wird geteilt, Rolle erst nach Tod
+            emit('spieler_gestorben', {
+                'spieler_id': ziel.id,
+                'spieler_name': ziel.name,
+                'todesart': 'jaeger',
+                'rolle': ziel.rolle  # Rolle wird nach Tod enthüllt
+            }, room=raum.code)
+            db.session.commit()
+            return True
+        return False
+    
+    return False
 
 
-@app.route("/<name>/<rolle>/<auswahl>/wer_tot")
-def wer_tot(name, rolle, auswahl):
-    """
-    The wer_tot function is used to add a player to the list of players who have voted.
-    It takes three arguments: name, rolle and auswahl.
-    The function checks if the player has already voted,
-    and if not it adds them to hat_gewaehlt.txt and writes their vote in abstimmung.txt.
-
-    :param name: Identify the player
-    :param rolle: Check if the player has already chosen a role
-    :param auswahl: Store the selected player
-    :return: A message that the user has already voted
-
-    """
-    with open("rollen_log.txt", "r", encoding="UTF8") as file:  # open the log file
-        players_vorhanden = file.read()  # read the log file
-    if werwolf.validiere_rolle(name, rolle) is not True:
-        return render_template("url_system.html", name=name, rolle=rolle)
-    with open("hat_gewaehlt.txt", "r", encoding="UTF8") as f:
-        if f"{name} : " in f.read():
-            return render_template("wahl_doppelt.html")
-        auswahl = auswahl.strip()  # erase the whitespace %20
-        if auswahl in players_vorhanden:
-            print("Eine legetime Auswahl wurde getroffen!")
-            with open("abstimmung.txt", "a") as abstimmung:
-                abstimmung.write(auswahl + "\n")
-            abstimmung.close()
-            with open("hat_gewaehlt.txt", "a") as hat_gewaehlt:
-                hat_gewaehlt.write(f"{name} : " + "\n")
-                return render_template("Dashboards/status/wer_wahl_warten.html")
+def handle_phase_wechsel(raum, alte_phase, neue_phase):
+    """Behandelt Phasenwechsel-Logik"""
+    
+    # Heiler-Schutz zuruecksetzen am Nachtende
+    if alte_phase == 'heiler_phase':
+        pass  # Schutz bleibt bis Nacht-Ende
+    
+    if alte_phase == 'werwolf_phase':
+        # Werwolf-Opfer ermitteln
+        ergebnis = game_logic.werwolf_abstimmung(raum)
+        if ergebnis and 'opfer_id' in ergebnis:
+            # SICHER: Nur an Hexe senden (private Nachricht)
+            hexe = Spieler.query.filter_by(raum_id=raum.id, rolle='Hexe', ist_am_leben=True).first()
+            if hexe:
+                # Speichere in Session oder Temp-Daten fuer Hexe
+                pass
+    
+    elif alte_phase == 'hexe_phase':
+        # Nacht-Ende: Tote bekannt geben
+        werwolf_opfer = SpielAktion.query.filter_by(
+            raum_id=raum.id, runde=raum.runde, phase='werwolf_phase', aktion_typ='werwolf_wahl'
+        ).first()
+        
+        geheilt = SpielAktion.query.filter_by(
+            raum_id=raum.id, runde=raum.runde, phase='hexe_phase', aktion_typ='heilen'
+        ).first()
+        
+        vergiftet = SpielAktion.query.filter_by(
+            raum_id=raum.id, runde=raum.runde, phase='hexe_phase', aktion_typ='vergiften'
+        ).first()
+        
+        tote = []
+        
+        # Werwolf-Opfer (wenn nicht geheilt oder geschuetzt)
+        if werwolf_opfer and werwolf_opfer.ziel_spieler_id:
+            opfer = Spieler.query.get(werwolf_opfer.ziel_spieler_id)
+            if opfer and opfer.ist_am_leben:
+                # Pruefen ob geheilt
+                if geheilt and geheilt.ziel_spieler_id == opfer.id:
+                    pass  # Geheilt!
+                # Pruefen ob vom Heiler geschuetzt
+                elif opfer.ist_beschuetzt:
+                    pass  # Geschuetzt!
+                else:
+                    game_logic.toete_spieler(opfer, 'werwolf')
+                    tote.append({'name': opfer.name, 'rolle': opfer.rolle, 'todesart': 'werwolf'})
+        
+        # Hexen-Gift-Opfer
+        if vergiftet and vergiftet.ziel_spieler_id:
+            opfer = Spieler.query.get(vergiftet.ziel_spieler_id)
+            if opfer and opfer.ist_am_leben:
+                game_logic.toete_spieler(opfer, 'hexe')
+                tote.append({'name': opfer.name, 'rolle': opfer.rolle, 'todesart': 'hexe'})
+        
+        # Heiler-Schutz zuruecksetzen
+        for s in Spieler.query.filter_by(raum_id=raum.id).all():
+            s.ist_beschuetzt = False
+        db.session.commit()
+        
+        if tote:
+            socketio.emit('nacht_ergebnis', {'tote': tote}, room=raum.code)
         else:
-            return render_template("fehler.html"), 500
-
-
-@app.route("/wer_wahl_warten")
-def wer_wahl_warten():
-    """
-    The wer_wahl_warten function is used to display the wer_wahl_warten.html template, which is displayed when a player has voted for a player to be killed.
-
-    :return: The current status of the voting
-
-    """
-    with open("hat_gewaehlt.txt", "r+") as hat_gewaehlt:
-        wer_anzahl_stimmen = sum(bool(line.rstrip()) for line in hat_gewaehlt)
-        if wer_anzahl_stimmen == 4:
-
-            count = 0
-            name_tot = ""
-            maxCount = 0
-            words = []
-
-            file = open("abstimmung.txt", "r", encoding="UTF8")
-
-            for line in file:
-
-                string = line.lower().replace(",", "").replace(".", "").split(" ")
-                words.extend(iter(string))
-            for i, item in enumerate(words):
-                count = 1
-                for j in range(i + 1, len(words)):
-                    if item == words[j]:
-                        count = count + 1
-
-                if count > maxCount:
-                    maxCount = count
-                    name_tot = item
-
-            with open("rollen_log.txt", "r+") as fileTot:
-
-                counter_tot = 0
-
-                file_list = list(fileTot)
-                # print(file_list)
-
-                name_tot = name_tot.strip("\n")
-                name_tot = name_tot.replace("\n", "")
-
-                while counter_tot < len(file_list):
-
-                    print(f"Name Tot: {name_tot} =")
-
-                    if name_tot in file_list[counter_tot]:
-                        dffd = file_list[counter_tot].split(" = ")
-                        new_line = dffd[0] + " = Tot \n"
-                        # print(new_line)
-                        file_list[counter_tot] = new_line
-                        # print(file_list)
-
-                    counter_tot += 1
-
-            fileTot.close()
-            with open("rollen_log.txt", "w") as fileFinal:
-                fileFinal.writelines(file_list)
-            fileFinal.close()
-
-            werwolf.schreibe_zuletzt_gestorben(name_tot)
-
-            return render_template(
-                "Dashboards/status/wer_wahl_ergebnis.html", name_tot=name_tot
-            )
-        return render_template("Dashboards/status/wer_wahl_warten.html")
-
-
-@app.route("/<name>/<rolle>/heilen/<auswahl>")
-def heilen(name, rolle, auswahl):
-    """
-    The heilen function allows a witch to heal someone.
-
-
-
-    :param name: Identify the witch
-    :param rolle: Check if the person that wants to heal is a witch
-    :param auswahl: Replace the name of the person to be healed in the rollen_original
-    :return: The dashboard dorfbewohner
-
-    """
-    if (
-        werwolf.validiere_rolle(name, rolle) is not True
-        or werwolf.hexe_darf_heilen() is not True
-    ):
-        return render_template("fehler.html"), 500
-    counter = 1
-    with open("rollen_original.txt", "r", encoding="UTF8") as file:
-        file_list = ["*********************\n"]
-
-        file_list.extend(iter(file))
-    while counter < len(file_list):
-        if auswahl in file_list[counter]:
-            file_list[counter] = file_list[counter].replace(name, auswahl)
-        counter += 1
-    file = open("rollen_log.txt", "w")
-
-    file.writelines(file_list)
-
-    werwolf.hexe_verbraucht("heilen")
-    werwolf.in_log_schreiben(f"Hexe {name} hat {auswahl} geheilt")
-    return render_template("Dashboards/Dash_Dorfbewohner.html")
-
-
-@app.route("/<name>/<rolle>/warten_auf_andere_spieler")
-def auf_andere_warten(name, rolle):
-    """
-    The auf_andere_warten function is used to render the auf_andere_warten.html template, which is used to display
-    the status of the game when it is in its initial state.
-
-    :param name: Identify the player
-    :param rolle: Determine the role of the player
-    :return: The html template for the status page when a player is waiting for another player to make an action
-    """
-    if werwolf.validiere_rolle(name, rolle) is True:
-        return render_template(
-            "Dashboards/status/auf_andere_warten.html", name=name, rolle=rolle
-        )
-
-
-@app.route("/log")
-def log_ansehen():
-    """
-    The log_ansehen function will take the logfile.txt and put it into a list, then print out the list in html format.
-
-    :return: The logfile
-
-    """
-    value_of_cookie_token = request.cookies.get("token")
-    token = value_of_cookie_token
-
-    if werwolf.name_und_rolle_aus_token(
-        token
-    ) and "Erzaehler" in werwolf.name_und_rolle_aus_token(token):
-
-        with open("logfile.txt", "r", encoding="UTF8") as file:
-            # put the file into a list
-            file_list = list(file)
-            # print the list
-
-            # return the list
-
-            return render_template("log.html", log=file_list)
-
-    return render_template("403.html"), 403
-
-
-@app.route("/<token>/zum_ziel")
-def zum_ziel(token: str):
-    """
-    The zum_ziel function is used to redirect the user to the target of a token.
-    If the token is valid, it will return a 302 response with an empty body and
-    the Location header set to the target URL. If not, it will return a 403 Forbidden error.
-
-    :param token:str: Identify the user
-    :return: The url of the target site
-    """
-    if werwolf.validiere_token(token):
-
-        # send the status as a response
-
-        return redirect(werwolf.erhalte_ziel(token))
-    return render_template("403.html"), 403
-
-
-@app.route("/newOverview")
-def newOverview():
-
-    with open("rollen_log.txt", encoding="UTF8") as players_log:  # open the log file
-        players_log = players_log.readlines()  # read the log file
-
-    with open("rollen_log.txt", encoding="UTF8") as players_log2:  # open the log file
-        players_log2 = players_log2.readlines()  # read the log file
-
-    with open(
-        "rollen_original.txt", encoding="UTF8"
-    ) as players_log_original:  # open the log file
-        players_log_original = players_log_original.readlines()  # read the log file
-
-    nurNamen = []  # create a list for the names
-    nurRollen = []  # create a list for the names
-    nurStatus = []  # create a list for the names
-
-    try:
-
-        for line in players_log:  # for every line in the log file
-
-            if "*" not in line:
-                line = line.split(" = ")  # split the line at the =
-                auswahlRolle = line[1]  # get the role
-
-                # if the role is not dead or the narrator
-                if "Erzaehler" not in auswahlRolle:
-                    name = line[0]  # get the name
-                    nurNamen.append(name)  # append the name to the list
-
-        for line3 in players_log2:  # for every line in the log file
-
-            if "*" not in line3:
-                line3 = line3.split(" = ")  # split the line at the =
-                name3 = line3[1]  # get the name
-                auswahlRolle3 = line[1]  # get the role
-
-                # if the role is not dead or the narrator
-                if "Erzaehler" not in name3:
-                    nurStatus.append(name3)  #
-
-        for line2 in players_log_original:  # for every line in the log file
-
-            if "*" not in line2:
-                line2 = line2.split(" = ")  # split the line at the =
-                name2 = line2[1]  # get the name
-                auswahlRolle2 = line2[1]  # get the role
-
-                # if the role is not dead or the narrator
-                if "Erzaehler" not in auswahlRolle2:
-                    nurRollen.append(name2)  # append the name to the list
-
-        # render the wahlbalken.html
-        return render_template(
-            "newOverview.html", nurListen=zip(nurNamen, nurRollen, nurStatus)
-        )
-
-    except Exception as e:
-        return render_template("fehler.html"), 500  # render the fehler.html
-
-
-@app.route("/noscript")
-def noscript():
-    """
-    The noscript function is called when the user requests a page that requires JavaScript.
-    It returns a template containing only an information message about this fact.
-
-    :return: The noscript
-
-    """
-    werwolf.in_log_schreiben("Noscript wurde aufgerufen")
-    return render_template("noscript.html")
-
-
-# context processor
-
-
-@app.context_processor
-def inject_now():
-    """
-    The inject_now function injects the current date and time into the context.
-       This is useful for dynamic data that requires timestamps.
-
-    :return: A dictionary with a key of now and the value being the current time
-
-    """
-    return {"now": datetime.utcnow()}
-
-
-@app.context_processor
-def inject_template_scope():
-    """
-    The inject_template_scope function injects the cookies_check function into the template scope.
-
-    The cookies_check function checks to see if the user has accepted cookies. If they have, it returns True. If not, it returns False.
-
-    :return: A dictionary with a single key, cookies_check
-    """
-    injections = {}
-
-    def cookies_check():
-        """
-        The cookies_check function checks to see if the user has accepted cookies.
-        If they have, it returns True. If not, it returns False.
-
-        :return: A boolean value
-
-        """
-        value = request.cookies.get("cookie_consent")
-
-        return value == "true"
-
-    injections.update(cookies_check=cookies_check)
-
-    return injections
-
-
-# sentry error handler
-@app.errorhandler(500)
-def server_error_handler(error):
-    """
-    The server_error_handler function is used to render a custom error page when the server encounters an error.
-    It is passed as the handler argument to app.register_error_handler
-
-    :param error: Pass the error message to the template
-    :return: A template fehler
-
-    """
-    return render_template("fehler.html"), 500
-
+            socketio.emit('nacht_ergebnis', {'tote': [], 'nachricht': 'Niemand ist in der Nacht gestorben.'}, room=raum.code)
+        
+        # Spielende pruefen
+        ende = game_logic.pruefe_spielende(raum)
+        if ende:
+            raum.aktuelle_phase = 'spiel_ende'
+            db.session.commit()
+            socketio.emit('spiel_ende', ende, room=raum.code)
+    
+    elif alte_phase == 'abstimmung':
+        # Tag-Abstimmung auswerten
+        ergebnis = game_logic.tag_abstimmung(raum)
+        
+        if ergebnis:
+            if ergebnis.get('kein_opfer'):
+                socketio.emit('abstimmung_ergebnis', {
+                    'kein_opfer': True,
+                    'nachricht': ergebnis.get('nachricht')
+                }, room=raum.code)
+            else:
+                opfer = Spieler.query.get(ergebnis['opfer_id'])
+                if opfer:
+                    tod_ergebnis = game_logic.toete_spieler(opfer, 'abstimmung')
+                    socketio.emit('abstimmung_ergebnis', {
+                        'opfer_name': ergebnis['opfer_name'],
+                        'opfer_rolle': ergebnis['opfer_rolle'],
+                        'stimmen': ergebnis['stimmen'],
+                        'jaeger_aktiv': 'jaeger_schuss' in tod_ergebnis.get('folge_aktionen', [])
+                    }, room=raum.code)
+                    
+                    # Jaeger-Phase einschalten wenn noetig
+                    if 'jaeger_schuss' in tod_ergebnis.get('folge_aktionen', []):
+                        raum.aktuelle_phase = 'jaeger_phase'
+                        db.session.commit()
+        
+        # Spielende pruefen
+        ende = game_logic.pruefe_spielende(raum)
+        if ende:
+            raum.aktuelle_phase = 'spiel_ende'
+            db.session.commit()
+            socketio.emit('spiel_ende', ende, room=raum.code)
+
+
+def pruefe_phase_abschluss(raum):
+    """Prueft ob die aktuelle Phase abgeschlossen werden kann"""
+    
+    if raum.aktuelle_phase == 'werwolf_phase':
+        werwoelfe = game_logic.hole_spieler_fuer_rolle(raum, 'Werwolf')
+        if all(game_logic.hat_spieler_gewaehlt(w, raum, 'werwolf_phase') for w in werwoelfe):
+            socketio.emit('phase_bereit', {'phase': 'werwolf_phase'}, room=raum.code)
+    
+    elif raum.aktuelle_phase == 'abstimmung':
+        lebende = game_logic.hole_lebende_spieler(raum)
+        if all(game_logic.hat_spieler_gewaehlt(s, raum, 'abstimmung') for s in lebende):
+            socketio.emit('phase_bereit', {'phase': 'abstimmung'}, room=raum.code)
+
+
+# ============================================================================
+# ERROR HANDLER
+# ============================================================================
 
 @app.errorhandler(404)
-def page_not_found(error):
-    """
-    The page_not_found function is used to render a custom error page when the server encounters an error.
-    It is passed as the handler argument to app.register_error_handler
-
-    :param error: Pass the error message to the template
-    :return: A template 404
-
-    """
-    return render_template("404.html"), 404
+def nicht_gefunden(e):
+    return render_template('404.html'), 404
 
 
-@app.errorhandler(403)
-def forbidden(error):
-    """
-    The forbidden function is used to render a custom error page when the server encounters an error.
-    It is passed as the handler argument to app.register_error_handler
-
-    :param error: Pass the error message to the template
-    :return: A template 403
-
-    """
-    return render_template("403.html"), 403
+@app.errorhandler(500)
+def server_fehler(e):
+    return render_template('fehler.html'), 500
 
 
-if __name__ == "__main__":
+# ============================================================================
+# MAIN
+# ============================================================================
 
-    app.run(debug=True)
+if __name__ == '__main__':
+    socketio.run(app, debug=True, host='0.0.0.0', port=5001)

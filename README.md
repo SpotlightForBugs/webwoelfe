@@ -1,93 +1,148 @@
-<!--@generated-->
+# Webwölfe
 
-[![CodeQL](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SpotlightForBugs/webwoelfe/actions/workflows/codeql-analysis.yml)
-[![DeepSource](https://deepsource.io/gh/SpotlightForBugs/webwoelfe.svg/?label=active+issues&show_trend=true&token=38zI19NiOksAJX_tvxXBxqt4)](https://deepsource.io/gh/SpotlightForBugs/webwoelfe/?ref=repository-badge)
-[![DeepSource](https://deepsource.io/gh/SpotlightForBugs/webwoelfe.svg/?label=resolved+issues&show_trend=true&token=38zI19NiOksAJX_tvxXBxqt4)](https://deepsource.io/gh/SpotlightForBugs/webwoelfe/?ref=repository-badge)
-[![CodeScene System Mastery](https://codescene.io/projects/29010/status-badges/system-mastery)](https://codescene.io/projects/29010)
+**Das klassische Werwolf-Partyspiel - jetzt digital!**
 
----
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
+[![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
-![All](https://badgen.net/github/checks/SpotlightForBugs/webwoelfe)
-![GitHub tag](https://img.shields.io/github/tag/SpotlightForBugs/webwoelfe?include_prereleases=&sort=semver&color=blue)
-[![issues - webwoelfe](https://img.shields.io/github/issues/SpotlightForBugs/webwoelfe)](https://github.com/SpotlightForBugs/webwoelfe/issues)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe?ref=badge_shield)
-
----
-
-# Webwölfe [WORK IN PROGRESS, NOT PRODUCTION READY]
-
-[Werwölfe von Düsterwald Wikipedia](https://de.wikipedia.org/wiki/Die_Werw%C3%B6lfe_von_D%C3%BCsterwald)
-
-<img width="435" alt="Wolf_watermark" src="https://user-images.githubusercontent.com/73603712/185472606-b5ad525e-924d-4a17-9843-d2a75615a2ee.png">
-
-## Screenshots
-
-<img width="435" alt="Placeholder" src="https://via.placeholder.com/435x300.png?text=Webwölfe+Platzhalter">
+Webwölfe ist eine moderne, webbasierte Implementation des beliebten Gesellschaftsspiels "Werwolf" (auch bekannt als "Mafia" oder "Werwölfe von Düsterwald"). Spiele mit deinen Freunden - egal ob im selben Raum oder über das Internet verteilt!
 
 ## Features
 
-- Light/dark mode
-- Live previews
-- Fullscreen mode
-- Cross platform
+- **Zwei Spielmodi**: 
+  - Online (jeder auf eigenem Gerät, automatischer Erzähler) 
+  - Gruppen-Modus (alle zusammen lokal, mit Erzähler-Unterstützung)
+- **Echtzeit-Updates**: WebSocket-basierte Kommunikation für nahtloses Gameplay
+- **45+ Rollen**: Von Grundrollen bis Community-Kreationen ([Quelle](https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung))
+- **Anti-Cheat**: Schutz gegen DevTools/F12-Spicken
+- **Responsive Design**: Funktioniert auf Desktop und Mobilgeräten
+- **Atmosphärisches Design**: Dunkles Theme mit stimmungsvoller Gestaltung
+- **Erzähler-Texte**: Vorgefertigte Texte für den Gruppen-Modus
 
-## Optimierungen
+## Verfügbare Rollen
 
-Die Webseite ist für alle gängigen Bildschirmgrößen optimiert.
+### Grundrollen
+- **Werwolf** - Töte jede Nacht einen Dorfbewohner
+- **Dorfbewohner** - Finde und eliminiere die Werwölfe
+- **Seherin** - Erfahre die wahre Identität eines Spielers
+- **Hexe** - Heiltrank & Gifttrank (je einmal nutzbar)
+- **Jäger** - Nimm jemanden mit in den Tod
+- **Heiler** - Schütze einen Spieler pro Nacht
+- **Amor** - Verliebe zwei Spieler
+
+### Erweiterte Rollen
+- **Weißer Wolf** - Gewinnt alleine, kann Mitwölfe töten
+- **Urwolf** - Kann Dorfbewohner infizieren
+- **Alter Mann** - Überlebt ersten Wolfsangriff
+- **Zwei Schwestern** - Kennen sich gegenseitig
+- **Vampir** - Verwandle Spieler in Vampire
+- **Flötenspieler** - Verzaubere alle zum Sieg
+- ... und viele mehr!
 
 ## Installation
 
-Einfach über git clonen:
+### Voraussetzungen
+- Python 3.10 oder höher
+- pip
+
+### Schritte
 
 ```bash
-  git clone https://github.com/SpotlightForBugs/webwoelfe.git
-  cd webwoelfe
-  pip install -r requirements.txt
-  #to run
-  python3 app.py
+# Repository klonen
+git clone https://github.com/SpotlightForBugs/webwoelfe.git
+cd webwoelfe
 
+# Virtuelle Umgebung erstellen (empfohlen)
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# oder: venv\Scripts\activate  # Windows
+
+# Abhängigkeiten installieren
+pip install -r requirements.txt
+
+# Anwendung starten
+python app.py
 ```
 
-[WARNUNG ZU FLASKS DEBUG-MODE (klick)](https://github.com/SpotlightForBugs/webwoelfe/security/code-scanning/2)
+Die Anwendung läuft dann unter `http://localhost:5001`
 
-## Tech Stack
+## Spielablauf
 
-- We use [Python](https://www.python.org/) and [Flask](https://flask.palletsprojects.com/en/1.1.x/) for the backend.
-- We use [Bootstrap](https://getbootstrap.com/) to style the web application.
-- We use [CodeQL](https://codeql.com/) and [DeepSource](https://deepsource.io/) to analyze the code.
-- We use [Sentry](https://sentry.io/) to report errors.
-- We use [Freshpaint.io](https://freshpaint.io/) to analyze user behavoir.
-- We use [CodeScene](https://codescene.io/) to analyze the code quality.
+1. **Raum erstellen**: Ein Spieler erstellt einen Raum und erhält einen 6-stelligen Code
+2. **Beitreten**: Andere Spieler treten mit dem Code bei
+3. **Spiel starten**: Bei mindestens 5 Spielern kann das Spiel gestartet werden
+4. **Rollen erhalten**: Jeder Spieler bekommt eine geheime Rolle zugeteilt
+5. **Tag & Nacht**: Das Spiel wechselt zwischen Tag- und Nachtphasen
+6. **Gewinnen**: Dorf gewinnt wenn alle Wölfe tot sind, Wölfe gewinnen bei Mehrheit
 
-## Roadmap
+## Spielmodi
 
-- Additional browser support
+### Online-Modus
+- Jeder Spieler auf eigenem Gerät
+- **Kein Erzähler nötig** - das Spiel erzählt automatisch
+- Automatische Nachrichten und Anweisungen
+- Perfekt für Remote-Spielrunden
 
-- Add more integrations
+### Gruppen-Modus
+- Alle zusammen vor Ort
+- Mit menschlichem Erzähler
+- **Erzähler erhält vorgefertigte Texte** zum Vorlesen
+- Klassisches Spielerlebnis
+- Perfekt für Partys und Spieleabende
 
-## FAQ
+## Technologie-Stack
 
-#### Ist das Spiel kostenlos spielbar?
+- **Backend**: Python/Flask mit Flask-SocketIO
+- **Datenbank**: SQLite mit SQLAlchemy ORM
+- **Frontend**: Vanilla JS, CSS3, HTML5
+- **Echtzeit**: WebSockets via Socket.IO
+- **Icons**: FontAwesome 6
+- **Fonts**: Cinzel & Crimson Pro (Google Fonts)
 
-Ja
+## Projektstruktur
 
-#### Frage 2
+```
+webwoelfe/
+|-- app.py              # Flask-Anwendung & WebSocket-Events
+|-- models.py           # SQLAlchemy-Modelle & Rollen-Definitionen
+|-- game_logic.py       # Spiellogik (Phasen, Abstimmungen, etc.)
+|-- requirements.txt    # Python-Abhängigkeiten
+|-- templates/          # Jinja2-Templates
+|   |-- struktur.html   # Basis-Template mit Anti-Cheat
+|   |-- index.html      # Startseite
+|   |-- lobby.html      # Warteraum
+|   |-- spiel.html      # Hauptspiel-Interface
+|   +-- rollen.html     # Rollenübersicht
+|-- static/
+|   +-- images/         # Favicon & Grafiken
++-- instance/
+    +-- webwoelfe.db    # SQLite-Datenbank
+```
 
-Answer 2
+## Sicherheit
 
-## Authors
+Webwölfe enthält Schutzmaßnahmen gegen Spicken:
+- DevTools-Erkennung (F12, Ctrl+Shift+I, etc.)
+- Rechtsklick deaktiviert
+- Console-Logging deaktiviert
+- Sensible Spielerinformationen werden serverseitig validiert
+
+## Beitragen
+
+Beiträge sind willkommen! Bitte lies [CONTRIBUTING.md](CONTRIBUTING.md) für Details.
+
+## Lizenz
+
+Dieses Projekt steht unter der GNU General Public License v3.0 - siehe [LICENSE](LICENSE) für Details.
+
+## Autoren
 
 - [@SpotlightForBugs](https://www.github.com/SpotlightForBugs)
 - [@Error404UNameNotFound](https://www.github.com/Error404UNameNotFound)
 - [@BlackTesseract](https://www.github.com/BlackTesseract)
-- [@Zora](#)
-
-## License
-
-[GNU General Public License v3.0](https://github.com/SpotlightForBugs/webwoelfe/blob/Pro/LICENSE)
+- @Zora
 
 ---
 
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FSpotlightForBugs%2Fwebwoelfe?ref=badge_large)
-
-[License Report](https://app.fossa.com/reports/453739f4-1f96-485d-920d-91550b171239)
+*Inspiriert von "Werwölfe von Düsterwald" und der [Werwolf Wiki Rollen-Sammlung](https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung)*

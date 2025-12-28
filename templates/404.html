@@ -1,36 +1,14 @@
 {% extends 'struktur.html' %}
-<!--@generated-->
 
-{% block body %}
+{% block title %}Seite nicht gefunden{% endblock %}
 
-<div class="container-fluid" style="margin-top: 30px">
-  <h1 id="rot">Fehler | 404</h1>
-  <h4>Die Seite konnte nicht gefunden werden.</h4>
-  <button
-    type="button"
-    class="btn btn-danger"
-    data-bs-toggle="button"
-    aria-pressed="false"
-    autocomplete="off"
-    onClick="goBack();"
-  >
-    Zurück
-  </button>
+{% block content %}
+<div class="container text-center" style="padding: 4rem 0;">
+    <div class="fade-in">
+        <div style="font-size: 8rem; color: var(--accent-red); margin-bottom: 1rem;">404</div>
+        <h1 style="margin-bottom: 1rem;">Seite nicht gefunden</h1>
+        <p class="text-muted mb-4">Die gesuchte Seite existiert nicht oder wurde verschoben.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Zurueck zur Startseite</a>
+    </div>
 </div>
-
-<script>
-  function goBack() {
-    window.history.back();
-  }
-</script>
-
-{% endblock %} {% block footer %}
-
-<small
-  ><a href="https://github.com/Error404UNameNotFound"
-    >Error404UNameNotFound</a
-  ></small
->
-{% endblock %} {% block script %}
-<script src="../../../../static/scripts/rot.js"></script>
 {% endblock %}

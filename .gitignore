@@ -133,3 +133,26 @@ dmypy.json
 __pycache__/
 .vscode/
 logfile.txt
+
+node_modules
+
+# Generated Audio Files
+static/audio/cache/
+*.mp3
+*.wav
+
+# Database Files
+instance/
+*.db
+*.db-journal
+
+# Test Reports & Screenshots
+playwright-report/
+tests/screenshots/
+
+# IDE & OS
+.DS_Store
+.idea/
+*.swp
+*.swo
+*~

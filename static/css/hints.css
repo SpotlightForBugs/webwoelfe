@@ -1,0 +1,476 @@
+/**
+ * Webwölfe - Hinweis-System CSS
+ * Subtile visuelle Hinweise für Online-Modus
+ * Prozentbasiert, nicht spezifisch, ausbalanciert
+ */
+
+/* ============================================
+   BASIS-ANIMATIONEN FÜR HINWEISE
+   ============================================ */
+
+/* Augen-Flackern - Kurzes rotes Glühen */
+@keyframes eyes-flicker {
+    0%, 100% { filter: none; }
+    25% { filter: drop-shadow(0 0 3px #dc2626) brightness(1.1); }
+    50% { filter: drop-shadow(0 0 8px #dc2626) brightness(1.2); }
+    75% { filter: drop-shadow(0 0 3px #dc2626) brightness(1.1); }
+}
+
+.hint-eyes-flicker {
+    animation: eyes-flicker 0.15s ease-in-out;
+}
+
+/* Schatten - Dunkler Schatten huscht vorbei */
+@keyframes shadow-pass {
+    0% { 
+        box-shadow: inset 0 0 0 transparent;
+        transform: translateX(0);
+    }
+    30% { 
+        box-shadow: inset -50px 0 40px -20px rgba(0, 0, 0, 0.4);
+    }
+    70% { 
+        box-shadow: inset 50px 0 40px -20px rgba(0, 0, 0, 0.4);
+    }
+    100% { 
+        box-shadow: inset 0 0 0 transparent;
+        transform: translateX(0);
+    }
+}
+
+.hint-shadow {
+    animation: shadow-pass 0.3s ease-in-out;
+}
+
+/* Mondschein - Kurzes bläuliches Leuchten */
+@keyframes moonlight {
+    0%, 100% { 
+        box-shadow: none;
+        filter: none;
+    }
+    50% { 
+        box-shadow: 0 0 20px 5px rgba(147, 197, 253, 0.5);
+        filter: brightness(1.15) saturate(1.1);
+    }
+}
+
+.hint-moonlight {
+    animation: moonlight 0.5s ease-in-out;
+}
+
+/* Nervöses Zittern - Leichtes Vibrieren */
+@keyframes nervous-shake {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    10% { transform: translateX(-1px) rotate(-0.5deg); }
+    20% { transform: translateX(1px) rotate(0.5deg); }
+    30% { transform: translateX(-1px) rotate(-0.3deg); }
+    40% { transform: translateX(1px) rotate(0.3deg); }
+    50% { transform: translateX(0) rotate(0); }
+    60% { transform: translateX(-0.5px) rotate(-0.2deg); }
+    70% { transform: translateX(0.5px) rotate(0.2deg); }
+    80% { transform: translateX(-0.5px) rotate(-0.1deg); }
+    90% { transform: translateX(0.5px) rotate(0.1deg); }
+}
+
+.hint-nervous {
+    animation: nervous-shake 0.8s ease-in-out;
+}
+
+/* Blick abwenden - Avatar dreht sich kurz weg */
+@keyframes look-away {
+    0%, 100% { transform: rotateY(0); }
+    50% { transform: rotateY(15deg); opacity: 0.85; }
+}
+
+.hint-look-away {
+    animation: look-away 0.4s ease-in-out;
+}
+
+/* Herzschlag - Pulsierendes Glühen */
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); box-shadow: none; }
+    15% { transform: scale(1.02); box-shadow: 0 0 5px rgba(239, 68, 68, 0.3); }
+    30% { transform: scale(1); box-shadow: none; }
+    45% { transform: scale(1.03); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+    60% { transform: scale(1); box-shadow: none; }
+    75% { transform: scale(1.015); box-shadow: 0 0 5px rgba(239, 68, 68, 0.2); }
+}
+
+.hint-heartbeat {
+    animation: heartbeat 1.5s ease-in-out;
+}
+
+/* Mystisches Glühen - Kann gut oder böse sein */
+@keyframes mystical-glow {
+    0%, 100% { 
+        filter: none;
+        box-shadow: none;
+    }
+    50% { 
+        filter: brightness(1.1) saturate(1.2);
+        box-shadow: 0 0 15px 3px rgba(167, 139, 250, 0.4);
+    }
+}
+
+.hint-glow {
+    animation: mystical-glow 0.6s ease-in-out;
+}
+
+/* Selbst-Verdächtigung - Für Selbstmörder, Gerber, etc. */
+@keyframes sus-self {
+    0% { 
+        border-color: currentColor;
+        box-shadow: none;
+    }
+    20% { 
+        border-color: #f59e0b;
+        box-shadow: 0 0 5px rgba(245, 158, 11, 0.3);
+    }
+    40% { 
+        border-color: #ef4444;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    }
+    60% { 
+        border-color: #f59e0b;
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
+    }
+    80% { 
+        border-color: #ef4444;
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+    }
+    100% { 
+        border-color: currentColor;
+        box-shadow: none;
+    }
+}
+
+.hint-sus-self {
+    animation: sus-self 1s ease-in-out;
+}
+
+/* Stolpern - Kurzes "Kippen" */
+@keyframes stumble {
+    0%, 100% { transform: rotate(0) translateY(0); }
+    30% { transform: rotate(-3deg) translateY(2px); }
+    60% { transform: rotate(2deg) translateY(-1px); }
+    80% { transform: rotate(-1deg) translateY(1px); }
+}
+
+.hint-stumble {
+    animation: stumble 0.5s ease-in-out;
+}
+
+/* ============================================
+   SPIELER-KARTEN STYLING MIT HINWEISEN
+   ============================================ */
+
+.spieler-karte {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+/* Verdächtigkeits-Indikator (optional, für erfahrene Spieler) */
+.verdaechtigkeit-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(239, 68, 68, var(--verdaechtigkeit, 0)) 100%
+    );
+    border-radius: 0 0 8px 8px;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* ============================================
+   BUTTON FÜR SELBST-VERDÄCHTIGUNG
+   ============================================ */
+
+.btn-verdaechtig {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    border: 1px solid #4b5563;
+    color: #f59e0b;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-verdaechtig:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.btn-verdaechtig:active {
+    transform: translateY(0);
+}
+
+.btn-verdaechtig:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-verdaechtig .uses-left {
+    background: #f59e0b;
+    color: #1f2937;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.125rem 0.375rem;
+    border-radius: 999px;
+}
+
+/* ============================================
+   AUDIO-HINWEIS INDIKATOR
+   ============================================ */
+
+.audio-hint-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(15, 15, 26, 0.9);
+    border: 1px solid rgba(196, 30, 58, 0.3);
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.audio-hint-indicator.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.audio-hint-indicator i {
+    color: #c41e3a;
+    font-size: 1.25rem;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ============================================
+   NACHT-MODUS OVERLAY FÜR HINWEISE
+   ============================================ */
+
+.nacht-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(
+        circle at 50% 50%,
+        transparent 0%,
+        rgba(10, 10, 20, 0.3) 50%,
+        rgba(10, 10, 20, 0.6) 100%
+    );
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.nacht-overlay.aktiv {
+    opacity: 1;
+}
+
+/* Mond-Effekt während der Nacht */
+.nacht-overlay::before {
+    content: '';
+    position: absolute;
+    top: 5%;
+    right: 10%;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(
+        circle at 30% 30%,
+        #fef3c7 0%,
+        #fcd34d 30%,
+        transparent 70%
+    );
+    border-radius: 50%;
+    filter: blur(2px);
+    opacity: 0.7;
+}
+
+/* ============================================
+   RESPONSIVE ANPASSUNGEN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .btn-verdaechtig {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    
+    .audio-hint-indicator {
+        bottom: 10px;
+        right: 10px;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY - Reduzierte Bewegung
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .hint-eyes-flicker,
+    .hint-shadow,
+    .hint-moonlight,
+    .hint-nervous,
+    .hint-look-away,
+    .hint-heartbeat,
+    .hint-glow,
+    .hint-sus-self,
+    .hint-stumble {
+        animation: none !important;
+    }
+    
+    .audio-hint-indicator i {
+        animation: none;
+    }
+}
+
+/* ============================================
+   SYNCHRONISIERTE HINWEIS-NACHRICHTEN
+   (Für Online-Modus: Alle Spieler sehen diese!)
+   ============================================ */
+
+.hint-messages-container {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    max-width: 90vw;
+}
+
+.hint-message {
+    background: linear-gradient(135deg, rgba(15, 15, 26, 0.95) 0%, rgba(30, 30, 50, 0.95) 100%);
+    border: 1px solid rgba(196, 30, 58, 0.4);
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #e5e7eb;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.4s ease;
+}
+
+.hint-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hint-message i {
+    color: #c41e3a;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.hint-message span {
+    flex-grow: 1;
+}
+
+/* Verschiedene Hinweis-Typen mit unterschiedlichen Farben */
+.hint-message-augen_flackern {
+    border-color: rgba(220, 38, 38, 0.5);
+}
+.hint-message-augen_flackern i {
+    color: #dc2626;
+}
+
+.hint-message-schatten {
+    border-color: rgba(100, 100, 120, 0.5);
+}
+.hint-message-schatten i {
+    color: #6b7280;
+}
+
+.hint-message-mond_schein {
+    border-color: rgba(147, 197, 253, 0.5);
+}
+.hint-message-mond_schein i {
+    color: #93c5fd;
+}
+
+.hint-message-nervoes,
+.hint-message-stolpern {
+    border-color: rgba(251, 191, 36, 0.5);
+}
+.hint-message-nervoes i,
+.hint-message-stolpern i {
+    color: #fbbf24;
+}
+
+.hint-message-gluehen {
+    border-color: rgba(167, 139, 250, 0.5);
+}
+.hint-message-gluehen i {
+    color: #a78bfa;
+}
+
+.hint-message-selbst_verdaechtigung {
+    border-color: rgba(239, 68, 68, 0.6);
+    background: linear-gradient(135deg, rgba(30, 10, 10, 0.95) 0%, rgba(50, 20, 20, 0.95) 100%);
+}
+.hint-message-selbst_verdaechtigung i {
+    color: #ef4444;
+    animation: pulse 0.5s infinite;
+}
+
+/* ============================================
+   3D VILLAGE CONTAINER
+   ============================================ */
+
+#village-3d-container {
+    width: 100%;
+    height: 400px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%);
+    border: 1px solid rgba(196, 30, 58, 0.2);
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+    #village-3d-container {
+        height: 250px;
+    }
+    
+    .hint-messages-container {
+        top: 60px;
+    }
+    
+    .hint-message {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+}
+

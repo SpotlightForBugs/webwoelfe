@@ -1,22 +1,14 @@
 {% extends 'struktur.html' %}
-<!--@generated-->
 
-{% block body %}
+{% block title %}Fehler{% endblock %}
 
-<div class="container-fluid" style="margin-top: 30px">
-  <h1 id="rot">Fehler</h1>
-  <h2>
-    Bitte gehe zurück zum
-    <a style="color: red" href="{{ url_for('index')}}">Start</a>
-  </h2>
+{% block content %}
+<div class="container text-center" style="padding: 4rem 0;">
+    <div class="fade-in">
+        <div style="font-size: 5rem; margin-bottom: 1rem;">&#128128;</div>
+        <h1 style="margin-bottom: 1rem; color: var(--accent-red);">Etwas ist schiefgelaufen</h1>
+        <p class="text-muted mb-4">Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Zurueck zur Startseite</a>
+    </div>
 </div>
-<script>
-  //weiterleitung zurück zum start
-  setTimeout(function () {
-    window.location.href = "{{ url_for('index')}}";
-  }, 5000);
-</script>
-
-{% endblock %} {% block script %}
-<script src="../../../../static/scripts/rot.js"></script>
 {% endblock %}

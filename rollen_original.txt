@@ -1,8 +1,0 @@
-Hello = Erzaehler
-Hello2 = Seherin
-Awefr = Dorfbewohner
-Dfsfsdf = Dorfbewohner
-Fdssfs = Hexe
-Dsfsdfsdfs = Dorfbewohner
-Adad = Armor
-Ghjjgh = Werwolf

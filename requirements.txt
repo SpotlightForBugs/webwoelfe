@@ -4,5 +4,6 @@ flask-sqlalchemy>=3.1.0
 python-socketio>=5.10.0
 eventlet>=0.35.0
 python-engineio>=4.8.0
+gunicorn>=21.2.0
 edge-tts>=6.1.0
 pillow>=10.0.0

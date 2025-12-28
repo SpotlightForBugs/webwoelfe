@@ -21,6 +21,7 @@ This directory contains comprehensive Playwright-based automated tests for the W
 ### Test Helpers
 
 **helpers/game-helpers.ts** - Comprehensive helper functions for game automation:
+
 - `createRoom()` - Creates a new game room
 - `joinRoom()` - Joins an existing game room
 - `startGame()` - Starts the game from the lobby
@@ -39,11 +40,13 @@ This directory contains comprehensive Playwright-based automated tests for the W
 ## Running the Tests
 
 ### Prerequisites
+
 - Python 3.x with Flask and dependencies (see requirements.txt)
 - Node.js with npm
 - Virtual environment activated (source venv/bin/activate)
 
 ### Run All Tests
+
 ```bash
 npm test
 # or
@@ -51,23 +54,27 @@ npm test
 ```
 
 ### Run Specific Test
+
 ```bash
 npm run test:game1    # Run village victory game
 npm run test:game2    # Run werewolf victory game
 ```
 
 ### Run in Headed Mode (see browser)
+
 ```bash
 npm run test:headed
 ```
 
 ### Debug Mode
+
 ```bash
 npm run test:debug    # Opens interactive debug mode
 npm run test:ui       # Opens Playwright UI
 ```
 
 ### View Test Report
+
 ```bash
 npm run test:report   # Shows the last test report
 ```
@@ -75,7 +82,9 @@ npm run test:report   # Shows the last test report
 ## Test Architecture
 
 ### Game Flow
+
 Each test simulates a complete game:
+
 1. **Lobby Phase** - Players join and wait for game start
 2. **Role Distribution** - Game assigns roles based on player count
 3. **Night Phase** - Werewolves attack, special roles act
@@ -83,7 +92,9 @@ Each test simulates a complete game:
 5. **End Condition** - Game ends when one team wins
 
 ### Multi-Browser Testing
+
 Tests use multiple browser contexts (one per player) to simulate:
+
 - Independent player actions
 - Parallel decision-making
 - Socket.io communication between players
@@ -92,6 +103,7 @@ Tests use multiple browser contexts (one per player) to simulate:
 ### Configuration
 
 **playwright.config.ts**:
+
 - Base URL: `http://localhost:5001`
 - Auto-starts Flask server before tests
 - Single worker (tests must be sequential due to shared game state)
@@ -102,9 +114,11 @@ Tests use multiple browser contexts (one per player) to simulate:
 ## Game Test Scenarios
 
 ### Game 1: Village Victory (5 Players)
+
 **Players**: Anna, Bernd, Clara, David, Emma
 
 **Typical Role Distribution**:
+
 - Werewolves: ~2
 - Seer/Witch/Special Roles: ~2
 - Village Dwellers: ~1
@@ -112,33 +126,43 @@ Tests use multiple browser contexts (one per player) to simulate:
 **Victory Condition**: Village eliminates all werewolves before they achieve majority.
 
 ### Game 2: Werewolf Victory (6 Players)
+
 **Players**: Friedrich, Greta, Hans, Inge, Johann, Klara
 
 **Test Strategy**: Werewolves strategically eliminate key targets (Seer, Witch) to achieve majority.
 
 ### Game 2B: Large Game (8 Players)
+
 Tests role distribution scaling and game stability with more players.
 
 ## Debugging Failed Tests
 
 ### View Screenshots
+
 Failed test screenshots are saved in:
+
 ```
 test-results/[test-name]/test-failed-1.png
 ```
 
 ### View Videos
+
 Videos of failed tests (if enabled):
+
 ```
 test-results/[test-name]/video.webm
 ```
 
 ### Enable Trace
+
 Add to test:
+
 ```typescript
-test.use({ trace: 'on' });
+test.use({ trace: "on" });
 ```
+
 View trace with:
+
 ```bash
 npx playwright show-trace test-results/[test-name]/trace.zip
 ```
@@ -175,15 +199,16 @@ To add new game scenarios:
 1. Create new `.spec.ts` file in `tests/` directory
 2. Import helpers from `./helpers/game-helpers`
 3. Follow the pattern:
+
    ```typescript
-   test.describe('Game X: New Scenario', () => {
+   test.describe("Game X: New Scenario", () => {
      let players: Player[] = [];
-     
+
      test.afterEach(async () => {
        await cleanup(players);
      });
-     
-     test('scenario description', async ({ browser }) => {
+
+     test("scenario description", async ({ browser }) => {
        // Your test code
      });
    });
@@ -200,7 +225,7 @@ For GitHub Actions or similar CI systems:
   run: |
     source venv/bin/activate
     npm test
-    
+
 - name: Upload results
   if: always()
   uses: actions/upload-artifact@v3
@@ -219,6 +244,7 @@ For GitHub Actions or similar CI systems:
 ## Contact & Issues
 
 Report issues with tests in the project repository. Include:
+
 - Test name and error message
 - Screenshot/video if available
 - System information (OS, Python version, Node version)

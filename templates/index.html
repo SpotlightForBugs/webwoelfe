@@ -1,383 +1,666 @@
-{% extends 'struktur.html' %}
-
-{% block nav_home %}active{% endblock %}
-
-{% block content %}
+{% extends 'struktur.html' %} {% block nav_home %}active{% endblock %} {% block
+content %}
 <div class="container">
-    <!-- Hero Section -->
-    <section class="hero text-center fade-in" style="padding: 4rem 0;">
-        <h1 style="font-size: 3.5rem; margin-bottom: 1rem;">
-            <span style="color: var(--accent-gold);">Web</span><span style="color: var(--accent-red);">wölfe</span>
-        </h1>
-        <p class="text-muted" style="font-size: 1.25rem; max-width: 600px; margin: 0 auto 3rem;">
-            Das klassische Werwolf-Partyspiel - jetzt digital! 
-            Entlarve die Wölfe, bevor es zu spät ist!
-        </p>
-        
-        {% if fehler %}
-        <div class="alert alert-error" style="max-width: 500px; margin: 0 auto 2rem;">
-            {{ fehler }}
-        </div>
-        {% endif %}
-    </section>
-    
-    <!-- Spielmodus Auswahl -->
-    <section class="grid grid-2 fade-in delay-1" style="max-width: 900px; margin: 0 auto;">
-        
-        <!-- Neues Spiel erstellen -->
-        <div class="card">
-            <div class="card-header">
-                <h2 style="color: var(--accent-red); font-size: 1.5rem;">
-                    <i class="fa-solid fa-paw"></i> Neues Spiel
-                </h2>
-            </div>
-            
-            <form action="{{ url_for('raum_erstellen') }}" method="POST">
-                <div class="form-group">
-                    <label class="form-label">Dein Name</label>
-                    <input type="text" name="spieler_name" class="form-input" 
-                           placeholder="Spielleiter" maxlength="30" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Raumname</label>
-                    <input type="text" name="raum_name" class="form-input" 
-                           placeholder="Webwölfe Runde" maxlength="50">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Spielerzahl (5-18)</label>
-                    <input type="number" name="spieler_anzahl" class="form-input" 
-                           value="8" min="5" max="18">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Spielmodus</label>
-                    <select name="modus" class="form-input">
-                        <option value="online">Online - Jeder auf eigenem Gerät (ohne Erzähler)</option>
-                        <option value="gruppe">Gruppe - Alle zusammen lokal (mit Erzähler)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-checkbox">
-                        <input type="checkbox" name="ist_erzaehler">
-                        <span>Ich bin der Erzähler (spiele nicht mit)</span>
-                    </label>
-                </div>
-                
-                <!-- Erweiterte Einstellungen Toggle -->
-                <div class="form-group">
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="toggleErweitert()" style="width: 100%;">
-                        <i class="fa-solid fa-sliders" id="erweitert-icon"></i> Erweiterte Einstellungen
-                        <i class="fa-solid fa-chevron-down" id="erweitert-chevron"></i>
-                    </button>
-                </div>
-                
-                <!-- Erweiterte Einstellungen (versteckt) -->
-                <div id="erweiterte-einstellungen" style="display: none;">
-                    
-                    <!-- Regelset Auswahl -->
-                    <div class="form-group">
-                        <label class="form-label">Regelset</label>
-                        <select name="regelset" class="form-input">
-                            <option value="standard">Standard - Klassische Regeln</option>
-                            <option value="schnell">Schnellspiel - Kürzere Zeiten</option>
-                            <option value="chaos">Chaos - Mehr Überraschungen</option>
-                            <option value="profi">Profi - Weniger Hinweise, mehr Strategie</option>
-                            <option value="party">Party - Lockere Regeln</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Hinweise aktivieren (nur Online) -->
-                    <div class="form-group" id="hinweise-option">
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="hinweise_aktiv" checked>
-                            <span>Visuelle Hinweise aktivieren (Online-Modus)</span>
-                        </label>
-                        <small class="text-muted" style="display: block; margin-top: 0.25rem; font-size: 0.75rem;">
-                            Subtile visuelle Hinweise helfen dem Dorf, Werwölfe zu erkennen.
-                        </small>
-                    </div>
-                    
-                    <!-- Audio-Erzähler (nur Online) -->
-                    <div class="form-group" id="audio-option">
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="audio_erzaehler" checked>
-                            <span>Audio-Erzähler aktivieren (Online-Modus)</span>
-                        </label>
-                        <small class="text-muted" style="display: block; margin-top: 0.25rem; font-size: 0.75rem;">
-                            Das Spiel spricht die Erzähler-Texte automatisch vor.
-                        </small>
-                    </div>
-                    
-                    <!-- Rollen-Auswahl -->
-                    <div class="form-group">
-                        <label class="form-label">Rollen-Auswahl</label>
-                        <select name="rollen_modus" class="form-input" onchange="toggleRollenAuswahl(this.value)">
-                            <option value="auto">Automatisch (empfohlen für Spielerzahl)</option>
-                            <option value="manuell">Manuell auswählen</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Manuelle Rollen-Auswahl -->
-                    <div id="manuelle-rollen" style="display: none;">
-                        <div class="form-group">
-                            <label class="form-label">Verfügbare Rollen</label>
-                            <div style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem;">
-                                
-                                <!-- Grundrollen -->
-                                <div style="margin-bottom: 1rem;">
-                                    <strong style="color: var(--accent-gold); font-size: 0.875rem;">Grundrollen</strong>
-                                    <div class="rollen-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
-                                        {% for rolle, info in rollen_nach_kategorie.get('grundrollen', {}).items() %}
-                                        <label class="form-checkbox rollen-checkbox" style="font-size: 0.875rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                            <input type="checkbox" name="rollen" value="{{ rolle }}" {% if rolle in ['Werwolf', 'Dorfbewohner', 'Seherin'] %}checked{% endif %}>
-                                            <span><i class="{{ info.icon }}" style="color: {{ info.farbe }}; margin-right: 0.25rem;"></i> {{ rolle }}</span>
-                                        </label>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                
-                                <!-- Dorfbewohner-Varianten -->
-                                <div style="margin-bottom: 1rem;">
-                                    <strong style="color: var(--text-muted); font-size: 0.875rem;">Dorfbewohner-Varianten</strong>
-                                    <div class="rollen-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
-                                        {% for rolle, info in rollen_nach_kategorie.get('dorfbewohner', {}).items() %}
-                                        <label class="form-checkbox rollen-checkbox" style="font-size: 0.875rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                            <input type="checkbox" name="rollen" value="{{ rolle }}">
-                                            <span><i class="{{ info.icon }}" style="color: {{ info.farbe }}; margin-right: 0.25rem;"></i> {{ rolle }}</span>
-                                        </label>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                
-                                <!-- Werwolf-Varianten -->
-                                <div style="margin-bottom: 1rem;">
-                                    <strong style="color: var(--accent-red); font-size: 0.875rem;">Werwolf-Varianten</strong>
-                                    <div class="rollen-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
-                                        {% for rolle, info in rollen_nach_kategorie.get('werwolf', {}).items() %}
-                                        <label class="form-checkbox rollen-checkbox" style="font-size: 0.875rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                            <input type="checkbox" name="rollen" value="{{ rolle }}">
-                                            <span><i class="{{ info.icon }}" style="color: {{ info.farbe }}; margin-right: 0.25rem;"></i> {{ rolle }}</span>
-                                        </label>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                
-                                <!-- Seher-Varianten -->
-                                <div style="margin-bottom: 1rem;">
-                                    <strong style="color: #7c3aed; font-size: 0.875rem;">Seher-Varianten</strong>
-                                    <div class="rollen-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
-                                        {% for rolle, info in rollen_nach_kategorie.get('seher', {}).items() %}
-                                        <label class="form-checkbox rollen-checkbox" style="font-size: 0.875rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                            <input type="checkbox" name="rollen" value="{{ rolle }}">
-                                            <span><i class="{{ info.icon }}" style="color: {{ info.farbe }}; margin-right: 0.25rem;"></i> {{ rolle }}</span>
-                                        </label>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                
-                                <!-- Spezial-Rollen -->
-                                <div>
-                                    <strong style="color: #06b6d4; font-size: 0.875rem;">Spezial-Rollen</strong>
-                                    <div class="rollen-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
-                                        {% for rolle, info in rollen_nach_kategorie.get('spezial', {}).items() %}
-                                        <label class="form-checkbox rollen-checkbox" style="font-size: 0.875rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                            <input type="checkbox" name="rollen" value="{{ rolle }}">
-                                            <span><i class="{{ info.icon }}" style="color: {{ info.farbe }}; margin-right: 0.25rem;"></i> {{ rolle }}</span>
-                                        </label>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                
-                            </div>
-                            <small class="text-muted" style="display: block; margin-top: 0.5rem;">
-                                Wähle die Rollen, die im Spiel vorkommen sollen.
-                            </small>
-                        </div>
-                    </div>
-                    
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-block btn-lg">
-                    Spiel erstellen
-                </button>
-            </form>
-        </div>
-        
-        <!-- Bestehendem Spiel beitreten -->
-        <div class="card">
-            <div class="card-header">
-                <h2 style="color: var(--accent-blue); font-size: 1.5rem;">
-                    <i class="fa-solid fa-door-open"></i> Spiel beitreten
-                </h2>
-            </div>
-            
-            <form action="{{ url_for('raum_beitreten') }}" method="POST">
-                <div class="form-group">
-                    <label class="form-label">Dein Name</label>
-                    <input type="text" name="spieler_name" class="form-input" 
-                           placeholder="Dein Name" maxlength="30" required>
-  </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Raumcode</label>
-                    <input type="text" name="code" class="form-input" 
-                           placeholder="ABC123" maxlength="6" 
-                           style="text-transform: uppercase; letter-spacing: 0.2em; font-size: 1.5rem; text-align: center;"
-                           required>
-</div>
+  <!-- Hero Section -->
+  <section class="hero text-center fade-in" style="padding: 4rem 0">
+    <h1 style="font-size: 3.5rem; margin-bottom: 1rem">
+      <span style="color: var(--accent-gold)">Web</span
+      ><span style="color: var(--accent-red)">wölfe</span>
+    </h1>
+    <p
+      class="text-muted"
+      style="font-size: 1.25rem; max-width: 600px; margin: 0 auto 3rem"
+    >
+      Das klassische Werwolf-Partyspiel - jetzt digital! Entlarve die Wölfe,
+      bevor es zu spät ist!
+    </p>
 
-                <div style="flex: 1;"></div>
-                
-                <button type="submit" class="btn btn-secondary btn-block btn-lg" style="margin-top: 2rem;">
-                    Beitreten
-                </button>
-            </form>
+    {% if fehler %}
+    <div
+      class="alert alert-error"
+      style="max-width: 500px; margin: 0 auto 2rem"
+    >
+      {{ fehler }}
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- Spielmodus Auswahl -->
+  <section
+    class="grid grid-2 fade-in delay-1"
+    style="max-width: 900px; margin: 0 auto"
+  >
+    <!-- Neues Spiel erstellen -->
+    <div class="card">
+      <div class="card-header">
+        <h2 style="color: var(--accent-red); font-size: 1.5rem">
+          <i class="fa-solid fa-paw"></i> Neues Spiel
+        </h2>
+      </div>
+
+      <form action="{{ url_for('raum_erstellen') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label">Dein Name</label>
+          <input
+            type="text"
+            name="spieler_name"
+            class="form-input"
+            placeholder="Spielleiter"
+            maxlength="30"
+            required
+          />
         </div>
-    </section>
-    
-    <!-- Spielanleitung -->
-    <section class="fade-in delay-2" style="max-width: 900px; margin: 4rem auto 0;">
-        <div class="card">
-            <h3 style="color: var(--accent-gold); margin-bottom: 1.5rem;">Wie funktioniert es?</h3>
-            
-            <div class="grid grid-3" style="text-align: center;">
-                <div>
-                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--accent-gold);">
-                        <i class="fa-solid fa-plus-circle"></i>
-                    </div>
-                    <h4 class="mb-1">Raum erstellen</h4>
-                    <p class="text-muted">Erstelle einen Raum und teile den Code mit deinen Freunden.</p>
+
+        <div class="form-group">
+          <label class="form-label">Raumname</label>
+          <input
+            type="text"
+            name="raum_name"
+            class="form-input"
+            placeholder="Webwölfe Runde"
+            maxlength="50"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Spielerzahl (5-18)</label>
+          <input
+            type="number"
+            name="spieler_anzahl"
+            class="form-input"
+            value="8"
+            min="5"
+            max="18"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Spielmodus</label>
+          <select name="modus" class="form-input">
+            <option value="online">
+              Online - Jeder auf eigenem Gerät (ohne Erzähler)
+            </option>
+            <option value="gruppe">
+              Gruppe - Alle zusammen lokal (mit Erzähler)
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-checkbox">
+            <input type="checkbox" name="ist_erzaehler" />
+            <span>Ich bin der Erzähler (spiele nicht mit)</span>
+          </label>
+        </div>
+
+        <!-- Erweiterte Einstellungen Toggle -->
+        <div class="form-group">
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm"
+            onclick="toggleErweitert()"
+            style="width: 100%"
+          >
+            <i class="fa-solid fa-sliders" id="erweitert-icon"></i> Erweiterte
+            Einstellungen
+            <i class="fa-solid fa-chevron-down" id="erweitert-chevron"></i>
+          </button>
+        </div>
+
+        <!-- Erweiterte Einstellungen (versteckt) -->
+        <div id="erweiterte-einstellungen" style="display: none">
+          <!-- Regelset Auswahl -->
+          <div class="form-group">
+            <label class="form-label">Regelset</label>
+            <select name="regelset" class="form-input">
+              <option value="standard">Standard - Klassische Regeln</option>
+              <option value="schnell">Schnellspiel - Kürzere Zeiten</option>
+              <option value="chaos">Chaos - Mehr Überraschungen</option>
+              <option value="profi">
+                Profi - Weniger Hinweise, mehr Strategie
+              </option>
+              <option value="party">Party - Lockere Regeln</option>
+            </select>
+          </div>
+
+          <!-- Hinweise aktivieren (nur Online) -->
+          <div class="form-group" id="hinweise-option">
+            <label class="form-checkbox">
+              <input type="checkbox" name="hinweise_aktiv" checked />
+              <span>Visuelle Hinweise aktivieren (Online-Modus)</span>
+            </label>
+            <small
+              class="text-muted"
+              style="display: block; margin-top: 0.25rem; font-size: 0.75rem"
+            >
+              Subtile visuelle Hinweise helfen dem Dorf, Werwölfe zu erkennen.
+            </small>
+          </div>
+
+          <!-- Audio-Erzähler (nur Online) -->
+          <div class="form-group" id="audio-option">
+            <label class="form-checkbox">
+              <input type="checkbox" name="audio_erzaehler" checked />
+              <span>Audio-Erzähler aktivieren (Online-Modus)</span>
+            </label>
+            <small
+              class="text-muted"
+              style="display: block; margin-top: 0.25rem; font-size: 0.75rem"
+            >
+              Das Spiel spricht die Erzähler-Texte automatisch vor.
+            </small>
+          </div>
+
+          <!-- Rollen-Auswahl -->
+          <div class="form-group">
+            <label class="form-label">Rollen-Auswahl</label>
+            <select
+              name="rollen_modus"
+              class="form-input"
+              onchange="toggleRollenAuswahl(this.value)"
+            >
+              <option value="auto">
+                Automatisch (empfohlen für Spielerzahl)
+              </option>
+              <option value="manuell">Manuell auswählen</option>
+            </select>
+          </div>
+
+          <!-- Manuelle Rollen-Auswahl -->
+          <div id="manuelle-rollen" style="display: none">
+            <div class="form-group">
+              <label class="form-label">Verfügbare Rollen</label>
+              <div
+                style="
+                  max-height: 300px;
+                  overflow-y: auto;
+                  background: rgba(0, 0, 0, 0.2);
+                  border-radius: 8px;
+                  padding: 1rem;
+                "
+              >
+                <!-- Grundrollen -->
+                <div style="margin-bottom: 1rem">
+                  <strong style="color: var(--accent-gold); font-size: 0.875rem"
+                    >Grundrollen</strong
+                  >
+                  <div
+                    class="rollen-grid"
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(2, 1fr);
+                      gap: 0.5rem;
+                      margin-top: 0.5rem;
+                    "
+                  >
+                    {% for rolle, info in
+                    rollen_nach_kategorie.get('grundrollen', {}).items() %}
+                    <label
+                      class="form-checkbox rollen-checkbox"
+                      style="
+                        font-size: 0.875rem;
+                        padding: 0.5rem;
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 4px;
+                      "
+                    >
+                      <input
+                        type="checkbox"
+                        name="rollen"
+                        value="{{ rolle }}"
+                        {%
+                        if
+                        rolle
+                        in
+                        ['Werwolf', 'Dorfbewohner', 'Seherin']
+                        %}checked{%
+                        endif
+                        %}
+                      />
+                      <span
+                        ><i
+                          class="{{ info.icon }}"
+                          style="color: {{ info.farbe }}; margin-right: 0.25rem;"
+                        ></i>
+                        {{ rolle }}</span
+                      >
+                    </label>
+                    {% endfor %}
+                  </div>
                 </div>
-                <div>
-                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--accent-blue);">
-                        <i class="fa-solid fa-user-secret"></i>
-                    </div>
-                    <h4 class="mb-1">Rollen erhalten</h4>
-                    <p class="text-muted">Jeder Spieler bekommt eine geheime Rolle zugewiesen.</p>
+
+                <!-- Dorfbewohner-Varianten -->
+                <div style="margin-bottom: 1rem">
+                  <strong style="color: var(--text-muted); font-size: 0.875rem"
+                    >Dorfbewohner-Varianten</strong
+                  >
+                  <div
+                    class="rollen-grid"
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(2, 1fr);
+                      gap: 0.5rem;
+                      margin-top: 0.5rem;
+                    "
+                  >
+                    {% for rolle, info in
+                    rollen_nach_kategorie.get('dorfbewohner', {}).items() %}
+                    <label
+                      class="form-checkbox rollen-checkbox"
+                      style="
+                        font-size: 0.875rem;
+                        padding: 0.5rem;
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 4px;
+                      "
+                    >
+                      <input
+                        type="checkbox"
+                        name="rollen"
+                        value="{{ rolle }}"
+                      />
+                      <span
+                        ><i
+                          class="{{ info.icon }}"
+                          style="color: {{ info.farbe }}; margin-right: 0.25rem;"
+                        ></i>
+                        {{ rolle }}</span
+                      >
+                    </label>
+                    {% endfor %}
+                  </div>
                 </div>
-                <div>
-                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--accent-red);">
-                        <i class="fa-solid fa-gamepad"></i>
-                    </div>
-                    <h4 class="mb-1">Spielen!</h4>
-                    <p class="text-muted">Entlarve die Werwölfe oder eliminiere das Dorf.</p>
+
+                <!-- Werwolf-Varianten -->
+                <div style="margin-bottom: 1rem">
+                  <strong style="color: var(--accent-red); font-size: 0.875rem"
+                    >Werwolf-Varianten</strong
+                  >
+                  <div
+                    class="rollen-grid"
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(2, 1fr);
+                      gap: 0.5rem;
+                      margin-top: 0.5rem;
+                    "
+                  >
+                    {% for rolle, info in rollen_nach_kategorie.get('werwolf',
+                    {}).items() %}
+                    <label
+                      class="form-checkbox rollen-checkbox"
+                      style="
+                        font-size: 0.875rem;
+                        padding: 0.5rem;
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 4px;
+                      "
+                    >
+                      <input
+                        type="checkbox"
+                        name="rollen"
+                        value="{{ rolle }}"
+                      />
+                      <span
+                        ><i
+                          class="{{ info.icon }}"
+                          style="color: {{ info.farbe }}; margin-right: 0.25rem;"
+                        ></i>
+                        {{ rolle }}</span
+                      >
+                    </label>
+                    {% endfor %}
+                  </div>
                 </div>
+
+                <!-- Seher-Varianten -->
+                <div style="margin-bottom: 1rem">
+                  <strong style="color: #7c3aed; font-size: 0.875rem"
+                    >Seher-Varianten</strong
+                  >
+                  <div
+                    class="rollen-grid"
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(2, 1fr);
+                      gap: 0.5rem;
+                      margin-top: 0.5rem;
+                    "
+                  >
+                    {% for rolle, info in rollen_nach_kategorie.get('seher',
+                    {}).items() %}
+                    <label
+                      class="form-checkbox rollen-checkbox"
+                      style="
+                        font-size: 0.875rem;
+                        padding: 0.5rem;
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 4px;
+                      "
+                    >
+                      <input
+                        type="checkbox"
+                        name="rollen"
+                        value="{{ rolle }}"
+                      />
+                      <span
+                        ><i
+                          class="{{ info.icon }}"
+                          style="color: {{ info.farbe }}; margin-right: 0.25rem;"
+                        ></i>
+                        {{ rolle }}</span
+                      >
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Spezial-Rollen -->
+                <div>
+                  <strong style="color: #06b6d4; font-size: 0.875rem"
+                    >Spezial-Rollen</strong
+                  >
+                  <div
+                    class="rollen-grid"
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(2, 1fr);
+                      gap: 0.5rem;
+                      margin-top: 0.5rem;
+                    "
+                  >
+                    {% for rolle, info in rollen_nach_kategorie.get('spezial',
+                    {}).items() %}
+                    <label
+                      class="form-checkbox rollen-checkbox"
+                      style="
+                        font-size: 0.875rem;
+                        padding: 0.5rem;
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 4px;
+                      "
+                    >
+                      <input
+                        type="checkbox"
+                        name="rollen"
+                        value="{{ rolle }}"
+                      />
+                      <span
+                        ><i
+                          class="{{ info.icon }}"
+                          style="color: {{ info.farbe }}; margin-right: 0.25rem;"
+                        ></i>
+                        {{ rolle }}</span
+                      >
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+              <small
+                class="text-muted"
+                style="display: block; margin-top: 0.5rem"
+              >
+                Wähle die Rollen, die im Spiel vorkommen sollen.
+              </small>
             </div>
+          </div>
         </div>
-    </section>
-    
-    <!-- Spielmodi Erklärung -->
-    <section class="fade-in delay-2" style="max-width: 900px; margin: 2rem auto 0;">
-        <div class="grid grid-2">
-            <div class="card" style="border-color: var(--accent-blue);">
-                <h4 style="color: var(--accent-blue);">
-                    <i class="fa-solid fa-wifi"></i> Online-Modus
-                </h4>
-                <p class="text-muted mb-2">Jeder Spieler auf eigenem Gerät - das Spiel erzählt automatisch.</p>
-                <ul class="text-muted" style="font-size: 0.9rem; padding-left: 1.5rem;">
-                    <li>Kein Erzähler nötig</li>
-                    <li>Das Spiel führt durch alle Phasen</li>
-                    <li>Automatische Nachrichten und Anweisungen</li>
-                    <li>Perfekt für Remote-Spielrunden</li>
-                </ul>
-            </div>
-            <div class="card" style="border-color: var(--accent-gold);">
-                <h4 style="color: var(--accent-gold);">
-                    <i class="fa-solid fa-users"></i> Gruppen-Modus
-                </h4>
-                <p class="text-muted mb-2">Alle zusammen vor Ort - der Erzähler erhält Anleitungen.</p>
-                <ul class="text-muted" style="font-size: 0.9rem; padding-left: 1.5rem;">
-                    <li>Mit menschlichem Erzähler</li>
-                    <li>Erzähler erhält vorgefertigte Texte</li>
-                    <li>Klassisches Spielerlebnis</li>
-                    <li>Perfekt für Partys und Spieleabende</li>
-                </ul>
-            </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg">
+          Spiel erstellen
+        </button>
+      </form>
+    </div>
+
+    <!-- Bestehendem Spiel beitreten -->
+    <div class="card">
+      <div class="card-header">
+        <h2 style="color: var(--accent-blue); font-size: 1.5rem">
+          <i class="fa-solid fa-door-open"></i> Spiel beitreten
+        </h2>
+      </div>
+
+      <form action="{{ url_for('raum_beitreten') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label">Dein Name</label>
+          <input
+            type="text"
+            name="spieler_name"
+            class="form-input"
+            placeholder="Dein Name"
+            maxlength="30"
+            required
+          />
         </div>
-    </section>
-    
-    <!-- Rollen Übersicht (Auswahl) -->
-    <section class="fade-in delay-3" style="max-width: 900px; margin: 3rem auto 0;">
-        <h3 class="text-center mb-3" style="color: var(--accent-gold);">Die wichtigsten Rollen</h3>
-        
-        <div class="grid grid-3">
-            <div class="card" style="border-color: var(--accent-red);">
-                <h4 style="color: var(--accent-red);">
-                    <i class="fa-solid fa-paw"></i> Werwolf
-                </h4>
-                <p class="text-muted">Töte jede Nacht einen Dorfbewohner und bleibe unentdeckt.</p>
-            </div>
-            <div class="card">
-                <h4 style="color: #7c3aed;">
-                    <i class="fa-solid fa-eye"></i> Seherin
-                </h4>
-                <p class="text-muted">Erfahre jede Nacht die wahre Identität eines Spielers.</p>
-            </div>
-            <div class="card">
-                <h4 style="color: var(--accent-green);">
-                    <i class="fa-solid fa-hat-wizard"></i> Hexe
-                </h4>
-                <p class="text-muted">Heile oder vergifte - aber jeder Trank wirkt nur einmal.</p>
-            </div>
-            <div class="card">
-                <h4 style="color: #b8860b;">
-                    <i class="fa-solid fa-crosshairs"></i> Jäger
-                </h4>
-                <p class="text-muted">Wenn du stirbst, nimmst du jemanden mit in den Tod.</p>
-            </div>
-            <div class="card">
-                <h4 style="color: #ff69b4;">
-                    <i class="fa-solid fa-heart"></i> Amor
-                </h4>
-                <p class="text-muted">Verliebe zwei Spieler - sie gewinnen nur gemeinsam.</p>
-            </div>
-            <div class="card">
-                <h4 style="color: #10b981;">
-                    <i class="fa-solid fa-heart-pulse"></i> Heiler
-                </h4>
-                <p class="text-muted">Schütze jede Nacht einen Spieler vor den Wölfen.</p>
-            </div>
+
+        <div class="form-group">
+          <label class="form-label">Raumcode</label>
+          <input
+            type="text"
+            name="code"
+            class="form-input"
+            placeholder="ABC123"
+            maxlength="6"
+            style="
+              text-transform: uppercase;
+              letter-spacing: 0.2em;
+              font-size: 1.5rem;
+              text-align: center;
+            "
+            required
+          />
         </div>
-        
-        <div class="text-center mt-3">
-            <a href="{{ url_for('rollen_uebersicht') }}" class="btn btn-ghost">
-                Alle {{ alle_rollen|length }} Rollen ansehen <i class="fa-solid fa-arrow-right"></i>
-            </a>
+
+        <div style="flex: 1"></div>
+
+        <button
+          type="submit"
+          class="btn btn-secondary btn-block btn-lg"
+          style="margin-top: 2rem"
+        >
+          Beitreten
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Spielanleitung -->
+  <section
+    class="fade-in delay-2"
+    style="max-width: 900px; margin: 4rem auto 0"
+  >
+    <div class="card">
+      <h3 style="color: var(--accent-gold); margin-bottom: 1.5rem">
+        Wie funktioniert es?
+      </h3>
+
+      <div class="grid grid-3" style="text-align: center">
+        <div>
+          <div
+            style="
+              font-size: 2.5rem;
+              margin-bottom: 0.5rem;
+              color: var(--accent-gold);
+            "
+          >
+            <i class="fa-solid fa-plus-circle"></i>
+          </div>
+          <h4 class="mb-1">Raum erstellen</h4>
+          <p class="text-muted">
+            Erstelle einen Raum und teile den Code mit deinen Freunden.
+          </p>
         </div>
-    </section>
+        <div>
+          <div
+            style="
+              font-size: 2.5rem;
+              margin-bottom: 0.5rem;
+              color: var(--accent-blue);
+            "
+          >
+            <i class="fa-solid fa-user-secret"></i>
+          </div>
+          <h4 class="mb-1">Rollen erhalten</h4>
+          <p class="text-muted">
+            Jeder Spieler bekommt eine geheime Rolle zugewiesen.
+          </p>
+        </div>
+        <div>
+          <div
+            style="
+              font-size: 2.5rem;
+              margin-bottom: 0.5rem;
+              color: var(--accent-red);
+            "
+          >
+            <i class="fa-solid fa-gamepad"></i>
+          </div>
+          <h4 class="mb-1">Spielen!</h4>
+          <p class="text-muted">
+            Entlarve die Werwölfe oder eliminiere das Dorf.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Spielmodi Erklärung -->
+  <section
+    class="fade-in delay-2"
+    style="max-width: 900px; margin: 2rem auto 0"
+  >
+    <div class="grid grid-2">
+      <div class="card" style="border-color: var(--accent-blue)">
+        <h4 style="color: var(--accent-blue)">
+          <i class="fa-solid fa-wifi"></i> Online-Modus
+        </h4>
+        <p class="text-muted mb-2">
+          Jeder Spieler auf eigenem Gerät - das Spiel erzählt automatisch.
+        </p>
+        <ul class="text-muted" style="font-size: 0.9rem; padding-left: 1.5rem">
+          <li>Kein Erzähler nötig</li>
+          <li>Das Spiel führt durch alle Phasen</li>
+          <li>Automatische Nachrichten und Anweisungen</li>
+          <li>Perfekt für Remote-Spielrunden</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color: var(--accent-gold)">
+        <h4 style="color: var(--accent-gold)">
+          <i class="fa-solid fa-users"></i> Gruppen-Modus
+        </h4>
+        <p class="text-muted mb-2">
+          Alle zusammen vor Ort - der Erzähler erhält Anleitungen.
+        </p>
+        <ul class="text-muted" style="font-size: 0.9rem; padding-left: 1.5rem">
+          <li>Mit menschlichem Erzähler</li>
+          <li>Erzähler erhält vorgefertigte Texte</li>
+          <li>Klassisches Spielerlebnis</li>
+          <li>Perfekt für Partys und Spieleabende</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rollen Übersicht (Auswahl) -->
+  <section
+    class="fade-in delay-3"
+    style="max-width: 900px; margin: 3rem auto 0"
+  >
+    <h3 class="text-center mb-3" style="color: var(--accent-gold)">
+      Die wichtigsten Rollen
+    </h3>
+
+    <div class="grid grid-3">
+      <div class="card" style="border-color: var(--accent-red)">
+        <h4 style="color: var(--accent-red)">
+          <i class="fa-solid fa-paw"></i> Werwolf
+        </h4>
+        <p class="text-muted">
+          Töte jede Nacht einen Dorfbewohner und bleibe unentdeckt.
+        </p>
+      </div>
+      <div class="card">
+        <h4 style="color: #7c3aed"><i class="fa-solid fa-eye"></i> Seherin</h4>
+        <p class="text-muted">
+          Erfahre jede Nacht die wahre Identität eines Spielers.
+        </p>
+      </div>
+      <div class="card">
+        <h4 style="color: var(--accent-green)">
+          <i class="fa-solid fa-hat-wizard"></i> Hexe
+        </h4>
+        <p class="text-muted">
+          Heile oder vergifte - aber jeder Trank wirkt nur einmal.
+        </p>
+      </div>
+      <div class="card">
+        <h4 style="color: #b8860b">
+          <i class="fa-solid fa-crosshairs"></i> Jäger
+        </h4>
+        <p class="text-muted">
+          Wenn du stirbst, nimmst du jemanden mit in den Tod.
+        </p>
+      </div>
+      <div class="card">
+        <h4 style="color: #ff69b4"><i class="fa-solid fa-heart"></i> Amor</h4>
+        <p class="text-muted">
+          Verliebe zwei Spieler - sie gewinnen nur gemeinsam.
+        </p>
+      </div>
+      <div class="card">
+        <h4 style="color: #10b981">
+          <i class="fa-solid fa-heart-pulse"></i> Heiler
+        </h4>
+        <p class="text-muted">
+          Schütze jede Nacht einen Spieler vor den Wölfen.
+        </p>
+      </div>
+    </div>
+
+    <div class="text-center mt-3">
+      <a href="{{ url_for('rollen_uebersicht') }}" class="btn btn-ghost">
+        Alle {{ alle_rollen|length }} Rollen ansehen
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+  </section>
 </div>
 
 <script>
-// Toggle erweiterte Einstellungen
-function toggleErweitert() {
-    const erweitert = document.getElementById('erweiterte-einstellungen');
-    const chevron = document.getElementById('erweitert-chevron');
-    
-    if (erweitert.style.display === 'none') {
-        erweitert.style.display = 'block';
-        chevron.classList.remove('fa-chevron-down');
-        chevron.classList.add('fa-chevron-up');
+  // Toggle erweiterte Einstellungen
+  function toggleErweitert() {
+    const erweitert = document.getElementById("erweiterte-einstellungen");
+    const chevron = document.getElementById("erweitert-chevron");
+
+    if (erweitert.style.display === "none") {
+      erweitert.style.display = "block";
+      chevron.classList.remove("fa-chevron-down");
+      chevron.classList.add("fa-chevron-up");
     } else {
-        erweitert.style.display = 'none';
-        chevron.classList.remove('fa-chevron-up');
-        chevron.classList.add('fa-chevron-down');
+      erweitert.style.display = "none";
+      chevron.classList.remove("fa-chevron-up");
+      chevron.classList.add("fa-chevron-down");
     }
-}
+  }
 
-// Toggle Rollen-Auswahl
-function toggleRollenAuswahl(value) {
-    const manuelleRollen = document.getElementById('manuelle-rollen');
-    manuelleRollen.style.display = value === 'manuell' ? 'block' : 'none';
-}
+  // Toggle Rollen-Auswahl
+  function toggleRollenAuswahl(value) {
+    const manuelleRollen = document.getElementById("manuelle-rollen");
+    manuelleRollen.style.display = value === "manuell" ? "block" : "none";
+  }
 
-// Zeige/Verstecke Online-spezifische Optionen basierend auf Modus
-document.querySelector('select[name="modus"]').addEventListener('change', function() {
-    const isOnline = this.value === 'online';
-    document.getElementById('hinweise-option').style.display = isOnline ? 'block' : 'none';
-    document.getElementById('audio-option').style.display = isOnline ? 'block' : 'none';
-});
+  // Zeige/Verstecke Online-spezifische Optionen basierend auf Modus
+  document
+    .querySelector('select[name="modus"]')
+    .addEventListener("change", function () {
+      const isOnline = this.value === "online";
+      document.getElementById("hinweise-option").style.display = isOnline
+        ? "block"
+        : "none";
+      document.getElementById("audio-option").style.display = isOnline
+        ? "block"
+        : "none";
+    });
 </script>
 {% endblock %}

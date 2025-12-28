@@ -1,809 +1,865 @@
-{% extends 'struktur.html' %}
-
-{% block title %}{{ raum.name }} - Runde {{ raum.runde }} | {{ spiel_name }}{% endblock %}
-
-{% block head %}
+{% extends 'struktur.html' %} {% block title %}{{ raum.name }} - Runde {{
+raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 <style>
-    .game-container {
-        display: grid;
-        grid-template-columns: 1fr 300px;
-        gap: 1.5rem;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-    
-    @media (max-width: 900px) {
-        .game-container {
-            grid-template-columns: 1fr;
-        }
-    }
-    
-    .phase-banner {
-        background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
-        margin-bottom: 1.5rem;
-    }
-    
-    .phase-name {
-        font-size: 1.5rem;
-        color: var(--accent-gold);
-        margin-bottom: 0.5rem;
-    }
-    
-    .rolle-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-weight: 600;
-    }
-    
-    .rolle-werwolf { background: var(--accent-red); color: white; }
-    .rolle-dorf { background: var(--accent-blue); color: white; }
-    .rolle-hexe { background: var(--accent-green); color: white; }
-    .rolle-seherin { background: #7b68ee; color: white; }
-    .rolle-jäger { background: #b8860b; color: white; }
-    .rolle-amor { background: #ff69b4; color: white; }
-    .rolle-erzähler { background: var(--accent-gold); color: var(--bg-primary); }
-    
-    .spieler-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 1rem;
-    }
-    
-    .spieler-card {
-        background: var(--bg-primary);
-        border: 2px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-    
-    .spieler-card:hover:not(.tot):not(.disabled) {
-        border-color: var(--accent-gold);
-        transform: translateY(-4px);
-    }
-    
-    .spieler-card.selected {
-        border-color: var(--accent-red);
-        box-shadow: 0 0 20px var(--accent-red-glow);
-    }
-    
-    .spieler-card.tot {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-    
-    .spieler-card.tot::after {
-        content: 'TOT';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-15deg);
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--accent-red);
-    }
-    
-    .spieler-avatar {
-        width: 60px;
-        height: 60px;
-        background: var(--accent-blue);
-        border-radius: 50%;
-        margin: 0 auto 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: white;
-    }
-    
-    .spieler-card.werwolf .spieler-avatar {
-        background: var(--accent-red);
-    }
-    
-    .action-panel {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-top: 1.5rem;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .sidebar-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1rem;
-    }
-    
-    .log-list {
-        max-height: 200px;
-        overflow-y: auto;
-        font-size: 0.875rem;
-    }
-    
-    .log-entry {
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .log-entry:last-child {
-        border-bottom: none;
-    }
-    
-    .log-time {
-        color: var(--text-secondary);
-        font-size: 0.75rem;
-    }
-    
-    .chat-input {
-        display: flex;
-        gap: 0.5rem;
-        margin-top: 1rem;
-    }
-    
-    .chat-messages {
-        max-height: 150px;
-        overflow-y: auto;
-        margin-bottom: 0.5rem;
-    }
-    
-    .chat-msg {
-        padding: 0.5rem;
-        background: var(--bg-primary);
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-    }
-    
-    .chat-msg.tot {
-        opacity: 0.6;
-        font-style: italic;
-    }
-    
-    .nacht-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 20, 0.8);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-    
-    .nacht-overlay.aktiv {
-        display: flex;
-    }
-    
-    .nacht-content {
-        text-align: center;
-        color: white;
-    }
-    
-    .nacht-content h2 {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-    }
-    
-    .mond-icon {
-        font-size: 5rem;
-        margin-bottom: 1rem;
-    }
-    
-    /* Erzähler-Panel */
-    .erzaehler-panel {
-        background: linear-gradient(135deg, var(--bg-card) 0%, rgba(212, 165, 116, 0.1) 100%);
-        border: 2px solid var(--accent-gold);
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-top: 1.5rem;
-    }
-    
-    .erzaehler-text {
-        background: var(--bg-primary);
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 1rem 0;
-        border-left: 4px solid var(--accent-gold);
-        font-style: italic;
-    }
-    
-    .erzaehler-anweisung {
-        background: rgba(196, 30, 58, 0.1);
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 1rem 0;
-        border-left: 4px solid var(--accent-red);
-        font-size: 0.9rem;
-    }
-</style>
-{% endblock %}
+  .game-container {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 
-{% block content %}
+  @media (max-width: 900px) {
+    .game-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .phase-banner {
+    background: linear-gradient(
+      135deg,
+      var(--bg-card) 0%,
+      var(--bg-secondary) 100%
+    );
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .phase-name {
+    font-size: 1.5rem;
+    color: var(--accent-gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .rolle-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  .rolle-werwolf {
+    background: var(--accent-red);
+    color: white;
+  }
+  .rolle-dorf {
+    background: var(--accent-blue);
+    color: white;
+  }
+  .rolle-hexe {
+    background: var(--accent-green);
+    color: white;
+  }
+  .rolle-seherin {
+    background: #7b68ee;
+    color: white;
+  }
+  .rolle-jäger {
+    background: #b8860b;
+    color: white;
+  }
+  .rolle-amor {
+    background: #ff69b4;
+    color: white;
+  }
+  .rolle-erzähler {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+  }
+
+  .spieler-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .spieler-card {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .spieler-card:hover:not(.tot):not(.disabled) {
+    border-color: var(--accent-gold);
+    transform: translateY(-4px);
+  }
+
+  .spieler-card.selected {
+    border-color: var(--accent-red);
+    box-shadow: 0 0 20px var(--accent-red-glow);
+  }
+
+  .spieler-card.tot {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .spieler-card.tot::after {
+    content: "TOT";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--accent-red);
+  }
+
+  .spieler-avatar {
+    width: 60px;
+    height: 60px;
+    background: var(--accent-blue);
+    border-radius: 50%;
+    margin: 0 auto 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+  }
+
+  .spieler-card.werwolf .spieler-avatar {
+    background: var(--accent-red);
+  }
+
+  .action-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .sidebar-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+  }
+
+  .log-list {
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.875rem;
+  }
+
+  .log-entry {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .log-entry:last-child {
+    border-bottom: none;
+  }
+
+  .log-time {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .chat-input {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .chat-messages {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 0.5rem;
+  }
+
+  .chat-msg {
+    padding: 0.5rem;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+  }
+
+  .chat-msg.tot {
+    opacity: 0.6;
+    font-style: italic;
+  }
+
+  .nacht-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 20, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .nacht-overlay.aktiv {
+    display: flex;
+  }
+
+  .nacht-content {
+    text-align: center;
+    color: white;
+  }
+
+  .nacht-content h2 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .mond-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Erzähler-Panel */
+  .erzaehler-panel {
+    background: linear-gradient(
+      135deg,
+      var(--bg-card) 0%,
+      rgba(212, 165, 116, 0.1) 100%
+    );
+    border: 2px solid var(--accent-gold);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .erzaehler-text {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid var(--accent-gold);
+    font-style: italic;
+  }
+
+  .erzaehler-anweisung {
+    background: rgba(196, 30, 58, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid var(--accent-red);
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %} {% block content %}
 <div class="container">
-    <div class="game-container">
-        <!-- Hauptbereich -->
-        <div class="main-area">
-            <!-- Phasen-Banner -->
-            <div class="phase-banner fade-in">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                        <div class="phase-name" id="phase-name">
-                            <i class="fa-solid fa-{{ 'moon' if 'nacht' in raum.aktuelle_phase else 'sun' }}"></i>
-                            {{ raum.aktuelle_phase|replace('_', ' ')|title }}
-                        </div>
-                        <div class="text-muted">Runde {{ raum.runde }}</div>
-                    </div>
-                    <div>
-                        <span class="rolle-badge rolle-{{ spieler.rolle|lower if spieler.rolle else 'dorf' }}">
-                            {{ spieler.rolle or 'Warte...' }}
-                        </span>
-                    </div>
-                </div>
+  <div class="game-container">
+    <!-- Hauptbereich -->
+    <div class="main-area">
+      <!-- Phasen-Banner -->
+      <div class="phase-banner fade-in">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+          "
+        >
+          <div>
+            <div class="phase-name" id="phase-name">
+              <i
+                class="fa-solid fa-{{ 'moon' if 'nacht' in raum.aktuelle_phase else 'sun' }}"
+              ></i>
+              {{ raum.aktuelle_phase|replace('_', ' ')|title }}
             </div>
-            
-            <!-- Rollenbeschreibung -->
-            {% if rolle_info %}
-            <div class="card mb-3 fade-in delay-1">
-                <h4 style="color: {{ rolle_info.farbe }}; margin-bottom: 0.5rem;">
-                    <i class="{{ rolle_info.icon }}"></i> {{ spieler.rolle }}
-                </h4>
-                <p>{{ rolle_info.beschreibung }}</p>
-            </div>
-            {% endif %}
-            
-            <!-- Status Nachricht -->
-            <div id="status-nachricht" class="alert alert-info mb-3" style="display: none;"></div>
-            
-            <!-- Spielerauswahl -->
-            <div class="card fade-in delay-2">
-                <h3 class="mb-2"><i class="fa-solid fa-users"></i> Spieler</h3>
-                <div class="spieler-grid" id="spieler-grid">
-                    {% for s in alle_spieler %}
-                    <div class="spieler-card {{ 'tot' if not s.ist_am_leben else '' }} {{ 'werwolf' if spieler.rolle == 'Werwolf' and s.rolle == 'Werwolf' and s.id != spieler.id else '' }} {{ 'erzaehler-card' if s.ist_erzaehler else '' }}"
-                         data-id="{{ s.id }}"
-                         data-name="{{ s.name }}"
-                         data-ist-erzaehler="{{ s.ist_erzaehler|lower }}"
-                         onclick="selectSpieler({{ s.id }})">
-                        <div class="spieler-avatar">{{ s.name[0]|upper }}</div>
-                        <div style="font-weight: 600;">{{ s.name }}</div>
-                        {% if s.id == spieler.id %}
-                        <div class="text-muted" style="font-size: 0.75rem;">(Du)</div>
-                        {% endif %}
-                        {% if s.ist_erzaehler %}
-                        <div class="text-muted" style="font-size: 0.75rem;">(Erzaehler)</div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            
-            <!-- Aktions-Panel -->
-            <div class="action-panel fade-in delay-3" id="action-panel">
-                <div class="action-buttons" id="action-buttons">
-                    <!-- Werden dynamisch basierend auf Phase/Rolle gefüllt -->
-                </div>
-            </div>
-            
-            <!-- Erzähler Controls (Gruppen-Modus) -->
-            {% if spieler.ist_erzaehler %}
-            <div class="erzaehler-panel">
-                <h3 style="color: var(--accent-gold);">
-                    <i class="fa-solid fa-book-open"></i> Erzähler-Steuerung
-                </h3>
-                
-                <!-- Erzählertext für aktuelle Phase -->
-                <div id="erzaehler-text-container">
-                    {% if erzaehler_text %}
-                    <div class="erzaehler-text">
-                        <strong>Vorlesen:</strong><br>
-                        "{{ erzaehler_text.text }}"
-                    </div>
-                    {% if erzaehler_text.anweisung %}
-                    <div class="erzaehler-anweisung">
-                        <i class="fa-solid fa-info-circle"></i> <strong>Anweisung:</strong><br>
-                        {{ erzaehler_text.anweisung }}
-                    </div>
-                    {% endif %}
-                    {% endif %}
-                </div>
-                
-                <div class="action-buttons mt-2">
-                    <button class="btn btn-primary" onclick="naechstePhase()">
-                        <i class="fa-solid fa-forward"></i> Nächste Phase
-                    </button>
-                </div>
-            </div>
-            {% endif %}
+            <div class="text-muted">Runde {{ raum.runde }}</div>
+          </div>
+          <div>
+            <span
+              class="rolle-badge rolle-{{ spieler.rolle|lower if spieler.rolle else 'dorf' }}"
+            >
+              {{ spieler.rolle or 'Warte...' }}
+            </span>
+          </div>
         </div>
-        
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <!-- Dein Status -->
-            <div class="sidebar-card">
-                <h4 class="mb-2"><i class="fa-solid fa-user"></i> Dein Status</h4>
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div class="spieler-avatar" style="width: 50px; height: 50px; font-size: 1.25rem;">
-                        {{ spieler.name[0]|upper }}
-                    </div>
-                    <div>
-                        <div style="font-weight: 600;">{{ spieler.name }}</div>
-                        <div class="text-muted">{{ spieler.rolle }}</div>
-                        <div style="color: {{ 'var(--accent-green)' if spieler.ist_am_leben else 'var(--accent-red)' }};">
-                            {{ 'Lebendig' if spieler.ist_am_leben else 'Tot' }}
-                        </div>
-                    </div>
-                </div>
-                
-                {% if spieler.rolle == 'Hexe' %}
-                <div class="mt-2" style="font-size: 0.875rem;">
-                    <div><i class="fa-solid fa-flask"></i> Heiltrank: {{ 'Vorhanden' if spieler.hexe_heiltrank else 'Verbraucht' }}</div>
-                    <div><i class="fa-solid fa-skull-crossbones"></i> Gifttrank: {{ 'Vorhanden' if spieler.hexe_gifttrank else 'Verbraucht' }}</div>
-                </div>
-                {% endif %}
-                
-                {% if spieler.rolle == 'Jäger' %}
-                <div class="mt-2" style="font-size: 0.875rem;">
-                    <div><i class="fa-solid fa-crosshairs"></i> Schuss: {{ 'Bereit' if spieler.jaeger_schuss else 'Abgefeuert' }}</div>
-                </div>
-                {% endif %}
-            </div>
-            
-            <!-- Spielverlauf -->
-            <div class="sidebar-card">
-                <h4 class="mb-2"><i class="fa-solid fa-scroll"></i> Verlauf</h4>
-                <div class="log-list" id="log-list">
-                    {% for log in logs %}
-                    <div class="log-entry">
-                        <div class="log-time">{{ log.zeitpunkt.strftime('%H:%M') }}</div>
-                        <div>{{ log.nachricht }}</div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            
-            <!-- Chat -->
-            <div class="sidebar-card">
-                <h4 class="mb-2"><i class="fa-solid fa-comments"></i> Chat</h4>
-                <div class="chat-messages" id="chat-messages"></div>
-                <div class="chat-input">
-                    <input type="text" class="form-input" id="chat-input" 
-                           placeholder="Nachricht..." maxlength="500">
-                    <button class="btn btn-ghost" onclick="sendChat()">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
+      </div>
+
+      <!-- Rollenbeschreibung -->
+      {% if rolle_info %}
+      <div class="card mb-3 fade-in delay-1">
+        <h4 style="color: {{ rolle_info.farbe }}; margin-bottom: 0.5rem;">
+          <i class="{{ rolle_info.icon }}"></i> {{ spieler.rolle }}
+        </h4>
+        <p>{{ rolle_info.beschreibung }}</p>
+      </div>
+      {% endif %}
+
+      <!-- Status Nachricht -->
+      <div
+        id="status-nachricht"
+        class="alert alert-info mb-3"
+        style="display: none"
+      ></div>
+
+      <!-- Spielerauswahl -->
+      <div class="card fade-in delay-2">
+        <h3 class="mb-2"><i class="fa-solid fa-users"></i> Spieler</h3>
+        <div class="spieler-grid" id="spieler-grid">
+          {% for s in alle_spieler %}
+          <div
+            class="spieler-card {{ 'tot' if not s.ist_am_leben else '' }} {{ 'werwolf' if spieler.rolle == 'Werwolf' and s.rolle == 'Werwolf' and s.id != spieler.id else '' }} {{ 'erzaehler-card' if s.ist_erzaehler else '' }}"
+            data-id="{{ s.id }}"
+            data-name="{{ s.name }}"
+            data-ist-erzaehler="{{ s.ist_erzaehler|lower }}"
+            onclick="selectSpieler({{ s.id }})"
+          >
+            <div class="spieler-avatar">{{ s.name[0]|upper }}</div>
+            <div style="font-weight: 600">{{ s.name }}</div>
+            {% if s.id == spieler.id %}
+            <div class="text-muted" style="font-size: 0.75rem">(Du)</div>
+            {% endif %} {% if s.ist_erzaehler %}
+            <div class="text-muted" style="font-size: 0.75rem">(Erzaehler)</div>
+            {% endif %}
+          </div>
+          {% endfor %}
         </div>
+      </div>
+
+      <!-- Aktions-Panel -->
+      <div class="action-panel fade-in delay-3" id="action-panel">
+        <div class="action-buttons" id="action-buttons">
+          <!-- Werden dynamisch basierend auf Phase/Rolle gefüllt -->
+        </div>
+      </div>
+
+      <!-- Erzähler Controls (Gruppen-Modus) -->
+      {% if spieler.ist_erzaehler %}
+      <div class="erzaehler-panel">
+        <h3 style="color: var(--accent-gold)">
+          <i class="fa-solid fa-book-open"></i> Erzähler-Steuerung
+        </h3>
+
+        <!-- Erzählertext für aktuelle Phase -->
+        <div id="erzaehler-text-container">
+          {% if erzaehler_text %}
+          <div class="erzaehler-text">
+            <strong>Vorlesen:</strong><br />
+            "{{ erzaehler_text.text }}"
+          </div>
+          {% if erzaehler_text.anweisung %}
+          <div class="erzaehler-anweisung">
+            <i class="fa-solid fa-info-circle"></i> <strong>Anweisung:</strong
+            ><br />
+            {{ erzaehler_text.anweisung }}
+          </div>
+          {% endif %} {% endif %}
+        </div>
+
+        <div class="action-buttons mt-2">
+          <button class="btn btn-primary" onclick="naechstePhase()">
+            <i class="fa-solid fa-forward"></i> Nächste Phase
+          </button>
+        </div>
+      </div>
+      {% endif %}
     </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Dein Status -->
+      <div class="sidebar-card">
+        <h4 class="mb-2"><i class="fa-solid fa-user"></i> Dein Status</h4>
+        <div style="display: flex; align-items: center; gap: 0.75rem">
+          <div
+            class="spieler-avatar"
+            style="width: 50px; height: 50px; font-size: 1.25rem"
+          >
+            {{ spieler.name[0]|upper }}
+          </div>
+          <div>
+            <div style="font-weight: 600">{{ spieler.name }}</div>
+            <div class="text-muted">{{ spieler.rolle }}</div>
+            <div
+              style="color: {{ 'var(--accent-green)' if spieler.ist_am_leben else 'var(--accent-red)' }};"
+            >
+              {{ 'Lebendig' if spieler.ist_am_leben else 'Tot' }}
+            </div>
+          </div>
+        </div>
+
+        {% if spieler.rolle == 'Hexe' %}
+        <div class="mt-2" style="font-size: 0.875rem">
+          <div>
+            <i class="fa-solid fa-flask"></i> Heiltrank: {{ 'Vorhanden' if
+            spieler.hexe_heiltrank else 'Verbraucht' }}
+          </div>
+          <div>
+            <i class="fa-solid fa-skull-crossbones"></i> Gifttrank: {{
+            'Vorhanden' if spieler.hexe_gifttrank else 'Verbraucht' }}
+          </div>
+        </div>
+        {% endif %} {% if spieler.rolle == 'Jäger' %}
+        <div class="mt-2" style="font-size: 0.875rem">
+          <div>
+            <i class="fa-solid fa-crosshairs"></i> Schuss: {{ 'Bereit' if
+            spieler.jaeger_schuss else 'Abgefeuert' }}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Spielverlauf -->
+      <div class="sidebar-card">
+        <h4 class="mb-2"><i class="fa-solid fa-scroll"></i> Verlauf</h4>
+        <div class="log-list" id="log-list">
+          {% for log in logs %}
+          <div class="log-entry">
+            <div class="log-time">{{ log.zeitpunkt.strftime('%H:%M') }}</div>
+            <div>{{ log.nachricht }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="sidebar-card">
+        <h4 class="mb-2"><i class="fa-solid fa-comments"></i> Chat</h4>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input">
+          <input
+            type="text"
+            class="form-input"
+            id="chat-input"
+            placeholder="Nachricht..."
+            maxlength="500"
+          />
+          <button class="btn btn-ghost" onclick="sendChat()">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Nacht Overlay -->
 <div class="nacht-overlay" id="nacht-overlay">
-    <div class="nacht-content">
-        <div class="mond-icon"><i class="fa-solid fa-moon"></i></div>
-        <h2>Die Nacht bricht an...</h2>
-        <p>Schlafe friedlich, Dorfbewohner.</p>
-    </div>
+  <div class="nacht-content">
+    <div class="mond-icon"><i class="fa-solid fa-moon"></i></div>
+    <h2>Die Nacht bricht an...</h2>
+    <p>Schlafe friedlich, Dorfbewohner.</p>
+  </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script>
-    const socket = io();
-    const raumCode = "{{ raum.code }}";
-    const spielerId = {{ spieler.id }};
-    const spielerRolle = "{{ spieler.rolle }}";
-    const istErzaehler = {{ 'true' if spieler.ist_erzaehler else 'false' }};
-    const spielModus = "{{ raum.modus }}";
-    
-    let selectedSpielerId = null;
-    let selectedSpielerIds = [];  // Für Amor (2 Spieler)
-    let aktuellePhase = "{{ raum.aktuelle_phase }}";
-    
-    // Raum beitreten
-    socket.emit('raum_beitreten', { code: raumCode });
-    
-    // Event Handler
-    socket.on('phase_geaendert', function(data) {
-        aktuellePhase = data.phase;
-        updatePhase(data.phase, data.runde);
-        if (data.erzaehler_text) {
-            updateErzaehlerText(data.erzaehler_text);
-        }
-    });
-    
-    socket.on('rolle_erhalten', function(data) {
-        showAlert('Deine Rolle: ' + data.rolle, 'success');
-    });
-    
-    socket.on('spieler_gestorben', function(data) {
-        const card = document.querySelector(`[data-id="${data.spieler_id}"]`);
-        if (card) {
-            card.classList.add('tot');
-        }
-        addLog(`${data.spieler_name} ist gestorben (${data.todesart})`);
-    });
-    
-    socket.on('seherin_ergebnis', function(data) {
-        const typ = data.ist_werwolf ? 'Werwolf!' : 'kein Werwolf';
-        showAlert(`${data.ziel_name} ist ${typ}`, data.ist_werwolf ? 'error' : 'success');
-    });
-    
-    socket.on('hexe_info', function(data) {
-        if (spielerRolle === 'Hexe') {
-            showAlert(`Das Werwolf-Opfer ist: ${data.opfer_name}`, 'info');
-        }
-    });
-    
-    socket.on('nacht_ergebnis', function(data) {
-        if (data.tote && data.tote.length > 0) {
-            const totenListe = data.tote.map(t => `${t.name} (${t.todesart || 'unbekannt'})`).join(', ');
-            console.log('[NACHT_ERGEBNIS]', totenListe);
-            // Show prominent death announcement
-            showAlert(`TOTE DER NACHT: ${totenListe}`, 'error');
-            addLog(`Tote der Nacht: ${totenListe}`);
-        } else {
-            showAlert('Niemand ist in der Nacht gestorben.', 'success');
-            addLog('Niemand ist in der Nacht gestorben.');
-        }
-    });
-    
-    socket.on('abstimmung_ergebnis', function(data) {
-        if (data.kein_opfer) {
-            showAlert(data.nachricht, 'info');
-        } else {
-            showAlert(`${data.opfer_name} wurde hingerichtet! (Rolle: ${data.opfer_rolle})`, 'error');
-        }
-    });
-    
-    socket.on('spiel_ende', function(data) {
-        showSpielEndeModal(data);
-    });
-    
-    socket.on('navigiere', function(data) {
-        window.location.href = data.ziel;
-    });
-    
-    socket.on('aktion_bestaetigt', function(data) {
-        showAlert('Aktion ausgeführt!', 'success');
-        clearSelection();
-    });
-    
-    socket.on('fehler', function(data) {
-        showAlert(data.nachricht, 'error');
-    });
-    
-    socket.on('chat', function(data) {
-        addChatMessage(data.von, data.nachricht, data.ist_tot);
-    });
-    
-    socket.on('phase_bereit', function(data) {
-        if (istErzaehler) {
-            showAlert('Alle Spieler haben gewählt. Bereit für nächste Phase.', 'info');
-        }
-    });
-    
-    // Online-Modus: Automatische Erzählung
-    socket.on('erzaehlung', function(data) {
-        if (spielModus === 'online') {
-            showErzaehlung(data.text, data.audio);
-        }
-    });
-    
-    // Funktionen
-    function selectSpieler(id) {
-        const card = document.querySelector(`[data-id="${id}"]`);
-        if (card.classList.contains('tot') || card.classList.contains('disabled')) return;
-        
-        // During voting (abstimmung), cannot select the narrator or yourself
-        if (aktuellePhase === 'abstimmung') {
-            const isNarrator = card.getAttribute('data-ist-erzaehler') === 'true';
-            const isSelf = id === spielerId;
-            if (isNarrator || isSelf) return;
-        }
-        
-        // Amor kann 2 Spieler wählen
-        if (spielerRolle === 'Amor' && aktuellePhase === 'armor_phase') {
-            if (selectedSpielerIds.includes(id)) {
-                selectedSpielerIds = selectedSpielerIds.filter(i => i !== id);
-                card.classList.remove('selected');
-            } else if (selectedSpielerIds.length < 2) {
-                selectedSpielerIds.push(id);
-                card.classList.add('selected');
-            }
-            updateActionButtons();
-            return;
-        }
-        
-        // Normale Auswahl (1 Spieler)
-        document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        selectedSpielerId = id;
-        updateActionButtons();
-    }
-    
-    function clearSelection() {
-        document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('selected'));
-        selectedSpielerId = null;
-        selectedSpielerIds = [];
-        updateActionButtons();
-    }
-    
-    function updatePhase(phase, runde) {
-        const phaseEl = document.getElementById('phase-name');
-        const isNacht = phase.includes('nacht') || phase.includes('phase');
-        phaseEl.innerHTML = `<i class="fa-solid fa-${isNacht && !phase.includes('tag') ? 'moon' : 'sun'}"></i> ${phase.replace(/_/g, ' ')}`;
-        
-        // Nacht-Overlay
-        const overlay = document.getElementById('nacht-overlay');
-        const nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'armor_phase'];
-        
-        if (nachtPhasen.includes(phase) && !sollteAktivSein()) {
-            overlay.classList.add('aktiv');
-        } else {
-            overlay.classList.remove('aktiv');
-        }
-        
-        updateActionButtons();
-    }
-    
-    function updateErzaehlerText(data) {
-        const container = document.getElementById('erzaehler-text-container');
-        if (!container) return;
-        
-        let html = '';
-        if (data && data.text) {
-            html = `
-                <div class="erzaehler-text">
-                    <strong>Vorlesen:</strong><br>
-                    "${data.text}"
-                </div>
-            `;
-            if (data.anweisung) {
-                html += `
-                    <div class="erzaehler-anweisung">
-                        <i class="fa-solid fa-info-circle"></i> <strong>Anweisung:</strong><br>
-                        ${data.anweisung}
-                    </div>
-                `;
-            }
-        }
-        container.innerHTML = html;
-    }
-    
-    function showErzaehlung(text, audioPath) {
-        // Zeigt die automatische Erzählung im Online-Modus
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--bg-card);
-            border: 2px solid var(--accent-gold);
-            border-radius: 12px;
-            padding: 2rem;
-            max-width: 500px;
-            text-align: center;
-            z-index: 1500;
-            animation: fadeIn 0.3s ease-out;
-        `;
-        
-        let html = `
-            <div style="font-size: 2rem; color: var(--accent-gold); margin-bottom: 1rem;">
-                <i class="fa-solid fa-book-open"></i>
-            </div>
-            <p style="font-size: 1.1rem; font-style: italic;">"${text}"</p>
-        `;
-        
-        // Wenn Audio verfügbar, add audio player
-        if (audioPath) {
-            console.log('[showErzaehlung] Audio path:', audioPath);
-            html += `
-                <div style="margin-top: 1.5rem;">
-                    <audio controls autoplay playsinline style="width: 100%; max-width: 300px; opacity: 1;">
-                        <source src="${audioPath}" type="audio/mpeg">
-                        Dein Browser unterstützt das Audio-Element nicht.
-                    </audio>
-                </div>
-            `;
-        } else {
-            console.log('[showErzaehlung] No audio path provided');
-        }
-        
-        notification.innerHTML = html;
-        document.body.appendChild(notification);
-        
-        // Duration: longer if audio is playing
-        const duration = audioPath ? 8000 : 4000;
-        setTimeout(() => {
-            notification.style.animation = 'fadeOut 0.3s ease-out';
-            setTimeout(() => notification.remove(), 300);
-        }, duration);
-    }
-    
-    function sollteAktivSein() {
-        if (istErzaehler) return true;
-        
-        const phasenRollen = {
-            'seherin_phase': 'Seherin',
-            'werwolf_phase': 'Werwolf',
-            'hexe_phase': 'Hexe',
-            'armor_phase': 'Amor'
-        };
-        
-        return phasenRollen[aktuellePhase] === spielerRolle;
-    }
-    
-    function updateActionButtons() {
-        const container = document.getElementById('action-buttons');
-        let html = '';
-        
-        console.log(`[updateActionButtons] Phase: ${aktuellePhase}, Selected: ${selectedSpielerId}, Role: ${spielerRolle}`);
-        
-        if (!selectedSpielerId && selectedSpielerIds.length === 0) {
-            html = '<p class="text-muted">Wähle einen Spieler</p>';
-        } else {
-            // Phasen-spezifische Aktionen
-            if (aktuellePhase === 'werwolf_phase' && spielerRolle === 'Werwolf') {
-                html = `<button class="btn btn-primary" onclick="aktion('werwolf_wahl')"><i class="fa-solid fa-paw"></i> Töten</button>`;
-            } else if (aktuellePhase === 'seherin_phase' && spielerRolle === 'Seherin') {
-                html = `<button class="btn btn-primary" onclick="aktion('seherin_sehen')"><i class="fa-solid fa-eye"></i> Identität sehen</button>`;
-            } else if (aktuellePhase === 'hexe_phase' && spielerRolle === 'Hexe') {
-                html = `
-                    <button class="btn btn-success" onclick="aktion('hexe_heilen')"><i class="fa-solid fa-heart-pulse"></i> Heilen</button>
-                    <button class="btn btn-primary" onclick="aktion('hexe_toeten')"><i class="fa-solid fa-skull-crossbones"></i> Vergiften</button>
-                    <button class="btn btn-ghost" onclick="aktion('hexe_nichts')">Nichts tun</button>
-                `;
-            } else if (aktuellePhase === 'armor_phase' && spielerRolle === 'Amor') {
-                if (selectedSpielerIds.length === 2) {
-                    html = `<button class="btn btn-primary" onclick="aktion('armor_verlieben')"><i class="fa-solid fa-heart"></i> Verlieben</button>`;
-                } else {
-                    html = `<p class="text-muted">Wähle 2 Spieler (${selectedSpielerIds.length}/2)</p>`;
-                }
-            } else if (aktuellePhase === 'abstimmung') {
-                html = `
-                    <button class="btn btn-primary" onclick="aktion('tag_wahl')"><i class="fa-solid fa-check"></i> Abstimmen</button>
-                    <button class="btn btn-ghost" onclick="aktion('tag_wahl', null)">Enthalten</button>
-                `;
-            } else if (aktuellePhase === 'jaeger_phase' && spielerRolle === 'Jäger') {
-                html = `<button class="btn btn-primary" onclick="aktion('jaeger_schuss')"><i class="fa-solid fa-crosshairs"></i> Erschießen</button>`;
-            }
-        }
-        
-        container.innerHTML = html;
-    }
-    
-    function aktion(typ, zielOverride) {
-        const ziel = zielOverride !== undefined ? zielOverride : 
-                     (typ === 'armor_verlieben' ? selectedSpielerIds : selectedSpielerId);
-        
-        socket.emit('aktion_ausfuehren', {
-            aktion: typ,
-            ziel_id: ziel
-        });
-    }
-    
-    function naechstePhase() {
-        socket.emit('phase_weiter');
-    }
-    
-    function showAlert(text, type) {
-        const el = document.getElementById('status-nachricht');
-        el.textContent = text;
-        el.className = `alert alert-${type} mb-3`;
-        el.style.display = 'block';
-        
-        setTimeout(() => {
-            el.style.display = 'none';
-        }, 5000);
-    }
-    
-    function addLog(text) {
-        const container = document.getElementById('log-list');
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        entry.innerHTML = `
-            <div class="log-time">${new Date().toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})}</div>
-            <div>${text}</div>
-        `;
-        container.prepend(entry);
-    }
-    
-    function addChatMessage(von, text, istTot) {
-        const container = document.getElementById('chat-messages');
-        const msg = document.createElement('div');
-        msg.className = 'chat-msg' + (istTot ? ' tot' : '');
-        msg.innerHTML = `<strong>${von}:</strong> ${text}`;
-        container.appendChild(msg);
-        container.scrollTop = container.scrollHeight;
-    }
-    
-    function sendChat() {
-        const input = document.getElementById('chat-input');
-        const text = input.value.trim();
-        if (text) {
-            socket.emit('chat_nachricht', { nachricht: text });
-            input.value = '';
-        }
-    }
-    
-    document.getElementById('chat-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendChat();
-    });
-    
-    function showSpielEndeModal(data) {
-        const overlay = document.createElement('div');
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        `;
-        
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            background: var(--bg-card);
-            padding: 3rem;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 500px;
-            border: 2px solid var(--accent-gold);
-        `;
-        
-        modal.innerHTML = `
-            <h1 style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 1rem;">
-                <i class="fa-solid fa-trophy"></i> Spielende
-            </h1>
-            <p style="font-size: 1.5rem; margin-bottom: 2rem;">${data.nachricht}</p>
-            <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">Gewinner: ${data.gewinner || 'Unbekannt'}</h3>
-            <button class="btn btn-primary btn-lg" onclick="socket.emit('navigiere_zur_lobby')">
-                <i class="fa-solid fa-home"></i> Zurück zur Startseite
-            </button>
-        `;
-        
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-    }
-    
-    socket.on('gehe_zu_startseite', function() {
-        window.location.href = '/';
-    });
-    
-    // Initial
-    updateActionButtons();
-    updatePhase(aktuellePhase, {{ raum.runde }});
+  const socket = io();
+  const raumCode = "{{ raum.code }}";
+  const spielerId = {{ spieler.id }};
+  const spielerRolle = "{{ spieler.rolle }}";
+  const istErzaehler = {{ 'true' if spieler.ist_erzaehler else 'false' }};
+  const spielModus = "{{ raum.modus }}";
+
+  let selectedSpielerId = null;
+  let selectedSpielerIds = [];  // Für Amor (2 Spieler)
+  let aktuellePhase = "{{ raum.aktuelle_phase }}";
+
+  // Raum beitreten
+  socket.emit('raum_beitreten', { code: raumCode });
+
+  // Event Handler
+  socket.on('phase_geaendert', function(data) {
+      aktuellePhase = data.phase;
+      updatePhase(data.phase, data.runde);
+      if (data.erzaehler_text) {
+          updateErzaehlerText(data.erzaehler_text);
+      }
+  });
+
+  socket.on('rolle_erhalten', function(data) {
+      showAlert('Deine Rolle: ' + data.rolle, 'success');
+  });
+
+  socket.on('spieler_gestorben', function(data) {
+      const card = document.querySelector(`[data-id="${data.spieler_id}"]`);
+      if (card) {
+          card.classList.add('tot');
+      }
+      addLog(`${data.spieler_name} ist gestorben (${data.todesart})`);
+  });
+
+  socket.on('seherin_ergebnis', function(data) {
+      const typ = data.ist_werwolf ? 'Werwolf!' : 'kein Werwolf';
+      showAlert(`${data.ziel_name} ist ${typ}`, data.ist_werwolf ? 'error' : 'success');
+  });
+
+  socket.on('hexe_info', function(data) {
+      if (spielerRolle === 'Hexe') {
+          showAlert(`Das Werwolf-Opfer ist: ${data.opfer_name}`, 'info');
+      }
+  });
+
+  socket.on('nacht_ergebnis', function(data) {
+      if (data.tote && data.tote.length > 0) {
+          const totenListe = data.tote.map(t => `${t.name} (${t.todesart || 'unbekannt'})`).join(', ');
+          console.log('[NACHT_ERGEBNIS]', totenListe);
+          // Show prominent death announcement
+          showAlert(`TOTE DER NACHT: ${totenListe}`, 'error');
+          addLog(`Tote der Nacht: ${totenListe}`);
+      } else {
+          showAlert('Niemand ist in der Nacht gestorben.', 'success');
+          addLog('Niemand ist in der Nacht gestorben.');
+      }
+  });
+
+  socket.on('abstimmung_ergebnis', function(data) {
+      if (data.kein_opfer) {
+          showAlert(data.nachricht, 'info');
+      } else {
+          showAlert(`${data.opfer_name} wurde hingerichtet! (Rolle: ${data.opfer_rolle})`, 'error');
+      }
+  });
+
+  socket.on('spiel_ende', function(data) {
+      showSpielEndeModal(data);
+  });
+
+  socket.on('navigiere', function(data) {
+      window.location.href = data.ziel;
+  });
+
+  socket.on('aktion_bestaetigt', function(data) {
+      showAlert('Aktion ausgeführt!', 'success');
+      clearSelection();
+  });
+
+  socket.on('fehler', function(data) {
+      showAlert(data.nachricht, 'error');
+  });
+
+  socket.on('chat', function(data) {
+      addChatMessage(data.von, data.nachricht, data.ist_tot);
+  });
+
+  socket.on('phase_bereit', function(data) {
+      if (istErzaehler) {
+          showAlert('Alle Spieler haben gewählt. Bereit für nächste Phase.', 'info');
+      }
+  });
+
+  // Online-Modus: Automatische Erzählung
+  socket.on('erzaehlung', function(data) {
+      if (spielModus === 'online') {
+          showErzaehlung(data.text, data.audio);
+      }
+  });
+
+  // Funktionen
+  function selectSpieler(id) {
+      const card = document.querySelector(`[data-id="${id}"]`);
+      if (card.classList.contains('tot') || card.classList.contains('disabled')) return;
+
+      // During voting (abstimmung), cannot select the narrator or yourself
+      if (aktuellePhase === 'abstimmung') {
+          const isNarrator = card.getAttribute('data-ist-erzaehler') === 'true';
+          const isSelf = id === spielerId;
+          if (isNarrator || isSelf) return;
+      }
+
+      // Amor kann 2 Spieler wählen
+      if (spielerRolle === 'Amor' && aktuellePhase === 'armor_phase') {
+          if (selectedSpielerIds.includes(id)) {
+              selectedSpielerIds = selectedSpielerIds.filter(i => i !== id);
+              card.classList.remove('selected');
+          } else if (selectedSpielerIds.length < 2) {
+              selectedSpielerIds.push(id);
+              card.classList.add('selected');
+          }
+          updateActionButtons();
+          return;
+      }
+
+      // Normale Auswahl (1 Spieler)
+      document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedSpielerId = id;
+      updateActionButtons();
+  }
+
+  function clearSelection() {
+      document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('selected'));
+      selectedSpielerId = null;
+      selectedSpielerIds = [];
+      updateActionButtons();
+  }
+
+  function updatePhase(phase, runde) {
+      const phaseEl = document.getElementById('phase-name');
+      const isNacht = phase.includes('nacht') || phase.includes('phase');
+      phaseEl.innerHTML = `<i class="fa-solid fa-${isNacht && !phase.includes('tag') ? 'moon' : 'sun'}"></i> ${phase.replace(/_/g, ' ')}`;
+
+      // Nacht-Overlay
+      const overlay = document.getElementById('nacht-overlay');
+      const nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'armor_phase'];
+
+      if (nachtPhasen.includes(phase) && !sollteAktivSein()) {
+          overlay.classList.add('aktiv');
+      } else {
+          overlay.classList.remove('aktiv');
+      }
+
+      updateActionButtons();
+  }
+
+  function updateErzaehlerText(data) {
+      const container = document.getElementById('erzaehler-text-container');
+      if (!container) return;
+
+      let html = '';
+      if (data && data.text) {
+          html = `
+              <div class="erzaehler-text">
+                  <strong>Vorlesen:</strong><br>
+                  "${data.text}"
+              </div>
+          `;
+          if (data.anweisung) {
+              html += `
+                  <div class="erzaehler-anweisung">
+                      <i class="fa-solid fa-info-circle"></i> <strong>Anweisung:</strong><br>
+                      ${data.anweisung}
+                  </div>
+              `;
+          }
+      }
+      container.innerHTML = html;
+  }
+
+  function showErzaehlung(text, audioPath) {
+      // Zeigt die automatische Erzählung im Online-Modus
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: var(--bg-card);
+          border: 2px solid var(--accent-gold);
+          border-radius: 12px;
+          padding: 2rem;
+          max-width: 500px;
+          text-align: center;
+          z-index: 1500;
+          animation: fadeIn 0.3s ease-out;
+      `;
+
+      let html = `
+          <div style="font-size: 2rem; color: var(--accent-gold); margin-bottom: 1rem;">
+              <i class="fa-solid fa-book-open"></i>
+          </div>
+          <p style="font-size: 1.1rem; font-style: italic;">"${text}"</p>
+      `;
+
+      // Wenn Audio verfügbar, add audio player
+      if (audioPath) {
+          console.log('[showErzaehlung] Audio path:', audioPath);
+          html += `
+              <div style="margin-top: 1.5rem;">
+                  <audio controls autoplay playsinline style="width: 100%; max-width: 300px; opacity: 1;">
+                      <source src="${audioPath}" type="audio/mpeg">
+                      Dein Browser unterstützt das Audio-Element nicht.
+                  </audio>
+              </div>
+          `;
+      } else {
+          console.log('[showErzaehlung] No audio path provided');
+      }
+
+      notification.innerHTML = html;
+      document.body.appendChild(notification);
+
+      // Duration: longer if audio is playing
+      const duration = audioPath ? 8000 : 4000;
+      setTimeout(() => {
+          notification.style.animation = 'fadeOut 0.3s ease-out';
+          setTimeout(() => notification.remove(), 300);
+      }, duration);
+  }
+
+  function sollteAktivSein() {
+      if (istErzaehler) return true;
+
+      const phasenRollen = {
+          'seherin_phase': 'Seherin',
+          'werwolf_phase': 'Werwolf',
+          'hexe_phase': 'Hexe',
+          'armor_phase': 'Amor'
+      };
+
+      return phasenRollen[aktuellePhase] === spielerRolle;
+  }
+
+  function updateActionButtons() {
+      const container = document.getElementById('action-buttons');
+      let html = '';
+
+      console.log(`[updateActionButtons] Phase: ${aktuellePhase}, Selected: ${selectedSpielerId}, Role: ${spielerRolle}`);
+
+      if (!selectedSpielerId && selectedSpielerIds.length === 0) {
+          html = '<p class="text-muted">Wähle einen Spieler</p>';
+      } else {
+          // Phasen-spezifische Aktionen
+          if (aktuellePhase === 'werwolf_phase' && spielerRolle === 'Werwolf') {
+              html = `<button class="btn btn-primary" onclick="aktion('werwolf_wahl')"><i class="fa-solid fa-paw"></i> Töten</button>`;
+          } else if (aktuellePhase === 'seherin_phase' && spielerRolle === 'Seherin') {
+              html = `<button class="btn btn-primary" onclick="aktion('seherin_sehen')"><i class="fa-solid fa-eye"></i> Identität sehen</button>`;
+          } else if (aktuellePhase === 'hexe_phase' && spielerRolle === 'Hexe') {
+              html = `
+                  <button class="btn btn-success" onclick="aktion('hexe_heilen')"><i class="fa-solid fa-heart-pulse"></i> Heilen</button>
+                  <button class="btn btn-primary" onclick="aktion('hexe_toeten')"><i class="fa-solid fa-skull-crossbones"></i> Vergiften</button>
+                  <button class="btn btn-ghost" onclick="aktion('hexe_nichts')">Nichts tun</button>
+              `;
+          } else if (aktuellePhase === 'armor_phase' && spielerRolle === 'Amor') {
+              if (selectedSpielerIds.length === 2) {
+                  html = `<button class="btn btn-primary" onclick="aktion('armor_verlieben')"><i class="fa-solid fa-heart"></i> Verlieben</button>`;
+              } else {
+                  html = `<p class="text-muted">Wähle 2 Spieler (${selectedSpielerIds.length}/2)</p>`;
+              }
+          } else if (aktuellePhase === 'abstimmung') {
+              html = `
+                  <button class="btn btn-primary" onclick="aktion('tag_wahl')"><i class="fa-solid fa-check"></i> Abstimmen</button>
+                  <button class="btn btn-ghost" onclick="aktion('tag_wahl', null)">Enthalten</button>
+              `;
+          } else if (aktuellePhase === 'jaeger_phase' && spielerRolle === 'Jäger') {
+              html = `<button class="btn btn-primary" onclick="aktion('jaeger_schuss')"><i class="fa-solid fa-crosshairs"></i> Erschießen</button>`;
+          }
+      }
+
+      container.innerHTML = html;
+  }
+
+  function aktion(typ, zielOverride) {
+      const ziel = zielOverride !== undefined ? zielOverride :
+                   (typ === 'armor_verlieben' ? selectedSpielerIds : selectedSpielerId);
+
+      socket.emit('aktion_ausfuehren', {
+          aktion: typ,
+          ziel_id: ziel
+      });
+  }
+
+  function naechstePhase() {
+      socket.emit('phase_weiter');
+  }
+
+  function showAlert(text, type) {
+      const el = document.getElementById('status-nachricht');
+      el.textContent = text;
+      el.className = `alert alert-${type} mb-3`;
+      el.style.display = 'block';
+
+      setTimeout(() => {
+          el.style.display = 'none';
+      }, 5000);
+  }
+
+  function addLog(text) {
+      const container = document.getElementById('log-list');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `
+          <div class="log-time">${new Date().toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})}</div>
+          <div>${text}</div>
+      `;
+      container.prepend(entry);
+  }
+
+  function addChatMessage(von, text, istTot) {
+      const container = document.getElementById('chat-messages');
+      const msg = document.createElement('div');
+      msg.className = 'chat-msg' + (istTot ? ' tot' : '');
+      msg.innerHTML = `<strong>${von}:</strong> ${text}`;
+      container.appendChild(msg);
+      container.scrollTop = container.scrollHeight;
+  }
+
+  function sendChat() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (text) {
+          socket.emit('chat_nachricht', { nachricht: text });
+          input.value = '';
+      }
+  }
+
+  document.getElementById('chat-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') sendChat();
+  });
+
+  function showSpielEndeModal(data) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2000;
+      `;
+
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+          background: var(--bg-card);
+          padding: 3rem;
+          border-radius: 20px;
+          text-align: center;
+          max-width: 500px;
+          border: 2px solid var(--accent-gold);
+      `;
+
+      modal.innerHTML = `
+          <h1 style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 1rem;">
+              <i class="fa-solid fa-trophy"></i> Spielende
+          </h1>
+          <p style="font-size: 1.5rem; margin-bottom: 2rem;">${data.nachricht}</p>
+          <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">Gewinner: ${data.gewinner || 'Unbekannt'}</h3>
+          <button class="btn btn-primary btn-lg" onclick="socket.emit('navigiere_zur_lobby')">
+              <i class="fa-solid fa-home"></i> Zurück zur Startseite
+          </button>
+      `;
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+  }
+
+  socket.on('gehe_zu_startseite', function() {
+      window.location.href = '/';
+  });
+
+  // Initial
+  updateActionButtons();
+  updatePhase(aktuellePhase, {{ raum.runde }});
 </script>
 {% endblock %}

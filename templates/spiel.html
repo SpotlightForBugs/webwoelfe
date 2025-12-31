@@ -768,40 +768,70 @@
     }
     
     function showErzaehlung(text, audioPath) {
-        // Zeigt die automatische Erzählung im Online-Modus
+        // Zeigt die automatische Erzählung im Online-Modus mit Custom Audio Player
         const notification = document.createElement('div');
+        notification.className = 'erzaehlung-overlay';
         notification.style.cssText = `
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: var(--bg-card);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30, 30, 35, 0.98) 100%);
             border: 2px solid var(--accent-gold);
-            border-radius: 12px;
-            padding: 2rem;
-            max-width: 500px;
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            max-width: 480px;
+            width: 90%;
             text-align: center;
             z-index: 1500;
-            animation: fadeIn 0.3s ease-out;
+            animation: fadeIn 0.4s ease-out;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(212, 175, 55, 0.15);
         `;
+        
+        const playerId = 'narrator-audio-' + Date.now();
         
         let html = `
-            <div style="font-size: 2rem; color: var(--accent-gold); margin-bottom: 1rem;">
+            <div style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 1rem; text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);">
                 <i class="fa-solid fa-book-open"></i>
             </div>
-            <p style="font-size: 1.1rem; font-style: italic;">"${text}"</p>
+            <p style="font-size: 1.15rem; font-style: italic; color: rgba(255,255,255,0.9); line-height: 1.6; margin-bottom: 1.5rem;">"${text}"</p>
         `;
         
-        // Wenn Audio verfügbar, add audio player
+        // Custom Audio Player wenn Audio verfügbar
         if (audioPath) {
             console.log('[showErzaehlung] Audio path:', audioPath);
             html += `
-                <div style="margin-top: 1.5rem;">
-                    <audio controls autoplay playsinline style="width: 100%; max-width: 300px; opacity: 1;">
-                        <source src="${audioPath}" type="audio/mpeg">
-                        Dein Browser unterstützt das Audio-Element nicht.
-                    </audio>
+                <div class="narrator-label">
+                    <i class="fa-solid fa-microphone"></i>
+                    <span>Erzähler spricht...</span>
                 </div>
+                <div class="narrator-audio-player" id="${playerId}-container">
+                    <button class="audio-play-btn" id="${playerId}-btn" onclick="toggleNarratorAudio('${playerId}')">
+                        <i class="fa-solid fa-pause" id="${playerId}-icon"></i>
+                    </button>
+                    <div class="audio-waveform" id="${playerId}-waveform">
+                        <div class="audio-waveform-bar active"></div>
+                        <div class="audio-waveform-bar active"></div>
+                        <div class="audio-waveform-bar active"></div>
+                        <div class="audio-waveform-bar active"></div>
+                        <div class="audio-waveform-bar active"></div>
+                    </div>
+                    <div class="audio-progress-container">
+                        <div class="audio-progress-bar" id="${playerId}-progress" onclick="seekNarratorAudio(event, '${playerId}')">
+                            <div class="audio-progress-fill" id="${playerId}-fill"></div>
+                        </div>
+                        <div class="audio-time">
+                            <span id="${playerId}-current">0:00</span>
+                            <span id="${playerId}-duration">0:00</span>
+                        </div>
+                    </div>
+                    <button class="audio-volume-btn" onclick="toggleNarratorMute('${playerId}')">
+                        <i class="fa-solid fa-volume-high" id="${playerId}-vol-icon"></i>
+                    </button>
+                </div>
+                <audio id="${playerId}" autoplay playsinline style="display: none;">
+                    <source src="${audioPath}" type="audio/mpeg">
+                </audio>
             `;
         } else {
             console.log('[showErzaehlung] No audio path provided');
@@ -810,12 +840,101 @@
         notification.innerHTML = html;
         document.body.appendChild(notification);
         
-        // Duration: longer if audio is playing
-        const duration = audioPath ? 8000 : 4000;
-        setTimeout(() => {
-            notification.style.animation = 'fadeOut 0.3s ease-out';
-            setTimeout(() => notification.remove(), 300);
-        }, duration);
+        // Setup custom audio player controls
+        if (audioPath) {
+            const audio = document.getElementById(playerId);
+            const progressFill = document.getElementById(playerId + '-fill');
+            const currentTime = document.getElementById(playerId + '-current');
+            const durationEl = document.getElementById(playerId + '-duration');
+            const playBtn = document.getElementById(playerId + '-btn');
+            const playIcon = document.getElementById(playerId + '-icon');
+            const waveform = document.getElementById(playerId + '-waveform');
+            
+            // Update progress bar
+            audio.addEventListener('timeupdate', () => {
+                if (audio.duration) {
+                    const percent = (audio.currentTime / audio.duration) * 100;
+                    progressFill.style.width = percent + '%';
+                    currentTime.textContent = formatAudioTime(audio.currentTime);
+                }
+            });
+            
+            // Set duration when loaded
+            audio.addEventListener('loadedmetadata', () => {
+                durationEl.textContent = formatAudioTime(audio.duration);
+            });
+            
+            // Handle play/pause states
+            audio.addEventListener('play', () => {
+                playIcon.className = 'fa-solid fa-pause';
+                playBtn.classList.add('playing');
+                waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.add('active'));
+            });
+            
+            audio.addEventListener('pause', () => {
+                playIcon.className = 'fa-solid fa-play';
+                playBtn.classList.remove('playing');
+                waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
+            });
+            
+            audio.addEventListener('ended', () => {
+                playIcon.className = 'fa-solid fa-redo';
+                playBtn.classList.remove('playing');
+                waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
+            });
+        }
+        
+        // Duration: longer if audio is playing, or wait for audio to end
+        const baseDuration = audioPath ? 12000 : 4000;
+        let removeTimeout = setTimeout(() => {
+            notification.style.animation = 'fadeOut 0.4s ease-out';
+            setTimeout(() => notification.remove(), 400);
+        }, baseDuration);
+        
+        // If audio, wait for it to finish instead
+        if (audioPath) {
+            const audio = document.getElementById(playerId);
+            audio.addEventListener('ended', () => {
+                clearTimeout(removeTimeout);
+                setTimeout(() => {
+                    notification.style.animation = 'fadeOut 0.4s ease-out';
+                    setTimeout(() => notification.remove(), 400);
+                }, 1500);
+            });
+        }
+    }
+    
+    // Audio player helper functions
+    function formatAudioTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+    
+    function toggleNarratorAudio(playerId) {
+        const audio = document.getElementById(playerId);
+        const icon = document.getElementById(playerId + '-icon');
+        if (audio.paused) {
+            audio.play();
+        } else {
+            audio.pause();
+        }
+    }
+    
+    function seekNarratorAudio(event, playerId) {
+        const audio = document.getElementById(playerId);
+        const progressBar = document.getElementById(playerId + '-progress');
+        const rect = progressBar.getBoundingClientRect();
+        const percent = (event.clientX - rect.left) / rect.width;
+        audio.currentTime = percent * audio.duration;
+    }
+    
+    function toggleNarratorMute(playerId) {
+        const audio = document.getElementById(playerId);
+        const icon = document.getElementById(playerId + '-vol-icon');
+        audio.muted = !audio.muted;
+        icon.className = audio.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
     }
     
     function sollteAktivSein() {

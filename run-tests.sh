@@ -22,42 +22,57 @@ show_help() {
   echo "  1         Game 1 (Village Victory)"
   echo "  2         Game 2 (Werewolf Victory)"
   echo "  3         Werewolf Vote (focused voting test)"
+  echo "  500       Massive Player Full Game Test (default: 100 players)"
+  echo "  stress    Wizard + Mass Player Stress Tests"
   echo "  all       Run everything except 0 (default)"
   echo ""
   echo "OPTIONS:"
   echo "  -h, --help   Show this help message"
   echo "  --keep       Keep browser open when tests complete"
   echo "  --delay N    Delay N seconds between actions (default: 0)"
+  echo "  -n N         Number of players for 500 test (default: 100, max recommended: 200)"
   exit 0
 }
 
 # Activate virtual environment
-source venv/bin/activate
-
+# Check multiple possible venv locations for cross-platform compatibility
+if [ -f ".venv/Scripts/activate" ]; then
+  source .venv/Scripts/activate
+elif [ -f ".venv/bin/activate" ]; then
+  source .venv/bin/activate
+elif [ -f "venv/Scripts/activate" ]; then
+  source venv/Scripts/activate
+elif [ -f "venv/bin/activate" ]; then
+  source venv/bin/activate
+else
+  echo "Warning: No virtual environment found, continuing without activation..."
+fi
 # Parse arguments
 KEEP_OPEN=false
 DELAY=0
 TEST_TYPE="all"
+PLAYER_COUNT=100
 
 for arg in "$@"; do
   case $arg in
     -h|--help)
       show_help
       ;;
-    0|1|2|3|all)
+    0|1|2|3|500|stress|all)
       TEST_TYPE="$arg"
       ;;
     --keep)
       KEEP_OPEN=true
       ;;
-    --delay)
-      # Next iteration will have the delay value, but we need to shift manually
-      # This will be handled in the next iteration
+    --delay|-n)
+      # Next iteration will have the value
       ;;
     *)
-      # Check if the previous argument was --delay
+      # Check if the previous argument was --delay or -n
       if [ "$prev_arg" = "--delay" ]; then
         DELAY="$arg"
+      elif [ "$prev_arg" = "-n" ]; then
+        PLAYER_COUNT="$arg"
       fi
       ;;
   esac
@@ -107,6 +122,16 @@ elif [ "$TEST_TYPE" == "3" ]; then
   [ "$KEEP_OPEN" = true ] && echo "Browser will stay open when tests complete"
   if [ "$DELAY" != "0" ]; then echo "Action delay: ${DELAY}s"; fi
   npx playwright test werewolf-vote
+elif [ "$TEST_TYPE" == "500" ]; then
+  echo "=== MASSIVE PLAYER TEST ==="
+  echo "$PLAYER_COUNT players ($((PLAYER_COUNT - 1)) headless + 1 headful)"
+  echo "This may take a while..."
+  [ "$KEEP_OPEN" = true ] && echo "Browser will stay open when tests complete"
+  PLAYER_COUNT=$PLAYER_COUNT npx playwright test massive-500-full-game --project=massive --timeout=1800000 --reporter=line
+elif [ "$TEST_TYPE" == "stress" ]; then
+  echo "=== STRESS TESTS (Wizard + Mass Players) ==="
+  [ "$KEEP_OPEN" = true ] && echo "Browser will stay open when tests complete"
+  npx playwright test massive-500-players --timeout=300000 --reporter=line
 else
   echo "Starting Playwright tests (skipping setup)..."
   [ "$KEEP_OPEN" = true ] && echo "Browser will stay open when tests complete"

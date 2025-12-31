@@ -56,12 +56,25 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      // Exclude massive tests from default project
+      testIgnore: ['**/massive-*.spec.ts'],
+    },
+    {
+      // Special project for 500-player tests - runs HEADLESS
+      name: 'massive',
+      use: { 
+        ...devices['Desktop Chrome'],
+        headless: true,  // Override: 499 players run headless
+      },
+      testMatch: ['**/massive-*.spec.ts'],
     },
   ],
 
   // Launch options for window positioning
   webServer: {
-    command: './venv/bin/python app.py',
+    // Use the local virtual environment: on Windows we use .venv (as used by run-tests.sh),
+    // on Unix-like systems we use venv
+    command: process.platform === 'win32' ? '.venv\\Scripts\\python.exe app.py' : './venv/bin/python app.py',
     url: 'http://localhost:5001',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

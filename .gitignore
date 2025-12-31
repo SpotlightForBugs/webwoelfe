@@ -156,3 +156,4 @@ tests/screenshots/
 *.swp
 *.swo
 *~
+test-results

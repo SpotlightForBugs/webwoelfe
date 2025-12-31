@@ -102,11 +102,12 @@ def raum_erstellen():
     ist_erzaehler = request.form.get('ist_erzaehler') == 'on'
     
     # Raum erstellen
+    # Support games from 5 to 10000 players (for massive events)
     raum = Raum(
         code=Raum.generiere_code(),
             name=name,
         modus=modus,
-        spieler_anzahl=max(5, min(18, spieler_anzahl))
+        spieler_anzahl=max(5, min(10000, spieler_anzahl))
     )
     db.session.add(raum)
     db.session.flush()

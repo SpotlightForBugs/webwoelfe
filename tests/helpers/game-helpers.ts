@@ -1,23 +1,134 @@
-import { Page, BrowserContext, Browser, expect, BrowserContextOptions } from '@playwright/test';
+import { Page, BrowserContext, Browser, expect, CDPSession } from '@playwright/test';
+import { execSync } from 'child_process';
 
 // Track window positions for tiling
 let windowPositionIndex = 0;
-const WINDOW_WIDTH = 900;
-const WINDOW_HEIGHT = 700;
-const WINDOWS_PER_ROW = 2;
+
+interface Monitor {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+let monitors: Monitor[] | null = null;
+
+function getMonitors(): Monitor[] {
+  if (monitors) return monitors;
+
+  try {
+    // Detect monitors based on platform
+    if (process.platform === 'win32') {
+      // Windows: Use PowerShell to get screen info
+      const cmd = 'powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::AllScreens | Select-Object WorkingArea | ConvertTo-Json"';
+      const output = execSync(cmd, { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+      // PowerShell might return a single object or an array
+      const data = JSON.parse(output);
+      const screens = Array.isArray(data) ? data : [data];
+
+      monitors = screens.map((s: any) => ({
+        x: s.WorkingArea.X,
+        y: s.WorkingArea.Y,
+        width: s.WorkingArea.Width,
+        height: s.WorkingArea.Height
+      }));
+    } else if (process.platform === 'darwin') {
+      // macOS: Use AppleScript to get desktop bounds (returns logical pixels)
+      const cmd = 'osascript -e \'tell application "Finder" to get bounds of window of desktop\'';
+      const output = execSync(cmd, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+      // Output format: "0, 0, 1920, 1080" (Left, Top, Right, Bottom)
+      const parts = output.split(',').map(p => parseInt(p.trim(), 10));
+      if (parts.length === 4) {
+        monitors = [{
+          x: parts[0],
+          y: parts[1],
+          width: parts[2] - parts[0],
+          height: parts[3] - parts[1]
+        }];
+      }
+    }
+  } catch (e) {
+    console.warn(`Failed to detect monitors on ${process.platform}, using default fallback:`, e);
+  }
+
+  // Fallback if detection failed
+  if (!monitors || monitors.length === 0) {
+    monitors = [{ x: 0, y: 0, width: 1920, height: 1080 }];
+  }
+
+  // Sort monitors by X position to ensure logical order (left to right)
+  monitors.sort((a, b) => a.x - b.x);
+
+  console.log(`[MONITOR] Detected ${monitors.length} monitor(s) on ${process.platform}`);
+  return monitors;
+}
+
+interface WindowBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 /**
  * Calculate window position for tiling
+ * Uses a 2x2 grid per monitor to maximize size
  */
-function getContextOptions(): BrowserContextOptions {
-  const row = Math.floor(windowPositionIndex / WINDOWS_PER_ROW);
-  const col = windowPositionIndex % WINDOWS_PER_ROW;
-  
+function getNextWindowBounds(): WindowBounds {
+  const monitors = getMonitors();
+
+  // Strategy: 2x2 grid per monitor
+  const windowsPerMonitor = 4;
+  const cols = 2;
+  const rows = 2;
+
+  // Determine which monitor to use
+  // Fill first monitor, then second, etc.
+  // Wrap around if we have more windows than capacity
+  const monitorIndex = Math.floor(windowPositionIndex / windowsPerMonitor) % monitors.length;
+  const localIndex = windowPositionIndex % windowsPerMonitor;
+
+  const monitor = monitors[monitorIndex];
+
+  const col = localIndex % cols;
+  const row = Math.floor(localIndex / cols);
+
+  const width = Math.floor(monitor.width / cols);
+  const height = Math.floor(monitor.height / rows);
+
+  const x = monitor.x + (col * width);
+  const y = monitor.y + (row * height);
+
   windowPositionIndex++;
   
   return {
-    viewport: { width: WINDOW_WIDTH, height: WINDOW_HEIGHT },
+    x,
+    y,
+    width,
+    height
   };
+}
+
+/**
+ * Configure window position and size using CDP
+ */
+async function configureWindow(page: Page, bounds: WindowBounds) {
+  try {
+    const session = await page.context().newCDPSession(page);
+    const { windowId } = await session.send('Browser.getWindowForTarget');
+    await session.send('Browser.setWindowBounds', {
+      windowId,
+      bounds: {
+        left: bounds.x,
+        top: bounds.y,
+        width: bounds.width,
+        height: bounds.height
+      }
+    });
+  } catch (e) {
+    // Ignore errors if CDP is not supported (e.g. Firefox/WebKit)
+    // or if running in headless mode where window management might differ
+  }
 }
 
 /**
@@ -94,9 +205,14 @@ export async function createRoom(
   isNarrator: boolean = true,
   mode: 'online' | 'gruppe' = 'online'
 ): Promise<{ player: Player; roomCode: string }> {
-  const context = await browser.newContext(getContextOptions());
+  const bounds = getNextWindowBounds();
+  const context = await browser.newContext({
+    viewport: { width: bounds.width, height: bounds.height },
+    screen: { width: 1920, height: 1080 }
+  });
   const page = await context.newPage();
-  
+  await configureWindow(page, bounds);
+
   // Go to home page
   await page.goto('/');
   await expect(page.locator('h1')).toBeVisible({ timeout: 10000 });
@@ -149,9 +265,14 @@ export async function joinRoom(
   roomCode: string,
   playerName: string
 ): Promise<Player> {
-  const context = await browser.newContext(getContextOptions());
+  const bounds = getNextWindowBounds();
+  const context = await browser.newContext({
+    viewport: { width: bounds.width, height: bounds.height },
+    screen: { width: 1920, height: 1080 }
+  });
   const page = await context.newPage();
-  
+  await configureWindow(page, bounds);
+
   // Go to home page
   await page.goto('/');
   
@@ -465,3 +586,6 @@ export function logEvent(eventType: string, message: string, details: string = '
   const detailsStr = details ? ` [${details}]` : '';
   console.log(`[${eventType.toUpperCase()}] ${message}${detailsStr}`);
 }
+
+
+

@@ -45,12 +45,19 @@ class Spieler(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False)
     session_id = db.Column(db.String(64), unique=True, nullable=False, index=True)
-    raum_id = db.Column(db.Integer, db.ForeignKey('raeume.id'), nullable=True)
-    rolle = db.Column(db.String(30), nullable=True)
-    ist_am_leben = db.Column(db.Boolean, default=True)
+    raum_id = db.Column(db.Integer, db.ForeignKey('raeume.id'), nullable=True, index=True)
+    rolle = db.Column(db.String(30), nullable=True, index=True)
+    ist_am_leben = db.Column(db.Boolean, default=True, index=True)
     ist_erzaehler = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), default='wartend')  # wartend, schläft, aktiv, tot
     beigetreten_am = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Composite indexes for common query patterns in large games
+    __table_args__ = (
+        db.Index('idx_spieler_raum_leben', 'raum_id', 'ist_am_leben'),
+        db.Index('idx_spieler_raum_rolle', 'raum_id', 'rolle'),
+        db.Index('idx_spieler_raum_erzaehler', 'raum_id', 'ist_erzaehler'),
+    )
     
     # Sitzplatz-System für Nachbar-Mechanik und 3D-Visualisierung
     sitzplatz = db.Column(db.Integer, nullable=True)  # Position im Kreis (0-n)
@@ -1785,22 +1792,76 @@ PHASEN = [
 
 
 # Rollen-Konfiguration nach Spielerzahl (Empfehlung)
+# For games larger than defined here, use berechne_rollen() from game_logic.py
 ROLLEN_EMPFEHLUNG = {
     5: ['Werwolf', 'Werwolf', 'Seherin', 'Dorfbewohner', 'Dorfbewohner'],
     6: ['Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Dorfbewohner', 'Dorfbewohner'],
-    7: ['Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jäger', 'Dorfbewohner', 'Dorfbewohner'],
-    8: ['Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Dorfbewohner', 'Dorfbewohner'],
-    9: ['Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Heiler', 'Dorfbewohner', 'Dorfbewohner'],
-    10: ['Werwolf', 'Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Heiler', 'Dorfbewohner', 'Dorfbewohner'],
-    11: ['Werwolf', 'Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Heiler', 'Alter Mann', 'Dorfbewohner', 'Dorfbewohner'],
-    12: ['Werwolf', 'Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Heiler', 'Alter Mann', 'Zwei Schwestern', 'Zwei Schwestern', 'Dorfbewohner'],
-    13: ['Werwolf', 'Werwolf', 'Werwolf', 'Weißer Wolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Heiler', 'Alter Mann', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
-    14: ['Werwolf', 'Werwolf', 'Werwolf', 'Weißer Wolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Heiler', 'Alter Mann', 'Medium', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
-    15: ['Werwolf', 'Werwolf', 'Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Heiler', 'Alter Mann', 'Medium', 'Rabe', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
-    16: ['Werwolf', 'Werwolf', 'Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Heiler', 'Alter Mann', 'Medium', 'Rabe', 'Prinz', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
-    17: ['Werwolf', 'Werwolf', 'Werwolf', 'Werwolf', 'Urwolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Heiler', 'Alter Mann', 'Medium', 'Rabe', 'Prinz', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
-    18: ['Werwolf', 'Werwolf', 'Werwolf', 'Werwolf', 'Urwolf', 'Seherin', 'Hexe', 'Jäger', 'Amor', 'Heiler', 'Alter Mann', 'Medium', 'Rabe', 'Prinz', 'Flötenspieler', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
+    7: ['Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jaeger', 'Dorfbewohner', 'Dorfbewohner'],
+    8: ['Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Dorfbewohner', 'Dorfbewohner'],
+    9: ['Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Heiler', 'Dorfbewohner', 'Dorfbewohner'],
+    10: ['Werwolf', 'Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Heiler', 'Dorfbewohner', 'Dorfbewohner'],
+    11: ['Werwolf', 'Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Heiler', 'Alter Mann', 'Dorfbewohner', 'Dorfbewohner'],
+    12: ['Werwolf', 'Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Heiler', 'Alter Mann', 'Zwei Schwestern', 'Zwei Schwestern', 'Dorfbewohner'],
+    13: ['Werwolf', 'Werwolf', 'Werwolf', 'Weisser Wolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Heiler', 'Alter Mann', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
+    14: ['Werwolf', 'Werwolf', 'Werwolf', 'Weisser Wolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Heiler', 'Alter Mann', 'Medium', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
+    15: ['Werwolf', 'Werwolf', 'Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Heiler', 'Alter Mann', 'Medium', 'Rabe', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
+    16: ['Werwolf', 'Werwolf', 'Werwolf', 'Werwolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Heiler', 'Alter Mann', 'Medium', 'Rabe', 'Prinz', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
+    17: ['Werwolf', 'Werwolf', 'Werwolf', 'Werwolf', 'Urwolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Heiler', 'Alter Mann', 'Medium', 'Rabe', 'Prinz', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
+    18: ['Werwolf', 'Werwolf', 'Werwolf', 'Werwolf', 'Urwolf', 'Seherin', 'Hexe', 'Jaeger', 'Amor', 'Heiler', 'Alter Mann', 'Medium', 'Rabe', 'Prinz', 'Floetenspieler', 'Dorfbewohner', 'Dorfbewohner', 'Dorfbewohner'],
 }
+
+
+def berechne_balance_statistik(spieler_anzahl: int) -> dict:
+    """
+    Calculate balance statistics for a given player count.
+    Useful for verifying game balance.
+    
+    Args:
+        spieler_anzahl: Number of players
+        
+    Returns:
+        Dictionary with balance statistics
+    """
+    from game_logic import berechne_rollen
+    
+    rollen = berechne_rollen(spieler_anzahl)
+    
+    # Calculate team sizes
+    team_dorf = 0
+    team_werwolf = 0
+    team_solo = 0
+    team_andere = 0  # Vampire, Zombie, etc.
+    
+    for rolle_name, anzahl in rollen.items():
+        if rolle_name == 'Erzaehler':
+            continue
+        rolle_info = ROLLEN.get(rolle_name, {})
+        team = rolle_info.get('team', 'dorf')
+        
+        if team == 'dorf':
+            team_dorf += anzahl
+        elif team == 'werwolf':
+            team_werwolf += anzahl
+        elif team == 'solo':
+            team_solo += anzahl
+        else:
+            team_andere += anzahl
+    
+    total = team_dorf + team_werwolf + team_solo + team_andere
+    
+    return {
+        'total_players': spieler_anzahl,
+        'team_dorf': team_dorf,
+        'team_werwolf': team_werwolf,
+        'team_solo': team_solo,
+        'team_andere': team_andere,
+        'dorf_prozent': round(team_dorf / total * 100, 1) if total > 0 else 0,
+        'werwolf_prozent': round(team_werwolf / total * 100, 1) if total > 0 else 0,
+        'solo_prozent': round(team_solo / total * 100, 1) if total > 0 else 0,
+        'andere_prozent': round(team_andere / total * 100, 1) if total > 0 else 0,
+        'rollen': rollen,
+        'balance_ratio': f"1:{round(team_dorf / team_werwolf, 1) if team_werwolf > 0 else 0}" 
+    }
 
 
 # Teams und ihre Gewinnbedingungen

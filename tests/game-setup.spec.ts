@@ -92,6 +92,10 @@ test.describe('Game Setup Only - No Gameplay', () => {
     for (const player of players) {
       expect(player.role).toBeTruthy();
       logEvent('VERIFY', `${player.name} has role: ${player.role}`);
+      
+      // Check window position
+      const pos = await player.page.evaluate(() => ({ x: window.screenX, y: window.screenY }));
+      console.log(`Window position for ${player.name}: x=${pos.x}, y=${pos.y}`);
     }
     
     // Step 7: Just display the game state

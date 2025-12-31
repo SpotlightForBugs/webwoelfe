@@ -1,5 +1,11 @@
-import { Page, BrowserContext, Browser, expect, CDPSession } from '@playwright/test';
-import { execSync } from 'child_process';
+import {
+  Page,
+  BrowserContext,
+  Browser,
+  expect,
+  CDPSession,
+} from "@playwright/test";
+import { execSync } from "child_process";
 
 // Track window positions for tiling
 let windowPositionIndex = 0;
@@ -18,10 +24,13 @@ function getMonitors(): Monitor[] {
 
   try {
     // Detect monitors based on platform
-    if (process.platform === 'win32') {
+    if (process.platform === "win32") {
       // Windows: Use PowerShell to get screen info
-      const cmd = 'powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::AllScreens | Select-Object WorkingArea | ConvertTo-Json"';
-      const output = execSync(cmd, { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+      const cmd =
+        'powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::AllScreens | Select-Object WorkingArea | ConvertTo-Json"';
+      const output = execSync(cmd, {
+        stdio: ["ignore", "pipe", "ignore"],
+      }).toString();
       // PowerShell might return a single object or an array
       const data = JSON.parse(output);
       const screens = Array.isArray(data) ? data : [data];
@@ -30,25 +39,33 @@ function getMonitors(): Monitor[] {
         x: s.WorkingArea.X,
         y: s.WorkingArea.Y,
         width: s.WorkingArea.Width,
-        height: s.WorkingArea.Height
+        height: s.WorkingArea.Height,
       }));
-    } else if (process.platform === 'darwin') {
+    } else if (process.platform === "darwin") {
       // macOS: Use AppleScript to get desktop bounds (returns logical pixels)
-      const cmd = 'osascript -e \'tell application "Finder" to get bounds of window of desktop\'';
-      const output = execSync(cmd, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+      const cmd =
+        "osascript -e 'tell application \"Finder\" to get bounds of window of desktop'";
+      const output = execSync(cmd, { stdio: ["ignore", "pipe", "ignore"] })
+        .toString()
+        .trim();
       // Output format: "0, 0, 1920, 1080" (Left, Top, Right, Bottom)
-      const parts = output.split(',').map(p => parseInt(p.trim(), 10));
+      const parts = output.split(",").map((p) => parseInt(p.trim(), 10));
       if (parts.length === 4) {
-        monitors = [{
-          x: parts[0],
-          y: parts[1],
-          width: parts[2] - parts[0],
-          height: parts[3] - parts[1]
-        }];
+        monitors = [
+          {
+            x: parts[0],
+            y: parts[1],
+            width: parts[2] - parts[0],
+            height: parts[3] - parts[1],
+          },
+        ];
       }
     }
   } catch (e) {
-    console.warn(`Failed to detect monitors on ${process.platform}, using default fallback:`, e);
+    console.warn(
+      `Failed to detect monitors on ${process.platform}, using default fallback:`,
+      e,
+    );
   }
 
   // Fallback if detection failed
@@ -59,7 +76,9 @@ function getMonitors(): Monitor[] {
   // Sort monitors by X position to ensure logical order (left to right)
   monitors.sort((a, b) => a.x - b.x);
 
-  console.log(`[MONITOR] Detected ${monitors.length} monitor(s) on ${process.platform}`);
+  console.log(
+    `[MONITOR] Detected ${monitors.length} monitor(s) on ${process.platform}`,
+  );
   return monitors;
 }
 
@@ -85,7 +104,8 @@ function getNextWindowBounds(): WindowBounds {
   // Determine which monitor to use
   // Fill first monitor, then second, etc.
   // Wrap around if we have more windows than capacity
-  const monitorIndex = Math.floor(windowPositionIndex / windowsPerMonitor) % monitors.length;
+  const monitorIndex =
+    Math.floor(windowPositionIndex / windowsPerMonitor) % monitors.length;
   const localIndex = windowPositionIndex % windowsPerMonitor;
 
   const monitor = monitors[monitorIndex];
@@ -96,16 +116,16 @@ function getNextWindowBounds(): WindowBounds {
   const width = Math.floor(monitor.width / cols);
   const height = Math.floor(monitor.height / rows);
 
-  const x = monitor.x + (col * width);
-  const y = monitor.y + (row * height);
+  const x = monitor.x + col * width;
+  const y = monitor.y + row * height;
 
   windowPositionIndex++;
-  
+
   return {
     x,
     y,
     width,
-    height
+    height,
   };
 }
 
@@ -115,15 +135,15 @@ function getNextWindowBounds(): WindowBounds {
 async function configureWindow(page: Page, bounds: WindowBounds) {
   try {
     const session = await page.context().newCDPSession(page);
-    const { windowId } = await session.send('Browser.getWindowForTarget');
-    await session.send('Browser.setWindowBounds', {
+    const { windowId } = await session.send("Browser.getWindowForTarget");
+    await session.send("Browser.setWindowBounds", {
       windowId,
       bounds: {
         left: bounds.x,
         top: bounds.y,
         width: bounds.width,
-        height: bounds.height
-      }
+        height: bounds.height,
+      },
     });
   } catch (e) {
     // Ignore errors if CDP is not supported (e.g. Firefox/WebKit)
@@ -150,7 +170,7 @@ export function getActionDelay(): number {
  * Should keep browser open
  */
 export function shouldKeepOpen(): boolean {
-  return process.env.TEST_KEEP_OPEN === 'true';
+  return process.env.TEST_KEEP_OPEN === "true";
 }
 
 /**
@@ -159,7 +179,7 @@ export function shouldKeepOpen(): boolean {
 export async function delayAction(): Promise<void> {
   const delay = getActionDelay();
   if (delay > 0) {
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }
 
@@ -168,9 +188,11 @@ export async function delayAction(): Promise<void> {
  */
 export async function waitIfKeepOpen(): Promise<void> {
   if (shouldKeepOpen()) {
-    console.log('\n[KEEP-OPEN] Browser will stay open for 10 minutes for inspection...');
-    logEvent('INFO', 'Test complete - keeping browser open for inspection');
-    await new Promise(resolve => setTimeout(resolve, 10 * 60 * 1000));
+    console.log(
+      "\n[KEEP-OPEN] Browser will stay open for 10 minutes for inspection...",
+    );
+    logEvent("INFO", "Test complete - keeping browser open for inspection");
+    await new Promise((resolve) => setTimeout(resolve, 10 * 60 * 1000));
   }
 }
 
@@ -200,60 +222,64 @@ export interface GameState {
 export async function createRoom(
   browser: Browser,
   playerName: string,
-  roomName: string = 'Test Game',
+  roomName: string = "Test Game",
   playerCount: number = 5,
   isNarrator: boolean = true,
-  mode: 'online' | 'gruppe' = 'online'
+  mode: "online" | "gruppe" = "online",
 ): Promise<{ player: Player; roomCode: string }> {
   const bounds = getNextWindowBounds();
   const context = await browser.newContext({
     viewport: { width: bounds.width, height: bounds.height },
-    screen: { width: 1920, height: 1080 }
+    screen: { width: 1920, height: 1080 },
   });
   const page = await context.newPage();
   await configureWindow(page, bounds);
 
   // Go to home page
-  await page.goto('/');
-  await expect(page.locator('h1')).toBeVisible({ timeout: 10000 });
-  
+  await page.goto("/");
+  await expect(page.locator("h1")).toBeVisible({ timeout: 10000 });
+
   // The create form is the first form (without the code input)
-  const createForm = page.locator('form').filter({ hasNot: page.locator('input[name="code"]') });
-  
+  const createForm = page
+    .locator("form")
+    .filter({ hasNot: page.locator('input[name="code"]') });
+
   // Fill in the form to create a new game
   await createForm.locator('input[name="spieler_name"]').fill(playerName);
   await createForm.locator('input[name="raum_name"]').fill(roomName);
-  await createForm.locator('input[name="spieler_anzahl"]').fill(String(playerCount));
-  
+  await createForm
+    .locator('input[name="spieler_anzahl"]')
+    .fill(String(playerCount));
+
   // Select mode
   await createForm.locator('select[name="modus"]').selectOption(mode);
-  
+
   // For online mode, always make the creator a narrator so phases can advance
   // For gruppe mode, only if explicitly requested
-  const shouldBeNarrator = mode === 'online' || isNarrator;
+  const shouldBeNarrator = mode === "online" || isNarrator;
   if (shouldBeNarrator) {
     await createForm.locator('input[name="ist_erzaehler"]').check();
   }
-  
+
   // Submit the form
   await createForm.locator('button[type="submit"]').click();
-  
+
   // Wait for lobby page
   await expect(page).toHaveURL(/\/lobby\//, { timeout: 10000 });
-  
+
   // Extract room code from the page
-  const roomCodeElement = page.locator('.room-code');
+  const roomCodeElement = page.locator(".room-code");
   await expect(roomCodeElement).toBeVisible({ timeout: 5000 });
-  const roomCode = (await roomCodeElement.textContent())?.trim() || '';
-  
+  const roomCode = (await roomCodeElement.textContent())?.trim() || "";
+
   return {
     player: {
       context,
       page,
       name: playerName,
-      isNarrator
+      isNarrator,
     },
-    roomCode
+    roomCode,
   };
 }
 
@@ -263,40 +289,42 @@ export async function createRoom(
 export async function joinRoom(
   browser: Browser,
   roomCode: string,
-  playerName: string
+  playerName: string,
 ): Promise<Player> {
   const bounds = getNextWindowBounds();
   const context = await browser.newContext({
     viewport: { width: bounds.width, height: bounds.height },
-    screen: { width: 1920, height: 1080 }
+    screen: { width: 1920, height: 1080 },
   });
   const page = await context.newPage();
   await configureWindow(page, bounds);
 
   // Go to home page
-  await page.goto('/');
-  
+  await page.goto("/");
+
   // The join form is the second form on the page (after the create form)
   // It has an input with name="code"
-  const joinForm = page.locator('form').filter({ has: page.locator('input[name="code"]') });
-  
+  const joinForm = page
+    .locator("form")
+    .filter({ has: page.locator('input[name="code"]') });
+
   // Fill the player name first
   await joinForm.locator('input[name="spieler_name"]').fill(playerName);
-  
+
   // Fill the room code
   await joinForm.locator('input[name="code"]').fill(roomCode);
-  
+
   // Submit the join form
   await joinForm.locator('button[type="submit"]').click();
-  
+
   // Wait for lobby page
   await expect(page).toHaveURL(/\/lobby\//, { timeout: 10000 });
-  
+
   return {
     context,
     page,
     name: playerName,
-    isNarrator: false
+    isNarrator: false,
   };
 }
 
@@ -304,10 +332,12 @@ export async function joinRoom(
  * Start the game from the lobby (any player can start if enough players)
  */
 export async function startGame(player: Player): Promise<void> {
-  const startButton = player.page.locator('#start-btn, button:has-text("Spiel starten")');
+  const startButton = player.page.locator(
+    '#start-btn, button:has-text("Spiel starten")',
+  );
   await expect(startButton).toBeVisible({ timeout: 10000 });
   await startButton.click();
-  
+
   // Wait for navigation to game page
   await expect(player.page).toHaveURL(/\/spiel\//, { timeout: 15000 });
 }
@@ -326,25 +356,27 @@ export async function waitForGameStart(players: Player[]): Promise<void> {
  */
 export async function getPlayerRole(player: Player): Promise<string> {
   // Wait for role badge to be visible
-  const roleBadge = player.page.locator('.rolle-badge');
+  const roleBadge = player.page.locator(".rolle-badge");
   await expect(roleBadge).toBeVisible({ timeout: 10000 });
-  
+
   const roleText = await roleBadge.textContent();
-  player.role = roleText?.trim() || 'Unknown';
+  player.role = roleText?.trim() || "Unknown";
   return player.role;
 }
 
 /**
  * Get all players' roles
  */
-export async function getAllPlayerRoles(players: Player[]): Promise<Map<string, string>> {
+export async function getAllPlayerRoles(
+  players: Player[],
+): Promise<Map<string, string>> {
   const roleMap = new Map<string, string>();
-  
+
   for (const player of players) {
     const role = await getPlayerRole(player);
     roleMap.set(player.name, role);
   }
-  
+
   return roleMap;
 }
 
@@ -356,11 +388,11 @@ export async function advancePhase(player: Player): Promise<void> {
   try {
     await player.page.evaluate(() => {
       // Directly call the naechstePhase function if it exists
-      if (typeof (window as any).naechstePhase === 'function') {
+      if (typeof (window as any).naechstePhase === "function") {
         (window as any).naechstePhase();
-      } else if (typeof (window as any).socket !== 'undefined') {
+      } else if (typeof (window as any).socket !== "undefined") {
         // Or emit the socket event
-        (window as any).socket.emit('phase_weiter');
+        (window as any).socket.emit("phase_weiter");
       }
     });
   } catch (e) {
@@ -368,12 +400,12 @@ export async function advancePhase(player: Player): Promise<void> {
     const buttons = [
       'button:has-text("Weiter")',
       'button:has-text("Phase")',
-      '#phase-weiter-btn',
+      "#phase-weiter-btn",
       'button:has-text("Naechste Phase")',
       'button:has-text("Naechste Runde")',
-      'button[type="button"]:visible'
+      'button[type="button"]:visible',
     ];
-    
+
     for (const selector of buttons) {
       try {
         const btn = player.page.locator(selector);
@@ -386,7 +418,7 @@ export async function advancePhase(player: Player): Promise<void> {
       }
     }
   }
-  
+
   // Wait for phase transition
   await player.page.waitForTimeout(1000);
 }
@@ -395,16 +427,21 @@ export async function advancePhase(player: Player): Promise<void> {
  * Get current phase from the game page
  */
 export async function getCurrentPhase(player: Player): Promise<string> {
-  const phaseElement = player.page.locator('#phase-name, .phase-name');
+  const phaseElement = player.page.locator("#phase-name, .phase-name");
   const phaseText = await phaseElement.textContent();
-  return phaseText?.trim().toLowerCase() || '';
+  return phaseText?.trim().toLowerCase() || "";
 }
 
 /**
  * Select a player target (for voting, attacking, etc.)
  */
-export async function selectTarget(player: Player, targetName: string): Promise<void> {
-  const targetCard = player.page.locator(`.spieler-card[data-name="${targetName}"], .spieler-card:has-text("${targetName}")`);
+export async function selectTarget(
+  player: Player,
+  targetName: string,
+): Promise<void> {
+  const targetCard = player.page.locator(
+    `.spieler-card[data-name="${targetName}"], .spieler-card:has-text("${targetName}")`,
+  );
   await expect(targetCard).toBeVisible();
   await targetCard.click();
   // Wait for action buttons to update after selection
@@ -414,8 +451,13 @@ export async function selectTarget(player: Player, targetName: string): Promise<
 /**
  * Confirm an action (after selecting a target)
  */
-export async function confirmAction(player: Player, actionText: string = 'Bestaetigen'): Promise<void> {
-  const confirmButton = player.page.locator(`button:has-text("${actionText}"), .btn-primary:has-text("${actionText}")`);
+export async function confirmAction(
+  player: Player,
+  actionText: string = "Bestaetigen",
+): Promise<void> {
+  const confirmButton = player.page.locator(
+    `button:has-text("${actionText}"), .btn-primary:has-text("${actionText}")`,
+  );
   // Wait for button to become visible
   await expect(confirmButton).toBeVisible({ timeout: 5000 });
   if (await confirmButton.isVisible()) {
@@ -429,30 +471,38 @@ export async function confirmAction(player: Player, actionText: string = 'Bestae
  */
 export async function vote(player: Player, targetName: string): Promise<void> {
   await selectTarget(player, targetName);
-  await confirmAction(player, 'Abstimmen');
+  await confirmAction(player, "Abstimmen");
 }
 
 /**
  * Werewolf attack action
  */
-export async function werewolfAttack(player: Player, targetName: string): Promise<void> {
+export async function werewolfAttack(
+  player: Player,
+  targetName: string,
+): Promise<void> {
   await selectTarget(player, targetName);
-  await confirmAction(player, 'Angreifen');
+  await confirmAction(player, "Angreifen");
 }
 
 /**
  * Seer see action
  */
-export async function seerSee(player: Player, targetName: string): Promise<void> {
+export async function seerSee(
+  player: Player,
+  targetName: string,
+): Promise<void> {
   await selectTarget(player, targetName);
-  await confirmAction(player, 'Sehen');
+  await confirmAction(player, "Sehen");
 }
 
 /**
  * Witch heal action
  */
 export async function witchHeal(player: Player): Promise<void> {
-  const healButton = player.page.locator('button:has-text("Heilen"), button:has-text("Heiltrank")');
+  const healButton = player.page.locator(
+    'button:has-text("Heilen"), button:has-text("Heiltrank")',
+  );
   if (await healButton.isVisible()) {
     await healButton.click();
     await player.page.waitForTimeout(500);
@@ -462,9 +512,14 @@ export async function witchHeal(player: Player): Promise<void> {
 /**
  * Witch poison action
  */
-export async function witchPoison(player: Player, targetName: string): Promise<void> {
+export async function witchPoison(
+  player: Player,
+  targetName: string,
+): Promise<void> {
   await selectTarget(player, targetName);
-  const poisonButton = player.page.locator('button:has-text("Vergiften"), button:has-text("Gifttrank")');
+  const poisonButton = player.page.locator(
+    'button:has-text("Vergiften"), button:has-text("Gifttrank")',
+  );
   if (await poisonButton.isVisible()) {
     await poisonButton.click();
     await player.page.waitForTimeout(500);
@@ -475,7 +530,9 @@ export async function witchPoison(player: Player, targetName: string): Promise<v
  * Skip/pass an action
  */
 export async function skipAction(player: Player): Promise<void> {
-  const skipButton = player.page.locator('button:has-text("Ueberspringen"), button:has-text("Nichts tun"), button:has-text("Weiter")');
+  const skipButton = player.page.locator(
+    'button:has-text("Ueberspringen"), button:has-text("Nichts tun"), button:has-text("Weiter")',
+  );
   if (await skipButton.isVisible()) {
     await skipButton.click();
     await player.page.waitForTimeout(500);
@@ -485,10 +542,15 @@ export async function skipAction(player: Player): Promise<void> {
 /**
  * Check if a player is dead on the game page
  */
-export async function isPlayerDead(observer: Player, targetName: string): Promise<boolean> {
-  const targetCard = observer.page.locator(`.spieler-card:has-text("${targetName}")`);
-  const classes = await targetCard.getAttribute('class');
-  return classes?.includes('tot') || false;
+export async function isPlayerDead(
+  observer: Player,
+  targetName: string,
+): Promise<boolean> {
+  const targetCard = observer.page.locator(
+    `.spieler-card:has-text("${targetName}")`,
+  );
+  const classes = await targetCard.getAttribute("class");
+  return classes?.includes("tot") || false;
 }
 
 /**
@@ -496,18 +558,20 @@ export async function isPlayerDead(observer: Player, targetName: string): Promis
  */
 export async function isGameOver(player: Player): Promise<boolean> {
   const phase = await getCurrentPhase(player);
-  return phase.includes('ende') || phase.includes('gewonnen');
+  return phase.includes("ende") || phase.includes("gewonnen");
 }
 
 /**
  * Get the winner of the game
  */
 export async function getWinner(player: Player): Promise<string> {
-  const winnerElement = player.page.locator('.winner, .gewinner, [data-winner]');
+  const winnerElement = player.page.locator(
+    ".winner, .gewinner, [data-winner]",
+  );
   if (await winnerElement.isVisible()) {
-    return (await winnerElement.textContent())?.trim() || '';
+    return (await winnerElement.textContent())?.trim() || "";
   }
-  return '';
+  return "";
 }
 
 /**
@@ -526,7 +590,11 @@ export async function cleanup(players: Player[]): Promise<void> {
 /**
  * Wait for a specific element to appear
  */
-export async function waitForElement(player: Player, selector: string, timeout: number = 10000): Promise<boolean> {
+export async function waitForElement(
+  player: Player,
+  selector: string,
+  timeout: number = 10000,
+): Promise<boolean> {
   try {
     await player.page.waitForSelector(selector, { timeout });
     return true;
@@ -538,54 +606,75 @@ export async function waitForElement(player: Player, selector: string, timeout: 
 /**
  * Take a screenshot of a player's view
  */
-export async function takeScreenshot(player: Player, name: string): Promise<void> {
-  await player.page.screenshot({ path: `tests/screenshots/${name}-${player.name}.png` });
+export async function takeScreenshot(
+  player: Player,
+  name: string,
+): Promise<void> {
+  await player.page.screenshot({
+    path: `tests/screenshots/${name}-${player.name}.png`,
+  });
 }
 
 /**
  * Log game state for debugging
  */
 export async function logGameState(players: Player[]): Promise<void> {
-  console.log('--- Game State ---');
+  console.log("--- Game State ---");
   for (const player of players) {
     const phase = await getCurrentPhase(player);
-    console.log(`Player: ${player.name}, Role: ${player.role || 'Unknown'}, Phase: ${phase}`);
+    console.log(
+      `Player: ${player.name}, Role: ${player.role || "Unknown"}, Phase: ${phase}`,
+    );
   }
-  console.log('-------------------');
+  console.log("-------------------");
 }
 
 /**
  * Verbose logging for voting
  */
-export function logVote(voter: string, votedFor: string, reason: string = ''): void {
-  const reasonStr = reason ? ` (${reason})` : '';
+export function logVote(
+  voter: string,
+  votedFor: string,
+  reason: string = "",
+): void {
+  const reasonStr = reason ? ` (${reason})` : "";
   console.log(`[VOTE] ${voter} votes for ${votedFor}${reasonStr}`);
 }
 
 /**
  * Verbose logging for actions
  */
-export function logAction(actor: string, action: string, target: string = '', details: string = ''): void {
-  const targetStr = target ? ` on ${target}` : '';
-  const detailsStr = details ? ` - ${details}` : '';
+export function logAction(
+  actor: string,
+  action: string,
+  target: string = "",
+  details: string = "",
+): void {
+  const targetStr = target ? ` on ${target}` : "";
+  const detailsStr = details ? ` - ${details}` : "";
   console.log(`[ACTION] ${actor} performs ${action}${targetStr}${detailsStr}`);
 }
 
 /**
  * Verbose logging for phase changes
  */
-export function logPhaseChange(oldPhase: string, newPhase: string, round: number = 0): void {
-  const roundStr = round > 0 ? ` (Round ${round})` : '';
+export function logPhaseChange(
+  oldPhase: string,
+  newPhase: string,
+  round: number = 0,
+): void {
+  const roundStr = round > 0 ? ` (Round ${round})` : "";
   console.log(`[PHASE] ${oldPhase} --> ${newPhase}${roundStr}`);
 }
 
 /**
  * Verbose logging for game events
  */
-export function logEvent(eventType: string, message: string, details: string = ''): void {
-  const detailsStr = details ? ` [${details}]` : '';
+export function logEvent(
+  eventType: string,
+  message: string,
+  details: string = "",
+): void {
+  const detailsStr = details ? ` [${details}]` : "";
   console.log(`[${eventType.toUpperCase()}] ${message}${detailsStr}`);
 }
-
-
-

@@ -25,8 +25,8 @@ def _build_test_app() -> Flask:
     """Create a fresh Flask app with an in-memory database for each test."""
 
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
     with app.app_context():
@@ -52,20 +52,20 @@ class GameLogicFullCycleTest(unittest.TestCase):
 
         # Minimum counts for roles that should appear as groups.
         special_counts = {
-            'Zwei Schwestern': 2,
-            'Drei Brüder': 3,
-            'Freimaurer': 3,
-            'Werwolf': 2,  # Keeps the wolf phase meaningful.
+            "Zwei Schwestern": 2,
+            "Drei Brüder": 3,
+            "Freimaurer": 3,
+            "Werwolf": 2,  # Keeps the wolf phase meaningful.
         }
 
         with self.app.app_context():
             raum = Raum(
-                code='TST123',
-                name='Full Cycle',
-                modus='online',
+                code="TST123",
+                name="Full Cycle",
+                modus="online",
                 spieler_anzahl=0,
                 spiel_gestartet=True,
-                aktuelle_phase='nacht_start',
+                aktuelle_phase="nacht_start",
                 runde=1,
             )
             db.session.add(raum)
@@ -83,7 +83,7 @@ class GameLogicFullCycleTest(unittest.TestCase):
                             raum_id=raum.id,
                             rolle=role,
                             ist_am_leben=True,
-                            status='aktiv',
+                            status="aktiv",
                         )
                     )
 
@@ -94,7 +94,9 @@ class GameLogicFullCycleTest(unittest.TestCase):
 
     def test_all_roles_advance_through_all_actions(self):
         raum_id = self._create_full_room()
-        expected_order = PHASEN[PHASEN.index('dieb_phase'): PHASEN.index('tag_ende') + 1]
+        expected_order = PHASEN[
+            PHASEN.index("dieb_phase") : PHASEN.index("tag_ende") + 1
+        ]
 
         with self.app.app_context():
             raum = Raum.query.get(raum_id)
@@ -103,7 +105,7 @@ class GameLogicFullCycleTest(unittest.TestCase):
 
             # Ensure every mapped action belongs to a known phase and key role gates the wolf attack.
             self.assertTrue(set(phase_roles.keys()).issubset(set(PHASEN)))
-            self.assertEqual(phase_roles.get('werwolf_phase'), 'Werwolf')
+            self.assertEqual(phase_roles.get("werwolf_phase"), "Werwolf")
 
             for _ in range(len(expected_order)):
                 next_phase = game_logic.naechste_phase(raum)
@@ -122,22 +124,24 @@ class GameLogicFullCycleTest(unittest.TestCase):
                         raum.id,
                         raum.runde,
                         next_phase,
-                        'test_action',
+                        "test_action",
                         actor.id,
                         target_id,
                     )
 
                 self.assertTrue(
-                    game_logic.alle_haben_gewaehlt(raum, next_phase, acting_role if acting_role else None)
+                    game_logic.alle_haben_gewaehlt(
+                        raum, next_phase, acting_role if acting_role else None
+                    )
                 )
 
-                if next_phase == 'tag_ende':
+                if next_phase == "tag_ende":
                     break
 
         self.assertEqual(expected_order[: len(visited)], visited)
         self.assertEqual(raum.runde, 1)
-        self.assertEqual(raum.aktuelle_phase, 'tag_ende')
+        self.assertEqual(raum.aktuelle_phase, "tag_ende")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

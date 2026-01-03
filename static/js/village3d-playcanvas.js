@@ -484,7 +484,7 @@ export default class Village3DPlayCanvas {
       const windowX = Math.sin(angle) * 1.3;
       const windowZ = -3.5 + Math.cos(angle) * 1.3;
       window.setLocalPosition(windowX, 9, windowZ);
-      window.setLocalEulerAngles(0, (i * 90), 0);
+      window.setLocalEulerAngles(0, i * 90, 0);
 
       const windowMat = new pc.StandardMaterial();
       windowMat.diffuse = new pc.Color(0.2, 0.2, 0.3);
@@ -1178,8 +1178,10 @@ export default class Village3DPlayCanvas {
       potion.setLocalScale(0.1, 0.3, 0.1);
 
       const potionMat = new pc.StandardMaterial();
-      potionMat.diffuse = i === 0 ? new pc.Color(0, 1, 0) : new pc.Color(0.8, 0, 0.8);
-      potionMat.emissive = i === 0 ? new pc.Color(0, 0.5, 0) : new pc.Color(0.4, 0, 0.4);
+      potionMat.diffuse =
+        i === 0 ? new pc.Color(0, 1, 0) : new pc.Color(0.8, 0, 0.8);
+      potionMat.emissive =
+        i === 0 ? new pc.Color(0, 0.5, 0) : new pc.Color(0.4, 0, 0.4);
       potionMat.opacity = 0.8;
       potionMat.blendType = pc.BLEND_ADDITIVE;
       potionMat.update();
@@ -1695,7 +1697,7 @@ export default class Village3DPlayCanvas {
     voteBadge.setLocalPosition(
       Math.random() * 0.6 - 0.3,
       3.8 + Math.random() * 0.4,
-      0
+      0,
     );
     voteBadge.setLocalScale(0.2, 0.2, 0.2);
 
@@ -1716,7 +1718,7 @@ export default class Village3DPlayCanvas {
       voteBadge.setLocalPosition(
         voteBadge.getLocalPosition().x,
         3.8 + Math.sin(time * 3) * 0.2,
-        voteBadge.getLocalPosition().z
+        voteBadge.getLocalPosition().z,
       );
 
       if (time > 5) {
@@ -1736,7 +1738,7 @@ export default class Village3DPlayCanvas {
     const bubble = new pc.Entity("ChatBubble");
     bubble.addComponent("model", { type: "plane" });
     bubble.setLocalPosition(0, 4.0, 0);
-    
+
     // Calculate size based on message length
     const width = Math.min(Math.max(message.length * 0.15, 2), 5);
     bubble.setLocalScale(width, 0.8, 1);
@@ -1775,13 +1777,13 @@ export default class Village3DPlayCanvas {
     ctx.font = "bold 32px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    
+
     // Word wrap
     const maxWidth = canvas.width - 40;
     const words = message.split(" ");
     let line = "";
     let y = canvas.height / 2;
-    
+
     words.forEach((word) => {
       const testLine = line + word + " ";
       const metrics = ctx.measureText(testLine);
@@ -1890,7 +1892,7 @@ export default class Village3DPlayCanvas {
         velocity: new pc.Vec3(
           (Math.random() - 0.5) * 2,
           Math.random() * 3 + 1,
-          (Math.random() - 0.5) * 2
+          (Math.random() - 0.5) * 2,
         ),
         life: 0,
         maxLife: 1 + Math.random() * 0.5,

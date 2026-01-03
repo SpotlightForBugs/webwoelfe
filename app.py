@@ -807,9 +807,22 @@ def handle_chat(data):
     # SICHER: Keine sensiblen Daten im Chat
     if not spieler.ist_am_leben:
         # Tote chatten nur mit Toten
-        emit("chat_tot", {"von": spieler.name, "nachricht": nachricht, "spieler_id": spieler.id}, room=raum.code)
+        emit(
+            "chat_tot",
+            {"von": spieler.name, "nachricht": nachricht, "spieler_id": spieler.id},
+            room=raum.code,
+        )
     else:
-        emit("chat", {"von": spieler.name, "nachricht": nachricht, "ist_tot": False, "spieler_id": spieler.id}, room=raum.code)
+        emit(
+            "chat",
+            {
+                "von": spieler.name,
+                "nachricht": nachricht,
+                "ist_tot": False,
+                "spieler_id": spieler.id,
+            },
+            room=raum.code,
+        )
 
 
 @socketio.on("navigiere_zur_lobby")

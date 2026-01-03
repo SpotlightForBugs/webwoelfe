@@ -521,8 +521,42 @@ spiel_name }}{% endblock %} {% block content %}
         "village-3d-lobby-container",
         "{{ raum.code }}",
       );
+      
+      // Initiale Spieler laden
+      updateVillage3D();
     }
   });
+  
+  // Funktion um 3D Dorf mit aktuellen Spielern zu aktualisieren
+  window.updateVillage3D = function() {
+    if (!window.village3dLobby) return;
+    
+    const spielerKarten = document.querySelectorAll('.spieler-karte');
+    const spielerDaten = [];
+    
+    spielerKarten.forEach(karte => {
+      const istErzaehler = karte.getAttribute('data-erzaehler') === 'true';
+      // Erzähler nicht im Dorf anzeigen
+      if (istErzaehler) return;
+      
+      const id = parseInt(karte.getAttribute('data-spieler-id'));
+      const name = karte.querySelector('.spielername')?.textContent?.replace('(Du)', '').trim() || 'Spieler';
+      
+      spielerDaten.push({
+        id: id,
+        name: name,
+        rolle: null, // In Lobby noch keine Rollen
+        ist_am_leben: true,
+        ist_erzaehler: false
+      });
+    });
+    
+    if (spielerDaten.length > 0) {
+      window.village3dLobby.setPlayers(spielerDaten);
+      // Lobby-Ansicht ist immer Tag
+      window.village3dLobby.setTimeOfDay(false);
+    }
+  };
 </script>
 {% endif %}
 <script>
@@ -546,6 +580,10 @@ spiel_name }}{% endblock %} {% block content %}
     updateRollenVorschau();
     // Auch zur Sitzordnung hinzufügen
     addToSitzordnung(data.spieler);
+    // 3D Dorf aktualisieren (Online-Modus)
+    if (window.updateVillage3D) {
+      setTimeout(() => window.updateVillage3D(), 100);
+    }
   });
 
   socket.on("spieler_getrennt", function (data) {
@@ -556,6 +594,10 @@ spiel_name }}{% endblock %} {% block content %}
     updateRollenVorschau();
     // Auch aus Sitzordnung entfernen
     removeFromSitzordnung(data.spieler_id);
+    // 3D Dorf aktualisieren (Online-Modus)
+    if (window.updateVillage3D) {
+      setTimeout(() => window.updateVillage3D(), 100);
+    }
   });
 
   socket.on("spiel_gestartet", function (data) {
@@ -811,6 +853,10 @@ spiel_name }}{% endblock %} {% block content %}
     updateSpielerAnzahl();
     updateStartButton();
     initSitzordnungFromSpieler();
+    // 3D Dorf aktualisieren (Online-Modus)
+    if (window.updateVillage3D) {
+      setTimeout(() => window.updateVillage3D(), 100);
+    }
   }
 
   async function spinForErzaehler() {

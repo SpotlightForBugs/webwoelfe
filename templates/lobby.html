@@ -67,7 +67,7 @@ spiel_name }}{% endblock %} {% block content %}
             >(<span id="spieler-anzahl" data-min="5"
               >{{ alle_spieler|length }}</span
             >
-            insgesamt, Erzähler zählt nicht für die Mindestanzahl)</span
+            insgesamt{% if raum.erzaehler_modus == 'zufall' %}, Erzähler zählt nicht für die Mindestanzahl{% endif %})</span
           >
         </h2>
         <div
@@ -130,7 +130,7 @@ spiel_name }}{% endblock %} {% block content %}
               {% endif %}
             </div>
             {% if s.ist_erzaehler %}
-            <div style="font-size: 0.75rem; color: var(--accent-gold)">
+            <div class="erzaehler-badge" style="font-size: 0.75rem; color: var(--accent-gold)">
               <i class="fa-solid fa-book-open"></i> Erzähler
             </div>
             {% endif %}
@@ -140,7 +140,8 @@ spiel_name }}{% endblock %} {% block content %}
       </div>
     </div>
 
-    <!-- Erzähler Auswahl -->
+    <!-- Erzähler Auswahl - nur bei Zufallsmodus -->
+    {% if raum.erzaehler_modus == 'zufall' %}
     <div class="card mb-3" id="erzaehler-card">
       <div
         class="card-header"
@@ -153,7 +154,6 @@ spiel_name }}{% endblock %} {% block content %}
         <h2 style="font-size: 1.25rem">
           <i class="fa-solid fa-book-open"></i> Erzähler bestimmen
         </h2>
-        {% if raum.erzaehler_modus == 'zufall' %}
         <button
           class="btn btn-primary btn-sm"
           id="erzaehler-spin-btn"
@@ -162,22 +162,13 @@ spiel_name }}{% endblock %} {% block content %}
         >
           <i class="fa-solid fa-arrows-spin"></i> Glücksrad
         </button>
-        {% else %}
-        <span
-          class="badge"
-          style="background: var(--bg-secondary); color: var(--text-secondary)"
-          >Glücksrad aus</span
-        >
-        {% endif %}
       </div>
       <p class="text-muted" id="erzaehler-status" style="margin-bottom: 0.5rem">
         {% if erzaehler %} Erzähler: <strong>{{ erzaehler.name }}</strong>
-        {% elif raum.erzaehler_modus == 'zufall' %} Noch kein Erzähler gewählt.
-        Das Glücksrad sucht einen zufälligen Freiwilligen. {% else %} Erzähler
-        wird ohne Glücksrad vergeben. Legt vor dem Start fest, wer moderiert. {%
+        {% else %} Noch kein Erzähler gewählt.
+        Das Glücksrad sucht einen zufälligen Freiwilligen. {%
         endif %}
       </p>
-      {% if raum.erzaehler_modus == 'zufall' %}
       <div
         id="erzaehler-wheel"
         style="
@@ -195,15 +186,11 @@ spiel_name }}{% endblock %} {% block content %}
         Das Glücksrad berücksichtigt nur Spieler, die noch nicht Erzähler sind.
         Alle sehen live, wer gezogen wird.
       </div>
-      {% else %}
-      <div class="alert alert-info" style="margin-top: 0.5rem">
-        Das Glücksrad erscheint nur, wenn ihr beim Setup "Zufälliger Erzähler"
-        gewählt habt.
-      </div>
-      {% endif %}
     </div>
+    {% endif %}
 
-    <!-- Sitzordnung - Drag & Drop -->
+    <!-- Sitzordnung - nur bei Gruppen-Modus (zusammen sitzen) manuell anzeigen -->
+    {% if raum.modus != 'online' %}
     <div class="card mb-3" id="sitzordnung-card">
       <div
         class="card-header"
@@ -242,6 +229,22 @@ spiel_name }}{% endblock %} {% block content %}
         <!-- Wird per JS gefüllt -->
       </div>
     </div>
+    {% else %}
+    <!-- Bei Online-Modus: Automatische Sitzordnung, zeige 3D-Dorf -->
+    <div class="card mb-3" id="sitzordnung-card">
+      <div class="card-header">
+        <h2 style="font-size: 1.25rem">
+          <i class="fa-solid fa-house"></i> Dorfansicht
+        </h2>
+      </div>
+      <p class="text-muted mb-2" style="font-size: 0.875rem">
+        <i class="fa-solid fa-shuffle"></i> Die Sitzordnung wird bei Online-Spielen automatisch festgelegt.
+      </p>
+      <div id="village-3d-lobby-container" style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden;">
+        <!-- 3D Dorf wird hier geladen -->
+      </div>
+    </div>
+    {% endif %}
 
     <!-- Spielstart -->
     <div class="card text-center">
@@ -272,14 +275,14 @@ spiel_name }}{% endblock %} {% block content %}
     </div>
 
     <!-- Rollen Vorschau -->
-    <div class="card mt-3">
+    <div class="card mt-3" id="rollen-vorschau-card">
       <h3 class="mb-2" style="font-size: 1rem; color: var(--text-secondary)">
         <i class="fa-solid fa-masks-theater"></i>
         Rollenverteilung ({{ rollen_vorschau_total }} Spieler{% if
         rollen_vorschau_hat_erzaehler %} inkl. Erzähler{% endif %})
       </h3>
       <div
-        id="rollen-vorschau"
+        id="rollen-vorschau-liste"
         style="display: flex; flex-wrap: wrap; gap: 0.5rem"
       >
         {% for rollen_name, anzahl in rollen_vorschau.items() %} {% set
@@ -497,6 +500,21 @@ spiel_name }}{% endblock %} {% block content %}
   }
 </style>
 {% endblock %} {% block scripts %}
+<!-- 3D Dorf für Online-Modus mit PlayCanvas -->
+{% if raum.modus == 'online' %}
+<script src="https://code.playcanvas.com/playcanvas-stable.min.js"></script>
+<script type="module">
+  import Village3DPlayCanvas from '/static/js/village3d-playcanvas.js';
+  
+  // Initialisiere 3D-Dorf in der Lobby
+  document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('village-3d-lobby-container');
+    if (container && typeof pc !== 'undefined') {
+      window.village3dLobby = new Village3DPlayCanvas('village-3d-lobby-container', '{{ raum.code }}');
+    }
+  });
+</script>
+{% endif %}
 <script>
   const socket = io();
   const raumCode = "{{ raum.code }}";
@@ -646,6 +664,43 @@ spiel_name }}{% endblock %} {% block content %}
     }
   }
 
+  // Rollenvorschau dynamisch aktualisieren
+  async function updateRollenVorschau() {
+    try {
+      const response = await fetch(`/api/rollen_vorschau/${raumCode}`);
+      const data = await response.json();
+      if (data.success) {
+        // Header aktualisieren
+        const header = document.querySelector('#rollen-vorschau-card h3');
+        if (header) {
+          const hatErzaehler = data.hat_erzaehler ? ' inkl. Erzähler' : '';
+          header.innerHTML = `<i class="fa-solid fa-masks-theater"></i> Rollenverteilung (${data.total} Spieler${hatErzaehler})`;
+        }
+        
+        // Rollen-Liste aktualisieren
+        const rollenListe = document.getElementById('rollen-vorschau-liste');
+        if (rollenListe) {
+          rollenListe.innerHTML = data.rollen.map(rolle => {
+            const anzahlText = rolle.anzahl > 1 ? ` x${rolle.anzahl}` : '';
+            return `
+              <span style="
+                background: ${rolle.farbe};
+                color: white;
+                padding: 0.25rem 0.75rem;
+                border-radius: 4px;
+                font-size: 0.75rem;
+              ">
+                ${rolle.name}${anzahlText}
+              </span>
+            `;
+          }).join('');
+        }
+      }
+    } catch (e) {
+      console.error('Fehler beim Aktualisieren der Rollenvorschau:', e);
+    }
+  }
+
   function showNotification(msg, type) {
     const notification = document.createElement("div");
     notification.className = `notification ${type}`;
@@ -665,11 +720,27 @@ spiel_name }}{% endblock %} {% block content %}
     setTimeout(() => notification.remove(), 3000);
   }
 
-  function starteSpiel() {
+  async function starteSpiel() {
     const btn = document.getElementById("start-btn");
     btn.disabled = true;
     btn.textContent = "Starte...";
+    
+    // Auto-spin für zufälligen Erzähler wenn kein Erzähler gewählt wurde
+    if (erzaehlerModus === "zufall" && !hatErzaehler()) {
+      btn.textContent = "Wähle Erzähler...";
+      await spinForErzaehler();
+      // Kurze Pause um das Ergebnis zu zeigen
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+    
+    btn.textContent = "Starte...";
     socket.emit("spiel_starten", {});
+  }
+  
+  function hatErzaehler() {
+    // Prüft ob bereits ein Erzähler gewählt wurde
+    const erzaehlerKarte = document.querySelector('.spieler-karte[data-erzaehler="true"]');
+    return erzaehlerKarte !== null;
   }
 
   function copyCode() {
@@ -692,10 +763,14 @@ spiel_name }}{% endblock %} {% block content %}
         Number(karte.getAttribute("data-spieler-id")) === Number(spielerId);
       karte.setAttribute("data-erzaehler", istMatch ? "true" : "false");
       const infoContainer = karte.querySelector("div:nth-child(2)");
-      const bestehend = infoContainer?.querySelector(".erzaehler-badge");
+      // Check for both class-based AND old inline badges
+      const bestehendClass = infoContainer?.querySelector(".erzaehler-badge");
+      const bestehendInline = infoContainer?.querySelector("div[style*='accent-gold']");
+      const hatSchonBadge = bestehendClass || bestehendInline;
 
       if (istMatch) {
-        if (!bestehend) {
+        // Only add if no badge exists at all
+        if (!hatSchonBadge) {
           const label = document.createElement("div");
           label.className = "erzaehler-badge";
           label.style.cssText =
@@ -704,9 +779,16 @@ spiel_name }}{% endblock %} {% block content %}
           infoContainer?.appendChild(label);
         }
         karte.style.outline = "2px solid var(--accent-gold)";
+        // Update avatar color
+        const avatar = karte.querySelector("div[style*='border-radius: 50%']");
+        if (avatar) avatar.style.background = "var(--accent-gold)";
       } else {
         karte.style.outline = "";
-        bestehend?.remove();
+        // Only remove dynamically added badges
+        bestehendClass?.remove();
+        // Reset avatar color
+        const avatar = karte.querySelector("div[style*='border-radius: 50%']");
+        if (avatar) avatar.style.background = "var(--accent-blue)";
       }
     });
 

@@ -98,30 +98,34 @@ class ParanormalerErmittlerbillig(Role):
         gezeigt_sicht = echte_sicht
         
         if ist_falsch:
+            # Sammle alle aktiven Rollen im Spiel (außer der eigenen und der Ziel-Rolle)
             spieler_rollen = getattr(kontext, 'spieler_rollen', {})
-            lebende = getattr(kontext, 'lebende_spieler', [])
-            kandidaten = [
-                spieler_rollen.get(spieler_id)
-                for spieler_id in lebende
-                if spieler_rollen.get(spieler_id)
-            ]
-            kandidaten = [
-                rolle for rolle in kandidaten
-                if rolle not in {self.info.name, ziel.rolle}
-            ]
+            lebende = kontext.lebende_spieler
             
-            if kandidaten:
-                zufalls_rolle = random.choice(kandidaten)
-            else:
-                zufalls_rolle = rollen_name
+            # Sammle die Rollen-Objekte der lebenden Spieler
+            aktive_rollen = []
+            for spieler_id in lebende:
+                rolle_obj = spieler_rollen.get(spieler_id)
+                if rolle_obj is None:
+                    continue
+                rolle_name = rolle_obj.info.name
+                # Nicht die eigene Rolle und nicht die Rolle des Ziels
+                if rolle_name != self.info.name and rolle_name != rollen_name:
+                    aktive_rollen.append(rolle_obj)
             
-            zufalls_rolle_obj = RoleRegistry.get(zufalls_rolle)
-            if zufalls_rolle_obj:
+            if aktive_rollen:
+                # Wähle eine zufällige aktive Rolle aus dem Spiel
+                zufalls_rolle_obj = random.choice(aktive_rollen)
                 gezeigt_sicht = zufalls_rolle_obj.sichtbar_als_fuer("Seherin")
                 gezeigt_rolle = zufalls_rolle_obj.sichtbare_rolle_fuer("Seherin")
             else:
-                gezeigt_sicht = SichtTyp.DORF
-                gezeigt_rolle = zufalls_rolle
+                # Fallback: Zeige gegenteilige Sicht
+                if echte_sicht == SichtTyp.WERWOLF:
+                    gezeigt_sicht = SichtTyp.DORF
+                    gezeigt_rolle = "Dorfbewohner"
+                else:
+                    gezeigt_sicht = SichtTyp.WERWOLF
+                    gezeigt_rolle = "Werwolf"
         
         gezeigt_werwolf = gezeigt_sicht == SichtTyp.WERWOLF
         gezeigt_nachricht = (
@@ -141,7 +145,4 @@ class ParanormalerErmittlerbillig(Role):
                 "war_falsch": ist_falsch,  # Ob es gelogen war (für Erzähler)
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
-        )
-
-
-#TODO Gegenteil ist quatsch. Wir brauchen eine Zufällige Auswahl von aktuell Aktiven Rollen (noch nicht gestorben + nicht paranormaler Ermittler billig). 
+        ) 

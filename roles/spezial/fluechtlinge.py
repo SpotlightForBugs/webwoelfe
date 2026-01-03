@@ -55,7 +55,7 @@ class Fluechtlinge(Role):
     
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.PASSIV
+        return AktionsTyp.KEINE
     
     @property
     def sichtbar_als(self) -> SichtTyp:

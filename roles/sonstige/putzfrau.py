@@ -39,7 +39,7 @@ class Putzfrau(Role):
     
     @property
     def aktions_typ(self) -> Optional[AktionsTyp]:
-        return AktionsTyp.PASSIV
+        return AktionsTyp.KEINE
     
     def on_spieler_stirbt(
         self,

@@ -1,0 +1,645 @@
+/**
+ * Character & Village Styling
+ * Beautiful role-based character avatars and village aesthetics
+ */
+
+/* ============================================================================
+   CHARACTER AVATARS - Each role gets a unique look
+   ============================================================================ */
+
+.spieler-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    margin: 0 auto 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    position: relative;
+    background: linear-gradient(145deg, #4a5568 0%, #2d3748 100%);
+    border: 3px solid #5a6678;
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.3),
+        inset 0 2px 10px rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Aura/Glow effect behind avatar */
+.spieler-avatar::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: transparent;
+    z-index: -1;
+    transition: all 0.3s ease;
+}
+
+.spieler-card:hover:not(.tot) .spieler-avatar::before {
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, transparent 70%);
+}
+
+/* Character icons instead of initials */
+.spieler-avatar i {
+    font-size: 1.8rem;
+}
+
+/* ============================================================================
+   ROLE-SPECIFIC AVATARS
+   ============================================================================ */
+
+/* === WERWOLF TEAM === */
+.spieler-avatar.rolle-werwolf,
+.spieler-avatar[data-team="werwolf"] {
+    background: linear-gradient(145deg, #b91c1c 0%, #7f1d1d 100%);
+    border-color: #ef4444;
+    box-shadow: 
+        0 4px 20px rgba(185, 28, 28, 0.4),
+        inset 0 2px 10px rgba(255, 255, 255, 0.1);
+}
+
+.spieler-avatar.rolle-werwolf::before {
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+    animation: pulse-red 2s ease-in-out infinite;
+}
+
+/* === DORF TEAM === */
+.spieler-avatar.rolle-dorfbewohner,
+.spieler-avatar[data-team="dorf"] {
+    background: linear-gradient(145deg, #0369a1 0%, #075985 100%);
+    border-color: #0ea5e9;
+}
+
+/* === SEHERIN === */
+.spieler-avatar.rolle-seherin {
+    background: linear-gradient(145deg, #7c3aed 0%, #5b21b6 100%);
+    border-color: #a78bfa;
+    box-shadow: 
+        0 4px 20px rgba(124, 58, 237, 0.4),
+        inset 0 2px 10px rgba(255, 255, 255, 0.1);
+}
+
+.spieler-avatar.rolle-seherin::after {
+    content: '👁️';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 1rem;
+    filter: drop-shadow(0 0 5px rgba(167, 139, 250, 0.8));
+}
+
+/* === HEXE === */
+.spieler-avatar.rolle-hexe {
+    background: linear-gradient(145deg, #059669 0%, #047857 100%);
+    border-color: #34d399;
+}
+
+.spieler-avatar.rolle-hexe::after {
+    content: '🧪';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 1rem;
+}
+
+/* === HEILER === */
+.spieler-avatar.rolle-heiler {
+    background: linear-gradient(145deg, #10b981 0%, #059669 100%);
+    border-color: #6ee7b7;
+}
+
+.spieler-avatar.rolle-heiler::after {
+    content: '💚';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* === JÄGER === */
+.spieler-avatar.rolle-jaeger,
+.spieler-avatar.rolle-jäger {
+    background: linear-gradient(145deg, #b45309 0%, #92400e 100%);
+    border-color: #fbbf24;
+}
+
+.spieler-avatar.rolle-jaeger::after,
+.spieler-avatar.rolle-jäger::after {
+    content: '🎯';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* === AMOR === */
+.spieler-avatar.rolle-amor {
+    background: linear-gradient(145deg, #ec4899 0%, #be185d 100%);
+    border-color: #f9a8d4;
+}
+
+.spieler-avatar.rolle-amor::after {
+    content: '💕';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* === SPECIAL ROLES === */
+
+/* Vampir */
+.spieler-avatar.rolle-vampir {
+    background: linear-gradient(145deg, #4c1d95 0%, #2e1065 100%);
+    border-color: #8b5cf6;
+}
+
+.spieler-avatar.rolle-vampir::after {
+    content: '🦇';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* Zombie */
+.spieler-avatar.rolle-zombie {
+    background: linear-gradient(145deg, #374151 0%, #1f2937 100%);
+    border-color: #6b7280;
+}
+
+.spieler-avatar.rolle-zombie::after {
+    content: '🧟';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* Bürgermeister */
+.spieler-avatar.rolle-buergermeister,
+.spieler-avatar.rolle-bürgermeister {
+    background: linear-gradient(145deg, #d97706 0%, #b45309 100%);
+    border-color: #fcd34d;
+}
+
+.spieler-avatar.rolle-buergermeister::after,
+.spieler-avatar.rolle-bürgermeister::after {
+    content: '👑';
+    position: absolute;
+    top: -12px;
+    right: 50%;
+    transform: translateX(50%);
+    font-size: 1.2rem;
+}
+
+/* Henker */
+.spieler-avatar.rolle-henker {
+    background: linear-gradient(145deg, #1f2937 0%, #111827 100%);
+    border-color: #4b5563;
+}
+
+.spieler-avatar.rolle-henker::after {
+    content: '⚔️';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* Engel */
+.spieler-avatar.rolle-engel {
+    background: linear-gradient(145deg, #fef3c7 0%, #fcd34d 100%);
+    border-color: #fbbf24;
+    color: #78350f;
+}
+
+.spieler-avatar.rolle-engel::after {
+    content: '😇';
+    position: absolute;
+    top: -12px;
+    right: 50%;
+    transform: translateX(50%);
+    font-size: 1rem;
+}
+
+/* Dorfdepp */
+.spieler-avatar.rolle-dorfdepp {
+    background: linear-gradient(145deg, #a78bfa 0%, #7c3aed 100%);
+    border-color: #c4b5fd;
+}
+
+.spieler-avatar.rolle-dorfdepp::after {
+    content: '🤪';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* Medium */
+.spieler-avatar.rolle-medium {
+    background: linear-gradient(145deg, #6366f1 0%, #4338ca 100%);
+    border-color: #a5b4fc;
+}
+
+.spieler-avatar.rolle-medium::after {
+    content: '🔮';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* Prostituierte */
+.spieler-avatar.rolle-prostituierte {
+    background: linear-gradient(145deg, #f472b6 0%, #ec4899 100%);
+    border-color: #fbcfe8;
+}
+
+.spieler-avatar.rolle-prostituierte::after {
+    content: '💋';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* Leibwächter */
+.spieler-avatar.rolle-leibwaechter,
+.spieler-avatar.rolle-leibwächter {
+    background: linear-gradient(145deg, #475569 0%, #334155 100%);
+    border-color: #94a3b8;
+}
+
+.spieler-avatar.rolle-leibwaechter::after,
+.spieler-avatar.rolle-leibwächter::after {
+    content: '🛡️';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* Erzähler */
+.spieler-avatar.rolle-erzaehler,
+.spieler-avatar.rolle-erzähler {
+    background: linear-gradient(145deg, #d4af37 0%, #b8860b 100%);
+    border-color: #ffd700;
+    box-shadow: 
+        0 4px 25px rgba(212, 175, 55, 0.5),
+        inset 0 2px 10px rgba(255, 255, 255, 0.2);
+}
+
+.spieler-avatar.rolle-erzaehler::after,
+.spieler-avatar.rolle-erzähler::after {
+    content: '📖';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.9rem;
+}
+
+/* ============================================================================
+   VISIBILITY INDICATORS - Who can see whom
+   ============================================================================ */
+
+/* Werewolf pack indicator - visible to werewolves */
+.spieler-card.werwolf-team-sichtbar {
+    position: relative;
+}
+
+.spieler-card.werwolf-team-sichtbar::before {
+    content: '🐺';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 1rem;
+    z-index: 10;
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.8));
+    animation: pulse-glow 2s infinite;
+}
+
+.spieler-card.werwolf-team-sichtbar .spieler-avatar {
+    border-color: #ef4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+/* Revealed by Seer indicator */
+.spieler-card.seherin-enthüllt-werwolf {
+    position: relative;
+}
+
+.spieler-card.seherin-enthüllt-werwolf::before {
+    content: '👁️‍🗨️';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 0.9rem;
+    z-index: 10;
+    animation: pulse-glow 2s infinite;
+}
+
+.spieler-card.seherin-enthüllt-werwolf .spieler-avatar {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+.spieler-card.seherin-enthüllt-dorf::before {
+    content: '✓';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 1rem;
+    color: #22c55e;
+    font-weight: bold;
+    z-index: 10;
+}
+
+.spieler-card.seherin-enthüllt-dorf .spieler-avatar {
+    border-color: #22c55e !important;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+}
+
+/* Lovers indicator (for Amor) */
+.spieler-card.verliebt::before {
+    content: '💕';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 1rem;
+    z-index: 10;
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+/* Disguised player (Wolf im Schafspelz etc.) */
+.spieler-card.verkleidet .spieler-avatar::after {
+    content: '🎭';
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    font-size: 0.8rem;
+}
+
+/* ============================================================================
+   ENHANCED PLAYER CARDS
+   ============================================================================ */
+
+.spieler-card {
+    background: linear-gradient(145deg, rgba(50, 42, 41, 0.9) 0%, rgba(26, 20, 20, 0.95) 100%);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: visible;
+}
+
+.spieler-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.spieler-card:hover:not(.tot):not(.disabled) {
+    border-color: var(--accent-gold);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.4),
+        0 0 30px rgba(212, 175, 55, 0.15);
+}
+
+.spieler-card.selected {
+    border-color: var(--color-blood);
+    box-shadow: 
+        0 0 30px var(--color-blood-glow),
+        0 10px 30px rgba(0, 0, 0, 0.4);
+    transform: translateY(-4px);
+}
+
+.spieler-card.selected .spieler-avatar {
+    animation: selected-pulse 1.5s ease-in-out infinite;
+}
+
+/* Dead players */
+.spieler-card.tot {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(70%);
+}
+
+.spieler-card.tot .spieler-avatar {
+    background: linear-gradient(145deg, #374151 0%, #1f2937 100%) !important;
+    border-color: #4b5563 !important;
+}
+
+.spieler-card.tot::before {
+    content: '💀';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    z-index: 20;
+    opacity: 0.8;
+}
+
+/* Player name styling */
+.spieler-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes pulse-red {
+    0%, 100% { 
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.5;
+        transform: scale(1.1);
+    }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+@keyframes selected-pulse {
+    0%, 100% { 
+        box-shadow: 
+            0 4px 20px rgba(149, 7, 6, 0.3),
+            inset 0 2px 10px rgba(255, 255, 255, 0.1);
+    }
+    50% { 
+        box-shadow: 
+            0 4px 30px rgba(149, 7, 6, 0.5),
+            0 0 40px rgba(149, 7, 6, 0.2),
+            inset 0 2px 10px rgba(255, 255, 255, 0.1);
+    }
+}
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.1); }
+    35% { transform: scale(1); }
+    45% { transform: scale(1.15); }
+    55% { transform: scale(1); }
+}
+
+/* ============================================================================
+   ROLE ICON MAP (use for displaying role icons)
+   ============================================================================ */
+
+.role-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.role-icon.werwolf::before { content: '🐺'; }
+.role-icon.seherin::before { content: '👁️'; }
+.role-icon.hexe::before { content: '🧙‍♀️'; }
+.role-icon.heiler::before { content: '💚'; }
+.role-icon.jaeger::before { content: '🎯'; }
+.role-icon.amor::before { content: '💘'; }
+.role-icon.dorfbewohner::before { content: '🏠'; }
+.role-icon.vampir::before { content: '🧛'; }
+.role-icon.zombie::before { content: '🧟'; }
+.role-icon.engel::before { content: '😇'; }
+.role-icon.henker::before { content: '⚔️'; }
+.role-icon.medium::before { content: '🔮'; }
+.role-icon.buergermeister::before { content: '👑'; }
+
+/* ============================================================================
+   VILLAGE ATMOSPHERE ENHANCEMENTS
+   ============================================================================ */
+
+/* Night phase atmospheric effects */
+.game-container.phase-nacht {
+    position: relative;
+}
+
+.game-container.phase-nacht::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at top, transparent 0%, rgba(0, 0, 20, 0.3) 100%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Day phase bright feel */
+.game-container.phase-tag {
+    position: relative;
+}
+
+.game-container.phase-tag::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at top, rgba(255, 248, 220, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* ============================================================================
+   ENHANCED SPIELER-GRID
+   ============================================================================ */
+
+.spieler-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.25rem;
+    padding: 0.5rem;
+}
+
+@media (min-width: 1200px) {
+    .spieler-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+/* ============================================================================
+   ROLE BADGE ENHANCEMENTS
+   ============================================================================ */
+
+.rolle-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.rolle-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.rolle-werwolf { 
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); 
+    color: white; 
+}
+
+.rolle-dorf, .rolle-dorfbewohner { 
+    background: linear-gradient(135deg, #0369a1 0%, #075985 100%); 
+    color: white; 
+}
+
+.rolle-hexe { 
+    background: linear-gradient(135deg, #059669 0%, #047857 100%); 
+    color: white; 
+}
+
+.rolle-seherin { 
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); 
+    color: white; 
+}
+
+.rolle-jäger, .rolle-jaeger { 
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%); 
+    color: white; 
+}
+
+.rolle-amor { 
+    background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); 
+    color: white; 
+}
+
+.rolle-heiler { 
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+    color: white; 
+}
+
+.rolle-erzähler, .rolle-erzaehler { 
+    background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%); 
+    color: #1a1414; 
+}

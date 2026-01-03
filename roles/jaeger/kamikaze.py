@@ -25,7 +25,7 @@ class Kamikaze(Role):
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
-            id=71,
+            id=171,
             name="Kamikaze",
             team=Team.DORF,
             kategorie=Kategorie.JAEGER,

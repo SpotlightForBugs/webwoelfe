@@ -37,7 +37,7 @@ class ErgebeneMagd(Role):
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
-            id=61,
+            id=162,
             name='Ergebene Magd',
             team=Team.DORF,
             kategorie=Kategorie.HEILER,

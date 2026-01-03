@@ -29,7 +29,7 @@ class Urwolf(Role):
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
-            id=23,
+            id=123,
             name="Urwolf",
             team=Team.WERWOLF,
             kategorie=Kategorie.WERWOLF,

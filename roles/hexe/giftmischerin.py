@@ -25,7 +25,7 @@ class Giftmischerin(Role):
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
-            id=61,
+            id=161,
             name="Giftmischerin",
             team=Team.DORF,
             kategorie=Kategorie.HEXE,

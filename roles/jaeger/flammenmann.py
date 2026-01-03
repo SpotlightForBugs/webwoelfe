@@ -34,7 +34,7 @@ class Flammenmann(Role):
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
-            id=52,
+            id=152,
             name='Flammenmann',
             team=Team.DORF,
             kategorie=Kategorie.JAEGER,

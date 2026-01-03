@@ -58,7 +58,7 @@ class Koenig(Role):
     
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.PASSIV
+        return AktionsTyp.KEINE
     
     def get_stimm_gewicht(self, spieler: 'Spieler',
                           kontext: SpielKontext) -> int:

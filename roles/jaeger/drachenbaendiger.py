@@ -60,7 +60,7 @@ class Drachenbaendiger(Role):
     
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.PASSIV
+        return AktionsTyp.KEINE
     
     def on_angegriffen(self, spieler: 'Spieler', angreifer_id: int,
                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:

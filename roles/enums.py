@@ -123,6 +123,9 @@ class AktionsTyp(Enum):
     SCHIESSEN = "schiessen"
     OPFERN = "opfern"
     HINWEIS_SENDEN = "hinweis_senden"
+    MANIPULIEREN = "manipulieren"
+    BLOCKIEREN = "blockieren"
+    BESUCHEN = "besuchen"
     KEINE = "keine"
 
 

@@ -26,7 +26,7 @@ class Hure(Role):
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
-            id=91,
+            id=191,
             name="Hure",
             team=Team.DORF,
             kategorie=Kategorie.SPEZIAL,

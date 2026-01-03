@@ -59,7 +59,7 @@ class Chemielaborant(Role):
     
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.PASSIV
+        return AktionsTyp.KEINE
     
     def on_eigener_tod(self, spieler: 'Spieler',
                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:

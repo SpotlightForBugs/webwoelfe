@@ -61,19 +61,20 @@ class Engel(Role):
     
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.PASSIV
+        return AktionsTyp.KEINE
     
     @property
     def kann_hinweis_senden(self) -> bool:
         """Engel kann Hinweise senden um sich verdächtig zu machen."""
         return True
     
-    def on_eigener_tod(self, spieler: 'Spieler',
+    def on_eigener_tod(self, spieler: 'Spieler', todesursache: str,
                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
         Prüft ob der Engel in der ersten Runde stirbt.
         """
-        if kontext.aktuelle_runde == 1:
+        aktuelle_runde = getattr(kontext, 'aktuelle_runde', kontext.runde)
+        if aktuelle_runde == 1:
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht="HALLELUJA! Der Engel ist in der ersten Runde gestorben! "

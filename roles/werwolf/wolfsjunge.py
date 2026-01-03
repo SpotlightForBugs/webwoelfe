@@ -29,7 +29,7 @@ class Wolfsjunge(Role):
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
-            id=24,
+            id=124,
             name="Wolfsjunge",
             team=Team.DORF,  # Startet als Dorf
             kategorie=Kategorie.WERWOLF,

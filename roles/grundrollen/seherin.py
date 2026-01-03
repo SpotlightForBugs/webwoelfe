@@ -65,6 +65,10 @@ class Seherin(Role):
         - Das Team der Rolle (basierend auf sichtbar_als)
         
         Einige Rollen können sich tarnen (sichtbar_als != tatsächliches Team).
+        
+        WICHTIG: Das Ergebnis wird als SNAPSHOT gespeichert.
+        Auch wenn sich die Rolle später ändert (z.B. Infektion),
+        sieht die Seherin weiterhin das ursprüngliche Ergebnis.
         """
         if ziel is None:
             return AktionsErgebnis(
@@ -93,6 +97,24 @@ class Seherin(Role):
             team = Team.DORF
         
         ist_werwolf = sicht == SichtTyp.WERWOLF
+        enthuellung_typ = "boese" if ist_werwolf else "gut"
+        
+        # Speichere als SNAPSHOT - wichtig für spätere Rollenänderungen
+        try:
+            from models import SeherinEnthuellung, Raum
+            raum = Raum.query.get(spieler.raum_id)
+            if raum:
+                SeherinEnthuellung.speichere_enthuellung(
+                    seherin_id=spieler.id,
+                    ziel_id=ziel.id,
+                    raum_id=raum.id,
+                    enthuellung_typ=enthuellung_typ,
+                    rolle=rollen_name,
+                    runde=raum.runde
+                )
+        except Exception as e:
+            # Fehler beim Speichern sollte die Aktion nicht blockieren
+            print(f"Warnung: Konnte Seherin-Enthüllung nicht speichern: {e}")
         
         # Nachricht mit vollständiger Rolleninformation
         if ist_werwolf:
@@ -110,6 +132,7 @@ class Seherin(Role):
                 "ist_werwolf": ist_werwolf,
                 "sicht_typ": sicht.value,
                 "team": team.value,
+                "snapshot": True,  # Markiert dass dies ein Snapshot ist
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

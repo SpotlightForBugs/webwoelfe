@@ -61,7 +61,7 @@ class Gerber(Role):
     
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.PASSIV
+        return AktionsTyp.KEINE
     
     @property
     def kann_hinweis_senden(self) -> bool:

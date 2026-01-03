@@ -278,13 +278,81 @@ class SpielerPosition(db.Model):
     spieler_id = db.Column(
         db.Integer, db.ForeignKey("spieler.id"), nullable=False, unique=True
     )
-    # Position im 3D-Raum (Einheitskreis um Lagerfeuer)
-    winkel = db.Column(db.Float, nullable=False)  # Winkel in Grad (0-360)
-    radius = db.Column(db.Float, default=5.0)  # Abstand vom Zentrum
-    # Visuelle Eigenschaften
-    avatar_typ = db.Column(db.String(20), default="default")  # Charakter-Modell
 
-    spieler = db.relationship("Spieler", backref="position_3d")
+
+class SeherinEnthuellung(db.Model):
+    """
+    Snapshot der Seherin-Enthüllungen.
+    
+    Speichert was die Seherin ZUM ZEITPUNKT der Enthüllung gesehen hat.
+    Auch wenn sich die Rolle später ändert (z.B. durch Infektion),
+    bleibt die ursprüngliche Enthüllung erhalten.
+    """
+    __tablename__ = "seherin_enthuellung"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    raum_id = db.Column(db.Integer, db.ForeignKey("raeume.id"), nullable=False, index=True)
+    seherin_id = db.Column(db.Integer, db.ForeignKey("spieler.id"), nullable=False, index=True)
+    ziel_id = db.Column(db.Integer, db.ForeignKey("spieler.id"), nullable=False)
+    
+    # Snapshot zum Zeitpunkt der Enthüllung
+    enthuellung_typ = db.Column(db.String(20), nullable=False)  # 'gut', 'boese', 'neutral'
+    gesehene_rolle = db.Column(db.String(50), nullable=True)  # Die Rolle die gesehen wurde
+    runde = db.Column(db.Integer, nullable=False)  # In welcher Runde enthüllt
+    enthuellt_am = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    @staticmethod
+    def speichere_enthuellung(seherin_id: int, ziel_id: int, raum_id: int, 
+                              enthuellung_typ: str, rolle: str, runde: int):
+        """Speichert eine neue Enthüllung als Snapshot"""
+        # Prüfe ob bereits enthüllt
+        bestehend = SeherinEnthuellung.query.filter_by(
+            seherin_id=seherin_id,
+            ziel_id=ziel_id,
+            raum_id=raum_id
+        ).first()
+        
+        if bestehend:
+            # Bereits enthüllt - keine Änderung
+            return bestehend
+        
+        enthuellung = SeherinEnthuellung(
+            raum_id=raum_id,
+            seherin_id=seherin_id,
+            ziel_id=ziel_id,
+            enthuellung_typ=enthuellung_typ,
+            gesehene_rolle=rolle,
+            runde=runde
+        )
+        db.session.add(enthuellung)
+        db.session.commit()
+        return enthuellung
+    
+    @staticmethod
+    def hole_enthuellung(seherin_id: int, raum_id: int) -> dict:
+        """
+        Holt alle Enthüllungen einer Seherin als Dictionary.
+        
+        Returns:
+            Dict von ziel_id -> {'typ': 'gut'/'boese', 'rolle': 'Werwolf', 'runde': 2}
+        """
+        enthüllungen = SeherinEnthuellung.query.filter_by(
+            seherin_id=seherin_id,
+            raum_id=raum_id
+        ).all()
+        
+        return {
+            e.ziel_id: {
+                'typ': e.enthuellung_typ,
+                'rolle': e.gesehene_rolle,
+                'runde': e.runde
+            }
+            for e in enthüllungen
+        }
+    
+    # Relationships mit expliziten foreign_keys
+    seherin = db.relationship("Spieler", foreign_keys=[seherin_id], backref="enthüllungen_als_seherin")
+    ziel = db.relationship("Spieler", foreign_keys=[ziel_id], backref="enthüllungen_als_ziel")
 
 
 # ============================================================================

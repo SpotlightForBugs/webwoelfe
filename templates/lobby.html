@@ -521,36 +521,40 @@ spiel_name }}{% endblock %} {% block content %}
         "village-3d-lobby-container",
         "{{ raum.code }}",
       );
-      
+
       // Initiale Spieler laden
       updateVillage3D();
     }
   });
-  
+
   // Funktion um 3D Dorf mit aktuellen Spielern zu aktualisieren
-  window.updateVillage3D = function() {
+  window.updateVillage3D = function () {
     if (!window.village3dLobby) return;
-    
-    const spielerKarten = document.querySelectorAll('.spieler-karte');
+
+    const spielerKarten = document.querySelectorAll(".spieler-karte");
     const spielerDaten = [];
-    
-    spielerKarten.forEach(karte => {
-      const istErzaehler = karte.getAttribute('data-erzaehler') === 'true';
+
+    spielerKarten.forEach((karte) => {
+      const istErzaehler = karte.getAttribute("data-erzaehler") === "true";
       // Erzähler nicht im Dorf anzeigen
       if (istErzaehler) return;
-      
-      const id = parseInt(karte.getAttribute('data-spieler-id'));
-      const name = karte.querySelector('.spielername')?.textContent?.replace('(Du)', '').trim() || 'Spieler';
-      
+
+      const id = parseInt(karte.getAttribute("data-spieler-id"));
+      const name =
+        karte
+          .querySelector(".spielername")
+          ?.textContent?.replace("(Du)", "")
+          .trim() || "Spieler";
+
       spielerDaten.push({
         id: id,
         name: name,
         rolle: null, // In Lobby noch keine Rollen
         ist_am_leben: true,
-        ist_erzaehler: false
+        ist_erzaehler: false,
       });
     });
-    
+
     if (spielerDaten.length > 0) {
       window.village3dLobby.setPlayers(spielerDaten);
       // Lobby-Ansicht ist immer Tag

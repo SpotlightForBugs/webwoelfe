@@ -36,20 +36,23 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
         rollen["Erzaehler"] = 1
 
     # ========================================================================
-    # WEREWOLF TEAM CALCULATION (Target: ~20-22% of players)
+    # WEREWOLF TEAM CALCULATION (Target: ~20-25% of players)
     # ========================================================================
-    # Base werewolf count: 1 per 4-5 players
+    # Base werewolf count: 1 per 4 players (minimum 2 for games 6+)
     # For large games, slightly lower ratio to balance voting power
-    if effektive_anzahl <= 10:
-        werwolf_basis = max(1, effektive_anzahl // 5)
+    if effektive_anzahl <= 5:
+        werwolf_basis = 1
+    elif effektive_anzahl <= 10:
+        # Bei 6-10 Spielern: mindestens 2 Werwölfe
+        werwolf_basis = max(2, (effektive_anzahl + 2) // 4)
     elif effektive_anzahl <= 50:
-        werwolf_basis = max(2, effektive_anzahl // 5)
+        werwolf_basis = max(2, effektive_anzahl // 4)
     elif effektive_anzahl <= 200:
         # For medium-large games: ~18-20% wolves
-        werwolf_basis = max(5, int(effektive_anzahl * 0.18))
+        werwolf_basis = max(5, int(effektive_anzahl * 0.20))
     else:
         # For massive games (500+): ~15-18% wolves (voting power is strong)
-        werwolf_basis = max(20, int(effektive_anzahl * 0.16))
+        werwolf_basis = max(20, int(effektive_anzahl * 0.17))
 
     # Add werewolf variants for large games
     rollen["Werwolf"] = werwolf_basis

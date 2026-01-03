@@ -894,6 +894,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       if (data.erzaehler_text) {
           updateErzaehlerText(data.erzaehler_text);
       }
+
+      // Schließe alle bestehenden Erzähler-Overlays um Überlappung zu vermeiden
+      closeAllErzaehlungOverlays();
   });
 
   socket.on('rolle_erhalten', function(data) {
@@ -1095,8 +1098,26 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       container.innerHTML = html;
   }
 
+  // Schließt alle Erzähler-Overlays
+  function closeAllErzaehlungOverlays() {
+      document.querySelectorAll('.erzaehlung-overlay').forEach(overlay => {
+          // Stoppe Audio falls vorhanden
+          const audio = overlay.querySelector('audio');
+          if (audio) {
+              audio.pause();
+              audio.currentTime = 0;
+          }
+          // Entferne Overlay
+          overlay.remove();
+      });
+  }
+
   function showErzaehlung(text, audioPath) {
+      // Schließe bestehende Overlays bevor ein neues gezeigt wird
+      closeAllErzaehlungOverlays();
+
       // Zeigt die automatische Erzählung im Online-Modus mit Custom Audio Player
+      // KEINE Spiellogik hier - nur Anzeige! Server steuert den Spielablauf.
       const notification = document.createElement('div');
       notification.className = 'erzaehlung-overlay';
       notification.style.cssText = `
@@ -1168,7 +1189,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       notification.innerHTML = html;
       document.body.appendChild(notification);
 
-      // Setup custom audio player controls
+      // Setup custom audio player controls (nur UI, keine Spiellogik)
       if (audioPath) {
           const audio = document.getElementById(playerId);
           const progressFill = document.getElementById(playerId + '-fill');
@@ -1209,38 +1230,59 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               playIcon.className = 'fa-solid fa-redo';
               playBtn.classList.remove('playing');
               waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
+
+              // Benachrichtige Server dass Audio fertig ist
+              socket.emit('audio_fertig', { phase: aktuellePhase });
+              console.log('[Audio] Ended, notifying server');
+
+              // Schließe das Overlay nach kurzer Verzögerung
+              setTimeout(() => {
+                  notification.style.animation = 'fadeOut 0.4s ease-out';
+                  setTimeout(() => notification.remove(), 400);
+              }, 1000);
+          });
+
+          // Handle autoplay being blocked
+          audio.play().catch((e) => {
+              console.warn('[Audio] Autoplay blocked:', e);
+              // Show play button more prominently
+              if (playBtn) {
+                  playBtn.style.animation = 'pulse 1s infinite';
+                  playBtn.style.transform = 'scale(1.2)';
+                  playIcon.className = 'fa-solid fa-play';
+              }
+
+              // Füge "Überspringen" Button hinzu falls Autoplay blockiert
+              const skipBtn = document.createElement('button');
+              skipBtn.className = 'btn btn-ghost';
+              skipBtn.style.cssText = 'margin-top: 1rem; display: block; margin-left: auto; margin-right: auto;';
+              skipBtn.innerHTML = '<i class="fa-solid fa-forward"></i> Überspringen';
+              skipBtn.onclick = () => {
+                  socket.emit('audio_fertig', { phase: aktuellePhase });
+                  notification.style.animation = 'fadeOut 0.4s ease-out';
+                  setTimeout(() => notification.remove(), 400);
+              };
+              notification.appendChild(skipBtn);
+          });
+
+          // Handle audio load error - skip to next phase
+          audio.addEventListener('error', (e) => {
+              console.error('[Audio] Load error:', e);
+              socket.emit('audio_fertig', { phase: aktuellePhase });
+              setTimeout(() => {
+                  notification.style.animation = 'fadeOut 0.4s ease-out';
+                  setTimeout(() => notification.remove(), 400);
+              }, 2000);
           });
       }
 
-      // Duration: longer if audio is playing, or wait for audio to end
-      const baseDuration = audioPath ? 12000 : 4000;
-      let removeTimeout = setTimeout(() => {
-          notification.style.animation = 'fadeOut 0.4s ease-out';
+      // Entferne Overlay - bei Audio wird es im 'ended' Event entfernt
+      // Nur für Overlays ohne Audio nach kurzer Zeit entfernen
+      if (!audioPath) {
           setTimeout(() => {
-              notification.remove();
-              if (erzaehlerModus === 'auto' && istAdmin) {
-                  console.log('[Auto-Progression] Timeout reached, going to next phase');
-                  naechstePhase();
-              }
-          }, 400);
-      }, baseDuration);
-
-      // If audio, wait for it to finish instead
-      if (audioPath) {
-          const audio = document.getElementById(playerId);
-          audio.addEventListener('ended', () => {
-              clearTimeout(removeTimeout);
-              setTimeout(() => {
-                  notification.style.animation = 'fadeOut 0.4s ease-out';
-                  setTimeout(() => {
-                      notification.remove();
-                      if (erzaehlerModus === 'auto' && istAdmin) {
-                          console.log('[Auto-Progression] Audio ended, going to next phase');
-                          naechstePhase();
-                      }
-                  }, 400);
-              }, 1500);
-          });
+              notification.style.animation = 'fadeOut 0.4s ease-out';
+              setTimeout(() => notification.remove(), 400);
+          }, 5000);
       }
   }
 

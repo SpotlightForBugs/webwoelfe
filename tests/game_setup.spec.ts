@@ -158,6 +158,12 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
       const erzaehlerName = PLAYER_NAMES[0];
       await erzaehlerPage.fill('input[name="spieler_name"]', erzaehlerName);
 
+      // Online-Modus auswählen (automatischer Erzähler)
+      // Dies ist der Standard, aber wir stellen sicher, dass er ausgewählt ist
+      const modusSelect = erzaehlerPage.locator('#modus-select');
+      await modusSelect.selectOption('online');
+      console.log("✓ Online-Modus mit automatischem Erzähler ausgewählt");
+
       // Raum erstellen
       const createBtn = erzaehlerPage.locator(
         'button:has-text("Spiel erstellen")',
@@ -165,7 +171,7 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
       await createBtn.click();
 
       // Warte auf Lobby und hole Raumcode
-      await erzaehlerPage.waitForURL(/\/lobby\//, { timeout: 15000 });
+      await erzaehlerPage.waitForURL(/\/lobby\//);
 
       // Raumcode aus URL oder Seite extrahieren
       const url = erzaehlerPage.url();

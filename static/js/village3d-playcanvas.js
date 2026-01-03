@@ -148,7 +148,7 @@ export default class Village3DPlayCanvas {
       "Rabe": new pc.Color(0.1, 0.1, 0.12),              // Raven black
       "Zahnarzt": new pc.Color(0.9, 0.95, 1.0),          // Dentist white
 
-      default: new pc.Color(0.7, 0.7, 0.7),              // Gray
+      default: new pc.Color(0.3, 0.5, 0.8),              // Same as Dorfbewohner - villagers can't tell apart
     };
 
     if (!this.container) {
@@ -221,20 +221,33 @@ export default class Village3DPlayCanvas {
     });
     
     // Add Fog for better atmosphere
-    // Setting fog through app.scene properties might fail in some versions if they are read-only
+    // In newer PlayCanvas versions, fog is set via rendering settings
     try {
-      this.app.scene.fog = 'exp2';
-      this.app.scene.fogColor = new pc.Color(0.01, 0.01, 0.02);
-      this.app.scene.fogDensity = 0.01;
+      // Try the newer API first (PlayCanvas 1.60+)
+      if (this.app.scene.rendering) {
+        this.app.scene.rendering.fog = pc.FOG_EXP2;
+        this.app.scene.rendering.fogColor = new pc.Color(0.01, 0.01, 0.02);
+        this.app.scene.rendering.fogDensity = 0.01;
+      } else if (this.app.scene.settings) {
+        // Alternative settings path
+        this.app.scene.settings.render.fog = pc.FOG_EXP2;
+        this.app.scene.settings.render.fogColor = new pc.Color(0.01, 0.01, 0.02);
+        this.app.scene.settings.render.fogDensity = 0.01;
+      }
     } catch (e) {
-      console.warn("Could not set fog:", e);
+      // Fog is not essential, just log quietly
+      console.debug("Fog not available:", e.message);
     }
     
-    // Set Ambient Light here too for safety
+    // Set Ambient Light
     try {
-      this.app.scene.ambientLight = new pc.Color(0.15, 0.15, 0.2);
+      if (this.app.scene.rendering) {
+        this.app.scene.rendering.ambientLight = new pc.Color(0.15, 0.15, 0.2);
+      } else {
+        this.app.scene.ambientLight = new pc.Color(0.15, 0.15, 0.2);
+      }
     } catch (e) {
-      console.warn("Could not set ambientLight:", e);
+      console.debug("Could not set ambientLight:", e.message);
     }
 
     this.camera.setPosition(
@@ -285,10 +298,8 @@ export default class Village3DPlayCanvas {
     this.createDetailedGround();
 
     // Create full medieval village (in both lobby and game)
-    // Village Buildings
-    if (!this.isLobbyMode) {
-      this.createVillageBuildings();
-    }
+    // Village Buildings - show in both modes for a complete scene
+    this.createVillageBuildings();
 
     // Campfire (center)
     if (this.isLobbyMode) {
@@ -444,50 +455,75 @@ export default class Village3DPlayCanvas {
     }
 
     // Roof (proper gabled roof with two slopes)
-    // Calculate roof dimensions: house is 4 wide, roof needs to extend past edges
-    const roofAngle = 35; // degrees
-    const roofWidth = 2.8; // Width of each roof panel (measured along slope)
-    const roofBaseY = 3.5; // Base height of roof (top of upper floor)
-    
-    // Calculate positions based on geometry
+    // House dimensions: 4 wide (X), 5 deep (Z), upper floor top at Y=3.5
+    const roofAngle = 35; // degrees - slightly less steep for better look
+    const houseWidth = 4.2; // Width of house
+    const houseDepth = 5.2; // Depth of house
+    const roofOverhang = 0.5; // How much roof extends past walls
+    const roofBaseY = 3.5; // Top of upper floor
+
+    // Calculate roof panel dimensions
     const roofRad = roofAngle * Math.PI / 180;
-    const roofRisePerPanel = Math.sin(roofRad) * (roofWidth / 2);
-    const roofRunPerPanel = Math.cos(roofRad) * (roofWidth / 2);
-    const roofPeakY = roofBaseY + roofRisePerPanel + 0.3; // Peak Y position
-    
-    const roofLeft = new pc.Entity("RoofLeft");
-    roofLeft.addComponent("model", { type: "box" });
-    roofLeft.setLocalScale(4.8, 0.15, roofWidth); // Width along house, thin, depth is the slope
-    roofLeft.setLocalPosition(0, roofBaseY + roofRisePerPanel / 2 + 0.1, -roofRunPerPanel / 2);
-    roofLeft.setLocalEulerAngles(-roofAngle, 0, 0); // Rotate around X axis for proper pitch
+    const halfWidth = (houseWidth / 2) + roofOverhang;
+    const roofPanelWidth = halfWidth / Math.cos(roofRad); // Width of angled panel
+    const roofPeakHeight = halfWidth * Math.tan(roofRad); // Height at peak
+    const roofLength = houseDepth + roofOverhang * 2; // Length extends past house
 
     const roofMat = new pc.StandardMaterial();
-    roofMat.diffuse = new pc.Color(0.35, 0.18, 0.12); // Dark terracotta
+    roofMat.diffuse = new pc.Color(0.4, 0.22, 0.15); // Dark terracotta/brown
     roofMat.update();
+
+    // Left roof panel - rotates around its local center, so we need to offset
+    // After rotation, the panel's edge should be at x=0, y=roofBaseY+roofPeakHeight
+    const roofLeft = new pc.Entity("RoofLeft");
+    roofLeft.addComponent("model", { type: "box" });
+    roofLeft.setLocalScale(roofPanelWidth, 0.12, roofLength);
+    // Position the center of the rotated panel
+    // Panel center in local space before rotation: (roofPanelWidth/2, 0, 0)
+    // After rotating by roofAngle around Z:
+    // x' = (roofPanelWidth/2) * cos(angle) = halfWidth/2
+    // y' = (roofPanelWidth/2) * sin(angle) = roofPeakHeight/2
+    const panelCenterX = -halfWidth / 2;
+    const panelCenterY = roofBaseY + roofPeakHeight / 2;
+    roofLeft.setLocalPosition(panelCenterX, panelCenterY, 0);
+    roofLeft.setLocalEulerAngles(0, 0, roofAngle);
     roofLeft.model.material = roofMat;
     house.addChild(roofLeft);
 
+    // Right roof panel (mirror of left)
     const roofRight = new pc.Entity("RoofRight");
     roofRight.addComponent("model", { type: "box" });
-    roofRight.setLocalScale(4.8, 0.15, roofWidth);
-    roofRight.setLocalPosition(0, roofBaseY + roofRisePerPanel / 2 + 0.1, roofRunPerPanel / 2);
-    roofRight.setLocalEulerAngles(roofAngle, 0, 0); // Opposite angle for other side
+    roofRight.setLocalScale(roofPanelWidth, 0.12, roofLength);
+    roofRight.setLocalPosition(halfWidth / 2, panelCenterY, 0);
+    roofRight.setLocalEulerAngles(0, 0, -roofAngle);
     roofRight.model.material = roofMat;
     house.addChild(roofRight);
 
-    // Roof peak (ridge beam at the top)
+    // Roof ridge beam at the peak
     const roofPeak = new pc.Entity("RoofPeak");
     roofPeak.addComponent("model", { type: "box" });
-    roofPeak.setLocalScale(5.0, 0.25, 0.25);
-    roofPeak.setLocalPosition(0, roofPeakY, 0);
+    roofPeak.setLocalScale(0.2, 0.15, roofLength + 0.1);
+    roofPeak.setLocalPosition(0, roofBaseY + roofPeakHeight + 0.05, 0);
     roofPeak.model.material = roofMat;
     house.addChild(roofPeak);
+
+    // Gable walls (fill triangular area at front and back)
+    const gableMat = plasterMat; // Same as upper floor
+    [-1, 1].forEach((side, idx) => {
+      const gable = new pc.Entity(`Gable-${idx}`);
+      gable.addComponent("model", { type: "box" });
+      // Approximate triangle with a box - make it smaller to look like a triangle
+      gable.setLocalScale(houseWidth * 0.85, roofPeakHeight * 0.65, 0.12);
+      gable.setLocalPosition(0, roofBaseY + roofPeakHeight * 0.32, side * (houseDepth / 2 + 0.06));
+      gable.model.material = gableMat;
+      house.addChild(gable);
+    });
 
     // Chimney
     const chimney = new pc.Entity("Chimney");
     chimney.addComponent("model", { type: "box" });
-    chimney.setLocalScale(0.6, 1.5, 0.6);
-    chimney.setLocalPosition(1.5, 5.3, 1);
+    chimney.setLocalScale(0.6, 1.8, 0.6);
+    chimney.setLocalPosition(1.2, roofBaseY + roofPeakHeight + 0.5, 1);
     chimney.model.material = stoneMat;
     house.addChild(chimney);
 
@@ -604,46 +640,49 @@ export default class Village3DPlayCanvas {
     }
 
     // Gabled roof - properly calculated to meet at peak
-    const churchRoofAngle = 30; // degrees
-    const churchRoofWidth = 5.5; // Width of each roof panel
-    const churchRoofBaseY = 6; // Base height above ground
-    const churchRoofPeakOffset =
-      Math.cos((churchRoofAngle * Math.PI) / 180) * (churchRoofWidth / 2);
-    const churchRoofPeakY =
-      churchRoofBaseY +
-      Math.sin((churchRoofAngle * Math.PI) / 180) * (churchRoofWidth / 2);
+    // Church base is 8 wide (X), 10 deep (Z), top at Y=6
+    const churchRoofAngle = 35; // degrees
+    const churchWidth = 8;
+    const churchDepth = 10;
+    const churchRoofOverhang = 0.5;
+    const churchRoofBaseY = 6;
 
-    const roofLeft = new pc.Entity("RoofLeft");
-    roofLeft.addComponent("model", { type: "box" });
-    roofLeft.setLocalScale(churchRoofWidth, 0.25, 10.5);
-    roofLeft.setLocalPosition(-churchRoofPeakOffset, churchRoofPeakY, 0);
-    roofLeft.setLocalEulerAngles(0, 180, -churchRoofAngle);
+    const churchRoofRad = churchRoofAngle * Math.PI / 180;
+    const churchHalfWidth = (churchWidth / 2) + churchRoofOverhang;
+    const churchRoofPanelWidth = churchHalfWidth / Math.cos(churchRoofRad);
+    const churchRoofPeakHeight = churchHalfWidth * Math.tan(churchRoofRad);
+    const churchRoofLength = churchDepth + churchRoofOverhang * 2;
 
     const roofMat = this.getMaterial({
       name: "ChurchRoof",
       diffuse: new pc.Color(0.28, 0.12, 0.08),
     });
+
+    // Left roof panel
+    const roofLeft = new pc.Entity("RoofLeft");
+    roofLeft.addComponent("model", { type: "box" });
+    roofLeft.setLocalScale(churchRoofPanelWidth, 0.2, churchRoofLength);
+    const churchPanelCenterX = -churchHalfWidth / 2;
+    const churchPanelCenterY = churchRoofBaseY + churchRoofPeakHeight / 2;
+    roofLeft.setLocalPosition(churchPanelCenterX, churchPanelCenterY, 0);
+    roofLeft.setLocalEulerAngles(0, 0, churchRoofAngle);
     roofLeft.model.material = roofMat;
     church.addChild(roofLeft);
 
+    // Right roof panel
     const roofRight = new pc.Entity("RoofRight");
     roofRight.addComponent("model", { type: "box" });
-    roofRight.setLocalScale(churchRoofWidth, 0.25, 10.5);
-    roofRight.setLocalPosition(churchRoofPeakOffset, churchRoofPeakY, 0);
-    roofRight.setLocalEulerAngles(0, 180, churchRoofAngle);
+    roofRight.setLocalScale(churchRoofPanelWidth, 0.2, churchRoofLength);
+    roofRight.setLocalPosition(churchHalfWidth / 2, churchPanelCenterY, 0);
+    roofRight.setLocalEulerAngles(0, 0, -churchRoofAngle);
     roofRight.model.material = roofMat;
     church.addChild(roofRight);
 
     // Roof ridge
     const ridge = new pc.Entity("Ridge");
     ridge.addComponent("model", { type: "box" });
-    ridge.setLocalScale(0.35, 0.35, 10.5);
-    ridge.setLocalPosition(
-      0,
-      churchRoofPeakY +
-        Math.sin((churchRoofAngle * Math.PI) / 180) * (churchRoofWidth / 2),
-      0,
-    );
+    ridge.setLocalScale(0.3, 0.25, churchRoofLength + 0.2);
+    ridge.setLocalPosition(0, churchRoofBaseY + churchRoofPeakHeight, 0);
     ridge.model.material = stoneMat;
     church.addChild(ridge);
 
@@ -1318,6 +1357,7 @@ export default class Village3DPlayCanvas {
         hand.model.material = handMat;
         arm.addChild(hand);
       }
+      console.log('[Village3D] Arms created');
 
       // === NECK ===
       const neck = new pc.Entity("Neck");
@@ -1338,10 +1378,16 @@ export default class Village3DPlayCanvas {
       entity.addChild(neck);
       entity.parts.neck = neck;
 
+      // === HEAD PIVOT (for animation) ===
+      const headPivot = new pc.Entity("HeadPivot");
+      headPivot.setLocalPosition(0, 1.85, 0);
+      entity.addChild(headPivot);
+      entity.parts.head = headPivot; // Store pivot for animation
+
       // === HEAD (slightly oval) ===
       const head = new pc.Entity("Head");
       head.addComponent("model", { type: "sphere" });
-      head.setLocalPosition(0, 1.85, 0);
+      head.setLocalPosition(0, 0, 0); // Position relative to pivot
       head.setLocalScale(0.5, 0.55, 0.45);
       
       const headMat = new pc.StandardMaterial();
@@ -1354,13 +1400,12 @@ export default class Village3DPlayCanvas {
       }
       headMat.update();
       head.model.material = headMat;
-      entity.addChild(head);
-      entity.parts.head = head;
+      headPivot.addChild(head);
 
     // === HAIR ===
     const hair = new pc.Entity("Hair");
     hair.addComponent("model", { type: "sphere" });
-    hair.setLocalPosition(0, 2.0, -0.05);
+    hair.setLocalPosition(0, 0.15, -0.05); // Position relative to head pivot
     hair.setLocalScale(0.52, 0.35, 0.48);
 
     const hairMat = new pc.StandardMaterial();
@@ -1382,7 +1427,7 @@ export default class Village3DPlayCanvas {
     }
     hairMat.update();
     hair.model.material = hairMat;
-    entity.addChild(hair);
+    headPivot.addChild(hair);
 
     // === FACIAL FEATURES (only for living players) ===
     if (isAlive) {
@@ -3121,23 +3166,30 @@ export default class Village3DPlayCanvas {
   createNameLabel(name, isAlive) {
     const label = new pc.Entity("NameLabel");
     label.addComponent("model", { type: "plane" });
-    label.setLocalScale(2, 0.5, 1);
+    // Negative X scale flips the texture horizontally to un-mirror it
+    label.setLocalScale(-2, 0.5, 1);
 
-    // Create canvas for text
+    // Create canvas for text - higher resolution for sharper text
     const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 64;
+    canvas.width = 512;
+    canvas.height = 128;
     const ctx = canvas.getContext("2d");
 
-    // Background
-    ctx.fillStyle = isAlive ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.4)";
+    // Background with rounded corners effect
+    ctx.fillStyle = isAlive ? "rgba(0, 0, 0, 0.8)" : "rgba(0, 0, 0, 0.5)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Text
-    ctx.fillStyle = isAlive ? "#FFFFFF" : "#888888";
-    ctx.font = "bold 32px Arial";
+    // Text - larger font for higher res canvas
+    ctx.fillStyle = isAlive ? "#FFFFFF" : "#999999";
+    ctx.font = "bold 64px Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+
+    // Add subtle text shadow for better readability
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
     ctx.fillText(name, canvas.width / 2, canvas.height / 2);
 
     // Create texture from canvas
@@ -3145,6 +3197,9 @@ export default class Village3DPlayCanvas {
       width: canvas.width,
       height: canvas.height,
       format: pc.PIXELFORMAT_R8_G8_B8_A8,
+      mipmaps: true,
+      minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
+      magFilter: pc.FILTER_LINEAR,
     });
 
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -3175,14 +3230,15 @@ export default class Village3DPlayCanvas {
       this.light.light.color = new pc.Color(0.15, 0.2, 0.4); // Deep moonlight
       this.light.light.intensity = 0.3;
       this.fillLight.light.intensity = 0.1;
-      try {
-        this.app.scene.ambientLight = new pc.Color(0.03, 0.03, 0.08);
-        this.app.scene.fogColor = new pc.Color(0.02, 0.02, 0.05);
-        this.app.scene.fogDensity = 0.03;
-      } catch (e) {
-        console.warn("Could not set scene properties in setTimeOfDay:", e);
-      }
-      this.fireLight.enabled = true;
+
+      // Update scene properties using the correct API
+      this.setSceneSettings({
+        ambientLight: new pc.Color(0.03, 0.03, 0.08),
+        fogColor: new pc.Color(0.02, 0.02, 0.05),
+        fogDensity: 0.03
+      });
+
+      if (this.fireLight) this.fireLight.enabled = true;
 
       // Show fireflies
       this.fireflies?.forEach((f) => (f.entity.enabled = true));
@@ -3201,14 +3257,15 @@ export default class Village3DPlayCanvas {
       this.light.light.color = new pc.Color(1, 0.95, 0.85); // Warm sunlight
       this.light.light.intensity = 1.2;
       this.fillLight.light.intensity = 0.4;
-      try {
-        this.app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.55);
-        this.app.scene.fogColor = new pc.Color(0.7, 0.8, 0.9);
-        this.app.scene.fogDensity = 0.005;
-      } catch (e) {
-        console.warn("Could not set scene properties in setTimeOfDay:", e);
-      }
-      this.fireLight.enabled = false; // Fire less visible during day
+
+      // Update scene properties using the correct API
+      this.setSceneSettings({
+        ambientLight: new pc.Color(0.5, 0.5, 0.55),
+        fogColor: new pc.Color(0.7, 0.8, 0.9),
+        fogDensity: 0.005
+      });
+
+      if (this.fireLight) this.fireLight.enabled = false; // Fire less visible during day
 
       // Hide fireflies
       this.fireflies?.forEach((f) => (f.entity.enabled = false));
@@ -3225,6 +3282,26 @@ export default class Village3DPlayCanvas {
     }
   }
 
+  // Helper to set scene rendering settings with proper API support
+  setSceneSettings(settings) {
+    try {
+      // Try newer API first (PlayCanvas 1.60+)
+      if (this.app.scene.rendering) {
+        if (settings.ambientLight) this.app.scene.rendering.ambientLight = settings.ambientLight;
+        if (settings.fogColor) this.app.scene.rendering.fogColor = settings.fogColor;
+        if (settings.fogDensity !== undefined) this.app.scene.rendering.fogDensity = settings.fogDensity;
+      } else {
+        // Fallback for older API - direct property access with assignments
+        const scene = this.app.scene;
+        if (settings.ambientLight && scene.ambientLight) {
+          scene.ambientLight.copy(settings.ambientLight);
+        }
+      }
+    } catch (e) {
+      console.debug("Scene settings update skipped:", e.message);
+    }
+  }
+
   resetCamera() {
     this.targetCameraAngle = this.defaultCameraAngle;
     this.targetCameraHeight = this.defaultCameraHeight;
@@ -3233,32 +3310,58 @@ export default class Village3DPlayCanvas {
 
   setupInput() {
     // Mouse/Touch input for camera and picking
+    let mouseButtonDown = false;
     let isDragging = false;
+    let isClick = false;
     let lastMouseX = 0;
     let lastMouseY = 0;
+    let mouseDownX = 0;
+    let mouseDownY = 0;
+    const CLICK_THRESHOLD = 5; // Pixels - if mouse moves less than this, it's a click
 
     this.app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
       if (event.button === pc.MOUSEBUTTON_LEFT) {
-        isDragging = true;
+        mouseButtonDown = true;
+        isDragging = false;
+        isClick = true;
         lastMouseX = event.x;
         lastMouseY = event.y;
-
-        // Picking
-        this.pick(event.x, event.y);
+        mouseDownX = event.x;
+        mouseDownY = event.y;
       }
     });
 
-    this.app.mouse.on(pc.EVENT_MOUSEUP, () => {
-      isDragging = false;
+    this.app.mouse.on(pc.EVENT_MOUSEUP, (event) => {
+      if (event.button === pc.MOUSEBUTTON_LEFT) {
+        // Only pick if it was a click, not a drag
+        if (isClick) {
+          this.pick(event.x, event.y);
+        }
+        mouseButtonDown = false;
+        isDragging = false;
+        isClick = false;
+      }
     });
 
     this.app.mouse.on(pc.EVENT_MOUSEMOVE, (event) => {
-      if (isDragging) {
-        const dx = event.x - lastMouseX;
-        const dy = event.y - lastMouseY;
+      // Only process movement when mouse button is pressed
+      if (!mouseButtonDown) return;
 
-        this.targetCameraAngle -= dx * 0.01;
-        this.targetCameraHeight += dy * 0.05;
+      const dx = event.x - mouseDownX;
+      const dy = event.y - mouseDownY;
+
+      // Check if we've moved enough to be considered a drag
+      if (Math.abs(dx) > CLICK_THRESHOLD || Math.abs(dy) > CLICK_THRESHOLD) {
+        isClick = false;
+        isDragging = true;
+      }
+
+      if (isDragging) {
+        const moveDx = event.x - lastMouseX;
+        const moveDy = event.y - lastMouseY;
+
+        this.targetCameraAngle -= moveDx * 0.01;
+        this.targetCameraHeight += moveDy * 0.05;
         this.targetCameraHeight = pc.math.clamp(this.targetCameraHeight, 5, 35);
 
         lastMouseX = event.x;
@@ -3276,30 +3379,74 @@ export default class Village3DPlayCanvas {
 
     // Touch support
     if (this.app.touch) {
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let isTouchClick = false;
+      let lastPinchDistance = 0;
+
       this.app.touch.on(pc.EVENT_TOUCHSTART, (event) => {
-        const touch = event.touches[0];
-        isDragging = true;
-        lastMouseX = touch.x;
-        lastMouseY = touch.y;
-        this.pick(touch.x, touch.y);
+        if (event.touches.length === 1) {
+          const touch = event.touches[0];
+          isDragging = false;
+          isTouchClick = true;
+          lastMouseX = touch.x;
+          lastMouseY = touch.y;
+          touchStartX = touch.x;
+          touchStartY = touch.y;
+        } else if (event.touches.length === 2) {
+          // Start pinch zoom
+          isTouchClick = false;
+          const dx = event.touches[0].x - event.touches[1].x;
+          const dy = event.touches[0].y - event.touches[1].y;
+          lastPinchDistance = Math.sqrt(dx * dx + dy * dy);
+        }
       });
 
-      this.app.touch.on(pc.EVENT_TOUCHEND, () => {
+      this.app.touch.on(pc.EVENT_TOUCHEND, (event) => {
+        if (isTouchClick && event.touches.length === 0) {
+          this.pick(touchStartX, touchStartY);
+        }
         isDragging = false;
+        isTouchClick = false;
+        lastPinchDistance = 0;
       });
 
       this.app.touch.on(pc.EVENT_TOUCHMOVE, (event) => {
-        if (isDragging && event.touches.length === 1) {
+        if (event.touches.length === 1) {
           const touch = event.touches[0];
-          const dx = touch.x - lastMouseX;
-          const dy = touch.y - lastMouseY;
+          const dx = touch.x - touchStartX;
+          const dy = touch.y - touchStartY;
 
-          this.targetCameraAngle -= dx * 0.01;
-          this.targetCameraHeight += dy * 0.05;
-          this.targetCameraHeight = pc.math.clamp(this.targetCameraHeight, 5, 35);
+          // Check if it's a drag
+          if (Math.abs(dx) > CLICK_THRESHOLD || Math.abs(dy) > CLICK_THRESHOLD) {
+            isTouchClick = false;
+            isDragging = true;
+          }
 
-          lastMouseX = touch.x;
-          lastMouseY = touch.y;
+          if (isDragging) {
+            const moveDx = touch.x - lastMouseX;
+            const moveDy = touch.y - lastMouseY;
+
+            this.targetCameraAngle -= moveDx * 0.01;
+            this.targetCameraHeight += moveDy * 0.05;
+            this.targetCameraHeight = pc.math.clamp(this.targetCameraHeight, 5, 35);
+
+            lastMouseX = touch.x;
+            lastMouseY = touch.y;
+          }
+        } else if (event.touches.length === 2) {
+          // Pinch zoom
+          isTouchClick = false;
+          const dx = event.touches[0].x - event.touches[1].x;
+          const dy = event.touches[0].y - event.touches[1].y;
+          const pinchDistance = Math.sqrt(dx * dx + dy * dy);
+
+          if (lastPinchDistance > 0) {
+            const pinchDelta = lastPinchDistance - pinchDistance;
+            this.targetCameraRadius += pinchDelta * 0.05;
+            this.targetCameraRadius = pc.math.clamp(this.targetCameraRadius, 10, 50);
+          }
+          lastPinchDistance = pinchDistance;
         }
       });
     }
@@ -3383,13 +3530,15 @@ export default class Village3DPlayCanvas {
     const pos = entity.getPosition();
     const angle = Math.atan2(pos.x, pos.z);
 
-    // Zoom in on the player
+    // Rotate camera to face the player but zoom OUT for better overview
     this.targetCameraAngle = angle;
-    this.targetCameraRadius = 10; // Closer
-    this.targetCameraHeight = 5; // Lower to see the player better
+    this.targetCameraRadius = 20; // Zoom out for better view
+    this.targetCameraHeight = 12; // Higher vantage point
+  }
 
-    // Auto-reset after a delay? Or just stay there?
-    // Let's stay there for now, user can zoom out manually.
+  // Public method for external calls (e.g., from updateActionButtons)
+  focusOnPlayer(playerId) {
+    this.zoomToPlayer(playerId);
   }
 
   highlightPlayer(playerId, color) {
@@ -3424,15 +3573,30 @@ export default class Village3DPlayCanvas {
     const entity = this.playerEntities.get(playerId);
     if (!entity) return;
 
+    // Hint color mapping for different effects
+    const hintColors = {
+      'eyes_glow_red': new pc.Color(1, 0.2, 0.1),      // Red eyes
+      'shadow_pass': new pc.Color(0.2, 0.2, 0.3),      // Dark shadow
+      'moonbeam': new pc.Color(0.8, 0.9, 1.0),         // Moonlight white
+      'character_shake': new pc.Color(0.8, 0.6, 0.2),  // Nervous yellow
+      'look_away': new pc.Color(0.6, 0.6, 0.6),        // Gray
+      'aura_glow': new pc.Color(0.5, 0.3, 0.9),        // Purple glow
+      'suspicious_behavior': new pc.Color(1.0, 0.5, 0), // Orange suspicious
+      'character_stumble': new pc.Color(0.6, 0.4, 0.2), // Brown stumble
+      'danger': new pc.Color(1, 0, 0),
+      'default': new pc.Color(1, 1, 0),
+    };
+
+    const hintColor = hintColors[type] || hintColors['default'];
+
     // Create hint icon above player
     const hint = new pc.Entity("Hint");
     hint.addComponent("model", { type: "sphere" });
-    hint.setLocalPosition(0, 4, 0);
-    hint.setLocalScale(0.5, 0.5, 0.5);
+    hint.setLocalPosition(0, 3.5, 0);
+    hint.setLocalScale(0.4, 0.4, 0.4);
 
     const mat = new pc.StandardMaterial();
-    mat.emissive =
-      type === "danger" ? new pc.Color(1, 0, 0) : new pc.Color(1, 1, 0);
+    mat.emissive = hintColor;
     mat.opacity = 0.8;
     mat.blendType = pc.BLEND_ADDITIVE;
     mat.update();
@@ -3440,16 +3604,67 @@ export default class Village3DPlayCanvas {
 
     entity.addChild(hint);
 
-    // Animate and remove
+    // Special effect: shake the character for 'character_shake' or 'character_stumble'
+    if (type === 'character_shake' || type === 'character_stumble') {
+      const originalPos = entity.getLocalPosition().clone();
+      let shakeTime = 0;
+      const shakeUpdate = (dt) => {
+        shakeTime += dt;
+        const intensity = type === 'character_shake' ? 0.05 : 0.1;
+        entity.setLocalPosition(
+          originalPos.x + Math.sin(shakeTime * 30) * intensity,
+          originalPos.y,
+          originalPos.z + Math.cos(shakeTime * 25) * intensity
+        );
+        if (shakeTime > 0.8) {
+          this.app.off("update", shakeUpdate);
+          entity.setLocalPosition(originalPos.x, originalPos.y, originalPos.z);
+        }
+      };
+      this.app.on("update", shakeUpdate);
+    }
+
+    // Special effect: eye glow for 'eyes_glow_red'
+    if (type === 'eyes_glow_red' && entity.parts && entity.parts.head) {
+      const eyes = entity.parts.head.findByName ?
+        [entity.parts.head.findByName("EyeWhite-0"), entity.parts.head.findByName("EyeWhite-1")] :
+        [];
+      const originalMats = [];
+      eyes.forEach((eye, i) => {
+        if (eye && eye.model) {
+          originalMats[i] = eye.model.material;
+          const glowMat = new pc.StandardMaterial();
+          glowMat.emissive = new pc.Color(1, 0.1, 0);
+          glowMat.diffuse = new pc.Color(1, 0.2, 0.1);
+          glowMat.update();
+          eye.model.material = glowMat;
+        }
+      });
+      // Restore after delay
+      setTimeout(() => {
+        eyes.forEach((eye, i) => {
+          if (eye && eye.model && originalMats[i]) {
+            eye.model.material = originalMats[i];
+          }
+        });
+      }, 1500);
+    }
+
+    // Animate and remove hint orb
     let time = 0;
     const updateHint = (dt) => {
       time += dt;
-      hint.setLocalPosition(0, 4 + Math.sin(time * 3) * 0.3, 0);
+      hint.setLocalPosition(0, 3.5 + Math.sin(time * 3) * 0.3, 0);
       hint.setLocalScale(
-        0.5 + Math.sin(time * 5) * 0.1,
-        0.5 + Math.sin(time * 5) * 0.1,
-        0.5 + Math.sin(time * 5) * 0.1,
+        0.4 + Math.sin(time * 5) * 0.1,
+        0.4 + Math.sin(time * 5) * 0.1,
+        0.4 + Math.sin(time * 5) * 0.1,
       );
+      // Fade out
+      if (time > 2) {
+        mat.opacity = 0.8 * (1 - (time - 2));
+        mat.update();
+      }
 
       if (time > 3) {
         this.app.off("update", updateHint);
@@ -3551,13 +3766,21 @@ export default class Village3DPlayCanvas {
       const labelPos = label.getPosition();
       const cameraPos = this.camera.getPosition();
 
-      // Calculate direction from label to camera (only horizontal for upright billboard)
+      // Calculate world angle from label to camera
       const dx = cameraPos.x - labelPos.x;
       const dz = cameraPos.z - labelPos.z;
-      const angle = Math.atan2(dx, dz) * (180 / Math.PI);
+      const worldAngle = Math.atan2(dx, dz) * (180 / Math.PI);
 
-      // Set rotation: -90 on X to make plane vertical, then Y rotation to face camera
-      label.setLocalEulerAngles(-90, angle, 0);
+      // Get parent's world rotation Y component
+      const parentRotation = label.parent.getEulerAngles();
+      const parentYRotation = parentRotation.y;
+
+      // Calculate local Y rotation needed (world angle minus parent's world Y rotation)
+      // Add 180 to flip the plane so the texture shows correctly (not mirrored)
+      const localYAngle = worldAngle - parentYRotation + 180;
+
+      // Set rotation: 90 on X to make plane vertical (facing forward), then local Y rotation to face camera
+      label.setLocalEulerAngles(90, localYAngle, 0);
     });
 
     // Animate Players
@@ -3572,30 +3795,30 @@ export default class Village3DPlayCanvas {
       if (isAlive && entity.parts) {
         // 1. Breathing (subtle scaling of torso)
         if (entity.parts.torso) {
-          const breathing = Math.sin(anim.time * 2) * 0.02 + 1;
+          const breathing = Math.sin(anim.time * 2) * 0.03 + 1;
           entity.parts.torso.setLocalScale(0.6 * breathing, 0.8, 0.35 * breathing);
         }
 
-        // 2. Head Movement (idle looking around)
+        // 2. Head Movement (idle looking around) - more noticeable
         if (entity.parts.head) {
-          const headYaw = Math.sin(anim.time * 0.5) * 15;
-          const headPitch = Math.cos(anim.time * 0.8) * 5;
+          const headYaw = Math.sin(anim.time * 0.5) * 25; // Increased from 15
+          const headPitch = Math.cos(anim.time * 0.8) * 8; // Increased from 5
           entity.parts.head.setLocalEulerAngles(headPitch, headYaw, 0);
         }
 
-        // 3. Arm Swaying
-        if (entity.parts.arms) {
+        // 3. Arm Swaying - more noticeable
+        if (entity.parts.arms && entity.parts.arms.length > 0) {
           entity.parts.arms.forEach((armPivot, i) => {
             const side = i === 0 ? 1 : -1;
-            const sway = Math.sin(anim.time * 1.5) * 5;
-            armPivot.setLocalEulerAngles(sway, 0, side * 5);
+            const sway = Math.sin(anim.time * 1.5 + i * Math.PI) * 12; // Increased from 5
+            armPivot.setLocalEulerAngles(sway, 0, side * 8);
           });
         }
 
-        // 4. Subtle body swaying
-        const bodySway = Math.sin(anim.time * 0.7) * 0.05;
-        const bodyLean = Math.cos(anim.time * 0.4) * 1;
-        entity.setLocalEulerAngles(0, entity.getLocalEulerAngles().y, bodyLean);
+        // 4. Subtle body swaying - more noticeable
+        const bodyLean = Math.cos(anim.time * 0.4) * 2; // Increased from 1
+        const currentY = entity.getLocalEulerAngles().y;
+        entity.setLocalEulerAngles(0, currentY, bodyLean);
 
         // 5. Special Accessory Animations
         if (entity.parts.wings) {

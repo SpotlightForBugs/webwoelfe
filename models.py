@@ -377,6 +377,11 @@ class SeherinEnthuellung(db.Model):
 
 # PHASE-BASIERTE TEXTE (werden jede Runde wiederholt)
 ERZAEHLER_PHASEN = {
+    "rollen_verteilt": {
+        "text": "Willkommen in Düsterwald! Die Rollen wurden verteilt. Schaut euch eure geheime Rolle an - verratet sie niemandem! Gleich bricht die erste Nacht herein.",
+        "anweisung": "Alle Spieler schauen sich ihre Rolle an. Dann beginnt die Nacht.",
+        "wiederholbar": False,
+    },
     "nacht_start": {
         "text": "Das Dorf schläft ein. Alle Spieler schließen die Augen.",
         "anweisung": "Warte bis alle Spieler die Augen geschlossen haben.",

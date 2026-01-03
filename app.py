@@ -45,6 +45,18 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Spielname als Konstante
 SPIEL_NAME = "Webwölfe"
 
+# Phasen-Konfiguration
+# Wartezeit zwischen automatischen Phasenwechseln (in Sekunden)
+# Mindestens 30 Sekunden um Audio-Erzählung vollständig abzuspielen
+PHASE_WECHSEL_DELAY = int(os.environ.get("PHASE_DELAY", "30"))
+
+
+def log_ts(msg: str):
+    """Log mit Timestamp für Debugging"""
+    ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+    print(f"[{ts}] {msg}")
+
+
 # Initialisierung
 db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
@@ -73,7 +85,7 @@ def start_cleanup_task():
     except ImportError:
         print("[System] Warnung: Gevent nicht verfügbar, Cleanup-Task deaktiviert.")
     except Exception as e:
-        print(f"[System] Fehler beim Starten des Cleanup-Tasks: {e}")
+        log_ts(f"[System] Fehler beim Starten des Cleanup-Tasks: {e}")
 
 
 start_cleanup_task()
@@ -132,7 +144,7 @@ def generiere_erzaehler_audio(text: str, stil: str = "normal") -> str | None:
         if audio_path:
             # Konvertiere relativen Pfad zu URL-Pfad
             url_path = "/" + audio_path.replace("\\", "/")
-            print(f"[Audio] Generated: {url_path}")
+            log_ts(f"[Audio] Generated: {url_path}")
             return url_path
         return None
     except Exception as e:
@@ -690,6 +702,15 @@ def handle_raum_beitreten(data):
                 room=code,
             )
 
+            # Online-Modus: Sende Erzählung für aktuelle Phase wenn Spiel läuft
+            if raum.modus == "online" and raum.spiel_gestartet and raum.aktuelle_phase in ERZAEHLER_TEXTE:
+                erzaehler_info = ERZAEHLER_TEXTE[raum.aktuelle_phase]
+                erzaehlung_text = erzaehler_info.get("text", "")
+                audio_path = None
+                if erzaehlung_text:
+                    audio_path = generiere_erzaehler_audio(erzaehlung_text, stil="normal")
+                emit("erzaehlung", {"text": erzaehlung_text, "audio": audio_path})
+
 
 @socketio.on("spiel_starten")
 def handle_spiel_starten(data):
@@ -723,6 +744,31 @@ def handle_spiel_starten(data):
             {"phase": raum.aktuelle_phase, "runde": raum.runde},
             room=raum.code,
         )
+
+        # Online-Modus: Automatisch die erste Phase (rollen_verteilt) anzeigen und weiterschalten
+        if raum.modus == "online":
+            # Sende initiale Erzählung für rollen_verteilt
+            if raum.aktuelle_phase in ERZAEHLER_TEXTE:
+                erzaehler_info = ERZAEHLER_TEXTE[raum.aktuelle_phase]
+                erzaehlung_text = erzaehler_info.get("text", "")
+                audio_path = None
+                if erzaehlung_text:
+                    audio_path = generiere_erzaehler_audio(erzaehlung_text, stil="normal")
+                socketio.emit(
+                    "erzaehlung", {"text": erzaehlung_text, "audio": audio_path}, room=raum.code
+                )
+
+            # Starte automatische Phasen-Progression
+            import threading
+            def auto_advance_initial():
+                import time
+                time.sleep(5)  # 5 Sekunden für Rollen-Verteilung
+                with app.app_context():
+                    raum_aktuell = db.session.get(Raum, raum.id)
+                    if raum_aktuell and raum_aktuell.aktuelle_phase == "rollen_verteilt":
+                        _wechsel_phase_intern(raum_aktuell)
+
+            threading.Thread(target=auto_advance_initial, daemon=True).start()
     else:
         emit("fehler", {"nachricht": "Spiel konnte nicht gestartet werden"})
 
@@ -739,13 +785,24 @@ def handle_phase_weiter():
     if not raum:
         return
 
-    # Im Auto-Modus darf jeder (oder nur der Creator?) die Phase weiterschalten,
-    # bzw. es wird vom Client automatisch getriggert.
-    # Hier erlauben wir es jedem Spieler im Raum, wenn der Modus 'auto' ist.
-    if raum.erzaehler_modus != "auto" and not spieler.ist_erzaehler:
+    # Im Online-Modus darf der Admin/Creator die Phase weiterschalten (automatisch vom Client getriggert).
+    # Im Gruppen-Modus darf nur der Erzähler manuell weiterschalten.
+    is_admin = raum.erzaehler_id == spieler.id
+    if raum.modus != "online" and not spieler.ist_erzaehler:
         emit("fehler", {"nachricht": "Nur der Erzaehler kann die Phase wechseln"})
         return
+    if raum.modus == "online" and not is_admin:
+        emit("fehler", {"nachricht": "Nur der Spielleiter kann die Phase wechseln"})
+        return
 
+    _wechsel_phase_intern(raum)
+
+
+def _wechsel_phase_intern(raum):
+    """
+    Interne Funktion für Phasenwechsel.
+    Wird rekursiv aufgerufen für automatische Phasen.
+    """
     alte_phase = raum.aktuelle_phase
     neue_phase = game_logic.naechste_phase(raum)
 
@@ -776,11 +833,11 @@ def handle_phase_weiter():
 
             audio_path = generiere_erzaehler_audio(erzaehlung_text, stil=stil)
 
-        emit(
+        socketio.emit(
             "erzaehlung", {"text": erzaehlung_text, "audio": audio_path}, room=raum.code
         )
 
-    emit(
+    socketio.emit(
         "phase_geaendert",
         {
             "phase": neue_phase,
@@ -790,6 +847,69 @@ def handle_phase_weiter():
         },
         room=raum.code,
     )
+
+    # Automatische Phasen: Diese brauchen keine Spieler-Interaktion
+    # und sollen nach Audio-Wiedergabe automatisch weiterschalten
+    AUTOMATISCHE_PHASEN = {
+        "rollen_verteilt",
+        "nacht_start",
+        "nacht_ende",
+        "tag_start",
+        "tag_ende",
+        "verliebte_info",
+        "baerenbaendiger_brummen",
+        "demoskopin_info",
+        "abstimmung_ergebnis",
+        "prinz_enthuellung",
+        "hahn_enthuellung",
+        "putzfrau_info",
+        "schwestern_phase",  # Info-only
+        "brueder_phase",  # Info-only
+        "freimaurer_phase",  # Info-only
+        "fluechtlinge_phase",  # Info-only
+    }
+
+    if raum.modus == "online" and neue_phase in AUTOMATISCHE_PHASEN:
+        # Markiere Raum als "wartet auf Audio"
+        # Der Client sendet 'audio_fertig' wenn Audio abgespielt wurde
+        # Fallback: Nach PHASE_WECHSEL_DELAY Sekunden automatisch weiter
+        raum_code = raum.code
+        phase_bei_start = neue_phase
+
+        import threading
+        def auto_advance_fallback():
+            import time
+            # Warte auf Fallback-Timeout (falls Audio nicht abgespielt wird)
+            time.sleep(PHASE_WECHSEL_DELAY)
+            with app.app_context():
+                raum_aktuell = Raum.query.filter_by(code=raum_code).first()
+                if raum_aktuell and raum_aktuell.aktuelle_phase == phase_bei_start:
+                    # Phase wurde noch nicht gewechselt (Audio-Event kam nicht an)
+                    log_ts(f"[Phase] Fallback-Timeout für {phase_bei_start}, wechsle Phase")
+                    _wechsel_phase_intern(raum_aktuell)
+
+        threading.Thread(target=auto_advance_fallback, daemon=True).start()
+
+
+# Socket-Handler für Audio-Fertig-Event
+@socketio.on("audio_fertig")
+def handle_audio_fertig(data):
+    """Client meldet dass Audio abgespielt wurde - Phase kann wechseln"""
+    spieler = hole_aktuellen_spieler()
+    if not spieler:
+        return
+
+    raum = db.session.get(Raum, spieler.raum_id)
+    if not raum or raum.modus != "online":
+        return
+
+    gemeldete_phase = data.get("phase", "")
+
+    # Nur der erste Spieler der meldet löst den Phasenwechsel aus
+    # Prüfe ob wir noch in der gleichen Phase sind
+    if raum.aktuelle_phase == gemeldete_phase:
+        log_ts(f"[Audio] Audio fertig für Phase {gemeldete_phase}, wechsle Phase")
+        _wechsel_phase_intern(raum)
 
 
 @socketio.on("aktion_ausfuehren")
@@ -1119,13 +1239,17 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         return True
 
     elif aktion_typ == "armor_verlieben":
+        log_ts(f"[Aktion] armor_verlieben von {spieler.name} (Rolle: {spieler.rolle})")
         if spieler.rolle != "Amor" or raum.aktuelle_phase != "armor_phase":
+            log_ts(f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}")
             return False
         if not spieler.armor_verliebt:
+            log_ts(f"[Aktion] ABGELEHNT: armor_verliebt bereits False")
             return False
 
         ziel_ids = ziel_id if isinstance(ziel_id, list) else [ziel_id]
         if len(ziel_ids) != 2:
+            log_ts(f"[Aktion] ABGELEHNT: Nicht genau 2 Ziele ({len(ziel_ids)})")
             return False
 
         spieler1 = db.session.get(Spieler, ziel_ids[0])
@@ -1136,6 +1260,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             spieler2.verliebt_mit_id = spieler1.id
             spieler.armor_verliebt = False
             db.session.commit()
+            log_ts(f"[Aktion] ERFOLG: {spieler1.name} ❤️ {spieler2.name}")
 
             # SICHER: Verliebte werden privat informiert
             game_logic.log_eintrag(
@@ -1333,17 +1458,84 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
 def pruefe_phase_abschluss(raum):
     """Prueft ob die aktuelle Phase abgeschlossen werden kann"""
 
-    if raum.aktuelle_phase == "werwolf_phase":
+    # Stelle sicher dass wir aktuelle Daten haben
+    db.session.expire_all()
+
+    if raum.aktuelle_phase == "armor_phase":
+        # Amor hat sein Liebespaar gewählt - Phase ist fertig
+        amor_spieler = game_logic.hole_spieler_fuer_rolle(raum, "Amor")
+        if not amor_spieler:
+            # Kein Amor vorhanden - Phase überspringen
+            _wechsel_phase_intern(raum)
+            return
+        # Prüfe ob alle Amors (normalerweise nur 1) ihre Aktion ausgeführt haben
+        alle_fertig = all(not a.armor_verliebt for a in amor_spieler)
+        if alle_fertig:
+            log_ts(f"[Phase] armor_phase abgeschlossen, wechsle Phase")
+            socketio.emit("phase_bereit", {"phase": "armor_phase"}, room=raum.code)
+            # Wechsle automatisch zur nächsten Phase
+            _wechsel_phase_intern(raum)
+
+    elif raum.aktuelle_phase == "seherin_phase":
+        # Seherin hat ihre Aktion ausgeführt
+        seherin_spieler = game_logic.hole_spieler_fuer_rolle(raum, "Seherin")
+        if not seherin_spieler:
+            _wechsel_phase_intern(raum)
+            return
+        alle_fertig = all(
+            game_logic.hat_spieler_gewaehlt(s, raum, "seherin_phase") for s in seherin_spieler
+        )
+        if alle_fertig:
+            log_ts(f"[Phase] seherin_phase abgeschlossen, wechsle Phase")
+            socketio.emit("phase_bereit", {"phase": "seherin_phase"}, room=raum.code)
+            _wechsel_phase_intern(raum)
+
+    elif raum.aktuelle_phase == "hexe_phase":
+        # Hexe hat ihre Aktion ausgeführt (heilen, töten, oder nichts tun)
+        hexe_spieler = game_logic.hole_spieler_fuer_rolle(raum, "Hexe")
+        if not hexe_spieler:
+            _wechsel_phase_intern(raum)
+            return
+        alle_fertig = all(
+            game_logic.hat_spieler_gewaehlt(h, raum, "hexe_phase") for h in hexe_spieler
+        )
+        if alle_fertig:
+            log_ts(f"[Phase] hexe_phase abgeschlossen, wechsle Phase")
+            socketio.emit("phase_bereit", {"phase": "hexe_phase"}, room=raum.code)
+            _wechsel_phase_intern(raum)
+
+    elif raum.aktuelle_phase == "heiler_phase":
+        # Heiler hat seine Aktion ausgeführt
+        heiler_spieler = game_logic.hole_spieler_fuer_rolle(raum, "Heiler")
+        if not heiler_spieler:
+            _wechsel_phase_intern(raum)
+            return
+        alle_fertig = all(
+            game_logic.hat_spieler_gewaehlt(h, raum, "heiler_phase") for h in heiler_spieler
+        )
+        if alle_fertig:
+            log_ts(f"[Phase] heiler_phase abgeschlossen, wechsle Phase")
+            socketio.emit("phase_bereit", {"phase": "heiler_phase"}, room=raum.code)
+            _wechsel_phase_intern(raum)
+
+    elif raum.aktuelle_phase == "werwolf_phase":
         werwoelfe = game_logic.hole_spieler_fuer_rolle(raum, "Werwolf")
+        if not werwoelfe:
+            _wechsel_phase_intern(raum)
+            return
         if all(
             game_logic.hat_spieler_gewaehlt(w, raum, "werwolf_phase") for w in werwoelfe
         ):
+            log_ts(f"[Phase] werwolf_phase abgeschlossen, wechsle Phase")
             socketio.emit("phase_bereit", {"phase": "werwolf_phase"}, room=raum.code)
+            _wechsel_phase_intern(raum)
 
     elif raum.aktuelle_phase == "abstimmung":
         lebende = game_logic.hole_lebende_spieler(raum)
         if all(game_logic.hat_spieler_gewaehlt(s, raum, "abstimmung") for s in lebende):
+            log_ts(f"[Phase] abstimmung abgeschlossen, wechsle Phase")
             socketio.emit("phase_bereit", {"phase": "abstimmung"}, room=raum.code)
+            _wechsel_phase_intern(raum)
 
 
 # ============================================================================

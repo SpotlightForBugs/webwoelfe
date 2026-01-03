@@ -8,6 +8,6 @@ from .kraeuterweib import Kraeuterweib
 from .giftmischerin import Giftmischerin
 
 __all__ = [
-    'Kraeuterweib',
-    'Giftmischerin',
+    "Kraeuterweib",
+    "Giftmischerin",
 ]

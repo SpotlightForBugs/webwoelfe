@@ -4,6 +4,7 @@ Zwei Schwestern - Kennen sich gegenseitig.
 Die zwei Schwestern erkennen sich in der ersten Nacht
 und können sich jede Nacht kurz absprechen.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie
@@ -17,14 +18,14 @@ if TYPE_CHECKING:
 class ZweiSchwestern(Role):
     """
     Zwei Schwestern - Gruppen-Informationsrolle.
-    
+
     Fähigkeiten:
     - Erkennen sich in der ersten Nacht
     - Können sich jede Nacht kurz absprechen
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -46,8 +47,10 @@ class ZweiSchwestern(Role):
                 "Sie dürfen sich kurz absprechen."
             ),
         )
-    
-    def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_spiel_start(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Schwestern erkennen sich in der ersten Nacht.
         """
@@ -57,9 +60,10 @@ class ZweiSchwestern(Role):
             effekte={"erkennt_schwester": True},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Schwestern dürfen sich kurz absprechen.
         """

@@ -4,6 +4,7 @@ Jesus - Der Auferstandene.
 Jesus kann nach seinem Tod wieder auferstehen
 und weiterspielen.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie
@@ -17,14 +18,14 @@ if TYPE_CHECKING:
 class Jesus(Role):
     """
     Jesus - Auferstehungs-Rolle.
-    
+
     Fähigkeiten:
     - Kann einmalig nach 3 Tagen auferstehen
     - Auferstehung geschieht automatisch
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -50,17 +51,18 @@ class Jesus(Role):
                 "Jesus erhebt sich und kehrt triumphierend ins Spiel zurück!"
             ),
         )
-    
-    def on_eigener_tod(self, spieler: 'Spieler', todesursache: str,
-                       kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_eigener_tod(
+        self, spieler: "Spieler", todesursache: str, kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Jesus startet den Auferstehungs-Timer.
         """
-        kann_auferstehen = getattr(spieler, 'jesus_auferstehung', True)
-        
+        kann_auferstehen = getattr(spieler, "jesus_auferstehung", True)
+
         if not kann_auferstehen:
             return None
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht="Jesus ist gestorben... aber er wird wiederkommen!",
@@ -70,13 +72,15 @@ class Jesus(Role):
             },
             log_sichtbar_fuer="erzaehler",
         )
-    
-    def on_tag_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_tag_start(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Prüft ob Jesus auferstehen sollte.
         """
-        auferstehung_runde = getattr(spieler, 'auferstehung_runde', None)
-        
+        auferstehung_runde = getattr(spieler, "auferstehung_runde", None)
+
         if auferstehung_runde and kontext.runde >= auferstehung_runde:
             return AktionsErgebnis(
                 erfolg=True,
@@ -90,5 +94,5 @@ class Jesus(Role):
                 },
                 log_sichtbar_fuer="alle",
             )
-        
+
         return None

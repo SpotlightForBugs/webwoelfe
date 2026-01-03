@@ -1,76 +1,112 @@
-{% extends 'struktur.html' %}
-
-{% block title %}Lobby - {{ raum.name }} | {{ spiel_name }}{% endblock %}
-
-{% block content %}
+{% extends 'struktur.html' %} {% block title %}Lobby - {{ raum.name }} | {{
+spiel_name }}{% endblock %} {% block content %}
 <div class="container">
-    <section class="fade-in" style="max-width: 800px; margin: 0 auto;">
-        
-        <!-- Raum Info -->
-        <div class="card mb-3">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <h1 style="font-size: 1.75rem; color: var(--accent-gold);">{{ raum.name }}</h1>
-                    <p class="text-muted">
-                        {% if raum.modus == 'online' %}
-                        <i class="fa-solid fa-wifi"></i> Online-Modus (Automatischer Erzähler)
-                        {% else %}
-                        <i class="fa-solid fa-users"></i> Gruppen-Modus (Mit Erzähler)
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="text-center">
-                    <p class="text-muted mb-1">Raumcode</p>
-                    <div class="room-code" style="
-                        font-family: 'Cinzel', serif;
-                        font-size: 2.5rem;
-                        letter-spacing: 0.3em;
-                        color: var(--accent-red);
-                        background: var(--bg-primary);
-                        padding: 0.5rem 1.5rem;
-                        border-radius: 8px;
-                        border: 2px dashed var(--accent-red);
-                        cursor: pointer;
-                    " onclick="copyCode()" title="Klicken zum Kopieren">
-                        {{ raum.code }}
-                    </div>
-                    <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem;">
-                        Klicken zum Kopieren
-                    </p>
-                </div>
-            </div>
+  <section class="fade-in" style="max-width: 800px; margin: 0 auto">
+    <!-- Raum Info -->
+    <div class="card mb-3">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1rem;
+        "
+      >
+        <div>
+          <h1 style="font-size: 1.75rem; color: var(--accent-gold)">
+            {{ raum.name }}
+          </h1>
+          <p class="text-muted">
+            {% if raum.modus == 'online' %}
+            <i class="fa-solid fa-wifi"></i> Online-Modus (Automatischer
+            Erzähler) {% else %} <i class="fa-solid fa-users"></i> Gruppen-Modus
+            (Mit Erzähler) {% endif %}
+          </p>
         </div>
-        
-        <!-- Spielerliste -->
-        <div class="card mb-3">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="font-size: 1.25rem;">
-                    <i class="fa-solid fa-users"></i> Spieler 
-                    <span class="text-muted">(<span id="spieler-anzahl">{{ alle_spieler|length }}</span> / {{ raum.spieler_anzahl }})</span>
-                </h2>
-                <div class="status-indicator" style="
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    color: var(--accent-green);
-                ">
-                    <span style="width: 10px; height: 10px; background: var(--accent-green); border-radius: 50%; animation: pulse 2s infinite;"></span>
-                    Warte auf Spieler...
-                </div>
-            </div>
-            
-            <div id="spieler-liste" class="grid grid-3" style="gap: 1rem;">
-                {% for s in alle_spieler %}
-                <div class="spieler-karte" style="
-                    background: var(--bg-primary);
-                    padding: 1rem;
-                    border-radius: 8px;
-                    border: 1px solid var(--border-color);
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                " data-spieler-id="{{ s.id }}">
-                    <div style="
+        <div class="text-center">
+          <p class="text-muted mb-1">Raumcode</p>
+          <div
+            class="room-code"
+            style="
+              font-family: &quot;Cinzel&quot;, serif;
+              font-size: 2.5rem;
+              letter-spacing: 0.3em;
+              color: var(--accent-red);
+              background: var(--bg-primary);
+              padding: 0.5rem 1.5rem;
+              border-radius: 8px;
+              border: 2px dashed var(--accent-red);
+              cursor: pointer;
+            "
+            onclick="copyCode()"
+            title="Klicken zum Kopieren"
+          >
+            {{ raum.code }}
+          </div>
+          <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem">
+            Klicken zum Kopieren
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spielerliste -->
+    <div class="card mb-3">
+      <div
+        class="card-header"
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <h2 style="font-size: 1.25rem">
+          <i class="fa-solid fa-users"></i> Spieler
+          <span class="text-muted"
+            >(<span id="spieler-anzahl">{{ alle_spieler|length }}</span> / {{
+            raum.spieler_anzahl }})</span
+          >
+        </h2>
+        <div
+          class="status-indicator"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-green);
+          "
+        >
+          <span
+            style="
+              width: 10px;
+              height: 10px;
+              background: var(--accent-green);
+              border-radius: 50%;
+              animation: pulse 2s infinite;
+            "
+          ></span>
+          Warte auf Spieler...
+        </div>
+      </div>
+
+      <div id="spieler-liste" class="grid grid-3" style="gap: 1rem">
+        {% for s in alle_spieler %}
+        <div
+          class="spieler-karte"
+          style="
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+          "
+          data-spieler-id="{{ s.id }}"
+        >
+          <div
+            style="
                         width: 40px;
                         height: 40px;
                         background: {{ 'var(--accent-gold)' if s.ist_erzaehler else 'var(--accent-blue)' }};
@@ -80,318 +116,353 @@
                         justify-content: center;
                         font-weight: bold;
                         color: var(--bg-primary);
-                    ">
-                        {{ s.name[0]|upper }}
-                    </div>
-                    <div>
-                        <div style="font-weight: 600;">
-                            {{ s.name }}
-                            {% if s.id == spieler.id %}
-                            <span class="text-muted">(Du)</span>
-                            {% endif %}
-                        </div>
-                        {% if s.ist_erzaehler %}
-                        <div style="font-size: 0.75rem; color: var(--accent-gold);">
-                            <i class="fa-solid fa-book-open"></i> Erzähler
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
+                    "
+          >
+            {{ s.name[0]|upper }}
+          </div>
+          <div>
+            <div style="font-weight: 600">
+              {{ s.name }} {% if s.id == spieler.id %}
+              <span class="text-muted">(Du)</span>
+              {% endif %}
             </div>
-        </div>
-        
-        <!-- Sitzordnung - Drag & Drop -->
-        <div class="card mb-3" id="sitzordnung-card">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="font-size: 1.25rem;">
-                    <i class="fa-solid fa-chair"></i> Sitzordnung
-                </h2>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-ghost btn-sm" onclick="randomizeSitzordnung()" title="Zufällige Anordnung">
-                        <i class="fa-solid fa-shuffle"></i>
-                    </button>
-                    <button class="btn btn-ghost btn-sm" onclick="saveSitzordnung()" title="Speichern">
-                        <i class="fa-solid fa-save"></i>
-                    </button>
-                </div>
+            {% if s.ist_erzaehler %}
+            <div style="font-size: 0.75rem; color: var(--accent-gold)">
+              <i class="fa-solid fa-book-open"></i> Erzähler
             </div>
-            <p class="text-muted mb-2" style="font-size: 0.875rem;">
-                <i class="fa-solid fa-hand-pointer"></i> Ziehe die Spieler in die Reihenfolge, wie sie physisch nebeneinander sitzen. Die Nachbarn im Kreis sind wichtig für bestimmte Rollen!
-            </p>
-            <div id="sitzordnung-container" class="sitzordnung-kreis">
-                <!-- Wird per JS gefüllt -->
-            </div>
-        </div>
-        
-        <!-- Spielstart -->
-        <div class="card text-center">
-            {% if ist_spiel_bereit %}
-                <p class="text-success mb-2">
-                    <i class="fa-solid fa-check-circle"></i> Genügend Spieler vorhanden!
-                </p>
-                <button id="start-btn" class="btn btn-primary btn-lg" onclick="starteSpiel()">
-                    <i class="fa-solid fa-play"></i> Spiel starten
-                </button>
-            {% else %}
-                <p class="text-muted mb-2">
-                    <i class="fa-solid fa-hourglass-half"></i> Noch {{ fehlende_spieler }} Spieler benötigt...
-                </p>
-                <button class="btn btn-ghost btn-lg" disabled>
-                    Warte auf Spieler...
-                </button>
             {% endif %}
-            
-            <p class="text-muted mt-3" style="font-size: 0.875rem;">
-                Teile den Raumcode <strong>{{ raum.code }}</strong> mit deinen Freunden!
-            </p>
+          </div>
         </div>
-        
-        <!-- Rollen Vorschau -->
-        <div class="card mt-3">
-            <h3 class="mb-2" style="font-size: 1rem; color: var(--text-secondary);">
-                <i class="fa-solid fa-masks-theater"></i>
-                Rollenverteilung ({{ rollen_vorschau_total }} Spieler{% if rollen_vorschau_hat_erzaehler %} inkl. Erzähler{% endif %})
-            </h3>
-            <div id="rollen-vorschau" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                {% for rollen_name, anzahl in rollen_vorschau.items() %}
-                    {% set rolle_info = rollen.get(rollen_name, {}) %}
-                    <span style="
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Sitzordnung - Drag & Drop -->
+    <div class="card mb-3" id="sitzordnung-card">
+      <div
+        class="card-header"
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <h2 style="font-size: 1.25rem">
+          <i class="fa-solid fa-chair"></i> Sitzordnung
+        </h2>
+        <div style="display: flex; gap: 0.5rem">
+          <button
+            class="btn btn-ghost btn-sm"
+            onclick="randomizeSitzordnung()"
+            title="Zufällige Anordnung"
+          >
+            <i class="fa-solid fa-shuffle"></i>
+          </button>
+          <button
+            class="btn btn-ghost btn-sm"
+            onclick="saveSitzordnung()"
+            title="Speichern"
+          >
+            <i class="fa-solid fa-save"></i>
+          </button>
+        </div>
+      </div>
+      <p class="text-muted mb-2" style="font-size: 0.875rem">
+        <i class="fa-solid fa-hand-pointer"></i> Ziehe die Spieler in die
+        Reihenfolge, wie sie physisch nebeneinander sitzen. Die Nachbarn im
+        Kreis sind wichtig für bestimmte Rollen!
+      </p>
+      <div id="sitzordnung-container" class="sitzordnung-kreis">
+        <!-- Wird per JS gefüllt -->
+      </div>
+    </div>
+
+    <!-- Spielstart -->
+    <div class="card text-center">
+      {% if ist_spiel_bereit %}
+      <p class="text-success mb-2">
+        <i class="fa-solid fa-check-circle"></i> Genügend Spieler vorhanden!
+      </p>
+      <button
+        id="start-btn"
+        class="btn btn-primary btn-lg"
+        onclick="starteSpiel()"
+      >
+        <i class="fa-solid fa-play"></i> Spiel starten
+      </button>
+      {% else %}
+      <p class="text-muted mb-2">
+        <i class="fa-solid fa-hourglass-half"></i> Noch {{ fehlende_spieler }}
+        Spieler benötigt...
+      </p>
+      <button class="btn btn-ghost btn-lg" disabled>
+        Warte auf Spieler...
+      </button>
+      {% endif %}
+
+      <p class="text-muted mt-3" style="font-size: 0.875rem">
+        Teile den Raumcode <strong>{{ raum.code }}</strong> mit deinen Freunden!
+      </p>
+    </div>
+
+    <!-- Rollen Vorschau -->
+    <div class="card mt-3">
+      <h3 class="mb-2" style="font-size: 1rem; color: var(--text-secondary)">
+        <i class="fa-solid fa-masks-theater"></i>
+        Rollenverteilung ({{ rollen_vorschau_total }} Spieler{% if
+        rollen_vorschau_hat_erzaehler %} inkl. Erzähler{% endif %})
+      </h3>
+      <div
+        id="rollen-vorschau"
+        style="display: flex; flex-wrap: wrap; gap: 0.5rem"
+      >
+        {% for rollen_name, anzahl in rollen_vorschau.items() %} {% set
+        rolle_info = rollen.get(rollen_name, {}) %}
+        <span
+          style="
                         background: {{ rolle_info.get('farbe', 'var(--text-secondary)') }};
                         color: white;
                         padding: 0.25rem 0.75rem;
                         border-radius: 4px;
                         font-size: 0.75rem;
-                    ">
-                        {{ rollen_name }}{% if anzahl > 1 %} x{{ anzahl }}{% endif %}
-                    </span>
-                {% endfor %}
-            </div>
-        </div>
-        
-    </section>
+                    "
+        >
+          {{ rollen_name }}{% if anzahl > 1 %} x{{ anzahl }}{% endif %}
+        </span>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
 </div>
 
 <style>
-    .spieler-karte {
-        animation: fadeIn 0.3s ease-out;
-    }
-    
-    .spieler-karte.neu {
-        animation: fadeIn 0.3s ease-out, glow 0.5s ease-out;
-    }
-    
-    /* Sitzordnung Kreis-Ansicht */
-    .sitzordnung-kreis {
-        position: relative;
-        width: 100%;
-        max-width: 500px;
-        margin: 1rem auto;
-        aspect-ratio: 1;
-        background: radial-gradient(circle at center, var(--bg-secondary) 0%, var(--bg-primary) 70%);
-        border-radius: 50%;
-        border: 2px dashed var(--border-color);
-    }
-    
-    .sitz-slot {
-        position: absolute;
-        width: 70px;
-        height: 70px;
-        transform: translate(-50%, -50%);
-        cursor: grab;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .sitz-slot:hover {
-        transform: translate(-50%, -50%) scale(1.1);
-    }
-    
-    .sitz-slot.dragging {
-        cursor: grabbing;
-        opacity: 0.8;
-        z-index: 100;
-        box-shadow: 0 0 20px var(--accent-gold);
-    }
-    
-    .sitz-slot.drag-over {
-        transform: translate(-50%, -50%) scale(1.15);
-        box-shadow: 0 0 15px var(--accent-blue);
-    }
-    
-    .sitz-avatar {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        background: var(--accent-blue);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-        font-size: 1.5rem;
-        border: 3px solid var(--border-color);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    
-    .sitz-avatar .sitz-name {
-        font-size: 0.65rem;
-        margin-top: 2px;
-        max-width: 60px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    
-    .sitz-avatar .sitz-nummer {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        width: 20px;
-        height: 20px;
-        background: var(--accent-gold);
-        color: var(--bg-primary);
-        border-radius: 50%;
-        font-size: 0.7rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .sitz-dorf-mitte {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 80px;
-        height: 80px;
-        background: var(--bg-card);
-        border: 2px solid var(--accent-gold);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--accent-gold);
-        font-size: 2rem;
-    }
-    
-    /* Drag & Drop Liste als Fallback */
-    .sitzordnung-liste {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        padding: 1rem;
-        min-height: 60px;
-        border: 2px dashed var(--border-color);
-        border-radius: 8px;
-        background: var(--bg-primary);
-    }
-    
-    .sitz-chip {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        cursor: grab;
-        transition: all 0.2s ease;
-        user-select: none;
-    }
-    
-    .sitz-chip:hover {
-        border-color: var(--accent-gold);
-        transform: translateY(-2px);
-    }
-    
-    .sitz-chip.dragging {
-        opacity: 0.5;
-        cursor: grabbing;
-    }
-    
-    .sitz-chip .chip-nummer {
-        width: 24px;
-        height: 24px;
-        background: var(--accent-gold);
-        color: var(--bg-primary);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.75rem;
-        font-weight: bold;
-    }
-    
-    .sitz-chip .chip-avatar {
-        width: 28px;
-        height: 28px;
-        background: var(--accent-blue);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 0.9rem;
-    }
-</style>
-{% endblock %}
+  .spieler-karte {
+    animation: fadeIn 0.3s ease-out;
+  }
 
-{% block scripts %}
+  .spieler-karte.neu {
+    animation:
+      fadeIn 0.3s ease-out,
+      glow 0.5s ease-out;
+  }
+
+  /* Sitzordnung Kreis-Ansicht */
+  .sitzordnung-kreis {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    margin: 1rem auto;
+    aspect-ratio: 1;
+    background: radial-gradient(
+      circle at center,
+      var(--bg-secondary) 0%,
+      var(--bg-primary) 70%
+    );
+    border-radius: 50%;
+    border: 2px dashed var(--border-color);
+  }
+
+  .sitz-slot {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    transform: translate(-50%, -50%);
+    cursor: grab;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .sitz-slot:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+
+  .sitz-slot.dragging {
+    cursor: grabbing;
+    opacity: 0.8;
+    z-index: 100;
+    box-shadow: 0 0 20px var(--accent-gold);
+  }
+
+  .sitz-slot.drag-over {
+    transform: translate(-50%, -50%) scale(1.15);
+    box-shadow: 0 0 15px var(--accent-blue);
+  }
+
+  .sitz-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.5rem;
+    border: 3px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .sitz-avatar .sitz-name {
+    font-size: 0.65rem;
+    margin-top: 2px;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sitz-avatar .sitz-nummer {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border-radius: 50%;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sitz-dorf-mitte {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: var(--bg-card);
+    border: 2px solid var(--accent-gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-gold);
+    font-size: 2rem;
+  }
+
+  /* Drag & Drop Liste als Fallback */
+  .sitzordnung-liste {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem;
+    min-height: 60px;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+  }
+
+  .sitz-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    cursor: grab;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+
+  .sitz-chip:hover {
+    border-color: var(--accent-gold);
+    transform: translateY(-2px);
+  }
+
+  .sitz-chip.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+  }
+
+  .sitz-chip .chip-nummer {
+    width: 24px;
+    height: 24px;
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+
+  .sitz-chip .chip-avatar {
+    width: 28px;
+    height: 28px;
+    background: var(--accent-blue);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %} {% block scripts %}
 <script>
-    const socket = io();
-    const raumCode = "{{ raum.code }}";
-    
-    // Raum beitreten
-    socket.emit('raum_beitreten', { code: raumCode });
-    
-    // Spielerliste aktualisieren
-    socket.on('spieler_liste', function(data) {
-        updateSpielerListe(data.spieler);
-    });
-    
-    socket.on('spieler_verbunden', function(data) {
-        // Neuen Spieler dynamisch zur Liste hinzufügen
-        addSpielerToList(data.spieler);
-        updateSpielerAnzahl();
-        updateStartButton();
-        updateRollenVorschau();
-        // Auch zur Sitzordnung hinzufügen
-        addToSitzordnung(data.spieler);
-    });
-    
-    socket.on('spieler_getrennt', function(data) {
-        // Spieler aus Liste entfernen
-        removeSpielerFromList(data.spieler_id);
-        updateSpielerAnzahl();
-        updateStartButton();
-        updateRollenVorschau();
-        // Auch aus Sitzordnung entfernen
-        removeFromSitzordnung(data.spieler_id);
-    });
-    
-    socket.on('spiel_gestartet', function(data) {
-        socket.emit('navigiere', { ziel: '/spiel/' + raumCode });
-    });
-    
-    socket.on('navigiere', function(data) {
-        window.location.href = data.ziel;
-    });
-    
-    socket.on('fehler', function(data) {
-        showNotification(data.nachricht, 'error');
-    });
-    
-    function addSpielerToList(spieler) {
-        const container = document.getElementById('spieler-liste');
-        const existierend = container.querySelector(`[data-spieler-id="${spieler.id}"]`);
-        if (existierend) return; // Bereits vorhanden
-        
-        const karte = document.createElement('div');
-        karte.className = 'spieler-karte neu';
-        karte.setAttribute('data-spieler-id', spieler.id);
-        karte.style.cssText = `
+  const socket = io();
+  const raumCode = "{{ raum.code }}";
+
+  // Raum beitreten
+  socket.emit("raum_beitreten", { code: raumCode });
+
+  // Spielerliste aktualisieren
+  socket.on("spieler_liste", function (data) {
+    updateSpielerListe(data.spieler);
+  });
+
+  socket.on("spieler_verbunden", function (data) {
+    // Neuen Spieler dynamisch zur Liste hinzufügen
+    addSpielerToList(data.spieler);
+    updateSpielerAnzahl();
+    updateStartButton();
+    updateRollenVorschau();
+    // Auch zur Sitzordnung hinzufügen
+    addToSitzordnung(data.spieler);
+  });
+
+  socket.on("spieler_getrennt", function (data) {
+    // Spieler aus Liste entfernen
+    removeSpielerFromList(data.spieler_id);
+    updateSpielerAnzahl();
+    updateStartButton();
+    updateRollenVorschau();
+    // Auch aus Sitzordnung entfernen
+    removeFromSitzordnung(data.spieler_id);
+  });
+
+  socket.on("spiel_gestartet", function (data) {
+    socket.emit("navigiere", { ziel: "/spiel/" + raumCode });
+  });
+
+  socket.on("navigiere", function (data) {
+    window.location.href = data.ziel;
+  });
+
+  socket.on("fehler", function (data) {
+    showNotification(data.nachricht, "error");
+  });
+
+  function addSpielerToList(spieler) {
+    const container = document.getElementById("spieler-liste");
+    const existierend = container.querySelector(
+      `[data-spieler-id="${spieler.id}"]`,
+    );
+    if (existierend) return; // Bereits vorhanden
+
+    const karte = document.createElement("div");
+    karte.className = "spieler-karte neu";
+    karte.setAttribute("data-spieler-id", spieler.id);
+    karte.style.cssText = `
             background: var(--bg-primary);
             padding: 1rem;
             border-radius: 8px;
@@ -400,11 +471,11 @@
             align-items: center;
             gap: 0.75rem;
         `;
-        
-        const istErzaehler = spieler.ist_erzaehler;
-        const farbe = istErzaehler ? 'var(--accent-gold)' : 'var(--accent-blue)';
-        
-        karte.innerHTML = `
+
+    const istErzaehler = spieler.ist_erzaehler;
+    const farbe = istErzaehler ? "var(--accent-gold)" : "var(--accent-blue)";
+
+    karte.innerHTML = `
             <div style="
                 width: 40px;
                 height: 40px;
@@ -420,35 +491,35 @@
             </div>
             <div>
                 <div style="font-weight: 600;">${spieler.name}</div>
-                ${istErzaehler ? '<div style="font-size: 0.75rem; color: var(--accent-gold);"><i class="fa-solid fa-book-open"></i> Erzähler</div>' : ''}
+                ${istErzaehler ? '<div style="font-size: 0.75rem; color: var(--accent-gold);"><i class="fa-solid fa-book-open"></i> Erzähler</div>' : ""}
             </div>
         `;
-        
-        container.appendChild(karte);
+
+    container.appendChild(karte);
+  }
+
+  function removeSpielerFromList(spielerId) {
+    const container = document.getElementById("spieler-liste");
+    const karte = container.querySelector(`[data-spieler-id="${spielerId}"]`);
+    if (karte) {
+      karte.style.animation = "fadeOut 0.3s ease-out";
+      setTimeout(() => karte.remove(), 300);
     }
-    
-    function removeSpielerFromList(spielerId) {
-        const container = document.getElementById('spieler-liste');
-        const karte = container.querySelector(`[data-spieler-id="${spielerId}"]`);
-        if (karte) {
-            karte.style.animation = 'fadeOut 0.3s ease-out';
-            setTimeout(() => karte.remove(), 300);
-        }
-    }
-    
-    function updateSpielerAnzahl() {
-        const container = document.getElementById('spieler-liste');
-        const anzahl = document.getElementById('spieler-anzahl');
-        anzahl.textContent = container.querySelectorAll('.spieler-karte').length;
-    }
-    
-    function updateStartButton() {
-        const container = document.getElementById('spieler-liste');
-        const anzahl = container.querySelectorAll('.spieler-karte').length;
-        const btnContainer = document.querySelector('.card.text-center');
-        
-        if (anzahl >= 5) {
-            btnContainer.innerHTML = `
+  }
+
+  function updateSpielerAnzahl() {
+    const container = document.getElementById("spieler-liste");
+    const anzahl = document.getElementById("spieler-anzahl");
+    anzahl.textContent = container.querySelectorAll(".spieler-karte").length;
+  }
+
+  function updateStartButton() {
+    const container = document.getElementById("spieler-liste");
+    const anzahl = container.querySelectorAll(".spieler-karte").length;
+    const btnContainer = document.querySelector(".card.text-center");
+
+    if (anzahl >= 5) {
+      btnContainer.innerHTML = `
                 <p class="text-success mb-2">
                     <i class="fa-solid fa-check-circle"></i> Genügend Spieler vorhanden!
                 </p>
@@ -459,8 +530,8 @@
                     Teile den Raumcode <strong>${raumCode}</strong> mit deinen Freunden!
                 </p>
             `;
-        } else {
-            btnContainer.innerHTML = `
+    } else {
+      btnContainer.innerHTML = `
                 <p class="text-muted mb-2">
                     <i class="fa-solid fa-hourglass-half"></i> Noch ${5 - anzahl} Spieler benötigt...
                 </p>
@@ -471,97 +542,101 @@
                     Teile den Raumcode <strong>${raumCode}</strong> mit deinen Freunden!
                 </p>
             `;
-        }
     }
-    
-    function showNotification(msg, type) {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.textContent = msg;
-        notification.style.cssText = `
+  }
+
+  function showNotification(msg, type) {
+    const notification = document.createElement("div");
+    notification.className = `notification ${type}`;
+    notification.textContent = msg;
+    notification.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
             padding: 1rem 2rem;
-            background: ${type === 'error' ? 'var(--accent-red)' : 'var(--accent-green)'};
+            background: ${type === "error" ? "var(--accent-red)" : "var(--accent-green)"};
             color: white;
             border-radius: 8px;
             z-index: 1000;
             animation: fadeIn 0.3s ease-out;
         `;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 3000);
-    }
-    
-    function starteSpiel() {
-        const btn = document.getElementById('start-btn');
-        btn.disabled = true;
-        btn.textContent = 'Starte...';
-        socket.emit('spiel_starten', {});
-    }
-    
-    function copyCode() {
-        navigator.clipboard.writeText(raumCode);
-        const codeEl = document.querySelector('.room-code');
-        const original = codeEl.textContent;
-        codeEl.textContent = 'Kopiert!';
-        setTimeout(() => codeEl.textContent = original, 1500);
-    }
-    
-    // ======================================
-    // SITZORDNUNG - Drag & Drop System
-    // ======================================
-    
-    let sitzordnung = []; // {id, name, sitzplatz}
-    let draggedElement = null;
-    
-    // Initiale Sitzordnung laden
-    async function loadSitzordnung() {
-        try {
-            const response = await fetch(`/api/sitzordnung/${raumCode}`);
-            const data = await response.json();
-            if (data.success) {
-                sitzordnung = data.sitzordnung;
-                renderSitzordnung();
-            }
-        } catch (e) {
-            console.error('Fehler beim Laden der Sitzordnung:', e);
-            // Fallback: Spielerliste als Sitzordnung
-            initSitzordnungFromSpieler();
-        }
-    }
-    
-    function initSitzordnungFromSpieler() {
-        const spielerKarten = document.querySelectorAll('.spieler-karte');
-        sitzordnung = [];
-        spielerKarten.forEach((karte, index) => {
-            const id = parseInt(karte.getAttribute('data-spieler-id'));
-            const name = karte.querySelector('div[style*="font-weight: 600"]')?.textContent?.replace('(Du)', '').trim() || `Spieler ${id}`;
-            // Ignoriere Erzähler
-            if (!karte.querySelector('.fa-book-open')) {
-                sitzordnung.push({ id, name, sitzplatz: index });
-            }
-        });
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+  }
+
+  function starteSpiel() {
+    const btn = document.getElementById("start-btn");
+    btn.disabled = true;
+    btn.textContent = "Starte...";
+    socket.emit("spiel_starten", {});
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(raumCode);
+    const codeEl = document.querySelector(".room-code");
+    const original = codeEl.textContent;
+    codeEl.textContent = "Kopiert!";
+    setTimeout(() => (codeEl.textContent = original), 1500);
+  }
+
+  // ======================================
+  // SITZORDNUNG - Drag & Drop System
+  // ======================================
+
+  let sitzordnung = []; // {id, name, sitzplatz}
+  let draggedElement = null;
+
+  // Initiale Sitzordnung laden
+  async function loadSitzordnung() {
+    try {
+      const response = await fetch(`/api/sitzordnung/${raumCode}`);
+      const data = await response.json();
+      if (data.success) {
+        sitzordnung = data.sitzordnung;
         renderSitzordnung();
+      }
+    } catch (e) {
+      console.error("Fehler beim Laden der Sitzordnung:", e);
+      // Fallback: Spielerliste als Sitzordnung
+      initSitzordnungFromSpieler();
     }
-    
-    function renderSitzordnung() {
-        const container = document.getElementById('sitzordnung-container');
-        if (!container || sitzordnung.length === 0) return;
-        
-        const anzahl = sitzordnung.length;
-        const radius = 42; // Prozent vom Container
-        
-        // Dorf-Mitte
-        let html = `<div class="sitz-dorf-mitte"><i class="fa-solid fa-campfire"></i></div>`;
-        
-        // Spieler im Kreis positionieren
-        sitzordnung.forEach((spieler, index) => {
-            const winkel = (index / anzahl) * 2 * Math.PI - Math.PI / 2;
-            const x = 50 + radius * Math.cos(winkel);
-            const y = 50 + radius * Math.sin(winkel);
-            
-            html += `
+  }
+
+  function initSitzordnungFromSpieler() {
+    const spielerKarten = document.querySelectorAll(".spieler-karte");
+    sitzordnung = [];
+    spielerKarten.forEach((karte, index) => {
+      const id = parseInt(karte.getAttribute("data-spieler-id"));
+      const name =
+        karte
+          .querySelector('div[style*="font-weight: 600"]')
+          ?.textContent?.replace("(Du)", "")
+          .trim() || `Spieler ${id}`;
+      // Ignoriere Erzähler
+      if (!karte.querySelector(".fa-book-open")) {
+        sitzordnung.push({ id, name, sitzplatz: index });
+      }
+    });
+    renderSitzordnung();
+  }
+
+  function renderSitzordnung() {
+    const container = document.getElementById("sitzordnung-container");
+    if (!container || sitzordnung.length === 0) return;
+
+    const anzahl = sitzordnung.length;
+    const radius = 42; // Prozent vom Container
+
+    // Dorf-Mitte
+    let html = `<div class="sitz-dorf-mitte"><i class="fa-solid fa-campfire"></i></div>`;
+
+    // Spieler im Kreis positionieren
+    sitzordnung.forEach((spieler, index) => {
+      const winkel = (index / anzahl) * 2 * Math.PI - Math.PI / 2;
+      const x = 50 + radius * Math.cos(winkel);
+      const y = 50 + radius * Math.sin(winkel);
+
+      html += `
                 <div class="sitz-slot" 
                      data-id="${spieler.id}" 
                      data-index="${index}"
@@ -578,120 +653,123 @@
                     </div>
                 </div>
             `;
-        });
-        
-        container.innerHTML = html;
-    }
-    
-    function handleDragStart(e) {
-        draggedElement = e.target.closest('.sitz-slot');
-        draggedElement.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', draggedElement.dataset.index);
-    }
-    
-    function handleDragOver(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        const slot = e.target.closest('.sitz-slot');
-        if (slot && slot !== draggedElement) {
-            slot.classList.add('drag-over');
-        }
-    }
-    
-    function handleDrop(e) {
-        e.preventDefault();
-        const targetSlot = e.target.closest('.sitz-slot');
-        if (!targetSlot || targetSlot === draggedElement) return;
-        
-        targetSlot.classList.remove('drag-over');
-        
-        const fromIndex = parseInt(draggedElement.dataset.index);
-        const toIndex = parseInt(targetSlot.dataset.index);
-        
-        // Swap positions in array
-        [sitzordnung[fromIndex], sitzordnung[toIndex]] = [sitzordnung[toIndex], sitzordnung[fromIndex]];
-        
-        // Update sitzplatz values
-        sitzordnung.forEach((s, i) => s.sitzplatz = i);
-        
-        renderSitzordnung();
-        saveSitzordnung();
-    }
-    
-    function handleDragEnd(e) {
-        document.querySelectorAll('.sitz-slot').forEach(slot => {
-            slot.classList.remove('dragging', 'drag-over');
-        });
-        draggedElement = null;
-    }
-    
-    function addToSitzordnung(spieler) {
-        // Nur hinzufügen wenn nicht Erzähler und noch nicht vorhanden
-        if (spieler.ist_erzaehler) return;
-        if (sitzordnung.find(s => s.id === spieler.id)) return;
-        
-        sitzordnung.push({
-            id: spieler.id,
-            name: spieler.name,
-            sitzplatz: sitzordnung.length
-        });
-        renderSitzordnung();
-        saveSitzordnung();
-    }
-    
-    function removeFromSitzordnung(spielerId) {
-        const index = sitzordnung.findIndex(s => s.id === spielerId);
-        if (index === -1) return;
-        
-        sitzordnung.splice(index, 1);
-        // Sitzplätze neu vergeben
-        sitzordnung.forEach((s, i) => s.sitzplatz = i);
-        renderSitzordnung();
-        saveSitzordnung();
-    }
-    
-    function randomizeSitzordnung() {
-        // Fisher-Yates shuffle
-        for (let i = sitzordnung.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [sitzordnung[i], sitzordnung[j]] = [sitzordnung[j], sitzordnung[i]];
-        }
-        sitzordnung.forEach((s, i) => s.sitzplatz = i);
-        renderSitzordnung();
-        saveSitzordnung();
-        showNotification('Sitzordnung gemischt!', 'success');
-    }
-    
-    async function saveSitzordnung() {
-        try {
-            const ordnung = sitzordnung.map((s, i) => ({ id: s.id, sitzplatz: i }));
-            const response = await fetch(`/api/sitzordnung/${raumCode}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ordnung })
-            });
-            const data = await response.json();
-            if (!data.success) {
-                console.error('Speichern fehlgeschlagen:', data.error);
-            }
-        } catch (e) {
-            console.error('Fehler beim Speichern:', e);
-        }
-    }
-    
-    // Socket-Events für Sitzordnung
-    socket.on('sitzordnung_aktualisiert', function(data) {
-        // Aktualisiere lokale Sitzordnung basierend auf Server-Daten
-        data.ordnung.forEach(update => {
-            const spieler = sitzordnung.find(s => s.id === update.id);
-            if (spieler) spieler.sitzplatz = update.sitzplatz;
-        });
-        sitzordnung.sort((a, b) => a.sitzplatz - b.sitzplatz);
-        renderSitzordnung();
     });
-    
-    // Initialisierung
-    loadSitzordnung();
+
+    container.innerHTML = html;
+  }
+
+  function handleDragStart(e) {
+    draggedElement = e.target.closest(".sitz-slot");
+    draggedElement.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", draggedElement.dataset.index);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const slot = e.target.closest(".sitz-slot");
+    if (slot && slot !== draggedElement) {
+      slot.classList.add("drag-over");
+    }
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    const targetSlot = e.target.closest(".sitz-slot");
+    if (!targetSlot || targetSlot === draggedElement) return;
+
+    targetSlot.classList.remove("drag-over");
+
+    const fromIndex = parseInt(draggedElement.dataset.index);
+    const toIndex = parseInt(targetSlot.dataset.index);
+
+    // Swap positions in array
+    [sitzordnung[fromIndex], sitzordnung[toIndex]] = [
+      sitzordnung[toIndex],
+      sitzordnung[fromIndex],
+    ];
+
+    // Update sitzplatz values
+    sitzordnung.forEach((s, i) => (s.sitzplatz = i));
+
+    renderSitzordnung();
+    saveSitzordnung();
+  }
+
+  function handleDragEnd(e) {
+    document.querySelectorAll(".sitz-slot").forEach((slot) => {
+      slot.classList.remove("dragging", "drag-over");
+    });
+    draggedElement = null;
+  }
+
+  function addToSitzordnung(spieler) {
+    // Nur hinzufügen wenn nicht Erzähler und noch nicht vorhanden
+    if (spieler.ist_erzaehler) return;
+    if (sitzordnung.find((s) => s.id === spieler.id)) return;
+
+    sitzordnung.push({
+      id: spieler.id,
+      name: spieler.name,
+      sitzplatz: sitzordnung.length,
+    });
+    renderSitzordnung();
+    saveSitzordnung();
+  }
+
+  function removeFromSitzordnung(spielerId) {
+    const index = sitzordnung.findIndex((s) => s.id === spielerId);
+    if (index === -1) return;
+
+    sitzordnung.splice(index, 1);
+    // Sitzplätze neu vergeben
+    sitzordnung.forEach((s, i) => (s.sitzplatz = i));
+    renderSitzordnung();
+    saveSitzordnung();
+  }
+
+  function randomizeSitzordnung() {
+    // Fisher-Yates shuffle
+    for (let i = sitzordnung.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [sitzordnung[i], sitzordnung[j]] = [sitzordnung[j], sitzordnung[i]];
+    }
+    sitzordnung.forEach((s, i) => (s.sitzplatz = i));
+    renderSitzordnung();
+    saveSitzordnung();
+    showNotification("Sitzordnung gemischt!", "success");
+  }
+
+  async function saveSitzordnung() {
+    try {
+      const ordnung = sitzordnung.map((s, i) => ({ id: s.id, sitzplatz: i }));
+      const response = await fetch(`/api/sitzordnung/${raumCode}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ordnung }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        console.error("Speichern fehlgeschlagen:", data.error);
+      }
+    } catch (e) {
+      console.error("Fehler beim Speichern:", e);
+    }
+  }
+
+  // Socket-Events für Sitzordnung
+  socket.on("sitzordnung_aktualisiert", function (data) {
+    // Aktualisiere lokale Sitzordnung basierend auf Server-Daten
+    data.ordnung.forEach((update) => {
+      const spieler = sitzordnung.find((s) => s.id === update.id);
+      if (spieler) spieler.sitzplatz = update.sitzplatz;
+    });
+    sitzordnung.sort((a, b) => a.sitzplatz - b.sitzplatz);
+    renderSitzordnung();
+  });
+
+  // Initialisierung
+  loadSitzordnung();
 </script>
 {% endblock %}

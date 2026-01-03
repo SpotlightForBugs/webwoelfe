@@ -4,6 +4,7 @@ Hexe - Maechtige Rolle mit zwei einmaligen Traenken.
 Die Hexe kann einmal pro Spiel jemanden heilen
 und einmal jemanden vergiften.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -17,14 +18,14 @@ if TYPE_CHECKING:
 class Hexe(Role):
     """
     Die Hexe - Dual-Action Rolle.
-    
+
     Fähigkeiten:
     - Heiltrank: Rettet das Werwolf-Opfer (einmalig)
     - Gifttrank: Tötet einen beliebigen Spieler (einmalig)
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -47,62 +48,63 @@ class Hexe(Role):
                 "Gifttrank einsetzen? (Zeige auf Spieler oder schuettle Kopf)"
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.HEILEN  # Primaere Aktion, Gift ist sekundaer
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "lebende"
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Hexe entscheidet über Heiltrank und Gifttrank.
-        
+
         Die Aktion wird als Dictionary erwartet mit:
         - heilen: bool
         - vergiften: Optional[spieler_id]
         """
         effekte = {}
         nachrichten = []
-        
+
         # Prüfe Heiltrank
-        hat_heiltrank = getattr(spieler, 'hexe_heiltrank', True)
-        
+        hat_heiltrank = getattr(spieler, "hexe_heiltrank", True)
+
         if hat_heiltrank and kontext.werwolf_opfer_id:
             # Kann heilen - Entscheidung kommt über zusätzliche Daten
-            effekte['kann_heilen'] = True
-            effekte['werwolf_opfer'] = kontext.werwolf_opfer_id
-        
+            effekte["kann_heilen"] = True
+            effekte["werwolf_opfer"] = kontext.werwolf_opfer_id
+
         # Prüfe Gifttrank
-        hat_gifttrank = getattr(spieler, 'hexe_gifttrank', True)
-        
+        hat_gifttrank = getattr(spieler, "hexe_gifttrank", True)
+
         if hat_gifttrank:
-            effekte['kann_vergiften'] = True
-        
+            effekte["kann_vergiften"] = True
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht="Die Hexe erwacht und sieht das Opfer der Werwoelfe.",
             effekte=effekte,
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def heilen(self, spieler: 'Spieler', kontext: SpielKontext) -> AktionsErgebnis:
+
+    def heilen(self, spieler: "Spieler", kontext: SpielKontext) -> AktionsErgebnis:
         """Setzt den Heiltrank ein."""
-        if not getattr(spieler, 'hexe_heiltrank', True):
+        if not getattr(spieler, "hexe_heiltrank", True):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Der Heiltrank wurde bereits verwendet.",
             )
-        
+
         if not kontext.werwolf_opfer_id:
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Es gibt kein Opfer zum Heilen.",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht="Du setzt den Heiltrank ein und rettest das Opfer!",
@@ -113,22 +115,23 @@ class Hexe(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def vergiften(self, spieler: 'Spieler', ziel: 'Spieler',
-                  kontext: SpielKontext) -> AktionsErgebnis:
+
+    def vergiften(
+        self, spieler: "Spieler", ziel: "Spieler", kontext: SpielKontext
+    ) -> AktionsErgebnis:
         """Setzt den Gifttrank ein."""
-        if not getattr(spieler, 'hexe_gifttrank', True):
+        if not getattr(spieler, "hexe_gifttrank", True):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Der Gifttrank wurde bereits verwendet.",
             )
-        
+
         if not self.validate_ziel(spieler, ziel, kontext):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Ungültiges Ziel für Gift.",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du vergiftest {ziel.name}!",

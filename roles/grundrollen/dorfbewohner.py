@@ -4,6 +4,7 @@ Dorfbewohner - Die Basis-Rolle für das Dorf-Team.
 Der Dorfbewohner hat keine speziellen Fähigkeiten,
 aber seine Stimme in der Abstimmung ist entscheidend.
 """
+
 from typing import Optional
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -14,10 +15,10 @@ from ..registry import RoleRegistry
 class Dorfbewohner(Role):
     """
     Einfacher Dorfbewohner ohne spezielle Fähigkeiten.
-    
+
     Gewinnbedingung: Alle Werwoelfe werden eliminiert.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -43,7 +44,7 @@ class Dorfbewohner(Role):
                 "Seine Stimme ist seine einzige Waffe."
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE

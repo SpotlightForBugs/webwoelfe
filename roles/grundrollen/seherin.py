@@ -4,6 +4,7 @@ Seherin - Die wichtigste Informationsrolle des Dorfes.
 Die Seherin kann jede Nacht die wahre Identität
 eines Spielers erfahren.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
@@ -17,14 +18,14 @@ if TYPE_CHECKING:
 class Seherin(Role):
     """
     Die Seherin - Informationsrolle.
-    
+
     Fähigkeiten:
     - Kann jede Nacht einen Spieler "sehen"
     - Erfährt ob das Ziel Werwolf oder Dorf ist
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -46,24 +47,25 @@ class Seherin(Role):
                 "die Zugehörigkeit."
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"  # Kann sich nicht selbst sehen
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Seherin sieht die vollständige Rolle eines Spielers.
-        
+
         Die Seherin erfährt:
         - Den genauen Rollennamen (z.B. "Hexe", "Werwolf", "Hund")
         - Das Team der Rolle (basierend auf sichtbar_als)
-        
+
         Einige Rollen können sich tarnen (sichtbar_als != tatsächliches Team).
         """
         if ziel is None:
@@ -71,17 +73,18 @@ class Seherin(Role):
                 erfolg=False,
                 nachricht="Du musst einen Spieler wählen.",
             )
-        
+
         if not self.validate_ziel(spieler, ziel, kontext):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Ungültiges Ziel.",
             )
-        
+
         # Hole die Rolle des Ziels
         from ..registry import RoleRegistry
+
         ziel_rolle = RoleRegistry.get(ziel.rolle)
-        
+
         if ziel_rolle:
             sicht = ziel_rolle.sichtbar_als_fuer(self.info.name)
             rollen_name = ziel_rolle.sichtbare_rolle_fuer(self.info.name)
@@ -91,15 +94,15 @@ class Seherin(Role):
             sicht = SichtTyp.DORF
             rollen_name = ziel.rolle or "Unbekannt"
             team = Team.DORF
-        
+
         ist_werwolf = sicht == SichtTyp.WERWOLF
-        
+
         # Nachricht mit vollständiger Rolleninformation
         if ist_werwolf:
             nachricht = f"{ziel.name} ist ein {rollen_name}! (Werwolf-Team)"
         else:
             nachricht = f"{ziel.name} ist ein {rollen_name}. (Dorf-Team)"
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=nachricht,

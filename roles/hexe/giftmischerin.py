@@ -1,6 +1,7 @@
 """
 Giftmischerin - Verzögerte Tötung.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -14,14 +15,14 @@ if TYPE_CHECKING:
 class Giftmischerin(Role):
     """
     Die Giftmischerin - Verzögerte Tötung.
-    
+
     Fähigkeiten:
     - Kann einmal einen Spieler vergiften
     - Vergifteter stirbt nach 2 Tagen
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -42,13 +43,14 @@ class Giftmischerin(Role):
                 "Die Giftmischerin erwacht. Möchte sie ihr Gift einsetzen?"
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.VERGIFTEN
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Giftmischerin vergiftet mit verzögerter Wirkung.
         """
@@ -59,7 +61,7 @@ class Giftmischerin(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du hast {ziel.name} vergiftet. In 2 Tagen wird er sterben.",

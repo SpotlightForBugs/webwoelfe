@@ -1,6 +1,7 @@
 """
 Prinz - Immun gegen Hinrichtung.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie
@@ -14,14 +15,14 @@ if TYPE_CHECKING:
 class Prinz(Role):
     """
     Der Prinz - Immunität gegen Hinrichtung.
-    
+
     Fähigkeiten:
     - Kann nicht vom Dorf gehängt werden (einmalig)
     - Bei Versuch wird Rolle enthüllt
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -39,13 +40,13 @@ class Prinz(Role):
             nacht_aktiv=False,
             prioritaet=98,
             erzaehler_tag=(
-                "Der Prinz kann nicht gehängt werden! Seine Identität "
-                "wird enthüllt."
+                "Der Prinz kann nicht gehängt werden! Seine Identität " "wird enthüllt."
             ),
         )
-    
-    def on_hinrichtung(self, spieler: 'Spieler', opfer: 'Spieler',
-                       kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_hinrichtung(
+        self, spieler: "Spieler", opfer: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Prinz überlebt die erste Hinrichtung.
         """
@@ -64,5 +65,5 @@ class Prinz(Role):
                 },
                 log_sichtbar_fuer="alle",
             )
-        
+
         return None

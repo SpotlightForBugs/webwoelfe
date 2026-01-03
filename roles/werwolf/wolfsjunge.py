@@ -4,6 +4,7 @@ Wolfsjunge - Wird zum Werwolf wenn Vorbild stirbt.
 Der Wolfsjunge waehlt in der ersten Nacht ein Vorbild.
 Stirbt dieses, verwandelt er sich in einen Werwolf.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, SichtTyp
@@ -17,15 +18,15 @@ if TYPE_CHECKING:
 class Wolfsjunge(Role):
     """
     Das Wolfsjunge (Wildes Kind) - Bedingte Verwandlung.
-    
+
     Faehigkeiten:
     - Waehlt in der ersten Nacht ein Vorbild
     - Stirbt das Vorbild: Wird zum Werwolf
     - Solange Vorbild lebt: Teil des Dorfes
-    
+
     Gewinnbedingung: Abhaengig von Verwandlung.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -43,17 +44,18 @@ class Wolfsjunge(Role):
             nacht_aktiv=True,
             prioritaet=7,
             erzaehler_nacht=(
-                "Das Wolfsjunge erwacht (nur erste Nacht) und waehlt "
-                "sein Vorbild."
+                "Das Wolfsjunge erwacht (nur erste Nacht) und waehlt " "sein Vorbild."
             ),
         )
-    
+
     @property
     def sichtbar_als(self) -> SichtTyp:
         # Sieht als Dorf aus, bis Verwandlung
         return SichtTyp.DORF
-    
-    def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_spiel_start(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Wolfsjunge waehlt sein Vorbild in der ersten Nacht.
         """
@@ -63,9 +65,10 @@ class Wolfsjunge(Role):
             effekte={"warte_auf_vorbild_wahl": True},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def vorbild_waehlen(self, spieler: 'Spieler', vorbild: 'Spieler',
-                        kontext: SpielKontext) -> AktionsErgebnis:
+
+    def vorbild_waehlen(
+        self, spieler: "Spieler", vorbild: "Spieler", kontext: SpielKontext
+    ) -> AktionsErgebnis:
         """
         Setzt das Vorbild.
         """
@@ -74,7 +77,7 @@ class Wolfsjunge(Role):
                 erfolg=False,
                 nachricht="Du kannst dich nicht selbst als Vorbild waehlen.",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{vorbild.name} ist nun dein Vorbild.",
@@ -84,14 +87,19 @@ class Wolfsjunge(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def on_spieler_stirbt(self, spieler: 'Spieler', opfer: 'Spieler',
-                          todesursache: str, kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_spieler_stirbt(
+        self,
+        spieler: "Spieler",
+        opfer: "Spieler",
+        todesursache: str,
+        kontext: SpielKontext,
+    ) -> Optional[AktionsErgebnis]:
         """
         Prueft ob das Vorbild stirbt und Verwandlung ausloest.
         """
-        vorbild_id = getattr(spieler, 'vorbild_id', None)
-        
+        vorbild_id = getattr(spieler, "vorbild_id", None)
+
         if vorbild_id and opfer.id == vorbild_id:
             return AktionsErgebnis(
                 erfolg=True,
@@ -106,5 +114,5 @@ class Wolfsjunge(Role):
                 },
                 log_sichtbar_fuer="erzaehler",
             )
-        
+
         return None

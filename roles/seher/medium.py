@@ -1,6 +1,7 @@
 """
 Medium - Kann mit Toten kommunizieren.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -14,13 +15,13 @@ if TYPE_CHECKING:
 class Medium(Role):
     """
     Das Medium - Kontakt zu den Toten.
-    
+
     Fähigkeiten:
     - Kann jede Nacht die Rolle eines Toten erfahren
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -41,17 +42,18 @@ class Medium(Role):
                 "Flüster dem Medium die Rolle des Toten zu."
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "tote"
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Medium erfährt die Rolle eines Toten.
         """
@@ -62,13 +64,13 @@ class Medium(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         if ziel.id not in kontext.tote_spieler:
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du kannst nur mit Toten sprechen.",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Der Geist von {ziel.name} flüstert: 'Ich war {ziel.rolle}'",

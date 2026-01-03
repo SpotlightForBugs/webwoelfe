@@ -9,7 +9,7 @@ from .urwolf import Urwolf
 from .wolfsjunge import Wolfsjunge
 
 __all__ = [
-    'WeisserWolf',
-    'Urwolf',
-    'Wolfsjunge',
+    "WeisserWolf",
+    "Urwolf",
+    "Wolfsjunge",
 ]

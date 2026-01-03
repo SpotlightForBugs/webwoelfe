@@ -1,9 +1,10 @@
 """
 Amor - Der Gott der Liebe.
 
-Amor verbindet zwei Spieler auf ewig - 
+Amor verbindet zwei Spieler auf ewig -
 stirbt einer, stirbt auch der andere.
 """
+
 from typing import Optional, List, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -17,15 +18,15 @@ if TYPE_CHECKING:
 class Amor(Role):
     """
     Amor - Verbindungs-Rolle.
-    
+
     Fähigkeiten:
     - Erste Nacht: Wählt zwei Spieler die sich verlieben
     - Verliebte sterben zusammen
     - Verliebte gewinnen nur gemeinsam als Letztes Paar
-    
+
     Gewinnbedingung: Dorf gewinnt ODER Verliebte überleben als Letzte.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -47,12 +48,14 @@ class Amor(Role):
                 "die sich verlieben sollen. Beruehre beide leicht an der Schulter."
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.VERLIEBEN
-    
-    def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_spiel_start(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Amor wählt in der ersten Nacht zwei Verliebte.
         """
@@ -62,9 +65,14 @@ class Amor(Role):
             effekte={"warte_auf_verliebte_wahl": True},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def verlieben(self, spieler: 'Spieler', ziel1: 'Spieler', ziel2: 'Spieler',
-                  kontext: SpielKontext) -> AktionsErgebnis:
+
+    def verlieben(
+        self,
+        spieler: "Spieler",
+        ziel1: "Spieler",
+        ziel2: "Spieler",
+        kontext: SpielKontext,
+    ) -> AktionsErgebnis:
         """
         Verbindet zwei Spieler als Verliebte.
         """
@@ -74,13 +82,16 @@ class Amor(Role):
                 erfolg=False,
                 nachricht="Du musst zwei verschiedene Spieler wählen.",
             )
-        
-        if ziel1.id not in kontext.lebende_spieler or ziel2.id not in kontext.lebende_spieler:
+
+        if (
+            ziel1.id not in kontext.lebende_spieler
+            or ziel2.id not in kontext.lebende_spieler
+        ):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Beide Spieler müssen am Leben sein.",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{ziel1.name} und {ziel2.name} haben sich verliebt!",
@@ -90,14 +101,19 @@ class Amor(Role):
             },
             log_sichtbar_fuer="erzaehler",
         )
-    
-    def on_spieler_stirbt(self, spieler: 'Spieler', opfer: 'Spieler',
-                          todesursache: str, kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_spieler_stirbt(
+        self,
+        spieler: "Spieler",
+        opfer: "Spieler",
+        todesursache: str,
+        kontext: SpielKontext,
+    ) -> Optional[AktionsErgebnis]:
         """
         Prüft ob ein Verliebter stirbt und der andere folgen muss.
         """
-        verliebt_mit = getattr(opfer, 'verliebt_mit_id', None)
-        
+        verliebt_mit = getattr(opfer, "verliebt_mit_id", None)
+
         if verliebt_mit and verliebt_mit in kontext.lebende_spieler:
             return AktionsErgebnis(
                 erfolg=True,
@@ -108,20 +124,24 @@ class Amor(Role):
                 },
                 log_sichtbar_fuer="alle",
             )
-        
+
         return None
-    
-    def berechne_gewinn(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[Team]:
+
+    def berechne_gewinn(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[Team]:
         """
         Verliebte gewinnen wenn sie die letzten Überlebenden sind.
         """
-        verliebt_mit = getattr(spieler, 'verliebt_mit_id', None)
-        
+        verliebt_mit = getattr(spieler, "verliebt_mit_id", None)
+
         if verliebt_mit:
             # Prüfe ob nur noch die Verliebten leben
-            if (len(kontext.lebende_spieler) == 2 and 
-                spieler.id in kontext.lebende_spieler and 
-                verliebt_mit in kontext.lebende_spieler):
+            if (
+                len(kontext.lebende_spieler) == 2
+                and spieler.id in kontext.lebende_spieler
+                and verliebt_mit in kontext.lebende_spieler
+            ):
                 return Team.VERLIEBTE
-        
+
         return None

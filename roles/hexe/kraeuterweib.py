@@ -1,6 +1,7 @@
 """
 Kraeuterweib - Kann Spieler stumm machen.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -14,14 +15,14 @@ if TYPE_CHECKING:
 class Kraeuterweib(Role):
     """
     Das Kräuterweib - Stummheits-Rolle.
-    
+
     Fähigkeiten:
     - Kann jede Nacht einen Spieler stumm machen
     - Stumme Spieler dürfen am nächsten Tag nicht reden
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -43,17 +44,18 @@ class Kraeuterweib(Role):
                 "der morgen stumm sein wird."
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.STUMM_MACHEN
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Kräuterweib macht einen Spieler stumm.
         """
@@ -64,7 +66,7 @@ class Kraeuterweib(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{ziel.name} wird morgen stumm sein.",

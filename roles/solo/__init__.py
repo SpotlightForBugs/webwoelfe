@@ -9,7 +9,7 @@ from .floetenspieler import Floetenspieler
 from .henker import Henker
 
 __all__ = [
-    'Selbstmoerder',
-    'Floetenspieler',
-    'Henker',
+    "Selbstmoerder",
+    "Floetenspieler",
+    "Henker",
 ]

@@ -1,6 +1,7 @@
 """
 Floetenspieler - Verzaubert alle Spieler.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -14,14 +15,14 @@ if TYPE_CHECKING:
 class Floetenspieler(Role):
     """
     Der Floetenspieler - Verzauberungs-Solo.
-    
+
     Faehigkeiten:
     - Kann jede Nacht 2 Spieler verzaubern
     - Gewinnt wenn alle Lebenden verzaubert sind
-    
+
     Gewinnbedingung: Alle Lebenden sind verzaubert.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -39,17 +40,17 @@ class Floetenspieler(Role):
             nacht_aktiv=True,
             prioritaet=70,
             erzaehler_nacht=(
-                "Der Floetenspieler erwacht und waehlt 2 Spieler "
-                "zum Verzaubern."
+                "Der Floetenspieler erwacht und waehlt 2 Spieler " "zum Verzaubern."
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.VERZAUBERN
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Floetenspieler verzaubert Spieler.
         """
@@ -61,7 +62,7 @@ class Floetenspieler(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du verzauberst {ziel.name} mit deiner Melodie.",
@@ -71,8 +72,10 @@ class Floetenspieler(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def berechne_gewinn(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[Team]:
+
+    def berechne_gewinn(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[Team]:
         """
         Gewinnt wenn alle Lebenden verzaubert sind.
         """

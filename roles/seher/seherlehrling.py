@@ -1,6 +1,7 @@
 """
 Seherlehrling - Wird zur Seherin wenn die Original-Seherin stirbt.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
@@ -14,14 +15,14 @@ if TYPE_CHECKING:
 class Seherlehrling(Role):
     """
     Der Seherlehrling - Nachfolger der Seherin.
-    
+
     Fähigkeiten:
     - Keine aktiven Fähigkeiten zu Beginn
     - Wenn Seherin stirbt: Übernimmt ihre Fähigkeit
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -38,13 +39,16 @@ class Seherlehrling(Role):
             farbe="#8b5cf6",
             nacht_aktiv=False,  # Wird aktiv wenn Seherin stirbt
             prioritaet=21,
-            erzaehler_nacht=(
-                "Der Seherlehrling schläft. Noch lernt er..."
-            ),
+            erzaehler_nacht=("Der Seherlehrling schläft. Noch lernt er..."),
         )
-    
-    def on_spieler_stirbt(self, spieler: 'Spieler', opfer: 'Spieler',
-                          todesursache: str, kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_spieler_stirbt(
+        self,
+        spieler: "Spieler",
+        opfer: "Spieler",
+        todesursache: str,
+        kontext: SpielKontext,
+    ) -> Optional[AktionsErgebnis]:
         """
         Prüft ob die Seherin stirbt und der Lehrling übernimmt.
         """
@@ -61,5 +65,5 @@ class Seherlehrling(Role):
                 },
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         return None

@@ -4,6 +4,7 @@ Demoskopin - Die Meinungsforscherin.
 Die Demoskopin erfährt am Anfang jeder Tagphase,
 wer die meisten Stimmen bekommen würde.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -17,59 +18,61 @@ if TYPE_CHECKING:
 class Demoskopin(Role):
     """
     Demoskopin - Umfrage-Informationsrolle.
-    
+
     Fähigkeiten:
     - Erfährt am Tag wer die meisten Stimmen bekommen würde
     - Basiert auf den bisherigen Abstimmungen/Stimmung
     - Kann Trends erkennen
-    
+
     Besonderheiten:
     - Keine aktive Nacht-Aktion
     - Info ist nur für sie sichtbar
     - Hilfreich um Abstimmungen vorherzusagen
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=34,
-            name='Demoskopin',
+            name="Demoskopin",
             team=Team.DORF,
             kategorie=Kategorie.SEHER,
             beschreibung=(
-                'Du bist die Demoskopin. Du kennst die Meinungsumfragen! '
-                'Am Anfang jeder Tagphase erfährst du, wer die meisten '
-                'Stimmen bekommen würde.'
+                "Du bist die Demoskopin. Du kennst die Meinungsumfragen! "
+                "Am Anfang jeder Tagphase erfährst du, wer die meisten "
+                "Stimmen bekommen würde."
             ),
-            icon='fa-solid fa-chart-column',
-            farbe='#06b6d4',
+            icon="fa-solid fa-chart-column",
+            farbe="#06b6d4",
             nacht_aktiv=False,
             prioritaet=85,
             erzaehler_nacht=(
-                'Die Demoskopin analysiert auch nachts die Stimmung im Dorf.'
+                "Die Demoskopin analysiert auch nachts die Stimmung im Dorf."
             ),
             erzaehler_tag=(
-                'Die Demoskopin erfährt die aktuellen Umfragewerte. '
-                '(Zeige ihr heimlich den beliebtesten Kandidaten)'
+                "Die Demoskopin erfährt die aktuellen Umfragewerte. "
+                "(Zeige ihr heimlich den beliebtesten Kandidaten)"
             ),
             hinweis_config=None,
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
-    
-    def on_tag_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_tag_start(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Demoskopin erfährt den aktuellen Umfrage-Spitzenreiter.
-        
+
         Die Berechnung basiert auf:
         - Bisherige Abstimmungsmuster
         - Spieler die oft verdächtigt wurden
         - "Stimmung" im Raum
-        
+
         In der Praxis wird dies von der game_logic berechnet.
         """
         return AktionsErgebnis(
@@ -86,14 +89,14 @@ class Demoskopin(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
+
     def berechne_umfrage_spitzenreiter(self, kontext: SpielKontext) -> Optional[int]:
         """
         Berechnet den Spieler mit den meisten potentiellen Stimmen.
-        
+
         Diese Methode wird von game_logic aufgerufen und berechnet
         basierend auf bisherigen Abstimmungen.
-        
+
         Returns:
             Spieler-ID des Spitzenreiters oder None
         """

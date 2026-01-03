@@ -12,10 +12,10 @@ from .freimaurer import Freimaurer
 from .jesus import Jesus
 
 __all__ = [
-    'AlterMann',
-    'Dorfdepp',
-    'DreiBrueder',
-    'ZweiSchwestern',
-    'Freimaurer',
-    'Jesus',
+    "AlterMann",
+    "Dorfdepp",
+    "DreiBrueder",
+    "ZweiSchwestern",
+    "Freimaurer",
+    "Jesus",
 ]

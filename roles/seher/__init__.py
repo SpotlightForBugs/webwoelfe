@@ -9,7 +9,7 @@ from .aurenseherin import Aurenseherin
 from .medium import Medium
 
 __all__ = [
-    'Seherlehrling',
-    'Aurenseherin',
-    'Medium',
+    "Seherlehrling",
+    "Aurenseherin",
+    "Medium",
 ]

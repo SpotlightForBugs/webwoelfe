@@ -1,215 +1,253 @@
-{% extends 'struktur.html' %}
-
-{% block title %}Rollen - {{ spiel_name }}{% endblock %}
-{% block nav_rollen %}active{% endblock %}
-
-{% block head %}
+{% extends 'struktur.html' %} {% block title %}Rollen - {{ spiel_name }}{%
+endblock %} {% block nav_rollen %}active{% endblock %} {% block head %}
 <style>
-    .rollen-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1.5rem;
-    }
-    
-    .rolle-card {
-        background: var(--bg-card);
-        border: 2px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-    }
-    
-    .rolle-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    }
-    
-    .rolle-icon {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.05);
-    }
-    
-    .rolle-icon i {
-        font-size: 1.75rem;
-    }
-    
-    .rolle-name {
-        font-family: 'Cinzel', serif;
-        font-size: 1.25rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .rolle-team {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        margin-right: 0.5rem;
-    }
-    
-    .team-dorf { background: #3b82f6; color: white; }
-    .team-werwolf { background: #dc2626; color: white; }
-    .team-vampir { background: #7c2d12; color: white; }
-    .team-zombie { background: #4ade80; color: #1a1a1a; }
-    .team-solo { background: #6b7280; color: white; }
-    .team-verliebte { background: #ec4899; color: white; }
-    
-    .kategorie-section {
-        margin-bottom: 4rem;
-    }
-    
-    .kategorie-title {
-        font-family: 'Cinzel', serif;
-        font-size: 1.75rem;
-        color: var(--accent-gold);
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    
-    .kategorie-title i {
-        font-size: 1.5rem;
-    }
-    
-    .nacht-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        background: rgba(196, 30, 58, 0.2);
-        padding: 0.2rem 0.5rem;
-        border-radius: 10px;
-    }
-    
-    .nacht-badge i {
-        font-size: 0.7rem;
-    }
-    
-    .credits-section {
-        background: var(--bg-card);
-        border-radius: 12px;
-        padding: 2rem;
-        margin: 2rem 0;
-        text-align: center;
-    }
-    
-    .credits-title {
-        font-family: 'Cinzel', serif;
-        font-size: 1.25rem;
-        color: var(--accent-gold);
-        margin-bottom: 1rem;
-    }
-    
-    .credits-authors {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .credits-authors a, .credits-authors span {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        background: rgba(255,255,255,0.05);
-        border-radius: 8px;
-        color: var(--text-primary);
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-    
-    .credits-authors a:hover {
-        background: rgba(212, 165, 116, 0.2);
-        color: var(--accent-gold);
-    }
-</style>
-{% endblock %}
+  .rollen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
 
-{% block content %}
+  .rolle-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .rolle-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .rolle-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .rolle-icon i {
+    font-size: 1.75rem;
+  }
+
+  .rolle-name {
+    font-family: "Cinzel", serif;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .rolle-team {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    margin-right: 0.5rem;
+  }
+
+  .team-dorf {
+    background: #3b82f6;
+    color: white;
+  }
+  .team-werwolf {
+    background: #dc2626;
+    color: white;
+  }
+  .team-vampir {
+    background: #7c2d12;
+    color: white;
+  }
+  .team-zombie {
+    background: #4ade80;
+    color: #1a1a1a;
+  }
+  .team-solo {
+    background: #6b7280;
+    color: white;
+  }
+  .team-verliebte {
+    background: #ec4899;
+    color: white;
+  }
+
+  .kategorie-section {
+    margin-bottom: 4rem;
+  }
+
+  .kategorie-title {
+    font-family: "Cinzel", serif;
+    font-size: 1.75rem;
+    color: var(--accent-gold);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .kategorie-title i {
+    font-size: 1.5rem;
+  }
+
+  .nacht-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background: rgba(196, 30, 58, 0.2);
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+  }
+
+  .nacht-badge i {
+    font-size: 0.7rem;
+  }
+
+  .credits-section {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    text-align: center;
+  }
+
+  .credits-title {
+    font-family: "Cinzel", serif;
+    font-size: 1.25rem;
+    color: var(--accent-gold);
+    margin-bottom: 1rem;
+  }
+
+  .credits-authors {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .credits-authors a,
+  .credits-authors span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .credits-authors a:hover {
+    background: rgba(212, 165, 116, 0.2);
+    color: var(--accent-gold);
+  }
+</style>
+{% endblock %} {% block content %}
 <div class="container">
-    <section class="fade-in" style="padding: 2rem 0;">
-        <h1 class="text-center mb-4" style="font-size: 2.5rem;">
-            <span style="color: var(--accent-gold);">Alle Rollen</span>
-        </h1>
-        <p class="text-center text-muted mb-4" style="max-width: 600px; margin: 0 auto;">
-            {{ spiel_name }} bietet ueber {{ alle_rollen|length }} verschiedene Rollen - von den klassischen Grundrollen 
-            bis zu aufregenden Community-Kreationen!
-        </p>
-    </section>
-    
-    {# Dynamische Kategorien-Sektionen #}
-    {% set kategorie_reihenfolge = ['grundrollen', 'dorfbewohner', 'werwolf', 'seher', 'hexe', 'jaeger', 'heiler', 'spezial', 'boese', 'solo', 'sonstige'] %}
-    
-    {% for kat_key in kategorie_reihenfolge %}
-        {% if kategorien[kat_key] %}
-        {% set kat_meta = kategorie_info[kat_key] if kategorie_info and kat_key in kategorie_info else {} %}
-        <section class="kategorie-section fade-in">
-            <h2 class="kategorie-title">
-                <i class="{{ kat_meta.icon if kat_meta.icon else 'fa-solid fa-users' }}"></i> 
-                {{ kat_meta.name if kat_meta.name else kat_key|title }}
-            </h2>
-            <p class="text-muted mb-3">{{ kat_meta.beschreibung if kat_meta.beschreibung else '' }}</p>
-            <div class="rollen-grid">
-                {% for rolle in kategorien[kat_key] %}
-                <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                    <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                        <i class="{{ rolle.icon }}"></i>
-                    </div>
-                    <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                    <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name if rolle.team in alle_teams else rolle.team }}</span>
-                    {% if rolle.erweiterung and rolle.erweiterung != 'basisspiel' %}
-                    {% set erw_meta = erweiterung_info[rolle.erweiterung] if erweiterung_info and rolle.erweiterung in erweiterung_info else {} %}
-                    <span class="expansion-badge {{ erw_meta.badge_class if erw_meta.badge_class else '' }}" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; margin-left: 0.25rem;">
-                        {{ erw_meta.badge if erw_meta.badge else rolle.erweiterung|title }}
-                    </span>
-                    {% endif %}
-                    {% if rolle.nacht_aktiv %}
-                    <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                    {% endif %}
-                    <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
-                </div>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
-    {% endfor %}
-    
-    <!-- Credits Section -->
-    <section class="credits-section fade-in">
-        <h3 class="credits-title"><i class="fa-solid fa-heart"></i> Credits</h3>
-        <div class="credits-authors">
-            <a href="https://github.com/SpotlightForBugs" target="_blank">
-                <i class="fa-brands fa-github"></i> SpotlightForBugs
-            </a>
-            <a href="https://github.com/Heizkoerper" target="_blank">
-                <i class="fa-brands fa-github"></i> Heizkoerper
-            </a>
-            <a href="https://github.com/BlackTesseract" target="_blank">
-                <i class="fa-brands fa-github"></i> BlackTesseract
-            </a>
-            <span>
-                <i class="fa-solid fa-user"></i> Zora
-            </span>
+  <section class="fade-in" style="padding: 2rem 0">
+    <h1 class="text-center mb-4" style="font-size: 2.5rem">
+      <span style="color: var(--accent-gold)">Alle Rollen</span>
+    </h1>
+    <p
+      class="text-center text-muted mb-4"
+      style="max-width: 600px; margin: 0 auto"
+    >
+      {{ spiel_name }} bietet ueber {{ alle_rollen|length }} verschiedene Rollen
+      - von den klassischen Grundrollen bis zu aufregenden Community-Kreationen!
+    </p>
+  </section>
+
+  {# Dynamische Kategorien-Sektionen #} {% set kategorie_reihenfolge =
+  ['grundrollen', 'dorfbewohner', 'werwolf', 'seher', 'hexe', 'jaeger',
+  'heiler', 'spezial', 'boese', 'solo', 'sonstige'] %} {% for kat_key in
+  kategorie_reihenfolge %} {% if kategorien[kat_key] %} {% set kat_meta =
+  kategorie_info[kat_key] if kategorie_info and kat_key in kategorie_info else
+  {} %}
+  <section class="kategorie-section fade-in">
+    <h2 class="kategorie-title">
+      <i
+        class="{{ kat_meta.icon if kat_meta.icon else 'fa-solid fa-users' }}"
+      ></i>
+      {{ kat_meta.name if kat_meta.name else kat_key|title }}
+    </h2>
+    <p class="text-muted mb-3">
+      {{ kat_meta.beschreibung if kat_meta.beschreibung else '' }}
+    </p>
+    <div class="rollen-grid">
+      {% for rolle in kategorien[kat_key] %}
+      <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
+        <div class="rolle-icon" style="color: {{ rolle.farbe }};">
+          <i class="{{ rolle.icon }}"></i>
         </div>
-        <p class="text-muted" style="font-size: 0.875rem;">
-            Inspiriert von "Werwoelfe von Duesterwald" | 
-            Rollen basierend auf der <a href="https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung" target="_blank" style="color: var(--accent-gold);">Werwolf Wiki Rollen-Sammlung</a>
+        <div class="rolle-name" style="color: {{ rolle.farbe }};">
+          {{ rolle.name }}
+        </div>
+        <span class="rolle-team team-{{ rolle.team }}"
+          >{{ alle_teams[rolle.team].name if rolle.team in alle_teams else
+          rolle.team }}</span
+        >
+        {% if rolle.erweiterung and rolle.erweiterung != 'basisspiel' %} {% set
+        erw_meta = erweiterung_info[rolle.erweiterung] if erweiterung_info and
+        rolle.erweiterung in erweiterung_info else {} %}
+        <span
+          class="expansion-badge {{ erw_meta.badge_class if erw_meta.badge_class else '' }}"
+          style="
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            margin-left: 0.25rem;
+          "
+        >
+          {{ erw_meta.badge if erw_meta.badge else rolle.erweiterung|title }}
+        </span>
+        {% endif %} {% if rolle.nacht_aktiv %}
+        <span class="nacht-badge"
+          ><i class="fa-solid fa-moon"></i> Nachtaktiv</span
+        >
+        {% endif %}
+        <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem">
+          {{ rolle.beschreibung }}
         </p>
-    </section>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %} {% endfor %}
+
+  <!-- Credits Section -->
+  <section class="credits-section fade-in">
+    <h3 class="credits-title"><i class="fa-solid fa-heart"></i> Credits</h3>
+    <div class="credits-authors">
+      <a href="https://github.com/SpotlightForBugs" target="_blank">
+        <i class="fa-brands fa-github"></i> SpotlightForBugs
+      </a>
+      <a href="https://github.com/Heizkoerper" target="_blank">
+        <i class="fa-brands fa-github"></i> Heizkoerper
+      </a>
+      <a href="https://github.com/BlackTesseract" target="_blank">
+        <i class="fa-brands fa-github"></i> BlackTesseract
+      </a>
+      <span> <i class="fa-solid fa-user"></i> Zora </span>
+    </div>
+    <p class="text-muted" style="font-size: 0.875rem">
+      Inspiriert von "Werwoelfe von Duesterwald" | Rollen basierend auf der
+      <a
+        href="https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung"
+        target="_blank"
+        style="color: var(--accent-gold)"
+        >Werwolf Wiki Rollen-Sammlung</a
+      >
+    </p>
+  </section>
 </div>
 {% endblock %}

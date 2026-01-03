@@ -4,6 +4,7 @@ Zahnarzt - Blockiert Abstimmungen.
 Der Zahnarzt näht einem Spieler den Mund zu,
 sodass dieser am nächsten Tag nicht abstimmen darf.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -17,55 +18,56 @@ if TYPE_CHECKING:
 class Zahnarzt(Role):
     """
     Zahnarzt - Abstimmungs-Blocker.
-    
+
     Fähigkeiten:
     - Blockiert jede Nacht die Stimme eines Spielers
     - Spieler kann noch sprechen, aber nicht abstimmen
-    
+
     Besonderheiten:
     - Kann Wölfe am Abstimmen hindern
     - Kann aber auch wichtige Dorf-Stimmen blockieren
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=72,
-            name='Zahnarzt',
+            name="Zahnarzt",
             team=Team.DORF,
             kategorie=Kategorie.SPEZIAL,
             beschreibung=(
-                'Du bist der Zahnarzt. Jede Nacht kannst du einem Spieler '
-                'den Mund zunähen - er kann am nächsten Tag nicht abstimmen, '
-                'nur sprechen!'
+                "Du bist der Zahnarzt. Jede Nacht kannst du einem Spieler "
+                "den Mund zunähen - er kann am nächsten Tag nicht abstimmen, "
+                "nur sprechen!"
             ),
-            icon='fa-solid fa-tooth',
-            farbe='#ffffff',
+            icon="fa-solid fa-tooth",
+            farbe="#ffffff",
             nacht_aktiv=True,
             prioritaet=66,
             erzaehler_nacht=(
-                'Der Zahnarzt erwacht und wählt einen Spieler, '
-                'der morgen nicht abstimmen darf.'
+                "Der Zahnarzt erwacht und wählt einen Spieler, "
+                "der morgen nicht abstimmen darf."
             ),
             erzaehler_tag=(
-                '{spieler} wurde vom Zahnarzt behandelt und darf heute '
-                'nicht abstimmen!'
+                "{spieler} wurde vom Zahnarzt behandelt und darf heute "
+                "nicht abstimmen!"
             ),
             hinweis_config=None,
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.BLOCKIEREN
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "lebende_andere"
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Zahnarzt näht einem Spieler den Mund zu.
         """
@@ -76,13 +78,13 @@ class Zahnarzt(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         if ziel.id in kontext.tote_spieler:
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du kannst bei Toten nichts nähen.",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du nähst {ziel.name} den Mund zu. Er darf morgen nicht abstimmen!",

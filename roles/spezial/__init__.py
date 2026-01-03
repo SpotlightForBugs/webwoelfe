@@ -8,6 +8,6 @@ from .buergermeister import Buergermeister
 from .hure import Hure
 
 __all__ = [
-    'Buergermeister',
-    'Hure',
+    "Buergermeister",
+    "Hure",
 ]

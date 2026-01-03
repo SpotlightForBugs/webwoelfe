@@ -4,6 +4,7 @@ Freimaurer - Geheime Loge im Dorf.
 Die Freimaurer erkennen sich gegenseitig und wissen,
 dass sie auf der gleichen Seite stehen.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie
@@ -17,14 +18,14 @@ if TYPE_CHECKING:
 class Freimaurer(Role):
     """
     Freimaurer - Gruppen-Vertrauensrolle.
-    
+
     Fähigkeiten:
     - Erkennen sich alle in der ersten Nacht
     - Wissen wem sie vertrauen können
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -41,12 +42,12 @@ class Freimaurer(Role):
             farbe="#3b82f6",
             nacht_aktiv=True,
             prioritaet=9,
-            erzaehler_nacht=(
-                "Die Freimaurer erwachen und erkennen sich gegenseitig."
-            ),
+            erzaehler_nacht=("Die Freimaurer erwachen und erkennen sich gegenseitig."),
         )
-    
-    def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_spiel_start(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Freimaurer erkennen sich in der ersten Nacht.
         """

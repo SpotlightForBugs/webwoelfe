@@ -1,521 +1,704 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}{{ spiel_name }}{% endblock %}</title>
-    
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
-    <meta name="theme-color" content="#0A0606">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-    
+
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='images/apple-touch-icon.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='images/favicon-32x32.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='images/favicon-16x16.png') }}"
+    />
+    <meta name="theme-color" content="#0A0606" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
     <!-- Theme CSS (Logo colors) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
-    
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/theme.css') }}"
+    />
+
     <!-- Hint System CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/hints.css') }}">
-    
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/hints.css') }}"
+    />
+
     <style>
-        /* Core color palette from logo-mit-text.png */
-        :root {
-            /* Logo Colors */
-            --color-void: #0A0606;
-            --color-blood: #950706;
-            --color-crimson: #941814;
-            --color-ash: #332A29;
-            --color-stone: #6C5D5B;
-            
-            /* Semantic mappings */
-            --bg-primary: var(--color-void);
-            --bg-secondary: #0f0a0a;
-            --bg-card: var(--color-ash);
-            --text-primary: #e8e8f0;
-            --text-secondary: #a0a0b0;
-            --accent-red: var(--color-blood);
-            --accent-red-glow: rgba(149, 7, 6, 0.4);
-            --accent-gold: #d4a574;
-            --accent-blue: #4a6fa5;
-            --accent-green: #2d8659;
-            --border-color: var(--color-stone);
-            --shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
-            
-            /* Text colors */
-            --color-text: var(--text-primary);
-            --color-text-muted: var(--text-secondary);
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Crimson Pro', Georgia, serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-        
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Cinzel', serif;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1.5rem;
-        }
-        
-        /* Header */
-        header {
-            background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
-            padding: 1rem 0;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-        }
-        
-        .nav-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-family: 'Cinzel', serif;
-            font-size: 1.5rem;
-            color: var(--accent-gold);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            filter: drop-shadow(0 0 8px var(--accent-red-glow));
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-        
-        nav a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 1rem;
-            transition: color 0.3s;
-        }
-        
-        nav a:hover, nav a.active {
-            color: var(--accent-gold);
-        }
-        
-        /* Main Content */
-        main {
-            padding-top: 100px;
-            min-height: calc(100vh - 60px);
-        }
-        
-        /* Cards */
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: var(--shadow);
-        }
-        
-        .card-header {
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        /* Buttons */
-        .btn {
-            font-family: 'Cinzel', serif;
-            font-weight: 600;
-            padding: 0.875rem 2rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-red) 0%, #8b1525 100%);
-            color: white;
-            box-shadow: 0 4px 16px var(--accent-red-glow);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 24px var(--accent-red-glow);
-        }
-        
-        .btn-secondary {
-            background: transparent;
-            color: var(--accent-gold);
-            border: 2px solid var(--accent-gold);
-        }
-        
-        .btn-secondary:hover {
-            background: var(--accent-gold);
-            color: var(--bg-primary);
-        }
-        
-        .btn-ghost {
-            background: rgba(255,255,255,0.05);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-        
-        .btn-ghost:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, var(--accent-green) 0%, #1e5e3d 100%);
-            color: white;
-        }
-        
-        .btn-lg {
-            padding: 1.25rem 3rem;
-            font-size: 1.125rem;
-        }
-        
-        .btn-block {
-            width: 100%;
-        }
-        
-        /* Forms */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 1rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: var(--accent-gold);
-            box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
-        }
-        
-        .form-input::placeholder {
-            color: var(--text-secondary);
-            opacity: 0.6;
-        }
-        
-        .form-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            cursor: pointer;
-        }
-        
-        .form-checkbox input {
-            width: 20px;
-            height: 20px;
-            accent-color: var(--accent-red);
-        }
-        
-        /* Alerts */
-        .alert {
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid;
-        }
-        
-        .alert-error {
-            background: rgba(196, 30, 58, 0.15);
-            border-color: var(--accent-red);
-            color: #ff6b6b;
-        }
-        
-        .alert-success {
-            background: rgba(45, 134, 89, 0.15);
-            border-color: var(--accent-green);
-            color: #6bcf8e;
-        }
-        
-        .alert-info {
-            background: rgba(74, 111, 165, 0.15);
-            border-color: var(--accent-blue);
-            color: #7ba3d4;
-        }
-        
-        /* Grid */
-        .grid {
-            display: grid;
-            gap: 1.5rem;
-        }
-        
-        .grid-2 {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        
+      /* Core color palette from logo-mit-text.png */
+      :root {
+        /* Logo Colors */
+        --color-void: #0a0606;
+        --color-blood: #950706;
+        --color-crimson: #941814;
+        --color-ash: #332a29;
+        --color-stone: #6c5d5b;
+
+        /* Semantic mappings */
+        --bg-primary: var(--color-void);
+        --bg-secondary: #0f0a0a;
+        --bg-card: var(--color-ash);
+        --text-primary: #e8e8f0;
+        --text-secondary: #a0a0b0;
+        --accent-red: var(--color-blood);
+        --accent-red-glow: rgba(149, 7, 6, 0.4);
+        --accent-gold: #d4a574;
+        --accent-blue: #4a6fa5;
+        --accent-green: #2d8659;
+        --border-color: var(--color-stone);
+        --shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+
+        /* Text colors */
+        --color-text: var(--text-primary);
+        --color-text-muted: var(--text-secondary);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Crimson Pro", Georgia, serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        line-height: 1.6;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: "Cinzel", serif;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
+
+      /* Header */
+      header {
+        background: linear-gradient(
+          180deg,
+          var(--bg-secondary) 0%,
+          transparent 100%
+        );
+        padding: 1rem 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+      }
+
+      .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-family: "Cinzel", serif;
+        font-size: 1.5rem;
+        color: var(--accent-gold);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        filter: drop-shadow(0 0 8px var(--accent-red-glow));
+      }
+
+      nav ul {
+        display: flex;
+        list-style: none;
+        gap: 2rem;
+      }
+
+      nav a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 1rem;
+        transition: color 0.3s;
+      }
+
+      nav a:hover,
+      nav a.active {
+        color: var(--accent-gold);
+      }
+
+      /* Main Content */
+      main {
+        padding-top: 100px;
+        min-height: calc(100vh - 60px);
+      }
+
+      /* Cards */
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+      }
+
+      .card-header {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      /* Buttons */
+      .btn {
+        font-family: "Cinzel", serif;
+        font-weight: 600;
+        padding: 0.875rem 2rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent-red) 0%, #8b1525 100%);
+        color: white;
+        box-shadow: 0 4px 16px var(--accent-red-glow);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px var(--accent-red-glow);
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: var(--accent-gold);
+        border: 2px solid var(--accent-gold);
+      }
+
+      .btn-secondary:hover {
+        background: var(--accent-gold);
+        color: var(--bg-primary);
+      }
+
+      .btn-ghost {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+      }
+
+      .btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-success {
+        background: linear-gradient(
+          135deg,
+          var(--accent-green) 0%,
+          #1e5e3d 100%
+        );
+        color: white;
+      }
+
+      .btn-lg {
+        padding: 1.25rem 3rem;
+        font-size: 1.125rem;
+      }
+
+      .btn-block {
+        width: 100%;
+      }
+
+      /* Forms */
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 1rem;
+        transition:
+          border-color 0.3s,
+          box-shadow 0.3s;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: var(--accent-gold);
+        box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+      }
+
+      .form-input::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.6;
+      }
+
+      .form-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+      }
+
+      .form-checkbox input {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--accent-red);
+      }
+
+      /* Alerts */
+      .alert {
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid;
+      }
+
+      .alert-error {
+        background: rgba(196, 30, 58, 0.15);
+        border-color: var(--accent-red);
+        color: #ff6b6b;
+      }
+
+      .alert-success {
+        background: rgba(45, 134, 89, 0.15);
+        border-color: var(--accent-green);
+        color: #6bcf8e;
+      }
+
+      .alert-info {
+        background: rgba(74, 111, 165, 0.15);
+        border-color: var(--accent-blue);
+        color: #7ba3d4;
+      }
+
+      /* Grid */
+      .grid {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      @media (max-width: 768px) {
+        .grid-2,
         .grid-3 {
-            grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: 1fr;
         }
-        
-        @media (max-width: 768px) {
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
+      }
+
+      /* Animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
         }
-        
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
         }
-        
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px var(--accent-red-glow); }
-            50% { box-shadow: 0 0 40px var(--accent-red-glow); }
+        50% {
+          opacity: 0.5;
         }
-        
-        .fade-in {
-            animation: fadeIn 0.6s ease-out;
+      }
+
+      @keyframes glow {
+        0%,
+        100% {
+          box-shadow: 0 0 20px var(--accent-red-glow);
         }
-        
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
-        
-        /* Footer */
-        footer {
-            background: var(--bg-secondary);
-            padding: 1.5rem 0;
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-top: 3rem;
+        50% {
+          box-shadow: 0 0 40px var(--accent-red-glow);
         }
-        
-        footer a {
-            color: var(--accent-gold);
-            text-decoration: none;
-        }
-        
-        /* Utilities */
-        .text-center { text-align: center; }
-        .text-muted { color: var(--text-secondary); }
-        .text-accent { color: var(--accent-gold); }
-        .text-danger { color: var(--accent-red); }
-        .text-success { color: var(--accent-green); }
-        .mb-1 { margin-bottom: 0.5rem; }
-        .mb-2 { margin-bottom: 1rem; }
-        .mb-3 { margin-bottom: 1.5rem; }
-        .mb-4 { margin-bottom: 2rem; }
-        .mt-2 { margin-top: 1rem; }
-        .mt-3 { margin-top: 1.5rem; }
-        .mt-4 { margin-top: 2rem; }
-        .flex { display: flex; }
-        .flex-center { justify-content: center; align-items: center; }
-        .gap-1 { gap: 0.5rem; }
-        .gap-2 { gap: 1rem; }
-        .gap-3 { gap: 1.5rem; }
-        
-        /* Rollen-Badges */
-        .rolle-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
+      }
+
+      .fade-in {
+        animation: fadeIn 0.6s ease-out;
+      }
+
+      .delay-1 {
+        animation-delay: 0.1s;
+      }
+      .delay-2 {
+        animation-delay: 0.2s;
+      }
+      .delay-3 {
+        animation-delay: 0.3s;
+      }
+
+      /* Footer */
+      footer {
+        background: var(--bg-secondary);
+        padding: 1.5rem 0;
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-top: 3rem;
+      }
+
+      footer a {
+        color: var(--accent-gold);
+        text-decoration: none;
+      }
+
+      /* Utilities */
+      .text-center {
+        text-align: center;
+      }
+      .text-muted {
+        color: var(--text-secondary);
+      }
+      .text-accent {
+        color: var(--accent-gold);
+      }
+      .text-danger {
+        color: var(--accent-red);
+      }
+      .text-success {
+        color: var(--accent-green);
+      }
+      .mb-1 {
+        margin-bottom: 0.5rem;
+      }
+      .mb-2 {
+        margin-bottom: 1rem;
+      }
+      .mb-3 {
+        margin-bottom: 1.5rem;
+      }
+      .mb-4 {
+        margin-bottom: 2rem;
+      }
+      .mt-2 {
+        margin-top: 1rem;
+      }
+      .mt-3 {
+        margin-top: 1.5rem;
+      }
+      .mt-4 {
+        margin-top: 2rem;
+      }
+      .flex {
+        display: flex;
+      }
+      .flex-center {
+        justify-content: center;
+        align-items: center;
+      }
+      .gap-1 {
+        gap: 0.5rem;
+      }
+      .gap-2 {
+        gap: 1rem;
+      }
+      .gap-3 {
+        gap: 1.5rem;
+      }
+
+      /* Rollen-Badges */
+      .rolle-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+      }
     </style>
-    
+
     {% block head %}{% endblock %}
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <div class="container nav-container">
-            <a href="{{ url_for('index') }}" class="logo">
-                <svg class="logo-icon" viewBox="0 0 100 100" fill="none">
-                    <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="2" fill="none"/>
-                    <path d="M30 60 Q35 40 50 35 Q65 40 70 60 Q65 70 50 75 Q35 70 30 60" fill="currentColor"/>
-                    <circle cx="40" cy="50" r="5" fill="#fff"/>
-                    <circle cx="60" cy="50" r="5" fill="#fff"/>
-                </svg>
-                {{ spiel_name }}
-            </a>
-            <nav>
-                <ul>
-                    <li><a href="{{ url_for('index') }}" class="{% block nav_home %}{% endblock %}">Start</a></li>
-                    <li><a href="{{ url_for('rollen_uebersicht') }}" class="{% block nav_rollen %}{% endblock %}">Rollen</a></li>
-                </ul>
-            </nav>
-        </div>
+      <div class="container nav-container">
+        <a href="{{ url_for('index') }}" class="logo">
+          <svg class="logo-icon" viewBox="0 0 100 100" fill="none">
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+            />
+            <path
+              d="M30 60 Q35 40 50 35 Q65 40 70 60 Q65 70 50 75 Q35 70 30 60"
+              fill="currentColor"
+            />
+            <circle cx="40" cy="50" r="5" fill="#fff" />
+            <circle cx="60" cy="50" r="5" fill="#fff" />
+          </svg>
+          {{ spiel_name }}
+        </a>
+        <nav>
+          <ul>
+            <li>
+              <a
+                href="{{ url_for('index') }}"
+                class="{% block nav_home %}{% endblock %}"
+                >Start</a
+              >
+            </li>
+            <li>
+              <a
+                href="{{ url_for('rollen_uebersicht') }}"
+                class="{% block nav_rollen %}{% endblock %}"
+                >Rollen</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
     </header>
-    
-    <main>
-        {% block content %}{% endblock %}
-    </main>
-    
+
+    <main>{% block content %}{% endblock %}</main>
+
     <footer>
-        <div class="container">
-            <p style="margin-bottom: 0.5rem;">
-                <i class="fa-solid fa-paw" style="color: var(--accent-red);"></i>
-                {{ spiel_name }} - Das klassische Werwolf-Partyspiel digital!
-            </p>
-            <p style="font-size: 0.8rem; margin-bottom: 0.5rem;">
-                Erstellt von 
-                <a href="https://github.com/SpotlightForBugs" target="_blank">@SpotlightForBugs</a>,
-                <a href="https://github.com/Heizkoerper" target="_blank">@Heizkoerper</a>,
-                <a href="https://github.com/BlackTesseract" target="_blank">@BlackTesseract</a>
-                und <span style="color: var(--accent-gold);">@Zora</span>
-            </p>
-            <p style="font-size: 0.75rem;">
-                Inspiriert von "Werwölfe von Düsterwald" | 
-                Rollen basierend auf der <a href="https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung" target="_blank">Werwolf Wiki</a>
-            </p>
-    </div>
+      <div class="container">
+        <p style="margin-bottom: 0.5rem">
+          <i class="fa-solid fa-paw" style="color: var(--accent-red)"></i>
+          {{ spiel_name }} - Das klassische Werwolf-Partyspiel digital!
+        </p>
+        <p style="font-size: 0.8rem; margin-bottom: 0.5rem">
+          Erstellt von
+          <a href="https://github.com/SpotlightForBugs" target="_blank"
+            >@SpotlightForBugs</a
+          >,
+          <a href="https://github.com/Heizkoerper" target="_blank"
+            >@Heizkoerper</a
+          >,
+          <a href="https://github.com/BlackTesseract" target="_blank"
+            >@BlackTesseract</a
+          >
+          und <span style="color: var(--accent-gold)">@Zora</span>
+        </p>
+        <p style="font-size: 0.75rem">
+          Inspiriert von "Werwölfe von Düsterwald" | Rollen basierend auf der
+          <a
+            href="https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung"
+            target="_blank"
+            >Werwolf Wiki</a
+          >
+        </p>
+      </div>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
     <script src="{{ url_for('static', filename='js/hints.js') }}"></script>
-    
+
     <!-- Anti-DevTools Schutz - Verhindert Spicken via F12 -->
     <script>
-    (function() {
-        'use strict';
-        
+      (function () {
+        "use strict";
+
         // Rechtsklick deaktivieren
-        document.addEventListener('contextmenu', function(e) {
+        document.addEventListener("contextmenu", function (e) {
+          e.preventDefault();
+          return false;
+        });
+
+        // F12 und andere Shortcuts blockieren
+        document.addEventListener("keydown", function (e) {
+          // F12
+          if (e.key === "F12" || e.keyCode === 123) {
             e.preventDefault();
             return false;
+          }
+          // Ctrl+Shift+I (DevTools)
+          if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            (e.key === "I" || e.key === "i" || e.keyCode === 73)
+          ) {
+            e.preventDefault();
+            return false;
+          }
+          // Ctrl+Shift+J (Console)
+          if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            (e.key === "J" || e.key === "j" || e.keyCode === 74)
+          ) {
+            e.preventDefault();
+            return false;
+          }
+          // Ctrl+Shift+C (Element Picker)
+          if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            (e.key === "C" || e.key === "c" || e.keyCode === 67)
+          ) {
+            e.preventDefault();
+            return false;
+          }
+          // Ctrl+U (View Source)
+          if (
+            e.ctrlKey &&
+            (e.key === "U" || e.key === "u" || e.keyCode === 85)
+          ) {
+            e.preventDefault();
+            return false;
+          }
+          // Cmd+Option+I (Mac DevTools)
+          if (
+            e.metaKey &&
+            e.altKey &&
+            (e.key === "I" || e.key === "i" || e.keyCode === 73)
+          ) {
+            e.preventDefault();
+            return false;
+          }
+          // Cmd+Option+J (Mac Console)
+          if (
+            e.metaKey &&
+            e.altKey &&
+            (e.key === "J" || e.key === "j" || e.keyCode === 74)
+          ) {
+            e.preventDefault();
+            return false;
+          }
+          // Cmd+Option+C (Mac Element Picker)
+          if (
+            e.metaKey &&
+            e.altKey &&
+            (e.key === "C" || e.key === "c" || e.keyCode === 67)
+          ) {
+            e.preventDefault();
+            return false;
+          }
         });
-        
-        // F12 und andere Shortcuts blockieren
-        document.addEventListener('keydown', function(e) {
-            // F12
-            if (e.key === 'F12' || e.keyCode === 123) {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+Shift+I (DevTools)
-            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+Shift+J (Console)
-            if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+Shift+C (Element Picker)
-            if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c' || e.keyCode === 67)) {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+U (View Source)
-            if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
-                e.preventDefault();
-                return false;
-            }
-            // Cmd+Option+I (Mac DevTools)
-            if (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) {
-                e.preventDefault();
-                return false;
-            }
-            // Cmd+Option+J (Mac Console)
-            if (e.metaKey && e.altKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) {
-                e.preventDefault();
-                return false;
-            }
-            // Cmd+Option+C (Mac Element Picker)
-            if (e.metaKey && e.altKey && (e.key === 'C' || e.key === 'c' || e.keyCode === 67)) {
-                e.preventDefault();
-                return false;
-            }
-        });
-        
+
         // DevTools-Erkennung via Timing
         let devtoolsOpen = false;
         const threshold = 160;
-        
-        setInterval(function() {
-            const start = performance.now();
-            debugger;
-            const end = performance.now();
-            
-            if (end - start > threshold) {
-                if (!devtoolsOpen) {
-                    devtoolsOpen = true;
-                    // Warnung anzeigen
-                    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f0f1a;color:#c41e3a;font-family:Cinzel,serif;font-size:2rem;text-align:center;padding:2rem;"><div><i class="fa-solid fa-paw"></i> Spicken ist nicht erlaubt! <i class="fa-solid fa-paw"></i><br><span style="font-size:1rem;color:#a0a0b0;">Schliesse die Entwicklerkonsole und lade die Seite neu.</span></div></div>';
-                }
+
+        setInterval(function () {
+          const start = performance.now();
+          debugger;
+          const end = performance.now();
+
+          if (end - start > threshold) {
+            if (!devtoolsOpen) {
+              devtoolsOpen = true;
+              // Warnung anzeigen
+              document.body.innerHTML =
+                '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f0f1a;color:#c41e3a;font-family:Cinzel,serif;font-size:2rem;text-align:center;padding:2rem;"><div><i class="fa-solid fa-paw"></i> Spicken ist nicht erlaubt! <i class="fa-solid fa-paw"></i><br><span style="font-size:1rem;color:#a0a0b0;">Schliesse die Entwicklerkonsole und lade die Seite neu.</span></div></div>';
             }
+          }
         }, 1000);
-        
+
         // Console.log überschreiben
-        const noop = function() {};
-        const methods = ['log', 'debug', 'info', 'warn', 'error', 'table', 'trace', 'dir', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'countReset', 'assert', 'profile', 'profileEnd', 'time', 'timeLog', 'timeEnd', 'timeStamp'];
-        
-        methods.forEach(function(method) {
-            console[method] = noop;
+        const noop = function () {};
+        const methods = [
+          "log",
+          "debug",
+          "info",
+          "warn",
+          "error",
+          "table",
+          "trace",
+          "dir",
+          "group",
+          "groupCollapsed",
+          "groupEnd",
+          "clear",
+          "count",
+          "countReset",
+          "assert",
+          "profile",
+          "profileEnd",
+          "time",
+          "timeLog",
+          "timeEnd",
+          "timeStamp",
+        ];
+
+        methods.forEach(function (method) {
+          console[method] = noop;
         });
-        
+
         // Warnung in Console
-        Object.defineProperty(console, '_commandLineAPI', {
-            get: function() {
-                throw new Error('Spicken ist nicht erlaubt!');
-            }
+        Object.defineProperty(console, "_commandLineAPI", {
+          get: function () {
+            throw new Error("Spicken ist nicht erlaubt!");
+          },
         });
-    })();
+      })();
     </script>
-    
+
     {% block scripts %}{% endblock %}
-</body>
+  </body>
 </html>

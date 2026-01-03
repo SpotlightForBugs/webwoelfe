@@ -10,8 +10,8 @@ Webwölfe ist eine moderne, webbasierte Implementation des beliebten Gesellschaf
 
 ## Features
 
-- **Zwei Spielmodi**: 
-  - Online (jeder auf eigenem Gerät mit 3D-Dorf, automatischer Erzähler) 
+- **Zwei Spielmodi**:
+  - Online (jeder auf eigenem Gerät mit 3D-Dorf, automatischer Erzähler)
   - Gruppen-Modus (alle zusammen vor Ort, mit Erzähler-Unterstützung)
 - **Sitzordnung per Drag & Drop**: Spieler können ihre physische Sitzordnung im Kreis festlegen - wichtig für Nachbar-Mechaniken!
 - **3D-Dorfvisualisierung**: Interaktives 3D-Dorf zeigt alle Spieler im Kreis
@@ -25,6 +25,7 @@ Webwölfe ist eine moderne, webbasierte Implementation des beliebten Gesellschaf
 ## Verfügbare Rollen
 
 ### Grundrollen
+
 - **Werwolf** - Töte jede Nacht einen Dorfbewohner
 - **Dorfbewohner** - Finde und eliminiere die Werwölfe
 - **Seherin** - Erfahre die wahre Identität eines Spielers
@@ -34,6 +35,7 @@ Webwölfe ist eine moderne, webbasierte Implementation des beliebten Gesellschaf
 - **Amor** - Verliebe zwei Spieler
 
 ### Erweiterte Rollen
+
 - **Weißer Wolf** - Gewinnt alleine, kann Mitwölfe töten
 - **Urwolf** - Kann Dorfbewohner infizieren
 - **Alter Mann** - Überlebt ersten Wolfsangriff
@@ -45,6 +47,7 @@ Webwölfe ist eine moderne, webbasierte Implementation des beliebten Gesellschaf
 ## Installation
 
 ### Voraussetzungen
+
 - Python 3.10 oder höher
 - pip
 
@@ -81,12 +84,14 @@ Die Anwendung läuft dann unter `http://localhost:5001`
 ## Spielmodi
 
 ### Online-Modus
+
 - Jeder Spieler auf eigenem Gerät
 - **Kein Erzähler nötig** - das Spiel erzählt automatisch
 - Automatische Nachrichten und Anweisungen
 - Perfekt für Remote-Spielrunden
 
 ### Gruppen-Modus
+
 - Alle zusammen vor Ort
 - Mit menschlichem Erzähler
 - **Erzähler erhält vorgefertigte Texte** zum Vorlesen
@@ -125,6 +130,7 @@ webwoelfe/
 ## Sicherheit
 
 Webwölfe enthält Schutzmaßnahmen gegen Spicken:
+
 - DevTools-Erkennung (F12, Ctrl+Shift+I, etc.)
 - Rechtsklick deaktiviert
 - Console-Logging deaktiviert
@@ -147,4 +153,4 @@ Dieses Projekt steht unter der GNU General Public License v3.0 - siehe [LICENSE]
 
 ---
 
-*Inspiriert von "Werwölfe von Düsterwald" und der [Werwolf Wiki Rollen-Sammlung](https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung)*
+_Inspiriert von "Werwölfe von Düsterwald" und der [Werwolf Wiki Rollen-Sammlung](https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung)_

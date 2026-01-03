@@ -24,7 +24,7 @@ export default class Village3DPlayCanvas {
     this.buildings = [];
     this.isNight = true;
     this.onPlayerClick = null;
-    
+
     // Lobby mode - simplified view with no buildings/environment
     this.isLobbyMode = options.lobbyMode || false;
 

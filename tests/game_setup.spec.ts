@@ -132,9 +132,7 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
       console.log("📝 Erstelle Raum...");
 
       const layout0 = calculateWindowLayout(0, PLAYER_COUNT);
-      const erzaehlerContext = await browser.newContext(
-        IS_MACOS ? { viewport: null } : { viewport: { width: layout0.width, height: layout0.height } }
-      );
+      const erzaehlerContext = await browser.newContext({ viewport: null });
       const erzaehlerPage = await erzaehlerContext.newPage();
 
       // Fenster positionieren
@@ -207,9 +205,7 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
 
         // Verwende headless Browser wenn HL Flag gesetzt
         const targetBrowser = headlessBrowser || browser;
-        const context = await targetBrowser.newContext(
-          IS_MACOS && !HEADLESS_OTHERS ? { viewport: null } : { viewport: { width: layout.width, height: layout.height } }
-        );
+        const context = await targetBrowser.newContext({ viewport: null });
         const page = await context.newPage();
 
         // Fenster positionieren (nur wenn nicht headless)
@@ -247,7 +243,7 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
         await beitretenCard.locator('button:has-text("Beitreten")').click();
 
         // Warte auf Lobby
-        await page.waitForURL(/\/lobby\//, { timeout: 10000 });
+        await page.waitForURL(/\/lobby\//);
 
         players.push({
           context,

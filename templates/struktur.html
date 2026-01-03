@@ -555,6 +555,7 @@
     <script src="{{ url_for('static', filename='js/hints.js') }}"></script>
 
     <!-- Anti-DevTools Schutz - Verhindert Spicken via F12 -->
+    {% if not debug %}
     <script>
       (function () {
         "use strict";
@@ -693,6 +694,7 @@
         });
       })();
     </script>
+    {% endif %}
 
     {% block scripts %}{% endblock %}
   </body>

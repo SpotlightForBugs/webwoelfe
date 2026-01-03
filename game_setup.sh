@@ -24,6 +24,22 @@ set -e
 PLAYERS=""
 HL_FLAG=""
 
+# delete the db file to start fresh
+if [ -f "instance/webwoelfe.db" ]; then
+    rm instance/webwoelfe.db
+    echo "🗑️  Alte Datenbankdatei gelöscht"
+fi
+
+# operating system aware venv activation
+if [ -f ".venv/Scripts/activate" ]; then
+    # Windows
+    source .venv/Scripts/activate
+elif [ -f "venv/bin/activate" ]; then
+    # Unix/Linux/MacOS
+    source venv/bin/activate
+fi
+
+
 for arg in "$@"; do
     case $arg in
         --hl)
@@ -64,6 +80,7 @@ if ! curl -s http://localhost:$PORT > /dev/null 2>&1; then
     # Starte Server im Hintergrund mit gevent
     export FLASK_APP=app.py
     export FLASK_ENV=development
+    export FLASK_DEBUG=1
     export PORT=$PORT
     python app.py &
     SERVER_PID=$!

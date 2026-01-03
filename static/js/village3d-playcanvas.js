@@ -25,22 +25,30 @@ export default class Village3DPlayCanvas {
     this.isNight = true;
     this.onPlayerClick = null;
     this.deadMaterial = null; // Cache for dead player material
+    this.materialCache = new Map();
 
-    // Lobby mode - simplified view with no buildings/environment
-    this.isLobbyMode = options.lobbyMode || false;
+    // Target camera values for smoothing
+    this.targetCameraAngle = 0;
+    this.targetCameraHeight = 15;
+    this.targetCameraRadius = 25;
 
-    // Camera settings - adjust for lobby vs game mode
-    if (this.isLobbyMode) {
-      // Lobby: more top-down view, closer to see players
+    // Default camera settings - adjust for lobby vs game mode
+    if (options.lobbyMode) {
       this.defaultCameraAngle = 0;
-      this.defaultCameraHeight = 20; // Higher for top-down
-      this.defaultCameraRadius = 18; // Closer to players
+      this.defaultCameraHeight = 20;
+      this.defaultCameraRadius = 18;
     } else {
-      // Game: standard perspective view
       this.defaultCameraAngle = 0;
       this.defaultCameraHeight = 15;
       this.defaultCameraRadius = 25;
     }
+
+    this.targetCameraAngle = this.defaultCameraAngle;
+    this.targetCameraHeight = this.defaultCameraHeight;
+    this.targetCameraRadius = this.defaultCameraRadius;
+
+    // Lobby mode - simplified view with no buildings/environment
+    this.isLobbyMode = options.lobbyMode || false;
 
     // Role colors for player appearance - ALL ROLES
     this.roleColors = {
@@ -157,12 +165,14 @@ export default class Village3DPlayCanvas {
     this.canvas.style.width = "100%";
     this.canvas.style.height = "100%";
     this.canvas.style.display = "block";
+    this.canvas.tabIndex = 0; // Make canvas focusable
     this.container.appendChild(this.canvas);
 
     // Initialize PlayCanvas
     this.app = new pc.Application(this.canvas, {
       mouse: new pc.Mouse(this.canvas),
       touch: new pc.TouchDevice(this.canvas),
+      keyboard: new pc.Keyboard(window),
       elementInput: new pc.ElementInput(this.canvas),
     });
 
@@ -189,19 +199,44 @@ export default class Village3DPlayCanvas {
 
     // Input handling
     this.setupInput();
+
+    // Register update for animation
+    this.updateBound = (dt) => {
+      try {
+        this.update(dt);
+      } catch (e) {
+        console.error("[Village3D] Update error:", e);
+      }
+    };
+    this.app.on("update", this.updateBound);
   }
 
   createScene() {
-    // Ambient Light
-    this.app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.15);
-
     // Camera
     this.camera = new pc.Entity("Camera");
     this.camera.addComponent("camera", {
-      clearColor: new pc.Color(0.05, 0.05, 0.08),
-      farClip: 150,
+      clearColor: new pc.Color(0.01, 0.01, 0.02),
+      farClip: 200,
       fov: 45,
     });
+    
+    // Add Fog for better atmosphere
+    // Setting fog through app.scene properties might fail in some versions if they are read-only
+    try {
+      this.app.scene.fog = 'exp2';
+      this.app.scene.fogColor = new pc.Color(0.01, 0.01, 0.02);
+      this.app.scene.fogDensity = 0.01;
+    } catch (e) {
+      console.warn("Could not set fog:", e);
+    }
+    
+    // Set Ambient Light here too for safety
+    try {
+      this.app.scene.ambientLight = new pc.Color(0.15, 0.15, 0.2);
+    } catch (e) {
+      console.warn("Could not set ambientLight:", e);
+    }
+
     this.camera.setPosition(
       0,
       this.defaultCameraHeight,
@@ -214,16 +249,21 @@ export default class Village3DPlayCanvas {
     this.cameraAngle = this.defaultCameraAngle;
     this.cameraHeight = this.defaultCameraHeight;
     this.cameraRadius = this.defaultCameraRadius;
+
+    this.targetCameraAngle = this.cameraAngle;
+    this.targetCameraHeight = this.cameraHeight;
+    this.targetCameraRadius = this.cameraRadius;
+
     this.targetPosition = new pc.Vec3(0, 0, 0);
 
     // Directional Light (Moon/Sun)
     this.light = new pc.Entity("DirectionalLight");
     this.light.addComponent("light", {
       type: "directional",
-      color: new pc.Color(0.6, 0.7, 0.9),
-      intensity: 0.8,
+      color: new pc.Color(0.7, 0.8, 1.0),
+      intensity: 1.0,
       castShadows: true,
-      shadowBias: 0.05,
+      shadowBias: 0.2,
       normalOffsetBias: 0.05,
       shadowDistance: 80,
     });
@@ -246,10 +286,16 @@ export default class Village3DPlayCanvas {
 
     // Create full medieval village (in both lobby and game)
     // Village Buildings
-    this.createVillageBuildings();
+    if (!this.isLobbyMode) {
+      this.createVillageBuildings();
+    }
 
     // Campfire (center)
-    this.createCampfire();
+    if (this.isLobbyMode) {
+      this.createSimpleCampfire();
+    } else {
+      this.createCampfire();
+    }
 
     // Environment (Trees, Stones, Fence)
     this.createEnvironment();
@@ -266,7 +312,7 @@ export default class Village3DPlayCanvas {
     });
 
     // Smaller ground in lobby mode
-    const groundSize = this.isLobbyMode ? 30 : 80;
+    const groundSize = this.isLobbyMode ? 40 : 80;
     ground.setLocalScale(groundSize, 1, groundSize);
 
     const material = new pc.StandardMaterial();
@@ -278,21 +324,43 @@ export default class Village3DPlayCanvas {
     ground.model.material = material;
     this.app.root.addChild(ground);
 
-    // Village center circle (lighter area) - smaller in lobby
+    // Center circle
     const centerCircle = new pc.Entity("CenterCircle");
     centerCircle.addComponent("model", {
       type: "cylinder",
     });
     const circleSize = this.isLobbyMode ? 12 : 18;
     centerCircle.setLocalScale(circleSize, 0.05, circleSize);
-    centerCircle.setPosition(0, 0.05, 0);
+    centerCircle.setPosition(0, 0.02, 0); // Offset to avoid Z-fighting
 
-    const circleMat = new pc.StandardMaterial();
-    circleMat.diffuse = new pc.Color(0.25, 0.22, 0.18); // Dirt/worn grass
-    circleMat.update();
+    const circleMat = this.getMaterial({
+      name: "CenterCircle",
+      diffuse: new pc.Color(0.25, 0.22, 0.18),
+    });
     centerCircle.model.material = circleMat;
 
     this.app.root.addChild(centerCircle);
+  }
+
+  // Material caching helper
+  getMaterial(options) {
+    const key = options.name || JSON.stringify(options);
+    if (this.materialCache.has(key)) {
+      return this.materialCache.get(key);
+    }
+
+    const mat = new pc.StandardMaterial();
+    if (options.diffuse) mat.diffuse = options.diffuse;
+    if (options.specular) mat.specular = options.specular;
+    if (options.emissive) mat.emissive = options.emissive;
+    if (options.shininess !== undefined) mat.shininess = options.shininess;
+    if (options.opacity !== undefined) {
+      mat.opacity = options.opacity;
+      mat.blendType = options.blendType || pc.BLEND_NORMAL;
+    }
+    mat.update();
+    this.materialCache.set(key, mat);
+    return mat;
   }
 
   createVillageBuildings() {
@@ -377,18 +445,21 @@ export default class Village3DPlayCanvas {
 
     // Roof (proper gabled roof with two slopes)
     // Calculate roof dimensions: house is 4 wide, roof needs to extend past edges
-    // With 45 degree angle, each side needs to be sqrt(2) * halfWidth
     const roofAngle = 35; // degrees
-    const roofWidth = 2.8; // Width of each roof panel
-    const roofHeight = 3.6; // Height above upper floor
-    const roofPeakY = roofHeight + Math.sin(roofAngle * Math.PI / 180) * (roofWidth / 2);
-    const roofOffset = Math.cos(roofAngle * Math.PI / 180) * (roofWidth / 2);
+    const roofWidth = 2.8; // Width of each roof panel (measured along slope)
+    const roofBaseY = 3.5; // Base height of roof (top of upper floor)
+    
+    // Calculate positions based on geometry
+    const roofRad = roofAngle * Math.PI / 180;
+    const roofRisePerPanel = Math.sin(roofRad) * (roofWidth / 2);
+    const roofRunPerPanel = Math.cos(roofRad) * (roofWidth / 2);
+    const roofPeakY = roofBaseY + roofRisePerPanel + 0.3; // Peak Y position
     
     const roofLeft = new pc.Entity("RoofLeft");
     roofLeft.addComponent("model", { type: "box" });
-    roofLeft.setLocalScale(roofWidth, 0.15, 5.6);
-    roofLeft.setLocalPosition(-roofOffset, roofPeakY, 0);
-    roofLeft.setLocalEulerAngles(0, 0, -roofAngle);
+    roofLeft.setLocalScale(4.8, 0.15, roofWidth); // Width along house, thin, depth is the slope
+    roofLeft.setLocalPosition(0, roofBaseY + roofRisePerPanel / 2 + 0.1, -roofRunPerPanel / 2);
+    roofLeft.setLocalEulerAngles(-roofAngle, 0, 0); // Rotate around X axis for proper pitch
 
     const roofMat = new pc.StandardMaterial();
     roofMat.diffuse = new pc.Color(0.35, 0.18, 0.12); // Dark terracotta
@@ -398,17 +469,17 @@ export default class Village3DPlayCanvas {
 
     const roofRight = new pc.Entity("RoofRight");
     roofRight.addComponent("model", { type: "box" });
-    roofRight.setLocalScale(roofWidth, 0.15, 5.6);
-    roofRight.setLocalPosition(roofOffset, roofPeakY, 0);
-    roofRight.setLocalEulerAngles(0, 0, roofAngle);
+    roofRight.setLocalScale(4.8, 0.15, roofWidth);
+    roofRight.setLocalPosition(0, roofBaseY + roofRisePerPanel / 2 + 0.1, roofRunPerPanel / 2);
+    roofRight.setLocalEulerAngles(roofAngle, 0, 0); // Opposite angle for other side
     roofRight.model.material = roofMat;
     house.addChild(roofRight);
 
     // Roof peak (ridge beam at the top)
     const roofPeak = new pc.Entity("RoofPeak");
     roofPeak.addComponent("model", { type: "box" });
-    roofPeak.setLocalScale(0.25, 0.25, 5.6);
-    roofPeak.setLocalPosition(0, roofPeakY + Math.sin(roofAngle * Math.PI / 180) * (roofWidth / 2), 0);
+    roofPeak.setLocalScale(5.0, 0.25, 0.25);
+    roofPeak.setLocalPosition(0, roofPeakY, 0);
     roofPeak.model.material = roofMat;
     house.addChild(roofPeak);
 
@@ -511,11 +582,12 @@ export default class Village3DPlayCanvas {
     base.setLocalScale(8, 6, 10);
     base.setLocalPosition(0, 3, 0);
 
-    const stoneMat = new pc.StandardMaterial();
-    stoneMat.diffuse = new pc.Color(0.55, 0.55, 0.58); // Light stone
-    stoneMat.specular = new pc.Color(0.1, 0.1, 0.1);
-    stoneMat.shininess = 5;
-    stoneMat.update();
+    const stoneMat = this.getMaterial({
+      name: "ChurchStone",
+      diffuse: new pc.Color(0.55, 0.55, 0.58),
+      specular: new pc.Color(0.1, 0.1, 0.1),
+      shininess: 5,
+    });
     base.model.material = stoneMat;
     church.addChild(base);
 
@@ -535,18 +607,22 @@ export default class Village3DPlayCanvas {
     const churchRoofAngle = 30; // degrees
     const churchRoofWidth = 5.5; // Width of each roof panel
     const churchRoofBaseY = 6; // Base height above ground
-    const churchRoofPeakOffset = Math.cos(churchRoofAngle * Math.PI / 180) * (churchRoofWidth / 2);
-    const churchRoofPeakY = churchRoofBaseY + Math.sin(churchRoofAngle * Math.PI / 180) * (churchRoofWidth / 2);
-    
+    const churchRoofPeakOffset =
+      Math.cos((churchRoofAngle * Math.PI) / 180) * (churchRoofWidth / 2);
+    const churchRoofPeakY =
+      churchRoofBaseY +
+      Math.sin((churchRoofAngle * Math.PI) / 180) * (churchRoofWidth / 2);
+
     const roofLeft = new pc.Entity("RoofLeft");
     roofLeft.addComponent("model", { type: "box" });
     roofLeft.setLocalScale(churchRoofWidth, 0.25, 10.5);
     roofLeft.setLocalPosition(-churchRoofPeakOffset, churchRoofPeakY, 0);
-    roofLeft.setLocalEulerAngles(0, 0, -churchRoofAngle);
+    roofLeft.setLocalEulerAngles(0, 180, -churchRoofAngle);
 
-    const roofMat = new pc.StandardMaterial();
-    roofMat.diffuse = new pc.Color(0.28, 0.12, 0.08); // Dark tile
-    roofMat.update();
+    const roofMat = this.getMaterial({
+      name: "ChurchRoof",
+      diffuse: new pc.Color(0.28, 0.12, 0.08),
+    });
     roofLeft.model.material = roofMat;
     church.addChild(roofLeft);
 
@@ -554,7 +630,7 @@ export default class Village3DPlayCanvas {
     roofRight.addComponent("model", { type: "box" });
     roofRight.setLocalScale(churchRoofWidth, 0.25, 10.5);
     roofRight.setLocalPosition(churchRoofPeakOffset, churchRoofPeakY, 0);
-    roofRight.setLocalEulerAngles(0, 0, churchRoofAngle);
+    roofRight.setLocalEulerAngles(0, 180, churchRoofAngle);
     roofRight.model.material = roofMat;
     church.addChild(roofRight);
 
@@ -562,7 +638,12 @@ export default class Village3DPlayCanvas {
     const ridge = new pc.Entity("Ridge");
     ridge.addComponent("model", { type: "box" });
     ridge.setLocalScale(0.35, 0.35, 10.5);
-    ridge.setLocalPosition(0, churchRoofPeakY + Math.sin(churchRoofAngle * Math.PI / 180) * (churchRoofWidth / 2), 0);
+    ridge.setLocalPosition(
+      0,
+      churchRoofPeakY +
+        Math.sin((churchRoofAngle * Math.PI) / 180) * (churchRoofWidth / 2),
+      0,
+    );
     ridge.model.material = stoneMat;
     church.addChild(ridge);
 
@@ -575,6 +656,13 @@ export default class Village3DPlayCanvas {
     church.addChild(tower);
 
     // Tower windows (arched)
+    const towerWindowMat = this.getMaterial({
+      name: "TowerWindow",
+      diffuse: new pc.Color(0.2, 0.2, 0.3),
+      opacity: 0.6,
+      blendType: pc.BLEND_NORMAL,
+    });
+
     for (let i = 0; i < 4; i++) {
       const window = new pc.Entity(`TowerWindow-${i}`);
       window.addComponent("model", { type: "box" });
@@ -584,13 +672,7 @@ export default class Village3DPlayCanvas {
       const windowZ = -3.5 + Math.cos(angle) * 1.3;
       window.setLocalPosition(windowX, 9, windowZ);
       window.setLocalEulerAngles(0, i * 90, 0);
-
-      const windowMat = new pc.StandardMaterial();
-      windowMat.diffuse = new pc.Color(0.2, 0.2, 0.3);
-      windowMat.opacity = 0.6;
-      windowMat.blendType = pc.BLEND_NORMAL;
-      windowMat.update();
-      window.model.material = windowMat;
+      window.model.material = towerWindowMat;
       church.addChild(window);
     }
 
@@ -600,10 +682,11 @@ export default class Village3DPlayCanvas {
     spire.setLocalScale(2, 4, 2);
     spire.setLocalPosition(0, 12.5, -3.5);
 
-    const spireMat = new pc.StandardMaterial();
-    spireMat.diffuse = new pc.Color(0.25, 0.35, 0.25); // Copper patina
-    spireMat.shininess = 40;
-    spireMat.update();
+    const spireMat = this.getMaterial({
+      name: "SpireCopper",
+      diffuse: new pc.Color(0.25, 0.35, 0.25),
+      shininess: 40,
+    });
     spire.model.material = spireMat;
     church.addChild(spire);
 
@@ -778,15 +861,21 @@ export default class Village3DPlayCanvas {
         Math.random() * 10 - 5,
       );
 
-      const mat = new pc.StandardMaterial();
-      mat.diffuse = new pc.Color(0.3, 0.3, 0.35);
-      mat.update();
-      stone.model.material = mat;
+      const stoneMat = this.getMaterial({
+        name: "CampfireStone",
+        diffuse: new pc.Color(0.3, 0.3, 0.35),
+      });
+      stone.model.material = stoneMat;
 
       this.app.root.addChild(stone);
     }
 
     // Logs
+    const logMat = this.getMaterial({
+      name: "CampfireLog",
+      diffuse: new pc.Color(0.25, 0.15, 0.08),
+    });
+
     for (let i = 0; i < 5; i++) {
       const log = new pc.Entity("Log");
       log.addComponent("model", { type: "cylinder" });
@@ -801,11 +890,7 @@ export default class Village3DPlayCanvas {
         i * 72,
         Math.random() * 20,
       );
-
-      const mat = new pc.StandardMaterial();
-      mat.diffuse = new pc.Color(0.25, 0.15, 0.08);
-      mat.update();
-      log.model.material = mat;
+      log.model.material = logMat;
 
       this.app.root.addChild(log);
     }
@@ -817,12 +902,13 @@ export default class Village3DPlayCanvas {
       p.addComponent("model", { type: "plane" });
       p.setLocalScale(0.4, 0.4, 0.4);
 
-      const mat = new pc.StandardMaterial();
-      mat.emissive = new pc.Color(1, 0.6 - i * 0.02, 0.1);
-      mat.opacity = 0.9;
-      mat.blendType = pc.BLEND_ADDITIVE;
-      mat.update();
-      p.model.material = mat;
+      const fireParticleMat = this.getMaterial({
+        name: `FireParticle-${i % 5}`, // Use 5 variants
+        emissive: new pc.Color(1, 0.6 - (i % 5) * 0.1, 0.1),
+        opacity: 0.9,
+        blendType: pc.BLEND_ADDITIVE,
+      });
+      p.model.material = fireParticleMat;
 
       this.app.root.addChild(p);
       this.fireParticles.push({
@@ -832,9 +918,6 @@ export default class Village3DPlayCanvas {
         life: Math.random(),
       });
     }
-
-    // Register update for animation
-    this.app.on("update", (dt) => this.update(dt));
   }
 
   createSimpleCampfire() {
@@ -864,16 +947,14 @@ export default class Village3DPlayCanvas {
     marker.model.material = mat;
 
     this.app.root.addChild(marker);
-
-    // Register update for animation
-    this.app.on("update", (dt) => this.update(dt));
   }
 
   createEnvironment() {
     // Trees with more variety
-    for (let i = 0; i < 30; i++) {
-      const angle = (i / 30) * Math.PI * 2 + (Math.random() - 0.5);
-      const radius = 25 + Math.random() * 10;
+    const treeCount = this.isLobbyMode ? 40 : 30;
+    for (let i = 0; i < treeCount; i++) {
+      const angle = (i / treeCount) * Math.PI * 2 + (Math.random() - 0.5);
+      const radius = this.isLobbyMode ? 15 + Math.random() * 5 : 25 + Math.random() * 10;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
@@ -882,9 +963,10 @@ export default class Village3DPlayCanvas {
     }
 
     // Bushes
-    for (let i = 0; i < 15; i++) {
+    const bushCount = this.isLobbyMode ? 20 : 15;
+    for (let i = 0; i < bushCount; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = 18 + Math.random() * 8;
+      const radius = this.isLobbyMode ? 12 + Math.random() * 6 : 18 + Math.random() * 8;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
@@ -892,9 +974,10 @@ export default class Village3DPlayCanvas {
     }
 
     // Rocks/Stones scattered around
-    for (let i = 0; i < 20; i++) {
+    const rockCount = this.isLobbyMode ? 25 : 20;
+    for (let i = 0; i < rockCount; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = 10 + Math.random() * 25;
+      const radius = this.isLobbyMode ? 8 + Math.random() * 15 : 10 + Math.random() * 25;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
@@ -908,34 +991,28 @@ export default class Village3DPlayCanvas {
     // Trunk
     const trunk = new pc.Entity("Trunk");
     trunk.addComponent("model", { type: "cylinder" });
-    trunk.setLocalScale(
-      0.4 + Math.random() * 0.2,
-      height,
-      0.4 + Math.random() * 0.2,
-    );
+    trunk.setLocalScale(0.4, height, 0.4);
     trunk.setLocalPosition(0, height / 2, 0);
-    const trunkMat = new pc.StandardMaterial();
-    trunkMat.diffuse = new pc.Color(0.2, 0.15, 0.1);
-    trunkMat.update();
+
+    const trunkMat = this.getMaterial({
+      name: "TrunkMaterial",
+      diffuse: new pc.Color(0.2, 0.15, 0.1),
+    });
     trunk.model.material = trunkMat;
     tree.addChild(trunk);
 
     // Leaves (multiple layers)
+    const leavesMat = this.getMaterial({
+      name: "LeavesMaterial",
+      diffuse: new pc.Color(0.08, 0.2, 0.08),
+    });
+
     for (let i = 0; i < 3; i++) {
       const leaves = new pc.Entity(`Leaves-${i}`);
       leaves.addComponent("model", { type: "cone" });
-      const scale = 3 - i * 0.5 + Math.random() * 0.5;
+      const scale = 3 - i * 0.5;
       leaves.setLocalScale(scale, height * 0.8, scale);
       leaves.setLocalPosition(0, height + i * 0.8, 0);
-      leaves.setLocalEulerAngles(0, Math.random() * 360, 0);
-
-      const leavesMat = new pc.StandardMaterial();
-      leavesMat.diffuse = new pc.Color(
-        0.05 + Math.random() * 0.05,
-        0.15 + Math.random() * 0.1,
-        0.05,
-      );
-      leavesMat.update();
       leaves.model.material = leavesMat;
       tree.addChild(leaves);
     }
@@ -952,10 +1029,11 @@ export default class Village3DPlayCanvas {
     bush.setLocalScale(scale, scale * 0.7, scale);
     bush.setPosition(x, scale * 0.35, z);
 
-    const mat = new pc.StandardMaterial();
-    mat.diffuse = new pc.Color(0.08, 0.2, 0.08);
-    mat.update();
-    bush.model.material = mat;
+    const bushMat = this.getMaterial({
+      name: "BushMaterial",
+      diffuse: new pc.Color(0.08, 0.2, 0.08),
+    });
+    bush.model.material = bushMat;
 
     this.app.root.addChild(bush);
   }
@@ -972,11 +1050,12 @@ export default class Village3DPlayCanvas {
       Math.random() * 20 - 10,
     );
 
-    const mat = new pc.StandardMaterial();
-    mat.diffuse = new pc.Color(0.35, 0.35, 0.4);
-    mat.shininess = 5;
-    mat.update();
-    rock.model.material = mat;
+    const rockMat = this.getMaterial({
+      name: "RockMaterial",
+      diffuse: new pc.Color(0.35, 0.35, 0.4),
+      shininess: 5,
+    });
+    rock.model.material = rockMat;
 
     this.app.root.addChild(rock);
   }
@@ -1015,32 +1094,56 @@ export default class Village3DPlayCanvas {
   }
 
   setPlayers(players) {
+    if (!players) return;
     this.players = players;
-    console.log('[Village3D] setPlayers called with', players.length, 'players');
-
-    // Clear existing
-    this.playerEntities.forEach((entity) => entity.destroy());
-    this.playerEntities.clear();
-    this.playerLabels.forEach((entity) => entity.destroy());
-    this.playerLabels.clear();
+    console.log("[Village3D] setPlayers called with", players.length, "players");
 
     const count = players.length;
     const radius = 8;
+    const currentIds = new Set(players.map((p) => p.id));
+
+    // Remove players that are no longer in the list
+    this.playerEntities.forEach((entity, id) => {
+      if (!currentIds.has(id)) {
+        entity.destroy();
+        this.playerEntities.delete(id);
+        const label = this.playerLabels.get(id);
+        if (label) {
+          label.destroy();
+          this.playerLabels.delete(id);
+        }
+      }
+    });
 
     players.forEach((player, index) => {
       const angle = (index / count) * Math.PI * 2;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
-      console.log(`[Village3D] Creating player ${player.name} at position (${x.toFixed(2)}, 0, ${z.toFixed(2)})`);
-      const entity = this.createDetailedPlayer(player, x, z, angle);
+      let entity = this.playerEntities.get(player.id);
+      if (entity) {
+        // Update existing entity position
+        entity.setPosition(x, 0, z);
+        entity.lookAt(0, 0, 0);
+        entity.playerData = player;
 
-      this.app.root.addChild(entity);
-      this.playerEntities.set(player.id, entity);
-      console.log(`[Village3D] Player ${player.name} created and added to scene`);
+        // Update status if needed
+        this.updatePlayerStatus(player.id, player.ist_am_leben);
+      } else {
+        // Create new
+        console.log(
+          `[Village3D] Creating player ${player.name} at position (${x.toFixed(2)}, 0, ${z.toFixed(2)})`,
+        );
+        entity = this.createDetailedPlayer(player, x, z, angle);
+        this.app.root.addChild(entity);
+        this.playerEntities.set(player.id, entity);
+      }
     });
-    
-    console.log('[Village3D] All players added to scene. Total:', this.playerEntities.size);
+
+    console.log(
+      "[Village3D] All players processed. Total:",
+      this.playerEntities.size,
+    );
   }
 
   createDetailedPlayer(player, x, z, angle) {
@@ -1065,6 +1168,7 @@ export default class Village3DPlayCanvas {
       // Name Label (3D text using plane with canvas texture)
       const nameLabel = this.createNameLabel(player.name, player.ist_am_leben);
       nameLabel.setLocalPosition(0, 2.8, 0);
+      // Billboard orientation will be set in update() - no initial rotation needed
       entity.addChild(nameLabel);
       this.playerLabels.set(player.id, nameLabel);
 
@@ -1089,9 +1193,24 @@ export default class Village3DPlayCanvas {
   }
 
   addRoleSpecificAppearance(entity, player, roleColor) {
+    // Early exit if entity or player is missing
+    if (!entity || !player) return;
+
+    const rolle = player.rolle;
+    const isAlive = player.ist_am_leben;
+
+    // Animation state
+    entity.animState = {
+      time: Math.random() * 10,
+      idleSpeed: 0.5 + Math.random() * 0.5,
+      breathingPhase: Math.random() * Math.PI * 2,
+      headTurnPhase: Math.random() * Math.PI * 2,
+      isMoving: false,
+    };
+
+    entity.parts = {};
+
     try {
-      const rolle = player.rolle;
-      const isAlive = player.ist_am_leben;
       console.log(`[Village3D] addRoleSpecificAppearance for ${player.name}, rolle=${rolle}, alive=${isAlive}`);
 
       // Skin tone for living players
@@ -1127,9 +1246,11 @@ export default class Village3DPlayCanvas {
       torsoMat.update();
       torso.model.material = torsoMat;
       entity.addChild(torso);
+      entity.parts.torso = torso;
       console.log('[Village3D] Torso created');
 
       // === LEGS ===
+      entity.parts.legs = [];
       for (let i = 0; i < 2; i++) {
         const leg = new pc.Entity(`Leg-${i}`);
         leg.addComponent("model", { type: "box" });
@@ -1149,14 +1270,21 @@ export default class Village3DPlayCanvas {
         legMat.update();
         leg.model.material = legMat;
         entity.addChild(leg);
+        entity.parts.legs.push(leg);
       }
       console.log('[Village3D] Legs created');
 
       // === ARMS ===
+      entity.parts.arms = [];
       for (let i = 0; i < 2; i++) {
+        const armPivot = new pc.Entity(`ArmPivot-${i}`);
+        armPivot.setLocalPosition(i === 0 ? -0.3 : 0.3, 1.3, 0);
+        entity.addChild(armPivot);
+        entity.parts.arms.push(armPivot);
+
         const arm = new pc.Entity(`Arm-${i}`);
         arm.addComponent("model", { type: "box" });
-        arm.setLocalPosition(i === 0 ? -0.4 : 0.4, 0.95, 0);
+        arm.setLocalPosition(i === 0 ? -0.1 : 0.1, -0.25, 0);
         arm.setLocalScale(0.15, 0.55, 0.2);
         arm.setLocalEulerAngles(0, 0, i === 0 ? 8 : -8);
         
@@ -1170,62 +1298,64 @@ export default class Village3DPlayCanvas {
         }
         armMat.update();
         arm.model.material = armMat;
-        entity.addChild(arm);
+        armPivot.addChild(arm);
 
         // Hands
         const hand = new pc.Entity(`Hand-${i}`);
         hand.addComponent("model", { type: "sphere" });
-        hand.setLocalPosition(i === 0 ? -0.4 : 0.4, 0.6, 0);
+        hand.setLocalPosition(0, -0.3, 0);
         hand.setLocalScale(0.12, 0.12, 0.1);
         
         const handMat = new pc.StandardMaterial();
-      handMat.diffuse = skinColor;
-      handMat.specular = new pc.Color(0.15, 0.12, 0.1);
-      handMat.shininess = 25;
-      if (!isAlive) {
-        handMat.opacity = 0.5;
-        handMat.blendType = pc.BLEND_NORMAL;
+        handMat.diffuse = skinColor;
+        handMat.specular = new pc.Color(0.15, 0.12, 0.1);
+        handMat.shininess = 25;
+        if (!isAlive) {
+          handMat.opacity = 0.5;
+          handMat.blendType = pc.BLEND_NORMAL;
+        }
+        handMat.update();
+        hand.model.material = handMat;
+        arm.addChild(hand);
       }
-      handMat.update();
-      hand.model.material = handMat;
-      entity.addChild(hand);
-    }
 
-    // === NECK ===
-    const neck = new pc.Entity("Neck");
-    neck.addComponent("model", { type: "cylinder" });
-    neck.setLocalPosition(0, 1.5, 0);
-    neck.setLocalScale(0.15, 0.12, 0.15);
-    
-    const neckMat = new pc.StandardMaterial();
-    neckMat.diffuse = skinColor;
-    neckMat.specular = new pc.Color(0.15, 0.12, 0.1);
-    neckMat.shininess = 25;
-    if (!isAlive) {
-      neckMat.opacity = 0.5;
-      neckMat.blendType = pc.BLEND_NORMAL;
-    }
-    neckMat.update();
-    neck.model.material = neckMat;
-    entity.addChild(neck);
+      // === NECK ===
+      const neck = new pc.Entity("Neck");
+      neck.addComponent("model", { type: "cylinder" });
+      neck.setLocalPosition(0, 1.5, 0);
+      neck.setLocalScale(0.15, 0.12, 0.15);
+      
+      const neckMat = new pc.StandardMaterial();
+      neckMat.diffuse = skinColor;
+      neckMat.specular = new pc.Color(0.15, 0.12, 0.1);
+      neckMat.shininess = 25;
+      if (!isAlive) {
+        neckMat.opacity = 0.5;
+        neckMat.blendType = pc.BLEND_NORMAL;
+      }
+      neckMat.update();
+      neck.model.material = neckMat;
+      entity.addChild(neck);
+      entity.parts.neck = neck;
 
-    // === HEAD (slightly oval) ===
-    const head = new pc.Entity("Head");
-    head.addComponent("model", { type: "sphere" });
-    head.setLocalPosition(0, 1.85, 0);
-    head.setLocalScale(0.5, 0.55, 0.45);
-    
-    const headMat = new pc.StandardMaterial();
-    headMat.diffuse = skinColor;
-    headMat.specular = new pc.Color(0.15, 0.12, 0.1);
-    headMat.shininess = 25;
-    if (!isAlive) {
-      headMat.opacity = 0.5;
-      headMat.blendType = pc.BLEND_NORMAL;
-    }
-    headMat.update();
-    head.model.material = headMat;
-    entity.addChild(head);
+      // === HEAD (slightly oval) ===
+      const head = new pc.Entity("Head");
+      head.addComponent("model", { type: "sphere" });
+      head.setLocalPosition(0, 1.85, 0);
+      head.setLocalScale(0.5, 0.55, 0.45);
+      
+      const headMat = new pc.StandardMaterial();
+      headMat.diffuse = skinColor;
+      headMat.specular = new pc.Color(0.15, 0.12, 0.1);
+      headMat.shininess = 25;
+      if (!isAlive) {
+        headMat.opacity = 0.5;
+        headMat.blendType = pc.BLEND_NORMAL;
+      }
+      headMat.update();
+      head.model.material = headMat;
+      entity.addChild(head);
+      entity.parts.head = head;
 
     // === HAIR ===
     const hair = new pc.Entity("Hair");
@@ -1263,7 +1393,7 @@ export default class Village3DPlayCanvas {
         // Eye white (sclera)
         const eyeWhite = new pc.Entity(`EyeWhite-${i}`);
         eyeWhite.addComponent("model", { type: "sphere" });
-        eyeWhite.setLocalPosition(eyeX, 1.9, 0.2);
+        eyeWhite.setLocalPosition(eyeX, 0.05, 0.2);
         eyeWhite.setLocalScale(0.1, 0.08, 0.06);
 
         const eyeWhiteMat = new pc.StandardMaterial();
@@ -1271,12 +1401,12 @@ export default class Village3DPlayCanvas {
         eyeWhiteMat.shininess = 60;
         eyeWhiteMat.update();
         eyeWhite.model.material = eyeWhiteMat;
-        entity.addChild(eyeWhite);
+        head.addChild(eyeWhite);
 
         // Iris (colored part)
         const iris = new pc.Entity(`Iris-${i}`);
         iris.addComponent("model", { type: "sphere" });
-        iris.setLocalPosition(eyeX, 1.9, 0.24);
+        iris.setLocalPosition(eyeX, 0.05, 0.24);
         iris.setLocalScale(0.055, 0.055, 0.03);
 
         const irisMat = new pc.StandardMaterial();
@@ -1293,24 +1423,24 @@ export default class Village3DPlayCanvas {
         irisMat.shininess = 80;
         irisMat.update();
         iris.model.material = irisMat;
-        entity.addChild(iris);
+        head.addChild(iris);
 
         // Pupil (black center)
         const pupil = new pc.Entity(`Pupil-${i}`);
         pupil.addComponent("model", { type: "sphere" });
-        pupil.setLocalPosition(eyeX, 1.9, 0.26);
+        pupil.setLocalPosition(eyeX, 0.05, 0.26);
         pupil.setLocalScale(0.03, 0.03, 0.02);
 
         const pupilMat = new pc.StandardMaterial();
         pupilMat.diffuse = new pc.Color(0.05, 0.05, 0.05);
         pupilMat.update();
         pupil.model.material = pupilMat;
-        entity.addChild(pupil);
+        head.addChild(pupil);
 
         // Eye highlight/reflection
         const eyeHighlight = new pc.Entity(`EyeHighlight-${i}`);
         eyeHighlight.addComponent("model", { type: "sphere" });
-        eyeHighlight.setLocalPosition(eyeX + 0.015, 1.91, 0.265);
+        eyeHighlight.setLocalPosition(eyeX + 0.015, 0.06, 0.265);
         eyeHighlight.setLocalScale(0.012, 0.012, 0.008);
 
         const highlightMat = new pc.StandardMaterial();
@@ -1318,14 +1448,14 @@ export default class Village3DPlayCanvas {
         highlightMat.emissive = new pc.Color(0.5, 0.5, 0.5);
         highlightMat.update();
         eyeHighlight.model.material = highlightMat;
-        entity.addChild(eyeHighlight);
+        head.addChild(eyeHighlight);
       }
 
       // --- EYEBROWS ---
       for (let i = 0; i < 2; i++) {
         const eyebrow = new pc.Entity(`Eyebrow-${i}`);
         eyebrow.addComponent("model", { type: "box" });
-        eyebrow.setLocalPosition(i === 0 ? -0.12 : 0.12, 1.98, 0.2);
+        eyebrow.setLocalPosition(i === 0 ? -0.12 : 0.12, 0.13, 0.2);
         eyebrow.setLocalScale(0.1, 0.02, 0.04);
         eyebrow.setLocalEulerAngles(0, 0, i === 0 ? 5 : -5);
         
@@ -1334,13 +1464,13 @@ export default class Village3DPlayCanvas {
         eyebrowMat.shininess = 40;
         eyebrowMat.update();
         eyebrow.model.material = eyebrowMat;
-        entity.addChild(eyebrow);
+        head.addChild(eyebrow);
       }
 
       // --- NOSE ---
       const nose = new pc.Entity("Nose");
       nose.addComponent("model", { type: "box" });
-      nose.setLocalPosition(0, 1.82, 0.23);
+      nose.setLocalPosition(0, -0.03, 0.23);
       nose.setLocalScale(0.05, 0.08, 0.06);
       nose.setLocalEulerAngles(15, 0, 0);
       
@@ -1350,12 +1480,12 @@ export default class Village3DPlayCanvas {
       noseMat.shininess = 25;
       noseMat.update();
       nose.model.material = noseMat;
-      entity.addChild(nose);
+      head.addChild(nose);
 
       // --- MOUTH ---
       const mouth = new pc.Entity("Mouth");
       mouth.addComponent("model", { type: "box" });
-      mouth.setLocalPosition(0, 1.72, 0.2);
+      mouth.setLocalPosition(0, -0.13, 0.2);
       mouth.setLocalScale(0.12, 0.025, 0.03);
 
       const mouthMat = new pc.StandardMaterial();
@@ -1363,13 +1493,13 @@ export default class Village3DPlayCanvas {
       mouthMat.shininess = 50;
       mouthMat.update();
       mouth.model.material = mouthMat;
-      entity.addChild(mouth);
+      head.addChild(mouth);
 
       // --- EARS ---
       for (let i = 0; i < 2; i++) {
         const ear = new pc.Entity(`Ear-Human-${i}`);
         ear.addComponent("model", { type: "sphere" });
-        ear.setLocalPosition(i === 0 ? -0.26 : 0.26, 1.85, 0);
+        ear.setLocalPosition(i === 0 ? -0.26 : 0.26, 0, 0);
         ear.setLocalScale(0.06, 0.1, 0.04);
         
         const earMat = new pc.StandardMaterial();
@@ -1378,7 +1508,7 @@ export default class Village3DPlayCanvas {
         earMat.shininess = 25;
         earMat.update();
         ear.model.material = earMat;
-        entity.addChild(ear);
+        head.addChild(ear);
       }
     } else {
       // Dead players get X eyes
@@ -1388,7 +1518,7 @@ export default class Village3DPlayCanvas {
         // X mark for dead eyes
         const xLine1 = new pc.Entity(`DeadEyeX1-${i}`);
         xLine1.addComponent("model", { type: "box" });
-        xLine1.setLocalPosition(eyeX, 1.9, 0.23);
+        xLine1.setLocalPosition(eyeX, 0.05, 0.23);
         xLine1.setLocalScale(0.08, 0.015, 0.015);
         xLine1.setLocalEulerAngles(0, 0, 45);
 
@@ -1398,15 +1528,15 @@ export default class Village3DPlayCanvas {
         deadEyeMat.blendType = pc.BLEND_NORMAL;
         deadEyeMat.update();
         xLine1.model.material = deadEyeMat;
-        entity.addChild(xLine1);
+        head.addChild(xLine1);
 
         const xLine2 = new pc.Entity(`DeadEyeX2-${i}`);
         xLine2.addComponent("model", { type: "box" });
-        xLine2.setLocalPosition(eyeX, 1.9, 0.23);
+        xLine2.setLocalPosition(eyeX, 0.05, 0.23);
         xLine2.setLocalScale(0.08, 0.015, 0.015);
         xLine2.setLocalEulerAngles(0, 0, -45);
         xLine2.model.material = deadEyeMat;
-        entity.addChild(xLine2);
+        head.addChild(xLine2);
       }
     }
 
@@ -1860,6 +1990,7 @@ export default class Village3DPlayCanvas {
 
   addAmorFeatures(entity, roleColor) {
     // Cupid wings (on back)
+    entity.parts.wings = [];
     for (let i = 0; i < 2; i++) {
       const wing = new pc.Entity(`Wing-${i}`);
       wing.addComponent("model", { type: "box" });
@@ -1874,6 +2005,7 @@ export default class Village3DPlayCanvas {
       wingMat.update();
       wing.model.material = wingMat;
       entity.addChild(wing);
+      entity.parts.wings.push(wing);
     }
 
     // Bow (weapon held in hand)
@@ -3022,9 +3154,12 @@ export default class Village3DPlayCanvas {
     // Apply to material
     const mat = new pc.StandardMaterial();
     mat.diffuseMap = texture;
-    mat.emissive = new pc.Color(0.3, 0.3, 0.3);
-    mat.opacity = isAlive ? 1.0 : 0.5;
+    mat.emissive = new pc.Color(1, 1, 1);
+    mat.emissiveMap = texture;
+    mat.opacity = isAlive ? 1.0 : 0.6;
     mat.blendType = pc.BLEND_NORMAL;
+    mat.cull = pc.CULLFACE_NONE; // Double-sided so visible from both directions
+    mat.depthWrite = false; // Helps with transparency sorting
     mat.update();
 
     label.model.material = mat;
@@ -3040,9 +3175,13 @@ export default class Village3DPlayCanvas {
       this.light.light.color = new pc.Color(0.15, 0.2, 0.4); // Deep moonlight
       this.light.light.intensity = 0.3;
       this.fillLight.light.intensity = 0.1;
-      this.app.scene.ambientLight = new pc.Color(0.03, 0.03, 0.08);
-      this.app.scene.fogColor = new pc.Color(0.02, 0.02, 0.05);
-      this.app.scene.fogDensity = 0.03;
+      try {
+        this.app.scene.ambientLight = new pc.Color(0.03, 0.03, 0.08);
+        this.app.scene.fogColor = new pc.Color(0.02, 0.02, 0.05);
+        this.app.scene.fogDensity = 0.03;
+      } catch (e) {
+        console.warn("Could not set scene properties in setTimeOfDay:", e);
+      }
       this.fireLight.enabled = true;
 
       // Show fireflies
@@ -3062,9 +3201,13 @@ export default class Village3DPlayCanvas {
       this.light.light.color = new pc.Color(1, 0.95, 0.85); // Warm sunlight
       this.light.light.intensity = 1.2;
       this.fillLight.light.intensity = 0.4;
-      this.app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.55);
-      this.app.scene.fogColor = new pc.Color(0.7, 0.8, 0.9);
-      this.app.scene.fogDensity = 0.005;
+      try {
+        this.app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.55);
+        this.app.scene.fogColor = new pc.Color(0.7, 0.8, 0.9);
+        this.app.scene.fogDensity = 0.005;
+      } catch (e) {
+        console.warn("Could not set scene properties in setTimeOfDay:", e);
+      }
       this.fireLight.enabled = false; // Fire less visible during day
 
       // Hide fireflies
@@ -3083,9 +3226,9 @@ export default class Village3DPlayCanvas {
   }
 
   resetCamera() {
-    this.cameraAngle = this.defaultCameraAngle;
-    this.cameraHeight = this.defaultCameraHeight;
-    this.cameraRadius = this.defaultCameraRadius;
+    this.targetCameraAngle = this.defaultCameraAngle;
+    this.targetCameraHeight = this.defaultCameraHeight;
+    this.targetCameraRadius = this.defaultCameraRadius;
   }
 
   setupInput() {
@@ -3114,9 +3257,9 @@ export default class Village3DPlayCanvas {
         const dx = event.x - lastMouseX;
         const dy = event.y - lastMouseY;
 
-        this.cameraAngle -= dx * 0.01;
-        this.cameraHeight += dy * 0.05;
-        this.cameraHeight = pc.math.clamp(this.cameraHeight, 5, 35);
+        this.targetCameraAngle -= dx * 0.01;
+        this.targetCameraHeight += dy * 0.05;
+        this.targetCameraHeight = pc.math.clamp(this.targetCameraHeight, 5, 35);
 
         lastMouseX = event.x;
         lastMouseY = event.y;
@@ -3127,8 +3270,8 @@ export default class Village3DPlayCanvas {
     this.app.mouse.on(pc.EVENT_MOUSEWHEEL, (event) => {
       // Prevent page scrolling
       event.event.preventDefault();
-      this.cameraRadius += event.wheel * 0.5;
-      this.cameraRadius = pc.math.clamp(this.cameraRadius, 15, 40);
+      this.targetCameraRadius += event.wheel * 0.5;
+      this.targetCameraRadius = pc.math.clamp(this.targetCameraRadius, 10, 50);
     });
 
     // Touch support
@@ -3151,15 +3294,25 @@ export default class Village3DPlayCanvas {
           const dx = touch.x - lastMouseX;
           const dy = touch.y - lastMouseY;
 
-          this.cameraAngle -= dx * 0.01;
-          this.cameraHeight += dy * 0.05;
-          this.cameraHeight = pc.math.clamp(this.cameraHeight, 5, 35);
+          this.targetCameraAngle -= dx * 0.01;
+          this.targetCameraHeight += dy * 0.05;
+          this.targetCameraHeight = pc.math.clamp(this.targetCameraHeight, 5, 35);
 
           lastMouseX = touch.x;
           lastMouseY = touch.y;
         }
       });
     }
+
+    this.app.keyboard.on(pc.EVENT_KEYDOWN, (event) => {
+      if (event.key === pc.KEY_R) {
+        const activeElement = document.activeElement;
+        if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
+          return;
+        }
+        this.resetCamera();
+      }
+    });
   }
 
   pick(x, y) {
@@ -3177,33 +3330,66 @@ export default class Village3DPlayCanvas {
     let closestDist = Infinity;
     let closestPlayerId = null;
 
+    // Use a slightly more accurate picking with ray-box or ray-cylinder if possible
+    // For now, let's improve the manual check to use a bounding box approach
     this.playerEntities.forEach((entity, id) => {
-      // Simple bounding sphere check
       const pos = entity.getPosition();
-      const radius = 2.0; // Larger radius for easier clicking
-
-      // Ray-Sphere intersection
-      const v = new pc.Vec3().sub2(pos, from);
       const dir = new pc.Vec3().sub2(to, from).normalize();
-      const t = v.dot(dir);
+
+      // Simple ray-cylinder approximation (since players are standing)
+      // Project ray onto XZ plane
+      const rayStart2D = new pc.Vec2(from.x, from.z);
+      const rayDir2D = new pc.Vec2(dir.x, dir.z);
+      const dir2DLength = rayDir2D.length();
+      
+      if (dir2DLength < 0.001) return; // Vertical ray, handled by direct distance if needed
+      
+      rayDir2D.normalize();
+      const circleCenter2D = new pc.Vec2(pos.x, pos.z);
+      const radius = 1.5; // Increased radius for easier clicking
+
+      const v = new pc.Vec2().sub2(circleCenter2D, rayStart2D);
+      const t = v.dot(rayDir2D);
 
       if (t > 0) {
-        const p = new pc.Vec3().copy(dir).scale(t).add(from);
-        const distSq = p.sub(pos).lengthSq();
+        const p = new pc.Vec2().copy(rayDir2D).scale(t).add(rayStart2D);
+        const distSq = new pc.Vec2().sub2(p, circleCenter2D).lengthSq();
 
         if (distSq < radius * radius) {
-          const dist = t; // Distance from camera
-          if (dist < closestDist) {
-            closestDist = dist;
-            closestPlayerId = id;
+          // Now check Y height
+          const hitY = from.y + dir.y * (t / dir2DLength);
+          if (hitY >= pos.y && hitY <= pos.y + 3.0) {
+            const dist = t;
+            if (dist < closestDist) {
+              closestDist = dist;
+              closestPlayerId = id;
+            }
           }
         }
       }
     });
 
     if (closestPlayerId !== null && this.onPlayerClick) {
+      console.log(`[Village3D] Picked player: ${closestPlayerId}`);
       this.onPlayerClick(closestPlayerId);
+      this.zoomToPlayer(closestPlayerId);
     }
+  }
+
+  zoomToPlayer(playerId) {
+    const entity = this.playerEntities.get(playerId);
+    if (!entity) return;
+
+    const pos = entity.getPosition();
+    const angle = Math.atan2(pos.x, pos.z);
+
+    // Zoom in on the player
+    this.targetCameraAngle = angle;
+    this.targetCameraRadius = 10; // Closer
+    this.targetCameraHeight = 5; // Lower to see the player better
+
+    // Auto-reset after a delay? Or just stay there?
+    // Let's stay there for now, user can zoom out manually.
   }
 
   highlightPlayer(playerId, color) {
@@ -3274,14 +3460,41 @@ export default class Village3DPlayCanvas {
   }
 
   update(dt) {
+    // Keyboard Controls
+    // Only move if we are not in an input field
+    const activeElement = document.activeElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || (activeElement.isContentEditable && activeElement.tagName !== 'CANVAS'))) {
+      return;
+    }
+    
+    if (this.app.keyboard.isPressed(pc.KEY_LEFT) || this.app.keyboard.isPressed(pc.KEY_A)) {
+      this.targetCameraAngle += 2 * dt;
+    }
+    if (this.app.keyboard.isPressed(pc.KEY_RIGHT) || this.app.keyboard.isPressed(pc.KEY_D)) {
+      this.targetCameraAngle -= 2 * dt;
+    }
+    if (this.app.keyboard.isPressed(pc.KEY_UP) || this.app.keyboard.isPressed(pc.KEY_W)) {
+      this.targetCameraRadius -= 10 * dt;
+    }
+    if (this.app.keyboard.isPressed(pc.KEY_DOWN) || this.app.keyboard.isPressed(pc.KEY_S)) {
+      this.targetCameraRadius += 10 * dt;
+    }
+    
+    this.targetCameraRadius = pc.math.clamp(this.targetCameraRadius, 5, 50);
+
+    // Smooth camera rotation and zoom
+    this.cameraAngle = pc.math.lerp(this.cameraAngle, this.targetCameraAngle, dt * 8);
+    this.cameraHeight = pc.math.lerp(this.cameraHeight, this.targetCameraHeight, dt * 8);
+    this.cameraRadius = pc.math.lerp(this.cameraRadius, this.targetCameraRadius, dt * 8);
+
     // Update Camera Position
     const x = Math.sin(this.cameraAngle) * this.cameraRadius;
     const z = Math.cos(this.cameraAngle) * this.cameraRadius;
 
-    // Smooth camera movement
+    // Smooth camera movement (positional lerp)
     const currentPos = this.camera.getPosition();
     const targetPos = new pc.Vec3(x, this.cameraHeight, z);
-    const newPos = new pc.Vec3().lerp(currentPos, targetPos, dt * 5);
+    const newPos = new pc.Vec3().lerp(currentPos, targetPos, dt * 10);
 
     this.camera.setPosition(newPos);
     this.camera.lookAt(0, 2, 0);
@@ -3311,8 +3524,9 @@ export default class Village3DPlayCanvas {
     }
 
     // Animate fireflies (night only)
-    if (this.isNight && this.fireflies) {
+    if (this.isNight && this.fireflies && this.fireflies.length > 0) {
       this.fireflies.forEach((f) => {
+        if (!f.entity || !f.entity.light) return;
         f.phase += dt * f.speed;
         const newAngle = f.angle + Math.sin(f.phase) * 0.5;
         const newRadius = f.radius + Math.cos(f.phase * 0.7) * 2;
@@ -3329,9 +3543,77 @@ export default class Village3DPlayCanvas {
       });
     }
 
-    // Make name labels always face camera
+    // Make name labels always face camera (billboard effect)
     this.playerLabels.forEach((label) => {
-      label.lookAt(this.camera.getPosition());
+      if (!label || !label.parent) return;
+
+      // Get world position of label
+      const labelPos = label.getPosition();
+      const cameraPos = this.camera.getPosition();
+
+      // Calculate direction from label to camera (only horizontal for upright billboard)
+      const dx = cameraPos.x - labelPos.x;
+      const dz = cameraPos.z - labelPos.z;
+      const angle = Math.atan2(dx, dz) * (180 / Math.PI);
+
+      // Set rotation: -90 on X to make plane vertical, then Y rotation to face camera
+      label.setLocalEulerAngles(-90, angle, 0);
+    });
+
+    // Animate Players
+    this.playerEntities.forEach((entity) => {
+      if (!entity.animState) return;
+
+      const anim = entity.animState;
+      anim.time += dt * anim.idleSpeed;
+      
+      const isAlive = entity.playerData ? entity.playerData.ist_am_leben : true;
+
+      if (isAlive && entity.parts) {
+        // 1. Breathing (subtle scaling of torso)
+        if (entity.parts.torso) {
+          const breathing = Math.sin(anim.time * 2) * 0.02 + 1;
+          entity.parts.torso.setLocalScale(0.6 * breathing, 0.8, 0.35 * breathing);
+        }
+
+        // 2. Head Movement (idle looking around)
+        if (entity.parts.head) {
+          const headYaw = Math.sin(anim.time * 0.5) * 15;
+          const headPitch = Math.cos(anim.time * 0.8) * 5;
+          entity.parts.head.setLocalEulerAngles(headPitch, headYaw, 0);
+        }
+
+        // 3. Arm Swaying
+        if (entity.parts.arms) {
+          entity.parts.arms.forEach((armPivot, i) => {
+            const side = i === 0 ? 1 : -1;
+            const sway = Math.sin(anim.time * 1.5) * 5;
+            armPivot.setLocalEulerAngles(sway, 0, side * 5);
+          });
+        }
+
+        // 4. Subtle body swaying
+        const bodySway = Math.sin(anim.time * 0.7) * 0.05;
+        const bodyLean = Math.cos(anim.time * 0.4) * 1;
+        entity.setLocalEulerAngles(0, entity.getLocalEulerAngles().y, bodyLean);
+
+        // 5. Special Accessory Animations
+        if (entity.parts.wings) {
+          entity.parts.wings.forEach((wing, i) => {
+            const side = i === 0 ? 1 : -1;
+            const flap = Math.sin(anim.time * 3) * 10;
+            wing.setLocalEulerAngles(0, side * (35 + flap), side * (-25));
+          });
+        }
+      } else if (!isAlive && entity.parts) {
+        // Dead players have subtle "ghostly" floating if alive is false
+        const float = Math.sin(anim.time * 0.5) * 0.1;
+        entity.setLocalPosition(
+          entity.getLocalPosition().x,
+          float,
+          entity.getLocalPosition().z
+        );
+      }
     });
   }
 

@@ -54,6 +54,31 @@ with app.app_context():
     db.create_all()
 
 
+# Cleanup Task starten
+def start_cleanup_task():
+    """Startet den Hintergrund-Task zur Bereinigung alter Spiele"""
+    try:
+        import gevent
+        from cleanup import cleanup_old_games
+
+        def run_cleanup():
+            print("[System] Cleanup-Task gestartet.")
+            # Einmal beim Start ausführen
+            cleanup_old_games(app, max_age_hours=24)
+            while True:
+                gevent.sleep(3600)  # Warte 1 Stunde
+                cleanup_old_games(app, max_age_hours=24)
+
+        gevent.spawn(run_cleanup)
+    except ImportError:
+        print("[System] Warnung: Gevent nicht verfügbar, Cleanup-Task deaktiviert.")
+    except Exception as e:
+        print(f"[System] Fehler beim Starten des Cleanup-Tasks: {e}")
+
+
+start_cleanup_task()
+
+
 # ============================================================================
 # KONTEXT-PROZESSOR - Globale Template-Variablen
 # ============================================================================
@@ -63,6 +88,7 @@ with app.app_context():
 def inject_globals():
     """Stellt globale Variablen fuer alle Templates bereit"""
     return {
+        "debug": app.debug,
         "spiel_name": SPIEL_NAME,
         "alle_rollen": ROLLEN,
         "alle_teams": TEAMS,
@@ -705,12 +731,19 @@ def handle_spiel_starten(data):
 def handle_phase_weiter():
     """Wechselt zur naechsten Phase (Erzaehler)"""
     spieler = hole_aktuellen_spieler()
-    if not spieler or not spieler.ist_erzaehler:
-        emit("fehler", {"nachricht": "Nur der Erzaehler kann die Phase wechseln"})
+    if not spieler:
+        emit("fehler", {"nachricht": "Nicht angemeldet"})
         return
 
     raum = db.session.get(Raum, spieler.raum_id)
     if not raum:
+        return
+
+    # Im Auto-Modus darf jeder (oder nur der Creator?) die Phase weiterschalten,
+    # bzw. es wird vom Client automatisch getriggert.
+    # Hier erlauben wir es jedem Spieler im Raum, wenn der Modus 'auto' ist.
+    if raum.erzaehler_modus != "auto" and not spieler.ist_erzaehler:
+        emit("fehler", {"nachricht": "Nur der Erzaehler kann die Phase wechseln"})
         return
 
     alte_phase = raum.aktuelle_phase

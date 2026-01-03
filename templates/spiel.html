@@ -874,6 +874,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   const socket = io();
   const raumCode = "{{ raum.code }}";
   const spielerId = {{ spieler.id }};
+  const istAdmin = {{ 'true' if raum.erzaehler_id == spieler.id else 'false' }};
   const spielerRolle = "{{ spieler.rolle }}";
   const spielerTeam = "{{ rolle_info.team if rolle_info else '' }}";
   const istErzaehler = {{ 'true' if spieler.ist_erzaehler else 'false' }};
@@ -1215,7 +1216,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       const baseDuration = audioPath ? 12000 : 4000;
       let removeTimeout = setTimeout(() => {
           notification.style.animation = 'fadeOut 0.4s ease-out';
-          setTimeout(() => notification.remove(), 400);
+          setTimeout(() => {
+              notification.remove();
+              if (erzaehlerModus === 'auto' && istAdmin) {
+                  console.log('[Auto-Progression] Timeout reached, going to next phase');
+                  naechstePhase();
+              }
+          }, 400);
       }, baseDuration);
 
       // If audio, wait for it to finish instead
@@ -1225,7 +1232,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               clearTimeout(removeTimeout);
               setTimeout(() => {
                   notification.style.animation = 'fadeOut 0.4s ease-out';
-                  setTimeout(() => notification.remove(), 400);
+                  setTimeout(() => {
+                      notification.remove();
+                      if (erzaehlerModus === 'auto' && istAdmin) {
+                          console.log('[Auto-Progression] Audio ended, going to next phase');
+                          naechstePhase();
+                      }
+                  }, 400);
               }, 1500);
           });
       }

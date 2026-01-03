@@ -587,6 +587,25 @@ spiel_name }}{% endblock %} {% block content %}
   socket.emit("raum_beitreten", { code: raumCode });
 
   // Spielerliste aktualisieren
+  function updateSpielerListe(spielerListe) {
+    const container = document.getElementById("spieler-liste");
+    if (!container) return;
+    
+    container.innerHTML = "";
+    spielerListe.forEach((spieler) => {
+      addSpielerToList(spieler);
+    });
+    
+    updateSpielerAnzahl();
+    updateStartButton();
+    updateRollenVorschau();
+    
+    // Sitzordnung aktualisieren falls vorhanden
+    if (typeof initSitzordnungFromSpieler === "function") {
+      initSitzordnungFromSpieler();
+    }
+  }
+
   socket.on("spieler_liste", function (data) {
     updateSpielerListe(data.spieler);
   });

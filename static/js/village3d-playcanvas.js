@@ -168,7 +168,7 @@ export default class Village3DPlayCanvas {
     ground.addComponent("model", {
       type: "plane",
     });
-    
+
     // Smaller ground in lobby mode
     const groundSize = this.isLobbyMode ? 30 : 80;
     ground.setLocalScale(groundSize, 1, groundSize);
@@ -683,8 +683,7 @@ export default class Village3DPlayCanvas {
       // Lobby mode: use blue for all players so they're visible
       roleColor = new pc.Color(0.3, 0.5, 0.8);
     } else {
-      roleColor =
-        this.roleColors[player.rolle] || this.roleColors["default"];
+      roleColor = this.roleColors[player.rolle] || this.roleColors["default"];
     }
 
     // Body (more detailed)

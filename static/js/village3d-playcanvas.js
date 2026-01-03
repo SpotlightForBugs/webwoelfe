@@ -1756,7 +1756,13 @@ export default class Village3DPlayCanvas {
     ctx.lineTo(canvas.width - 10 - 15, 10);
     ctx.arcTo(canvas.width - 10, 10, canvas.width - 10, 10 + 15, 15);
     ctx.lineTo(canvas.width - 10, canvas.height - 10 - 15);
-    ctx.arcTo(canvas.width - 10, canvas.height - 10, canvas.width - 10 - 15, canvas.height - 10, 15);
+    ctx.arcTo(
+      canvas.width - 10,
+      canvas.height - 10,
+      canvas.width - 10 - 15,
+      canvas.height - 10,
+      15,
+    );
     ctx.lineTo(10 + 15, canvas.height - 10);
     ctx.arcTo(10, canvas.height - 10, 10, canvas.height - 10 - 15, 15);
     ctx.lineTo(10, 10 + 15);

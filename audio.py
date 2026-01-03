@@ -218,7 +218,9 @@ async def text_zu_audio(
             return str(elevenlabs_datei)
 
         # Versuche ElevenLabs zu generieren
-        result = text_zu_audio_elevenlabs(text, stil=stil, force_regenerate=force_regenerate)
+        result = text_zu_audio_elevenlabs(
+            text, stil=stil, force_regenerate=force_regenerate
+        )
         if result:
             return result
 
@@ -422,7 +424,11 @@ async def generiere_erzaehler_audio_cache():
     for event_id, event_info in ERZAEHLER_EVENTS.items():
         text = event_info.get("text", "")
         if text and "{" not in text:  # Nur statische Texte
-            stil = "dramatisch" if "werwolf" in event_id.lower() or "tot" in text.lower() else "normal"
+            stil = (
+                "dramatisch"
+                if "werwolf" in event_id.lower() or "tot" in text.lower()
+                else "normal"
+            )
             alle_texte.append((event_id, text, stil))
 
     print(f"Gefunden: {len(alle_texte)} Texte zu generieren")

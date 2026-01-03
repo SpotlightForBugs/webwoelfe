@@ -160,8 +160,8 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
 
       // Online-Modus auswählen (automatischer Erzähler)
       // Dies ist der Standard, aber wir stellen sicher, dass er ausgewählt ist
-      const modusSelect = erzaehlerPage.locator('#modus-select');
-      await modusSelect.selectOption('online');
+      const modusSelect = erzaehlerPage.locator("#modus-select");
+      await modusSelect.selectOption("online");
       console.log("✓ Online-Modus mit automatischem Erzähler ausgewählt");
 
       // Raum erstellen

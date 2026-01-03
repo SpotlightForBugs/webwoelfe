@@ -703,12 +703,18 @@ def handle_raum_beitreten(data):
             )
 
             # Online-Modus: Sende Erzählung für aktuelle Phase wenn Spiel läuft
-            if raum.modus == "online" and raum.spiel_gestartet and raum.aktuelle_phase in ERZAEHLER_TEXTE:
+            if (
+                raum.modus == "online"
+                and raum.spiel_gestartet
+                and raum.aktuelle_phase in ERZAEHLER_TEXTE
+            ):
                 erzaehler_info = ERZAEHLER_TEXTE[raum.aktuelle_phase]
                 erzaehlung_text = erzaehler_info.get("text", "")
                 audio_path = None
                 if erzaehlung_text:
-                    audio_path = generiere_erzaehler_audio(erzaehlung_text, stil="normal")
+                    audio_path = generiere_erzaehler_audio(
+                        erzaehlung_text, stil="normal"
+                    )
                 emit("erzaehlung", {"text": erzaehlung_text, "audio": audio_path})
 
 
@@ -753,19 +759,28 @@ def handle_spiel_starten(data):
                 erzaehlung_text = erzaehler_info.get("text", "")
                 audio_path = None
                 if erzaehlung_text:
-                    audio_path = generiere_erzaehler_audio(erzaehlung_text, stil="normal")
+                    audio_path = generiere_erzaehler_audio(
+                        erzaehlung_text, stil="normal"
+                    )
                 socketio.emit(
-                    "erzaehlung", {"text": erzaehlung_text, "audio": audio_path}, room=raum.code
+                    "erzaehlung",
+                    {"text": erzaehlung_text, "audio": audio_path},
+                    room=raum.code,
                 )
 
             # Starte automatische Phasen-Progression
             import threading
+
             def auto_advance_initial():
                 import time
+
                 time.sleep(5)  # 5 Sekunden für Rollen-Verteilung
                 with app.app_context():
                     raum_aktuell = db.session.get(Raum, raum.id)
-                    if raum_aktuell and raum_aktuell.aktuelle_phase == "rollen_verteilt":
+                    if (
+                        raum_aktuell
+                        and raum_aktuell.aktuelle_phase == "rollen_verteilt"
+                    ):
                         _wechsel_phase_intern(raum_aktuell)
 
             threading.Thread(target=auto_advance_initial, daemon=True).start()
@@ -877,15 +892,19 @@ def _wechsel_phase_intern(raum):
         phase_bei_start = neue_phase
 
         import threading
+
         def auto_advance_fallback():
             import time
+
             # Warte auf Fallback-Timeout (falls Audio nicht abgespielt wird)
             time.sleep(PHASE_WECHSEL_DELAY)
             with app.app_context():
                 raum_aktuell = Raum.query.filter_by(code=raum_code).first()
                 if raum_aktuell and raum_aktuell.aktuelle_phase == phase_bei_start:
                     # Phase wurde noch nicht gewechselt (Audio-Event kam nicht an)
-                    log_ts(f"[Phase] Fallback-Timeout für {phase_bei_start}, wechsle Phase")
+                    log_ts(
+                        f"[Phase] Fallback-Timeout für {phase_bei_start}, wechsle Phase"
+                    )
                     _wechsel_phase_intern(raum_aktuell)
 
         threading.Thread(target=auto_advance_fallback, daemon=True).start()
@@ -1241,7 +1260,9 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     elif aktion_typ == "armor_verlieben":
         log_ts(f"[Aktion] armor_verlieben von {spieler.name} (Rolle: {spieler.rolle})")
         if spieler.rolle != "Amor" or raum.aktuelle_phase != "armor_phase":
-            log_ts(f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}")
+            log_ts(
+                f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}"
+            )
             return False
         if not spieler.armor_verliebt:
             log_ts(f"[Aktion] ABGELEHNT: armor_verliebt bereits False")
@@ -1483,7 +1504,8 @@ def pruefe_phase_abschluss(raum):
             _wechsel_phase_intern(raum)
             return
         alle_fertig = all(
-            game_logic.hat_spieler_gewaehlt(s, raum, "seherin_phase") for s in seherin_spieler
+            game_logic.hat_spieler_gewaehlt(s, raum, "seherin_phase")
+            for s in seherin_spieler
         )
         if alle_fertig:
             log_ts(f"[Phase] seherin_phase abgeschlossen, wechsle Phase")
@@ -1511,7 +1533,8 @@ def pruefe_phase_abschluss(raum):
             _wechsel_phase_intern(raum)
             return
         alle_fertig = all(
-            game_logic.hat_spieler_gewaehlt(h, raum, "heiler_phase") for h in heiler_spieler
+            game_logic.hat_spieler_gewaehlt(h, raum, "heiler_phase")
+            for h in heiler_spieler
         )
         if alle_fertig:
             log_ts(f"[Phase] heiler_phase abgeschlossen, wechsle Phase")

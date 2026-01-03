@@ -374,7 +374,7 @@ def naechste_phase(raum: Raum) -> str:
     phase_mapping = phasennamen_zu_rollen_mapping()
 
     # Spezielle Phasen-Logik
-    if raum.aktuelle_phase == "armor_phase":
+    if raum.aktuelle_phase == "amor_phase":
         # Armor nur in Runde 1
         if raum.runde > 1:
             naechste_idx = PHASEN.index("seherin_phase")

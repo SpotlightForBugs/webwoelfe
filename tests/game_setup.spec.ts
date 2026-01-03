@@ -99,6 +99,40 @@ function calculateWindowLayout(
   };
 }
 
+/**
+ * Positions and resizes a browser window for tiled display on Windows.
+ * Uses CDP (Chrome DevTools Protocol) for reliable window management.
+ */
+async function tileWindow(page: Page, index: number, total: number): Promise<void> {
+  const layout = calculateWindowLayout(index, total);
+
+  try {
+    // Get CDP session for direct window control
+    const cdpSession = await page.context().newCDPSession(page);
+
+    // Get the current window ID
+    const { windowId } = await cdpSession.send('Browser.getWindowForTarget');
+
+    // Set window bounds (position and size)
+    await cdpSession.send('Browser.setWindowBounds', {
+      windowId,
+      bounds: {
+        left: layout.x,
+        top: layout.y,
+        width: layout.width,
+        height: layout.height,
+        windowState: 'normal'
+      }
+    });
+  } catch (e) {
+    // Fallback to JavaScript window methods if CDP fails
+    await page.evaluate(({ x, y, w, h }) => {
+      window.moveTo(x, y);
+      window.resizeTo(w, h);
+    }, { x: layout.x, y: layout.y, w: layout.width, h: layout.height });
+  }
+}
+
 test.describe("Game Setup - Auto-Create and Stay Open", () => {
   test(`Setup game with ${PLAYER_COUNT} players`, async () => {
     const players: PlayerWindow[] = [];
@@ -131,17 +165,11 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
       // ============================================
       console.log("📝 Erstelle Raum...");
 
-      const layout0 = calculateWindowLayout(0, PLAYER_COUNT);
       const erzaehlerContext = await browser.newContext({ viewport: null });
       const erzaehlerPage = await erzaehlerContext.newPage();
 
-      // Fenster positionieren
-      await erzaehlerPage.evaluate(
-        ({ x, y }) => {
-          window.moveTo(x, y);
-        },
-        { x: layout0.x, y: layout0.y },
-      );
+      // Fenster positionieren und skalieren
+      await tileWindow(erzaehlerPage, 0, PLAYER_COUNT);
 
       // Zur Startseite navigieren
       await erzaehlerPage.goto(BASE_URL);
@@ -207,21 +235,15 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
           (i >= PLAYER_NAMES.length
             ? ` ${Math.floor(i / PLAYER_NAMES.length) + 1}`
             : "");
-        const layout = calculateWindowLayout(i, PLAYER_COUNT);
 
         // Verwende headless Browser wenn HL Flag gesetzt
         const targetBrowser = headlessBrowser || browser;
         const context = await targetBrowser.newContext({ viewport: null });
         const page = await context.newPage();
 
-        // Fenster positionieren (nur wenn nicht headless)
+        // Fenster positionieren und skalieren (nur wenn nicht headless)
         if (!HEADLESS_OTHERS) {
-          await page.evaluate(
-            ({ x, y }) => {
-              window.moveTo(x, y);
-            },
-            { x: layout.x, y: layout.y },
-          );
+          await tileWindow(page, i, PLAYER_COUNT);
         }
 
         // Zur Startseite

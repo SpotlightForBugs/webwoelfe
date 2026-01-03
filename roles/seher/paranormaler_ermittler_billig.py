@@ -61,6 +61,10 @@ class ParanormalerErmittlerbillig(Role):
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
 
+    def get_phase_name(self) -> str:
+        """Gibt den Namen der Nacht-Phase zurück."""
+        return "paranormal_billig_phase"
+
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"

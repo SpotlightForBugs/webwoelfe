@@ -1030,7 +1030,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       }
 
       // Amor kann 2 Spieler wählen
-      if (spielerRolle === 'Amor' && aktuellePhase === 'armor_phase') {
+      if (spielerRolle === 'Amor' && aktuellePhase === 'amor_phase') {
           if (selectedSpielerIds.includes(id)) {
               selectedSpielerIds = selectedSpielerIds.filter(i => i !== id);
               card.classList.remove('selected');
@@ -1063,7 +1063,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       // Nacht-Overlay
       const overlay = document.getElementById('nacht-overlay');
-      const nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'armor_phase'];
+      const nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'amor_phase'];
 
       if (nachtPhasen.includes(phase) && !sollteAktivSein()) {
           overlay.classList.add('aktiv');
@@ -1322,16 +1322,98 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   function sollteAktivSein() {
       if (istErzaehler) return true;
 
+      // Comprehensive mapping of phases to roles
       const phasenRollen = {
+          // Grundrollen
           'seherin_phase': 'Seherin',
           'werwolf_phase': 'Werwolf',
           'hexe_phase': 'Hexe',
-          'armor_phase': 'Amor'
+          'amor_phase': 'Amor',
+          'heiler_phase': 'Heiler',
+          'jaeger_phase': 'Jäger',
+          // Seher-Varianten
+          'seherlehrling_phase': 'Seherlehrling',
+          'aurenseherin_phase': 'Aurenseherin',
+          'medium_phase': 'Medium',
+          'tratschweib_phase': 'Tratschweib',
+          'paranormal_billig_phase': 'Paranormaler Ermittler (billig)',
+          'werwolfseherin_phase': 'Werwolfseherin',
+          'demoskopin_phase': 'Demoskopin',
+          'baerenbaendiger_phase': 'Bärenbändiger',
+          // Heiler-Varianten
+          'leibwaechter_phase': 'Leibwächter',
+          'prostituierte_phase': 'Prostituierte',
+          'hure_phase': 'Prostituierte',
+          'nutte_phase': 'Prostituierte',
+          'ergebene_magd_phase': 'Ergebene Magd',
+          'oma_phase': 'Oma',
+          // Hexe-Varianten
+          'hexenmeister_phase': 'Hexenmeister',
+          'giftmischerin_phase': 'Giftmischerin',
+          'kraeuterweib_phase': 'Kräuterweib',
+          'zauberer_phase': 'Zauberer',
+          'sandmann_phase': 'Sandmann',
+          'hahn_phase': 'Hahn',
+          // Jäger-Varianten
+          'kamikaze_phase': 'Kamikaze',
+          'prinz_phase': 'Prinz',
+          'koenig_phase': 'König',
+          'buddler_phase': 'Buddler',
+          'pyromane_phase': 'Pyromane',
+          'flammenmann_phase': 'Flammenmann',
+          'drachenbaendiger_phase': 'Drachenbändiger',
+          'gaukler_phase': 'Gaukler',
+          'inquisitor_phase': 'Inquisitor',
+          'tanklastwagenfahrer_phase': 'Tanklastwagenfahrer',
+          // Werwolf-Varianten
+          'einsamer_wolf_phase': 'Einsamer Wolf',
+          'urwolf_phase': 'Urwolf',
+          'weisser_wolf_phase': 'Weißer Wolf',
+          'mordlustiger_phase': 'Mordlustiger Werwolf',
+          'wildes_kind_phase': 'Wildes Kind',
+          'wolfsjunge_phase': 'Wolfsjunge',
+          'teenager_werwolf_phase': 'Teenager-Werwolf',
+          'polarwolf_phase': 'Polarwolf',
+          'lupin_phase': 'Lupin',
+          'wolf_im_schafspelz_phase': 'Wolf im Schafspelz',
+          // Böse Rollen
+          'vampir_phase': 'Vampir',
+          'zombie_phase': 'Zombie',
+          'floetenspieler_phase': 'Flötenspieler',
+          // Solo-Rollen
+          'henker_phase': 'Henker',
+          'selbstmoerder_phase': 'Selbstmörder',
+          // Erste-Nacht-Phasen
+          'dieb_phase': 'Dieb',
+          'doppelgaenger_phase': 'Doppelgänger',
+          'dunkler_priester_phase': 'Dunkler Priester',
+          'hund_phase': 'Hund',
+          // Dorfbewohner-Varianten
+          'zwei_schwestern_phase': 'Zwei Schwestern',
+          'drei_brueder_phase': 'Drei Brüder',
+          'freimaurer_phase': 'Freimaurer',
+          'tonks_phase': 'Tonks',
+          'alter_mann_phase': 'Alter Mann',
+          'griesgram_phase': 'Griesgram',
+          'jesus_phase': 'Jesus',
+          'dorfdepp_phase': 'Dorfdepp',
+          // Sonstige
+          'rabe_phase': 'Rabe',
+          'zahnarzt_phase': 'Zahnarzt',
+          'buergermeister_phase': 'Bürgermeister',
+          'engel_phase': 'Engel',
+          'gerber_phase': 'Gerber',
+          'kleines_maedchen_phase': 'Kleines Mädchen',
+          'putzfrau_phase': 'Putzfrau',
+          'suendenbock_phase': 'Sündenbock',
       };
 
+      // Special handling for wolf phases - all wolves can act
       if (aktuellePhase === 'werwolf_phase') {
           return spielerTeam === 'werwolf';
       }
+
+      // Check if player's role matches the current phase
       return phasenRollen[aktuellePhase] === spielerRolle;
   }
 
@@ -1352,7 +1434,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       if (!selectedSpielerId && selectedSpielerIds.length === 0) {
           html = '<p class="text-muted">Wähle einen Spieler</p>';
       } else {
-          // Phasen-spezifische Aktionen
+          // =================================================================
+          // GRUNDROLLEN
+          // =================================================================
           if (aktuellePhase === 'werwolf_phase' && spielerTeam === 'werwolf') {
               html = `<button class="btn btn-primary" onclick="aktion('werwolf_wahl')"><i class="fa-solid fa-paw"></i> Töten</button>`;
           } else if (aktuellePhase === 'seherin_phase' && spielerRolle === 'Seherin') {
@@ -1363,19 +1447,183 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   <button class="btn btn-primary" onclick="aktion('hexe_toeten')"><i class="fa-solid fa-skull-crossbones"></i> Vergiften</button>
                   <button class="btn btn-ghost" onclick="aktion('hexe_nichts')">Nichts tun</button>
               `;
-          } else if (aktuellePhase === 'armor_phase' && spielerRolle === 'Amor') {
+          } else if (aktuellePhase === 'amor_phase' && spielerRolle === 'Amor') {
               if (selectedSpielerIds.length === 2) {
                   html = `<button class="btn btn-primary" onclick="aktion('armor_verlieben')"><i class="fa-solid fa-heart"></i> Verlieben</button>`;
               } else {
                   html = `<p class="text-muted">Wähle 2 Spieler (${selectedSpielerIds.length}/2)</p>`;
               }
+          } else if (aktuellePhase === 'heiler_phase' && spielerRolle === 'Heiler') {
+              html = `<button class="btn btn-primary" onclick="aktion('heiler_schuetzen')"><i class="fa-solid fa-heart-pulse"></i> Schützen</button>`;
+          } else if (aktuellePhase === 'jaeger_phase' && spielerRolle === 'Jäger') {
+              html = `<button class="btn btn-primary" onclick="aktion('jaeger_schuss')"><i class="fa-solid fa-crosshairs"></i> Erschießen</button>`;
+
+          // =================================================================
+          // SEHER-VARIANTEN
+          // =================================================================
+          } else if (aktuellePhase === 'seherlehrling_phase' && spielerRolle === 'Seherlehrling') {
+              html = `<button class="btn btn-primary" onclick="aktion('sehen')"><i class="fa-solid fa-eye"></i> Sehen</button>`;
+          } else if (aktuellePhase === 'aurenseherin_phase' && spielerRolle === 'Aurenseherin') {
+              html = `<button class="btn btn-primary" onclick="aktion('sehen')"><i class="fa-solid fa-eye"></i> Aura sehen</button>`;
+          } else if (aktuellePhase === 'medium_phase' && spielerRolle === 'Medium') {
+              html = `<button class="btn btn-primary" onclick="aktion('sehen')"><i class="fa-solid fa-ghost"></i> Kontaktieren</button>`;
+          } else if (aktuellePhase === 'tratschweib_phase' && spielerRolle === 'Tratschweib') {
+              html = `<button class="btn btn-primary" onclick="aktion('sehen')"><i class="fa-solid fa-comments"></i> Vergleichen</button>`;
+          } else if (aktuellePhase === 'paranormal_billig_phase' && spielerRolle === 'Paranormaler Ermittler (billig)') {
+              html = `<button class="btn btn-primary" onclick="aktion('sehen')"><i class="fa-solid fa-eye-slash"></i> Sehen</button>`;
+          } else if (aktuellePhase === 'werwolfseherin_phase' && spielerRolle === 'Werwolfseherin') {
+              html = `<button class="btn btn-primary" onclick="aktion('sehen')"><i class="fa-solid fa-eye"></i> Sehen</button>`;
+          } else if (aktuellePhase === 'demoskopin_phase' && spielerRolle === 'Demoskopin') {
+              html = `<button class="btn btn-primary" onclick="aktion('sehen')"><i class="fa-solid fa-chart-pie"></i> Umfrage</button>`;
+          } else if (aktuellePhase === 'baerenbaendiger_phase' && spielerRolle === 'Bärenbändiger') {
+              html = `<button class="btn btn-primary" onclick="aktion('sehen')"><i class="fa-solid fa-paw"></i> Bär befragen</button>`;
+
+          // =================================================================
+          // HEILER-VARIANTEN
+          // =================================================================
+          } else if (aktuellePhase === 'leibwaechter_phase' && spielerRolle === 'Leibwächter') {
+              html = `<button class="btn btn-primary" onclick="aktion('schuetzen')"><i class="fa-solid fa-shield-halved"></i> Beschützen</button>`;
+          } else if ((aktuellePhase === 'prostituierte_phase' || aktuellePhase === 'hure_phase' || aktuellePhase === 'nutte_phase') && spielerRolle === 'Prostituierte') {
+              html = `
+                  <button class="btn btn-primary" onclick="aktion('besuchen')"><i class="fa-solid fa-bed"></i> Besuchen</button>
+                  <button class="btn btn-ghost" onclick="aktion('nichts')">Zuhause bleiben</button>
+              `;
+          } else if (aktuellePhase === 'ergebene_magd_phase' && spielerRolle === 'Ergebene Magd') {
+              html = `<button class="btn btn-primary" onclick="aktion('schuetzen')"><i class="fa-solid fa-hand-holding-heart"></i> Dienen</button>`;
+          } else if (aktuellePhase === 'oma_phase' && spielerRolle === 'Oma') {
+              html = `<button class="btn btn-primary" onclick="aktion('schuetzen')"><i class="fa-solid fa-cookie"></i> Kekse backen</button>`;
+
+          // =================================================================
+          // HEXE-VARIANTEN
+          // =================================================================
+          } else if (aktuellePhase === 'hexenmeister_phase' && spielerRolle === 'Hexenmeister') {
+              html = `<button class="btn btn-primary" onclick="aktion('verzaubern')"><i class="fa-solid fa-wand-magic-sparkles"></i> Verzaubern</button>`;
+          } else if (aktuellePhase === 'giftmischerin_phase' && spielerRolle === 'Giftmischerin') {
+              html = `<button class="btn btn-primary" onclick="aktion('vergiften')"><i class="fa-solid fa-flask"></i> Vergiften</button>`;
+          } else if (aktuellePhase === 'kraeuterweib_phase' && spielerRolle === 'Kräuterweib') {
+              html = `<button class="btn btn-primary" onclick="aktion('heilen')"><i class="fa-solid fa-seedling"></i> Kräuter geben</button>`;
+          } else if (aktuellePhase === 'zauberer_phase' && spielerRolle === 'Zauberer') {
+              html = `<button class="btn btn-primary" onclick="aktion('verzaubern')"><i class="fa-solid fa-hat-wizard"></i> Zaubern</button>`;
+          } else if (aktuellePhase === 'sandmann_phase' && spielerRolle === 'Sandmann') {
+              html = `<button class="btn btn-primary" onclick="aktion('einschlaefern')"><i class="fa-solid fa-moon"></i> Einschläfern</button>`;
+          } else if (aktuellePhase === 'hahn_phase' && spielerRolle === 'Hahn') {
+              html = `<button class="btn btn-primary" onclick="aktion('wecken')"><i class="fa-solid fa-sun"></i> Wecken</button>`;
+
+          // =================================================================
+          // JÄGER-VARIANTEN
+          // =================================================================
+          } else if (aktuellePhase === 'kamikaze_phase' && spielerRolle === 'Kamikaze') {
+              html = `<button class="btn btn-primary" onclick="aktion('schiessen')"><i class="fa-solid fa-bomb"></i> Explodieren</button>`;
+          } else if (aktuellePhase === 'prinz_phase' && spielerRolle === 'Prinz') {
+              html = `<button class="btn btn-primary" onclick="aktion('enthuellung')"><i class="fa-solid fa-crown"></i> Enthüllen</button>`;
+          } else if (aktuellePhase === 'koenig_phase' && spielerRolle === 'König') {
+              html = `<button class="btn btn-primary" onclick="aktion('waehlen')"><i class="fa-solid fa-crown"></i> Befehlen</button>`;
+          } else if (aktuellePhase === 'buddler_phase' && spielerRolle === 'Buddler') {
+              html = `<button class="btn btn-primary" onclick="aktion('graben')"><i class="fa-solid fa-shovel"></i> Ausgraben</button>`;
+          } else if (aktuellePhase === 'pyromane_phase' && spielerRolle === 'Pyromane') {
+              html = `<button class="btn btn-primary" onclick="aktion('anzuenden')"><i class="fa-solid fa-fire"></i> Anzünden</button>`;
+          } else if (aktuellePhase === 'flammenmann_phase' && spielerRolle === 'Flammenmann') {
+              html = `<button class="btn btn-primary" onclick="aktion('anzuenden')"><i class="fa-solid fa-fire-flame-curved"></i> Verbrennen</button>`;
+          } else if (aktuellePhase === 'drachenbaendiger_phase' && spielerRolle === 'Drachenbändiger') {
+              html = `<button class="btn btn-primary" onclick="aktion('angreifen')"><i class="fa-solid fa-dragon"></i> Drache angreifen</button>`;
+          } else if (aktuellePhase === 'gaukler_phase' && spielerRolle === 'Gaukler') {
+              html = `<button class="btn btn-primary" onclick="aktion('tauschen')"><i class="fa-solid fa-shuffle"></i> Rollen tauschen</button>`;
+          } else if (aktuellePhase === 'inquisitor_phase' && spielerRolle === 'Inquisitor') {
+              html = `<button class="btn btn-primary" onclick="aktion('untersuchen')"><i class="fa-solid fa-cross"></i> Untersuchen</button>`;
+          } else if (aktuellePhase === 'tanklastwagenfahrer_phase' && spielerRolle === 'Tanklastwagenfahrer') {
+              html = `<button class="btn btn-primary" onclick="aktion('fahren')"><i class="fa-solid fa-truck"></i> Überfahren</button>`;
+
+          // =================================================================
+          // WERWOLF-VARIANTEN
+          // =================================================================
+          } else if (aktuellePhase === 'einsamer_wolf_phase' && spielerRolle === 'Einsamer Wolf') {
+              html = `<button class="btn btn-primary" onclick="aktion('toeten')"><i class="fa-solid fa-paw"></i> Alleine töten</button>`;
+          } else if (aktuellePhase === 'urwolf_phase' && spielerRolle === 'Urwolf') {
+              html = `<button class="btn btn-primary" onclick="aktion('verwandeln')"><i class="fa-solid fa-virus"></i> Verwandeln</button>`;
+          } else if (aktuellePhase === 'weisser_wolf_phase' && spielerRolle === 'Weißer Wolf') {
+              html = `<button class="btn btn-primary" onclick="aktion('toeten')"><i class="fa-solid fa-skull"></i> Werwolf töten</button>`;
+          } else if (aktuellePhase === 'mordlustiger_phase' && spielerRolle === 'Mordlustiger Werwolf') {
+              html = `<button class="btn btn-primary" onclick="aktion('toeten')"><i class="fa-solid fa-skull-crossbones"></i> Extra töten</button>`;
+          } else if (aktuellePhase === 'wildes_kind_phase' && spielerRolle === 'Wildes Kind') {
+              html = `<button class="btn btn-primary" onclick="aktion('vorbild_waehlen')"><i class="fa-solid fa-child"></i> Vorbild wählen</button>`;
+          } else if (aktuellePhase === 'wolfsjunge_phase' && spielerRolle === 'Wolfsjunge') {
+              html = `<button class="btn btn-primary" onclick="aktion('toeten')"><i class="fa-solid fa-paw"></i> Angreifen</button>`;
+          } else if (aktuellePhase === 'teenager_werwolf_phase' && spielerRolle === 'Teenager-Werwolf') {
+              html = `<button class="btn btn-primary" onclick="aktion('toeten')"><i class="fa-solid fa-paw"></i> Angreifen</button>`;
+          } else if (aktuellePhase === 'polarwolf_phase' && spielerRolle === 'Polarwolf') {
+              html = `<button class="btn btn-primary" onclick="aktion('toeten')"><i class="fa-solid fa-snowflake"></i> Einfrieren</button>`;
+          } else if (aktuellePhase === 'lupin_phase' && spielerRolle === 'Lupin') {
+              html = `<button class="btn btn-primary" onclick="aktion('toeten')"><i class="fa-solid fa-moon"></i> Angreifen</button>`;
+          } else if (aktuellePhase === 'wolf_im_schafspelz_phase' && spielerRolle === 'Wolf im Schafspelz') {
+              html = `<button class="btn btn-primary" onclick="aktion('tarnen')"><i class="fa-solid fa-mask"></i> Tarnen</button>`;
+
+          // =================================================================
+          // BÖSE ROLLEN
+          // =================================================================
+          } else if (aktuellePhase === 'vampir_phase' && spielerRolle === 'Vampir') {
+              html = `<button class="btn btn-primary" onclick="aktion('infizieren')"><i class="fa-solid fa-droplet"></i> Beißen</button>`;
+          } else if (aktuellePhase === 'zombie_phase' && spielerRolle === 'Zombie') {
+              html = `<button class="btn btn-primary" onclick="aktion('infizieren')"><i class="fa-solid fa-biohazard"></i> Infizieren</button>`;
+          } else if (aktuellePhase === 'floetenspieler_phase' && spielerRolle === 'Flötenspieler') {
+              html = `<button class="btn btn-primary" onclick="aktion('verzaubern')"><i class="fa-solid fa-music"></i> Verzaubern</button>`;
+
+          // =================================================================
+          // SOLO-ROLLEN
+          // =================================================================
+          } else if (aktuellePhase === 'henker_phase' && spielerRolle === 'Henker') {
+              html = `<button class="btn btn-primary" onclick="aktion('markieren')"><i class="fa-solid fa-gavel"></i> Markieren</button>`;
+          } else if (aktuellePhase === 'selbstmoerder_phase' && spielerRolle === 'Selbstmörder') {
+              html = `<button class="btn btn-primary" onclick="aktion('sterben')"><i class="fa-solid fa-skull"></i> Sterben wollen</button>`;
+
+          // =================================================================
+          // ERSTE-NACHT-PHASEN
+          // =================================================================
+          } else if (aktuellePhase === 'dieb_phase' && spielerRolle === 'Dieb') {
+              html = `<button class="btn btn-primary" onclick="aktion('stehlen')"><i class="fa-solid fa-mask"></i> Rolle stehlen</button>`;
+          } else if (aktuellePhase === 'doppelgaenger_phase' && spielerRolle === 'Doppelgänger') {
+              html = `<button class="btn btn-primary" onclick="aktion('kopieren')"><i class="fa-solid fa-clone"></i> Kopieren</button>`;
+          } else if (aktuellePhase === 'dunkler_priester_phase' && spielerRolle === 'Dunkler Priester') {
+              html = `<button class="btn btn-primary" onclick="aktion('markieren')"><i class="fa-solid fa-cross"></i> Markieren</button>`;
+          } else if (aktuellePhase === 'hund_phase' && spielerRolle === 'Hund') {
+              html = `
+                  <button class="btn btn-primary" onclick="aktion('hund_werwolf')"><i class="fa-solid fa-paw"></i> Werwolf werden</button>
+                  <button class="btn btn-secondary" onclick="aktion('hund_dorf')"><i class="fa-solid fa-dog"></i> Dorfhund bleiben</button>
+              `;
+
+          // =================================================================
+          // DORFBEWOHNER-VARIANTEN (meist passiv, aber manche haben Aktionen)
+          // =================================================================
+          } else if (aktuellePhase === 'tonks_phase' && spielerRolle === 'Tonks') {
+              html = `<button class="btn btn-primary" onclick="aktion('verwandeln')"><i class="fa-solid fa-wand-sparkles"></i> Verwandeln</button>`;
+          } else if (aktuellePhase === 'griesgram_phase' && spielerRolle === 'Griesgram') {
+              html = `<button class="btn btn-primary" onclick="aktion('verfluchen')"><i class="fa-solid fa-cloud"></i> Verfluchen</button>`;
+          } else if (aktuellePhase === 'jesus_phase' && spielerRolle === 'Jesus') {
+              html = `<button class="btn btn-primary" onclick="aktion('segnen')"><i class="fa-solid fa-hands-praying"></i> Segnen</button>`;
+
+          // =================================================================
+          // SONSTIGE
+          // =================================================================
+          } else if (aktuellePhase === 'rabe_phase' && spielerRolle === 'Rabe') {
+              html = `<button class="btn btn-primary" onclick="aktion('markieren')"><i class="fa-solid fa-crow"></i> Markieren</button>`;
+          } else if (aktuellePhase === 'zahnarzt_phase' && spielerRolle === 'Zahnarzt') {
+              html = `<button class="btn btn-primary" onclick="aktion('betaeuben')"><i class="fa-solid fa-tooth"></i> Betäuben</button>`;
+          } else if (aktuellePhase === 'engel_phase' && spielerRolle === 'Engel') {
+              html = `<button class="btn btn-primary" onclick="aktion('schuetzen')"><i class="fa-solid fa-angel"></i> Beschützen</button>`;
+          } else if (aktuellePhase === 'gerber_phase' && spielerRolle === 'Gerber') {
+              html = `<button class="btn btn-primary" onclick="aktion('gerben')"><i class="fa-solid fa-scroll"></i> Gerben</button>`;
+          } else if (aktuellePhase === 'kleines_maedchen_phase' && spielerRolle === 'Kleines Mädchen') {
+              html = `<button class="btn btn-primary" onclick="aktion('spionieren')"><i class="fa-solid fa-eye"></i> Spionieren</button>`;
+          } else if (aktuellePhase === 'putzfrau_phase' && spielerRolle === 'Putzfrau') {
+              html = `<button class="btn btn-primary" onclick="aktion('aufdecken')"><i class="fa-solid fa-broom"></i> Aufdecken</button>`;
+
+          // =================================================================
+          // ABSTIMMUNG
+          // =================================================================
           } else if (aktuellePhase === 'abstimmung') {
               html = `
                   <button class="btn btn-primary" onclick="aktion('tag_wahl')"><i class="fa-solid fa-check"></i> Abstimmen</button>
                   <button class="btn btn-ghost" onclick="aktion('tag_wahl', null)">Enthalten</button>
               `;
-          } else if (aktuellePhase === 'jaeger_phase' && spielerRolle === 'Jäger') {
-              html = `<button class="btn btn-primary" onclick="aktion('jaeger_schuss')"><i class="fa-solid fa-crosshairs"></i> Erschießen</button>`;
           }
       }
 

@@ -308,6 +308,10 @@ def spiel(code):
     # Rolle-Info holen - SICHER: Nur eigene Rolle wird mitgegeben
     rolle_info = ROLLEN.get(spieler.rolle, {})
 
+    # Debug logging für Rolle
+    if spieler.rolle:
+        log_ts(f"[Spiel] Spieler {spieler.name} hat Rolle: {spieler.rolle}, Team: {rolle_info.get('team', 'NICHT GEFUNDEN')}")
+
     # Logs fuer Spieler - SICHER: Nur fuer den Spieler sichtbare Logs
     if spieler.ist_erzaehler:
         logs = (
@@ -863,8 +867,8 @@ def _wechsel_phase_intern(raum):
         "prinz_enthuellung",
         "hahn_enthuellung",
         "putzfrau_info",
-        "schwestern_phase",  # Info-only
-        "brueder_phase",  # Info-only
+        "zwei_schwestern_phase",  # Info-only
+        "drei_brueder_phase",  # Info-only
         "freimaurer_phase",  # Info-only
         "fluechtlinge_phase",  # Info-only
     }
@@ -1147,16 +1151,20 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     """Verarbeitet eine Spielaktion"""
 
     if aktion_typ == "werwolf_wahl":
+        log_ts(f"[Aktion] werwolf_wahl von {spieler.name} (Rolle: {spieler.rolle}) für Ziel-ID: {ziel_id}")
         if (
             not game_logic.ist_werwolf_rolle(spieler.rolle)
             or raum.aktuelle_phase != "werwolf_phase"
         ):
+            log_ts(f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}")
             return False
         if game_logic.hat_spieler_gewaehlt(spieler, raum, "werwolf_phase"):
+            log_ts(f"[Aktion] ABGELEHNT: {spieler.name} hat bereits gewählt")
             return False
         game_logic.registriere_aktion(
             raum.id, raum.runde, "werwolf_phase", "werwolf_wahl", spieler.id, ziel_id
         )
+        log_ts(f"[Aktion] ERFOLG: Werwolf {spieler.name} wählt Ziel-ID {ziel_id}")
         return True
 
     elif aktion_typ == "seherin_sehen":
@@ -1240,7 +1248,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     elif aktion_typ == "armor_verlieben":
         log_ts(f"[Aktion] armor_verlieben von {spieler.name} (Rolle: {spieler.rolle})")
-        if spieler.rolle != "Amor" or raum.aktuelle_phase != "armor_phase":
+        if spieler.rolle != "Amor" or raum.aktuelle_phase != "amor_phase":
             log_ts(f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}")
             return False
         if not spieler.armor_verliebt:
@@ -1321,36 +1329,108 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             return True
         return False
 
+    # ==========================================================================
+    # GENERIC ACTION HANDLER for all other roles
+    # Uses the Role classes to process actions dynamically
+    # ==========================================================================
+    else:
+        from roles import RoleRegistry
+        from roles.base import SpielKontext
+
+        # Get the player's role class
+        rolle_obj = RoleRegistry.get(spieler.rolle)
+        if not rolle_obj:
+            return False
+
+        # Build a SpielKontext for the role
+        lebende = [s.id for s in Spieler.query.filter_by(
+            raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
+        ).all()]
+        tote = [s.id for s in Spieler.query.filter_by(
+            raum_id=raum.id, ist_am_leben=False, ist_erzaehler=False
+        ).all()]
+
+        kontext = SpielKontext(
+            raum_id=raum.id,
+            runde=raum.runde,
+            phase=raum.aktuelle_phase,
+            aktiver_spieler_id=spieler.id,
+            lebende_spieler=lebende,
+            tote_spieler=tote,
+        )
+
+        # Check if the current phase matches the role's phase
+        rolle_phase = rolle_obj.get_phase_name()
+        if raum.aktuelle_phase != rolle_phase:
+            return False
+
+        # Get the target player if specified
+        ziel = db.session.get(Spieler, ziel_id) if ziel_id else None
+
+        # Execute the role's night action
+        ergebnis = rolle_obj.on_nacht_aktion(spieler, ziel, kontext)
+
+        if ergebnis and ergebnis.erfolg:
+            # Register the action
+            game_logic.registriere_aktion(
+                raum.id, raum.runde, rolle_phase, aktion_typ, spieler.id, ziel_id
+            )
+
+            # Send result to the player
+            if ergebnis.nachricht:
+                emit("aktion_ergebnis", {
+                    "nachricht": ergebnis.nachricht,
+                    "effekte": ergebnis.effekte,
+                })
+
+            db.session.commit()
+            return True
+
+        return False
+
     return False
 
 
 def handle_phase_wechsel(raum, alte_phase, neue_phase):
     """Behandelt Phasenwechsel-Logik"""
+    log_ts(f"[Phase] Wechsel: {alte_phase} -> {neue_phase}")
 
     # Heiler-Schutz zuruecksetzen am Nachtende
     if alte_phase == "heiler_phase":
         pass  # Schutz bleibt bis Nacht-Ende
 
     if alte_phase == "werwolf_phase":
-        # Werwolf-Opfer ermitteln
+        # Werwolf-Opfer ermitteln und an Hexe senden
         ergebnis = game_logic.werwolf_abstimmung(raum)
         if ergebnis and "opfer_id" in ergebnis:
-            # SICHER: Nur an Hexe senden (private Nachricht)
             hexe = Spieler.query.filter_by(
                 raum_id=raum.id, rolle="Hexe", ist_am_leben=True
             ).first()
             if hexe:
-                # Speichere in Session oder Temp-Daten fuer Hexe
-                pass
+                opfer = db.session.get(Spieler, ergebnis["opfer_id"])
+                if opfer:
+                    socketio.emit(
+                        "hexe_info",
+                        {"opfer_name": opfer.name, "opfer_id": opfer.id},
+                        room=request.sid if hasattr(request, 'sid') else raum.code,
+                    )
 
-    elif alte_phase == "hexe_phase":
-        # Nacht-Ende: Tote bekannt geben
+    # WICHTIG: Nacht-Tode bei nacht_ende verarbeiten!
+    # Dies stellt sicher dass Tode immer verarbeitet werden, auch wenn
+    # hexe_phase übersprungen wird (weil keine Hexe existiert)
+    elif neue_phase == "nacht_ende":
+        log_ts(f"[Nacht] Verarbeite Nacht-Ende für Runde {raum.runde}")
+
         werwolf_opfer = SpielAktion.query.filter_by(
             raum_id=raum.id,
             runde=raum.runde,
             phase="werwolf_phase",
             aktion_typ="werwolf_wahl",
         ).first()
+
+        log_ts(f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}")
+        if werwolf_opfer:
+            log_ts(f"[Nacht] Werwolf-Ziel-ID: {werwolf_opfer.ziel_spieler_id}")
 
         geheilt = SpielAktion.query.filter_by(
             raum_id=raum.id, runde=raum.runde, phase="hexe_phase", aktion_typ="heilen"
@@ -1368,14 +1448,17 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         # Werwolf-Opfer (wenn nicht geheilt oder geschuetzt)
         if werwolf_opfer and werwolf_opfer.ziel_spieler_id:
             opfer = db.session.get(Spieler, werwolf_opfer.ziel_spieler_id)
+            if opfer:
+                log_ts(f"[Nacht] Werwolf-Opfer: {opfer.name}, am_leben={opfer.ist_am_leben}")
             if opfer and opfer.ist_am_leben:
                 # Pruefen ob geheilt
                 if geheilt and geheilt.ziel_spieler_id == opfer.id:
-                    pass  # Geheilt!
+                    log_ts(f"[Nacht] {opfer.name} wurde von Hexe geheilt!")
                 # Pruefen ob vom Heiler geschuetzt
                 elif opfer.ist_beschuetzt:
-                    pass  # Geschuetzt!
+                    log_ts(f"[Nacht] {opfer.name} wurde vom Heiler geschützt!")
                 else:
+                    log_ts(f"[Nacht] {opfer.name} STIRBT durch Werwolf!")
                     game_logic.toete_spieler(opfer, "werwolf")
                     tote.append(
                         {
@@ -1389,6 +1472,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         if vergiftet and vergiftet.ziel_spieler_id:
             opfer = db.session.get(Spieler, vergiftet.ziel_spieler_id)
             if opfer and opfer.ist_am_leben:
+                log_ts(f"[Nacht] {opfer.name} STIRBT durch Hexen-Gift!")
                 game_logic.toete_spieler(opfer, "hexe")
                 tote.append(
                     {"name": opfer.name, "rolle": opfer.rolle, "todesart": "hexe"}
@@ -1399,6 +1483,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             s.ist_beschuetzt = False
         db.session.commit()
 
+        log_ts(f"[Nacht] Tote in dieser Nacht: {len(tote)}")
         if tote:
             socketio.emit("nacht_ergebnis", {"tote": tote}, room=raum.code)
         else:
@@ -1411,6 +1496,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         # Spielende pruefen
         ende = game_logic.pruefe_spielende(raum)
         if ende:
+            log_ts(f"[Spiel] ENDE! Gewinner: {ende.get('gewinner', 'unbekannt')}")
             raum.aktuelle_phase = "spiel_ende"
             db.session.commit()
             socketio.emit("spiel_ende", ende, room=raum.code)
@@ -1461,7 +1547,7 @@ def pruefe_phase_abschluss(raum):
     # Stelle sicher dass wir aktuelle Daten haben
     db.session.expire_all()
 
-    if raum.aktuelle_phase == "armor_phase":
+    if raum.aktuelle_phase == "amor_phase":
         # Amor hat sein Liebespaar gewählt - Phase ist fertig
         amor_spieler = game_logic.hole_spieler_fuer_rolle(raum, "Amor")
         if not amor_spieler:
@@ -1471,8 +1557,8 @@ def pruefe_phase_abschluss(raum):
         # Prüfe ob alle Amors (normalerweise nur 1) ihre Aktion ausgeführt haben
         alle_fertig = all(not a.armor_verliebt for a in amor_spieler)
         if alle_fertig:
-            log_ts(f"[Phase] armor_phase abgeschlossen, wechsle Phase")
-            socketio.emit("phase_bereit", {"phase": "armor_phase"}, room=raum.code)
+            log_ts(f"[Phase] amor_phase abgeschlossen, wechsle Phase")
+            socketio.emit("phase_bereit", {"phase": "amor_phase"}, room=raum.code)
             # Wechsle automatisch zur nächsten Phase
             _wechsel_phase_intern(raum)
 
@@ -1536,6 +1622,94 @@ def pruefe_phase_abschluss(raum):
             log_ts(f"[Phase] abstimmung abgeschlossen, wechsle Phase")
             socketio.emit("phase_bereit", {"phase": "abstimmung"}, room=raum.code)
             _wechsel_phase_intern(raum)
+
+    # ==========================================================================
+    # GENERIC PHASE COMPLETION HANDLER
+    # Handles all other role phases dynamically
+    # ==========================================================================
+    else:
+        from roles import RoleRegistry
+
+        # Try to find a role matching the current phase
+        aktuelle_phase = raum.aktuelle_phase
+
+        # Mapping of phases to role names (extended list)
+        phase_rolle_map = {
+            'seherlehrling_phase': 'Seherlehrling',
+            'aurenseherin_phase': 'Aurenseherin',
+            'medium_phase': 'Medium',
+            'tratschweib_phase': 'Tratschweib',
+            'paranormal_billig_phase': 'Paranormaler Ermittler (billig)',
+            'werwolfseherin_phase': 'Werwolfseherin',
+            'demoskopin_phase': 'Demoskopin',
+            'baerenbaendiger_phase': 'Bärenbändiger',
+            'leibwaechter_phase': 'Leibwächter',
+            'prostituierte_phase': 'Prostituierte',
+            'hure_phase': 'Prostituierte',
+            'nutte_phase': 'Prostituierte',
+            'ergebene_magd_phase': 'Ergebene Magd',
+            'oma_phase': 'Oma',
+            'hexenmeister_phase': 'Hexenmeister',
+            'giftmischerin_phase': 'Giftmischerin',
+            'kraeuterweib_phase': 'Kräuterweib',
+            'zauberer_phase': 'Zauberer',
+            'sandmann_phase': 'Sandmann',
+            'hahn_phase': 'Hahn',
+            'kamikaze_phase': 'Kamikaze',
+            'prinz_phase': 'Prinz',
+            'koenig_phase': 'König',
+            'buddler_phase': 'Buddler',
+            'pyromane_phase': 'Pyromane',
+            'flammenmann_phase': 'Flammenmann',
+            'drachenbaendiger_phase': 'Drachenbändiger',
+            'gaukler_phase': 'Gaukler',
+            'inquisitor_phase': 'Inquisitor',
+            'tanklastwagenfahrer_phase': 'Tanklastwagenfahrer',
+            'einsamer_wolf_phase': 'Einsamer Wolf',
+            'urwolf_phase': 'Urwolf',
+            'weisser_wolf_phase': 'Weißer Wolf',
+            'mordlustiger_phase': 'Mordlustiger Werwolf',
+            'wildes_kind_phase': 'Wildes Kind',
+            'wolfsjunge_phase': 'Wolfsjunge',
+            'teenager_werwolf_phase': 'Teenager-Werwolf',
+            'polarwolf_phase': 'Polarwolf',
+            'lupin_phase': 'Lupin',
+            'wolf_im_schafspelz_phase': 'Wolf im Schafspelz',
+            'vampir_phase': 'Vampir',
+            'zombie_phase': 'Zombie',
+            'floetenspieler_phase': 'Flötenspieler',
+            'henker_phase': 'Henker',
+            'selbstmoerder_phase': 'Selbstmörder',
+            'dieb_phase': 'Dieb',
+            'doppelgaenger_phase': 'Doppelgänger',
+            'dunkler_priester_phase': 'Dunkler Priester',
+            'hund_phase': 'Hund',
+            'tonks_phase': 'Tonks',
+            'griesgram_phase': 'Griesgram',
+            'jesus_phase': 'Jesus',
+            'rabe_phase': 'Rabe',
+            'zahnarzt_phase': 'Zahnarzt',
+            'engel_phase': 'Engel',
+            'gerber_phase': 'Gerber',
+            'kleines_maedchen_phase': 'Kleines Mädchen',
+            'putzfrau_phase': 'Putzfrau',
+        }
+
+        rolle_name = phase_rolle_map.get(aktuelle_phase)
+        if rolle_name:
+            rolle_spieler = game_logic.hole_spieler_fuer_rolle(raum, rolle_name)
+            if not rolle_spieler:
+                # No player with this role - skip phase
+                _wechsel_phase_intern(raum)
+                return
+
+            alle_fertig = all(
+                game_logic.hat_spieler_gewaehlt(s, raum, aktuelle_phase) for s in rolle_spieler
+            )
+            if alle_fertig:
+                log_ts(f"[Phase] {aktuelle_phase} abgeschlossen, wechsle Phase")
+                socketio.emit("phase_bereit", {"phase": aktuelle_phase}, room=raum.code)
+                _wechsel_phase_intern(raum)
 
 
 # ============================================================================

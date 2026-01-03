@@ -52,6 +52,7 @@ class Amor(Role):
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.VERLIEBEN
     
+
     def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
         Amor wählt in der ersten Nacht zwei Verliebte.

@@ -106,11 +106,15 @@ def text_zu_audio_elevenlabs(
         },
     }
 
-    response = requests.post(url, headers=headers, json=payload, timeout=30)
-    response.raise_for_status()
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
 
-    audio_datei.write_bytes(response.content)
-    return str(audio_datei)
+        audio_datei.write_bytes(response.content)
+        return str(audio_datei)
+    except (requests.RequestException, IOError) as e:
+        print(f"[ELEVENLABS] API-Fehler: {e}")
+        return None
 
 
 def text_zu_audio_elevenlabs_sync(

@@ -340,8 +340,10 @@ def phasennamen_zu_rollen_mapping() -> dict:
                 if phase_key in PHASEN:
                     mapping.setdefault(phase_key, rolle.info.name)
                     break
-    except Exception as exc:
+    except (ImportError, AttributeError) as exc:
+        import traceback
         print(f"[ROLLEN] Warnung: Dynamisches Phasen-Mapping deaktiviert: {exc}")
+        print(f"[ROLLEN] Traceback: {traceback.format_exc()}")
 
     # Fallback: baue das Mapping aus dem Legacy-ROLLEN-Dict, falls die Registry
     # einmal nicht initialisiert werden konnte (z.B. in minimalen Testumgebungen).

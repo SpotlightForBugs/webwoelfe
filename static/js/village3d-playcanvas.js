@@ -89,7 +89,7 @@ export default class Village3DPlayCanvas {
         this.app.resizeCanvas();
       }
     };
-    
+
     window.addEventListener("resize", resizeCanvas);
     // Initial resize to fit container
     resizeCanvas();

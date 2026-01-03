@@ -77,11 +77,22 @@ export default class Village3DPlayCanvas {
     });
 
     this.app.start();
-    this.app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+    // Use NONE to respect container size, not FILL_WINDOW which ignores it
+    this.app.setCanvasFillMode(pc.FILLMODE_NONE);
     this.app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-    // Resize handler
-    window.addEventListener("resize", () => this.app.resizeCanvas());
+    // Resize handler to match container size
+    const resizeCanvas = () => {
+      if (this.container && this.canvas) {
+        this.canvas.width = this.container.clientWidth;
+        this.canvas.height = this.container.clientHeight;
+        this.app.resizeCanvas();
+      }
+    };
+    
+    window.addEventListener("resize", resizeCanvas);
+    // Initial resize to fit container
+    resizeCanvas();
 
     // Create Scene
     this.createScene();

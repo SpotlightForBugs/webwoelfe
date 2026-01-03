@@ -295,62 +295,58 @@ def hat_spieler_mit_rolle(raum: Raum, rolle: str) -> bool:
     return Spieler.query.filter_by(raum_id=raum.id, rolle=rolle, ist_am_leben=True).first() is not None
 
 
+def _normalisiere_phase_name(phase_name: str) -> str:
+    """Bringt dynamische Phasennamen in das PHASEN-Schema."""
+
+    replacements = {
+        'ä': 'ae',
+        'ö': 'oe',
+        'ü': 'ue',
+        'ß': 'ss',
+    }
+
+    normalisiert = phase_name.strip().lower()
+    for alt, neu in replacements.items():
+        normalisiert = normalisiert.replace(alt, neu)
+
+    normalisiert = normalisiert.replace(' ', '_')
+    while '__' in normalisiert:
+        normalisiert = normalisiert.replace('__', '_')
+    return normalisiert
+
+
 def phasennamen_zu_rollen_mapping() -> dict:
     """
-    Erstellt ein Mapping zwischen Phasennamen und erforderlichen Rollen.
-    
-    Returns:
-        Dictionary mit Phase zu Rolle Mapping
+    Erstellt ein Mapping zwischen Phasennamen und erforderlichen Rollen dynamisch
+    aus dem Rollen-Registry, so dass neue Rollen keinen Hardcode mehr benötigen.
     """
-    return {
-        'dieb_phase': 'Dieb',
-        'doppelgaenger_phase': 'Doppelgänger',
-        'armor_phase': 'Amor',
-        'priester_dunkel_phase': 'Dunkler Priester',
-        'wildes_kind_phase': 'Wildes Kind',
-        'hund_phase': 'Hund',
-        'schwestern_phase': 'Zwei Schwestern',
-        'brueder_phase': 'Drei Brüder',
-        'freimaurer_phase': 'Freimaurer',
-        'fluechtlinge_phase': 'Flüchtlinge',
-        'sandmann_phase': 'Sandmann',
-        'seherin_phase': 'Seherin',
-        'seherlehrling_phase': 'Seherlehrling',
-        'aurenseherin_phase': 'Aurenseherin',
-        'medium_phase': 'Medium',
-        'tratschweib_phase': 'Tratschweib',
-        'paranormal_billig_phase': 'Paranormaler Ermittler (billig)',
-        'werwolfseherin_phase': 'Werwolfseherin',
-        'heiler_phase': 'Heiler',
-        'leibwaechter_phase': 'Leibwächter',
-        'hure_phase': 'Hure',
-        'prostituierte_phase': 'Prostituierte',
-        'nutte_phase': 'Nutte',
-        'einsamerwolf_phase': 'Einsamer Wolf',
-        'urwolf_phase': 'Urwolf',
-        'weisser_wolf_phase': 'Weißer Wolf',
-        'mordlustiger_phase': 'Mordlustiger',
-        'hexe_phase': 'Hexe',
-        'hexenmeister_phase': 'Hexenmeister',
-        'giftmischerin_phase': 'Giftmischerin',
-        'kraeuterweib_phase': 'Kräuterweib',
-        'zauberer_phase': 'Zauberer',
-        'zahnarzt_phase': 'Zahnarzt',
-        'rabe_phase': 'Rabe',
-        'floetenspieler_phase': 'Flötenspieler',
-        'vampir_phase': 'Vampir',
-        'zombie_phase': 'Zombie',
-        'pyromane_phase': 'Pyromane',
-        'tonks_phase': 'Tonks',
-        'buddler_phase': 'Buddler',
-        'baerenbaendiger_brummen': 'Bärenbändiger',
-        'demoskopin_info': 'Demoskopin',
-        'prinz_enthuellung': 'Prinz',
-        'jaeger_phase': 'Jäger',
-        'kamikaze_phase': 'Kamikaze',
-        'hahn_enthuellung': 'Hahn',
-        'putzfrau_info': 'Putzfrau',
-    }
+
+    mapping = {}
+
+    try:
+        from roles import RoleRegistry
+
+        for rolle in RoleRegistry.get_all():
+            # Bevorzugt den von der Rolle gelieferten Namen, normalisiert ihn aber
+            # in das bestehende PHASEN-Schema (ae/oe/ue/ss statt Umlaute).
+            kandidaten = [rolle.get_phase_name(), f"{rolle.info.name}_phase"]
+            for kandidat in kandidaten:
+                phase_key = _normalisiere_phase_name(kandidat)
+                if phase_key in PHASEN:
+                    mapping.setdefault(phase_key, rolle.info.name)
+                    break
+    except Exception as exc:
+        print(f"[ROLLEN] Warnung: Dynamisches Phasen-Mapping deaktiviert: {exc}")
+
+    # Fallback: baue das Mapping aus dem Legacy-ROLLEN-Dict, falls die Registry
+    # einmal nicht initialisiert werden konnte (z.B. in minimalen Testumgebungen).
+    if not mapping:
+        for rollen_name in ROLLEN.keys():
+            phase_key = _normalisiere_phase_name(f"{rollen_name}_phase")
+            if phase_key in PHASEN:
+                mapping[phase_key] = rollen_name
+
+    return mapping
 
 
 def naechste_phase(raum: Raum) -> str:

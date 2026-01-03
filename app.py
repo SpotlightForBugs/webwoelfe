@@ -10,6 +10,7 @@ import game_logic
 import secrets
 import os
 import asyncio
+import random
 from datetime import datetime
 
 # App Konfiguration
@@ -64,8 +65,19 @@ def generiere_erzaehler_audio(text: str, stil: str = 'normal') -> str | None:
         URL-Pfad zur Audio-Datei oder None bei Fehler
     """
     try:
-        from audio import text_zu_audio_sync
-        audio_path = text_zu_audio_sync(text, stil=stil)
+        from audio import (
+            text_zu_audio_sync,
+            text_zu_audio_elevenlabs_sync,
+            elevenlabs_aktiv
+        )
+
+        audio_path = None
+        if elevenlabs_aktiv():
+            audio_path = text_zu_audio_elevenlabs_sync(text, stil=stil)
+
+        if not audio_path:
+            audio_path = text_zu_audio_sync(text, stil=stil)
+
         if audio_path:
             # Konvertiere relativen Pfad zu URL-Pfad
             url_path = '/' + audio_path.replace('\\', '/')
@@ -101,17 +113,18 @@ def raum_erstellen():
     """Erstellt einen neuen Spielraum"""
     modus = request.form.get('modus', 'online')
     name = request.form.get('raum_name', 'Webwölfe Runde')
-    spieler_anzahl = int(request.form.get('spieler_anzahl', 8))
     spieler_name = request.form.get('spieler_name', 'Spielleiter')
-    ist_erzaehler = request.form.get('ist_erzaehler') == 'on'
+    erzaehler_modus = request.form.get('erzaehler_modus', 'selbst')
+    ist_erzaehler = erzaehler_modus == 'selbst'
     
     # Raum erstellen
-    # Support games from 5 to 10000 players (for massive events)
+    # Spieleranzahl wird jetzt dynamisch aus der Lobby berechnet – keine manuelle Eingabe nötig
     raum = Raum(
         code=Raum.generiere_code(),
-            name=name,
+        name=name,
         modus=modus,
-        spieler_anzahl=max(5, min(10000, spieler_anzahl))
+        spieler_anzahl=0,
+        erzaehler_modus=erzaehler_modus
     )
     db.session.add(raum)
     db.session.flush()
@@ -188,8 +201,13 @@ def lobby(code):
     alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
     erzaehler = next((s for s in alle_spieler if s.ist_erzaehler), None)
     spieler_ohne_erzaehler = [s for s in alle_spieler if not s.ist_erzaehler]
-    fehlende_spieler = max(0, raum.spieler_anzahl - len(spieler_ohne_erzaehler))
-    rollen_vorschau_total = raum.spieler_anzahl + (1 if erzaehler else 0)
+    aktuelle_spielerzahl = len(spieler_ohne_erzaehler)
+    ziel_spielerzahl = max(5, aktuelle_spielerzahl)
+    raum.spieler_anzahl = ziel_spielerzahl
+    db.session.commit()
+
+    fehlende_spieler = max(0, 5 - aktuelle_spielerzahl)
+    rollen_vorschau_total = max(5, aktuelle_spielerzahl) + (1 if erzaehler else 0)
     rollen_vorschau = game_logic.berechne_rollen(
         rollen_vorschau_total,
         mit_erzaehler=bool(erzaehler)
@@ -199,6 +217,7 @@ def lobby(code):
                          raum=raum, 
                          spieler=spieler,
                          alle_spieler=alle_spieler,
+                         erzaehler=erzaehler,
                          rollen=ROLLEN,
                          rollen_vorschau=rollen_vorschau,
                          rollen_vorschau_total=rollen_vorschau_total,
@@ -337,6 +356,47 @@ def set_sitzordnung(code):
     }, room=raum.code)
     
     return jsonify({'success': True})
+
+
+@app.route('/api/raum/<code>/erzaehler/random', methods=['POST'])
+def waehle_zufaelligen_erzaehler(code):
+    """Wählt einen zufälligen Erzähler aus allen Spielern des Raums."""
+    raum = Raum.query.filter_by(code=code).first()
+    if not raum:
+        return jsonify({'success': False, 'error': 'Raum nicht gefunden'}), 404
+
+    if raum.spiel_gestartet:
+        return jsonify({'success': False, 'error': 'Spiel bereits gestartet'}), 400
+
+    spieler = hole_aktuellen_spieler()
+    if not spieler or spieler.raum_id != raum.id:
+        return jsonify({'success': False, 'error': 'Nicht autorisiert'}), 403
+
+    if raum.erzaehler_modus != 'zufall':
+        return jsonify({'success': False, 'error': 'Zufälliger Erzähler ist für diesen Raum nicht aktiviert'}), 400
+
+    alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
+    kandidaten = [s for s in alle_spieler if not s.ist_erzaehler]
+
+    if not kandidaten:
+        return jsonify({'success': False, 'error': 'Keine Kandidaten gefunden'}), 400
+
+    # Entferne bisherigen Erzähler (falls vorhanden)
+    for kandidat in alle_spieler:
+        if kandidat.ist_erzaehler:
+            kandidat.ist_erzaehler = False
+
+    erzaehler = random.choice(kandidaten)
+    erzaehler.ist_erzaehler = True
+    raum.erzaehler_id = erzaehler.id
+    db.session.commit()
+
+    socketio.emit('erzaehler_gewaehlt', {
+        'spieler_id': erzaehler.id,
+        'name': erzaehler.name
+    }, room=raum.code)
+
+    return jsonify({'success': True, 'erzaehler': {'id': erzaehler.id, 'name': erzaehler.name}})
 
 
 # ============================================================================

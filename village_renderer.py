@@ -122,9 +122,10 @@ class VillageRenderer:
         
         # 5. Spieler rendern (von hinten nach vorne für korrekte Überlappung)
         spieler_sortiert = self._sortiere_spieler_fuer_rendering(szene.spieler)
+        total_spieler = max(len(szene.spieler), 8)
         for spieler in spieler_sortiert:
             hinweis = szene.aktive_hinweise.get(spieler.id)
-            self._render_spieler(img, draw, spieler, szene.phase, hinweis)
+            self._render_spieler(img, draw, spieler, szene.phase, hinweis, total_spieler)
         
         # 6. Atmosphären-Effekte
         if szene.wetter == 'nebel':
@@ -320,24 +321,29 @@ class VillageRenderer:
         return sorted(spieler, key=y_position)
     
     def _render_spieler(
-        self, 
-        img: Image.Image, 
-        draw: ImageDraw.Draw, 
-        spieler: SpielerVisual, 
+        self,
+        img: Image.Image,
+        draw: ImageDraw.Draw,
+        spieler: SpielerVisual,
         phase: str,
-        hinweis: Optional[Tuple[str, float]] = None
+        hinweis: Optional[Tuple[str, float]] = None,
+        total_spieler: int = 8
     ):
         """Rendert einen einzelnen Spieler"""
-        anzahl = max(8, 1)  # Mindestens 8 Positionen
+        anzahl = max(total_spieler, 8)
         winkel = (spieler.sitzplatz / anzahl) * 2 * math.pi - math.pi / 2
-        
+
         cx, cy = CIRCLE_CENTER
-        x = cx + math.cos(winkel) * CIRCLE_RADIUS
-        y = cy + math.sin(winkel) * CIRCLE_RADIUS * ISO_SCALE_Y
+        tiefenfaktor = 0.65 + 0.35 * ((math.sin(winkel) + 1) / 2)
+        radius = CIRCLE_RADIUS * (0.8 + 0.2 * tiefenfaktor)
+        x = cx + math.cos(winkel) * radius
+        y = cy + math.sin(winkel) * radius * ISO_SCALE_Y
+
+        scale = 0.7 + 0.5 * tiefenfaktor
         
         # Schatten
         if spieler.ist_am_leben:
-            draw.ellipse([x - 15, y + 25, x + 15, y + 35], fill=(0, 0, 0, 80))
+            draw.ellipse([x - 15 * scale, y + 25 * scale, x + 15 * scale, y + 35 * scale], fill=(0, 0, 0, 80))
         
         # Körper-Farbe basierend auf Zustand
         if not spieler.ist_am_leben:
@@ -355,37 +361,37 @@ class VillageRenderer:
             
             # Körper (Robe)
             robe_punkte = [
-                (x - 12, y + 25),  # Unten links
-                (x - 15, y - 5),   # Taille links
-                (x - 8, y - 25),   # Schulter links
-                (x, y - 30),       # Kopf-Ansatz
-                (x + 8, y - 25),   # Schulter rechts
-                (x + 15, y - 5),   # Taille rechts
-                (x + 12, y + 25),  # Unten rechts
+                (x - 12 * scale, y + 25 * scale),  # Unten links
+                (x - 15 * scale, y - 5 * scale),   # Taille links
+                (x - 8 * scale, y - 25 * scale),   # Schulter links
+                (x, y - 30 * scale),       # Kopf-Ansatz
+                (x + 8 * scale, y - 25 * scale),   # Schulter rechts
+                (x + 15 * scale, y - 5 * scale),   # Taille rechts
+                (x + 12 * scale, y + 25 * scale),  # Unten rechts
             ]
             draw.polygon(robe_punkte, fill=koerper_farbe, outline=(50, 50, 60))
-            
+
             # Kopf
-            kopf_y = y - 40
-            draw.ellipse([x - 10, kopf_y - 10, x + 10, kopf_y + 10], fill=(220, 185, 155))
+            kopf_y = y - 40 * scale
+            draw.ellipse([x - 10 * scale, kopf_y - 10 * scale, x + 10 * scale, kopf_y + 10 * scale], fill=(220, 185, 155))
             
             # Augen (schauen zum Feuer)
             feuer_richtung = math.atan2(cy - kopf_y, cx - x)
-            auge_offset_x = math.cos(feuer_richtung) * 3
-            draw.ellipse([x - 4 + auge_offset_x, kopf_y - 2, x - 2 + auge_offset_x, kopf_y + 2], fill=(40, 40, 40))
-            draw.ellipse([x + 2 + auge_offset_x, kopf_y - 2, x + 4 + auge_offset_x, kopf_y + 2], fill=(40, 40, 40))
+            auge_offset_x = math.cos(feuer_richtung) * 3 * scale
+            draw.ellipse([x - 4 * scale + auge_offset_x, kopf_y - 2 * scale, x - 2 * scale + auge_offset_x, kopf_y + 2 * scale], fill=(40, 40, 40))
+            draw.ellipse([x + 2 * scale + auge_offset_x, kopf_y - 2 * scale, x + 4 * scale + auge_offset_x, kopf_y + 2 * scale], fill=(40, 40, 40))
             
             # Hinweis-Glow um Spieler
             if hinweis:
                 self._render_hinweis_effekt(img, draw, x, y, hinweis)
         else:
             # Toter Spieler - liegend
-            draw.ellipse([x - 20, y + 10, x + 20, y + 30], fill=koerper_farbe)
+            draw.ellipse([x - 20 * scale, y + 10 * scale, x + 20 * scale, y + 30 * scale], fill=koerper_farbe)
             # X über den Augen
-            draw.line([(x - 8, y + 15), (x - 2, y + 21)], fill=(100, 50, 50), width=2)
-            draw.line([(x - 8, y + 21), (x - 2, y + 15)], fill=(100, 50, 50), width=2)
-            draw.line([(x + 2, y + 15), (x + 8, y + 21)], fill=(100, 50, 50), width=2)
-            draw.line([(x + 2, y + 21), (x + 8, y + 15)], fill=(100, 50, 50), width=2)
+            draw.line([(x - 8 * scale, y + 15 * scale), (x - 2 * scale, y + 21 * scale)], fill=(100, 50, 50), width=2)
+            draw.line([(x - 8 * scale, y + 21 * scale), (x - 2 * scale, y + 15 * scale)], fill=(100, 50, 50), width=2)
+            draw.line([(x + 2 * scale, y + 15 * scale), (x + 8 * scale, y + 21 * scale)], fill=(100, 50, 50), width=2)
+            draw.line([(x + 2 * scale, y + 21 * scale), (x + 8 * scale, y + 15 * scale)], fill=(100, 50, 50), width=2)
         
         # Name
         name_text = spieler.name[:12]  # Maximal 12 Zeichen

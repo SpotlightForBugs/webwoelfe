@@ -23,6 +23,7 @@ class Raum(db.Model):
     aktuelle_phase = db.Column(db.String(30), default='lobby')
     runde = db.Column(db.Integer, default=0)
     erzaehler_id = db.Column(db.Integer, db.ForeignKey('spieler.id'), nullable=True)
+    erzaehler_modus = db.Column(db.String(20), default='selbst')  # selbst, zufall
     
     # Spielende
     spiel_beendet = db.Column(db.Boolean, default=False)

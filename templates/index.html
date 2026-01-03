@@ -115,13 +115,6 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Spielerzahl (5-10000)</label>
-                    <input type="number" name="spieler_anzahl" class="form-input" 
-                           value="8" min="5" max="10000">
-                    <small class="form-hint">Für große Events: 500+ Spieler werden unterstützt!</small>
-                </div>
-                
-                <div class="form-group">
                     <label class="form-label">Spielmodus</label>
                     <select name="modus" class="form-input" id="modus-select">
                         <option value="online">Online - Jeder auf eigenem Gerät mit 3D-Dorf</option>
@@ -133,10 +126,23 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-checkbox">
-                        <input type="checkbox" name="ist_erzaehler">
-                        <span>Ich bin der Erzähler (spiele nicht mit)</span>
-                    </label>
+                    <label class="form-label">Wer erzählt?</label>
+                    <div class="form-radio">
+                        <label class="form-checkbox" style="margin-bottom: 0.35rem;">
+                            <input type="radio" name="erzaehler_modus" value="selbst" checked>
+                            <span>Ich erzähle selbst (klassisch, kein Glücksrad)</span>
+                        </label>
+                        <label class="form-checkbox">
+                            <input type="radio" name="erzaehler_modus" value="zufall">
+                            <span>Zufälliger Erzähler in der Lobby per Glücksrad</span>
+                        </label>
+                    </div>
+                    <small class="form-hint">Die Zufallsauswahl startet erst, wenn ihr bereit seid.</small>
+                </div>
+
+                <div class="alert alert-info" role="status" style="margin-bottom: 1rem;">
+                    <strong>Kein Vorwissen nötig!</strong> Rollen und Regeln werden automatisch erklärt,
+                    sobald der Erzähler das Spiel startet. Du musst nur deine Freunde einladen.
                 </div>
                 
                 <!-- ============================================ -->

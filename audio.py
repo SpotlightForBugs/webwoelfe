@@ -9,10 +9,16 @@ import edge_tts
 import os
 import hashlib
 from pathlib import Path
+import requests
 
 # Ordner für Audio-Cache
 AUDIO_CACHE_DIR = Path('static/audio/cache')
 AUDIO_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+ELEVENLABS_VOICE_ID = os.environ.get('ELEVENLABS_VOICE_ID', 'g1jpii0iyvtRs8fqXsd1')
+ELEVENLABS_MODEL = os.environ.get('ELEVENLABS_MODEL_ID', 'eleven_multilingual_v2')
+ELEVENLABS_API_KEY = os.environ.get('ELEVENLABS_API_KEY')
+ENABLE_ELEVENLABS = os.environ.get('ENABLE_ELEVENLABS', 'false').lower() == 'true'
 
 # Deutsche Stimmen für edge-tts
 STIMMEN = {
@@ -59,6 +65,65 @@ def generiere_audio_hash(text: str, stimme: str, stil: str) -> str:
     """Generiert einen eindeutigen Hash für Audio-Caching."""
     content = f"{text}_{stimme}_{stil}"
     return hashlib.md5(content.encode()).hexdigest()
+
+
+def elevenlabs_aktiv() -> bool:
+    """Prüft, ob ElevenLabs aktiviert und konfiguriert ist."""
+    return ENABLE_ELEVENLABS and bool(ELEVENLABS_API_KEY)
+
+
+def text_zu_audio_elevenlabs(
+    text: str,
+    stimme: str | None = None,
+    stil: str = 'normal',
+    force_regenerate: bool = False
+) -> str | None:
+    """
+    ElevenLabs Text-to-Speech mit Caching.
+
+    Returns None, falls ElevenLabs nicht aktiviert oder nicht konfiguriert ist.
+    """
+    if not elevenlabs_aktiv():
+        return None
+
+    voice_id = stimme or ELEVENLABS_VOICE_ID
+    audio_hash = generiere_audio_hash(text, f"11_{voice_id}", stil)
+    audio_datei = AUDIO_CACHE_DIR / f"11_{audio_hash}.mp3"
+
+    if audio_datei.exists() and not force_regenerate:
+        return str(audio_datei)
+
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    headers = {
+        'xi-api-key': ELEVENLABS_API_KEY,
+        'Accept': 'audio/mpeg'
+    }
+    payload = {
+        'text': text,
+        'model_id': ELEVENLABS_MODEL,
+        'voice_settings': {
+            'stability': 0.45,
+            'similarity_boost': 0.9,
+            'style': 0.55 if stil == 'dramatisch' else 0.25,
+            'use_speaker_boost': True
+        }
+    }
+
+    response = requests.post(url, headers=headers, json=payload, timeout=30)
+    response.raise_for_status()
+
+    audio_datei.write_bytes(response.content)
+    return str(audio_datei)
+
+
+def text_zu_audio_elevenlabs_sync(
+    text: str,
+    stimme: str | None = None,
+    stil: str = 'normal',
+    force_regenerate: bool = False
+) -> str | None:
+    """Synchroner Wrapper für die ElevenLabs API."""
+    return text_zu_audio_elevenlabs(text, stimme=stimme, stil=stil, force_regenerate=force_regenerate)
 
 
 async def text_zu_audio(

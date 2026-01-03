@@ -67,6 +67,16 @@ pip install -r requirements.txt
 python app.py
 ```
 
+### Optionale Erzähler-Stimme über ElevenLabs
+
+Wenn du die natürlich klingende ElevenLabs-Stimme nutzen möchtest, setze folgende Umgebungsvariablen:
+
+- `ENABLE_ELEVENLABS=true`
+- `ELEVENLABS_API_KEY=<dein API Key>`
+- `ELEVENLABS_VOICE_ID=g1jpii0iyvtRs8fqXsd1` (Standardstimme aus dem Beispiel)
+
+Alle erzeugten Audios werden im lokalen Cache (`static/audio/cache`) abgelegt, damit Ansagen nicht erneut generiert werden müssen.
+
 Die Anwendung läuft dann unter `http://localhost:5001`
 
 ## Spielablauf

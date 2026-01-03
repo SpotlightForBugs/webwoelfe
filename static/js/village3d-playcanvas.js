@@ -155,23 +155,18 @@ export default class Village3DPlayCanvas {
     // Ground
     this.createDetailedGround();
 
-    // Only create full village in game mode, not in lobby
-    if (!this.isLobbyMode) {
-      // Village Buildings
-      this.createVillageBuildings();
+    // Create full medieval village (in both lobby and game)
+    // Village Buildings
+    this.createVillageBuildings();
 
-      // Campfire (center)
-      this.createCampfire();
+    // Campfire (center)
+    this.createCampfire();
 
-      // Environment (Trees, Stones, Fence)
-      this.createEnvironment();
+    // Environment (Trees, Stones, Fence)
+    this.createEnvironment();
 
-      // Atmospheric effects
-      this.createAtmosphericEffects();
-    } else {
-      // Lobby mode: minimal scene - just a simple center marker
-      this.createSimpleCampfire();
-    }
+    // Atmospheric effects
+    this.createAtmosphericEffects();
   }
 
   createDetailedGround() {

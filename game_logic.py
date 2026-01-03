@@ -342,6 +342,7 @@ def phasennamen_zu_rollen_mapping() -> dict:
                     break
     except (ImportError, AttributeError) as exc:
         import traceback
+
         print(f"[ROLLEN] Warnung: Dynamisches Phasen-Mapping deaktiviert: {exc}")
         print(f"[ROLLEN] Traceback: {traceback.format_exc()}")
 

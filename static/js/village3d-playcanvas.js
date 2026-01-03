@@ -24,6 +24,7 @@ export default class Village3DPlayCanvas {
     this.buildings = [];
     this.isNight = true;
     this.onPlayerClick = null;
+    this.deadMaterial = null; // Cache for dead player material
 
     // Lobby mode - simplified view with no buildings/environment
     this.isLobbyMode = options.lobbyMode || false;
@@ -561,8 +562,8 @@ export default class Village3DPlayCanvas {
     const roseWindowMat = new pc.StandardMaterial();
     roseWindowMat.diffuse = new pc.Color(0.7, 0.3, 0.3); // Stained glass red
     roseWindowMat.emissive = new pc.Color(0.8, 0.4, 0.2);
-    roseWindowMat.opacity = 0.8;
-    roseWindowMat.blendType = pc.BLEND_ADDITIVE;
+    roseWindowMat.opacity = 0.7;
+    roseWindowMat.blendType = pc.BLEND_NORMAL;
     roseWindowMat.update();
     roseWindow.model.material = roseWindowMat;
     church.addChild(roseWindow);
@@ -582,8 +583,8 @@ export default class Village3DPlayCanvas {
       ];
       stainedMat.diffuse = colors[i];
       stainedMat.emissive = colors[i];
-      stainedMat.opacity = 0.8;
-      stainedMat.blendType = pc.BLEND_ADDITIVE;
+      stainedMat.opacity = 0.7;
+      stainedMat.blendType = pc.BLEND_NORMAL;
       stainedMat.update();
       sideWindow.model.material = stainedMat;
       church.addChild(sideWindow);
@@ -1807,7 +1808,7 @@ export default class Village3DPlayCanvas {
       format: pc.PIXELFORMAT_R8_G8_B8_A8,
     });
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    texture.lock().set(pixels.data);
+    texture.lock().set(new Uint8Array(pixels.data));
     texture.unlock();
 
     // Apply material
@@ -1884,7 +1885,8 @@ export default class Village3DPlayCanvas {
 
       const mat = new pc.StandardMaterial();
       mat.emissive = color;
-      mat.blendType = pc.BLEND_NORMAL;
+      mat.opacity = 0.8;
+      mat.blendType = pc.BLEND_ADDITIVE;
       mat.update();
       particle.model.material = mat;
 
@@ -1935,16 +1937,20 @@ export default class Village3DPlayCanvas {
     if (!entity) return;
 
     if (!isAlive) {
+      // Create cached dead material if not exists
+      if (!this.deadMaterial) {
+        this.deadMaterial = new pc.StandardMaterial();
+        this.deadMaterial.diffuse = new pc.Color(0.3, 0.3, 0.3);
+        this.deadMaterial.opacity = 0.4;
+        this.deadMaterial.blendType = pc.BLEND_NORMAL;
+        this.deadMaterial.update();
+      }
+
       // Make player gray and semi-transparent
       entity.children.forEach((child) => {
         if (child.model && child.model.material) {
-          // Clone material to avoid affecting other entities
-          const mat = child.model.material.clone();
-          mat.diffuse = new pc.Color(0.3, 0.3, 0.3);
-          mat.opacity = 0.4;
-          mat.blendType = pc.BLEND_NORMAL;
-          mat.update();
-          child.model.material = mat;
+          // Use cached material
+          child.model.material = this.deadMaterial;
         }
         if (child.light) {
           child.enabled = false;

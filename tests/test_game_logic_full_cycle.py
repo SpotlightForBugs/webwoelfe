@@ -18,7 +18,8 @@ import unittest
 from flask import Flask
 
 import game_logic
-from models import PHASEN, Raum, Spieler, db
+from game_logic import PHASEN
+from models import Raum, Spieler, db
 
 
 def _build_test_app() -> Flask:

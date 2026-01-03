@@ -1495,9 +1495,29 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               }
           });
 
-          // Spieler-Highlight bei Abstimmung
+          // Spieler-Highlight bei Abstimmung - Show vote in 3D
           socket.on('stimme_abgegeben', function(data) {
               village3d.highlightPlayer(data.ziel_id, 'red');
+              village3d.showVoteIndicator(data.ziel_id, data.waehler_name);
+          });
+
+          // Show death effect in 3D
+          socket.on('spieler_gestorben', function(data) {
+              village3d.updatePlayerStatus(data.spieler_id, false);
+          });
+
+          // Show action effects in 3D
+          socket.on('aktion_bestaetigt', function(data) {
+              if (data.effekt && data.ziel_id) {
+                  village3d.showActionEffect(data.ziel_id, data.effekt);
+              }
+          });
+
+          // Show chat messages in 3D
+          socket.on('chat', function(data) {
+              if (data.spieler_id && data.nachricht) {
+                  village3d.showChatBubble(data.spieler_id, data.nachricht);
+              }
           });
       }
   }).catch(err => {

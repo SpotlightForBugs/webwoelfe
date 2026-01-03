@@ -23,7 +23,6 @@ from roles import get_rollen_nach_erweiterung, ERWEITERUNG_INFO, KATEGORIE_INFO
 import game_logic
 import secrets
 import os
-import asyncio
 import random
 from datetime import datetime
 
@@ -1049,7 +1048,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         spieler.jaeger_schuss = False
         ziel = Spieler.query.get(ziel_id)
         if ziel:
-            ergebnis = game_logic.toete_spieler(ziel, "jaeger")
+            game_logic.toete_spieler(ziel, "jaeger")
             # SICHER: Nur Name wird geteilt, Rolle erst nach Tod
             emit(
                 "spieler_gestorben",

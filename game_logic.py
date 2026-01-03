@@ -298,51 +298,16 @@ def hat_spieler_mit_rolle(raum: Raum, rolle: str) -> bool:
 def phasennamen_zu_rollen_mapping() -> dict:
     """
     Erstellt ein Mapping zwischen Phasennamen und erforderlichen Rollen.
-    
+
     Returns:
         Dictionary mit Phase zu Rolle Mapping
     """
-    return {
-        'dieb_phase': 'Dieb',
-        'doppelgaenger_phase': 'Doppelgänger',
-        'armor_phase': 'Amor',
-        'priester_dunkel_phase': 'Dunkler Priester',
-        'wildes_kind_phase': 'Wildes Kind',
-        'hund_phase': 'Hund',
-        'schwestern_phase': 'Zwei Schwestern',
-        'brueder_phase': 'Drei Brüder',
-        'freimaurer_phase': 'Freimaurer',
-        'fluechtlinge_phase': 'Flüchtlinge',
-        'sandmann_phase': 'Sandmann',
-        'seherin_phase': 'Seherin',
-        'seherlehrling_phase': 'Seherlehrling',
-        'aurenseherin_phase': 'Aurenseherin',
-        'medium_phase': 'Medium',
-        'tratschweib_phase': 'Tratschweib',
-        'paranormal_billig_phase': 'Paranormaler Ermittler (billig)',
-        'werwolfseherin_phase': 'Werwolfseherin',
-        'heiler_phase': 'Heiler',
-        'leibwaechter_phase': 'Leibwächter',
-        'hure_phase': 'Hure',
-        'prostituierte_phase': 'Prostituierte',
-        'nutte_phase': 'Nutte',
-        'einsamerwolf_phase': 'Einsamer Wolf',
-        'urwolf_phase': 'Urwolf',
-        'weisser_wolf_phase': 'Weißer Wolf',
-        'mordlustiger_phase': 'Mordlustiger',
-        'hexe_phase': 'Hexe',
-        'hexenmeister_phase': 'Hexenmeister',
-        'giftmischerin_phase': 'Giftmischerin',
-        'kraeuterweib_phase': 'Kräuterweib',
-        'zauberer_phase': 'Zauberer',
-        'zahnarzt_phase': 'Zahnarzt',
-        'rabe_phase': 'Rabe',
-        'floetenspieler_phase': 'Flötenspieler',
-        'vampir_phase': 'Vampir',
-        'zombie_phase': 'Zombie',
-        'pyromane_phase': 'Pyromane',
-        'tonks_phase': 'Tonks',
-        'buddler_phase': 'Buddler',
+    from roles import RoleRegistry
+
+    mapping = RoleRegistry.get_phase_role_mapping()
+
+    # Tag-/Spezial-Phasen, die nicht über nacht_aktiv erfasst werden
+    mapping.update({
         'baerenbaendiger_brummen': 'Bärenbändiger',
         'demoskopin_info': 'Demoskopin',
         'prinz_enthuellung': 'Prinz',
@@ -350,7 +315,9 @@ def phasennamen_zu_rollen_mapping() -> dict:
         'kamikaze_phase': 'Kamikaze',
         'hahn_enthuellung': 'Hahn',
         'putzfrau_info': 'Putzfrau',
-    }
+    })
+
+    return mapping
 
 
 def naechste_phase(raum: Raum) -> str:

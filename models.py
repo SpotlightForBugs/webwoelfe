@@ -817,71 +817,51 @@ def _erstelle_rollen_dict():
 ROLLEN = _erstelle_rollen_dict()
 
 
+def _erstelle_phasen_liste():
+    """
+    Baut die Phasenliste dynamisch aus den registrierten Rollen.
+
+    Nachtaktive Rollen liefern ihre Phase über Role.get_phase_name().
+    Ergänzend werden die allgemeinen Tag- und Spezial-Phasen angefügt.
+    """
+    basis_phasen = [
+        'lobby',
+        'rollen_verteilt',
+        'nacht_start',
+    ]
+
+    dynamische_phasen = []
+    try:
+        from roles import RoleRegistry
+
+        dynamische_phasen = [
+            rolle.get_phase_name() for rolle in RoleRegistry.get_nacht_aktive()
+        ]
+    except Exception as e:
+        print(f"[PHASEN] Fehler beim Erstellen der dynamischen Phasenliste: {e}")
+
+    tag_und_spezial_phasen = [
+        'nacht_ende',
+        'tag_start',
+        'baerenbaendiger_brummen',
+        'demoskopin_info',
+        'diskussion',
+        'abstimmung',
+        'abstimmung_ergebnis',
+        'prinz_enthuellung',
+        'jaeger_phase',
+        'kamikaze_phase',
+        'hahn_enthuellung',
+        'putzfrau_info',
+        'tag_ende',
+        'spiel_ende',
+    ]
+
+    return basis_phasen + dynamische_phasen + tag_und_spezial_phasen
+
+
 # Spielphasen in korrekter Reihenfolge
-PHASEN = [
-    'lobby',
-    'rollen_verteilt',
-    'nacht_start',
-    # Erste-Nacht-Phasen (nur Runde 1)
-    'dieb_phase',
-    'doppelgaenger_phase',
-    'armor_phase',
-    'priester_dunkel_phase',
-    'wildes_kind_phase',
-    'hund_phase',
-    'schwestern_phase',
-    'brueder_phase',
-    'freimaurer_phase',
-    'fluechtlinge_phase',
-    'verliebte_info',
-    # Reguläre Nacht-Phasen
-    'sandmann_phase',
-    'seherin_phase',
-    'seherlehrling_phase',
-    'aurenseherin_phase',
-    'medium_phase',
-    'tratschweib_phase',
-    'paranormal_billig_phase',
-    'werwolfseherin_phase',
-    'heiler_phase',
-    'leibwaechter_phase',
-    'hure_phase',
-    'prostituierte_phase',
-    'nutte_phase',
-    'werwolf_phase',
-    'einsamerwolf_phase',
-    'urwolf_phase',
-    'weisser_wolf_phase',
-    'mordlustiger_phase',
-    'hexe_phase',
-    'hexenmeister_phase',
-    'giftmischerin_phase',
-    'kraeuterweib_phase',
-    'zauberer_phase',
-    'zahnarzt_phase',
-    'rabe_phase',
-    'floetenspieler_phase',
-    'vampir_phase',
-    'zombie_phase',
-    'pyromane_phase',
-    'tonks_phase',
-    'buddler_phase',
-    'nacht_ende',
-    # Tag-Phasen
-    'tag_start',
-    'baerenbaendiger_brummen',
-    'demoskopin_info',
-    'diskussion',
-    'abstimmung',
-    'abstimmung_ergebnis',
-    'prinz_enthuellung',
-    'jaeger_phase',
-    'kamikaze_phase',
-    'hahn_enthuellung',
-    'putzfrau_info',
-    'tag_ende',
-    'spiel_ende'
-]
+PHASEN = _erstelle_phasen_liste()
 
 
 # Rollen-Konfiguration nach Spielerzahl (Empfehlung)

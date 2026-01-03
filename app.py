@@ -783,7 +783,21 @@ def handle_aktion(data):
     erfolg = verarbeite_aktion(spieler, raum, aktion_typ, ziel_id)
 
     if erfolg:
-        emit("aktion_bestaetigt", {"aktion": aktion_typ})
+        # Map action types to 3D effect types
+        effect_map = {
+            'hexe_heilen': 'heal',
+            'heiler_schuetzen': 'protect',
+            'hexe_toeten': 'poison',
+            'werwolf_wahl': 'attack',
+            'armor_verlieben': 'love',
+        }
+        
+        effect_data = {"aktion": aktion_typ}
+        if ziel_id and aktion_typ in effect_map:
+            effect_data["effekt"] = effect_map[aktion_typ]
+            effect_data["ziel_id"] = ziel_id
+        
+        emit("aktion_bestaetigt", effect_data)
 
         # Pruefen ob alle fertig sind
         pruefe_phase_abschluss(raum)

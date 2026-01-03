@@ -982,6 +982,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   socket.on('aktion_bestaetigt', function(data) {
       showAlert('Aktion ausgeführt!', 'success');
       clearSelection();
+      // Show 3D effect if available
+      if (window.village3d && data.effekt && data.ziel_id) {
+          window.village3d.showActionEffect(data.ziel_id, data.effekt);
+      }
   });
 
   socket.on('fehler', function(data) {
@@ -990,6 +994,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   socket.on('chat', function(data) {
       addChatMessage(data.von, data.nachricht, data.ist_tot);
+      // Also show in 3D if available and player_id exists
+      if (window.village3d && data.spieler_id && data.nachricht) {
+          window.village3d.showChatBubble(data.spieler_id, data.nachricht);
+      }
   });
 
   socket.on('phase_bereit', function(data) {
@@ -1504,20 +1512,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Show death effect in 3D
           socket.on('spieler_gestorben', function(data) {
               village3d.updatePlayerStatus(data.spieler_id, false);
-          });
-
-          // Show action effects in 3D
-          socket.on('aktion_bestaetigt', function(data) {
-              if (data.effekt && data.ziel_id) {
-                  village3d.showActionEffect(data.ziel_id, data.effekt);
-              }
-          });
-
-          // Show chat messages in 3D
-          socket.on('chat', function(data) {
-              if (data.spieler_id && data.nachricht) {
-                  village3d.showChatBubble(data.spieler_id, data.nachricht);
-              }
           });
       }
   }).catch(err => {

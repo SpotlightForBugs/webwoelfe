@@ -513,19 +513,8 @@ spiel_name }}{% endblock %} {% block content %}
 <script type="module">
   import Village3DPlayCanvas from "/static/js/village3d-playcanvas.js";
 
-  // Initialisiere 3D-Dorf in der Lobby
-  document.addEventListener("DOMContentLoaded", function () {
-    const container = document.getElementById("village-3d-lobby-container");
-    if (container && typeof pc !== "undefined") {
-      window.village3dLobby = new Village3DPlayCanvas(
-        "village-3d-lobby-container",
-        "{{ raum.code }}",
-      );
-
-      // Initiale Spieler laden
-      updateVillage3D();
-    }
-  });
+  // Konstante für Update-Verzögerung (Zeit für DOM-Updates)
+  const VILLAGE_UPDATE_DELAY = 100;
 
   // Funktion um 3D Dorf mit aktuellen Spielern zu aktualisieren
   window.updateVillage3D = function () {
@@ -539,7 +528,11 @@ spiel_name }}{% endblock %} {% block content %}
       // Erzähler nicht im Dorf anzeigen
       if (istErzaehler) return;
 
-      const id = parseInt(karte.getAttribute("data-spieler-id"));
+      const idStr = karte.getAttribute("data-spieler-id");
+      const id = parseInt(idStr, 10);
+      // Validierung: Ungültige IDs überspringen
+      if (!idStr || isNaN(id)) return;
+
       const name =
         karte
           .querySelector(".spielername")
@@ -561,6 +554,27 @@ spiel_name }}{% endblock %} {% block content %}
       window.village3dLobby.setTimeOfDay(false);
     }
   };
+
+  // Helper-Funktion für verzögerte Village-Updates
+  window.scheduleVillageUpdate = function () {
+    if (window.updateVillage3D) {
+      setTimeout(() => window.updateVillage3D(), VILLAGE_UPDATE_DELAY);
+    }
+  };
+
+  // Initialisiere 3D-Dorf in der Lobby
+  document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("village-3d-lobby-container");
+    if (container && typeof pc !== "undefined") {
+      window.village3dLobby = new Village3DPlayCanvas(
+        "village-3d-lobby-container",
+        "{{ raum.code }}",
+      );
+
+      // Initiale Spieler laden
+      updateVillage3D();
+    }
+  });
 </script>
 {% endif %}
 <script>
@@ -585,8 +599,8 @@ spiel_name }}{% endblock %} {% block content %}
     // Auch zur Sitzordnung hinzufügen
     addToSitzordnung(data.spieler);
     // 3D Dorf aktualisieren (Online-Modus)
-    if (window.updateVillage3D) {
-      setTimeout(() => window.updateVillage3D(), 100);
+    if (window.scheduleVillageUpdate) {
+      window.scheduleVillageUpdate();
     }
   });
 
@@ -599,8 +613,8 @@ spiel_name }}{% endblock %} {% block content %}
     // Auch aus Sitzordnung entfernen
     removeFromSitzordnung(data.spieler_id);
     // 3D Dorf aktualisieren (Online-Modus)
-    if (window.updateVillage3D) {
-      setTimeout(() => window.updateVillage3D(), 100);
+    if (window.scheduleVillageUpdate) {
+      window.scheduleVillageUpdate();
     }
   });
 
@@ -858,8 +872,8 @@ spiel_name }}{% endblock %} {% block content %}
     updateStartButton();
     initSitzordnungFromSpieler();
     // 3D Dorf aktualisieren (Online-Modus)
-    if (window.updateVillage3D) {
-      setTimeout(() => window.updateVillage3D(), 100);
+    if (window.scheduleVillageUpdate) {
+      window.scheduleVillageUpdate();
     }
   }
 

@@ -55,7 +55,7 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     
     # Special werewolf roles (scale with game size)
     if effektive_anzahl >= 13:
-        rollen['Weisser Wolf'] = max(1, effektive_anzahl // 100)  # Solo wolf
+        rollen['Weißer Wolf'] = max(1, effektive_anzahl // 100)  # Solo wolf
     if effektive_anzahl >= 17:
         rollen['Urwolf'] = max(1, effektive_anzahl // 150)
     if effektive_anzahl >= 25:
@@ -78,7 +78,7 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     if effektive_anzahl >= 8:
         rollen['Amor'] = max(1, effektive_anzahl // 150)
     if effektive_anzahl >= 10:
-        rollen['Jaeger'] = max(1, effektive_anzahl // 60)  # Death trigger
+        rollen['Jäger'] = max(1, effektive_anzahl // 60)  # Death trigger
     if effektive_anzahl >= 12:
         rollen['Heiler'] = max(1, effektive_anzahl // 80)  # Protection
     
@@ -92,9 +92,9 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     if effektive_anzahl >= 25:
         rollen['Prinz'] = max(1, effektive_anzahl // 150)
     if effektive_anzahl >= 30:
-        rollen['Buergermeister'] = max(1, effektive_anzahl // 200)
+        rollen['Bürgermeister'] = max(1, effektive_anzahl // 200)
     if effektive_anzahl >= 35:
-        rollen['Leibwaechter'] = max(1, effektive_anzahl // 150)
+        rollen['Leibwächter'] = max(1, effektive_anzahl // 150)
     if effektive_anzahl >= 40:
         rollen['Aurenseherin'] = max(1, effektive_anzahl // 200)
     if effektive_anzahl >= 50:
@@ -102,7 +102,7 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     if effektive_anzahl >= 60:
         rollen['Tratschweib'] = max(1, effektive_anzahl // 200)
     if effektive_anzahl >= 75:
-        rollen['Baerenbaendiger'] = max(1, effektive_anzahl // 250)
+        rollen['Bärenbändiger'] = max(1, effektive_anzahl // 250)
     
     # Group knowledge roles for very large games
     if effektive_anzahl >= 80:
@@ -110,18 +110,18 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
         rollen['Zwei Schwestern'] = schwestern_paare * 2
     if effektive_anzahl >= 100:
         brueder_gruppen = max(1, effektive_anzahl // 250)
-        rollen['Drei Brueder'] = brueder_gruppen * 3
+        rollen['Drei Brüder'] = brueder_gruppen * 3
     if effektive_anzahl >= 120:
         freimaurer_anzahl = max(2, effektive_anzahl // 150)
         rollen['Freimaurer'] = freimaurer_anzahl
     
     # Defensive/utility roles for massive games
     if effektive_anzahl >= 150:
-        rollen['Kraeuterweib'] = max(1, effektive_anzahl // 300)
+        rollen['Kräuterweib'] = max(1, effektive_anzahl // 300)
         rollen['Zauberer'] = max(1, effektive_anzahl // 350)
     if effektive_anzahl >= 200:
         rollen['Hure'] = max(1, effektive_anzahl // 300)
-        rollen['Doppelgaenger'] = max(1, effektive_anzahl // 400)
+        rollen['Doppelgänger'] = max(1, effektive_anzahl // 400)
     if effektive_anzahl >= 300:
         rollen['Sandmann'] = max(1, effektive_anzahl // 400)
         rollen['Buddler'] = max(1, effektive_anzahl // 500)
@@ -146,9 +146,9 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     if effektive_anzahl >= 15:
         rollen['Dorfdepp'] = max(1, effektive_anzahl // 200)
     if effektive_anzahl >= 50:
-        rollen['Floetenspieler'] = max(1, effektive_anzahl // 250)
+        rollen['Flötenspieler'] = max(1, effektive_anzahl // 250)
     if effektive_anzahl >= 100:
-        rollen['Selbstmoerder'] = max(1, effektive_anzahl // 300)
+        rollen['Selbstmörder'] = max(1, effektive_anzahl // 300)
     if effektive_anzahl >= 150:
         rollen['Henker'] = max(1, effektive_anzahl // 400)
     if effektive_anzahl >= 300:
@@ -304,49 +304,49 @@ def phasennamen_zu_rollen_mapping() -> dict:
     """
     return {
         'dieb_phase': 'Dieb',
-        'doppelgaenger_phase': 'Doppelgaenger',
-        'armor_phase': 'Armor',
+        'doppelgaenger_phase': 'Doppelgänger',
+        'armor_phase': 'Amor',
         'priester_dunkel_phase': 'Dunkler Priester',
         'wildes_kind_phase': 'Wildes Kind',
         'hund_phase': 'Hund',
         'schwestern_phase': 'Zwei Schwestern',
-        'brueder_phase': 'Zwei Brueder',
+        'brueder_phase': 'Drei Brüder',
         'freimaurer_phase': 'Freimaurer',
-        'fluechtlinge_phase': 'Fluechtlinge',
+        'fluechtlinge_phase': 'Flüchtlinge',
         'sandmann_phase': 'Sandmann',
         'seherin_phase': 'Seherin',
         'seherlehrling_phase': 'Seherlehrling',
         'aurenseherin_phase': 'Aurenseherin',
         'medium_phase': 'Medium',
         'tratschweib_phase': 'Tratschweib',
-        'paranormal_billig_phase': 'Paranormal Billig',
+        'paranormal_billig_phase': 'Paranormaler Ermittler (billig)',
         'werwolfseherin_phase': 'Werwolfseherin',
         'heiler_phase': 'Heiler',
-        'leibwaechter_phase': 'Leibwaechter',
+        'leibwaechter_phase': 'Leibwächter',
         'hure_phase': 'Hure',
         'prostituierte_phase': 'Prostituierte',
         'nutte_phase': 'Nutte',
         'einsamerwolf_phase': 'Einsamer Wolf',
         'urwolf_phase': 'Urwolf',
-        'weisser_wolf_phase': 'Weisser Wolf',
+        'weisser_wolf_phase': 'Weißer Wolf',
         'mordlustiger_phase': 'Mordlustiger',
         'hexe_phase': 'Hexe',
         'hexenmeister_phase': 'Hexenmeister',
         'giftmischerin_phase': 'Giftmischerin',
-        'kraeuterweib_phase': 'Kraeuterweib',
+        'kraeuterweib_phase': 'Kräuterweib',
         'zauberer_phase': 'Zauberer',
         'zahnarzt_phase': 'Zahnarzt',
         'rabe_phase': 'Rabe',
-        'floetenspieler_phase': 'Floetenspieler',
+        'floetenspieler_phase': 'Flötenspieler',
         'vampir_phase': 'Vampir',
         'zombie_phase': 'Zombie',
         'pyromane_phase': 'Pyromane',
         'tonks_phase': 'Tonks',
         'buddler_phase': 'Buddler',
-        'baerenbaendiger_brummen': 'Baerenbandiger',
+        'baerenbaendiger_brummen': 'Bärenbändiger',
         'demoskopin_info': 'Demoskopin',
         'prinz_enthuellung': 'Prinz',
-        'jaeger_phase': 'Jaeger',
+        'jaeger_phase': 'Jäger',
         'kamikaze_phase': 'Kamikaze',
         'hahn_enthuellung': 'Hahn',
         'putzfrau_info': 'Putzfrau',
@@ -420,6 +420,25 @@ def naechste_phase(raum: Raum) -> str:
     return raum.aktuelle_phase
 
 
+def ist_werwolf_rolle(rolle: str) -> bool:
+    """
+    Prueft ob eine Rolle zum Werwolf-Team gehoert.
+    Beruecksichtigt alle Werwolf-Varianten.
+    """
+    from roles import RoleRegistry
+    from roles.enums import Team
+    
+    rolle_obj = RoleRegistry.get(rolle)
+    if rolle_obj:
+        return rolle_obj.info.team == Team.WERWOLF
+    
+    rolle_info = ROLLEN.get(rolle, {})
+    if rolle_info:
+        return rolle_info.get('team') == 'werwolf'
+    
+    return 'werwolf' in (rolle or '').lower()
+
+
 def pruefe_spielende(raum: Raum) -> dict | None:
     """
     Prueft ob das Spiel zu Ende ist.
@@ -432,8 +451,9 @@ def pruefe_spielende(raum: Raum) -> dict | None:
     """
     lebende = Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False).all()
     
-    werwoelfe = [s for s in lebende if s.rolle == 'Werwolf']
-    dorfbewohner = [s for s in lebende if s.rolle != 'Werwolf']
+    # Beruecksichtige alle Werwolf-Varianten
+    werwoelfe = [s for s in lebende if ist_werwolf_rolle(s.rolle)]
+    dorfbewohner = [s for s in lebende if not ist_werwolf_rolle(s.rolle)]
     
     # Verliebten-Check
     verliebte = Spieler.query.filter(
@@ -445,7 +465,9 @@ def pruefe_spielende(raum: Raum) -> dict | None:
         # Pruefen ob nur noch die Verliebten leben
         if len(lebende) == 2:
             rollen = {v.rolle for v in verliebte}
-            if 'Werwolf' in rollen and len(rollen) > 1:
+            # Pruefen ob ein Verliebter ein Wolf ist
+            hat_wolf = any(ist_werwolf_rolle(r) for r in rollen)
+            if hat_wolf and len(rollen) > 1:
                 return {
                     'gewinner': 'verliebte',
                     'nachricht': 'Die Verliebten haben gewonnen! Ihre Liebe hat alle ueberwunden.',
@@ -494,7 +516,7 @@ def toete_spieler(spieler: Spieler, todesart: str = 'unbekannt') -> dict:
     }
     
     # Jaeger stirbt - kann noch schiessen
-    if spieler.rolle == 'Jaeger' and spieler.jaeger_schuss:
+    if spieler.rolle == 'Jäger' and spieler.jaeger_schuss:
         ergebnis['folge_aktionen'].append('jaeger_schuss')
     
     # Verliebter stirbt - Partner stirbt auch
@@ -692,5 +714,4 @@ def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: str = None) -> bool:
         if not hat_spieler_gewaehlt(s, raum, phase):
             return False
     return True
-
 

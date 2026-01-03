@@ -589,6 +589,7 @@
     const raumCode = "{{ raum.code }}";
     const spielerId = {{ spieler.id }};
     const spielerRolle = "{{ spieler.rolle }}";
+    const spielerTeam = "{{ rolle_info.team if rolle_info else '' }}";
     const istErzaehler = {{ 'true' if spieler.ist_erzaehler else 'false' }};
     const spielModus = "{{ raum.modus }}";
     
@@ -621,8 +622,13 @@
     });
     
     socket.on('seherin_ergebnis', function(data) {
-        const typ = data.ist_werwolf ? 'Werwolf!' : 'kein Werwolf';
-        showAlert(`${data.ziel_name} ist ${typ}`, data.ist_werwolf ? 'error' : 'success');
+        if (data.rolle) {
+            const teamText = data.ist_werwolf ? 'Werwolf-Team' : 'Dorf-Team';
+            showAlert(`${data.ziel_name} ist ${data.rolle} (${teamText})`, data.ist_werwolf ? 'error' : 'success');
+        } else {
+            const typ = data.ist_werwolf ? 'Werwolf!' : 'kein Werwolf';
+            showAlert(`${data.ziel_name} ist ${typ}`, data.ist_werwolf ? 'error' : 'success');
+        }
     });
     
     socket.on('hexe_info', function(data) {
@@ -947,6 +953,9 @@
             'armor_phase': 'Amor'
         };
         
+        if (aktuellePhase === 'werwolf_phase') {
+            return spielerTeam === 'werwolf';
+        }
         return phasenRollen[aktuellePhase] === spielerRolle;
     }
     
@@ -960,7 +969,7 @@
             html = '<p class="text-muted">Wähle einen Spieler</p>';
         } else {
             // Phasen-spezifische Aktionen
-            if (aktuellePhase === 'werwolf_phase' && spielerRolle === 'Werwolf') {
+            if (aktuellePhase === 'werwolf_phase' && spielerTeam === 'werwolf') {
                 html = `<button class="btn btn-primary" onclick="aktion('werwolf_wahl')"><i class="fa-solid fa-paw"></i> Töten</button>`;
             } else if (aktuellePhase === 'seherin_phase' && spielerRolle === 'Seherin') {
                 html = `<button class="btn btn-primary" onclick="aktion('seherin_sehen')"><i class="fa-solid fa-eye"></i> Identität sehen</button>`;

@@ -16,13 +16,17 @@ class Raum(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(6), unique=True, nullable=False, index=True)
     name = db.Column(db.String(50), nullable=False)
-    modus = db.Column(db.String(20), nullable=False, default='online')  # 'gruppe' oder 'online'
+    modus = db.Column(db.String(20), nullable=False, default='online')  # 'online' oder 'gruppe'
     erstellt_am = db.Column(db.DateTime, default=datetime.utcnow)
     spieler_anzahl = db.Column(db.Integer, default=8)
     spiel_gestartet = db.Column(db.Boolean, default=False)
     aktuelle_phase = db.Column(db.String(30), default='lobby')
     runde = db.Column(db.Integer, default=0)
     erzaehler_id = db.Column(db.Integer, db.ForeignKey('spieler.id'), nullable=True)
+    
+    # Spielende
+    spiel_beendet = db.Column(db.Boolean, default=False)
+    gewinner = db.Column(db.String(50), nullable=True)
     
     # Rollen-Konfiguration (JSON der aktivierten Rollen)
     aktive_rollen = db.Column(db.Text, default='{}')
@@ -97,6 +101,12 @@ class Spieler(db.Model):
     
     # Henker-Ziel
     henker_ziel_id = db.Column(db.Integer, db.ForeignKey('spieler.id'), nullable=True)
+    
+    # Herrchen (für Hund)
+    herrchen_id = db.Column(db.Integer, db.ForeignKey('spieler.id'), nullable=True)
+    
+    # Hund hat sein Herrchen bereits gewählt
+    hund_herrchen_gewaehlt = db.Column(db.Boolean, default=False)
     
     @staticmethod
     def generiere_session():
@@ -244,7 +254,7 @@ class SpielerPosition(db.Model):
 
 
 # ============================================================================
-# ERZÄHLER-TEXTE FÜR LOKALEN MODUS
+# ERZÄHLER-TEXTE FÜR GRUPPEN-MODUS
 # ============================================================================
 
 # PHASE-BASIERTE TEXTE (werden jede Runde wiederholt)
@@ -348,6 +358,12 @@ ERZAEHLER_EVENTS = {
         'bedingung': {'runde': 1, 'rolle_aktiv': 'Doppelgänger'},
         'einmalig': True,
     },
+    'hund_herrchen': {
+        'text': 'Der Hund erwacht. Er wählt sein Herrchen. Stirbt sein Herrchen, wird der Hund zum Werwolf!',
+        'anweisung': 'Der Hund öffnet die Augen und zeigt auf sein Herrchen. Merke dir diese Wahl.',
+        'bedingung': {'runde': 1, 'rolle_aktiv': 'Hund'},
+        'einmalig': True,
+    },
     
     # === EREIGNIS-EVENTS (passieren bei bestimmten Aktionen) ===
     'jaeger_stirbt': {
@@ -378,6 +394,12 @@ ERZAEHLER_EVENTS = {
         'text': 'Das Vorbild des Wilden Kindes ist gestorben! Das Kind verwandelt sich in einen Werwolf!',
         'anweisung': 'Das Wilde Kind wird in der nächsten Nacht mit den Werwölfen aufwachen.',
         'bedingung': {'trigger': 'vorbild_stirbt'},
+        'einmalig': True,
+    },
+    'hund_verwandelt': {
+        'text': 'Das Herrchen des Hundes ist gestorben! Der treue Hund verwandelt sich vor Trauer in einen Werwolf!',
+        'anweisung': 'Der Hund wird in der nächsten Nacht mit den Werwölfen aufwachen.',
+        'bedingung': {'trigger': 'herrchen_stirbt'},
         'einmalig': True,
     },
     'jesus_aufersteht': {
@@ -581,8 +603,8 @@ HINWEIS_TYPEN = {
 # ============================================================================
 
 HINWEIS_MODUS = {
-    'lokal': {
-        # Im lokalen Modus: Audio + Visual für den Erzähler
+    'gruppe': {
+        # Im Gruppen-Modus: Audio + Visual für den Erzähler
         'audio_erlaubt': True,
         'visual_ziel': 'erzaehler',  # Nur Erzähler sieht Hinweise
         'synchronisiert': False,
@@ -761,967 +783,38 @@ SPIEL_REGELN = {
 
 
 # ============================================================================
-# ROLLEN DEFINITIONEN - Vollständige Sammlung
+# ROLLEN DEFINITIONEN - Vollstaendige Sammlung
 # Basierend auf: https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung
 # Icons: FontAwesome 6 (https://fontawesome.com/icons)
+#
+# HINWEIS: Diese Definition ist nur noch fuer Abwaertskompatibilitaet.
+# Neue Rollen werden in roles/ als eigene Klassen definiert!
+# Siehe roles/README.md fuer Details.
+
+
+# ============================================================================
+# DYNAMISCHES ROLLEN-SYSTEM
+# Alle Rollen werden jetzt aus roles/*.py geladen.
+# Um eine neue Rolle hinzuzufuegen: Einfach eine .py-Datei in roles/ erstellen!
 # ============================================================================
 
-ROLLEN = {
-    # ========================================================================
-    # 1-9 GRUNDROLLEN
-    # ========================================================================
-    'Dorfbewohner': {
-        'id': 1,
-        'team': 'dorf',
-        'kategorie': 'grundrollen',
-        'beschreibung': 'Du bist ein einfacher Dorfbewohner. Hilf dem Dorf, die Werwölfe zu entlarven! Du hast keine speziellen Fähigkeiten, aber deine Stimme zählt.',
-        'nacht_aktiv': False,
-        'prioritaet': 100,
-        'icon': 'fa-solid fa-user',
-        'farbe': '#6b7280',
-        'erzaehler_nacht': 'Der Dorfbewohner schläft friedlich. Er hat keine nächtlichen Fähigkeiten.',
-        'erzaehler_tag': 'Der Dorfbewohner erwacht und hofft, die Wölfe zu entlarven. Seine Stimme ist seine einzige Waffe.',
-        'hinweis_config': None,  # Keine speziellen Hinweise
-    },
-    'Werwolf': {
-        'id': 2,
-        'team': 'werwolf',
-        'kategorie': 'grundrollen',
-        'beschreibung': 'Du bist ein Werwolf! Jede Nacht ermordest du gemeinsam mit deinen Werwolf-Gefährten einen Dorfbewohner. Bleibe unentdeckt!',
-        'nacht_aktiv': True,
-        'prioritaet': 50,
-        'icon': 'fa-solid fa-paw',
-        'farbe': '#dc2626',
-        'erzaehler_nacht': 'Die Werwölfe erwachen, erkennen sich und wählen gemeinsam ein Opfer aus.',
-        'erzaehler_tag': None,
-    },
-    'Seherin': {
-        'id': 3,
-        'team': 'dorf',
-        'kategorie': 'grundrollen',
-        'beschreibung': 'Du bist die Seherin. Jede Nacht kannst du die wahre Identität eines Spielers erfahren - ob er ein Werwolf ist oder nicht.',
-        'nacht_aktiv': True,
-        'prioritaet': 20,
-        'icon': 'fa-solid fa-eye',
-        'farbe': '#7c3aed',
-        'erzaehler_nacht': 'Die Seherin erwacht und zeigt auf einen Spieler. Du zeigst ihr mit Daumen hoch (Dorf) oder runter (Werwolf) die Zugehörigkeit.',
-        'erzaehler_tag': None,
-    },
-    'Hexe': {
-        'id': 4,
-        'team': 'dorf',
-        'kategorie': 'grundrollen',
-        'beschreibung': 'Du bist die Hexe. Du hast einen Heiltrank (rettet das Werwolf-Opfer) und einen Gifttrank (tötet einen Spieler). Jeder Trank kann nur einmal verwendet werden!',
-        'nacht_aktiv': True,
-        'prioritaet': 60,
-        'icon': 'fa-solid fa-hat-wizard',
-        'farbe': '#059669',
-        'erzaehler_nacht': 'Die Hexe erwacht. Zeige auf das Werwolf-Opfer. Frage: Heiltrank einsetzen? (Daumen hoch/runter) Gifttrank einsetzen? (Zeige auf Spieler oder schüttle Kopf)',
-        'erzaehler_tag': None,
-    },
-    'Jäger': {
-        'id': 5,
-        'team': 'dorf',
-        'kategorie': 'grundrollen',
-        'beschreibung': 'Du bist der Jäger. Wenn du stirbst, kannst du einen letzten Schuss abfeuern und einen Spieler deiner Wahl mit in den Tod reißen!',
-        'nacht_aktiv': False,
-        'prioritaet': 99,
-        'icon': 'fa-solid fa-crosshairs',
-        'farbe': '#b45309',
-        'erzaehler_nacht': 'Der Jäger schläft mit seiner Flinte unter dem Kopfkissen. Bereit für seinen letzten Schuss.',
-        'erzaehler_tag': 'Der Jäger ist gestorben! Mit zitternder Hand hebt er seine Flinte. Auf wen feuert er seinen letzten Schuss?',
-        'hinweis_config': None,
-    },
-    'Heiler': {
-        'id': 6,
-        'team': 'dorf',
-        'kategorie': 'grundrollen',
-        'beschreibung': 'Du bist der Heiler. Jede Nacht kannst du einen Spieler vor dem Werwolf-Angriff schützen. Du darfst nicht zweimal hintereinander denselben Spieler schützen!',
-        'nacht_aktiv': True,
-        'prioritaet': 55,
-        'icon': 'fa-solid fa-heart-pulse',
-        'farbe': '#10b981',
-        'erzaehler_nacht': 'Der Heiler erwacht und zeigt auf den Spieler, den er diese Nacht beschützen möchte. Nicht denselben wie letzte Nacht!',
-        'erzaehler_tag': None,
-    },
-    'Amor': {
-        'id': 7,
-        'team': 'dorf',
-        'kategorie': 'grundrollen',
-        'beschreibung': 'Du bist Amor. In der ersten Nacht wählst du zwei Spieler, die sich unsterblich verlieben. Stirbt einer, stirbt auch der andere. Die Verliebten gewinnen nur gemeinsam!',
-        'nacht_aktiv': True,
-        'prioritaet': 5,
-        'icon': 'fa-solid fa-heart',
-        'farbe': '#ec4899',
-        'erzaehler_nacht': 'Amor erwacht (nur erste Nacht) und zeigt auf zwei Spieler, die sich verlieben sollen. Berühre beide leicht an der Schulter.',
-        'erzaehler_tag': None,
-    },
+def _erstelle_rollen_dict():
+    """
+    Erstellt das ROLLEN-Dict dynamisch aus dem modularen System (roles/*.py).
+    
+    Neue Rollen einfach als .py-Datei in roles/ hinzufuegen - sie werden
+    automatisch erkannt und registriert!
+    """
+    try:
+        from roles import get_alle_rollen
+        return get_alle_rollen()
+    except Exception as e:
+        print(f"[ROLLEN] Fehler beim Laden: {e}")
+        return {}
 
-    # ========================================================================
-    # 10-19 DORFBEWOHNER-VARIANTEN
-    # ========================================================================
-    'Alter Mann': {
-        'id': 11,
-        'team': 'dorf',
-        'kategorie': 'dorfbewohner',
-        'beschreibung': 'Du bist der Alte Mann. Du überlebst den ersten Werwolf-Angriff! Aber Vorsicht: Wirst du vom Dorf gehängt, verlieren alle Spezialrollen ihre Fähigkeiten.',
-        'nacht_aktiv': False,
-        'prioritaet': 98,
-        'icon': 'fa-solid fa-person-cane',
-        'farbe': '#78716c',
-        'erzaehler_nacht': 'Der Alte Mann schläft tief. Seine zähe Haut hat schon manchen Biss überstanden.',
-        'erzaehler_tag': 'Der Alte Mann erwacht. Falls er von Wölfen angegriffen wurde, hat er überlebt! Aber Vorsicht: Hängt das Dorf ihn, verlieren alle Spezialrollen ihre Kräfte.',
-        'hinweis_config': None,
-    },
-    'Dorfdepp': {
-        'id': 12,
-        'team': 'solo',
-        'kategorie': 'dorfbewohner',
-        'beschreibung': 'Du bist der Dorfdepp. Du gewinnst, wenn du vom Dorf gehängt wirst. Du gewinnst mit dem eigentlichen Gewinner.',
-        'nacht_aktiv': False,
-        'prioritaet': 100,
-        'icon': 'fa-solid fa-face-grin-tongue',
-        'farbe': '#f59e0b',
-        'erzaehler_nacht': 'Der Dorfdepp schläft und träumt davon, endlich ernst genommen zu werden... oder auch nicht.',
-        'erzaehler_tag': 'Der Dorfdepp stolpert durch den Tag. Sein Ziel: So verdächtig wie möglich wirken, ohne ein Werwolf zu sein!',
-        'hinweis_config': 'Dorfdepp',  # Kann sich selbst verdächtig machen
-    },
-    'Drei Brüder': {
-        'id': 13,
-        'team': 'dorf',
-        'kategorie': 'dorfbewohner',
-        'beschreibung': 'Du bist einer der drei Brüder. In der ersten Nacht erkennt ihr euch gegenseitig. Ihr dürft jede Nacht kurz die Augen öffnen und euch absprechen.',
-        'nacht_aktiv': True,
-        'prioritaet': 8,
-        'icon': 'fa-solid fa-people-group',
-        'farbe': '#4f46e5',
-        'erzaehler_nacht': 'Die drei Brüder erwachen und erkennen sich. Sie dürfen sich kurz absprechen.',
-        'erzaehler_tag': None,
-    },
-    'Zwei Schwestern': {
-        'id': 14,
-        'team': 'dorf',
-        'kategorie': 'dorfbewohner',
-        'beschreibung': 'Du bist eine der zwei Schwestern. In der ersten Nacht erkennt ihr euch gegenseitig. Ihr dürft jede Nacht kurz die Augen öffnen und euch absprechen.',
-        'nacht_aktiv': True,
-        'prioritaet': 8,
-        'icon': 'fa-solid fa-user-group',
-        'farbe': '#f472b6',
-        'erzaehler_nacht': 'Die zwei Schwestern erwachen und erkennen sich. Sie dürfen sich kurz absprechen.',
-        'erzaehler_tag': None,
-    },
-    'Freimaurer': {
-        'id': 15,
-        'team': 'dorf',
-        'kategorie': 'dorfbewohner',
-        'beschreibung': 'Du bist ein Freimaurer. In der ersten Nacht erkennen sich alle Freimaurer gegenseitig. Ihr wisst, dass ihr auf der gleichen Seite steht.',
-        'nacht_aktiv': True,
-        'prioritaet': 9,
-        'icon': 'fa-solid fa-building-columns',
-        'farbe': '#3b82f6',
-        'erzaehler_nacht': 'Die Freimaurer erwachen und erkennen sich gegenseitig.',
-        'erzaehler_tag': None,
-    },
-    'Griesgram': {
-        'id': 16,
-        'team': 'dorf',
-        'kategorie': 'dorfbewohner',
-        'beschreibung': 'Du bist der Griesgram. Du bist immer schlecht gelaunt und stimmst immer mit JA bei Hinrichtungen. Deine Stimme zählt aber trotzdem!',
-        'nacht_aktiv': False,
-        'prioritaet': 100,
-        'icon': 'fa-solid fa-face-angry',
-        'farbe': '#6b7280',
-        'erzaehler_nacht': 'Der Griesgram wälzt sich mürrisch im Bett. Selbst im Schlaf ist er schlecht gelaunt.',
-        'erzaehler_tag': 'Der Griesgram erwacht grantig. Er stimmt IMMER für eine Hinrichtung - egal wer vorgeschlagen wird!',
-        'hinweis_config': None,
-    },
-    'Jesus': {
-        'id': 17,
-        'team': 'dorf',
-        'kategorie': 'dorfbewohner',
-        'beschreibung': 'Du bist Jesus. Wenn du stirbst, kannst du einmalig nach 3 Tagen auferstehen und weiterspielen! Die Auferstehung geschieht automatisch.',
-        'nacht_aktiv': False,
-        'prioritaet': 97,
-        'icon': 'fa-solid fa-cross',
-        'farbe': '#fbbf24',
-        'erzaehler_nacht': 'Jesus ruht friedlich. Der Tod ist für ihn nur ein vorübergehender Zustand.',
-        'erzaehler_tag': 'Falls Jesus vor 3 Tagen gestorben ist: Ein Wunder geschieht! Jesus erhebt sich und kehrt triumphierend ins Spiel zurück!',
-        'hinweis_config': None,
-    },
-    'Tonks': {
-        'id': 18,
-        'team': 'dorf',
-        'kategorie': 'dorfbewohner',
-        'beschreibung': 'Du bist Tonks, ein Metamorphmagus! Einmal pro Spiel kannst du deine Rolle mit einem zufälligen toten Spieler tauschen und seine Fähigkeiten übernehmen.',
-        'nacht_aktiv': True,
-        'prioritaet': 75,
-        'icon': 'fa-solid fa-masks-theater',
-        'farbe': '#a855f7',
-        'erzaehler_nacht': 'Tonks erwacht. Möchte sie ihre Rolle mit einem toten Spieler tauschen? (Einmal pro Spiel)',
-        'erzaehler_tag': None,
-    },
-    'Hund': {
-        'id': 19,
-        'team': 'dorf',
-        'kategorie': 'dorfbewohner',
-        'beschreibung': 'Du bist der treue Hund. Du wählst in der ersten Nacht ein Herrchen. Stirbt dein Herrchen, wechselst du zum Team der Werwölfe über!',
-        'nacht_aktiv': True,
-        'prioritaet': 7,
-        'icon': 'fa-solid fa-dog',
-        'farbe': '#a16207',
-        'erzaehler_nacht': 'Der Hund erwacht (nur erste Nacht) und wählt sein Herrchen.',
-        'erzaehler_tag': None,
-    },
 
-    # ========================================================================
-    # 20-29 WERWOLF-VARIANTEN
-    # ========================================================================
-    'Weißer Wolf': {
-        'id': 21,
-        'team': 'solo',
-        'kategorie': 'werwolf',
-        'beschreibung': 'Du bist der Weiße Wolf! Du jagst mit den Wölfen, aber jede zweite Nacht kannst du zusätzlich einen Mitwerwolf töten. Du gewinnst nur alleine!',
-        'nacht_aktiv': True,
-        'prioritaet': 52,
-        'icon': 'fa-solid fa-paw',
-        'farbe': '#f5f5f4',
-        'erzaehler_nacht': 'Der Weiße Wolf erwacht (jede zweite Nacht). Möchte er einen Mitwerwolf töten?',
-        'erzaehler_tag': None,
-    },
-    'Polarwolf': {
-        'id': 22,
-        'team': 'werwolf',
-        'kategorie': 'werwolf',
-        'beschreibung': 'Du bist der Polarwolf. Du bist immun gegen die Kälte - der Sandmann kann dich nicht einschläfern und der Jäger verfehlt dich immer!',
-        'nacht_aktiv': True,
-        'prioritaet': 50,
-        'icon': 'fa-solid fa-snowflake',
-        'farbe': '#e0f2fe',
-        'erzaehler_nacht': 'Der Polarwolf ist immun gegen Sandmann und Jäger.',
-        'erzaehler_tag': None,
-    },
-    'Wolf im Schafspelz': {
-        'id': 23,
-        'team': 'werwolf',
-        'kategorie': 'werwolf',
-        'beschreibung': 'Du bist der Wolf im Schafspelz. Für die Seherin erscheinst du als harmloser Dorfbewohner! Nur die Aurenseherin erkennt dein böses Herz.',
-        'nacht_aktiv': True,
-        'prioritaet': 50,
-        'icon': 'fa-brands fa-bluesky',
-        'farbe': '#fef3c7',
-        'erzaehler_nacht': 'Der Wolf im Schafspelz erscheint der Seherin als Dorfbewohner!',
-        'erzaehler_tag': None,
-    },
-    'Teenager-Werwolf': {
-        'id': 24,
-        'team': 'werwolf',
-        'kategorie': 'werwolf',
-        'beschreibung': 'Du bist der Teenager-Werwolf. Du bist rebellisch - einmal pro Spiel kannst du dich weigern, beim Werwolf-Angriff mitzumachen, ohne aufzufallen.',
-        'nacht_aktiv': True,
-        'prioritaet': 50,
-        'icon': 'fa-solid fa-paw',
-        'farbe': '#f97316',
-        'erzaehler_nacht': 'Der Teenager-Werwolf kann einmal pro Spiel den Angriff verweigern.',
-        'erzaehler_tag': None,
-    },
-    'Wildes Kind': {
-        'id': 25,
-        'team': 'dorf',
-        'kategorie': 'werwolf',
-        'beschreibung': 'Du bist das Wilde Kind. In der ersten Nacht wählst du ein Vorbild. Solange es lebt, bist du Dorfbewohner. Stirbt es, wirst du zum Werwolf!',
-        'nacht_aktiv': True,
-        'prioritaet': 6,
-        'icon': 'fa-solid fa-child',
-        'farbe': '#92400e',
-        'erzaehler_nacht': 'Das Wilde Kind erwacht (erste Nacht) und wählt sein Vorbild.',
-        'erzaehler_tag': 'Das Vorbild des Wilden Kindes ist gestorben - es wird zum Werwolf!',
-    },
-    'Lupin': {
-        'id': 26,
-        'team': 'werwolf',
-        'kategorie': 'werwolf',
-        'beschreibung': 'Du bist Lupin. Du verwandelst dich nur bei Vollmond - in geraden Runden bist du ein harmloser Mensch (erscheinst so für Seherin), in ungeraden ein Wolf!',
-        'nacht_aktiv': True,
-        'prioritaet': 50,
-        'icon': 'fa-solid fa-moon',
-        'farbe': '#ca8a04',
-        'erzaehler_nacht': 'Lupin ist in geraden Runden Mensch, in ungeraden Wolf.',
-        'erzaehler_tag': None,
-    },
-    'Werwolfseherin': {
-        'id': 27,
-        'team': 'werwolf',
-        'kategorie': 'werwolf',
-        'beschreibung': 'Du bist die Werwolfseherin. Du bist ein Werwolf mit Seher-Kräften! Jede Nacht erfährst du die Rolle eines Spielers (nach dem Werwolf-Angriff).',
-        'nacht_aktiv': True,
-        'prioritaet': 65,
-        'icon': 'fa-solid fa-eye',
-        'farbe': '#b91c1c',
-        'erzaehler_nacht': 'Die Werwolfseherin erwacht nach den Werwölfen und erfährt die Rolle eines Spielers.',
-        'erzaehler_tag': None,
-    },
-    'Wolfsjunge': {
-        'id': 28,
-        'team': 'werwolf',
-        'kategorie': 'werwolf',
-        'beschreibung': 'Du bist der Wolfsjunge. Wenn ein anderer Werwolf stirbt, verwandelst du dich vor Wut - in der nächsten Nacht töten die Wölfe ZWEI Opfer!',
-        'nacht_aktiv': True,
-        'prioritaet': 50,
-        'icon': 'fa-solid fa-paw',
-        'farbe': '#991b1b',
-        'erzaehler_nacht': 'Ein Werwolf ist gestorben - der Wolfsjunge ist wütend! Heute Nacht zwei Opfer!',
-        'erzaehler_tag': None,
-    },
-    'Urwolf': {
-        'id': 29,
-        'team': 'werwolf',
-        'kategorie': 'werwolf',
-        'beschreibung': 'Du bist der Urwolf. Einmal pro Spiel kannst du statt zu töten einen Dorfbewohner infizieren - dieser wird zum Werwolf und erwacht als solcher!',
-        'nacht_aktiv': True,
-        'prioritaet': 51,
-        'icon': 'fa-solid fa-virus',
-        'farbe': '#7f1d1d',
-        'erzaehler_nacht': 'Der Urwolf kann einmal pro Spiel einen Spieler infizieren statt zu töten.',
-        'erzaehler_tag': None,
-    },
-    'Einsamer Wolf': {
-        'id': 30,
-        'team': 'solo',
-        'kategorie': 'werwolf',
-        'beschreibung': 'Du bist der Einsame Wolf. Du kennst die anderen Wölfe nicht und sie kennen dich nicht. Du tötest alleine und gewinnst nur, wenn DU der letzte Wolf bist!',
-        'nacht_aktiv': True,
-        'prioritaet': 48,
-        'icon': 'fa-solid fa-paw',
-        'farbe': '#4c1d95',
-        'erzaehler_nacht': 'Der Einsame Wolf erwacht separat und wählt sein eigenes Opfer.',
-        'erzaehler_tag': None,
-    },
-
-    # ========================================================================
-    # 30-39 SEHENDE ROLLEN
-    # ========================================================================
-    'Seherlehrling': {
-        'id': 31,
-        'team': 'dorf',
-        'kategorie': 'seher',
-        'beschreibung': 'Du bist der Seherlehrling. Du hast noch keine Fähigkeiten, aber wenn die Seherin stirbt, übernimmst du ihre Kraft und kannst ab dann jede Nacht sehen!',
-        'nacht_aktiv': False,
-        'prioritaet': 21,
-        'icon': 'fa-solid fa-graduation-cap',
-        'farbe': '#8b5cf6',
-        'erzaehler_nacht': 'Der Seherlehrling übernimmt die Fähigkeit der Seherin, falls diese stirbt.',
-        'erzaehler_tag': 'Die Seherin ist tot! Der Seherlehrling übernimmt ihre Fähigkeiten.',
-    },
-    'Aurenseherin': {
-        'id': 32,
-        'team': 'dorf',
-        'kategorie': 'seher',
-        'beschreibung': 'Du bist die Aurenseherin. Du siehst nicht die Rolle, aber die Aura - ob jemand Böses im Sinn hat. Verliebte und Verzauberte haben veränderte Auren!',
-        'nacht_aktiv': True,
-        'prioritaet': 22,
-        'icon': 'fa-solid fa-star',
-        'farbe': '#c084fc',
-        'erzaehler_nacht': 'Die Aurenseherin erwacht und erfährt die Aura eines Spielers (gut/böse/verändert).',
-        'erzaehler_tag': None,
-    },
-    'Medium': {
-        'id': 33,
-        'team': 'dorf',
-        'kategorie': 'seher',
-        'beschreibung': 'Du bist das Medium. Jede Nacht kannst du mit einem bereits gestorbenen Spieler kommunizieren und erfährst seine wahre Rolle und letzte Worte.',
-        'nacht_aktiv': True,
-        'prioritaet': 23,
-        'icon': 'fa-solid fa-ghost',
-        'farbe': '#a78bfa',
-        'erzaehler_nacht': 'Das Medium erwacht und wählt einen Toten zur Kommunikation. Flüstere ihm die Rolle zu.',
-        'erzaehler_tag': None,
-    },
-    'Demoskopin': {
-        'id': 34,
-        'team': 'dorf',
-        'kategorie': 'seher',
-        'beschreibung': 'Du bist die Demoskopin. Du kennst die Meinungsumfragen! Am Anfang jeder Tagphase erfährst du, wer die meisten Stimmen bekommen würde.',
-        'nacht_aktiv': False,
-        'prioritaet': 85,
-        'icon': 'fa-solid fa-chart-column',
-        'farbe': '#06b6d4',
-        'erzaehler_nacht': 'Die Demoskopin analysiert auch nachts die Stimmung im Dorf.',
-        'erzaehler_tag': 'Die Demoskopin erwacht mit frischen Umfragewerten! Sie weiß, wer heute die meisten Stimmen bekommen würde.',
-        'hinweis_config': None,
-    },
-    'Tratschweib': {
-        'id': 35,
-        'team': 'dorf',
-        'kategorie': 'seher',
-        'beschreibung': 'Du bist das Tratschweib. Du hörst alles! Jede Nacht erfährst du zwei zufällige Spieler und ob sie im gleichen Team sind oder nicht.',
-        'nacht_aktiv': True,
-        'prioritaet': 24,
-        'icon': 'fa-solid fa-comment-dots',
-        'farbe': '#e11d48',
-        'erzaehler_nacht': 'Das Tratschweib erwacht und erfährt, ob zwei zufällige Spieler im gleichen Team sind.',
-        'erzaehler_tag': None,
-    },
-    'Paranormaler Ermittler (billig)': {
-        'id': 36,
-        'team': 'dorf',
-        'kategorie': 'seher',
-        'beschreibung': 'Du bist der Paranormale Ermittler mit billiger Kristallkugel. Du kannst sehen, aber die Ergebnisse sind zu 30% falsch! Vertraue deinen Visionen nicht blind.',
-        'nacht_aktiv': True,
-        'prioritaet': 25,
-        'icon': 'fa-solid fa-eye-slash',
-        'farbe': '#a3a3a3',
-        'erzaehler_nacht': 'Der Paranormale Ermittler erwacht. ACHTUNG: 30% Chance auf falsches Ergebnis!',
-        'erzaehler_tag': None,
-    },
-    'Bärenbändiger': {
-        'id': 37,
-        'team': 'dorf',
-        'kategorie': 'seher',
-        'beschreibung': 'Du bist der Bärenbändiger. Dein Bär brummt morgens, wenn ein Werwolf neben dir sitzt! Alle hören das Brummen, aber nur du weißt was es bedeutet.',
-        'nacht_aktiv': False,
-        'prioritaet': 86,
-        'icon': 'fa-solid fa-paw',
-        'farbe': '#78350f',
-        'erzaehler_nacht': 'Der Bär des Bärenbändigers schläft unruhig. Er spürt die Wölfe in der Nähe...',
-        'erzaehler_tag': 'GRRRR! Der Bär des Bärenbändigers brummt laut! Das bedeutet: Mindestens ein Werwolf sitzt direkt neben dem Bärenbändiger!',
-        'hinweis_config': None,
-    },
-
-    # ========================================================================
-    # 40-49 HEXEN UND ÄHNLICHE ROLLEN
-    # ========================================================================
-    'Kräuterweib': {
-        'id': 41,
-        'team': 'dorf',
-        'kategorie': 'hexe',
-        'beschreibung': 'Du bist das Kräuterweib. Jede Nacht kannst du einem Spieler einen Trank geben, der ihn am nächsten Tag stumm macht - er darf nicht sprechen!',
-        'nacht_aktiv': True,
-        'prioritaet': 61,
-        'icon': 'fa-solid fa-leaf',
-        'farbe': '#16a34a',
-        'erzaehler_nacht': 'Das Kräuterweib erwacht und wählt einen Spieler, der morgen stumm sein wird.',
-        'erzaehler_tag': '{spieler} wurde vom Kräuterweib verstummt und darf heute nicht sprechen!',
-    },
-    'Giftmischerin': {
-        'id': 42,
-        'team': 'werwolf',
-        'kategorie': 'hexe',
-        'beschreibung': 'Du bist die Giftmischerin. Du gehörst zu den Wölfen! Einmal pro Spiel kannst du einen Spieler vergiften, der nach 2 Tagen stirbt (wenn nicht geheilt).',
-        'nacht_aktiv': True,
-        'prioritaet': 62,
-        'icon': 'fa-solid fa-skull-crossbones',
-        'farbe': '#4ade80',
-        'erzaehler_nacht': 'Die Giftmischerin kann einmal pro Spiel einen Spieler vergiften (Tod nach 2 Tagen).',
-        'erzaehler_tag': None,
-    },
-    'Zauberer': {
-        'id': 43,
-        'team': 'dorf',
-        'kategorie': 'hexe',
-        'beschreibung': 'Du bist der Zauberer. Du hast 3 Zauber: Schutz (1x), Sicht (1x) und Schweigen (1x). Setze sie weise ein, denn jeder Zauber wirkt nur einmal!',
-        'nacht_aktiv': True,
-        'prioritaet': 63,
-        'icon': 'fa-solid fa-wand-magic-sparkles',
-        'farbe': '#3b0764',
-        'erzaehler_nacht': 'Der Zauberer erwacht. Welchen Zauber möchte er einsetzen? (Schutz/Sicht/Schweigen)',
-        'erzaehler_tag': None,
-    },
-    'Sandmann': {
-        'id': 44,
-        'team': 'dorf',
-        'kategorie': 'hexe',
-        'beschreibung': 'Du bist der Sandmann. Jede Nacht kannst du einen Spieler einschläfern - dieser kann seine Nachtaktion nicht ausführen und verschläft die Phase!',
-        'nacht_aktiv': True,
-        'prioritaet': 15,
-        'icon': 'fa-solid fa-bed',
-        'farbe': '#ddd6fe',
-        'erzaehler_nacht': 'Der Sandmann erwacht zuerst und wählt einen Spieler, der diese Nacht verschläft.',
-        'erzaehler_tag': None,
-    },
-    'Hahn': {
-        'id': 45,
-        'team': 'dorf',
-        'kategorie': 'hexe',
-        'beschreibung': 'Du bist der Hahn. Du krähst bei Sonnenaufgang! Wenn du stirbst, wird die Identität des Spielers, der dich getötet hat, enthüllt.',
-        'nacht_aktiv': False,
-        'prioritaet': 96,
-        'icon': 'fa-solid fa-sun',
-        'farbe': '#dc2626',
-        'erzaehler_nacht': 'Der Hahn schläft auf seinem Hühnerstall. Er wird jeden Mörder entlarven, der ihn tötet.',
-        'erzaehler_tag': 'KIKERIKI! Der Hahn wurde getötet! Mit letzter Kraft verrät er seinen Mörder: Es war {moerder}!',
-        'hinweis_config': None,
-    },
-
-    # ========================================================================
-    # 50-59 JÄGER UND AGGRESSIVE ROLLEN
-    # ========================================================================
-    'Prinz': {
-        'id': 51,
-        'team': 'dorf',
-        'kategorie': 'jaeger',
-        'beschreibung': 'Du bist der Prinz. Du kannst nicht durch die Dorfabstimmung gehängt werden! Wenn die Mehrheit dich wählt, wird deine Identität enthüllt aber du lebst.',
-        'nacht_aktiv': False,
-        'prioritaet': 97,
-        'icon': 'fa-solid fa-crown',
-        'farbe': '#fbbf24',
-        'erzaehler_nacht': 'Der Prinz ruht in seinem königlichen Bett. Niemand würde es wagen, ihn zu erhängen.',
-        'erzaehler_tag': 'HALT! Das Dorf wählte den Prinzen! Er offenbart seine Identität und kann NICHT gehängt werden!',
-        'hinweis_config': None,
-    },
-    'Flammenmann': {
-        'id': 52,
-        'team': 'dorf',
-        'kategorie': 'jaeger',
-        'beschreibung': 'Du bist der Flammenmann. Einmal pro Spiel kannst du während des Tages ein Haus anzünden - alle Spieler darin (Links und Rechts neben dir) sterben!',
-        'nacht_aktiv': False,
-        'prioritaet': 94,
-        'icon': 'fa-solid fa-fire',
-        'farbe': '#ea580c',
-        'erzaehler_nacht': 'Der Flammenmann träumt von lodernden Flammen. Er wartet auf den richtigen Moment.',
-        'erzaehler_tag': 'FEUER! Der Flammenmann zündet sein Haus an! Die Flammen greifen auf die Nachbarhäuser über - alle Nachbarn sterben!',
-        'hinweis_config': None,
-    },
-    'Drachenbändiger': {
-        'id': 53,
-        'team': 'dorf',
-        'kategorie': 'jaeger',
-        'beschreibung': 'Du bist der Drachenbändiger. Dein Drache beschützt dich - wer dich angreift, wird von deinem Drachen getötet! Funktioniert nur einmal.',
-        'nacht_aktiv': False,
-        'prioritaet': 93,
-        'icon': 'fa-solid fa-dragon',
-        'farbe': '#7c3aed',
-        'erzaehler_nacht': 'Der Drachenbändiger schläft friedlich, sein Drache wacht über ihn mit feurigem Atem.',
-        'erzaehler_tag': 'FEUER-ATEM! Der Drache des Drachenbändigers verbrennt seinen Angreifer zu Asche!',
-        'hinweis_config': None,
-    },
-    'Tanklastwagenfahrer': {
-        'id': 54,
-        'team': 'dorf',
-        'kategorie': 'jaeger',
-        'beschreibung': 'Du bist der Tanklastwagenfahrer. Einmal pro Spiel kannst du während des Tages jemanden überfahren - dieser Spieler stirbt sofort!',
-        'nacht_aktiv': False,
-        'prioritaet': 92,
-        'icon': 'fa-solid fa-truck',
-        'farbe': '#64748b',
-        'erzaehler_nacht': 'Der Tanklastwagenfahrer parkt seinen Laster. Er wartet auf den richtigen Moment.',
-        'erzaehler_tag': 'HUUUP! Der Tanklastwagenfahrer startet seinen Motor und überfährt {spieler}! Keine Chance zu überleben!',
-        'hinweis_config': None,
-    },
-    'Inquisitor': {
-        'id': 55,
-        'team': 'dorf',
-        'kategorie': 'jaeger',
-        'beschreibung': 'Du bist der Inquisitor. Einmal pro Spiel kannst du während des Tages einen Spieler verhören - gesteht er nicht (Werwolf), stirbt er sofort!',
-        'nacht_aktiv': False,
-        'prioritaet': 91,
-        'icon': 'fa-solid fa-scale-balanced',
-        'farbe': '#1e3a8a',
-        'erzaehler_nacht': 'Der Inquisitor schärft sein Schwert der Gerechtigkeit im Schlaf.',
-        'erzaehler_tag': 'Der Inquisitor tritt vor! "Im Namen der Wahrheit - GESTEHE!" Ist das Ziel ein Werwolf, stirbt es auf der Stelle!',
-        'hinweis_config': None,
-    },
-    'König': {
-        'id': 56,
-        'team': 'dorf',
-        'kategorie': 'jaeger',
-        'beschreibung': 'Du bist der König. Deine Stimme zählt doppelt bei allen Abstimmungen! Aber wenn du stirbst, darf das Dorf einen neuen König wählen.',
-        'nacht_aktiv': False,
-        'prioritaet': 95,
-        'icon': 'fa-solid fa-chess-king',
-        'farbe': '#ca8a04',
-        'erzaehler_nacht': 'Der König ruht auf seinem Thron. Seine Stimme wiegt schwerer als alle anderen.',
-        'erzaehler_tag': 'Der König ist gefallen! Sein Erbe muss bestimmt werden - das Dorf wählt einen neuen König mit doppelter Stimme!',
-        'hinweis_config': None,
-    },
-    'Buddler': {
-        'id': 57,
-        'team': 'dorf',
-        'kategorie': 'jaeger',
-        'beschreibung': 'Du bist der Buddler. Jede Nacht kannst du ein Grab ausgraben und erfährst die Todesursache des Spielers - Werwolf, Abstimmung, Gift oder Anderes.',
-        'nacht_aktiv': True,
-        'prioritaet': 80,
-        'icon': 'fa-solid fa-shovel',
-        'farbe': '#78716c',
-        'erzaehler_nacht': 'Der Buddler erwacht und wählt ein Grab. Flüstere ihm die Todesursache zu.',
-        'erzaehler_tag': None,
-    },
-    'Pyromane': {
-        'id': 58,
-        'team': 'solo',
-        'kategorie': 'jaeger',
-        'beschreibung': 'Du bist der Pyromane. Jede Nacht kannst du ein Haus mit Benzin übergießen. Einmal pro Spiel kannst du alle übergossenen Häuser anzünden - das Feuer tötet auch die NACHBARN (links und rechts)!',
-        'nacht_aktiv': True,
-        'prioritaet': 75,
-        'icon': 'fa-solid fa-fire-flame-curved',
-        'farbe': '#f97316',
-        'erzaehler_nacht': 'Der Pyromane erwacht. Möchtest du ein Haus mit Benzin übergießen - oder alle übergossenen Häuser ANZÜNDEN?',
-        'erzaehler_tag': 'FEUER! Der Pyromane hat zugeschlagen! Die Flammen verschlingen {opfer} und breiten sich auf die Nachbarhäuser aus!',
-        'nutzt_nachbarn': True,  # Markiert diese Rolle als nachbar-relevant
-        'gewinnbedingung': 'Überlebe bis zum Schluss und zünde mindestens ein Haus an.',
-    },
-    'Gaukler': {
-        'id': 59,
-        'team': 'dorf',
-        'kategorie': 'jaeger',
-        'beschreibung': 'Du bist der Gaukler. Einmal pro Spiel kannst du während des Tages zwei Spieler ihre Plätze tauschen lassen - alle Effekte wechseln mit!',
-        'nacht_aktiv': False,
-        'prioritaet': 90,
-        'icon': 'fa-solid fa-masks-theater',
-        'farbe': '#c026d3',
-        'erzaehler_nacht': 'Der Gaukler probt seine Tricks im Schlaf. Ein Meister der Verwirrung.',
-        'erzaehler_tag': 'HOKUSPOKUS! Der Gaukler wirbelt herum und lässt {spieler1} und {spieler2} ihre Plätze tauschen! Alle Effekte wandern mit!',
-        'hinweis_config': None,
-    },
-    'Kamikaze': {
-        'id': 60,
-        'team': 'dorf',
-        'kategorie': 'jaeger',
-        'beschreibung': 'Du bist der Kamikaze. Jede Nacht wirst du gefragt, ob du jemanden töten willst. Wenn ja, stirbt dein Opfer - aber du auch! Wenn du den letzten Werwolf tötest, gewinnst du mit dem Dorf.',
-        'nacht_aktiv': True,
-        'prioritaet': 76,
-        'icon': 'fa-solid fa-bomb',
-        'farbe': '#ef4444',
-        'erzaehler_nacht': 'Der Kamikaze erwacht. Möchte er sich opfern und jemanden mitnehmen?',
-        'erzaehler_tag': None,
-    },
-
-    # ========================================================================
-    # 60-69 HEILER UND SCHÜTZENDE ROLLEN
-    # ========================================================================
-    'Ergebene Magd': {
-        'id': 61,
-        'team': 'dorf',
-        'kategorie': 'heiler',
-        'beschreibung': 'Du bist die Ergebene Magd. Wenn eine wichtige Rolle (Seherin, Hexe, Jäger) stirbt, übernimmst du ihre Identität und Fähigkeiten!',
-        'nacht_aktiv': False,
-        'prioritaet': 95,
-        'icon': 'fa-solid fa-broom',
-        'farbe': '#14b8a6',
-        'erzaehler_nacht': 'Die Ergebene Magd ruht im Hintergrund, bereit ihre Herrin zu ersetzen wenn nötig.',
-        'erzaehler_tag': 'Die Ergebene Magd tritt vor! Sie übernimmt die Rolle und Fähigkeiten der verstorbenen {rolle}!',
-        'hinweis_config': None,
-    },
-    'Hure': {
-        'id': 62,
-        'team': 'dorf',
-        'kategorie': 'heiler',
-        'beschreibung': 'Du bist die Hure. Jede Nacht besuchst du einen Spieler und schützt ihn vor Werwölfen. Aber: Besuchst du einen Werwolf, stirbst DU!',
-        'nacht_aktiv': True,
-        'prioritaet': 45,
-        'icon': 'fa-solid fa-heart',
-        'farbe': '#db2777',
-        'erzaehler_nacht': 'Die Hure erwacht und wählt einen Spieler zum Besuchen.',
-        'erzaehler_tag': None,
-    },
-    'Prostituierte': {
-        'id': 63,
-        'team': 'dorf',
-        'kategorie': 'heiler',
-        'beschreibung': 'Du bist die Prostituierte. Jede Nacht kannst du bei einem Spieler schlafen - ihr beide seid diese Nacht geschützt, aber er sieht deine Rolle!',
-        'nacht_aktiv': True,
-        'prioritaet': 46,
-        'icon': 'fa-solid fa-bed',
-        'farbe': '#f43f5e',
-        'erzaehler_nacht': 'Die Prostituierte erwacht und wählt einen Spieler für die Nacht.',
-        'erzaehler_tag': None,
-    },
-    'Oma': {
-        'id': 64,
-        'team': 'dorf',
-        'kategorie': 'heiler',
-        'beschreibung': 'Du bist die Oma. Du bist alt und schwach - die Werwölfe verschonen dich aus Mitleid! Du kannst nicht von Wölfen getötet werden.',
-        'nacht_aktiv': False,
-        'prioritaet': 100,
-        'icon': 'fa-solid fa-person-dress',
-        'farbe': '#fda4af',
-        'erzaehler_nacht': 'Die Oma schnarcht leise in ihrem Bett. Die Werwölfe haben Mitleid mit der alten Frau.',
-        'erzaehler_tag': 'Die Werwölfe haben die Oma verschont! Sie ist zu alt und schwach - kein würdiger Gegner für die Bestien.',
-        'hinweis_config': None,
-    },
-    'Leibwächter': {
-        'id': 65,
-        'team': 'dorf',
-        'kategorie': 'heiler',
-        'beschreibung': 'Du bist der Leibwächter. Jede Nacht wählst du einen Spieler zum Schützen. Wird dieser angegriffen, stirbst DU stattdessen!',
-        'nacht_aktiv': True,
-        'prioritaet': 56,
-        'icon': 'fa-solid fa-shield-halved',
-        'farbe': '#0d9488',
-        'erzaehler_nacht': 'Der Leibwächter erwacht und wählt einen Spieler zum Beschützen.',
-        'erzaehler_tag': None,
-    },
-
-    # ========================================================================
-    # 70-79 AMOR UND SPEZIALROLLEN
-    # ========================================================================
-    'Dunkler Priester': {
-        'id': 71,
-        'team': 'werwolf',
-        'kategorie': 'spezial',
-        'beschreibung': 'Du bist der Dunkle Priester. Wie Amor wählst du zwei Spieler die sich verlieben - aber du gehörst zu den Wölfen und gewinnst mit ihnen!',
-        'nacht_aktiv': True,
-        'prioritaet': 5,
-        'icon': 'fa-solid fa-church',
-        'farbe': '#18181b',
-        'erzaehler_nacht': 'Der Dunkle Priester erwacht (erste Nacht) und wählt zwei Spieler zum Verlieben.',
-        'erzaehler_tag': None,
-    },
-    'Zahnarzt': {
-        'id': 72,
-        'team': 'dorf',
-        'kategorie': 'spezial',
-        'beschreibung': 'Du bist der Zahnarzt. Jede Nacht kannst du einem Spieler den Mund zunähen - er kann am nächsten Tag nicht abstimmen, nur sprechen!',
-        'nacht_aktiv': True,
-        'prioritaet': 66,
-        'icon': 'fa-solid fa-tooth',
-        'farbe': '#ffffff',
-        'erzaehler_nacht': 'Der Zahnarzt erwacht und wählt einen Spieler, der morgen nicht abstimmen darf.',
-        'erzaehler_tag': '{spieler} wurde vom Zahnarzt behandelt und darf heute nicht abstimmen!',
-    },
-    'Rabe': {
-        'id': 73,
-        'team': 'dorf',
-        'kategorie': 'spezial',
-        'beschreibung': 'Du bist der Rabe. Jede Nacht markierst du einen Spieler. Dieser erhält am nächsten Tag automatisch 2 Extra-Stimmen gegen sich!',
-        'nacht_aktiv': True,
-        'prioritaet': 65,
-        'icon': 'fa-solid fa-crow',
-        'farbe': '#1f2937',
-        'erzaehler_nacht': 'Der Rabe erwacht und markiert einen Spieler (+2 Stimmen gegen ihn morgen).',
-        'erzaehler_tag': '{spieler} wurde vom Raben markiert und hat +2 Stimmen gegen sich!',
-    },
-    'Selbstmörder': {
-        'id': 74,
-        'team': 'solo',
-        'kategorie': 'spezial',
-        'beschreibung': 'Du bist der Selbstmörder. Du gewinnst NUR wenn du vom Dorf gehängt wirst! Versuche verdächtig zu wirken, ohne zu offensichtlich zu sein.',
-        'nacht_aktiv': False,
-        'prioritaet': 100,
-        'icon': 'fa-solid fa-skull',
-        'farbe': '#374151',
-        'erzaehler_nacht': 'Der Selbstmörder liegt wach und plant, wie er morgen möglichst verdächtig wirken kann.',
-        'erzaehler_tag': 'Der Selbstmörder erwacht mit einem finsteren Plan. Sein Ziel: Vom Dorf gehängt werden! Aber nicht zu offensichtlich...',
-        'hinweis_config': 'Selbstmörder',  # Kann aktiv Hinweise auf sich ziehen!
-    },
-    'Chemielaborant': {
-        'id': 75,
-        'team': 'dorf',
-        'kategorie': 'spezial',
-        'beschreibung': 'Du bist der Chemielaborant. Wenn du stirbst, sterben deine beiden nächsten lebenden Nachbarn mit dir! Das kann nicht verhindert werden (Ausnahme: Nachbar ist bei der Hure).',
-        'nacht_aktiv': False,
-        'prioritaet': 97,
-        'icon': 'fa-solid fa-flask',
-        'farbe': '#10b981',
-        'erzaehler_nacht': 'Der Chemielaborant experimentiert selbst im Schlaf. Ein gefährlicher Nachbar...',
-        'erzaehler_tag': 'KABOOM! Der Chemielaborant ist tot und seine instabilen Chemikalien explodieren! Seine beiden Nachbarn sterben mit ihm!',
-        'hinweis_config': None,
-    },
-    'Flüchtlinge': {
-        'id': 76,
-        'team': 'dorf',
-        'kategorie': 'spezial',
-        'beschreibung': 'Du bist ein Flüchtling. Alle Flüchtlinge kennen sich und halten zusammen. Ihr müsst bis zum Ende überleben um zu gewinnen!',
-        'nacht_aktiv': True,
-        'prioritaet': 10,
-        'icon': 'fa-solid fa-person-running',
-        'farbe': '#0ea5e9',
-        'erzaehler_nacht': 'Die Flüchtlinge erwachen und erkennen sich gegenseitig.',
-        'erzaehler_tag': None,
-    },
-    'Nutte': {
-        'id': 77,
-        'team': 'dorf',
-        'kategorie': 'spezial',
-        'beschreibung': 'Du bist die Nutte. Jede Nacht wählst du einen Spieler, bei dem du übernachtest. Wird dieser von Werwölfen getötet, stirbst auch du! Aber: Wirst du selbst gewählt, überlebst du (du bist ja nicht zuhause).',
-        'nacht_aktiv': True,
-        'prioritaet': 47,
-        'icon': 'fa-solid fa-house-user',
-        'farbe': '#ec4899',
-        'erzaehler_nacht': 'Die Nutte erwacht und wählt einen Spieler, bei dem sie übernachtet.',
-        'erzaehler_tag': None,
-    },
-    'Mordlustiger': {
-        'id': 78,
-        'team': 'solo',
-        'kategorie': 'spezial',
-        'beschreibung': 'Du bist der Mordlustige. Du gewinnst, wenn du der letzte überlebende Spieler bist! Jede Nacht kannst du einen Spieler ermorden.',
-        'nacht_aktiv': True,
-        'prioritaet': 49,
-        'icon': 'fa-solid fa-user-ninja',
-        'farbe': '#7f1d1d',
-        'erzaehler_nacht': 'Der Mordlustige erwacht und wählt sein nächtliches Opfer.',
-        'erzaehler_tag': None,
-    },
-
-    # ========================================================================
-    # 80-89 VAMPIRE UND BÖSE ROLLEN
-    # ========================================================================
-    'Vampir': {
-        'id': 81,
-        'team': 'vampir',
-        'kategorie': 'boese',
-        'beschreibung': 'Du bist ein Vampir! Jede zweite Nacht kannst du einen Spieler in einen Vampir verwandeln. Ihr gewinnt, wenn mehr Vampire als andere leben!',
-        'nacht_aktiv': True,
-        'prioritaet': 53,
-        'icon': 'fa-solid fa-tooth',
-        'farbe': '#7c2d12',
-        'erzaehler_nacht': 'Die Vampire erwachen (jede zweite Nacht) und wählen einen Spieler zur Verwandlung.',
-        'erzaehler_tag': None,
-    },
-    'Hexenmeister': {
-        'id': 82,
-        'team': 'werwolf',
-        'kategorie': 'boese',
-        'beschreibung': 'Du bist der Hexenmeister. Du gehörst zu den Wölfen und hast einen Fluchzauber - der Verfluchte wird zum Werwolf wenn er angegriffen wird!',
-        'nacht_aktiv': True,
-        'prioritaet': 68,
-        'icon': 'fa-solid fa-hat-wizard',
-        'farbe': '#4c1d95',
-        'erzaehler_nacht': 'Der Hexenmeister kann einen Spieler verfluchen (wird bei Angriff zum Wolf).',
-        'erzaehler_tag': None,
-    },
-    'Flötenspieler': {
-        'id': 83,
-        'team': 'solo',
-        'kategorie': 'boese',
-        'beschreibung': 'Du bist der Flötenspieler. Jede Nacht verzauberst du zwei Spieler. Du gewinnst wenn alle lebenden Spieler verzaubert sind!',
-        'nacht_aktiv': True,
-        'prioritaet': 70,
-        'icon': 'fa-solid fa-music',
-        'farbe': '#84cc16',
-        'erzaehler_nacht': 'Der Flötenspieler erwacht und verzaubert zwei Spieler.',
-        'erzaehler_tag': None,
-    },
-    'Zombie': {
-        'id': 84,
-        'team': 'zombie',
-        'kategorie': 'boese',
-        'beschreibung': 'Du bist ein Zombie! Jede Nacht infizierst du einen Spieler. Stirbt ein Infizierter, wird er zum Zombie. Ihr gewinnt bei Zombie-Mehrheit!',
-        'nacht_aktiv': True,
-        'prioritaet': 54,
-        'icon': 'fa-solid fa-biohazard',
-        'farbe': '#4ade80',
-        'erzaehler_nacht': 'Die Zombies erwachen und infizieren einen Spieler.',
-        'erzaehler_tag': None,
-    },
-
-    # ========================================================================
-    # 90-99 SONSTIGE ROLLEN
-    # ========================================================================
-    'Putzfrau': {
-        'id': 91,
-        'team': 'dorf',
-        'kategorie': 'sonstige',
-        'beschreibung': 'Du bist die Putzfrau. Wenn jemand stirbt, räumst du auf und erfährst dabei seine wahre Rolle. Du teilst dein Wissen mit dem Dorf.',
-        'nacht_aktiv': False,
-        'prioritaet': 88,
-        'icon': 'fa-solid fa-spray-can-sparkles',
-        'farbe': '#06b6d4',
-        'erzaehler_nacht': 'Die Putzfrau wischt durch die leeren Häuser und sammelt wertvolle Informationen.',
-        'erzaehler_tag': 'Die Putzfrau hat beim Aufräumen etwas gefunden! Sie enthüllt die wahre Rolle des Toten: {rolle}!',
-        'hinweis_config': None,
-    },
-    'Gerber': {
-        'id': 92,
-        'team': 'solo',
-        'kategorie': 'sonstige',
-        'beschreibung': 'Du bist der Gerber. Du gewinnst wenn du gehängt wirst! Aber anders als der Selbstmörder - wenn du gewinnst, verlieren ALLE anderen!',
-        'nacht_aktiv': False,
-        'prioritaet': 100,
-        'icon': 'fa-solid fa-face-angry',
-        'farbe': '#78350f',
-        'erzaehler_nacht': 'Der Gerber arbeitet an seinen stinkenden Fellen. Ein verbitterter Mann mit einem düsteren Plan.',
-        'erzaehler_tag': 'ÜBERRASCHUNG! Der Gerber wurde gehängt und er lacht triumphierend! Sein Fluch verflucht das gesamte Dorf - ALLE verlieren außer ihm!',
-        'hinweis_config': 'Gerber',  # Kann sich selbst verdächtig machen
-    },
-    'Doppelgänger': {
-        'id': 93,
-        'team': 'dorf',
-        'kategorie': 'sonstige',
-        'beschreibung': 'Du bist der Doppelgänger. In der ersten Nacht wählst du einen Spieler. Stirbt dieser, übernimmst du seine Rolle und sein Team!',
-        'nacht_aktiv': True,
-        'prioritaet': 4,
-        'icon': 'fa-solid fa-clone',
-        'farbe': '#6366f1',
-        'erzaehler_nacht': 'Der Doppelgänger erwacht (erste Nacht) und wählt sein Ziel.',
-        'erzaehler_tag': 'Das Ziel des Doppelgängers ist tot! Er übernimmt dessen Rolle.',
-    },
-    'Henker': {
-        'id': 94,
-        'team': 'solo',
-        'kategorie': 'sonstige',
-        'beschreibung': 'Du bist der Henker. Dir wird zu Beginn ein Ziel zugeteilt. Du gewinnst wenn dein Ziel vom Dorf gehängt wird! Danach wirst du Dorfbewohner.',
-        'nacht_aktiv': False,
-        'prioritaet': 100,
-        'icon': 'fa-solid fa-gavel',
-        'farbe': '#4b5563',
-        'erzaehler_nacht': 'Der Henker erfährt sein Ziel: {ziel}',
-        'erzaehler_tag': 'Das Ziel des Henkers wurde gehängt! Der Henker hat gewonnen und wird zum Dorfbewohner.',
-    },
-    'Kleines Mädchen': {
-        'id': 95,
-        'team': 'dorf',
-        'kategorie': 'sonstige',
-        'beschreibung': 'Du bist das Kleine Mädchen. Du darfst nachts blinzeln um die Werwölfe zu beobachten! Aber Vorsicht: Wirst du erwischt, stirbst du sofort!',
-        'nacht_aktiv': True,
-        'prioritaet': 50,
-        'icon': 'fa-solid fa-child-dress',
-        'farbe': '#fbbf24',
-        'erzaehler_nacht': 'Das Kleine Mädchen darf während der Werwolf-Phase blinzeln - auf eigene Gefahr!',
-        'erzaehler_tag': None,
-    },
-    'Dieb': {
-        'id': 96,
-        'team': 'dorf',
-        'kategorie': 'sonstige',
-        'beschreibung': 'Du bist der Dieb. Zu Beginn siehst du zwei übrige Rollen und darfst dir eine aussuchen. Ist ein Werwolf dabei, musst du ihn wählen!',
-        'nacht_aktiv': True,
-        'prioritaet': 1,
-        'icon': 'fa-solid fa-mask',
-        'farbe': '#1e293b',
-        'erzaehler_nacht': 'Der Dieb erwacht zuerst und sieht zwei Rollen. Er muss eine wählen.',
-        'erzaehler_tag': None,
-    },
-    'Bürgermeister': {
-        'id': 97,
-        'team': 'dorf',
-        'kategorie': 'sonstige',
-        'beschreibung': 'Du bist der Bürgermeister. Deine Stimme zählt doppelt! Bei deinem Tod bestimmst du deinen Nachfolger, der deine Macht erbt.',
-        'nacht_aktiv': False,
-        'prioritaet': 95,
-        'icon': 'fa-solid fa-user-tie',
-        'farbe': '#1e40af',
-        'erzaehler_nacht': 'Der Bürgermeister ruht in seinem Rathaus. Seine Stimme hat doppeltes Gewicht.',
-        'erzaehler_tag': 'Der Bürgermeister ist gefallen! Mit letzter Kraft zeigt er auf seinen Nachfolger, der das Amt und die doppelte Stimme erbt!',
-        'hinweis_config': None,
-    },
-    'Sündenbock': {
-        'id': 98,
-        'team': 'dorf',
-        'kategorie': 'sonstige',
-        'beschreibung': 'Du bist der Sündenbock. Wenn es bei einer Abstimmung ein Unentschieden gibt, stirbst DU anstelle der anderen! Versuche das zu verhindern.',
-        'nacht_aktiv': False,
-        'prioritaet': 100,
-        'icon': 'fa-solid fa-person-falling',
-        'farbe': '#a8a29e',
-        'erzaehler_nacht': 'Der Sündenbock ahnt, dass er heute vielleicht für die Unentschlossenheit anderer sterben wird.',
-        'erzaehler_tag': 'UNENTSCHIEDEN bei der Abstimmung! Das Dorf kann sich nicht einigen - also muss der Sündenbock sterben!',
-        'hinweis_config': None,
-    },
-    'Engel': {
-        'id': 99,
-        'team': 'solo',
-        'kategorie': 'sonstige',
-        'beschreibung': 'Du bist der Engel. Du gewinnst NUR wenn du in der ersten Runde (Tag oder Nacht) stirbst! Danach wirst du zum normalen Dorfbewohner.',
-        'nacht_aktiv': False,
-        'prioritaet': 100,
-        'icon': 'fa-solid fa-feather',
-        'farbe': '#fef3c7',
-        'erzaehler_nacht': 'Der Engel wartet sehnsüchtig auf seinen frühen Tod, um in den Himmel aufzusteigen.',
-        'erzaehler_tag': 'Der Engel ist in der ersten Runde gestorben! Seine Flügel erstrahlen und er steigt siegreich in den Himmel auf!',
-        'hinweis_config': 'Engel',  # Kann sich verdächtig machen um schnell zu sterben
-    },
-}
+# Das eigentliche ROLLEN-Dict (wird beim Import erstellt)
+ROLLEN = _erstelle_rollen_dict()
 
 
 # Spielphasen in korrekter Reihenfolge
@@ -1899,11 +992,22 @@ TEAMS = {
 }
 
 
-# Rollen nach Kategorie gruppiert (für UI)
+# ============================================================================
+# HELFER-FUNKTIONEN FUER ROLLEN
+# Diese Funktionen nutzen das dynamische ROLLEN-Dict
+# ============================================================================
+
 def get_rollen_nach_kategorie():
-    """Gibt alle Rollen gruppiert nach Kategorie zurück als dict[kategorie][rolle_name] = rolle_data"""
+    """
+    Gibt alle Rollen gruppiert nach Kategorie zurueck.
+    Format: dict[kategorie][rolle_name] = rolle_data
+    
+    Diese Funktion wird bei jedem Aufruf neu berechnet,
+    um auch zur Laufzeit hinzugefuegte Rollen zu beruecksichtigen.
+    """
     kategorien = {}
-    for rolle_name, rolle_data in ROLLEN.items():
+    rollen_dict = _erstelle_rollen_dict()  # Frisch laden
+    for rolle_name, rolle_data in rollen_dict.items():
         kat = rolle_data.get('kategorie', 'sonstige')
         if kat not in kategorien:
             kategorien[kat] = {}
@@ -1912,11 +1016,15 @@ def get_rollen_nach_kategorie():
     return kategorien
 
 
-# Rollen nach Kategorie als Liste (für rollen.html)
 def get_rollen_nach_kategorie_liste():
-    """Gibt alle Rollen gruppiert nach Kategorie zurück als Liste"""
+    """
+    Gibt alle Rollen gruppiert nach Kategorie als Liste zurueck.
+    Format: dict[kategorie] = [rolle_data, ...]
+    Sortiert nach ID innerhalb jeder Kategorie.
+    """
     kategorien = {}
-    for rolle_name, rolle_data in ROLLEN.items():
+    rollen_dict = _erstelle_rollen_dict()  # Frisch laden
+    for rolle_name, rolle_data in rollen_dict.items():
         kat = rolle_data.get('kategorie', 'sonstige')
         if kat not in kategorien:
             kategorien[kat] = []
@@ -1927,27 +1035,27 @@ def get_rollen_nach_kategorie_liste():
     
     # Sortiere nach ID innerhalb jeder Kategorie
     for kat in kategorien:
-        kategorien[kat].sort(key=lambda x: x['id'])
+        kategorien[kat].sort(key=lambda x: x.get('id', 999))
     
     return kategorien
 
 
-# Kategorienamen für UI (mit schönen deutschen Namen)
+# Kategorienamen fuer UI (mit schoenen deutschen Namen)
 KATEGORIE_NAMEN = {
     'grundrollen': 'Grundrollen',
     'dorfbewohner': 'Dorfbewohner-Varianten',
     'werwolf': 'Werwolf-Varianten',
     'seher': 'Sehende Rollen',
     'hexe': 'Hexen & Zauberer',
-    'jaeger': 'Jäger & Kämpfer',
-    'heiler': 'Heiler & Beschützer',
+    'jaeger': 'Jaeger & Kaempfer',
+    'heiler': 'Heiler & Beschuetzer',
     'spezial': 'Spezialrollen',
-    'boese': 'Böse Wesen',
+    'boese': 'Boese Wesen',
+    'solo': 'Einzelkaempfer',
     'sonstige': 'Sonstige Rollen',
 }
 
 
-# Rollen-Anzahl
 def get_rollen_anzahl():
-    """Gibt die Anzahl aller verfügbaren Rollen zurück"""
-    return len(ROLLEN)
+    """Gibt die Anzahl aller verfuegbaren Rollen zurueck."""
+    return len(_erstelle_rollen_dict())

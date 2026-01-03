@@ -507,7 +507,7 @@ async function sendChatMessage(player: MassPlayer, message: string): Promise<voi
     if (await chatInput.isVisible({ timeout: 1000 })) {
       await chatInput.fill(message);
       await chatInput.press('Enter');
-      logEvent('💬 CHAT', `${player.name}: ${message}`);
+      logEvent('CHAT', `${player.name}: ${message}`);
     }
   } catch {
     // Chat nicht verfügbar
@@ -518,7 +518,7 @@ async function sendChatMessage(player: MassPlayer, message: string): Promise<voi
  * Simuliert echte Diskussion mit Chat-Nachrichten
  */
 async function executeRealDiscussion(players: MassPlayer[], durationMs: number = 10000): Promise<void> {
-  logEvent('🗣️ DISKUSSION', 'Spieler diskutieren...');
+  logEvent('DISKUSSION', 'Spieler diskutieren...');
   
   const alivePlayers = players.filter(p => p.isAlive);
   const numMessages = Math.min(5, Math.ceil(alivePlayers.length / 3));
@@ -550,7 +550,7 @@ async function selectPlayerInUI(actor: MassPlayer, targetName: string): Promise<
       
       // Klick auf Spielerkarte
       await targetCard.click();
-      logEvent('🎯 SELECT', `${actor.name} wählt ${targetName}`);
+      logEvent('SELECT', `${actor.name} waehlt ${targetName}`);
       await actor.page.waitForTimeout(ACTION_DELAY);
       return true;
     }
@@ -569,7 +569,7 @@ async function clickActionButton(player: MassPlayer, ...buttonTexts: string[]): 
       const btn = player.page.locator(`button:has-text("${text}"), .btn:has-text("${text}")`).first();
       if (await btn.isVisible({ timeout: 2000 })) {
         await btn.click();
-        logEvent('🔘 ACTION', `${player.name} klickt "${text}"`);
+        logEvent('ACTION', `${player.name} klickt "${text}"`);
         await player.page.waitForTimeout(1000);
         return true;
       }
@@ -583,7 +583,7 @@ async function clickActionButton(player: MassPlayer, ...buttonTexts: string[]): 
 // ============================================================================
 
 async function executeMayorElection(allPlayers: MassPlayer[], hostPage: Page): Promise<string | null> {
-  logEvent('👑 WAHL', 'Bürgermeisterwahl beginnt!');
+  logEvent('WAHL', 'Bürgermeisterwahl beginnt!');
   await waitForNarratorAudio(hostPage);
   await hostPage.waitForTimeout(ACTION_DELAY);
   
@@ -618,7 +618,7 @@ async function executeMayorElection(allPlayers: MassPlayer[], hostPage: Page): P
   if (mayor) {
     const mayorPlayer = allPlayers.find(p => p.name === mayor);
     if (mayorPlayer) mayorPlayer.isMayor = true;
-    logEvent('👑 BÜRGERMEISTER', `${mayor} wurde gewählt!`);
+    logEvent('BUERGERMEISTER', `${mayor} wurde gewählt!`);
   }
   
   await waitForNarratorAudio(hostPage);
@@ -639,7 +639,7 @@ async function executeFullNightPhase(
   let healed: string | null = null;
   let werewolfVictim: string | null = null;
   
-  logEvent('🌙 NACHT', 'Die Nacht bricht herein...');
+  logEvent('NACHT', 'Die Nacht bricht herein...');
   await waitForNarratorAudio(hostPage);
   await hostPage.waitForTimeout(ACTION_DELAY);
   
@@ -647,7 +647,7 @@ async function executeFullNightPhase(
   if (isFirstNight) {
     const amor = allPlayers.find(p => p.isAlive && p.role?.toLowerCase().includes('amor'));
     if (amor) {
-      logEvent('💘 AMOR', `${amor.name} wählt zwei Verliebte...`);
+      logEvent('AMOR', `${amor.name} wählt zwei Verliebte...`);
       await waitForNarratorAudio(amor.page);
       
       const candidates = allPlayers.filter(p => p.isAlive && p.id !== amor.id);
@@ -666,7 +666,7 @@ async function executeFullNightPhase(
         
         lover1.isLover = true;
         lover2.isLover = true;
-        logEvent('💕 VERLIEBTE', `${lover1.name} und ${lover2.name} sind nun verliebt!`);
+        logEvent('VERLIEBTE', `${lover1.name} und ${lover2.name} sind nun verliebt!`);
       }
       await waitForNarratorAudio(hostPage);
       await hostPage.waitForTimeout(ACTION_DELAY);
@@ -677,7 +677,7 @@ async function executeFullNightPhase(
   const bodyguard = allPlayers.find(p => p.isAlive && p.role?.toLowerCase().includes('leibwächter'));
   let protectedPlayer: string | null = null;
   if (bodyguard) {
-    logEvent('🛡️ LEIBWÄCHTER', `${bodyguard.name} wählt jemanden zum Beschützen...`);
+    logEvent('LEIBWAECHTER', `${bodyguard.name} wählt jemanden zum Beschützen...`);
     await waitForNarratorAudio(bodyguard.page);
     
     const candidates = allPlayers.filter(p => p.isAlive && p.id !== bodyguard.id);
@@ -687,7 +687,7 @@ async function executeFullNightPhase(
       
       await selectPlayerInUI(bodyguard, target.name);
       await clickActionButton(bodyguard, 'Beschützen', 'Bestätigen', 'Wählen');
-      logEvent('🛡️ SCHUTZ', `${bodyguard.name} beschützt ${target.name}`);
+      logEvent('SCHUTZ', `${bodyguard.name} beschützt ${target.name}`);
     }
     await hostPage.waitForTimeout(ACTION_DELAY);
   }
@@ -695,7 +695,7 @@ async function executeFullNightPhase(
   // Seherin - ECHTE UI
   const seer = allPlayers.find(p => p.isAlive && p.role?.toLowerCase().includes('seherin'));
   if (seer) {
-    logEvent('🔮 SEHERIN', `${seer.name} erwacht...`);
+    logEvent('SEHERIN', `${seer.name} erwacht...`);
     await waitForNarratorAudio(seer.page);
     
     const candidates = allPlayers.filter(p => p.isAlive && p.id !== seer.id);
@@ -704,13 +704,13 @@ async function executeFullNightPhase(
       
       await selectPlayerInUI(seer, target.name);
       await clickActionButton(seer, 'Sehen', 'Identität sehen', 'Bestätigen');
-      logEvent('👁️ VISION', `${seer.name} hat ${target.name} angesehen`);
+      logEvent('VISION', `${seer.name} hat ${target.name} angesehen`);
     }
     await hostPage.waitForTimeout(ACTION_DELAY);
   }
   
   // Werwölfe - ECHTE UI ABSTIMMUNG
-  logEvent('🐺 WERWÖLFE', 'Die Werwölfe erwachen...');
+  logEvent('WERWOELFE', 'Die Werwölfe erwachen...');
   const wolves = allPlayers.filter(p => p.isAlive && p.team === 'wolf');
   if (wolves.length > 0) {
     await waitForNarratorAudio(wolves[0].page);
@@ -722,12 +722,12 @@ async function executeFullNightPhase(
       
       // Alle Wölfe wählen das gleiche Ziel via echte UI-Klicks
       for (const wolf of wolves) {
-        logEvent('🐺 WAHL', `${wolf.name} wählt ${victim.name}`);
+        logEvent('WAHL', `${wolf.name} wählt ${victim.name}`);
         await selectPlayerInUI(wolf, victim.name);
         await clickActionButton(wolf, 'Töten', 'Angreifen', 'Wählen', 'Bestätigen');
       }
       
-      logEvent('🐺 ANGRIFF', `Die Werwölfe greifen ${werewolfVictim} an!`);
+      logEvent('ANGRIFF', `Die Werwölfe greifen ${werewolfVictim} an!`);
     }
   }
   await waitForNarratorAudio(hostPage);
@@ -736,14 +736,14 @@ async function executeFullNightPhase(
   // Hexe - ECHTE UI
   const witch = allPlayers.find(p => p.isAlive && p.role?.toLowerCase().includes('hexe'));
   if (witch) {
-    logEvent('🧙 HEXE', `${witch.name} erwacht...`);
+    logEvent('HEXE', `${witch.name} erwacht...`);
     await waitForNarratorAudio(witch.page);
     
     // Heiltrank - 50% Chance zu heilen wenn Opfer existiert
     if (werewolfVictim && Math.random() > 0.5) {
       await clickActionButton(witch, 'Heilen', 'Heiltrank', 'Retten');
       healed = werewolfVictim;
-      logEvent('💊 HEILUNG', `${witch.name} heilt ${werewolfVictim}`);
+      logEvent('HEILUNG', `${witch.name} heilt ${werewolfVictim}`);
     }
     
     // Gifttrank - 20% Chance jemanden zu vergiften
@@ -757,7 +757,7 @@ async function executeFullNightPhase(
         
         dead.push(poisoned.name);
         poisoned.isAlive = false;
-        logEvent('☠️ GIFT', `${witch.name} vergiftet ${poisoned.name}`);
+        logEvent('GIFT', `${witch.name} vergiftet ${poisoned.name}`);
       }
     } else {
       await clickActionButton(witch, 'Nichts tun', 'Überspringen', 'Weiter');
@@ -780,7 +780,7 @@ async function executeFullNightPhase(
       if (otherLover) {
         otherLover.isAlive = false;
         dead.push(otherLover.name);
-        logEvent('💔 HERZSCHMERZ', `${otherLover.name} stirbt an gebrochenem Herzen`);
+        logEvent('HERZSCHMERZ', `${otherLover.name} stirbt an gebrochenem Herzen`);
       }
     }
   }
@@ -799,20 +799,20 @@ async function executeFullDayPhase(
   hostPage: Page,
   deadLastNight: string[]
 ): Promise<string | null> {
-  logEvent('☀️ TAG', 'Der Tag bricht an...');
+  logEvent('TAG', 'Der Tag bricht an...');
   await waitForNarratorAudio(hostPage);
   await hostPage.waitForTimeout(ACTION_DELAY);
   
   // Tote der Nacht ansagen - das Spiel macht das automatisch
   if (deadLastNight.length > 0) {
-    logEvent('☠️ TOTE', `Gestorben in der Nacht: ${deadLastNight.join(', ')}`);
+    logEvent('TOTE', `Gestorben in der Nacht: ${deadLastNight.join(', ')}`);
     await waitForNarratorAudio(hostPage);
     
     // Jäger-Aktion wenn Jäger gestorben ist - ECHTE UI
     for (const deadName of deadLastNight) {
       const deadPlayer = allPlayers.find(p => p.name === deadName);
       if (deadPlayer?.role?.toLowerCase().includes('jäger')) {
-        logEvent('🏹 JÄGER', `${deadPlayer.name} ist gestorben und kann schießen!`);
+        logEvent('JAEGER', `${deadPlayer.name} ist gestorben und kann schießen!`);
         
         // Warte auf Jäger-UI und wähle Ziel
         await waitForNarratorAudio(deadPlayer.page);
@@ -822,12 +822,12 @@ async function executeFullDayPhase(
           await selectPlayerInUI(deadPlayer, hunterVictim.name);
           await clickActionButton(deadPlayer, 'Erschießen', 'Schießen', 'Bestätigen');
           hunterVictim.isAlive = false;
-          logEvent('💥 SCHUSS', `${deadPlayer.name} erschießt ${hunterVictim.name}!`);
+          logEvent('SCHUSS', `${deadPlayer.name} erschießt ${hunterVictim.name}!`);
         }
       }
     }
   } else {
-    logEvent('😴 SICHER', 'Niemand ist in der Nacht gestorben!');
+    logEvent('SICHER', 'Niemand ist in der Nacht gestorben!');
   }
   
   await waitForNarratorAudio(hostPage);
@@ -838,7 +838,7 @@ async function executeFullDayPhase(
   await executeRealDiscussion(allPlayers, ACTION_DELAY * 2);
   
   // Abstimmung - ECHTE UI-KLICKS
-  logEvent('🗳️ ABSTIMMUNG', 'Zeit für die Abstimmung!');
+  logEvent('ABSTIMMUNG', 'Zeit für die Abstimmung!');
   await waitForNarratorAudio(hostPage);
   await hostPage.waitForTimeout(ACTION_DELAY);
   
@@ -885,7 +885,7 @@ async function executeFullDayPhase(
     const eliminatedPlayer = allPlayers.find(p => p.name === eliminated);
     if (eliminatedPlayer) {
       eliminatedPlayer.isAlive = false;
-      logEvent('⚖️ HINRICHTUNG', `${eliminated} wird hingerichtet! (Rolle: ${eliminatedPlayer.role || 'Unbekannt'})`);
+      logEvent('HINRICHTUNG', `${eliminated} wird hingerichtet! (Rolle: ${eliminatedPlayer.role || 'Unbekannt'})`);
       await waitForNarratorAudio(hostPage);
       
       // Jäger stirbt -> schießt (ECHTE UI)
@@ -897,7 +897,7 @@ async function executeFullDayPhase(
           await selectPlayerInUI(eliminatedPlayer, hunterVictim.name);
           await clickActionButton(eliminatedPlayer, 'Erschießen', 'Schießen', 'Bestätigen');
           hunterVictim.isAlive = false;
-          logEvent('💥 RACHE', `Der Jäger nimmt ${hunterVictim.name} mit!`);
+          logEvent('RACHE', `Der Jäger nimmt ${hunterVictim.name} mit!`);
         }
       }
       
@@ -906,7 +906,7 @@ async function executeFullDayPhase(
         const otherLover = allPlayers.find(p => p.isLover && p.name !== eliminated && p.isAlive);
         if (otherLover) {
           otherLover.isAlive = false;
-          logEvent('💔 HERZSCHMERZ', `${otherLover.name} stirbt vor Liebeskummer`);
+          logEvent('HERZSCHMERZ', `${otherLover.name} stirbt vor Liebeskummer`);
         }
       }
       

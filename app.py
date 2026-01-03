@@ -5,6 +5,7 @@ Ein Echtzeit-Multiplayer Werwolf-Spiel mit WebSocket-Unterstuetzung
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from models import db, Raum, Spieler, SpielAktion, SpielLog, ROLLEN, PHASEN, TEAMS, ERZAEHLER_TEXTE, get_rollen_nach_kategorie, get_rollen_nach_kategorie_liste, get_rollen_anzahl
+from roles import get_rollen_nach_erweiterung, ERWEITERUNG_INFO, KATEGORIE_INFO
 import game_logic
 import secrets
 import os
@@ -18,7 +19,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///webwoelfe.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Spielname als Konstante
-SPIEL_NAME = 'Webwölfe'
+SPIEL_NAME = 'Webwoelfe'
 
 # Initialisierung
 db.init_app(app)
@@ -40,7 +41,10 @@ def inject_globals():
         'spiel_name': SPIEL_NAME,
         'alle_rollen': ROLLEN,
         'alle_teams': TEAMS,
-        'rollen_nach_kategorie': get_rollen_nach_kategorie()
+        'rollen_nach_kategorie': get_rollen_nach_kategorie(),
+        'rollen_nach_erweiterung': get_rollen_nach_erweiterung(),
+        'erweiterung_info': ERWEITERUNG_INFO,
+        'kategorie_info': KATEGORIE_INFO,
     }
 
 
@@ -182,12 +186,25 @@ def lobby(code):
         return redirect(url_for('spiel', code=code))
     
     alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
+    erzaehler = next((s for s in alle_spieler if s.ist_erzaehler), None)
+    spieler_ohne_erzaehler = [s for s in alle_spieler if not s.ist_erzaehler]
+    fehlende_spieler = max(0, raum.spieler_anzahl - len(spieler_ohne_erzaehler))
+    rollen_vorschau_total = raum.spieler_anzahl + (1 if erzaehler else 0)
+    rollen_vorschau = game_logic.berechne_rollen(
+        rollen_vorschau_total,
+        mit_erzaehler=bool(erzaehler)
+    )
     
     return render_template('lobby.html', 
                          raum=raum, 
                          spieler=spieler,
                          alle_spieler=alle_spieler,
-                         rollen=ROLLEN)
+                         rollen=ROLLEN,
+                         rollen_vorschau=rollen_vorschau,
+                         rollen_vorschau_total=rollen_vorschau_total,
+                         rollen_vorschau_hat_erzaehler=bool(erzaehler),
+                         fehlende_spieler=fehlende_spieler,
+                         ist_spiel_bereit=fehlende_spieler == 0)
 
 
 @app.route('/spiel/<code>')
@@ -236,7 +253,8 @@ def spiel(code):
         elif not s.ist_am_leben:
             spieler_data['rolle'] = s.rolle
         # Werwoelfe sehen sich gegenseitig
-        elif spieler.rolle == 'Werwolf' and s.rolle == 'Werwolf':
+        elif (game_logic.ist_werwolf_rolle(spieler.rolle) and
+              game_logic.ist_werwolf_rolle(s.rolle)):
             spieler_data['ist_werwolf'] = True
         sichere_spieler.append(spieler_data)
     
@@ -257,6 +275,68 @@ def spiel(code):
                          logs=logs,
                          phasen=PHASEN,
                          erzaehler_text=erzaehler_text)
+
+
+# ============================================================================
+# SITZORDNUNG API - Drag & Drop Sitzplatzwahl
+# ============================================================================
+
+@app.route('/api/sitzordnung/<code>', methods=['GET'])
+def get_sitzordnung(code):
+    """Gibt die aktuelle Sitzordnung zurück"""
+    raum = Raum.query.filter_by(code=code).first()
+    if not raum:
+        return jsonify({'success': False, 'error': 'Raum nicht gefunden'}), 404
+    
+    spieler = hole_aktuellen_spieler()
+    if not spieler or spieler.raum_id != raum.id:
+        return jsonify({'success': False, 'error': 'Nicht autorisiert'}), 403
+    
+    alle_spieler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=False).order_by(Spieler.sitzplatz, Spieler.id).all()
+    
+    return jsonify({
+        'success': True,
+        'sitzordnung': [
+            {
+                'id': s.id,
+                'name': s.name,
+                'sitzplatz': s.sitzplatz if s.sitzplatz is not None else i
+            }
+            for i, s in enumerate(alle_spieler)
+        ]
+    })
+
+
+@app.route('/api/sitzordnung/<code>', methods=['POST'])
+def set_sitzordnung(code):
+    """Aktualisiert die Sitzordnung"""
+    raum = Raum.query.filter_by(code=code).first()
+    if not raum:
+        return jsonify({'success': False, 'error': 'Raum nicht gefunden'}), 404
+    
+    if raum.spiel_gestartet:
+        return jsonify({'success': False, 'error': 'Spiel bereits gestartet'}), 400
+    
+    spieler = hole_aktuellen_spieler()
+    if not spieler or spieler.raum_id != raum.id:
+        return jsonify({'success': False, 'error': 'Nicht autorisiert'}), 403
+    
+    data = request.get_json()
+    ordnung = data.get('ordnung', [])  # Liste von {id, sitzplatz}
+    
+    for eintrag in ordnung:
+        s = Spieler.query.get(eintrag.get('id'))
+        if s and s.raum_id == raum.id:
+            s.sitzplatz = eintrag.get('sitzplatz')
+    
+    db.session.commit()
+    
+    # Broadcastet die neue Sitzordnung an alle Spieler
+    socketio.emit('sitzordnung_aktualisiert', {
+        'ordnung': ordnung
+    }, room=raum.code)
+    
+    return jsonify({'success': True})
 
 
 # ============================================================================
@@ -685,7 +765,8 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     """Verarbeitet eine Spielaktion"""
     
     if aktion_typ == 'werwolf_wahl':
-        if spieler.rolle != 'Werwolf' or raum.aktuelle_phase != 'werwolf_phase':
+        if (not game_logic.ist_werwolf_rolle(spieler.rolle) or
+                raum.aktuelle_phase != 'werwolf_phase'):
             return False
         if game_logic.hat_spieler_gewaehlt(spieler, raum, 'werwolf_phase'):
             return False
@@ -701,10 +782,22 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         ziel = Spieler.query.get(ziel_id)
         if ziel:
             # SICHER: Ergebnis nur an anfragenden Spieler senden
-            ist_werwolf = ziel.rolle in ['Werwolf', 'Urwolf', 'Wolfsjunge', 'Weisser_Wolf']
+            from roles import RoleRegistry
+            from roles.enums import SichtTyp
+            
+            ziel_rolle = RoleRegistry.get(ziel.rolle)
+            if ziel_rolle:
+                sicht = ziel_rolle.sichtbar_als_fuer("Seherin")
+                rollen_name = ziel_rolle.sichtbare_rolle_fuer("Seherin")
+            else:
+                sicht = SichtTyp.DORF
+                rollen_name = ziel.rolle or "Unbekannt"
+            
+            ist_werwolf = sicht == SichtTyp.WERWOLF
             socketio.emit('seherin_ergebnis', {
                 'ziel_name': ziel.name,
-                'ist_werwolf': ist_werwolf
+                'ist_werwolf': ist_werwolf,
+                'rolle': rollen_name
             }, room=request.sid)
             game_logic.registriere_aktion(
                 raum.id, raum.runde, 'seherin_phase',
@@ -758,7 +851,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         return True
     
     elif aktion_typ == 'armor_verlieben':
-        if spieler.rolle != 'Armor' or raum.aktuelle_phase != 'armor_phase':
+        if spieler.rolle != 'Amor' or raum.aktuelle_phase != 'armor_phase':
             return False
         if not spieler.armor_verliebt:
             return False
@@ -802,7 +895,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         return True
     
     elif aktion_typ == 'jaeger_schuss':
-        if spieler.rolle != 'Jaeger' or not spieler.jaeger_schuss:
+        if spieler.rolle != 'Jäger' or not spieler.jaeger_schuss:
             return False
         spieler.jaeger_schuss = False
         ziel = Spieler.query.get(ziel_id)
@@ -813,7 +906,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                 'spieler_id': ziel.id,
                 'spieler_name': ziel.name,
                 'todesart': 'jaeger',
-                'rolle': ziel.rolle  # Rolle wird nach Tod enthüllt
+                'rolle': ziel.rolle  # Rolle wird nach Tod enthuellt
             }, room=raum.code)
             db.session.commit()
             return True
@@ -960,4 +1053,5 @@ def server_fehler(e):
 # ============================================================================
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0', port=5001)
+    port = int(os.environ.get('PORT', '8888'))
+    socketio.run(app, debug=True, host='0.0.0.0', port=port)

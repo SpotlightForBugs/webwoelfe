@@ -147,240 +147,47 @@
             <span style="color: var(--accent-gold);">Alle Rollen</span>
         </h1>
         <p class="text-center text-muted mb-4" style="max-width: 600px; margin: 0 auto;">
-            {{ spiel_name }} bietet über {{ alle_rollen|length }} verschiedene Rollen - von den klassischen Grundrollen 
+            {{ spiel_name }} bietet ueber {{ alle_rollen|length }} verschiedene Rollen - von den klassischen Grundrollen 
             bis zu aufregenden Community-Kreationen!
         </p>
     </section>
     
-    <!-- Grundrollen -->
-    {% if kategorien.grundrollen %}
-    <section class="kategorie-section fade-in delay-1">
-        <h2 class="kategorie-title"><i class="fa-solid fa-users"></i> Grundrollen</h2>
-        <p class="text-muted mb-3">Die klassischen Rollen, die in jedem Spiel vorkommen.</p>
-        <div class="rollen-grid">
-            {% for rolle in kategorien.grundrollen %}
-            <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                    <i class="{{ rolle.icon }}"></i>
-                </div>
-                <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name }}</span>
-                {% if rolle.nacht_aktiv %}
-                <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                {% endif %}
-                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
+    {# Dynamische Kategorien-Sektionen #}
+    {% set kategorie_reihenfolge = ['grundrollen', 'dorfbewohner', 'werwolf', 'seher', 'hexe', 'jaeger', 'heiler', 'spezial', 'boese', 'solo', 'sonstige'] %}
     
-    <!-- Dorfbewohner Varianten -->
-    {% if kategorien.dorfbewohner %}
-    <section class="kategorie-section fade-in">
-        <h2 class="kategorie-title"><i class="fa-solid fa-user"></i> Dorfbewohner-Varianten</h2>
-        <p class="text-muted mb-3">Spezielle Dorfbewohner mit einzigartigen Fähigkeiten.</p>
-        <div class="rollen-grid">
-            {% for rolle in kategorien.dorfbewohner %}
-            <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                    <i class="{{ rolle.icon }}"></i>
+    {% for kat_key in kategorie_reihenfolge %}
+        {% if kategorien[kat_key] %}
+        {% set kat_meta = kategorie_info[kat_key] if kategorie_info and kat_key in kategorie_info else {} %}
+        <section class="kategorie-section fade-in">
+            <h2 class="kategorie-title">
+                <i class="{{ kat_meta.icon if kat_meta.icon else 'fa-solid fa-users' }}"></i> 
+                {{ kat_meta.name if kat_meta.name else kat_key|title }}
+            </h2>
+            <p class="text-muted mb-3">{{ kat_meta.beschreibung if kat_meta.beschreibung else '' }}</p>
+            <div class="rollen-grid">
+                {% for rolle in kategorien[kat_key] %}
+                <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
+                    <div class="rolle-icon" style="color: {{ rolle.farbe }};">
+                        <i class="{{ rolle.icon }}"></i>
+                    </div>
+                    <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
+                    <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name if rolle.team in alle_teams else rolle.team }}</span>
+                    {% if rolle.erweiterung and rolle.erweiterung != 'basisspiel' %}
+                    {% set erw_meta = erweiterung_info[rolle.erweiterung] if erweiterung_info and rolle.erweiterung in erweiterung_info else {} %}
+                    <span class="expansion-badge {{ erw_meta.badge_class if erw_meta.badge_class else '' }}" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; margin-left: 0.25rem;">
+                        {{ erw_meta.badge if erw_meta.badge else rolle.erweiterung|title }}
+                    </span>
+                    {% endif %}
+                    {% if rolle.nacht_aktiv %}
+                    <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
+                    {% endif %}
+                    <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
                 </div>
-                <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name }}</span>
-                {% if rolle.nacht_aktiv %}
-                <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                {% endif %}
-                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-    
-    <!-- Werwolf Varianten -->
-    {% if kategorien.werwolf %}
-    <section class="kategorie-section fade-in">
-        <h2 class="kategorie-title"><i class="fa-solid fa-paw"></i> Werwolf-Varianten</h2>
-        <p class="text-muted mb-3">Verschiedene Arten von Werwölfen mit speziellen Kräften.</p>
-        <div class="rollen-grid">
-            {% for rolle in kategorien.werwolf %}
-            <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                    <i class="{{ rolle.icon }}"></i>
-                </div>
-                <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name }}</span>
-                {% if rolle.nacht_aktiv %}
-                <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                {% endif %}
-                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-    
-    <!-- Seher Varianten -->
-    {% if kategorien.seher %}
-    <section class="kategorie-section fade-in">
-        <h2 class="kategorie-title"><i class="fa-solid fa-eye"></i> Sehende Rollen</h2>
-        <p class="text-muted mb-3">Rollen mit der Fähigkeit, verborgene Informationen zu enthüllen.</p>
-        <div class="rollen-grid">
-            {% for rolle in kategorien.seher %}
-            <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                    <i class="{{ rolle.icon }}"></i>
-                </div>
-                <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name }}</span>
-                {% if rolle.nacht_aktiv %}
-                <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                {% endif %}
-                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-    
-    <!-- Hexen Varianten -->
-    {% if kategorien.hexe %}
-    <section class="kategorie-section fade-in">
-        <h2 class="kategorie-title"><i class="fa-solid fa-hat-wizard"></i> Hexen & Zauberer</h2>
-        <p class="text-muted mb-3">Magische Rollen mit Tränken und Zaubern.</p>
-        <div class="rollen-grid">
-            {% for rolle in kategorien.hexe %}
-            <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                    <i class="{{ rolle.icon }}"></i>
-                </div>
-                <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name }}</span>
-                {% if rolle.nacht_aktiv %}
-                <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                {% endif %}
-                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-    
-    <!-- Jäger Varianten -->
-    {% if kategorien.jaeger %}
-    <section class="kategorie-section fade-in">
-        <h2 class="kategorie-title"><i class="fa-solid fa-crosshairs"></i> Jäger & Kämpfer</h2>
-        <p class="text-muted mb-3">Aggressive Rollen, die andere Spieler eliminieren können.</p>
-        <div class="rollen-grid">
-            {% for rolle in kategorien.jaeger %}
-            <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                    <i class="{{ rolle.icon }}"></i>
-                </div>
-                <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name }}</span>
-                {% if rolle.nacht_aktiv %}
-                <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                {% endif %}
-                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-    
-    <!-- Heiler Varianten -->
-    {% if kategorien.heiler %}
-    <section class="kategorie-section fade-in">
-        <h2 class="kategorie-title"><i class="fa-solid fa-heart-pulse"></i> Heiler & Beschützer</h2>
-        <p class="text-muted mb-3">Rollen, die andere Spieler vor dem Tod bewahren können.</p>
-        <div class="rollen-grid">
-            {% for rolle in kategorien.heiler %}
-            <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                    <i class="{{ rolle.icon }}"></i>
-                </div>
-                <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name }}</span>
-                {% if rolle.nacht_aktiv %}
-                <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                {% endif %}
-                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-    
-    <!-- Spezialrollen -->
-    {% if kategorien.spezial %}
-    <section class="kategorie-section fade-in">
-        <h2 class="kategorie-title"><i class="fa-solid fa-star"></i> Spezialrollen</h2>
-        <p class="text-muted mb-3">Einzigartige Rollen mit besonderen Gewinnbedingungen.</p>
-        <div class="rollen-grid">
-            {% for rolle in kategorien.spezial %}
-            <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                    <i class="{{ rolle.icon }}"></i>
-                </div>
-                <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name }}</span>
-                {% if rolle.nacht_aktiv %}
-                <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                {% endif %}
-                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-    
-    <!-- Böse Rollen -->
-    {% if kategorien.boese %}
-    <section class="kategorie-section fade-in">
-        <h2 class="kategorie-title"><i class="fa-solid fa-skull"></i> Vampire & andere Böse</h2>
-        <p class="text-muted mb-3">Weitere antagonistische Rollen neben den Werwölfen.</p>
-        <div class="rollen-grid">
-            {% for rolle in kategorien.boese %}
-            <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                    <i class="{{ rolle.icon }}"></i>
-                </div>
-                <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name }}</span>
-                {% if rolle.nacht_aktiv %}
-                <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                {% endif %}
-                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-    
-    <!-- Sonstige Rollen -->
-    {% if kategorien.sonstige %}
-    <section class="kategorie-section fade-in">
-        <h2 class="kategorie-title"><i class="fa-solid fa-masks-theater"></i> Sonstige Rollen</h2>
-        <p class="text-muted mb-3">Weitere interessante Rollen, die das Spiel bereichern.</p>
-        <div class="rollen-grid">
-            {% for rolle in kategorien.sonstige %}
-            <div class="rolle-card" style="border-color: {{ rolle.farbe }};">
-                <div class="rolle-icon" style="color: {{ rolle.farbe }};">
-                    <i class="{{ rolle.icon }}"></i>
-                </div>
-                <div class="rolle-name" style="color: {{ rolle.farbe }};">{{ rolle.name }}</div>
-                <span class="rolle-team team-{{ rolle.team }}">{{ alle_teams[rolle.team].name }}</span>
-                {% if rolle.nacht_aktiv %}
-                <span class="nacht-badge"><i class="fa-solid fa-moon"></i> Nachtaktiv</span>
-                {% endif %}
-                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">{{ rolle.beschreibung }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
+        </section>
+        {% endif %}
+    {% endfor %}
     
     <!-- Credits Section -->
     <section class="credits-section fade-in">
@@ -400,7 +207,7 @@
             </span>
         </div>
         <p class="text-muted" style="font-size: 0.875rem;">
-            Inspiriert von "Werwölfe von Düsterwald" | 
+            Inspiriert von "Werwoelfe von Duesterwald" | 
             Rollen basierend auf der <a href="https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung" target="_blank" style="color: var(--accent-gold);">Werwolf Wiki Rollen-Sammlung</a>
         </p>
     </section>

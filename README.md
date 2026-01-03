@@ -11,8 +11,10 @@ Webwölfe ist eine moderne, webbasierte Implementation des beliebten Gesellschaf
 ## Features
 
 - **Zwei Spielmodi**: 
-  - Online (jeder auf eigenem Gerät, automatischer Erzähler) 
-  - Gruppen-Modus (alle zusammen lokal, mit Erzähler-Unterstützung)
+  - Online (jeder auf eigenem Gerät mit 3D-Dorf, automatischer Erzähler) 
+  - Gruppen-Modus (alle zusammen vor Ort, mit Erzähler-Unterstützung)
+- **Sitzordnung per Drag & Drop**: Spieler können ihre physische Sitzordnung im Kreis festlegen - wichtig für Nachbar-Mechaniken!
+- **3D-Dorfvisualisierung**: Interaktives 3D-Dorf zeigt alle Spieler im Kreis
 - **Echtzeit-Updates**: WebSocket-basierte Kommunikation für nahtloses Gameplay
 - **45+ Rollen**: Von Grundrollen bis Community-Kreationen ([Quelle](https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sammlung))
 - **Anti-Cheat**: Schutz gegen DevTools/F12-Spicken

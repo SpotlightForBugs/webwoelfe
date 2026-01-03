@@ -13,11 +13,11 @@ class HintSystem {
         this.usesRemaining = {};
         this.village3d = null;  // Referenz zur 3D-Visualisierung
         
-        // Spiel-Modus: 'lokal' oder 'online'
+        // Spiel-Modus: 'gruppe' oder 'online'
         this.modus = 'online';
         
         // Im Online-Modus: Keine lokalen Audio-Hinweise!
-        // Audio wird nur im lokalen Gruppen-Modus mit Erzähler verwendet
+        // Audio wird nur im Gruppen-Modus mit Erzähler verwendet
         this.audioErlaubt = false;
         
         // CSS-Klassen für visuelle Hinweise (2D Fallback)
@@ -67,7 +67,7 @@ class HintSystem {
         const modusElement = document.querySelector('[data-spiel-modus]');
         if (modusElement) {
             this.modus = modusElement.dataset.spielModus;
-            this.audioErlaubt = (this.modus === 'lokal');
+            this.audioErlaubt = (this.modus === 'gruppe');
         }
         
         // 3D-Visualisierung finden
@@ -78,11 +78,11 @@ class HintSystem {
     
     /**
      * Setzt den Spiel-Modus
-     * @param {string} modus - 'lokal' oder 'online'
+     * @param {string} modus - 'gruppe' oder 'online'
      */
     setModus(modus) {
         this.modus = modus;
-        this.audioErlaubt = (modus === 'lokal');
+        this.audioErlaubt = (modus === 'gruppe');
         console.log(`Hinweis-System: Modus=${modus}, Audio=${this.audioErlaubt ? 'an' : 'aus'}`);
     }
     

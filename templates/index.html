@@ -1,9 +1,78 @@
 {% extends 'struktur.html' %}
 
+{% block head %}
+<style>
+    .pre-alpha-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 10, 20, 0.7);
+        z-index: 2000;
+        padding: 1.5rem;
+    }
+    .pre-alpha-modal.is-open {
+        display: flex;
+    }
+    .pre-alpha-card {
+        width: min(520px, 92vw);
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        overflow: hidden;
+    }
+    .pre-alpha-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+        background: linear-gradient(135deg, rgba(196, 30, 58, 0.12), rgba(255, 193, 7, 0.12));
+        border-bottom: 1px solid var(--border-color);
+    }
+    .pre-alpha-body {
+        padding: 1rem 1.25rem;
+        color: var(--text-secondary);
+    }
+    .pre-alpha-footer {
+        padding: 0 1.25rem 1.25rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .pre-alpha-close {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 1.25rem;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
 {% block nav_home %}active{% endblock %}
 
 {% block content %}
 <div class="container">
+    <div class="pre-alpha-modal" id="pre-alpha-modal" role="dialog" aria-modal="true" aria-labelledby="pre-alpha-title">
+        <div class="pre-alpha-card">
+            <div class="pre-alpha-header">
+                <h5 id="pre-alpha-title" style="margin: 0; color: var(--accent-gold);">
+                    Wichtiger Hinweis: Pre-Alpha Version
+                </h5>
+                <button class="pre-alpha-close" type="button" aria-label="Close" data-close-modal>
+                    &times;
+                </button>
+            </div>
+            <div class="pre-alpha-body">
+                <p>Du benutzt eine Pre-Alpha Version von Webwölfe. Das Spiel ist noch in der Entwicklung und wird nicht funktionieren. Bitte spiele es nicht ernsthaft.</p>
+                <p>Feedback und Bug Reports sind sehr willkommen. Kontaktiere uns über GitHub.</p>
+            </div>
+            <div class="pre-alpha-footer">
+                <button type="button" class="btn btn-primary" data-close-modal>Verstanden</button>
+            </div>
+        </div>
+    </div>
     <!-- Hero Section -->
     <section class="hero text-center fade-in" style="padding: 4rem 0;">
         <h1 style="font-size: 3.5rem; margin-bottom: 1rem;">
@@ -54,10 +123,13 @@
                 
                 <div class="form-group">
                     <label class="form-label">Spielmodus</label>
-                    <select name="modus" class="form-input">
-                        <option value="online">Online - Jeder auf eigenem Gerät (ohne Erzähler)</option>
-                        <option value="gruppe">Gruppe - Alle zusammen lokal (mit Erzähler)</option>
+                    <select name="modus" class="form-input" id="modus-select">
+                        <option value="online">Online - Jeder auf eigenem Gerät mit 3D-Dorf</option>
+                        <option value="gruppe">Gruppe - Alle zusammen vor Ort (mit Erzähler)</option>
                     </select>
+                    <small class="form-hint" id="modus-beschreibung">
+                        Jeder Spieler verwendet sein eigenes Smartphone oder Laptop.
+                    </small>
                 </div>
                 
                 <div class="form-group">
@@ -708,10 +780,14 @@
 }
 
 .expansion-check input:checked + .checkmark::after {
-    content: '✓';
-    color: #000;
-    font-size: 12px;
-    font-weight: bold;
+    content: '';
+    display: block;
+    width: 5px;
+    height: 10px;
+    border: solid #000;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    margin: 2px auto;
 }
 
 .expansion-check input:disabled + .checkmark {
@@ -1074,6 +1150,21 @@ function toggleErweitert() {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
+    var modal = document.getElementById('pre-alpha-modal');
+    if (modal) {
+        modal.classList.add('is-open');
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.classList.remove('is-open');
+            }
+        });
+        modal.querySelectorAll('[data-close-modal]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                modal.classList.remove('is-open');
+            });
+        });
+    }
+
     // Open the basis expansion by default
     const basisCard = document.querySelector('[data-expansion="basis"]');
     if (basisCard) {
@@ -1088,13 +1179,29 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial preview update
     updateRolesPreview();
     
-    // Modus change handler
-    const modusSelect = document.querySelector('select[name="modus"]');
+    // Modus change handler with descriptions
+    const modusDescriptions = {
+        'online': 'Jeder Spieler verwendet sein eigenes Smartphone oder Laptop. Das Spiel zeigt ein 3D-Dorf mit Sitzordnung.',
+        'gruppe': 'Alle sitzen physisch zusammen, ein Erzähler leitet das Spiel mit einem großen Bildschirm.'
+    };
+    
+    const modusSelect = document.getElementById('modus-select');
+    const modusBeschreibung = document.getElementById('modus-beschreibung');
+    
     if (modusSelect) {
         modusSelect.addEventListener('change', function() {
-            const isOnline = this.value === 'online';
+            const modus = this.value;
+            const isOnline = modus === 'online';
+            
+            // Update description
+            if (modusBeschreibung) {
+                modusBeschreibung.textContent = modusDescriptions[modus] || '';
+            }
+            
+            // Toggle options visibility
             const hinweisOption = document.getElementById('hinweise-option');
             const audioOption = document.getElementById('audio-option');
+            
             if (hinweisOption) hinweisOption.style.display = isOnline ? 'block' : 'none';
             if (audioOption) audioOption.style.display = isOnline ? 'block' : 'none';
         });

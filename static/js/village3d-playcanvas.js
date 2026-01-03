@@ -45,102 +45,102 @@ export default class Village3DPlayCanvas {
     // Role colors for player appearance - ALL ROLES
     this.roleColors = {
       // === GRUNDROLLEN ===
-      Werwolf: new pc.Color(0.6, 0.1, 0.1),           // Dark red
-      Dorfbewohner: new pc.Color(0.3, 0.5, 0.8),      // Blue
-      Seherin: new pc.Color(0.5, 0.3, 0.9),           // Purple
-      Hexe: new pc.Color(0.2, 0.7, 0.3),              // Green
-      Jäger: new pc.Color(0.6, 0.5, 0.2),             // Brown/Gold
-      Amor: new pc.Color(1.0, 0.4, 0.7),              // Pink
-      Heiler: new pc.Color(0.9, 0.9, 0.2),            // Yellow
+      Werwolf: new pc.Color(0.6, 0.1, 0.1), // Dark red
+      Dorfbewohner: new pc.Color(0.3, 0.5, 0.8), // Blue
+      Seherin: new pc.Color(0.5, 0.3, 0.9), // Purple
+      Hexe: new pc.Color(0.2, 0.7, 0.3), // Green
+      Jäger: new pc.Color(0.6, 0.5, 0.2), // Brown/Gold
+      Amor: new pc.Color(1.0, 0.4, 0.7), // Pink
+      Heiler: new pc.Color(0.9, 0.9, 0.2), // Yellow
 
       // === WERWOLF-VARIANTEN ===
-      "Einsamer Wolf": new pc.Color(0.4, 0.15, 0.15),    // Darker red
-      "Lupin": new pc.Color(0.5, 0.3, 0.2),              // Brown-red
-      "Polarwolf": new pc.Color(0.85, 0.9, 0.95),        // Ice white
-      "Teenager-Werwolf": new pc.Color(0.7, 0.2, 0.3),   // Teen red
-      "Urwolf": new pc.Color(0.3, 0.08, 0.05),           // Ancient dark
-      "Weißer Wolf": new pc.Color(0.95, 0.95, 0.98),     // Pure white
-      "Werwolfseherin": new pc.Color(0.6, 0.2, 0.5),     // Red-purple
-      "Wildes Kind": new pc.Color(0.55, 0.25, 0.15),     // Wild brown
+      "Einsamer Wolf": new pc.Color(0.4, 0.15, 0.15), // Darker red
+      Lupin: new pc.Color(0.5, 0.3, 0.2), // Brown-red
+      Polarwolf: new pc.Color(0.85, 0.9, 0.95), // Ice white
+      "Teenager-Werwolf": new pc.Color(0.7, 0.2, 0.3), // Teen red
+      Urwolf: new pc.Color(0.3, 0.08, 0.05), // Ancient dark
+      "Weißer Wolf": new pc.Color(0.95, 0.95, 0.98), // Pure white
+      Werwolfseherin: new pc.Color(0.6, 0.2, 0.5), // Red-purple
+      "Wildes Kind": new pc.Color(0.55, 0.25, 0.15), // Wild brown
       "Wolf im Schafspelz": new pc.Color(0.9, 0.88, 0.85), // Sheep wool
-      "Wolfsjunge": new pc.Color(0.5, 0.15, 0.1),        // Young wolf red
+      Wolfsjunge: new pc.Color(0.5, 0.15, 0.1), // Young wolf red
 
       // === BÖSE ROLLEN ===
-      "Flötenspieler": new pc.Color(0.4, 0.35, 0.5),     // Mysterious purple
-      "Hexenmeister": new pc.Color(0.15, 0.1, 0.3),      // Dark purple
-      "Vampir": new pc.Color(0.2, 0.0, 0.1),             // Blood dark
-      "Zombie": new pc.Color(0.3, 0.4, 0.25),            // Rotten green
+      Flötenspieler: new pc.Color(0.4, 0.35, 0.5), // Mysterious purple
+      Hexenmeister: new pc.Color(0.15, 0.1, 0.3), // Dark purple
+      Vampir: new pc.Color(0.2, 0.0, 0.1), // Blood dark
+      Zombie: new pc.Color(0.3, 0.4, 0.25), // Rotten green
 
       // === DORFBEWOHNER-VARIANTEN ===
-      "Alter Mann": new pc.Color(0.5, 0.5, 0.55),        // Gray
-      "Dorfdepp": new pc.Color(0.6, 0.5, 0.3),           // Tan
-      "Drei Brüder": new pc.Color(0.35, 0.45, 0.7),      // Brothers blue
-      "Freimaurer": new pc.Color(0.25, 0.25, 0.35),      // Mason gray
-      "Griesgram": new pc.Color(0.4, 0.35, 0.3),         // Grumpy brown
-      "Hund": new pc.Color(0.6, 0.45, 0.25),             // Dog brown
-      "Jesus": new pc.Color(1.0, 0.95, 0.8),             // Holy white
-      "Tonks": new pc.Color(0.9, 0.4, 0.9),              // Metamorph pink
-      "Zwei Schwestern": new pc.Color(0.7, 0.5, 0.7),    // Sister purple
+      "Alter Mann": new pc.Color(0.5, 0.5, 0.55), // Gray
+      Dorfdepp: new pc.Color(0.6, 0.5, 0.3), // Tan
+      "Drei Brüder": new pc.Color(0.35, 0.45, 0.7), // Brothers blue
+      Freimaurer: new pc.Color(0.25, 0.25, 0.35), // Mason gray
+      Griesgram: new pc.Color(0.4, 0.35, 0.3), // Grumpy brown
+      Hund: new pc.Color(0.6, 0.45, 0.25), // Dog brown
+      Jesus: new pc.Color(1.0, 0.95, 0.8), // Holy white
+      Tonks: new pc.Color(0.9, 0.4, 0.9), // Metamorph pink
+      "Zwei Schwestern": new pc.Color(0.7, 0.5, 0.7), // Sister purple
 
       // === HEILER-VARIANTEN ===
-      "Ergebene Magd": new pc.Color(0.7, 0.6, 0.5),      // Servant beige
-      "Leibwächter": new pc.Color(0.3, 0.35, 0.45),      // Guard steel
-      "Oma": new pc.Color(0.65, 0.55, 0.6),              // Grandma rose
-      "Prostituierte": new pc.Color(0.9, 0.3, 0.4),      // Red dress
+      "Ergebene Magd": new pc.Color(0.7, 0.6, 0.5), // Servant beige
+      Leibwächter: new pc.Color(0.3, 0.35, 0.45), // Guard steel
+      Oma: new pc.Color(0.65, 0.55, 0.6), // Grandma rose
+      Prostituierte: new pc.Color(0.9, 0.3, 0.4), // Red dress
 
       // === HEXE-VARIANTEN ===
-      "Giftmischerin": new pc.Color(0.4, 0.1, 0.5),      // Poison purple
-      "Hahn": new pc.Color(0.8, 0.4, 0.1),               // Rooster orange
-      "Kräuterweib": new pc.Color(0.3, 0.5, 0.2),        // Herb green
-      "Sandmann": new pc.Color(0.7, 0.65, 0.5),          // Sandy yellow
-      "Zauberer": new pc.Color(0.2, 0.2, 0.6),           // Wizard blue
+      Giftmischerin: new pc.Color(0.4, 0.1, 0.5), // Poison purple
+      Hahn: new pc.Color(0.8, 0.4, 0.1), // Rooster orange
+      Kräuterweib: new pc.Color(0.3, 0.5, 0.2), // Herb green
+      Sandmann: new pc.Color(0.7, 0.65, 0.5), // Sandy yellow
+      Zauberer: new pc.Color(0.2, 0.2, 0.6), // Wizard blue
 
       // === JÄGER-VARIANTEN ===
-      "Buddler": new pc.Color(0.5, 0.35, 0.2),           // Dirt brown
-      "Drachenbändiger": new pc.Color(0.8, 0.3, 0.1),    // Dragon orange
-      "Flammenmann": new pc.Color(0.95, 0.4, 0.1),       // Fire orange
-      "Gaukler": new pc.Color(0.9, 0.7, 0.2),            // Jester gold
-      "Inquisitor": new pc.Color(0.15, 0.1, 0.1),        // Dark inquisitor
-      "Kamikaze": new pc.Color(0.9, 0.1, 0.1),           // Explosive red
-      "König": new pc.Color(0.85, 0.7, 0.2),             // Royal gold
-      "Prinz": new pc.Color(0.6, 0.5, 0.8),              // Royal purple
-      "Pyromane": new pc.Color(1.0, 0.5, 0.0),           // Flame orange
-      "Tanklastwagenfahrer": new pc.Color(0.2, 0.3, 0.2),// Military green
+      Buddler: new pc.Color(0.5, 0.35, 0.2), // Dirt brown
+      Drachenbändiger: new pc.Color(0.8, 0.3, 0.1), // Dragon orange
+      Flammenmann: new pc.Color(0.95, 0.4, 0.1), // Fire orange
+      Gaukler: new pc.Color(0.9, 0.7, 0.2), // Jester gold
+      Inquisitor: new pc.Color(0.15, 0.1, 0.1), // Dark inquisitor
+      Kamikaze: new pc.Color(0.9, 0.1, 0.1), // Explosive red
+      König: new pc.Color(0.85, 0.7, 0.2), // Royal gold
+      Prinz: new pc.Color(0.6, 0.5, 0.8), // Royal purple
+      Pyromane: new pc.Color(1.0, 0.5, 0.0), // Flame orange
+      Tanklastwagenfahrer: new pc.Color(0.2, 0.3, 0.2), // Military green
 
       // === SEHER-VARIANTEN ===
-      "Aurenseherin": new pc.Color(0.6, 0.4, 0.8),       // Aura purple
-      "Bärenbändiger": new pc.Color(0.45, 0.3, 0.2),     // Bear brown
-      "Demoskopin": new pc.Color(0.4, 0.5, 0.6),         // Poll gray-blue
-      "Medium": new pc.Color(0.6, 0.5, 0.8),             // Spirit purple
+      Aurenseherin: new pc.Color(0.6, 0.4, 0.8), // Aura purple
+      Bärenbändiger: new pc.Color(0.45, 0.3, 0.2), // Bear brown
+      Demoskopin: new pc.Color(0.4, 0.5, 0.6), // Poll gray-blue
+      Medium: new pc.Color(0.6, 0.5, 0.8), // Spirit purple
       "Paranormaler Ermittler": new pc.Color(0.3, 0.4, 0.5), // Detective gray
-      "Seherlehrling": new pc.Color(0.55, 0.4, 0.75),    // Apprentice purple
-      "Tratschweib": new pc.Color(0.7, 0.5, 0.4),        // Gossip peach
+      Seherlehrling: new pc.Color(0.55, 0.4, 0.75), // Apprentice purple
+      Tratschweib: new pc.Color(0.7, 0.5, 0.4), // Gossip peach
 
       // === SOLO-ROLLEN ===
-      "Henker": new pc.Color(0.1, 0.1, 0.1),             // Black
-      "Selbstmörder": new pc.Color(0.3, 0.3, 0.35),      // Sad gray
+      Henker: new pc.Color(0.1, 0.1, 0.1), // Black
+      Selbstmörder: new pc.Color(0.3, 0.3, 0.35), // Sad gray
 
       // === SONSTIGE ===
-      "Bürgermeister": new pc.Color(0.5, 0.4, 0.6),      // Mayor purple
-      "Dieb": new pc.Color(0.2, 0.2, 0.25),              // Thief dark
-      "Doppelgänger": new pc.Color(0.5, 0.5, 0.5),       // Mirror gray
-      "Engel": new pc.Color(1.0, 1.0, 0.9),              // Angel white
-      "Gerber": new pc.Color(0.55, 0.4, 0.25),           // Leather brown
-      "Kleines Mädchen": new pc.Color(0.95, 0.7, 0.75),  // Little girl pink
-      "Putzfrau": new pc.Color(0.5, 0.6, 0.7),           // Cleaning blue
-      "Sündenbock": new pc.Color(0.5, 0.4, 0.3),         // Scapegoat brown
+      Bürgermeister: new pc.Color(0.5, 0.4, 0.6), // Mayor purple
+      Dieb: new pc.Color(0.2, 0.2, 0.25), // Thief dark
+      Doppelgänger: new pc.Color(0.5, 0.5, 0.5), // Mirror gray
+      Engel: new pc.Color(1.0, 1.0, 0.9), // Angel white
+      Gerber: new pc.Color(0.55, 0.4, 0.25), // Leather brown
+      "Kleines Mädchen": new pc.Color(0.95, 0.7, 0.75), // Little girl pink
+      Putzfrau: new pc.Color(0.5, 0.6, 0.7), // Cleaning blue
+      Sündenbock: new pc.Color(0.5, 0.4, 0.3), // Scapegoat brown
 
       // === SPEZIAL ===
-      "Chemielaborant": new pc.Color(0.3, 0.7, 0.5),     // Chemical green
-      "Dunkler Priester": new pc.Color(0.15, 0.1, 0.2),  // Dark priest
-      "Flüchtlinge": new pc.Color(0.6, 0.55, 0.45),      // Refugee tan
-      "Hure": new pc.Color(0.85, 0.25, 0.35),            // Red
-      "Mordlustiger": new pc.Color(0.7, 0.1, 0.15),      // Blood red
-      "Nutte": new pc.Color(0.8, 0.3, 0.5),              // Pink-red
-      "Rabe": new pc.Color(0.1, 0.1, 0.12),              // Raven black
-      "Zahnarzt": new pc.Color(0.9, 0.95, 1.0),          // Dentist white
+      Chemielaborant: new pc.Color(0.3, 0.7, 0.5), // Chemical green
+      "Dunkler Priester": new pc.Color(0.15, 0.1, 0.2), // Dark priest
+      Flüchtlinge: new pc.Color(0.6, 0.55, 0.45), // Refugee tan
+      Hure: new pc.Color(0.85, 0.25, 0.35), // Red
+      Mordlustiger: new pc.Color(0.7, 0.1, 0.15), // Blood red
+      Nutte: new pc.Color(0.8, 0.3, 0.5), // Pink-red
+      Rabe: new pc.Color(0.1, 0.1, 0.12), // Raven black
+      Zahnarzt: new pc.Color(0.9, 0.95, 1.0), // Dentist white
 
-      default: new pc.Color(0.7, 0.7, 0.7),              // Gray
+      default: new pc.Color(0.7, 0.7, 0.7), // Gray
     };
 
     if (!this.container) {
@@ -381,9 +381,10 @@ export default class Village3DPlayCanvas {
     const roofAngle = 35; // degrees
     const roofWidth = 2.8; // Width of each roof panel
     const roofHeight = 3.6; // Height above upper floor
-    const roofPeakY = roofHeight + Math.sin(roofAngle * Math.PI / 180) * (roofWidth / 2);
-    const roofOffset = Math.cos(roofAngle * Math.PI / 180) * (roofWidth / 2);
-    
+    const roofPeakY =
+      roofHeight + Math.sin((roofAngle * Math.PI) / 180) * (roofWidth / 2);
+    const roofOffset = Math.cos((roofAngle * Math.PI) / 180) * (roofWidth / 2);
+
     const roofLeft = new pc.Entity("RoofLeft");
     roofLeft.addComponent("model", { type: "box" });
     roofLeft.setLocalScale(roofWidth, 0.15, 5.6);
@@ -408,7 +409,11 @@ export default class Village3DPlayCanvas {
     const roofPeak = new pc.Entity("RoofPeak");
     roofPeak.addComponent("model", { type: "box" });
     roofPeak.setLocalScale(0.25, 0.25, 5.6);
-    roofPeak.setLocalPosition(0, roofPeakY + Math.sin(roofAngle * Math.PI / 180) * (roofWidth / 2), 0);
+    roofPeak.setLocalPosition(
+      0,
+      roofPeakY + Math.sin((roofAngle * Math.PI) / 180) * (roofWidth / 2),
+      0,
+    );
     roofPeak.model.material = roofMat;
     house.addChild(roofPeak);
 
@@ -535,9 +540,12 @@ export default class Village3DPlayCanvas {
     const churchRoofAngle = 30; // degrees
     const churchRoofWidth = 5.5; // Width of each roof panel
     const churchRoofBaseY = 6; // Base height above ground
-    const churchRoofPeakOffset = Math.cos(churchRoofAngle * Math.PI / 180) * (churchRoofWidth / 2);
-    const churchRoofPeakY = churchRoofBaseY + Math.sin(churchRoofAngle * Math.PI / 180) * (churchRoofWidth / 2);
-    
+    const churchRoofPeakOffset =
+      Math.cos((churchRoofAngle * Math.PI) / 180) * (churchRoofWidth / 2);
+    const churchRoofPeakY =
+      churchRoofBaseY +
+      Math.sin((churchRoofAngle * Math.PI) / 180) * (churchRoofWidth / 2);
+
     const roofLeft = new pc.Entity("RoofLeft");
     roofLeft.addComponent("model", { type: "box" });
     roofLeft.setLocalScale(churchRoofWidth, 0.25, 10.5);
@@ -562,7 +570,12 @@ export default class Village3DPlayCanvas {
     const ridge = new pc.Entity("Ridge");
     ridge.addComponent("model", { type: "box" });
     ridge.setLocalScale(0.35, 0.35, 10.5);
-    ridge.setLocalPosition(0, churchRoofPeakY + Math.sin(churchRoofAngle * Math.PI / 180) * (churchRoofWidth / 2), 0);
+    ridge.setLocalPosition(
+      0,
+      churchRoofPeakY +
+        Math.sin((churchRoofAngle * Math.PI) / 180) * (churchRoofWidth / 2),
+      0,
+    );
     ridge.model.material = stoneMat;
     church.addChild(ridge);
 
@@ -1016,7 +1029,11 @@ export default class Village3DPlayCanvas {
 
   setPlayers(players) {
     this.players = players;
-    console.log('[Village3D] setPlayers called with', players.length, 'players');
+    console.log(
+      "[Village3D] setPlayers called with",
+      players.length,
+      "players",
+    );
 
     // Clear existing
     this.playerEntities.forEach((entity) => entity.destroy());
@@ -1032,15 +1049,22 @@ export default class Village3DPlayCanvas {
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
-      console.log(`[Village3D] Creating player ${player.name} at position (${x.toFixed(2)}, 0, ${z.toFixed(2)})`);
+      console.log(
+        `[Village3D] Creating player ${player.name} at position (${x.toFixed(2)}, 0, ${z.toFixed(2)})`,
+      );
       const entity = this.createDetailedPlayer(player, x, z, angle);
 
       this.app.root.addChild(entity);
       this.playerEntities.set(player.id, entity);
-      console.log(`[Village3D] Player ${player.name} created and added to scene`);
+      console.log(
+        `[Village3D] Player ${player.name} created and added to scene`,
+      );
     });
-    
-    console.log('[Village3D] All players added to scene. Total:', this.playerEntities.size);
+
+    console.log(
+      "[Village3D] All players added to scene. Total:",
+      this.playerEntities.size,
+    );
   }
 
   createDetailedPlayer(player, x, z, angle) {
@@ -1056,7 +1080,10 @@ export default class Village3DPlayCanvas {
       } else {
         roleColor = this.roleColors[player.rolle] || this.roleColors["default"];
       }
-      console.log(`[Village3D] Role color for ${player.name} (${player.rolle}):`, roleColor);
+      console.log(
+        `[Village3D] Role color for ${player.name} (${player.rolle}):`,
+        roleColor,
+      );
 
       // Create role-specific appearance
       this.addRoleSpecificAppearance(entity, player, roleColor);
@@ -1079,11 +1106,13 @@ export default class Village3DPlayCanvas {
 
       // Store data
       entity.playerData = player;
-      
-      console.log(`[Village3D] Player ${player.name} fully configured at (${x.toFixed(2)}, 0, ${z.toFixed(2)})`);
+
+      console.log(
+        `[Village3D] Player ${player.name} fully configured at (${x.toFixed(2)}, 0, ${z.toFixed(2)})`,
+      );
       return entity;
     } catch (e) {
-      console.error('[Village3D] Error creating player:', player.name, e);
+      console.error("[Village3D] Error creating player:", player.name, e);
       throw e;
     }
   }
@@ -1092,11 +1121,13 @@ export default class Village3DPlayCanvas {
     try {
       const rolle = player.rolle;
       const isAlive = player.ist_am_leben;
-      console.log(`[Village3D] addRoleSpecificAppearance for ${player.name}, rolle=${rolle}, alive=${isAlive}`);
+      console.log(
+        `[Village3D] addRoleSpecificAppearance for ${player.name}, rolle=${rolle}, alive=${isAlive}`,
+      );
 
       // Skin tone for living players
-      const skinColor = isAlive 
-        ? new pc.Color(0.87, 0.72, 0.58) 
+      const skinColor = isAlive
+        ? new pc.Color(0.87, 0.72, 0.58)
         : new pc.Color(0.35, 0.35, 0.35);
       const skinMat = new pc.StandardMaterial();
       skinMat.diffuse = skinColor;
@@ -1127,7 +1158,7 @@ export default class Village3DPlayCanvas {
       torsoMat.update();
       torso.model.material = torsoMat;
       entity.addChild(torso);
-      console.log('[Village3D] Torso created');
+      console.log("[Village3D] Torso created");
 
       // === LEGS ===
       for (let i = 0; i < 2; i++) {
@@ -1135,7 +1166,7 @@ export default class Village3DPlayCanvas {
         leg.addComponent("model", { type: "box" });
         leg.setLocalPosition(i === 0 ? -0.15 : 0.15, 0.3, 0);
         leg.setLocalScale(0.2, 0.6, 0.25);
-        
+
         const legMat = new pc.StandardMaterial();
         if (isAlive) {
           legMat.diffuse = roleColor;
@@ -1150,7 +1181,7 @@ export default class Village3DPlayCanvas {
         leg.model.material = legMat;
         entity.addChild(leg);
       }
-      console.log('[Village3D] Legs created');
+      console.log("[Village3D] Legs created");
 
       // === ARMS ===
       for (let i = 0; i < 2; i++) {
@@ -1159,7 +1190,7 @@ export default class Village3DPlayCanvas {
         arm.setLocalPosition(i === 0 ? -0.4 : 0.4, 0.95, 0);
         arm.setLocalScale(0.15, 0.55, 0.2);
         arm.setLocalEulerAngles(0, 0, i === 0 ? 8 : -8);
-        
+
         const armMat = new pc.StandardMaterial();
         armMat.diffuse = skinColor;
         armMat.specular = new pc.Color(0.15, 0.12, 0.1);
@@ -1177,241 +1208,248 @@ export default class Village3DPlayCanvas {
         hand.addComponent("model", { type: "sphere" });
         hand.setLocalPosition(i === 0 ? -0.4 : 0.4, 0.6, 0);
         hand.setLocalScale(0.12, 0.12, 0.1);
-        
+
         const handMat = new pc.StandardMaterial();
-      handMat.diffuse = skinColor;
-      handMat.specular = new pc.Color(0.15, 0.12, 0.1);
-      handMat.shininess = 25;
+        handMat.diffuse = skinColor;
+        handMat.specular = new pc.Color(0.15, 0.12, 0.1);
+        handMat.shininess = 25;
+        if (!isAlive) {
+          handMat.opacity = 0.5;
+          handMat.blendType = pc.BLEND_NORMAL;
+        }
+        handMat.update();
+        hand.model.material = handMat;
+        entity.addChild(hand);
+      }
+
+      // === NECK ===
+      const neck = new pc.Entity("Neck");
+      neck.addComponent("model", { type: "cylinder" });
+      neck.setLocalPosition(0, 1.5, 0);
+      neck.setLocalScale(0.15, 0.12, 0.15);
+
+      const neckMat = new pc.StandardMaterial();
+      neckMat.diffuse = skinColor;
+      neckMat.specular = new pc.Color(0.15, 0.12, 0.1);
+      neckMat.shininess = 25;
       if (!isAlive) {
-        handMat.opacity = 0.5;
-        handMat.blendType = pc.BLEND_NORMAL;
+        neckMat.opacity = 0.5;
+        neckMat.blendType = pc.BLEND_NORMAL;
       }
-      handMat.update();
-      hand.model.material = handMat;
-      entity.addChild(hand);
-    }
+      neckMat.update();
+      neck.model.material = neckMat;
+      entity.addChild(neck);
 
-    // === NECK ===
-    const neck = new pc.Entity("Neck");
-    neck.addComponent("model", { type: "cylinder" });
-    neck.setLocalPosition(0, 1.5, 0);
-    neck.setLocalScale(0.15, 0.12, 0.15);
-    
-    const neckMat = new pc.StandardMaterial();
-    neckMat.diffuse = skinColor;
-    neckMat.specular = new pc.Color(0.15, 0.12, 0.1);
-    neckMat.shininess = 25;
-    if (!isAlive) {
-      neckMat.opacity = 0.5;
-      neckMat.blendType = pc.BLEND_NORMAL;
-    }
-    neckMat.update();
-    neck.model.material = neckMat;
-    entity.addChild(neck);
+      // === HEAD (slightly oval) ===
+      const head = new pc.Entity("Head");
+      head.addComponent("model", { type: "sphere" });
+      head.setLocalPosition(0, 1.85, 0);
+      head.setLocalScale(0.5, 0.55, 0.45);
 
-    // === HEAD (slightly oval) ===
-    const head = new pc.Entity("Head");
-    head.addComponent("model", { type: "sphere" });
-    head.setLocalPosition(0, 1.85, 0);
-    head.setLocalScale(0.5, 0.55, 0.45);
-    
-    const headMat = new pc.StandardMaterial();
-    headMat.diffuse = skinColor;
-    headMat.specular = new pc.Color(0.15, 0.12, 0.1);
-    headMat.shininess = 25;
-    if (!isAlive) {
-      headMat.opacity = 0.5;
-      headMat.blendType = pc.BLEND_NORMAL;
-    }
-    headMat.update();
-    head.model.material = headMat;
-    entity.addChild(head);
-
-    // === HAIR ===
-    const hair = new pc.Entity("Hair");
-    hair.addComponent("model", { type: "sphere" });
-    hair.setLocalPosition(0, 2.0, -0.05);
-    hair.setLocalScale(0.52, 0.35, 0.48);
-
-    const hairMat = new pc.StandardMaterial();
-    // Random hair color based on player id hash
-    const hairColors = [
-      new pc.Color(0.15, 0.1, 0.05),   // Dark brown
-      new pc.Color(0.35, 0.2, 0.1),    // Brown
-      new pc.Color(0.8, 0.6, 0.3),     // Blonde
-      new pc.Color(0.1, 0.08, 0.05),   // Black
-      new pc.Color(0.5, 0.25, 0.15),   // Auburn
-    ];
-    const playerIdStr = String(player.id);
-    const hairIndex = Math.abs(playerIdStr.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % hairColors.length;
-    hairMat.diffuse = isAlive ? hairColors[hairIndex] : new pc.Color(0.3, 0.3, 0.3);
-    hairMat.shininess = 40;
-    if (!isAlive) {
-      hairMat.opacity = 0.5;
-      hairMat.blendType = pc.BLEND_NORMAL;
-    }
-    hairMat.update();
-    hair.model.material = hairMat;
-    entity.addChild(hair);
-
-    // === FACIAL FEATURES (only for living players) ===
-    if (isAlive) {
-      // --- EYES with white, iris, and pupil ---
-      for (let i = 0; i < 2; i++) {
-        const eyeX = i === 0 ? -0.12 : 0.12;
-        
-        // Eye white (sclera)
-        const eyeWhite = new pc.Entity(`EyeWhite-${i}`);
-        eyeWhite.addComponent("model", { type: "sphere" });
-        eyeWhite.setLocalPosition(eyeX, 1.9, 0.2);
-        eyeWhite.setLocalScale(0.1, 0.08, 0.06);
-
-        const eyeWhiteMat = new pc.StandardMaterial();
-        eyeWhiteMat.diffuse = new pc.Color(0.95, 0.95, 0.95);
-        eyeWhiteMat.shininess = 60;
-        eyeWhiteMat.update();
-        eyeWhite.model.material = eyeWhiteMat;
-        entity.addChild(eyeWhite);
-
-        // Iris (colored part)
-        const iris = new pc.Entity(`Iris-${i}`);
-        iris.addComponent("model", { type: "sphere" });
-        iris.setLocalPosition(eyeX, 1.9, 0.24);
-        iris.setLocalScale(0.055, 0.055, 0.03);
-
-        const irisMat = new pc.StandardMaterial();
-        // Random eye color
-        const eyeColors = [
-          new pc.Color(0.25, 0.45, 0.7),  // Blue
-          new pc.Color(0.35, 0.55, 0.3),  // Green
-          new pc.Color(0.45, 0.3, 0.2),   // Brown
-          new pc.Color(0.3, 0.35, 0.35),  // Gray
-        ];
-        const eyeIdStr = String(player.id);
-        const eyeIndex = Math.abs(eyeIdStr.split('').reduce((a, c) => a + c.charCodeAt(0) * 2, 0)) % eyeColors.length;
-        irisMat.diffuse = eyeColors[eyeIndex];
-        irisMat.shininess = 80;
-        irisMat.update();
-        iris.model.material = irisMat;
-        entity.addChild(iris);
-
-        // Pupil (black center)
-        const pupil = new pc.Entity(`Pupil-${i}`);
-        pupil.addComponent("model", { type: "sphere" });
-        pupil.setLocalPosition(eyeX, 1.9, 0.26);
-        pupil.setLocalScale(0.03, 0.03, 0.02);
-
-        const pupilMat = new pc.StandardMaterial();
-        pupilMat.diffuse = new pc.Color(0.05, 0.05, 0.05);
-        pupilMat.update();
-        pupil.model.material = pupilMat;
-        entity.addChild(pupil);
-
-        // Eye highlight/reflection
-        const eyeHighlight = new pc.Entity(`EyeHighlight-${i}`);
-        eyeHighlight.addComponent("model", { type: "sphere" });
-        eyeHighlight.setLocalPosition(eyeX + 0.015, 1.91, 0.265);
-        eyeHighlight.setLocalScale(0.012, 0.012, 0.008);
-
-        const highlightMat = new pc.StandardMaterial();
-        highlightMat.diffuse = new pc.Color(1, 1, 1);
-        highlightMat.emissive = new pc.Color(0.5, 0.5, 0.5);
-        highlightMat.update();
-        eyeHighlight.model.material = highlightMat;
-        entity.addChild(eyeHighlight);
+      const headMat = new pc.StandardMaterial();
+      headMat.diffuse = skinColor;
+      headMat.specular = new pc.Color(0.15, 0.12, 0.1);
+      headMat.shininess = 25;
+      if (!isAlive) {
+        headMat.opacity = 0.5;
+        headMat.blendType = pc.BLEND_NORMAL;
       }
+      headMat.update();
+      head.model.material = headMat;
+      entity.addChild(head);
 
-      // --- EYEBROWS ---
-      for (let i = 0; i < 2; i++) {
-        const eyebrow = new pc.Entity(`Eyebrow-${i}`);
-        eyebrow.addComponent("model", { type: "box" });
-        eyebrow.setLocalPosition(i === 0 ? -0.12 : 0.12, 1.98, 0.2);
-        eyebrow.setLocalScale(0.1, 0.02, 0.04);
-        eyebrow.setLocalEulerAngles(0, 0, i === 0 ? 5 : -5);
-        
-        const eyebrowMat = new pc.StandardMaterial();
-        eyebrowMat.diffuse = hairMat.diffuse;
-        eyebrowMat.shininess = 40;
-        eyebrowMat.update();
-        eyebrow.model.material = eyebrowMat;
-        entity.addChild(eyebrow);
+      // === HAIR ===
+      const hair = new pc.Entity("Hair");
+      hair.addComponent("model", { type: "sphere" });
+      hair.setLocalPosition(0, 2.0, -0.05);
+      hair.setLocalScale(0.52, 0.35, 0.48);
+
+      const hairMat = new pc.StandardMaterial();
+      // Random hair color based on player id hash
+      const hairColors = [
+        new pc.Color(0.15, 0.1, 0.05), // Dark brown
+        new pc.Color(0.35, 0.2, 0.1), // Brown
+        new pc.Color(0.8, 0.6, 0.3), // Blonde
+        new pc.Color(0.1, 0.08, 0.05), // Black
+        new pc.Color(0.5, 0.25, 0.15), // Auburn
+      ];
+      const playerIdStr = String(player.id);
+      const hairIndex =
+        Math.abs(
+          playerIdStr.split("").reduce((a, c) => a + c.charCodeAt(0), 0),
+        ) % hairColors.length;
+      hairMat.diffuse = isAlive
+        ? hairColors[hairIndex]
+        : new pc.Color(0.3, 0.3, 0.3);
+      hairMat.shininess = 40;
+      if (!isAlive) {
+        hairMat.opacity = 0.5;
+        hairMat.blendType = pc.BLEND_NORMAL;
       }
+      hairMat.update();
+      hair.model.material = hairMat;
+      entity.addChild(hair);
 
-      // --- NOSE ---
-      const nose = new pc.Entity("Nose");
-      nose.addComponent("model", { type: "box" });
-      nose.setLocalPosition(0, 1.82, 0.23);
-      nose.setLocalScale(0.05, 0.08, 0.06);
-      nose.setLocalEulerAngles(15, 0, 0);
-      
-      const noseMat = new pc.StandardMaterial();
-      noseMat.diffuse = skinColor;
-      noseMat.specular = new pc.Color(0.15, 0.12, 0.1);
-      noseMat.shininess = 25;
-      noseMat.update();
-      nose.model.material = noseMat;
-      entity.addChild(nose);
+      // === FACIAL FEATURES (only for living players) ===
+      if (isAlive) {
+        // --- EYES with white, iris, and pupil ---
+        for (let i = 0; i < 2; i++) {
+          const eyeX = i === 0 ? -0.12 : 0.12;
 
-      // --- MOUTH ---
-      const mouth = new pc.Entity("Mouth");
-      mouth.addComponent("model", { type: "box" });
-      mouth.setLocalPosition(0, 1.72, 0.2);
-      mouth.setLocalScale(0.12, 0.025, 0.03);
+          // Eye white (sclera)
+          const eyeWhite = new pc.Entity(`EyeWhite-${i}`);
+          eyeWhite.addComponent("model", { type: "sphere" });
+          eyeWhite.setLocalPosition(eyeX, 1.9, 0.2);
+          eyeWhite.setLocalScale(0.1, 0.08, 0.06);
 
-      const mouthMat = new pc.StandardMaterial();
-      mouthMat.diffuse = new pc.Color(0.65, 0.35, 0.35);
-      mouthMat.shininess = 50;
-      mouthMat.update();
-      mouth.model.material = mouthMat;
-      entity.addChild(mouth);
+          const eyeWhiteMat = new pc.StandardMaterial();
+          eyeWhiteMat.diffuse = new pc.Color(0.95, 0.95, 0.95);
+          eyeWhiteMat.shininess = 60;
+          eyeWhiteMat.update();
+          eyeWhite.model.material = eyeWhiteMat;
+          entity.addChild(eyeWhite);
 
-      // --- EARS ---
-      for (let i = 0; i < 2; i++) {
-        const ear = new pc.Entity(`Ear-Human-${i}`);
-        ear.addComponent("model", { type: "sphere" });
-        ear.setLocalPosition(i === 0 ? -0.26 : 0.26, 1.85, 0);
-        ear.setLocalScale(0.06, 0.1, 0.04);
-        
-        const earMat = new pc.StandardMaterial();
-        earMat.diffuse = skinColor;
-        earMat.specular = new pc.Color(0.15, 0.12, 0.1);
-        earMat.shininess = 25;
-        earMat.update();
-        ear.model.material = earMat;
-        entity.addChild(ear);
+          // Iris (colored part)
+          const iris = new pc.Entity(`Iris-${i}`);
+          iris.addComponent("model", { type: "sphere" });
+          iris.setLocalPosition(eyeX, 1.9, 0.24);
+          iris.setLocalScale(0.055, 0.055, 0.03);
+
+          const irisMat = new pc.StandardMaterial();
+          // Random eye color
+          const eyeColors = [
+            new pc.Color(0.25, 0.45, 0.7), // Blue
+            new pc.Color(0.35, 0.55, 0.3), // Green
+            new pc.Color(0.45, 0.3, 0.2), // Brown
+            new pc.Color(0.3, 0.35, 0.35), // Gray
+          ];
+          const eyeIdStr = String(player.id);
+          const eyeIndex =
+            Math.abs(
+              eyeIdStr.split("").reduce((a, c) => a + c.charCodeAt(0) * 2, 0),
+            ) % eyeColors.length;
+          irisMat.diffuse = eyeColors[eyeIndex];
+          irisMat.shininess = 80;
+          irisMat.update();
+          iris.model.material = irisMat;
+          entity.addChild(iris);
+
+          // Pupil (black center)
+          const pupil = new pc.Entity(`Pupil-${i}`);
+          pupil.addComponent("model", { type: "sphere" });
+          pupil.setLocalPosition(eyeX, 1.9, 0.26);
+          pupil.setLocalScale(0.03, 0.03, 0.02);
+
+          const pupilMat = new pc.StandardMaterial();
+          pupilMat.diffuse = new pc.Color(0.05, 0.05, 0.05);
+          pupilMat.update();
+          pupil.model.material = pupilMat;
+          entity.addChild(pupil);
+
+          // Eye highlight/reflection
+          const eyeHighlight = new pc.Entity(`EyeHighlight-${i}`);
+          eyeHighlight.addComponent("model", { type: "sphere" });
+          eyeHighlight.setLocalPosition(eyeX + 0.015, 1.91, 0.265);
+          eyeHighlight.setLocalScale(0.012, 0.012, 0.008);
+
+          const highlightMat = new pc.StandardMaterial();
+          highlightMat.diffuse = new pc.Color(1, 1, 1);
+          highlightMat.emissive = new pc.Color(0.5, 0.5, 0.5);
+          highlightMat.update();
+          eyeHighlight.model.material = highlightMat;
+          entity.addChild(eyeHighlight);
+        }
+
+        // --- EYEBROWS ---
+        for (let i = 0; i < 2; i++) {
+          const eyebrow = new pc.Entity(`Eyebrow-${i}`);
+          eyebrow.addComponent("model", { type: "box" });
+          eyebrow.setLocalPosition(i === 0 ? -0.12 : 0.12, 1.98, 0.2);
+          eyebrow.setLocalScale(0.1, 0.02, 0.04);
+          eyebrow.setLocalEulerAngles(0, 0, i === 0 ? 5 : -5);
+
+          const eyebrowMat = new pc.StandardMaterial();
+          eyebrowMat.diffuse = hairMat.diffuse;
+          eyebrowMat.shininess = 40;
+          eyebrowMat.update();
+          eyebrow.model.material = eyebrowMat;
+          entity.addChild(eyebrow);
+        }
+
+        // --- NOSE ---
+        const nose = new pc.Entity("Nose");
+        nose.addComponent("model", { type: "box" });
+        nose.setLocalPosition(0, 1.82, 0.23);
+        nose.setLocalScale(0.05, 0.08, 0.06);
+        nose.setLocalEulerAngles(15, 0, 0);
+
+        const noseMat = new pc.StandardMaterial();
+        noseMat.diffuse = skinColor;
+        noseMat.specular = new pc.Color(0.15, 0.12, 0.1);
+        noseMat.shininess = 25;
+        noseMat.update();
+        nose.model.material = noseMat;
+        entity.addChild(nose);
+
+        // --- MOUTH ---
+        const mouth = new pc.Entity("Mouth");
+        mouth.addComponent("model", { type: "box" });
+        mouth.setLocalPosition(0, 1.72, 0.2);
+        mouth.setLocalScale(0.12, 0.025, 0.03);
+
+        const mouthMat = new pc.StandardMaterial();
+        mouthMat.diffuse = new pc.Color(0.65, 0.35, 0.35);
+        mouthMat.shininess = 50;
+        mouthMat.update();
+        mouth.model.material = mouthMat;
+        entity.addChild(mouth);
+
+        // --- EARS ---
+        for (let i = 0; i < 2; i++) {
+          const ear = new pc.Entity(`Ear-Human-${i}`);
+          ear.addComponent("model", { type: "sphere" });
+          ear.setLocalPosition(i === 0 ? -0.26 : 0.26, 1.85, 0);
+          ear.setLocalScale(0.06, 0.1, 0.04);
+
+          const earMat = new pc.StandardMaterial();
+          earMat.diffuse = skinColor;
+          earMat.specular = new pc.Color(0.15, 0.12, 0.1);
+          earMat.shininess = 25;
+          earMat.update();
+          ear.model.material = earMat;
+          entity.addChild(ear);
+        }
+      } else {
+        // Dead players get X eyes
+        for (let i = 0; i < 2; i++) {
+          const eyeX = i === 0 ? -0.12 : 0.12;
+
+          // X mark for dead eyes
+          const xLine1 = new pc.Entity(`DeadEyeX1-${i}`);
+          xLine1.addComponent("model", { type: "box" });
+          xLine1.setLocalPosition(eyeX, 1.9, 0.23);
+          xLine1.setLocalScale(0.08, 0.015, 0.015);
+          xLine1.setLocalEulerAngles(0, 0, 45);
+
+          const deadEyeMat = new pc.StandardMaterial();
+          deadEyeMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
+          deadEyeMat.opacity = 0.6;
+          deadEyeMat.blendType = pc.BLEND_NORMAL;
+          deadEyeMat.update();
+          xLine1.model.material = deadEyeMat;
+          entity.addChild(xLine1);
+
+          const xLine2 = new pc.Entity(`DeadEyeX2-${i}`);
+          xLine2.addComponent("model", { type: "box" });
+          xLine2.setLocalPosition(eyeX, 1.9, 0.23);
+          xLine2.setLocalScale(0.08, 0.015, 0.015);
+          xLine2.setLocalEulerAngles(0, 0, -45);
+          xLine2.model.material = deadEyeMat;
+          entity.addChild(xLine2);
+        }
       }
-    } else {
-      // Dead players get X eyes
-      for (let i = 0; i < 2; i++) {
-        const eyeX = i === 0 ? -0.12 : 0.12;
-        
-        // X mark for dead eyes
-        const xLine1 = new pc.Entity(`DeadEyeX1-${i}`);
-        xLine1.addComponent("model", { type: "box" });
-        xLine1.setLocalPosition(eyeX, 1.9, 0.23);
-        xLine1.setLocalScale(0.08, 0.015, 0.015);
-        xLine1.setLocalEulerAngles(0, 0, 45);
-
-        const deadEyeMat = new pc.StandardMaterial();
-        deadEyeMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
-        deadEyeMat.opacity = 0.6;
-        deadEyeMat.blendType = pc.BLEND_NORMAL;
-        deadEyeMat.update();
-        xLine1.model.material = deadEyeMat;
-        entity.addChild(xLine1);
-
-        const xLine2 = new pc.Entity(`DeadEyeX2-${i}`);
-        xLine2.addComponent("model", { type: "box" });
-        xLine2.setLocalPosition(eyeX, 1.9, 0.23);
-        xLine2.setLocalScale(0.08, 0.015, 0.015);
-        xLine2.setLocalEulerAngles(0, 0, -45);
-        xLine2.model.material = deadEyeMat;
-        entity.addChild(xLine2);
-      }
-    }
-
     } catch (e) {
-      console.error('[Village3D] Error in addRoleSpecificAppearance:', e);
+      console.error("[Village3D] Error in addRoleSpecificAppearance:", e);
       throw e;
     }
 
@@ -1766,7 +1804,7 @@ export default class Village3DPlayCanvas {
     const hat = new pc.Entity("Hat");
     hat.addComponent("model", { type: "cone" });
     hat.setLocalPosition(0, 2.35, -0.02);
-    hat.setLocalScale(0.35, 0.55, 0.35)
+    hat.setLocalScale(0.35, 0.55, 0.35);
 
     const hatMat = new pc.StandardMaterial();
     hatMat.diffuse = roleColor;
@@ -2192,7 +2230,7 @@ export default class Village3DPlayCanvas {
     hatMat.update();
     hat.model.material = hatMat;
     entity.addChild(hat);
-    
+
     const staff = new pc.Entity("MasterStaff");
     staff.addComponent("model", { type: "cylinder" });
     staff.setLocalPosition(-0.45, 1.0, 0.1);

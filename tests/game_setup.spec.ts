@@ -133,7 +133,9 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
 
       const layout0 = calculateWindowLayout(0, PLAYER_COUNT);
       const erzaehlerContext = await browser.newContext(
-        IS_MACOS ? { viewport: null } : { viewport: { width: layout0.width, height: layout0.height } }
+        IS_MACOS
+          ? { viewport: null }
+          : { viewport: { width: layout0.width, height: layout0.height } },
       );
       const erzaehlerPage = await erzaehlerContext.newPage();
 
@@ -208,7 +210,9 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
         // Verwende headless Browser wenn HL Flag gesetzt
         const targetBrowser = headlessBrowser || browser;
         const context = await targetBrowser.newContext(
-          IS_MACOS && !HEADLESS_OTHERS ? { viewport: null } : { viewport: { width: layout.width, height: layout.height } }
+          IS_MACOS && !HEADLESS_OTHERS
+            ? { viewport: null }
+            : { viewport: { width: layout.width, height: layout.height } },
         );
         const page = await context.newPage();
 

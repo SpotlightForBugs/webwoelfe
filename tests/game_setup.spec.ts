@@ -29,6 +29,8 @@ import {
 // Konfiguration
 const PLAYER_COUNT = parseInt(process.env.PLAYERS || "8", 10);
 const BASE_URL = process.env.BASE_URL || "http://localhost:5001";
+const IS_MACOS = process.platform === "darwin";
+const HEADLESS_OTHERS = process.env.HL === "1" || process.env.HL === "true";
 
 // Spielernamen
 const PLAYER_NAMES = [
@@ -106,13 +108,22 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
     console.log(`==========================================`);
     console.log(`Spieleranzahl: ${PLAYER_COUNT}`);
     console.log(`Base URL: ${BASE_URL}`);
+    console.log(`Headless Others: ${HEADLESS_OTHERS ? "Ja" : "Nein"}`);
     console.log(`==========================================\n`);
 
-    // Browser starten
+    // Browser starten (headed für Erzähler)
     const browser = await chromium.launch({
       headless: false,
       args: ["--disable-web-security", "--no-sandbox"],
     });
+
+    // Headless Browser für andere Spieler (wenn HL Flag gesetzt)
+    const headlessBrowser = HEADLESS_OTHERS
+      ? await chromium.launch({
+          headless: true,
+          args: ["--disable-web-security", "--no-sandbox"],
+        })
+      : null;
 
     try {
       // ============================================
@@ -121,9 +132,9 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
       console.log("📝 Erstelle Raum...");
 
       const layout0 = calculateWindowLayout(0, PLAYER_COUNT);
-      const erzaehlerContext = await browser.newContext({
-        viewport: { width: layout0.width, height: layout0.height },
-      });
+      const erzaehlerContext = await browser.newContext(
+        IS_MACOS ? { viewport: null } : { viewport: { width: layout0.width, height: layout0.height } }
+      );
       const erzaehlerPage = await erzaehlerContext.newPage();
 
       // Fenster positionieren
@@ -194,18 +205,22 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
             : "");
         const layout = calculateWindowLayout(i, PLAYER_COUNT);
 
-        const context = await browser.newContext({
-          viewport: { width: layout.width, height: layout.height },
-        });
+        // Verwende headless Browser wenn HL Flag gesetzt
+        const targetBrowser = headlessBrowser || browser;
+        const context = await targetBrowser.newContext(
+          IS_MACOS && !HEADLESS_OTHERS ? { viewport: null } : { viewport: { width: layout.width, height: layout.height } }
+        );
         const page = await context.newPage();
 
-        // Fenster positionieren
-        await page.evaluate(
-          ({ x, y }) => {
-            window.moveTo(x, y);
-          },
-          { x: layout.x, y: layout.y },
-        );
+        // Fenster positionieren (nur wenn nicht headless)
+        if (!HEADLESS_OTHERS) {
+          await page.evaluate(
+            ({ x, y }) => {
+              window.moveTo(x, y);
+            },
+            { x: layout.x, y: layout.y },
+          );
+        }
 
         // Zur Startseite
         await page.goto(BASE_URL);

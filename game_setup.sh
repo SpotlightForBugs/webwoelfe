@@ -4,9 +4,13 @@
 # ============================================================================
 # Spawns multiple browser windows, auto-creates a game, and stays open for testing
 #
-# Usage: ./game_setup.sh <number_of_players>
+# Usage: ./game_setup.sh <number_of_players> [--hl]
 #        ./game_setup.sh 8          # Creates a game with 8 players
 #        ./game_setup.sh 15         # Creates a game with 15 players
+#        ./game_setup.sh 8 --hl     # 8 players, only Erzähler window visible
+#
+# Options:
+#   --hl    Headless mode for all players except Erzähler (first window)
 #
 # Requirements:
 # - Node.js installed
@@ -16,8 +20,25 @@
 
 set -e
 
+# Parse arguments
+PLAYERS=""
+HL_FLAG=""
+
+for arg in "$@"; do
+    case $arg in
+        --hl)
+            HL_FLAG="1"
+            ;;
+        *)
+            if [ -z "$PLAYERS" ]; then
+                PLAYERS="$arg"
+            fi
+            ;;
+    esac
+done
+
 # Default to 8 players if not specified
-PLAYERS=${1:-8}
+PLAYERS=${PLAYERS:-8}
 
 if [ "$PLAYERS" -lt 5 ]; then
     echo "⚠️  Mindestens 5 Spieler benötigt. Setze auf 5."
@@ -87,6 +108,9 @@ fi
 # Run the Playwright setup script
 echo ""
 echo "🚀 Starte Browser-Fenster..."
+if [ -n "$HL_FLAG" ]; then
+    echo "   (Headless-Modus: Nur Erzähler-Fenster sichtbar)"
+fi
 echo ""
 
-PLAYERS=$PLAYERS npx playwright test tests/game_setup.spec.ts --headed --timeout=0
+PLAYERS=$PLAYERS HL=$HL_FLAG npx playwright test tests/game_setup.spec.ts --headed --timeout=0

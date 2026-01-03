@@ -42,16 +42,105 @@ export default class Village3DPlayCanvas {
       this.defaultCameraRadius = 25;
     }
 
-    // Role colors for player appearance
+    // Role colors for player appearance - ALL ROLES
     this.roleColors = {
-      Werwolf: new pc.Color(0.6, 0.1, 0.1), // Dark red
-      Dorfbewohner: new pc.Color(0.3, 0.5, 0.8), // Blue
-      Seherin: new pc.Color(0.5, 0.3, 0.9), // Purple
-      Hexe: new pc.Color(0.2, 0.7, 0.3), // Green
-      Jäger: new pc.Color(0.6, 0.5, 0.2), // Brown/Gold
-      Amor: new pc.Color(1.0, 0.4, 0.7), // Pink
-      Heiler: new pc.Color(0.9, 0.9, 0.2), // Yellow
-      default: new pc.Color(0.7, 0.7, 0.7), // Gray
+      // === GRUNDROLLEN ===
+      Werwolf: new pc.Color(0.6, 0.1, 0.1),           // Dark red
+      Dorfbewohner: new pc.Color(0.3, 0.5, 0.8),      // Blue
+      Seherin: new pc.Color(0.5, 0.3, 0.9),           // Purple
+      Hexe: new pc.Color(0.2, 0.7, 0.3),              // Green
+      Jäger: new pc.Color(0.6, 0.5, 0.2),             // Brown/Gold
+      Amor: new pc.Color(1.0, 0.4, 0.7),              // Pink
+      Heiler: new pc.Color(0.9, 0.9, 0.2),            // Yellow
+
+      // === WERWOLF-VARIANTEN ===
+      "Einsamer Wolf": new pc.Color(0.4, 0.15, 0.15),    // Darker red
+      "Lupin": new pc.Color(0.5, 0.3, 0.2),              // Brown-red
+      "Polarwolf": new pc.Color(0.85, 0.9, 0.95),        // Ice white
+      "Teenager-Werwolf": new pc.Color(0.7, 0.2, 0.3),   // Teen red
+      "Urwolf": new pc.Color(0.3, 0.08, 0.05),           // Ancient dark
+      "Weißer Wolf": new pc.Color(0.95, 0.95, 0.98),     // Pure white
+      "Werwolfseherin": new pc.Color(0.6, 0.2, 0.5),     // Red-purple
+      "Wildes Kind": new pc.Color(0.55, 0.25, 0.15),     // Wild brown
+      "Wolf im Schafspelz": new pc.Color(0.9, 0.88, 0.85), // Sheep wool
+      "Wolfsjunge": new pc.Color(0.5, 0.15, 0.1),        // Young wolf red
+
+      // === BÖSE ROLLEN ===
+      "Flötenspieler": new pc.Color(0.4, 0.35, 0.5),     // Mysterious purple
+      "Hexenmeister": new pc.Color(0.15, 0.1, 0.3),      // Dark purple
+      "Vampir": new pc.Color(0.2, 0.0, 0.1),             // Blood dark
+      "Zombie": new pc.Color(0.3, 0.4, 0.25),            // Rotten green
+
+      // === DORFBEWOHNER-VARIANTEN ===
+      "Alter Mann": new pc.Color(0.5, 0.5, 0.55),        // Gray
+      "Dorfdepp": new pc.Color(0.6, 0.5, 0.3),           // Tan
+      "Drei Brüder": new pc.Color(0.35, 0.45, 0.7),      // Brothers blue
+      "Freimaurer": new pc.Color(0.25, 0.25, 0.35),      // Mason gray
+      "Griesgram": new pc.Color(0.4, 0.35, 0.3),         // Grumpy brown
+      "Hund": new pc.Color(0.6, 0.45, 0.25),             // Dog brown
+      "Jesus": new pc.Color(1.0, 0.95, 0.8),             // Holy white
+      "Tonks": new pc.Color(0.9, 0.4, 0.9),              // Metamorph pink
+      "Zwei Schwestern": new pc.Color(0.7, 0.5, 0.7),    // Sister purple
+
+      // === HEILER-VARIANTEN ===
+      "Ergebene Magd": new pc.Color(0.7, 0.6, 0.5),      // Servant beige
+      "Leibwächter": new pc.Color(0.3, 0.35, 0.45),      // Guard steel
+      "Oma": new pc.Color(0.65, 0.55, 0.6),              // Grandma rose
+      "Prostituierte": new pc.Color(0.9, 0.3, 0.4),      // Red dress
+
+      // === HEXE-VARIANTEN ===
+      "Giftmischerin": new pc.Color(0.4, 0.1, 0.5),      // Poison purple
+      "Hahn": new pc.Color(0.8, 0.4, 0.1),               // Rooster orange
+      "Kräuterweib": new pc.Color(0.3, 0.5, 0.2),        // Herb green
+      "Sandmann": new pc.Color(0.7, 0.65, 0.5),          // Sandy yellow
+      "Zauberer": new pc.Color(0.2, 0.2, 0.6),           // Wizard blue
+
+      // === JÄGER-VARIANTEN ===
+      "Buddler": new pc.Color(0.5, 0.35, 0.2),           // Dirt brown
+      "Drachenbändiger": new pc.Color(0.8, 0.3, 0.1),    // Dragon orange
+      "Flammenmann": new pc.Color(0.95, 0.4, 0.1),       // Fire orange
+      "Gaukler": new pc.Color(0.9, 0.7, 0.2),            // Jester gold
+      "Inquisitor": new pc.Color(0.15, 0.1, 0.1),        // Dark inquisitor
+      "Kamikaze": new pc.Color(0.9, 0.1, 0.1),           // Explosive red
+      "König": new pc.Color(0.85, 0.7, 0.2),             // Royal gold
+      "Prinz": new pc.Color(0.6, 0.5, 0.8),              // Royal purple
+      "Pyromane": new pc.Color(1.0, 0.5, 0.0),           // Flame orange
+      "Tanklastwagenfahrer": new pc.Color(0.2, 0.3, 0.2),// Military green
+
+      // === SEHER-VARIANTEN ===
+      "Aurenseherin": new pc.Color(0.6, 0.4, 0.8),       // Aura purple
+      "Bärenbändiger": new pc.Color(0.45, 0.3, 0.2),     // Bear brown
+      "Demoskopin": new pc.Color(0.4, 0.5, 0.6),         // Poll gray-blue
+      "Medium": new pc.Color(0.6, 0.5, 0.8),             // Spirit purple
+      "Paranormaler Ermittler": new pc.Color(0.3, 0.4, 0.5), // Detective gray
+      "Seherlehrling": new pc.Color(0.55, 0.4, 0.75),    // Apprentice purple
+      "Tratschweib": new pc.Color(0.7, 0.5, 0.4),        // Gossip peach
+
+      // === SOLO-ROLLEN ===
+      "Henker": new pc.Color(0.1, 0.1, 0.1),             // Black
+      "Selbstmörder": new pc.Color(0.3, 0.3, 0.35),      // Sad gray
+
+      // === SONSTIGE ===
+      "Bürgermeister": new pc.Color(0.5, 0.4, 0.6),      // Mayor purple
+      "Dieb": new pc.Color(0.2, 0.2, 0.25),              // Thief dark
+      "Doppelgänger": new pc.Color(0.5, 0.5, 0.5),       // Mirror gray
+      "Engel": new pc.Color(1.0, 1.0, 0.9),              // Angel white
+      "Gerber": new pc.Color(0.55, 0.4, 0.25),           // Leather brown
+      "Kleines Mädchen": new pc.Color(0.95, 0.7, 0.75),  // Little girl pink
+      "Putzfrau": new pc.Color(0.5, 0.6, 0.7),           // Cleaning blue
+      "Sündenbock": new pc.Color(0.5, 0.4, 0.3),         // Scapegoat brown
+
+      // === SPEZIAL ===
+      "Chemielaborant": new pc.Color(0.3, 0.7, 0.5),     // Chemical green
+      "Dunkler Priester": new pc.Color(0.15, 0.1, 0.2),  // Dark priest
+      "Flüchtlinge": new pc.Color(0.6, 0.55, 0.45),      // Refugee tan
+      "Hure": new pc.Color(0.85, 0.25, 0.35),            // Red
+      "Mordlustiger": new pc.Color(0.7, 0.1, 0.15),      // Blood red
+      "Nutte": new pc.Color(0.8, 0.3, 0.5),              // Pink-red
+      "Rabe": new pc.Color(0.1, 0.1, 0.12),              // Raven black
+      "Zahnarzt": new pc.Color(0.9, 0.95, 1.0),          // Dentist white
+
+      default: new pc.Color(0.7, 0.7, 0.7),              // Gray
     };
 
     if (!this.container) {
@@ -287,11 +376,19 @@ export default class Village3DPlayCanvas {
     }
 
     // Roof (proper gabled roof with two slopes)
+    // Calculate roof dimensions: house is 4 wide, roof needs to extend past edges
+    // With 45 degree angle, each side needs to be sqrt(2) * halfWidth
+    const roofAngle = 35; // degrees
+    const roofWidth = 2.8; // Width of each roof panel
+    const roofHeight = 3.6; // Height above upper floor
+    const roofPeakY = roofHeight + Math.sin(roofAngle * Math.PI / 180) * (roofWidth / 2);
+    const roofOffset = Math.cos(roofAngle * Math.PI / 180) * (roofWidth / 2);
+    
     const roofLeft = new pc.Entity("RoofLeft");
     roofLeft.addComponent("model", { type: "box" });
-    roofLeft.setLocalScale(3, 0.2, 6);
-    roofLeft.setLocalPosition(-1.2, 4.3, 0);
-    roofLeft.setLocalEulerAngles(0, 0, -30);
+    roofLeft.setLocalScale(roofWidth, 0.15, 5.6);
+    roofLeft.setLocalPosition(-roofOffset, roofPeakY, 0);
+    roofLeft.setLocalEulerAngles(0, 0, -roofAngle);
 
     const roofMat = new pc.StandardMaterial();
     roofMat.diffuse = new pc.Color(0.35, 0.18, 0.12); // Dark terracotta
@@ -301,17 +398,17 @@ export default class Village3DPlayCanvas {
 
     const roofRight = new pc.Entity("RoofRight");
     roofRight.addComponent("model", { type: "box" });
-    roofRight.setLocalScale(3, 0.2, 6);
-    roofRight.setLocalPosition(1.2, 4.3, 0);
-    roofRight.setLocalEulerAngles(0, 0, 30);
+    roofRight.setLocalScale(roofWidth, 0.15, 5.6);
+    roofRight.setLocalPosition(roofOffset, roofPeakY, 0);
+    roofRight.setLocalEulerAngles(0, 0, roofAngle);
     roofRight.model.material = roofMat;
     house.addChild(roofRight);
 
-    // Roof peak
+    // Roof peak (ridge beam at the top)
     const roofPeak = new pc.Entity("RoofPeak");
     roofPeak.addComponent("model", { type: "box" });
-    roofPeak.setLocalScale(0.3, 0.3, 6);
-    roofPeak.setLocalPosition(0, 4.8, 0);
+    roofPeak.setLocalScale(0.25, 0.25, 5.6);
+    roofPeak.setLocalPosition(0, roofPeakY + Math.sin(roofAngle * Math.PI / 180) * (roofWidth / 2), 0);
     roofPeak.model.material = roofMat;
     house.addChild(roofPeak);
 
@@ -434,12 +531,18 @@ export default class Village3DPlayCanvas {
       church.addChild(buttress);
     }
 
-    // Gabled roof
+    // Gabled roof - properly calculated to meet at peak
+    const churchRoofAngle = 30; // degrees
+    const churchRoofWidth = 5.5; // Width of each roof panel
+    const churchRoofBaseY = 6; // Base height above ground
+    const churchRoofPeakOffset = Math.cos(churchRoofAngle * Math.PI / 180) * (churchRoofWidth / 2);
+    const churchRoofPeakY = churchRoofBaseY + Math.sin(churchRoofAngle * Math.PI / 180) * (churchRoofWidth / 2);
+    
     const roofLeft = new pc.Entity("RoofLeft");
     roofLeft.addComponent("model", { type: "box" });
-    roofLeft.setLocalScale(6, 0.3, 11);
-    roofLeft.setLocalPosition(-2.5, 7, 0);
-    roofLeft.setLocalEulerAngles(0, 0, -25);
+    roofLeft.setLocalScale(churchRoofWidth, 0.25, 10.5);
+    roofLeft.setLocalPosition(-churchRoofPeakOffset, churchRoofPeakY, 0);
+    roofLeft.setLocalEulerAngles(0, 0, -churchRoofAngle);
 
     const roofMat = new pc.StandardMaterial();
     roofMat.diffuse = new pc.Color(0.28, 0.12, 0.08); // Dark tile
@@ -449,17 +552,17 @@ export default class Village3DPlayCanvas {
 
     const roofRight = new pc.Entity("RoofRight");
     roofRight.addComponent("model", { type: "box" });
-    roofRight.setLocalScale(6, 0.3, 11);
-    roofRight.setLocalPosition(2.5, 7, 0);
-    roofRight.setLocalEulerAngles(0, 0, 25);
+    roofRight.setLocalScale(churchRoofWidth, 0.25, 10.5);
+    roofRight.setLocalPosition(churchRoofPeakOffset, churchRoofPeakY, 0);
+    roofRight.setLocalEulerAngles(0, 0, churchRoofAngle);
     roofRight.model.material = roofMat;
     church.addChild(roofRight);
 
     // Roof ridge
     const ridge = new pc.Entity("Ridge");
     ridge.addComponent("model", { type: "box" });
-    ridge.setLocalScale(0.4, 0.4, 11);
-    ridge.setLocalPosition(0, 7.8, 0);
+    ridge.setLocalScale(0.35, 0.35, 10.5);
+    ridge.setLocalPosition(0, churchRoofPeakY + Math.sin(churchRoofAngle * Math.PI / 180) * (churchRoofWidth / 2), 0);
     ridge.model.material = stoneMat;
     church.addChild(ridge);
 
@@ -913,6 +1016,7 @@ export default class Village3DPlayCanvas {
 
   setPlayers(players) {
     this.players = players;
+    console.log('[Village3D] setPlayers called with', players.length, 'players');
 
     // Clear existing
     this.playerEntities.forEach((entity) => entity.destroy());
@@ -928,112 +1032,393 @@ export default class Village3DPlayCanvas {
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
+      console.log(`[Village3D] Creating player ${player.name} at position (${x.toFixed(2)}, 0, ${z.toFixed(2)})`);
       const entity = this.createDetailedPlayer(player, x, z, angle);
 
       this.app.root.addChild(entity);
       this.playerEntities.set(player.id, entity);
+      console.log(`[Village3D] Player ${player.name} created and added to scene`);
     });
+    
+    console.log('[Village3D] All players added to scene. Total:', this.playerEntities.size);
   }
 
   createDetailedPlayer(player, x, z, angle) {
-    const entity = new pc.Entity(`Player-${player.id}`);
+    try {
+      const entity = new pc.Entity(`Player-${player.id}`);
+      console.log(`[Village3D] Created entity for player ${player.name}`);
 
-    // Get role color - in lobby mode use a visible color scheme
-    let roleColor;
-    if (this.isLobbyMode || !player.rolle) {
-      // Lobby mode: use blue for all players so they're visible
-      roleColor = new pc.Color(0.3, 0.5, 0.8);
-    } else {
-      roleColor = this.roleColors[player.rolle] || this.roleColors["default"];
+      // Get role color - in lobby mode use a visible color scheme
+      let roleColor;
+      if (this.isLobbyMode || !player.rolle) {
+        // Lobby mode: use blue for all players so they're visible
+        roleColor = new pc.Color(0.3, 0.5, 0.8);
+      } else {
+        roleColor = this.roleColors[player.rolle] || this.roleColors["default"];
+      }
+      console.log(`[Village3D] Role color for ${player.name} (${player.rolle}):`, roleColor);
+
+      // Create role-specific appearance
+      this.addRoleSpecificAppearance(entity, player, roleColor);
+      console.log(`[Village3D] Added appearance for ${player.name}`);
+
+      // Name Label (3D text using plane with canvas texture)
+      const nameLabel = this.createNameLabel(player.name, player.ist_am_leben);
+      nameLabel.setLocalPosition(0, 2.8, 0);
+      entity.addChild(nameLabel);
+      this.playerLabels.set(player.id, nameLabel);
+
+      // Add collision for picking
+      entity.addComponent("collision", {
+        type: "box",
+        halfExtents: new pc.Vec3(0.4, 1.2, 0.3),
+      });
+
+      entity.setPosition(x, 0, z);
+      entity.lookAt(0, 0, 0);
+
+      // Store data
+      entity.playerData = player;
+      
+      console.log(`[Village3D] Player ${player.name} fully configured at (${x.toFixed(2)}, 0, ${z.toFixed(2)})`);
+      return entity;
+    } catch (e) {
+      console.error('[Village3D] Error creating player:', player.name, e);
+      throw e;
     }
-
-    // Create role-specific appearance
-    this.addRoleSpecificAppearance(entity, player, roleColor);
-
-    // Name Label (3D text using plane with canvas texture)
-    const nameLabel = this.createNameLabel(player.name, player.ist_am_leben);
-    nameLabel.setLocalPosition(0, 3.2, 0);
-    entity.addChild(nameLabel);
-    this.playerLabels.set(player.id, nameLabel);
-
-    // Add collision for picking
-    entity.addComponent("collision", {
-      type: "box",
-      halfExtents: new pc.Vec3(0.6, 1.5, 0.6),
-    });
-
-    entity.setPosition(x, 0, z);
-    entity.lookAt(0, 0, 0);
-
-    // Store data
-    entity.playerData = player;
-
-    return entity;
   }
 
   addRoleSpecificAppearance(entity, player, roleColor) {
-    const rolle = player.rolle;
-    const isAlive = player.ist_am_leben;
+    try {
+      const rolle = player.rolle;
+      const isAlive = player.ist_am_leben;
+      console.log(`[Village3D] addRoleSpecificAppearance for ${player.name}, rolle=${rolle}, alive=${isAlive}`);
 
-    // Base body
-    const body = new pc.Entity("Body");
-    body.addComponent("model", { type: "capsule" });
-    body.setLocalPosition(0, 1, 0);
-    body.setLocalScale(0.8, 1.8, 0.8);
+      // Skin tone for living players
+      const skinColor = isAlive 
+        ? new pc.Color(0.87, 0.72, 0.58) 
+        : new pc.Color(0.35, 0.35, 0.35);
+      const skinMat = new pc.StandardMaterial();
+      skinMat.diffuse = skinColor;
+      skinMat.specular = new pc.Color(0.15, 0.12, 0.1);
+      skinMat.shininess = 25;
+      if (!isAlive) {
+        skinMat.opacity = 0.5;
+        skinMat.blendType = pc.BLEND_NORMAL;
+      }
+      skinMat.update();
 
-    const bodyMat = new pc.StandardMaterial();
-    if (isAlive) {
-      bodyMat.diffuse = roleColor;
-      bodyMat.specular = new pc.Color(0.2, 0.2, 0.2);
-      bodyMat.shininess = 20;
-    } else {
-      bodyMat.diffuse = new pc.Color(0.2, 0.2, 0.2);
-      bodyMat.opacity = 0.4;
-      bodyMat.blendType = pc.BLEND_NORMAL;
+      // === TORSO (main body) ===
+      const torso = new pc.Entity("Torso");
+      torso.addComponent("model", { type: "box" });
+      torso.setLocalPosition(0, 1.0, 0);
+      torso.setLocalScale(0.6, 0.8, 0.35);
+
+      const torsoMat = new pc.StandardMaterial();
+      if (isAlive) {
+        torsoMat.diffuse = roleColor;
+        torsoMat.specular = new pc.Color(0.15, 0.15, 0.15);
+        torsoMat.shininess = 15;
+      } else {
+        torsoMat.diffuse = new pc.Color(0.25, 0.25, 0.25);
+        torsoMat.opacity = 0.5;
+        torsoMat.blendType = pc.BLEND_NORMAL;
+      }
+      torsoMat.update();
+      torso.model.material = torsoMat;
+      entity.addChild(torso);
+      console.log('[Village3D] Torso created');
+
+      // === LEGS ===
+      for (let i = 0; i < 2; i++) {
+        const leg = new pc.Entity(`Leg-${i}`);
+        leg.addComponent("model", { type: "box" });
+        leg.setLocalPosition(i === 0 ? -0.15 : 0.15, 0.3, 0);
+        leg.setLocalScale(0.2, 0.6, 0.25);
+        
+        const legMat = new pc.StandardMaterial();
+        if (isAlive) {
+          legMat.diffuse = roleColor;
+          legMat.specular = new pc.Color(0.15, 0.15, 0.15);
+          legMat.shininess = 15;
+        } else {
+          legMat.diffuse = new pc.Color(0.25, 0.25, 0.25);
+          legMat.opacity = 0.5;
+          legMat.blendType = pc.BLEND_NORMAL;
+        }
+        legMat.update();
+        leg.model.material = legMat;
+        entity.addChild(leg);
+      }
+      console.log('[Village3D] Legs created');
+
+      // === ARMS ===
+      for (let i = 0; i < 2; i++) {
+        const arm = new pc.Entity(`Arm-${i}`);
+        arm.addComponent("model", { type: "box" });
+        arm.setLocalPosition(i === 0 ? -0.4 : 0.4, 0.95, 0);
+        arm.setLocalScale(0.15, 0.55, 0.2);
+        arm.setLocalEulerAngles(0, 0, i === 0 ? 8 : -8);
+        
+        const armMat = new pc.StandardMaterial();
+        armMat.diffuse = skinColor;
+        armMat.specular = new pc.Color(0.15, 0.12, 0.1);
+        armMat.shininess = 25;
+        if (!isAlive) {
+          armMat.opacity = 0.5;
+          armMat.blendType = pc.BLEND_NORMAL;
+        }
+        armMat.update();
+        arm.model.material = armMat;
+        entity.addChild(arm);
+
+        // Hands
+        const hand = new pc.Entity(`Hand-${i}`);
+        hand.addComponent("model", { type: "sphere" });
+        hand.setLocalPosition(i === 0 ? -0.4 : 0.4, 0.6, 0);
+        hand.setLocalScale(0.12, 0.12, 0.1);
+        
+        const handMat = new pc.StandardMaterial();
+      handMat.diffuse = skinColor;
+      handMat.specular = new pc.Color(0.15, 0.12, 0.1);
+      handMat.shininess = 25;
+      if (!isAlive) {
+        handMat.opacity = 0.5;
+        handMat.blendType = pc.BLEND_NORMAL;
+      }
+      handMat.update();
+      hand.model.material = handMat;
+      entity.addChild(hand);
     }
-    bodyMat.update();
-    body.model.material = bodyMat;
-    entity.addChild(body);
 
-    // Head
+    // === NECK ===
+    const neck = new pc.Entity("Neck");
+    neck.addComponent("model", { type: "cylinder" });
+    neck.setLocalPosition(0, 1.5, 0);
+    neck.setLocalScale(0.15, 0.12, 0.15);
+    
+    const neckMat = new pc.StandardMaterial();
+    neckMat.diffuse = skinColor;
+    neckMat.specular = new pc.Color(0.15, 0.12, 0.1);
+    neckMat.shininess = 25;
+    if (!isAlive) {
+      neckMat.opacity = 0.5;
+      neckMat.blendType = pc.BLEND_NORMAL;
+    }
+    neckMat.update();
+    neck.model.material = neckMat;
+    entity.addChild(neck);
+
+    // === HEAD (slightly oval) ===
     const head = new pc.Entity("Head");
     head.addComponent("model", { type: "sphere" });
-    head.setLocalPosition(0, 1.8, 0);
-    head.setLocalScale(0.6, 0.6, 0.6);
-
+    head.setLocalPosition(0, 1.85, 0);
+    head.setLocalScale(0.5, 0.55, 0.45);
+    
     const headMat = new pc.StandardMaterial();
-    if (isAlive) {
-      headMat.diffuse = new pc.Color(0.9, 0.8, 0.7);
-      headMat.shininess = 15;
-    } else {
-      headMat.diffuse = new pc.Color(0.3, 0.3, 0.3);
-      headMat.opacity = 0.4;
+    headMat.diffuse = skinColor;
+    headMat.specular = new pc.Color(0.15, 0.12, 0.1);
+    headMat.shininess = 25;
+    if (!isAlive) {
+      headMat.opacity = 0.5;
       headMat.blendType = pc.BLEND_NORMAL;
     }
     headMat.update();
     head.model.material = headMat;
     entity.addChild(head);
 
-    // Eyes
-    if (isAlive) {
-      for (let i = 0; i < 2; i++) {
-        const eye = new pc.Entity(`Eye-${i}`);
-        eye.addComponent("model", { type: "sphere" });
-        eye.setLocalPosition(i === 0 ? -0.15 : 0.15, 1.9, 0.25);
-        eye.setLocalScale(0.08, 0.08, 0.08);
+    // === HAIR ===
+    const hair = new pc.Entity("Hair");
+    hair.addComponent("model", { type: "sphere" });
+    hair.setLocalPosition(0, 2.0, -0.05);
+    hair.setLocalScale(0.52, 0.35, 0.48);
 
-        const eyeMat = new pc.StandardMaterial();
-        eyeMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
-        eyeMat.emissive = new pc.Color(0.2, 0.2, 0.3);
-        eyeMat.update();
-        eye.model.material = eyeMat;
-        entity.addChild(eye);
+    const hairMat = new pc.StandardMaterial();
+    // Random hair color based on player id hash
+    const hairColors = [
+      new pc.Color(0.15, 0.1, 0.05),   // Dark brown
+      new pc.Color(0.35, 0.2, 0.1),    // Brown
+      new pc.Color(0.8, 0.6, 0.3),     // Blonde
+      new pc.Color(0.1, 0.08, 0.05),   // Black
+      new pc.Color(0.5, 0.25, 0.15),   // Auburn
+    ];
+    const playerIdStr = String(player.id);
+    const hairIndex = Math.abs(playerIdStr.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % hairColors.length;
+    hairMat.diffuse = isAlive ? hairColors[hairIndex] : new pc.Color(0.3, 0.3, 0.3);
+    hairMat.shininess = 40;
+    if (!isAlive) {
+      hairMat.opacity = 0.5;
+      hairMat.blendType = pc.BLEND_NORMAL;
+    }
+    hairMat.update();
+    hair.model.material = hairMat;
+    entity.addChild(hair);
+
+    // === FACIAL FEATURES (only for living players) ===
+    if (isAlive) {
+      // --- EYES with white, iris, and pupil ---
+      for (let i = 0; i < 2; i++) {
+        const eyeX = i === 0 ? -0.12 : 0.12;
+        
+        // Eye white (sclera)
+        const eyeWhite = new pc.Entity(`EyeWhite-${i}`);
+        eyeWhite.addComponent("model", { type: "sphere" });
+        eyeWhite.setLocalPosition(eyeX, 1.9, 0.2);
+        eyeWhite.setLocalScale(0.1, 0.08, 0.06);
+
+        const eyeWhiteMat = new pc.StandardMaterial();
+        eyeWhiteMat.diffuse = new pc.Color(0.95, 0.95, 0.95);
+        eyeWhiteMat.shininess = 60;
+        eyeWhiteMat.update();
+        eyeWhite.model.material = eyeWhiteMat;
+        entity.addChild(eyeWhite);
+
+        // Iris (colored part)
+        const iris = new pc.Entity(`Iris-${i}`);
+        iris.addComponent("model", { type: "sphere" });
+        iris.setLocalPosition(eyeX, 1.9, 0.24);
+        iris.setLocalScale(0.055, 0.055, 0.03);
+
+        const irisMat = new pc.StandardMaterial();
+        // Random eye color
+        const eyeColors = [
+          new pc.Color(0.25, 0.45, 0.7),  // Blue
+          new pc.Color(0.35, 0.55, 0.3),  // Green
+          new pc.Color(0.45, 0.3, 0.2),   // Brown
+          new pc.Color(0.3, 0.35, 0.35),  // Gray
+        ];
+        const eyeIdStr = String(player.id);
+        const eyeIndex = Math.abs(eyeIdStr.split('').reduce((a, c) => a + c.charCodeAt(0) * 2, 0)) % eyeColors.length;
+        irisMat.diffuse = eyeColors[eyeIndex];
+        irisMat.shininess = 80;
+        irisMat.update();
+        iris.model.material = irisMat;
+        entity.addChild(iris);
+
+        // Pupil (black center)
+        const pupil = new pc.Entity(`Pupil-${i}`);
+        pupil.addComponent("model", { type: "sphere" });
+        pupil.setLocalPosition(eyeX, 1.9, 0.26);
+        pupil.setLocalScale(0.03, 0.03, 0.02);
+
+        const pupilMat = new pc.StandardMaterial();
+        pupilMat.diffuse = new pc.Color(0.05, 0.05, 0.05);
+        pupilMat.update();
+        pupil.model.material = pupilMat;
+        entity.addChild(pupil);
+
+        // Eye highlight/reflection
+        const eyeHighlight = new pc.Entity(`EyeHighlight-${i}`);
+        eyeHighlight.addComponent("model", { type: "sphere" });
+        eyeHighlight.setLocalPosition(eyeX + 0.015, 1.91, 0.265);
+        eyeHighlight.setLocalScale(0.012, 0.012, 0.008);
+
+        const highlightMat = new pc.StandardMaterial();
+        highlightMat.diffuse = new pc.Color(1, 1, 1);
+        highlightMat.emissive = new pc.Color(0.5, 0.5, 0.5);
+        highlightMat.update();
+        eyeHighlight.model.material = highlightMat;
+        entity.addChild(eyeHighlight);
       }
+
+      // --- EYEBROWS ---
+      for (let i = 0; i < 2; i++) {
+        const eyebrow = new pc.Entity(`Eyebrow-${i}`);
+        eyebrow.addComponent("model", { type: "box" });
+        eyebrow.setLocalPosition(i === 0 ? -0.12 : 0.12, 1.98, 0.2);
+        eyebrow.setLocalScale(0.1, 0.02, 0.04);
+        eyebrow.setLocalEulerAngles(0, 0, i === 0 ? 5 : -5);
+        
+        const eyebrowMat = new pc.StandardMaterial();
+        eyebrowMat.diffuse = hairMat.diffuse;
+        eyebrowMat.shininess = 40;
+        eyebrowMat.update();
+        eyebrow.model.material = eyebrowMat;
+        entity.addChild(eyebrow);
+      }
+
+      // --- NOSE ---
+      const nose = new pc.Entity("Nose");
+      nose.addComponent("model", { type: "box" });
+      nose.setLocalPosition(0, 1.82, 0.23);
+      nose.setLocalScale(0.05, 0.08, 0.06);
+      nose.setLocalEulerAngles(15, 0, 0);
+      
+      const noseMat = new pc.StandardMaterial();
+      noseMat.diffuse = skinColor;
+      noseMat.specular = new pc.Color(0.15, 0.12, 0.1);
+      noseMat.shininess = 25;
+      noseMat.update();
+      nose.model.material = noseMat;
+      entity.addChild(nose);
+
+      // --- MOUTH ---
+      const mouth = new pc.Entity("Mouth");
+      mouth.addComponent("model", { type: "box" });
+      mouth.setLocalPosition(0, 1.72, 0.2);
+      mouth.setLocalScale(0.12, 0.025, 0.03);
+
+      const mouthMat = new pc.StandardMaterial();
+      mouthMat.diffuse = new pc.Color(0.65, 0.35, 0.35);
+      mouthMat.shininess = 50;
+      mouthMat.update();
+      mouth.model.material = mouthMat;
+      entity.addChild(mouth);
+
+      // --- EARS ---
+      for (let i = 0; i < 2; i++) {
+        const ear = new pc.Entity(`Ear-Human-${i}`);
+        ear.addComponent("model", { type: "sphere" });
+        ear.setLocalPosition(i === 0 ? -0.26 : 0.26, 1.85, 0);
+        ear.setLocalScale(0.06, 0.1, 0.04);
+        
+        const earMat = new pc.StandardMaterial();
+        earMat.diffuse = skinColor;
+        earMat.specular = new pc.Color(0.15, 0.12, 0.1);
+        earMat.shininess = 25;
+        earMat.update();
+        ear.model.material = earMat;
+        entity.addChild(ear);
+      }
+    } else {
+      // Dead players get X eyes
+      for (let i = 0; i < 2; i++) {
+        const eyeX = i === 0 ? -0.12 : 0.12;
+        
+        // X mark for dead eyes
+        const xLine1 = new pc.Entity(`DeadEyeX1-${i}`);
+        xLine1.addComponent("model", { type: "box" });
+        xLine1.setLocalPosition(eyeX, 1.9, 0.23);
+        xLine1.setLocalScale(0.08, 0.015, 0.015);
+        xLine1.setLocalEulerAngles(0, 0, 45);
+
+        const deadEyeMat = new pc.StandardMaterial();
+        deadEyeMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
+        deadEyeMat.opacity = 0.6;
+        deadEyeMat.blendType = pc.BLEND_NORMAL;
+        deadEyeMat.update();
+        xLine1.model.material = deadEyeMat;
+        entity.addChild(xLine1);
+
+        const xLine2 = new pc.Entity(`DeadEyeX2-${i}`);
+        xLine2.addComponent("model", { type: "box" });
+        xLine2.setLocalPosition(eyeX, 1.9, 0.23);
+        xLine2.setLocalScale(0.08, 0.015, 0.015);
+        xLine2.setLocalEulerAngles(0, 0, -45);
+        xLine2.model.material = deadEyeMat;
+        entity.addChild(xLine2);
+      }
+    }
+
+    } catch (e) {
+      console.error('[Village3D] Error in addRoleSpecificAppearance:', e);
+      throw e;
     }
 
     // Add role-specific accessories and features
     if (isAlive && rolle) {
       switch (rolle) {
+        // === GRUNDROLLEN ===
         case "Werwolf":
           this.addWerwolfFeatures(entity, roleColor);
           break;
@@ -1052,6 +1437,231 @@ export default class Village3DPlayCanvas {
         case "Heiler":
           this.addHeilerFeatures(entity, roleColor);
           break;
+        case "Dorfbewohner":
+          this.addDorfbewohnerFeatures(entity, roleColor);
+          break;
+
+        // === WERWOLF-VARIANTEN ===
+        case "Einsamer Wolf":
+          this.addEinsamerWolfFeatures(entity, roleColor);
+          break;
+        case "Lupin":
+          this.addLupinFeatures(entity, roleColor);
+          break;
+        case "Polarwolf":
+          this.addPolarwolfFeatures(entity, roleColor);
+          break;
+        case "Teenager-Werwolf":
+          this.addTeenagerWerwolfFeatures(entity, roleColor);
+          break;
+        case "Urwolf":
+          this.addUrwolfFeatures(entity, roleColor);
+          break;
+        case "Weißer Wolf":
+          this.addWeisserWolfFeatures(entity, roleColor);
+          break;
+        case "Werwolfseherin":
+          this.addWerwolfseherinFeatures(entity, roleColor);
+          break;
+        case "Wildes Kind":
+          this.addWildesKindFeatures(entity, roleColor);
+          break;
+        case "Wolf im Schafspelz":
+          this.addWolfImSchafspelzFeatures(entity, roleColor);
+          break;
+        case "Wolfsjunge":
+          this.addWolfsjungeFeatures(entity, roleColor);
+          break;
+
+        // === BÖSE ROLLEN ===
+        case "Flötenspieler":
+          this.addFlötenspielerFeatures(entity, roleColor);
+          break;
+        case "Hexenmeister":
+          this.addHexenmeisterFeatures(entity, roleColor);
+          break;
+        case "Vampir":
+          this.addVampirFeatures(entity, roleColor);
+          break;
+        case "Zombie":
+          this.addZombieFeatures(entity, roleColor);
+          break;
+
+        // === DORFBEWOHNER-VARIANTEN ===
+        case "Alter Mann":
+          this.addAlterMannFeatures(entity, roleColor);
+          break;
+        case "Dorfdepp":
+          this.addDorfdeppFeatures(entity, roleColor);
+          break;
+        case "Drei Brüder":
+          this.addDreiBruederFeatures(entity, roleColor);
+          break;
+        case "Freimaurer":
+          this.addFreimaurerFeatures(entity, roleColor);
+          break;
+        case "Griesgram":
+          this.addGriesgramFeatures(entity, roleColor);
+          break;
+        case "Hund":
+          this.addHundFeatures(entity, roleColor);
+          break;
+        case "Jesus":
+          this.addJesusFeatures(entity, roleColor);
+          break;
+        case "Tonks":
+          this.addTonksFeatures(entity, roleColor);
+          break;
+        case "Zwei Schwestern":
+          this.addZweiSchwesternFeatures(entity, roleColor);
+          break;
+
+        // === HEILER-VARIANTEN ===
+        case "Ergebene Magd":
+          this.addErgebeneMagdFeatures(entity, roleColor);
+          break;
+        case "Leibwächter":
+          this.addLeibwaechterFeatures(entity, roleColor);
+          break;
+        case "Oma":
+          this.addOmaFeatures(entity, roleColor);
+          break;
+        case "Prostituierte":
+          this.addProstituierteFeatures(entity, roleColor);
+          break;
+
+        // === HEXE-VARIANTEN ===
+        case "Giftmischerin":
+          this.addGiftmischerinFeatures(entity, roleColor);
+          break;
+        case "Hahn":
+          this.addHahnFeatures(entity, roleColor);
+          break;
+        case "Kräuterweib":
+          this.addKraeuterweibFeatures(entity, roleColor);
+          break;
+        case "Sandmann":
+          this.addSandmannFeatures(entity, roleColor);
+          break;
+        case "Zauberer":
+          this.addZaubererFeatures(entity, roleColor);
+          break;
+
+        // === JÄGER-VARIANTEN ===
+        case "Buddler":
+          this.addBuddlerFeatures(entity, roleColor);
+          break;
+        case "Drachenbändiger":
+          this.addDrachenbaendigerFeatures(entity, roleColor);
+          break;
+        case "Flammenmann":
+          this.addFlammenmannFeatures(entity, roleColor);
+          break;
+        case "Gaukler":
+          this.addGauklerFeatures(entity, roleColor);
+          break;
+        case "Inquisitor":
+          this.addInquisitorFeatures(entity, roleColor);
+          break;
+        case "Kamikaze":
+          this.addKamikazeFeatures(entity, roleColor);
+          break;
+        case "König":
+          this.addKoenigFeatures(entity, roleColor);
+          break;
+        case "Prinz":
+          this.addPrinzFeatures(entity, roleColor);
+          break;
+        case "Pyromane":
+          this.addPyromaneFeatures(entity, roleColor);
+          break;
+        case "Tanklastwagenfahrer":
+          this.addTanklastwagenfahrerFeatures(entity, roleColor);
+          break;
+
+        // === SEHER-VARIANTEN ===
+        case "Aurenseherin":
+          this.addAurenseherinFeatures(entity, roleColor);
+          break;
+        case "Bärenbändiger":
+          this.addBaerenbaendigerFeatures(entity, roleColor);
+          break;
+        case "Demoskopin":
+          this.addDemoskopinFeatures(entity, roleColor);
+          break;
+        case "Medium":
+          this.addMediumFeatures(entity, roleColor);
+          break;
+        case "Paranormaler Ermittler":
+          this.addParanormalerErmittlerFeatures(entity, roleColor);
+          break;
+        case "Seherlehrling":
+          this.addSeherlehrlingFeatures(entity, roleColor);
+          break;
+        case "Tratschweib":
+          this.addTratschweibFeatures(entity, roleColor);
+          break;
+
+        // === SOLO-ROLLEN ===
+        case "Henker":
+          this.addHenkerFeatures(entity, roleColor);
+          break;
+        case "Selbstmörder":
+          this.addSelbstmoerderFeatures(entity, roleColor);
+          break;
+
+        // === SONSTIGE ===
+        case "Bürgermeister":
+          this.addBuergermeisterFeatures(entity, roleColor);
+          break;
+        case "Dieb":
+          this.addDiebFeatures(entity, roleColor);
+          break;
+        case "Doppelgänger":
+          this.addDoppelgaengerFeatures(entity, roleColor);
+          break;
+        case "Engel":
+          this.addEngelFeatures(entity, roleColor);
+          break;
+        case "Gerber":
+          this.addGerberFeatures(entity, roleColor);
+          break;
+        case "Kleines Mädchen":
+          this.addKleinesMaedchenFeatures(entity, roleColor);
+          break;
+        case "Putzfrau":
+          this.addPutzfrauFeatures(entity, roleColor);
+          break;
+        case "Sündenbock":
+          this.addSuendenbockFeatures(entity, roleColor);
+          break;
+
+        // === SPEZIAL ===
+        case "Chemielaborant":
+          this.addChemielaborantFeatures(entity, roleColor);
+          break;
+        case "Dunkler Priester":
+          this.addDunklerPriesterFeatures(entity, roleColor);
+          break;
+        case "Flüchtlinge":
+          this.addFluechtlingeFeatures(entity, roleColor);
+          break;
+        case "Hure":
+          this.addHureFeatures(entity, roleColor);
+          break;
+        case "Mordlustiger":
+          this.addMordlustigerFeatures(entity, roleColor);
+          break;
+        case "Nutte":
+          this.addNutteFeatures(entity, roleColor);
+          break;
+        case "Rabe":
+          this.addRabeFeatures(entity, roleColor);
+          break;
+        case "Zahnarzt":
+          this.addZahnarztFeatures(entity, roleColor);
+          break;
+
         default:
           // Default role indicator
           this.addDefaultRoleIndicator(entity, roleColor);
@@ -1061,13 +1671,13 @@ export default class Village3DPlayCanvas {
   }
 
   addWerwolfFeatures(entity, roleColor) {
-    // Wolf ears
+    // Wolf ears (pointy, on top of head)
     for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`Ear-${i}`);
+      const ear = new pc.Entity(`WolfEar-${i}`);
       ear.addComponent("model", { type: "cone" });
-      ear.setLocalPosition(i === 0 ? -0.35 : 0.35, 2.3, 0);
-      ear.setLocalScale(0.15, 0.3, 0.15);
-      ear.setLocalEulerAngles(0, 0, i === 0 ? -20 : 20);
+      ear.setLocalPosition(i === 0 ? -0.18 : 0.18, 2.25, -0.05);
+      ear.setLocalScale(0.12, 0.2, 0.1);
+      ear.setLocalEulerAngles(0, 0, i === 0 ? -15 : 15);
 
       const earMat = new pc.StandardMaterial();
       earMat.diffuse = roleColor;
@@ -1076,40 +1686,60 @@ export default class Village3DPlayCanvas {
       entity.addChild(ear);
     }
 
-    // Claws (hands)
+    // Claws on hands
     for (let i = 0; i < 2; i++) {
-      const claw = new pc.Entity(`Claw-${i}`);
-      claw.addComponent("model", { type: "cone" });
-      claw.setLocalPosition(i === 0 ? -0.6 : 0.6, 0.5, 0.3);
-      claw.setLocalScale(0.15, 0.3, 0.15);
-      claw.setLocalEulerAngles(90, 0, i === 0 ? -45 : 45);
+      for (let c = 0; c < 3; c++) {
+        const claw = new pc.Entity(`Claw-${i}-${c}`);
+        claw.addComponent("model", { type: "cone" });
+        const baseX = i === 0 ? -0.4 : 0.4;
+        const offsetX = (c - 1) * 0.03;
+        claw.setLocalPosition(baseX + offsetX, 0.52, 0.08);
+        claw.setLocalScale(0.025, 0.08, 0.025);
+        claw.setLocalEulerAngles(60, 0, 0);
 
-      const clawMat = new pc.StandardMaterial();
-      clawMat.diffuse = new pc.Color(0.3, 0.3, 0.3);
-      clawMat.shininess = 50;
-      clawMat.update();
-      claw.model.material = clawMat;
-      entity.addChild(claw);
+        const clawMat = new pc.StandardMaterial();
+        clawMat.diffuse = new pc.Color(0.2, 0.2, 0.2);
+        clawMat.shininess = 70;
+        clawMat.update();
+        claw.model.material = clawMat;
+        entity.addChild(claw);
+      }
+    }
+
+    // Fangs
+    for (let i = 0; i < 2; i++) {
+      const fang = new pc.Entity(`Fang-${i}`);
+      fang.addComponent("model", { type: "cone" });
+      fang.setLocalPosition(i === 0 ? -0.04 : 0.04, 1.68, 0.2);
+      fang.setLocalScale(0.02, 0.06, 0.02);
+      fang.setLocalEulerAngles(180, 0, 0);
+
+      const fangMat = new pc.StandardMaterial();
+      fangMat.diffuse = new pc.Color(0.95, 0.95, 0.9);
+      fangMat.shininess = 80;
+      fangMat.update();
+      fang.model.material = fangMat;
+      entity.addChild(fang);
     }
 
     // Glowing red eyes effect
     const eyeGlow = new pc.Entity("EyeGlow");
     eyeGlow.addComponent("light", {
       type: "point",
-      color: new pc.Color(1, 0, 0),
-      intensity: 0.5,
-      range: 2,
+      color: new pc.Color(1, 0.2, 0.1),
+      intensity: 0.6,
+      range: 1.5,
     });
-    eyeGlow.setLocalPosition(0, 1.9, 0.5);
+    eyeGlow.setLocalPosition(0, 1.9, 0.35);
     entity.addChild(eyeGlow);
   }
 
   addSeherinFeatures(entity, roleColor) {
-    // Crystal ball
+    // Crystal ball (held in hand)
     const crystal = new pc.Entity("CrystalBall");
     crystal.addComponent("model", { type: "sphere" });
-    crystal.setLocalPosition(0, 0.8, 0.5);
-    crystal.setLocalScale(0.3, 0.3, 0.3);
+    crystal.setLocalPosition(0.42, 0.7, 0.15);
+    crystal.setLocalScale(0.18, 0.18, 0.18);
 
     const crystalMat = new pc.StandardMaterial();
     crystalMat.diffuse = new pc.Color(0.5, 0.3, 0.9);
@@ -1126,17 +1756,17 @@ export default class Village3DPlayCanvas {
     aura.addComponent("light", {
       type: "point",
       color: new pc.Color(0.6, 0.4, 1.0),
-      intensity: 1.0,
-      range: 3,
+      intensity: 0.8,
+      range: 2.5,
     });
     aura.setLocalPosition(0, 1.5, 0);
     entity.addChild(aura);
 
-    // Pointed hat
+    // Pointed hat (on head)
     const hat = new pc.Entity("Hat");
     hat.addComponent("model", { type: "cone" });
-    hat.setLocalPosition(0, 2.6, 0);
-    hat.setLocalScale(0.5, 0.8, 0.5);
+    hat.setLocalPosition(0, 2.35, -0.02);
+    hat.setLocalScale(0.35, 0.55, 0.35)
 
     const hatMat = new pc.StandardMaterial();
     hatMat.diffuse = roleColor;
@@ -1149,8 +1779,8 @@ export default class Village3DPlayCanvas {
     // Witch hat (wider brim)
     const hat = new pc.Entity("WitchHat");
     hat.addComponent("model", { type: "cone" });
-    hat.setLocalPosition(0, 2.7, 0);
-    hat.setLocalScale(0.4, 1.0, 0.4);
+    hat.setLocalPosition(0, 2.5, -0.02);
+    hat.setLocalScale(0.3, 0.7, 0.3);
 
     const hatMat = new pc.StandardMaterial();
     hatMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
@@ -1161,17 +1791,17 @@ export default class Village3DPlayCanvas {
     // Hat brim
     const brim = new pc.Entity("HatBrim");
     brim.addComponent("model", { type: "cylinder" });
-    brim.setLocalPosition(0, 2.3, 0);
-    brim.setLocalScale(0.8, 0.05, 0.8);
+    brim.setLocalPosition(0, 2.15, 0);
+    brim.setLocalScale(0.55, 0.04, 0.55);
     brim.model.material = hatMat;
     entity.addChild(brim);
 
-    // Potion bottles
+    // Potion bottles (on belt)
     for (let i = 0; i < 2; i++) {
       const potion = new pc.Entity(`Potion-${i}`);
       potion.addComponent("model", { type: "cylinder" });
-      potion.setLocalPosition(i === 0 ? -0.5 : 0.5, 0.6, 0.3);
-      potion.setLocalScale(0.1, 0.3, 0.1);
+      potion.setLocalPosition(i === 0 ? -0.35 : 0.35, 0.7, 0.2);
+      potion.setLocalScale(0.06, 0.15, 0.06);
 
       const potionMat = new pc.StandardMaterial();
       potionMat.diffuse =
@@ -1187,12 +1817,12 @@ export default class Village3DPlayCanvas {
   }
 
   addJaegerFeatures(entity, roleColor) {
-    // Crossbow
+    // Crossbow (carried in hand)
     const crossbow = new pc.Entity("Crossbow");
     crossbow.addComponent("model", { type: "box" });
-    crossbow.setLocalPosition(0.6, 1.2, 0.3);
-    crossbow.setLocalScale(0.8, 0.15, 0.15);
-    crossbow.setLocalEulerAngles(0, 0, -45);
+    crossbow.setLocalPosition(0.5, 0.8, 0.2);
+    crossbow.setLocalScale(0.5, 0.1, 0.1);
+    crossbow.setLocalEulerAngles(0, 0, -30);
 
     const crossbowMat = new pc.StandardMaterial();
     crossbowMat.diffuse = new pc.Color(0.3, 0.2, 0.1);
@@ -1200,12 +1830,12 @@ export default class Village3DPlayCanvas {
     crossbow.model.material = crossbowMat;
     entity.addChild(crossbow);
 
-    // Quiver
+    // Quiver (on back)
     const quiver = new pc.Entity("Quiver");
     quiver.addComponent("model", { type: "cylinder" });
-    quiver.setLocalPosition(-0.4, 1.5, -0.3);
-    quiver.setLocalScale(0.2, 0.5, 0.2);
-    quiver.setLocalEulerAngles(30, 0, 0);
+    quiver.setLocalPosition(0.2, 1.2, -0.25);
+    quiver.setLocalScale(0.12, 0.35, 0.12);
+    quiver.setLocalEulerAngles(15, 0, 0);
 
     const quiverMat = new pc.StandardMaterial();
     quiverMat.diffuse = new pc.Color(0.4, 0.3, 0.2);
@@ -1217,8 +1847,8 @@ export default class Village3DPlayCanvas {
     for (let i = 0; i < 3; i++) {
       const arrow = new pc.Entity(`Arrow-${i}`);
       arrow.addComponent("model", { type: "cylinder" });
-      arrow.setLocalPosition(-0.4 + i * 0.1, 2.0, -0.3);
-      arrow.setLocalScale(0.05, 0.4, 0.05);
+      arrow.setLocalPosition(0.15 + i * 0.05, 1.55, -0.25);
+      arrow.setLocalScale(0.025, 0.25, 0.025);
 
       const arrowMat = new pc.StandardMaterial();
       arrowMat.diffuse = new pc.Color(0.6, 0.5, 0.3);
@@ -1229,13 +1859,13 @@ export default class Village3DPlayCanvas {
   }
 
   addAmorFeatures(entity, roleColor) {
-    // Cupid wings
+    // Cupid wings (on back)
     for (let i = 0; i < 2; i++) {
       const wing = new pc.Entity(`Wing-${i}`);
       wing.addComponent("model", { type: "box" });
-      wing.setLocalPosition(i === 0 ? -0.5 : 0.5, 1.5, -0.3);
-      wing.setLocalScale(0.8, 0.4, 0.1);
-      wing.setLocalEulerAngles(0, i === 0 ? 30 : -30, i === 0 ? -20 : 20);
+      wing.setLocalPosition(i === 0 ? -0.35 : 0.35, 1.15, -0.25);
+      wing.setLocalScale(0.5, 0.35, 0.06);
+      wing.setLocalEulerAngles(0, i === 0 ? 35 : -35, i === 0 ? -25 : 25);
 
       const wingMat = new pc.StandardMaterial();
       wingMat.diffuse = new pc.Color(1, 0.8, 0.9);
@@ -1246,11 +1876,11 @@ export default class Village3DPlayCanvas {
       entity.addChild(wing);
     }
 
-    // Bow (weapon)
+    // Bow (weapon held in hand)
     const bow = new pc.Entity("Bow");
     bow.addComponent("model", { type: "torus" });
-    bow.setLocalPosition(0.6, 1.0, 0);
-    bow.setLocalScale(0.5, 0.5, 0.1);
+    bow.setLocalPosition(-0.45, 0.75, 0.1);
+    bow.setLocalScale(0.3, 0.3, 0.08);
     bow.setLocalEulerAngles(0, 90, 0);
 
     const bowMat = new pc.StandardMaterial();
@@ -1264,31 +1894,31 @@ export default class Village3DPlayCanvas {
     heart.addComponent("light", {
       type: "point",
       color: new pc.Color(1, 0.4, 0.7),
-      intensity: 0.8,
-      range: 3,
+      intensity: 0.7,
+      range: 2.5,
     });
-    heart.setLocalPosition(0, 2.0, 0);
+    heart.setLocalPosition(0, 2.2, 0);
     entity.addChild(heart);
   }
 
   addHeilerFeatures(entity, roleColor) {
-    // Medical cross
+    // Medical cross (on chest)
     const cross1 = new pc.Entity("Cross1");
     cross1.addComponent("model", { type: "box" });
-    cross1.setLocalPosition(0, 2.5, 0.4);
-    cross1.setLocalScale(0.1, 0.4, 0.1);
+    cross1.setLocalPosition(0, 1.05, 0.19);
+    cross1.setLocalScale(0.06, 0.22, 0.03);
 
     const crossMat = new pc.StandardMaterial();
     crossMat.diffuse = new pc.Color(1, 1, 1);
-    crossMat.emissive = new pc.Color(0.5, 0.5, 0);
+    crossMat.emissive = new pc.Color(0.8, 0.2, 0.2);
     crossMat.update();
     cross1.model.material = crossMat;
     entity.addChild(cross1);
 
     const cross2 = new pc.Entity("Cross2");
     cross2.addComponent("model", { type: "box" });
-    cross2.setLocalPosition(0, 2.5, 0.4);
-    cross2.setLocalScale(0.3, 0.1, 0.1);
+    cross2.setLocalPosition(0, 1.05, 0.19);
+    cross2.setLocalScale(0.18, 0.06, 0.03);
     cross2.model.material = crossMat;
     entity.addChild(cross2);
 
@@ -1297,18 +1927,18 @@ export default class Village3DPlayCanvas {
     healingAura.addComponent("light", {
       type: "point",
       color: new pc.Color(0.9, 0.9, 0.2),
-      intensity: 1.0,
-      range: 3,
+      intensity: 0.8,
+      range: 2.5,
     });
-    healingAura.setLocalPosition(0, 1.5, 0);
+    healingAura.setLocalPosition(0, 1.2, 0);
     entity.addChild(healingAura);
 
-    // Staff
+    // Staff (held in hand)
     const staff = new pc.Entity("Staff");
     staff.addComponent("model", { type: "cylinder" });
-    staff.setLocalPosition(-0.6, 1.5, 0);
-    staff.setLocalScale(0.08, 2.0, 0.08);
-    staff.setLocalEulerAngles(0, 0, -15);
+    staff.setLocalPosition(-0.5, 1.0, 0.1);
+    staff.setLocalScale(0.05, 1.2, 0.05);
+    staff.setLocalEulerAngles(0, 0, -10);
 
     const staffMat = new pc.StandardMaterial();
     staffMat.diffuse = new pc.Color(0.5, 0.4, 0.2);
@@ -1321,8 +1951,8 @@ export default class Village3DPlayCanvas {
     // Default glowing sphere above head
     const indicator = new pc.Entity("RoleIndicator");
     indicator.addComponent("model", { type: "sphere" });
-    indicator.setLocalPosition(0, 2.8, 0);
-    indicator.setLocalScale(0.25, 0.25, 0.25);
+    indicator.setLocalPosition(0, 2.4, 0);
+    indicator.setLocalScale(0.15, 0.15, 0.15);
 
     const indicatorMat = new pc.StandardMaterial();
     indicatorMat.emissive = roleColor;
@@ -1331,6 +1961,1029 @@ export default class Village3DPlayCanvas {
     indicatorMat.update();
     indicator.model.material = indicatorMat;
     entity.addChild(indicator);
+  }
+
+  // === DORFBEWOHNER ===
+  addDorfbewohnerFeatures(entity, roleColor) {
+    // Simple hat
+    const hat = new pc.Entity("Hat");
+    hat.addComponent("model", { type: "cone" });
+    hat.setLocalPosition(0, 2.35, 0);
+    hat.setLocalScale(0.3, 0.25, 0.3);
+    const hatMat = new pc.StandardMaterial();
+    hatMat.diffuse = roleColor;
+    hatMat.update();
+    hat.model.material = hatMat;
+    entity.addChild(hat);
+  }
+
+  // === WERWOLF VARIANTEN ===
+  addEinsamerWolfFeatures(entity, roleColor) {
+    // Lone wolf ears + scars
+    for (let i = 0; i < 2; i++) {
+      const ear = new pc.Entity(`LoneWolfEar-${i}`);
+      ear.addComponent("model", { type: "cone" });
+      ear.setLocalPosition(i === 0 ? -0.18 : 0.18, 2.25, -0.05);
+      ear.setLocalScale(0.14, 0.22, 0.11);
+      ear.model.material = new pc.StandardMaterial();
+      ear.model.material.diffuse = roleColor;
+      ear.model.material.update();
+      entity.addChild(ear);
+    }
+    // Scars on face
+    const scar = new pc.Entity("Scar");
+    scar.addComponent("model", { type: "box" });
+    scar.setLocalPosition(0.15, 1.85, 0.2);
+    scar.setLocalScale(0.08, 0.15, 0.02);
+    const scarMat = new pc.StandardMaterial();
+    scarMat.diffuse = new pc.Color(0.3, 0.1, 0.1);
+    scarMat.update();
+    scar.model.material = scarMat;
+    entity.addChild(scar);
+  }
+
+  addLupinFeatures(entity, roleColor) {
+    // Distinguished wolf ears + monocle glow
+    for (let i = 0; i < 2; i++) {
+      const ear = new pc.Entity(`LupinEar-${i}`);
+      ear.addComponent("model", { type: "cone" });
+      ear.setLocalPosition(i === 0 ? -0.16 : 0.16, 2.27, -0.03);
+      ear.setLocalScale(0.12, 0.21, 0.1);
+      ear.model.material = new pc.StandardMaterial();
+      ear.model.material.diffuse = roleColor;
+      ear.model.material.update();
+      entity.addChild(ear);
+    }
+    // Monocle
+    const monocle = new pc.Entity("Monocle");
+    monocle.addComponent("model", { type: "torus" });
+    monocle.setLocalPosition(0.12, 1.9, 0.22);
+    monocle.setLocalScale(0.08, 0.08, 0.02);
+    const monocMat = new pc.StandardMaterial();
+    monocMat.diffuse = new pc.Color(0.8, 0.7, 0.3);
+    monocMat.shininess = 80;
+    monocMat.update();
+    monocle.model.material = monocMat;
+    entity.addChild(monocle);
+  }
+
+  addPolarwolfFeatures(entity, roleColor) {
+    // Ice crystal ears + frosted aura
+    for (let i = 0; i < 2; i++) {
+      const ear = new pc.Entity(`PolarEar-${i}`);
+      ear.addComponent("model", { type: "cone" });
+      ear.setLocalPosition(i === 0 ? -0.18 : 0.18, 2.25, -0.05);
+      ear.setLocalScale(0.13, 0.21, 0.1);
+      ear.model.material = new pc.StandardMaterial();
+      ear.model.material.diffuse = new pc.Color(0.95, 0.98, 1.0);
+      ear.model.material.shininess = 90;
+      ear.model.material.update();
+      entity.addChild(ear);
+    }
+    // Ice aura
+    const iceAura = new pc.Entity("IceAura");
+    iceAura.addComponent("light", {
+      type: "point",
+      color: new pc.Color(0.7, 0.9, 1.0),
+      intensity: 0.5,
+      range: 2.0,
+    });
+    iceAura.setLocalPosition(0, 1.5, 0);
+    entity.addChild(iceAura);
+  }
+
+  addTeenagerWerwolfFeatures(entity, roleColor) {
+    // Smaller ears + hoodie
+    for (let i = 0; i < 2; i++) {
+      const ear = new pc.Entity(`TeenEar-${i}`);
+      ear.addComponent("model", { type: "cone" });
+      ear.setLocalPosition(i === 0 ? -0.15 : 0.15, 2.22, 0);
+      ear.setLocalScale(0.1, 0.18, 0.08);
+      ear.model.material = new pc.StandardMaterial();
+      ear.model.material.diffuse = roleColor;
+      ear.model.material.update();
+      entity.addChild(ear);
+    }
+  }
+
+  addUrwolfFeatures(entity, roleColor) {
+    // Large ancient ears + scars
+    for (let i = 0; i < 2; i++) {
+      const ear = new pc.Entity(`AncientEar-${i}`);
+      ear.addComponent("model", { type: "cone" });
+      ear.setLocalPosition(i === 0 ? -0.2 : 0.2, 2.28, -0.06);
+      ear.setLocalScale(0.15, 0.24, 0.12);
+      ear.model.material = new pc.StandardMaterial();
+      ear.model.material.diffuse = roleColor;
+      ear.model.material.update();
+      entity.addChild(ear);
+    }
+  }
+
+  addWeisserWolfFeatures(entity, roleColor) {
+    // Pure white ears + ethereal glow
+    for (let i = 0; i < 2; i++) {
+      const ear = new pc.Entity(`WhiteEar-${i}`);
+      ear.addComponent("model", { type: "cone" });
+      ear.setLocalPosition(i === 0 ? -0.18 : 0.18, 2.25, -0.05);
+      ear.setLocalScale(0.12, 0.21, 0.1);
+      ear.model.material = new pc.StandardMaterial();
+      ear.model.material.diffuse = new pc.Color(1.0, 1.0, 0.98);
+      ear.model.material.emissive = new pc.Color(0.3, 0.3, 0.2);
+      ear.model.material.update();
+      entity.addChild(ear);
+    }
+  }
+
+  addWerwolfseherinFeatures(entity, roleColor) {
+    // Wolf ears + crystal ball
+    for (let i = 0; i < 2; i++) {
+      const ear = new pc.Entity(`SeherWolfEar-${i}`);
+      ear.addComponent("model", { type: "cone" });
+      ear.setLocalPosition(i === 0 ? -0.18 : 0.18, 2.25, -0.05);
+      ear.setLocalScale(0.12, 0.21, 0.1);
+      ear.model.material = new pc.StandardMaterial();
+      ear.model.material.diffuse = roleColor;
+      ear.model.material.update();
+      entity.addChild(ear);
+    }
+    // Crystal ball
+    const crystal = new pc.Entity("WolfCrystal");
+    crystal.addComponent("model", { type: "sphere" });
+    crystal.setLocalPosition(0.4, 0.7, 0.1);
+    crystal.setLocalScale(0.15, 0.15, 0.15);
+    const crystalMat = new pc.StandardMaterial();
+    crystalMat.diffuse = new pc.Color(0.5, 0.3, 0.9);
+    crystalMat.emissive = new pc.Color(0.6, 0.4, 1.0);
+    crystalMat.opacity = 0.7;
+    crystalMat.blendType = pc.BLEND_ADDITIVE;
+    crystalMat.update();
+    crystal.model.material = crystalMat;
+    entity.addChild(crystal);
+  }
+
+  addWildesKindFeatures(entity, roleColor) {
+    // Wild ragged appearance - torn clothes effect
+    const tear = new pc.Entity("Tear");
+    tear.addComponent("model", { type: "box" });
+    tear.setLocalPosition(0.25, 1.0, 0.18);
+    tear.setLocalScale(0.15, 0.25, 0.02);
+    const tearMat = new pc.StandardMaterial();
+    tearMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
+    tearMat.update();
+    tear.model.material = tearMat;
+    entity.addChild(tear);
+  }
+
+  addWolfImSchafspelzFeatures(entity, roleColor) {
+    // Sheep wool appearance on shoulders
+    for (let i = 0; i < 2; i++) {
+      const wool = new pc.Entity(`Wool-${i}`);
+      wool.addComponent("model", { type: "sphere" });
+      wool.setLocalPosition(i === 0 ? -0.4 : 0.4, 1.35, -0.1);
+      wool.setLocalScale(0.25, 0.2, 0.15);
+      const woolMat = new pc.StandardMaterial();
+      woolMat.diffuse = new pc.Color(0.95, 0.93, 0.9);
+      woolMat.shininess = 20;
+      woolMat.update();
+      wool.model.material = woolMat;
+      entity.addChild(wool);
+    }
+  }
+
+  addWolfsjungeFeatures(entity, roleColor) {
+    // Young small ears
+    for (let i = 0; i < 2; i++) {
+      const ear = new pc.Entity(`YoungEar-${i}`);
+      ear.addComponent("model", { type: "cone" });
+      ear.setLocalPosition(i === 0 ? -0.15 : 0.15, 2.2, 0);
+      ear.setLocalScale(0.08, 0.15, 0.07);
+      ear.model.material = new pc.StandardMaterial();
+      ear.model.material.diffuse = roleColor;
+      ear.model.material.update();
+      entity.addChild(ear);
+    }
+  }
+
+  // === BÖSE ROLLEN ===
+  addFlötenspielerFeatures(entity, roleColor) {
+    // Flute in hand
+    const flute = new pc.Entity("Flute");
+    flute.addComponent("model", { type: "cylinder" });
+    flute.setLocalPosition(0.35, 1.0, 0.1);
+    flute.setLocalScale(0.08, 0.35, 0.08);
+    flute.setLocalEulerAngles(0, 0, 45);
+    const fluteMat = new pc.StandardMaterial();
+    fluteMat.diffuse = new pc.Color(0.7, 0.6, 0.3);
+    fluteMat.shininess = 60;
+    fluteMat.update();
+    flute.model.material = fluteMat;
+    entity.addChild(flute);
+  }
+
+  addHexenmeisterFeatures(entity, roleColor) {
+    // Dark staff + pointed hat
+    const hat = new pc.Entity("HexenmeisterHat");
+    hat.addComponent("model", { type: "cone" });
+    hat.setLocalPosition(0, 2.35, -0.02);
+    hat.setLocalScale(0.32, 0.5, 0.32);
+    const hatMat = new pc.StandardMaterial();
+    hatMat.diffuse = new pc.Color(0.05, 0.02, 0.08);
+    hatMat.update();
+    hat.model.material = hatMat;
+    entity.addChild(hat);
+    
+    const staff = new pc.Entity("MasterStaff");
+    staff.addComponent("model", { type: "cylinder" });
+    staff.setLocalPosition(-0.45, 1.0, 0.1);
+    staff.setLocalScale(0.06, 1.3, 0.06);
+    const staffMat = new pc.StandardMaterial();
+    staffMat.diffuse = new pc.Color(0.1, 0.05, 0.02);
+    staffMat.update();
+    staff.model.material = staffMat;
+    entity.addChild(staff);
+  }
+
+  addVampirFeatures(entity, roleColor) {
+    // Fangs + cape suggestion
+    for (let i = 0; i < 2; i++) {
+      const fang = new pc.Entity(`VampireFang-${i}`);
+      fang.addComponent("model", { type: "cone" });
+      fang.setLocalPosition(i === 0 ? -0.04 : 0.04, 1.68, 0.2);
+      fang.setLocalScale(0.025, 0.08, 0.025);
+      fang.setLocalEulerAngles(180, 0, 0);
+      const fangMat = new pc.StandardMaterial();
+      fangMat.diffuse = new pc.Color(0.95, 0.95, 0.9);
+      fangMat.update();
+      fang.model.material = fangMat;
+      entity.addChild(fang);
+    }
+    // Glowing red eyes
+    const eyeGlow = new pc.Entity("VampireGlow");
+    eyeGlow.addComponent("light", {
+      type: "point",
+      color: new pc.Color(0.8, 0.1, 0.1),
+      intensity: 0.5,
+      range: 1.5,
+    });
+    eyeGlow.setLocalPosition(0, 1.9, 0.35);
+    entity.addChild(eyeGlow);
+  }
+
+  addZombieFeatures(entity, roleColor) {
+    // Rotting flesh effects + missing parts
+    const rotMark = new pc.Entity("RotMark");
+    rotMark.addComponent("model", { type: "sphere" });
+    rotMark.setLocalPosition(-0.15, 1.15, 0.18);
+    rotMark.setLocalScale(0.12, 0.12, 0.05);
+    const rotMat = new pc.StandardMaterial();
+    rotMat.diffuse = new pc.Color(0.2, 0.25, 0.15);
+    rotMat.update();
+    rotMark.model.material = rotMat;
+    entity.addChild(rotMark);
+  }
+
+  // === DORFBEWOHNER VARIANTEN ===
+  addAlterMannFeatures(entity, roleColor) {
+    // Cane + old man hair
+    const cane = new pc.Entity("Cane");
+    cane.addComponent("model", { type: "cylinder" });
+    cane.setLocalPosition(-0.4, 0.7, 0.1);
+    cane.setLocalScale(0.04, 0.9, 0.04);
+    const caneMat = new pc.StandardMaterial();
+    caneMat.diffuse = new pc.Color(0.3, 0.2, 0.1);
+    caneMat.update();
+    cane.model.material = caneMat;
+    entity.addChild(cane);
+  }
+
+  addDorfdeppFeatures(entity, roleColor) {
+    // Silly expression marker
+    const jesterHat = new pc.Entity("JesterHat");
+    jesterHat.addComponent("model", { type: "cone" });
+    jesterHat.setLocalPosition(0, 2.35, 0);
+    jesterHat.setLocalScale(0.28, 0.3, 0.28);
+    const hatMat = new pc.StandardMaterial();
+    hatMat.diffuse = new pc.Color(0.7, 0.3, 0.3);
+    hatMat.update();
+    jesterHat.model.material = hatMat;
+    entity.addChild(jesterHat);
+  }
+
+  addDreiBruederFeatures(entity, roleColor) {
+    // Band of three - unity mark
+    const band = new pc.Entity("UnityBand");
+    band.addComponent("model", { type: "torus" });
+    band.setLocalPosition(0, 0.5, 0);
+    band.setLocalScale(0.4, 0.08, 0.4);
+    const bandMat = new pc.StandardMaterial();
+    bandMat.diffuse = roleColor;
+    bandMat.update();
+    band.model.material = bandMat;
+    entity.addChild(band);
+  }
+
+  addFreimaurerFeatures(entity, roleColor) {
+    // Square and compass symbol on chest
+    const symbol = new pc.Entity("MasonSymbol");
+    symbol.addComponent("model", { type: "box" });
+    symbol.setLocalPosition(0, 1.05, 0.19);
+    symbol.setLocalScale(0.12, 0.12, 0.02);
+    const symMat = new pc.StandardMaterial();
+    symMat.diffuse = new pc.Color(0.6, 0.55, 0.3);
+    symMat.emissive = new pc.Color(0.3, 0.25, 0.1);
+    symMat.update();
+    symbol.model.material = symMat;
+    entity.addChild(symbol);
+  }
+
+  addGriesgramFeatures(entity, roleColor) {
+    // Grumpy frown mark
+    const grumpMarker = new pc.Entity("GrumpMark");
+    grumpMarker.addComponent("model", { type: "box" });
+    grumpMarker.setLocalPosition(0, 1.75, 0.22);
+    grumpMarker.setLocalScale(0.16, 0.03, 0.02);
+    const grumpMat = new pc.StandardMaterial();
+    grumpMat.diffuse = new pc.Color(0.2, 0.2, 0.2);
+    grumpMat.update();
+    grumpMarker.model.material = grumpMat;
+    entity.addChild(grumpMarker);
+  }
+
+  addHundFeatures(entity, roleColor) {
+    // Dog ears + snout
+    for (let i = 0; i < 2; i++) {
+      const ear = new pc.Entity(`DogEar-${i}`);
+      ear.addComponent("model", { type: "sphere" });
+      ear.setLocalPosition(i === 0 ? -0.2 : 0.2, 2.15, 0.05);
+      ear.setLocalScale(0.12, 0.18, 0.1);
+      ear.model.material = new pc.StandardMaterial();
+      ear.model.material.diffuse = roleColor;
+      ear.model.material.update();
+      entity.addChild(ear);
+    }
+  }
+
+  addJesusFeatures(entity, roleColor) {
+    // Holy halo + cross
+    const halo = new pc.Entity("Halo");
+    halo.addComponent("model", { type: "torus" });
+    halo.setLocalPosition(0, 2.4, 0);
+    halo.setLocalScale(0.4, 0.35, 0.4);
+    halo.setLocalEulerAngles(90, 0, 0);
+    const haloMat = new pc.StandardMaterial();
+    haloMat.emissive = new pc.Color(1, 1, 0.7);
+    haloMat.opacity = 0.7;
+    haloMat.blendType = pc.BLEND_ADDITIVE;
+    haloMat.update();
+    halo.model.material = haloMat;
+    entity.addChild(halo);
+  }
+
+  addTonksFeatures(entity, roleColor) {
+    // Color-shifting appearance indicator
+    const colorShift = new pc.Entity("ColorShift");
+    colorShift.addComponent("model", { type: "sphere" });
+    colorShift.setLocalPosition(0.3, 1.5, 0);
+    colorShift.setLocalScale(0.2, 0.2, 0.2);
+    const shiftMat = new pc.StandardMaterial();
+    shiftMat.diffuse = new pc.Color(0.9, 0.4, 0.9);
+    shiftMat.emissive = new pc.Color(0.5, 0.2, 0.5);
+    shiftMat.opacity = 0.6;
+    shiftMat.blendType = pc.BLEND_ADDITIVE;
+    shiftMat.update();
+    colorShift.model.material = shiftMat;
+    entity.addChild(colorShift);
+  }
+
+  addZweiSchwesternFeatures(entity, roleColor) {
+    // Sister bond mark
+    const sisterhood = new pc.Entity("SisterhoodMark");
+    sisterhood.addComponent("model", { type: "box" });
+    sisterhood.setLocalPosition(0, 0.8, 0.18);
+    sisterhood.setLocalScale(0.18, 0.08, 0.03);
+    const sMat = new pc.StandardMaterial();
+    sMat.diffuse = new pc.Color(0.8, 0.6, 0.8);
+    sMat.update();
+    sisterhood.model.material = sMat;
+    entity.addChild(sisterhood);
+  }
+
+  // === HEILER VARIANTEN ===
+  addErgebeneMagdFeatures(entity, roleColor) {
+    // Servant outfit indicator
+    const ribbon = new pc.Entity("Ribbon");
+    ribbon.addComponent("model", { type: "box" });
+    ribbon.setLocalPosition(0.3, 1.2, -0.18);
+    ribbon.setLocalScale(0.08, 0.3, 0.03);
+    const ribbonMat = new pc.StandardMaterial();
+    ribbonMat.diffuse = new pc.Color(1, 0.8, 0.9);
+    ribbonMat.update();
+    ribbon.model.material = ribbonMat;
+    entity.addChild(ribbon);
+  }
+
+  addLeibwaechterFeatures(entity, roleColor) {
+    // Armor plating on shoulders
+    for (let i = 0; i < 2; i++) {
+      const armor = new pc.Entity(`Armor-${i}`);
+      armor.addComponent("model", { type: "box" });
+      armor.setLocalPosition(i === 0 ? -0.38 : 0.38, 1.3, -0.05);
+      armor.setLocalScale(0.15, 0.18, 0.08);
+      const armorMat = new pc.StandardMaterial();
+      armorMat.diffuse = new pc.Color(0.5, 0.55, 0.6);
+      armorMat.shininess = 70;
+      armorMat.update();
+      armor.model.material = armorMat;
+      entity.addChild(armor);
+    }
+  }
+
+  addOmaFeatures(entity, roleColor) {
+    // Grandma shawl
+    const shawl = new pc.Entity("Shawl");
+    shawl.addComponent("model", { type: "box" });
+    shawl.setLocalPosition(0, 1.15, -0.15);
+    shawl.setLocalScale(0.65, 0.4, 0.08);
+    const shawlMat = new pc.StandardMaterial();
+    shawlMat.diffuse = new pc.Color(0.6, 0.4, 0.5);
+    shawlMat.update();
+    shawl.model.material = shawlMat;
+    entity.addChild(shawl);
+  }
+
+  addProstituierteFeatures(entity, roleColor) {
+    // Red dress accent
+    const dress = new pc.Entity("DressAccent");
+    dress.addComponent("model", { type: "box" });
+    dress.setLocalPosition(0, 0.95, 0.18);
+    dress.setLocalScale(0.5, 0.35, 0.05);
+    const dressMat = new pc.StandardMaterial();
+    dressMat.diffuse = new pc.Color(0.9, 0.3, 0.4);
+    dressMat.shininess = 40;
+    dressMat.update();
+    dress.model.material = dressMat;
+    entity.addChild(dress);
+  }
+
+  // === HEXE VARIANTEN ===
+  addGiftmischerinFeatures(entity, roleColor) {
+    // Poison bottles
+    for (let i = 0; i < 2; i++) {
+      const poison = new pc.Entity(`PoisonBottle-${i}`);
+      poison.addComponent("model", { type: "cylinder" });
+      poison.setLocalPosition(i === 0 ? -0.3 : 0.3, 0.75, 0.2);
+      poison.setLocalScale(0.05, 0.12, 0.05);
+      const poisonMat = new pc.StandardMaterial();
+      poisonMat.diffuse = new pc.Color(0.4, 0.8, 0.2);
+      poisonMat.emissive = new pc.Color(0.2, 0.4, 0.1);
+      poisonMat.opacity = 0.8;
+      poisonMat.blendType = pc.BLEND_ADDITIVE;
+      poisonMat.update();
+      poison.model.material = poisonMat;
+      entity.addChild(poison);
+    }
+  }
+
+  addHahnFeatures(entity, roleColor) {
+    // Rooster comb
+    const comb = new pc.Entity("RoosterComb");
+    comb.addComponent("model", { type: "sphere" });
+    comb.setLocalPosition(0, 2.35, 0.1);
+    comb.setLocalScale(0.15, 0.2, 0.12);
+    const combMat = new pc.StandardMaterial();
+    combMat.diffuse = new pc.Color(1.0, 0.3, 0.2);
+    combMat.shininess = 30;
+    combMat.update();
+    comb.model.material = combMat;
+    entity.addChild(comb);
+  }
+
+  addKraeuterweibFeatures(entity, roleColor) {
+    // Herb pouch
+    const pouch = new pc.Entity("HerbPouch");
+    pouch.addComponent("model", { type: "sphere" });
+    pouch.setLocalPosition(-0.3, 0.8, 0.15);
+    pouch.setLocalScale(0.15, 0.15, 0.1);
+    const pouchMat = new pc.StandardMaterial();
+    pouchMat.diffuse = new pc.Color(0.4, 0.5, 0.3);
+    pouchMat.update();
+    pouch.model.material = pouchMat;
+    entity.addChild(pouch);
+  }
+
+  addSandmannFeatures(entity, roleColor) {
+    // Sleepy aura
+    const sleepAura = new pc.Entity("SleepAura");
+    sleepAura.addComponent("light", {
+      type: "point",
+      color: new pc.Color(0.8, 0.8, 0.9),
+      intensity: 0.4,
+      range: 2.0,
+    });
+    sleepAura.setLocalPosition(0, 1.5, 0);
+    entity.addChild(sleepAura);
+  }
+
+  addZaubererFeatures(entity, roleColor) {
+    // Wizard hat + staff
+    const hat = new pc.Entity("WizardHat");
+    hat.addComponent("model", { type: "cone" });
+    hat.setLocalPosition(0, 2.35, -0.02);
+    hat.setLocalScale(0.32, 0.55, 0.32);
+    const hatMat = new pc.StandardMaterial();
+    hatMat.diffuse = new pc.Color(0.15, 0.15, 0.4);
+    hatMat.emissive = new pc.Color(0.08, 0.08, 0.2);
+    hatMat.update();
+    hat.model.material = hatMat;
+    entity.addChild(hat);
+  }
+
+  // === JÄGER VARIANTEN ===
+  addBuddlerFeatures(entity, roleColor) {
+    // Pickaxe
+    const pick = new pc.Entity("Pickaxe");
+    pick.addComponent("model", { type: "box" });
+    pick.setLocalPosition(0.48, 0.9, 0.15);
+    pick.setLocalScale(0.2, 0.08, 0.08);
+    pick.setLocalEulerAngles(0, 0, 30);
+    const pickMat = new pc.StandardMaterial();
+    pickMat.diffuse = new pc.Color(0.4, 0.3, 0.2);
+    pickMat.update();
+    pick.model.material = pickMat;
+    entity.addChild(pick);
+  }
+
+  addDrachenbaendigerFeatures(entity, roleColor) {
+    // Dragon scale decoration
+    const scale = new pc.Entity("DragonScale");
+    scale.addComponent("model", { type: "sphere" });
+    scale.setLocalPosition(0.35, 1.2, 0.15);
+    scale.setLocalScale(0.12, 0.12, 0.08);
+    const scaleMat = new pc.StandardMaterial();
+    scaleMat.diffuse = new pc.Color(0.8, 0.4, 0.1);
+    scaleMat.emissive = new pc.Color(0.4, 0.2, 0.05);
+    scaleMat.shininess = 85;
+    scaleMat.update();
+    scale.model.material = scaleMat;
+    entity.addChild(scale);
+  }
+
+  addFlammenmannFeatures(entity, roleColor) {
+    // Fire aura
+    const fireAura = new pc.Entity("PersonalFireAura");
+    fireAura.addComponent("light", {
+      type: "point",
+      color: new pc.Color(1, 0.6, 0.2),
+      intensity: 0.7,
+      range: 2.5,
+    });
+    fireAura.setLocalPosition(0, 1.5, 0);
+    entity.addChild(fireAura);
+  }
+
+  addGauklerFeatures(entity, roleColor) {
+    // Juggling balls
+    for (let i = 0; i < 2; i++) {
+      const ball = new pc.Entity(`JugglingBall-${i}`);
+      ball.addComponent("model", { type: "sphere" });
+      ball.setLocalPosition(i === 0 ? -0.25 : 0.25, 1.35, 0.1);
+      ball.setLocalScale(0.08, 0.08, 0.08);
+      const ballMat = new pc.StandardMaterial();
+      ballMat.diffuse = new pc.Color(0.9, 0.7, 0.2);
+      ballMat.emissive = new pc.Color(0.45, 0.35, 0.1);
+      ballMat.shininess = 60;
+      ballMat.update();
+      ball.model.material = ballMat;
+      entity.addChild(ball);
+    }
+  }
+
+  addInquisitorFeatures(entity, roleColor) {
+    // Burning symbol
+    const symbol = new pc.Entity("InquisitorSymbol");
+    symbol.addComponent("model", { type: "box" });
+    symbol.setLocalPosition(0, 1.05, 0.19);
+    symbol.setLocalScale(0.1, 0.1, 0.02);
+    const symMat = new pc.StandardMaterial();
+    symMat.diffuse = new pc.Color(0.9, 0.4, 0.1);
+    symMat.emissive = new pc.Color(0.5, 0.2, 0.05);
+    symMat.update();
+    symbol.model.material = symMat;
+    entity.addChild(symbol);
+  }
+
+  addKamikazeFeatures(entity, roleColor) {
+    // Explosive aura - red glow
+    const boom = new pc.Entity("BoomAura");
+    boom.addComponent("light", {
+      type: "point",
+      color: new pc.Color(1, 0.1, 0.1),
+      intensity: 0.6,
+      range: 2.0,
+    });
+    boom.setLocalPosition(0, 1.5, 0);
+    entity.addChild(boom);
+  }
+
+  addKoenigFeatures(entity, roleColor) {
+    // Crown
+    const crown = new pc.Entity("Crown");
+    crown.addComponent("model", { type: "torus" });
+    crown.setLocalPosition(0, 2.35, 0);
+    crown.setLocalScale(0.32, 0.15, 0.32);
+    const crownMat = new pc.StandardMaterial();
+    crownMat.diffuse = new pc.Color(1, 0.84, 0.0);
+    crownMat.emissive = new pc.Color(0.5, 0.42, 0.0);
+    crownMat.shininess = 90;
+    crownMat.update();
+    crown.model.material = crownMat;
+    entity.addChild(crown);
+  }
+
+  addPrinzFeatures(entity, roleColor) {
+    // Prince circlet (smaller crown)
+    const circlet = new pc.Entity("Circlet");
+    circlet.addComponent("model", { type: "torus" });
+    circlet.setLocalPosition(0, 2.3, 0);
+    circlet.setLocalScale(0.28, 0.1, 0.28);
+    const circletMat = new pc.StandardMaterial();
+    circletMat.diffuse = new pc.Color(0.8, 0.7, 0.2);
+    circletMat.shininess = 80;
+    circletMat.update();
+    circlet.model.material = circletMat;
+    entity.addChild(circlet);
+  }
+
+  addPyromaneFeatures(entity, roleColor) {
+    // Flame aura - intense
+    const flame = new pc.Entity("PyroFlameAura");
+    flame.addComponent("light", {
+      type: "point",
+      color: new pc.Color(1, 0.5, 0.0),
+      intensity: 0.8,
+      range: 2.5,
+    });
+    flame.setLocalPosition(0, 1.5, 0);
+    entity.addChild(flame);
+  }
+
+  addTanklastwagenfahrerFeatures(entity, roleColor) {
+    // Truck driver badge
+    const badge = new pc.Entity("TruckBadge");
+    badge.addComponent("model", { type: "box" });
+    badge.setLocalPosition(0.2, 1.05, 0.19);
+    badge.setLocalScale(0.08, 0.1, 0.02);
+    const badgeMat = new pc.StandardMaterial();
+    badgeMat.diffuse = new pc.Color(0.3, 0.6, 0.3);
+    badgeMat.update();
+    badge.model.material = badgeMat;
+    entity.addChild(badge);
+  }
+
+  // === SEHER VARIANTEN ===
+  addAurenseherinFeatures(entity, roleColor) {
+    // Aura glow
+    const auraGlow = new pc.Entity("AuraGlow");
+    auraGlow.addComponent("light", {
+      type: "point",
+      color: new pc.Color(0.9, 0.5, 0.9),
+      intensity: 0.6,
+      range: 2.5,
+    });
+    auraGlow.setLocalPosition(0, 1.5, 0);
+    entity.addChild(auraGlow);
+  }
+
+  addBaerenbaendigerFeatures(entity, roleColor) {
+    // Bear strength mark
+    const strength = new pc.Entity("StrengthMark");
+    strength.addComponent("model", { type: "box" });
+    strength.setLocalPosition(0.25, 0.95, 0.18);
+    strength.setLocalScale(0.15, 0.2, 0.03);
+    const strengthMat = new pc.StandardMaterial();
+    strengthMat.diffuse = new pc.Color(0.5, 0.35, 0.2);
+    strengthMat.update();
+    strength.model.material = strengthMat;
+    entity.addChild(strength);
+  }
+
+  addDemoskopinFeatures(entity, roleColor) {
+    // Poll clipboard
+    const clipboard = new pc.Entity("Clipboard");
+    clipboard.addComponent("model", { type: "box" });
+    clipboard.setLocalPosition(0.35, 1.1, 0.08);
+    clipboard.setLocalScale(0.15, 0.25, 0.05);
+    clipboard.setLocalEulerAngles(0, 0, 20);
+    const clipMat = new pc.StandardMaterial();
+    clipMat.diffuse = new pc.Color(0.8, 0.7, 0.5);
+    clipMat.update();
+    clipboard.model.material = clipMat;
+    entity.addChild(clipboard);
+  }
+
+  addMediumFeatures(entity, roleColor) {
+    // Spirit aura
+    const spiritAura = new pc.Entity("SpiritAura");
+    spiritAura.addComponent("light", {
+      type: "point",
+      color: new pc.Color(0.8, 0.6, 1.0),
+      intensity: 0.5,
+      range: 2.2,
+    });
+    spiritAura.setLocalPosition(0, 1.5, 0);
+    entity.addChild(spiritAura);
+  }
+
+  addParanormalerErmittlerFeatures(entity, roleColor) {
+    // Investigation tool - magnifier
+    const magnifier = new pc.Entity("Magnifier");
+    magnifier.addComponent("model", { type: "torus" });
+    magnifier.setLocalPosition(0.4, 1.15, 0.05);
+    magnifier.setLocalScale(0.1, 0.1, 0.05);
+    const magMat = new pc.StandardMaterial();
+    magMat.diffuse = new pc.Color(0.7, 0.65, 0.5);
+    magMat.shininess = 60;
+    magMat.update();
+    magnifier.model.material = magMat;
+    entity.addChild(magnifier);
+  }
+
+  addSeherlehrlingFeatures(entity, roleColor) {
+    // Apprentice scroll
+    const scroll = new pc.Entity("Scroll");
+    scroll.addComponent("model", { type: "cylinder" });
+    scroll.setLocalPosition(0.35, 1.0, 0.1);
+    scroll.setLocalScale(0.06, 0.25, 0.06);
+    const scrollMat = new pc.StandardMaterial();
+    scrollMat.diffuse = new pc.Color(0.9, 0.88, 0.8);
+    scrollMat.update();
+    scroll.model.material = scrollMat;
+    entity.addChild(scroll);
+  }
+
+  addTratschweibFeatures(entity, roleColor) {
+    // Gossip tongue mark
+    const gossip = new pc.Entity("GossipMark");
+    gossip.addComponent("model", { type: "box" });
+    gossip.setLocalPosition(0, 1.72, 0.22);
+    gossip.setLocalScale(0.14, 0.04, 0.02);
+    const gossipMat = new pc.StandardMaterial();
+    gossipMat.diffuse = new pc.Color(0.8, 0.4, 0.4);
+    gossipMat.update();
+    gossip.model.material = gossipMat;
+    entity.addChild(gossip);
+  }
+
+  // === SOLO ROLLEN ===
+  addHenkerFeatures(entity, roleColor) {
+    // Executioner hood
+    const hood = new pc.Entity("ExecutionerHood");
+    hood.addComponent("model", { type: "sphere" });
+    hood.setLocalPosition(0, 1.95, 0.05);
+    hood.setLocalScale(0.55, 0.6, 0.5);
+    const hoodMat = new pc.StandardMaterial();
+    hoodMat.diffuse = new pc.Color(0.05, 0.05, 0.05);
+    hoodMat.update();
+    hood.model.material = hoodMat;
+    entity.addChild(hood);
+  }
+
+  addSelbstmoerderFeatures(entity, roleColor) {
+    // Sad aura
+    const sadAura = new pc.Entity("SadAura");
+    sadAura.addComponent("light", {
+      type: "point",
+      color: new pc.Color(0.4, 0.4, 0.5),
+      intensity: 0.3,
+      range: 1.5,
+    });
+    sadAura.setLocalPosition(0, 1.5, 0);
+    entity.addChild(sadAura);
+  }
+
+  // === SONSTIGE ===
+  addBuergermeisterFeatures(entity, roleColor) {
+    // Mayor sash
+    const sash = new pc.Entity("MayorSash");
+    sash.addComponent("model", { type: "box" });
+    sash.setLocalPosition(0, 1.0, 0.18);
+    sash.setLocalScale(0.55, 0.15, 0.03);
+    const sashMat = new pc.StandardMaterial();
+    sashMat.diffuse = new pc.Color(0.8, 0.2, 0.2);
+    sashMat.emissive = new pc.Color(0.4, 0.1, 0.1);
+    sashMat.shininess = 50;
+    sashMat.update();
+    sash.model.material = sashMat;
+    entity.addChild(sash);
+  }
+
+  addDiebFeatures(entity, roleColor) {
+    // Mask
+    const mask = new pc.Entity("Mask");
+    mask.addComponent("model", { type: "box" });
+    mask.setLocalPosition(0, 1.9, 0.2);
+    mask.setLocalScale(0.3, 0.15, 0.04);
+    const maskMat = new pc.StandardMaterial();
+    maskMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
+    maskMat.update();
+    mask.model.material = maskMat;
+    entity.addChild(mask);
+  }
+
+  addDoppelgaengerFeatures(entity, roleColor) {
+    // Mirror shimmer
+    const shimmer = new pc.Entity("Shimmer");
+    shimmer.addComponent("light", {
+      type: "point",
+      color: new pc.Color(0.7, 0.7, 0.8),
+      intensity: 0.4,
+      range: 2.0,
+    });
+    shimmer.setLocalPosition(0, 1.5, 0);
+    entity.addChild(shimmer);
+  }
+
+  addEngelFeatures(entity, roleColor) {
+    // Angel halo
+    const halo = new pc.Entity("AngelHalo");
+    halo.addComponent("model", { type: "torus" });
+    halo.setLocalPosition(0, 2.4, 0);
+    halo.setLocalScale(0.35, 0.3, 0.35);
+    halo.setLocalEulerAngles(90, 0, 0);
+    const haloMat = new pc.StandardMaterial();
+    haloMat.emissive = new pc.Color(1, 0.95, 0.7);
+    haloMat.opacity = 0.8;
+    haloMat.blendType = pc.BLEND_ADDITIVE;
+    haloMat.update();
+    halo.model.material = haloMat;
+    entity.addChild(halo);
+  }
+
+  addGerberFeatures(entity, roleColor) {
+    // Leather working tools
+    const tool = new pc.Entity("LeatherTool");
+    tool.addComponent("model", { type: "box" });
+    tool.setLocalPosition(0.35, 0.85, 0.15);
+    tool.setLocalScale(0.1, 0.08, 0.06);
+    const toolMat = new pc.StandardMaterial();
+    toolMat.diffuse = new pc.Color(0.6, 0.45, 0.3);
+    toolMat.update();
+    tool.model.material = toolMat;
+    entity.addChild(tool);
+  }
+
+  addKleinesMaedchenFeatures(entity, roleColor) {
+    // Innocence ribbon
+    const ribbon = new pc.Entity("InnocenceRibbon");
+    ribbon.addComponent("model", { type: "box" });
+    ribbon.setLocalPosition(0.2, 2.0, -0.1);
+    ribbon.setLocalScale(0.1, 0.15, 0.03);
+    const ribbonMat = new pc.StandardMaterial();
+    ribbonMat.diffuse = new pc.Color(1, 0.7, 0.85);
+    ribbonMat.update();
+    ribbon.model.material = ribbonMat;
+    entity.addChild(ribbon);
+  }
+
+  addPutzfrauFeatures(entity, roleColor) {
+    // Cleaning bucket
+    const bucket = new pc.Entity("Bucket");
+    bucket.addComponent("model", { type: "cylinder" });
+    bucket.setLocalPosition(-0.4, 0.5, 0.1);
+    bucket.setLocalScale(0.1, 0.12, 0.1);
+    const bucketMat = new pc.StandardMaterial();
+    bucketMat.diffuse = new pc.Color(0.6, 0.5, 0.4);
+    bucketMat.update();
+    bucket.model.material = bucketMat;
+    entity.addChild(bucket);
+  }
+
+  addSuendenbockFeatures(entity, roleColor) {
+    // Scapegoat mark
+    const mark = new pc.Entity("ScapegoatMark");
+    mark.addComponent("model", { type: "sphere" });
+    mark.setLocalPosition(-0.2, 1.5, 0.15);
+    mark.setLocalScale(0.15, 0.15, 0.08);
+    const markMat = new pc.StandardMaterial();
+    markMat.diffuse = new pc.Color(0.6, 0.4, 0.3);
+    markMat.update();
+    mark.model.material = markMat;
+    entity.addChild(mark);
+  }
+
+  // === SPEZIAL ===
+  addChemielaborantFeatures(entity, roleColor) {
+    // Chemical vials
+    for (let i = 0; i < 2; i++) {
+      const vial = new pc.Entity(`ChemicalVial-${i}`);
+      vial.addComponent("model", { type: "cylinder" });
+      vial.setLocalPosition(i === 0 ? -0.35 : 0.35, 0.8, 0.2);
+      vial.setLocalScale(0.05, 0.15, 0.05);
+      const vialMat = new pc.StandardMaterial();
+      vialMat.diffuse = new pc.Color(0.3, 0.8, 0.5);
+      vialMat.emissive = new pc.Color(0.15, 0.4, 0.25);
+      vialMat.opacity = 0.9;
+      vialMat.blendType = pc.BLEND_ADDITIVE;
+      vialMat.update();
+      vial.model.material = vialMat;
+      entity.addChild(vial);
+    }
+  }
+
+  addDunklerPriesterFeatures(entity, roleColor) {
+    // Priest robes + dark aura
+    const robes = new pc.Entity("PriestRobes");
+    robes.addComponent("model", { type: "box" });
+    robes.setLocalPosition(0, 0.95, -0.15);
+    robes.setLocalScale(0.6, 0.5, 0.12);
+    const robesMat = new pc.StandardMaterial();
+    robesMat.diffuse = new pc.Color(0.1, 0.05, 0.1);
+    robesMat.update();
+    robes.model.material = robesMat;
+    entity.addChild(robes);
+  }
+
+  addFluechtlingeFeatures(entity, roleColor) {
+    // Refugee pack
+    const pack = new pc.Entity("RefugeePack");
+    pack.addComponent("model", { type: "box" });
+    pack.setLocalPosition(-0.35, 1.2, -0.2);
+    pack.setLocalScale(0.15, 0.25, 0.1);
+    const packMat = new pc.StandardMaterial();
+    packMat.diffuse = new pc.Color(0.5, 0.4, 0.3);
+    packMat.update();
+    pack.model.material = packMat;
+    entity.addChild(pack);
+  }
+
+  addHureFeatures(entity, roleColor) {
+    // Red dress accent
+    const dress = new pc.Entity("HureDress");
+    dress.addComponent("model", { type: "box" });
+    dress.setLocalPosition(0, 0.95, 0.18);
+    dress.setLocalScale(0.55, 0.4, 0.05);
+    const dressMat = new pc.StandardMaterial();
+    dressMat.diffuse = new pc.Color(0.95, 0.2, 0.3);
+    dressMat.shininess = 50;
+    dressMat.update();
+    dress.model.material = dressMat;
+    entity.addChild(dress);
+  }
+
+  addMordlustigerFeatures(entity, roleColor) {
+    // Blood lust aura
+    const lust = new pc.Entity("BloodLustAura");
+    lust.addComponent("light", {
+      type: "point",
+      color: new pc.Color(1, 0.2, 0.2),
+      intensity: 0.7,
+      range: 2.3,
+    });
+    lust.setLocalPosition(0, 1.5, 0);
+    entity.addChild(lust);
+  }
+
+  addNutteFeatures(entity, roleColor) {
+    // Pink dress accent
+    const dress = new pc.Entity("NutteDress");
+    dress.addComponent("model", { type: "box" });
+    dress.setLocalPosition(0, 0.95, 0.18);
+    dress.setLocalScale(0.5, 0.35, 0.05);
+    const dressMat = new pc.StandardMaterial();
+    dressMat.diffuse = new pc.Color(0.9, 0.4, 0.6);
+    dressMat.shininess = 40;
+    dressMat.update();
+    dress.model.material = dressMat;
+    entity.addChild(dress);
+  }
+
+  addRabeFeatures(entity, roleColor) {
+    // Raven feathers
+    const feather = new pc.Entity("RavenFeather");
+    feather.addComponent("model", { type: "box" });
+    feather.setLocalPosition(-0.25, 2.1, -0.15);
+    feather.setLocalScale(0.12, 0.35, 0.04);
+    feather.setLocalEulerAngles(0, 0, -30);
+    const featherMat = new pc.StandardMaterial();
+    featherMat.diffuse = new pc.Color(0.05, 0.05, 0.08);
+    featherMat.update();
+    feather.model.material = featherMat;
+    entity.addChild(feather);
+  }
+
+  addZahnarztFeatures(entity, roleColor) {
+    // Dentist mirror
+    const mirror = new pc.Entity("DentistMirror");
+    mirror.addComponent("model", { type: "sphere" });
+    mirror.setLocalPosition(0.35, 1.1, 0.15);
+    mirror.setLocalScale(0.08, 0.08, 0.04);
+    const mirrorMat = new pc.StandardMaterial();
+    mirrorMat.diffuse = new pc.Color(0.8, 0.8, 0.9);
+    mirrorMat.shininess = 95;
+    mirrorMat.update();
+    mirror.model.material = mirrorMat;
+    entity.addChild(mirror);
   }
 
   createNameLabel(name, isAlive) {

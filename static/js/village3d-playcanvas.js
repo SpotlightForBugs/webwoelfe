@@ -28,10 +28,18 @@ export default class Village3DPlayCanvas {
     // Lobby mode - simplified view with no buildings/environment
     this.isLobbyMode = options.lobbyMode || false;
 
-    // Camera settings
-    this.defaultCameraAngle = 0;
-    this.defaultCameraHeight = 15;
-    this.defaultCameraRadius = 25;
+    // Camera settings - adjust for lobby vs game mode
+    if (this.isLobbyMode) {
+      // Lobby: more top-down view, closer to see players
+      this.defaultCameraAngle = 0;
+      this.defaultCameraHeight = 20; // Higher for top-down
+      this.defaultCameraRadius = 18; // Closer to players
+    } else {
+      // Game: standard perspective view
+      this.defaultCameraAngle = 0;
+      this.defaultCameraHeight = 15;
+      this.defaultCameraRadius = 25;
+    }
 
     // Role colors for player appearance
     this.roleColors = {
@@ -160,7 +168,10 @@ export default class Village3DPlayCanvas {
     ground.addComponent("model", {
       type: "plane",
     });
-    ground.setLocalScale(80, 1, 80);
+    
+    // Smaller ground in lobby mode
+    const groundSize = this.isLobbyMode ? 30 : 80;
+    ground.setLocalScale(groundSize, 1, groundSize);
 
     const material = new pc.StandardMaterial();
     material.diffuse = new pc.Color(0.12, 0.18, 0.08); // Rich grass
@@ -171,12 +182,13 @@ export default class Village3DPlayCanvas {
     ground.model.material = material;
     this.app.root.addChild(ground);
 
-    // Village center circle (lighter area)
+    // Village center circle (lighter area) - smaller in lobby
     const centerCircle = new pc.Entity("CenterCircle");
     centerCircle.addComponent("model", {
       type: "cylinder",
     });
-    centerCircle.setLocalScale(18, 0.05, 18);
+    const circleSize = this.isLobbyMode ? 12 : 18;
+    centerCircle.setLocalScale(circleSize, 0.05, circleSize);
     centerCircle.setPosition(0, 0.05, 0);
 
     const circleMat = new pc.StandardMaterial();
@@ -665,9 +677,15 @@ export default class Village3DPlayCanvas {
   createDetailedPlayer(player, x, z, angle) {
     const entity = new pc.Entity(`Player-${player.id}`);
 
-    // Get role color
-    const roleColor =
-      this.roleColors[player.rolle] || this.roleColors["default"];
+    // Get role color - in lobby mode use a visible color scheme
+    let roleColor;
+    if (this.isLobbyMode || !player.rolle) {
+      // Lobby mode: use blue for all players so they're visible
+      roleColor = new pc.Color(0.3, 0.5, 0.8);
+    } else {
+      roleColor =
+        this.roleColors[player.rolle] || this.roleColors["default"];
+    }
 
     // Body (more detailed)
     const body = new pc.Entity("Body");
@@ -901,6 +919,8 @@ export default class Village3DPlayCanvas {
 
     // Mouse wheel for zoom
     this.app.mouse.on(pc.EVENT_MOUSEWHEEL, (event) => {
+      // Prevent page scrolling
+      event.event.preventDefault();
       this.cameraRadius += event.wheel * 0.5;
       this.cameraRadius = pc.math.clamp(this.cameraRadius, 15, 40);
     });

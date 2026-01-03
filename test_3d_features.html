@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Feature Test - Webwölfe</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1e;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #d4af37;
+        }
+        #controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #2a2a2e;
+            border-radius: 8px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #d4af37;
+            border: none;
+            border-radius: 5px;
+            color: #1a1a1e;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #e5c047;
+        }
+        #container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #d4af37;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #2a2a2e;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 3D Feature Test - Webwölfe</h1>
+    
+    <div id="controls">
+        <h2>Test Controls</h2>
+        <button onclick="testVote()">🗳️ Test Vote</button>
+        <button onclick="testChat()">💬 Test Chat</button>
+        <button onclick="testHeal()">💚 Test Heal</button>
+        <button onclick="testAttack()">⚔️ Test Attack</button>
+        <button onclick="testProtect()">🛡️ Test Protect</button>
+        <button onclick="testDeath()">💀 Test Death</button>
+        <button onclick="toggleNight()">🌙/☀️ Toggle Day/Night</button>
+        <button onclick="resetCamera()">📷 Reset Camera</button>
+    </div>
+
+    <div id="container"></div>
+
+    <div class="info">
+        <h3>✨ Features Implemented:</h3>
+        <ul>
+            <li>✅ Custom 3D role designs (Werwolf, Seherin, Hexe, Jäger, Amor, Heiler)</li>
+            <li>✅ Realistic medieval timber-framed houses</li>
+            <li>✅ Detailed church with bell tower and stained glass</li>
+            <li>✅ Live vote indicators floating above players</li>
+            <li>✅ 3D chat bubbles with word-wrapped text</li>
+            <li>✅ Action effects (heal, attack, protect, poison, love)</li>
+            <li>✅ Death animations and tombstones</li>
+            <li>✅ Day/Night cycle with lighting changes</li>
+        </ul>
+    </div>
+
+    <script src="https://code.playcanvas.com/playcanvas-stable.min.js"></script>
+    <script type="module">
+        import Village3DPlayCanvas from '/static/js/village3d-playcanvas.js';
+
+        // Initialize the 3D village
+        const village = new Village3DPlayCanvas('container', 'TEST');
+
+        // Create test players with different roles
+        const testPlayers = [
+            { id: 1, name: 'Wolf', rolle: 'Werwolf', ist_am_leben: true, ist_erzaehler: false },
+            { id: 2, name: 'Seer', rolle: 'Seherin', ist_am_leben: true, ist_erzaehler: false },
+            { id: 3, name: 'Witch', rolle: 'Hexe', ist_am_leben: true, ist_erzaehler: false },
+            { id: 4, name: 'Hunter', rolle: 'Jäger', ist_am_leben: true, ist_erzaehler: false },
+            { id: 5, name: 'Cupid', rolle: 'Amor', ist_am_leben: true, ist_erzaehler: false },
+            { id: 6, name: 'Healer', rolle: 'Heiler', ist_am_leben: true, ist_erzaehler: false },
+            { id: 7, name: 'Villager', rolle: 'Dorfbewohner', ist_am_leben: true, ist_erzaehler: false },
+        ];
+
+        village.setPlayers(testPlayers);
+
+        let isNight = true;
+        let testPlayerId = 1;
+
+        window.testVote = () => {
+            village.showVoteIndicator(testPlayerId, 'Test Voter');
+            testPlayerId = (testPlayerId % testPlayers.length) + 1;
+        };
+
+        window.testChat = () => {
+            village.showChatBubble(testPlayerId, 'Hello from 3D world!');
+            testPlayerId = (testPlayerId % testPlayers.length) + 1;
+        };
+
+        window.testHeal = () => {
+            village.showActionEffect(testPlayerId, 'heal');
+            testPlayerId = (testPlayerId % testPlayers.length) + 1;
+        };
+
+        window.testAttack = () => {
+            village.showActionEffect(testPlayerId, 'attack');
+            testPlayerId = (testPlayerId % testPlayers.length) + 1;
+        };
+
+        window.testProtect = () => {
+            village.showActionEffect(testPlayerId, 'protect');
+            testPlayerId = (testPlayerId % testPlayers.length) + 1;
+        };
+
+        window.testDeath = () => {
+            village.updatePlayerStatus(testPlayerId, false);
+            testPlayerId = (testPlayerId % testPlayers.length) + 1;
+        };
+
+        window.toggleNight = () => {
+            isNight = !isNight;
+            village.setTimeOfDay(isNight);
+        };
+
+        window.resetCamera = () => {
+            village.resetCamera();
+        };
+
+        window.village = village;
+        console.log('3D Village Test initialized!');
+    </script>
+</body>
+</html>

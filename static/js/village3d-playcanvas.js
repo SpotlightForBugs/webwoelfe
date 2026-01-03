@@ -1751,20 +1751,17 @@ export default class Village3DPlayCanvas {
 
     // Background
     ctx.fillStyle = "rgba(40, 40, 50, 0.9)";
-    ctx.roundRect = function (x, y, w, h, r) {
-      this.beginPath();
-      this.moveTo(x + r, y);
-      this.lineTo(x + w - r, y);
-      this.arcTo(x + w, y, x + w, y + r, r);
-      this.lineTo(x + w, y + h - r);
-      this.arcTo(x + w, y + h, x + w - r, y + h, r);
-      this.lineTo(x + r, y + h);
-      this.arcTo(x, y + h, x, y + h - r, r);
-      this.lineTo(x, y + r);
-      this.arcTo(x, y, x + r, y, r);
-      this.closePath();
-    };
-    ctx.roundRect(10, 10, canvas.width - 20, canvas.height - 20, 15);
+    ctx.beginPath();
+    ctx.moveTo(10 + 15, 10);
+    ctx.lineTo(canvas.width - 10 - 15, 10);
+    ctx.arcTo(canvas.width - 10, 10, canvas.width - 10, 10 + 15, 15);
+    ctx.lineTo(canvas.width - 10, canvas.height - 10 - 15);
+    ctx.arcTo(canvas.width - 10, canvas.height - 10, canvas.width - 10 - 15, canvas.height - 10, 15);
+    ctx.lineTo(10 + 15, canvas.height - 10);
+    ctx.arcTo(10, canvas.height - 10, 10, canvas.height - 10 - 15, 15);
+    ctx.lineTo(10, 10 + 15);
+    ctx.arcTo(10, 10, 10 + 15, 10, 15);
+    ctx.closePath();
     ctx.fill();
 
     // Border
@@ -1804,7 +1801,7 @@ export default class Village3DPlayCanvas {
       format: pc.PIXELFORMAT_R8_G8_B8_A8,
     });
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    texture.lock().set(new Uint8Array(pixels.data));
+    texture.lock().set(pixels.data);
     texture.unlock();
 
     // Apply material
@@ -1881,8 +1878,7 @@ export default class Village3DPlayCanvas {
 
       const mat = new pc.StandardMaterial();
       mat.emissive = color;
-      mat.opacity = 0.8;
-      mat.blendType = pc.BLEND_ADDITIVE;
+      mat.blendType = pc.BLEND_NORMAL;
       mat.update();
       particle.model.material = mat;
 
@@ -1936,11 +1932,13 @@ export default class Village3DPlayCanvas {
       // Make player gray and semi-transparent
       entity.children.forEach((child) => {
         if (child.model && child.model.material) {
-          const mat = child.model.material;
+          // Clone material to avoid affecting other entities
+          const mat = child.model.material.clone();
           mat.diffuse = new pc.Color(0.3, 0.3, 0.3);
           mat.opacity = 0.4;
           mat.blendType = pc.BLEND_NORMAL;
           mat.update();
+          child.model.material = mat;
         }
         if (child.light) {
           child.enabled = false;

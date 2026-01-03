@@ -1,6 +1,7 @@
 """
 Hure - Besucht andere Spieler und entgeht Angriffen.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie
@@ -14,15 +15,15 @@ if TYPE_CHECKING:
 class Hure(Role):
     """
     Die Hure - Naechtliche Besuche.
-    
+
     Faehigkeiten:
     - Besucht jede Nacht einen Spieler
     - Entgeht Angriffen auf ihr eigenes Haus
     - Stirbt wenn sie bei einem Werwolf uebernachtet
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -39,17 +40,16 @@ class Hure(Role):
             farbe="#f43f5e",
             nacht_aktiv=True,
             prioritaet=45,
-            erzaehler_nacht=(
-                "Die Hure erwacht und waehlt bei wem sie uebernachtet."
-            ),
+            erzaehler_nacht=("Die Hure erwacht und waehlt bei wem sie uebernachtet."),
         )
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Hure besucht einen Spieler.
         """
@@ -60,14 +60,15 @@ class Hure(Role):
                 effekte={"bleibt_zuhause": True},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         from ..registry import RoleRegistry
+
         ziel_rolle = RoleRegistry.get(ziel.rolle)
-        
+
         ist_werwolf = False
         if ziel_rolle:
             ist_werwolf = ziel_rolle.info.team == Team.WERWOLF
-        
+
         if ist_werwolf:
             return AktionsErgebnis(
                 erfolg=True,
@@ -79,7 +80,7 @@ class Hure(Role):
                 },
                 log_sichtbar_fuer="erzaehler",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du uebernachtest bei {ziel.name}.",

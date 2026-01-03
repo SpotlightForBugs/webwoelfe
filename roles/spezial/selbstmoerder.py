@@ -1,6 +1,7 @@
 """
 Selbstmörder - Gewinnt nur wenn er vom Dorf gehängt wird
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -14,62 +15,56 @@ if TYPE_CHECKING:
 class Selbstmoerder(Role):
     """
     Selbstmörder
-    
+
     Solo-Rolle die gewinnt, wenn sie vom Dorf hingerichtet wird.
     Muss das Dorf überzeugen, ihn zu hängen, ohne zu offensichtlich zu sein.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=74,
-            name='Selbstmörder',
+            name="Selbstmörder",
             team=Team.SOLO,
             kategorie=Kategorie.SPEZIAL,
-            beschreibung='Du bist der Selbstmörder. Du gewinnst NUR wenn du vom Dorf gehängt wirst! Versuche verdächtig zu wirken, ohne zu offensichtlich zu sein.',
-            icon='fa-solid fa-skull',
-            farbe='#374151',
+            beschreibung="Du bist der Selbstmörder. Du gewinnst NUR wenn du vom Dorf gehängt wirst! Versuche verdächtig zu wirken, ohne zu offensichtlich zu sein.",
+            icon="fa-solid fa-skull",
+            farbe="#374151",
             nacht_aktiv=False,
             prioritaet=100,
-            erzaehler_nacht='Der Selbstmörder liegt wach und plant, wie er morgen möglichst verdächtig wirken kann.',
-            erzaehler_tag='Der Selbstmörder erwacht mit einem finsteren Plan. Sein Ziel: Vom Dorf gehängt werden! Aber nicht zu offensichtlich...',
-            hinweis_config='Selbstmörder',
+            erzaehler_nacht="Der Selbstmörder liegt wach und plant, wie er morgen möglichst verdächtig wirken kann.",
+            erzaehler_tag="Der Selbstmörder erwacht mit einem finsteren Plan. Sein Ziel: Vom Dorf gehängt werden! Aber nicht zu offensichtlich...",
+            hinweis_config="Selbstmörder",
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE  # Passive Rolle
-    
+
     def on_hinrichtung(
-        self,
-        spieler: 'Spieler',
-        opfer: 'Spieler',
-        kontext: SpielKontext
+        self, spieler: "Spieler", opfer: "Spieler", kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
         """
         Prüft ob der Selbstmörder hingerichtet wird - dann gewinnt er!
         """
         if opfer.id != spieler.id:
             return None
-        
+
         # Der Selbstmörder wurde gehängt - er gewinnt!
         return AktionsErgebnis(
             erfolg=True,
             nachricht="🎭 DER SELBSTMÖRDER HAT GEWONNEN! Er wurde vom Dorf gehängt, genau wie er es wollte!",
             effekte={
-                'selbstmoerder_gewinnt': True,
-                'spiel_ende': True,
-                'gewinner': 'Selbstmörder',
-                'gewinner_team': Team.SOLO.value
+                "selbstmoerder_gewinnt": True,
+                "spiel_ende": True,
+                "gewinner": "Selbstmörder",
+                "gewinner_team": Team.SOLO.value,
             },
-            log_sichtbar_fuer="alle"
+            log_sichtbar_fuer="alle",
         )
-    
+
     def on_eigener_tod(
-        self,
-        spieler: 'Spieler',
-        todesursache: str,
-        kontext: SpielKontext
+        self, spieler: "Spieler", todesursache: str, kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
         """
         Prüft die Todesursache - nur Hinrichtung führt zum Sieg.
@@ -79,33 +74,28 @@ class Selbstmoerder(Role):
                 erfolg=True,
                 nachricht="🎭 Der Selbstmörder wurde gehängt und hat damit sein Ziel erreicht!",
                 effekte={
-                    'selbstmoerder_gewinnt': True,
-                    'spiel_ende': True,
-                    'gewinner': 'Selbstmörder'
+                    "selbstmoerder_gewinnt": True,
+                    "spiel_ende": True,
+                    "gewinner": "Selbstmörder",
                 },
-                log_sichtbar_fuer="alle"
+                log_sichtbar_fuer="alle",
             )
         else:
             # Andere Todesart = Niederlage
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht=f"💀 Der Selbstmörder wurde durch {todesursache} getötet - das war nicht sein Plan!",
-                effekte={
-                    'selbstmoerder_verliert': True
-                },
-                log_sichtbar_fuer="alle"
+                effekte={"selbstmoerder_verliert": True},
+                log_sichtbar_fuer="alle",
             )
-    
+
     def on_spiel_ende(
-        self,
-        spieler: 'Spieler',
-        gewinner_team: Team,
-        kontext: SpielKontext
+        self, spieler: "Spieler", gewinner_team: Team, kontext: SpielKontext
     ) -> bool:
         """
         Der Selbstmörder gewinnt nur, wenn er gehängt wurde.
         Er teilt nie den Sieg mit einem anderen Team.
         """
         # Prüfe ob er durch Hinrichtung gestorben ist
-        wurde_gehaengt = getattr(spieler, 'wurde_gehaengt', False)
+        wurde_gehaengt = getattr(spieler, "wurde_gehaengt", False)
         return wurde_gehaengt

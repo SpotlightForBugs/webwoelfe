@@ -512,7 +512,7 @@ def toete_spieler(spieler: Spieler, todesart: str = "unbekannt") -> dict:
     from roles import RoleRegistry
     from roles.base import SpielKontext
     from roles.enums import Phase
-    
+
     spieler.ist_am_leben = False
     spieler.status = "tot"
 
@@ -524,13 +524,13 @@ def toete_spieler(spieler: Spieler, todesart: str = "unbekannt") -> dict:
         "folge_aktionen": [],
         "rollen_effekte": [],
     }
-    
+
     # Baue SpielKontext für Rollen-Trigger
     raum = Raum.query.get(spieler.raum_id)
     alle_spieler = Spieler.query.filter_by(raum_id=spieler.raum_id).all()
     lebende_ids = [s.id for s in alle_spieler if s.ist_am_leben and s.id != spieler.id]
     tote_ids = [s.id for s in alle_spieler if not s.ist_am_leben]
-    
+
     kontext = SpielKontext(
         raum_id=spieler.raum_id,
         runde=raum.runde if raum else 1,
@@ -539,7 +539,7 @@ def toete_spieler(spieler: Spieler, todesart: str = "unbekannt") -> dict:
         lebende_spieler=lebende_ids,
         tote_spieler=tote_ids,
     )
-    
+
     # Füge dynamische Attribute für Rollen hinzu
     kontext.spieler_rollen = {s.id: RoleRegistry.get(s.rolle) for s in alle_spieler}
     kontext.spieler_namen = {s.id: s.name for s in alle_spieler}
@@ -548,35 +548,43 @@ def toete_spieler(spieler: Spieler, todesart: str = "unbekannt") -> dict:
         rolle_obj = RoleRegistry.get(s.rolle)
         if rolle_obj:
             kontext.spieler_teams[s.id] = rolle_obj.info.team
-    
+
     # 1. Rufe on_eigener_tod für den sterbenden Spieler auf
     sterbende_rolle = RoleRegistry.get(spieler.rolle)
     if sterbende_rolle:
-        eigener_tod_ergebnis = sterbende_rolle.on_eigener_tod(spieler, todesart, kontext)
+        eigener_tod_ergebnis = sterbende_rolle.on_eigener_tod(
+            spieler, todesart, kontext
+        )
         if eigener_tod_ergebnis:
-            ergebnis["rollen_effekte"].append({
-                "spieler_id": spieler.id,
-                "typ": "eigener_tod",
-                "ergebnis": eigener_tod_ergebnis
-            })
+            ergebnis["rollen_effekte"].append(
+                {
+                    "spieler_id": spieler.id,
+                    "typ": "eigener_tod",
+                    "ergebnis": eigener_tod_ergebnis,
+                }
+            )
             # Verarbeite spezielle Effekte
             if eigener_tod_ergebnis.effekte.get("spiel_ende"):
                 ergebnis["spiel_ende"] = True
                 ergebnis["gewinner"] = eigener_tod_ergebnis.effekte.get("gewinner")
-    
+
     # 2. Rufe on_spieler_stirbt für alle anderen lebenden Spieler auf
     for anderer in alle_spieler:
         if anderer.id == spieler.id or not anderer.ist_am_leben:
             continue
         andere_rolle = RoleRegistry.get(anderer.rolle)
         if andere_rolle:
-            stirbt_ergebnis = andere_rolle.on_spieler_stirbt(anderer, spieler, todesart, kontext)
+            stirbt_ergebnis = andere_rolle.on_spieler_stirbt(
+                anderer, spieler, todesart, kontext
+            )
             if stirbt_ergebnis:
-                ergebnis["rollen_effekte"].append({
-                    "spieler_id": anderer.id,
-                    "typ": "on_spieler_stirbt",
-                    "ergebnis": stirbt_ergebnis
-                })
+                ergebnis["rollen_effekte"].append(
+                    {
+                        "spieler_id": anderer.id,
+                        "typ": "on_spieler_stirbt",
+                        "ergebnis": stirbt_ergebnis,
+                    }
+                )
                 # Verarbeite Team-Wechsel (z.B. Hund wird Werwolf)
                 if stirbt_ergebnis.effekte.get("verwandlung"):
                     neues_team = stirbt_ergebnis.effekte.get("neues_team")
@@ -585,7 +593,7 @@ def toete_spieler(spieler: Spieler, todesart: str = "unbekannt") -> dict:
 
     # Legacy-Logik für Abwärtskompatibilität
     # Jaeger stirbt - kann noch schiessen
-    if spieler.rolle == "Jäger" and getattr(spieler, 'jaeger_schuss', True):
+    if spieler.rolle == "Jäger" and getattr(spieler, "jaeger_schuss", True):
         ergebnis["folge_aktionen"].append("jaeger_schuss")
 
     # Verliebter stirbt - Partner stirbt auch

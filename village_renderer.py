@@ -40,30 +40,25 @@ FARBEN = {
     "tag_himmel": [(135, 180, 220), (180, 210, 240), (220, 235, 255)],
     "daemmerung_himmel": [(80, 50, 100), (120, 70, 100), (180, 100, 80)],
     "sterne": [(255, 255, 255), (255, 250, 220), (200, 220, 255)],
-    
     # Feuer & Licht
     "feuer_kern": (255, 255, 200),
     "feuer_innen": (255, 200, 50),
     "feuer_mitte": (255, 130, 30),
     "feuer_aussen": (200, 60, 10),
     "feuer_glut": (180, 40, 10),
-    
     # Boden & Vegetation
     "gras_dunkel": (25, 45, 25),
     "gras_hell": (35, 60, 35),
     "erde": (45, 35, 30),
     "erde_dunkel": (35, 28, 25),
     "steine": [(60, 55, 55), (70, 65, 60), (55, 50, 50)],
-    
     # Mond
     "mond": (255, 252, 230),
     "mond_glow": (255, 255, 220, 80),
     "mond_krater": (220, 215, 200),
-    
     # Sonne
     "sonne": (255, 240, 180),
     "sonne_glow": (255, 220, 100),
-    
     # Charaktere
     "haut_hell": (240, 210, 180),
     "haut_mittel": (220, 185, 155),
@@ -73,7 +68,6 @@ FARBEN = {
     "haare_schwarz": (30, 25, 25),
     "haare_grau": (150, 145, 140),
     "haare_rot": (160, 60, 40),
-    
     # Kleidung nach Team/Rolle
     "kleidung_dorf": (80, 100, 140),
     "kleidung_werwolf": (100, 40, 40),
@@ -83,14 +77,12 @@ FARBEN = {
     "kleidung_jaeger": (140, 100, 50),
     "kleidung_amor": (200, 80, 120),
     "kleidung_neutral": (90, 85, 80),
-    
     # Status-Effekte
     "tot": (80, 75, 70),
     "werwolf_aura": (180, 30, 30, 60),
     "dorf_aura": (60, 140, 60, 50),
     "seherin_aura": (140, 80, 200, 60),
     "mystisch": (150, 100, 200),
-    
     # Schatten
     "schatten": (0, 0, 0, 100),
     "schatten_stark": (0, 0, 0, 150),
@@ -195,9 +187,15 @@ class VillageRenderer:
             )
         except:
             try:
-                self._font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 14)
-                self._font_small = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 11)
-                self._font_large = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 16)
+                self._font = ImageFont.truetype(
+                    "/System/Library/Fonts/Helvetica.ttc", 14
+                )
+                self._font_small = ImageFont.truetype(
+                    "/System/Library/Fonts/Helvetica.ttc", 11
+                )
+                self._font_large = ImageFont.truetype(
+                    "/System/Library/Fonts/Helvetica.ttc", 16
+                )
             except:
                 self._font = ImageFont.load_default()
                 self._font_small = self._font
@@ -208,7 +206,9 @@ class VillageRenderer:
         if spieler_id not in self._charakter_cache:
             random.seed(spieler_id * 12345)
             self._charakter_cache[spieler_id] = {
-                "haar_farbe": random.choice(["braun", "blond", "schwarz", "grau", "rot"]),
+                "haar_farbe": random.choice(
+                    ["braun", "blond", "schwarz", "grau", "rot"]
+                ),
                 "haut_ton": random.choice(["hell", "mittel", "dunkel"]),
                 "geschlecht": random.choice(["m", "w"]),
                 "haar_stil": random.randint(0, 3),
@@ -272,7 +272,7 @@ class VillageRenderer:
         buffer = io.BytesIO()
         # Convert to RGB for final output (remove alpha)
         final_img = Image.new("RGB", img.size, (0, 0, 0))
-        final_img.paste(img, mask=img.split()[3] if img.mode == 'RGBA' else None)
+        final_img.paste(img, mask=img.split()[3] if img.mode == "RGBA" else None)
         final_img.save(buffer, format="PNG", optimize=True)
         return buffer.getvalue()
 
@@ -285,7 +285,7 @@ class VillageRenderer:
     def _render_himmel(self, img: Image.Image, draw: ImageDraw.Draw, phase: str):
         """Rendert wunderschönen Himmel mit Gradient und Details"""
         horizon_y = int(self.height * 0.55)
-        
+
         if phase == "nacht":
             # Wunderschöner Nachthimmel mit Gradient
             for y in range(horizon_y):
@@ -305,7 +305,9 @@ class VillageRenderer:
                 # Dichter in diagonalem Band
                 if abs(y - (x * 0.4)) < 80:
                     alpha = random.randint(20, 60)
-                    milky_draw.ellipse([x-1, y-1, x+1, y+1], fill=(200, 200, 255, alpha))
+                    milky_draw.ellipse(
+                        [x - 1, y - 1, x + 1, y + 1], fill=(200, 200, 255, alpha)
+                    )
             img.paste(Image.alpha_composite(img, milky))
 
             # Sterne - verschiedene Größen und Helligkeit
@@ -313,20 +315,26 @@ class VillageRenderer:
                 x = random.randint(0, self.width)
                 y = random.randint(0, horizon_y - 20)
                 star_type = random.random()
-                
+
                 if star_type < 0.6:  # Kleine Sterne
                     brightness = random.randint(150, 255)
                     draw.point((x, y), fill=(brightness, brightness, brightness))
                 elif star_type < 0.9:  # Mittlere Sterne
                     brightness = random.randint(180, 255)
                     color = random.choice(FARBEN["sterne"])
-                    draw.ellipse([x-1, y-1, x+1, y+1], fill=color)
+                    draw.ellipse([x - 1, y - 1, x + 1, y + 1], fill=color)
                 else:  # Große funkelnde Sterne
                     brightness = random.randint(220, 255)
                     # Stern mit Strahlen
-                    draw.line([(x-3, y), (x+3, y)], fill=(brightness, brightness, brightness, 180))
-                    draw.line([(x, y-3), (x, y+3)], fill=(brightness, brightness, brightness, 180))
-                    draw.ellipse([x-1, y-1, x+2, y+2], fill=(255, 255, 250))
+                    draw.line(
+                        [(x - 3, y), (x + 3, y)],
+                        fill=(brightness, brightness, brightness, 180),
+                    )
+                    draw.line(
+                        [(x, y - 3), (x, y + 3)],
+                        fill=(brightness, brightness, brightness, 180),
+                    )
+                    draw.ellipse([x - 1, y - 1, x + 2, y + 2], fill=(255, 255, 250))
 
         elif phase == "tag":
             # Schöner blauer Tageshimmel
@@ -336,7 +344,7 @@ class VillageRenderer:
                 g = int(180 + ratio * 55)
                 b = int(235 + ratio * 20)
                 draw.line([(0, y), (self.width, y)], fill=(r, g, b))
-                
+
             # Leichte Wolken
             for _ in range(5):
                 cx = random.randint(50, self.width - 50)
@@ -346,8 +354,10 @@ class VillageRenderer:
                     oy = random.randint(-15, 15)
                     w = random.randint(30, 60)
                     h = random.randint(15, 30)
-                    draw.ellipse([cx+ox-w, cy+oy-h, cx+ox+w, cy+oy+h], 
-                                fill=(255, 255, 255, 30))
+                    draw.ellipse(
+                        [cx + ox - w, cy + oy - h, cx + ox + w, cy + oy + h],
+                        fill=(255, 255, 255, 30),
+                    )
         else:
             # Dämmerung - Orange/Lila Gradient
             for y in range(horizon_y):
@@ -386,9 +396,9 @@ class VillageRenderer:
         # Mond-Körper mit Gradient
         for i in range(mond_radius, 0, -1):
             ratio = i / mond_radius
-            r = int(255 - (1-ratio) * 15)
-            g = int(252 - (1-ratio) * 20)
-            b = int(230 - (1-ratio) * 30)
+            r = int(255 - (1 - ratio) * 15)
+            g = int(252 - (1 - ratio) * 20)
+            b = int(230 - (1 - ratio) * 30)
             draw.ellipse(
                 [mond_x - i, mond_y - i, mond_x + i, mond_y + i],
                 fill=(r, g, b),
@@ -412,9 +422,10 @@ class VillageRenderer:
             # Krater-Highlight am Rand
             draw.arc(
                 [kx - size + 1, ky - size + 1, kx + size - 1, ky + size - 1],
-                200, 340,
+                200,
+                340,
                 fill=(255, 252, 240),
-                width=1
+                width=1,
             )
 
     def _render_sonne(self, img: Image.Image, draw: ImageDraw.Draw):
@@ -428,8 +439,12 @@ class VillageRenderer:
             glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
             glow_draw = ImageDraw.Draw(glow)
             glow_draw.ellipse(
-                [sonne_x - sonne_radius - i * 5, sonne_y - sonne_radius - i * 5,
-                 sonne_x + sonne_radius + i * 5, sonne_y + sonne_radius + i * 5],
+                [
+                    sonne_x - sonne_radius - i * 5,
+                    sonne_y - sonne_radius - i * 5,
+                    sonne_x + sonne_radius + i * 5,
+                    sonne_y + sonne_radius + i * 5,
+                ],
                 fill=(255, 220, 100, alpha),
             )
             img.paste(Image.alpha_composite(img, glow))
@@ -447,15 +462,15 @@ class VillageRenderer:
             draw.line(
                 [(start_x, start_y), (end_x, end_y)],
                 fill=(255, 230, 120),
-                width=3 if i % 2 == 0 else 2
+                width=3 if i % 2 == 0 else 2,
             )
 
         # Sonne selbst mit Gradient
         for i in range(sonne_radius, 0, -1):
             ratio = i / sonne_radius
             r = 255
-            g = int(240 - (1-ratio) * 30)
-            b = int(180 - (1-ratio) * 80)
+            g = int(240 - (1 - ratio) * 30)
+            b = int(180 - (1 - ratio) * 80)
             draw.ellipse(
                 [sonne_x - i, sonne_y - i, sonne_x + i, sonne_y + i],
                 fill=(r, g, b),
@@ -464,7 +479,7 @@ class VillageRenderer:
     def _render_daemmerung_licht(self, img: Image.Image, draw: ImageDraw.Draw):
         """Rendert Dämmerungslicht am Horizont"""
         horizon_y = int(self.height * 0.55)
-        
+
         # Glühender Horizont
         for i in range(40, 0, -1):
             alpha = int(40 * (1 - i / 40))
@@ -472,8 +487,12 @@ class VillageRenderer:
             glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
             glow_draw = ImageDraw.Draw(glow)
             glow_draw.ellipse(
-                [self.width // 2 - 200 - i * 5, y - i * 2,
-                 self.width // 2 + 200 + i * 5, y + i * 3],
+                [
+                    self.width // 2 - 200 - i * 5,
+                    y - i * 2,
+                    self.width // 2 + 200 + i * 5,
+                    y + i * 3,
+                ],
                 fill=(255, 150, 80, alpha),
             )
             img.paste(Image.alpha_composite(img, glow))
@@ -481,7 +500,7 @@ class VillageRenderer:
     def _render_landschaft(self, img: Image.Image, draw: ImageDraw.Draw, phase: str):
         """Rendert sanfte Hügel im Hintergrund"""
         horizon_y = int(self.height * 0.55)
-        
+
         # Farben basierend auf Phase
         if phase == "nacht":
             huegel_farben = [(25, 30, 35), (20, 25, 30), (15, 20, 25)]
@@ -489,34 +508,34 @@ class VillageRenderer:
             huegel_farben = [(80, 120, 80), (60, 100, 60), (45, 85, 50)]
         else:
             huegel_farben = [(60, 50, 55), (50, 40, 45), (40, 35, 40)]
-        
+
         # Mehrere Hügelschichten
         for layer, farbe in enumerate(huegel_farben):
             offset = layer * 25
             punkte = [(0, horizon_y + offset)]
-            
+
             # Sanfte Kurve für Hügel
             for x in range(0, self.width + 50, 50):
                 h = math.sin(x * 0.008 + layer * 2) * 30 + math.sin(x * 0.015) * 15
                 punkte.append((x, horizon_y + offset - 40 - h))
-            
+
             punkte.append((self.width, horizon_y + offset))
             punkte.append((self.width, self.height))
             punkte.append((0, self.height))
-            
+
             draw.polygon(punkte, fill=farbe)
 
     def _render_baeume(self, img: Image.Image, draw: ImageDraw.Draw, phase: str):
         """Rendert Silhouetten von Bäumen"""
         horizon_y = int(self.height * 0.55)
-        
+
         if phase == "nacht":
             baum_farbe = (15, 18, 22)
         elif phase == "tag":
             baum_farbe = (35, 55, 35)
         else:
             baum_farbe = (30, 25, 30)
-        
+
         # Bäume links und rechts
         baum_positionen = [
             (30, horizon_y + 30, 50, 80),
@@ -524,7 +543,7 @@ class VillageRenderer:
             (self.width - 50, horizon_y + 25, 45, 75),
             (self.width - 100, horizon_y + 35, 35, 60),
         ]
-        
+
         for x, y, breite, hoehe in baum_positionen:
             # Baumkrone (Dreieck)
             punkte = [
@@ -536,13 +555,13 @@ class VillageRenderer:
             # Stamm
             draw.rectangle(
                 [x - 5, y, x + 5, y + 20],
-                fill=(40, 30, 25) if phase != "nacht" else (20, 18, 18)
+                fill=(40, 30, 25) if phase != "nacht" else (20, 18, 18),
             )
 
     def _render_haeuser(self, img: Image.Image, draw: ImageDraw.Draw, phase: str):
         """Rendert wunderschöne mittelalterliche Häuser im Hintergrund"""
         horizon_y = int(self.height * 0.55)
-        
+
         if phase == "nacht":
             wand_farbe = (50, 45, 40)
             wand_akzent = (60, 55, 50)
@@ -564,7 +583,7 @@ class VillageRenderer:
             dach_dunkel = (80, 45, 35)
             fenster_farbe = (255, 190, 100)
             schornstein_farbe = (80, 70, 65)
-        
+
         # Mehr Häuser, größer und verteilt
         haus_positionen = [
             # (x, y, breite, hoehe, hat_schornstein, num_fenster)
@@ -575,53 +594,77 @@ class VillageRenderer:
             (self.width // 2 - 180, horizon_y + 40, 60, 48, True, 1),
             (self.width // 2 + 180, horizon_y + 45, 55, 45, False, 1),
         ]
-        
+
         for x, y, breite, hoehe, hat_schornstein, num_fenster in haus_positionen:
             # Schatten
             schatten = Image.new("RGBA", img.size, (0, 0, 0, 0))
             schatten_draw = ImageDraw.Draw(schatten)
             schatten_draw.ellipse(
-                [x - breite//2 - 5, y + 2, x + breite//2 + 5, y + 15],
-                fill=(0, 0, 0, 40)
+                [x - breite // 2 - 5, y + 2, x + breite // 2 + 5, y + 15],
+                fill=(0, 0, 0, 40),
             )
             img.paste(Image.alpha_composite(img, schatten))
-            
+
             # Wand mit Fachwerk-Effekt
-            draw.rectangle([x - breite//2, y - hoehe, x + breite//2, y], fill=wand_farbe)
-            
+            draw.rectangle(
+                [x - breite // 2, y - hoehe, x + breite // 2, y], fill=wand_farbe
+            )
+
             # Fachwerk-Balken
             balken_farbe = (50, 35, 30) if phase != "tag" else (80, 55, 45)
             # Horizontaler Balken
-            draw.rectangle([x - breite//2, y - hoehe//2 - 2, x + breite//2, y - hoehe//2 + 2], fill=balken_farbe)
+            draw.rectangle(
+                [
+                    x - breite // 2,
+                    y - hoehe // 2 - 2,
+                    x + breite // 2,
+                    y - hoehe // 2 + 2,
+                ],
+                fill=balken_farbe,
+            )
             # Vertikale Balken
-            draw.rectangle([x - breite//2, y - hoehe, x - breite//2 + 4, y], fill=balken_farbe)
-            draw.rectangle([x + breite//2 - 4, y - hoehe, x + breite//2, y], fill=balken_farbe)
+            draw.rectangle(
+                [x - breite // 2, y - hoehe, x - breite // 2 + 4, y], fill=balken_farbe
+            )
+            draw.rectangle(
+                [x + breite // 2 - 4, y - hoehe, x + breite // 2, y], fill=balken_farbe
+            )
             # Diagonale Kreuz-Balken (vereinfacht als Linien)
-            draw.line([(x - breite//2, y - hoehe), (x, y - hoehe//2)], fill=balken_farbe, width=2)
-            draw.line([(x + breite//2, y - hoehe), (x, y - hoehe//2)], fill=balken_farbe, width=2)
-            
+            draw.line(
+                [(x - breite // 2, y - hoehe), (x, y - hoehe // 2)],
+                fill=balken_farbe,
+                width=2,
+            )
+            draw.line(
+                [(x + breite // 2, y - hoehe), (x, y - hoehe // 2)],
+                fill=balken_farbe,
+                width=2,
+            )
+
             # Dach mit Schichten-Effekt
             dach_hoehe = 30 + hoehe // 4
             dach_punkte = [
-                (x - breite//2 - 12, y - hoehe),
+                (x - breite // 2 - 12, y - hoehe),
                 (x, y - hoehe - dach_hoehe),
-                (x + breite//2 + 12, y - hoehe),
+                (x + breite // 2 + 12, y - hoehe),
             ]
             draw.polygon(dach_punkte, fill=dach_farbe)
             # Dach-Schattenseite
             dach_schatten = [
                 (x, y - hoehe - dach_hoehe),
-                (x + breite//2 + 12, y - hoehe),
-                (x + breite//2 + 8, y - hoehe),
+                (x + breite // 2 + 12, y - hoehe),
+                (x + breite // 2 + 8, y - hoehe),
                 (x, y - hoehe - dach_hoehe + 5),
             ]
             draw.polygon(dach_schatten, fill=dach_dunkel)
-            
+
             # Schornstein
             if hat_schornstein:
-                sx = x + breite//4
-                draw.rectangle([sx - 6, y - hoehe - dach_hoehe + 8, sx + 6, y - hoehe - 5], 
-                              fill=schornstein_farbe)
+                sx = x + breite // 4
+                draw.rectangle(
+                    [sx - 6, y - hoehe - dach_hoehe + 8, sx + 6, y - hoehe - 5],
+                    fill=schornstein_farbe,
+                )
                 # Rauch bei Nacht
                 if phase == "nacht":
                     rauch = Image.new("RGBA", img.size, (0, 0, 0, 0))
@@ -629,56 +672,82 @@ class VillageRenderer:
                     for i in range(3):
                         ry = y - hoehe - dach_hoehe - 5 - i * 12
                         rx = sx + i * 3
-                        rauch_draw.ellipse([rx - 5 - i*2, ry - 4, rx + 5 + i*2, ry + 4], 
-                                           fill=(180, 180, 180, 40 - i*10))
+                        rauch_draw.ellipse(
+                            [rx - 5 - i * 2, ry - 4, rx + 5 + i * 2, ry + 4],
+                            fill=(180, 180, 180, 40 - i * 10),
+                        )
                     img.paste(Image.alpha_composite(img, rauch))
-            
+
             # Fenster mit warmem Licht
             fenster_layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
             fenster_draw = ImageDraw.Draw(fenster_layer)
-            
+
             if num_fenster >= 1:
                 # Erstes Fenster
-                fx = x - breite//4 if num_fenster > 1 else x
+                fx = x - breite // 4 if num_fenster > 1 else x
                 fenster_draw.rectangle(
                     [fx - 8, y - hoehe + 12, fx + 8, y - hoehe + 28],
-                    fill=fenster_farbe + (220,)
+                    fill=fenster_farbe + (220,),
                 )
                 # Fensterkreuz
-                draw.line([(fx, y - hoehe + 12), (fx, y - hoehe + 28)], fill=balken_farbe, width=1)
-                draw.line([(fx - 8, y - hoehe + 20), (fx + 8, y - hoehe + 20)], fill=balken_farbe, width=1)
-                
+                draw.line(
+                    [(fx, y - hoehe + 12), (fx, y - hoehe + 28)],
+                    fill=balken_farbe,
+                    width=1,
+                )
+                draw.line(
+                    [(fx - 8, y - hoehe + 20), (fx + 8, y - hoehe + 20)],
+                    fill=balken_farbe,
+                    width=1,
+                )
+
                 # Lichtschein bei Nacht
                 if phase == "nacht":
                     for glow in range(3, 0, -1):
                         alpha = 20 * (4 - glow)
                         fenster_draw.ellipse(
-                            [fx - 12 - glow*3, y - hoehe + 10 - glow*2, 
-                             fx + 12 + glow*3, y - hoehe + 30 + glow*2],
-                            fill=(255, 200, 100, alpha)
+                            [
+                                fx - 12 - glow * 3,
+                                y - hoehe + 10 - glow * 2,
+                                fx + 12 + glow * 3,
+                                y - hoehe + 30 + glow * 2,
+                            ],
+                            fill=(255, 200, 100, alpha),
                         )
-            
+
             if num_fenster >= 2:
                 # Zweites Fenster
-                fx = x + breite//4
+                fx = x + breite // 4
                 fenster_draw.rectangle(
                     [fx - 8, y - hoehe + 12, fx + 8, y - hoehe + 28],
-                    fill=fenster_farbe + (220,)
+                    fill=fenster_farbe + (220,),
                 )
-                draw.line([(fx, y - hoehe + 12), (fx, y - hoehe + 28)], fill=balken_farbe, width=1)
-                draw.line([(fx - 8, y - hoehe + 20), (fx + 8, y - hoehe + 20)], fill=balken_farbe, width=1)
-                
+                draw.line(
+                    [(fx, y - hoehe + 12), (fx, y - hoehe + 28)],
+                    fill=balken_farbe,
+                    width=1,
+                )
+                draw.line(
+                    [(fx - 8, y - hoehe + 20), (fx + 8, y - hoehe + 20)],
+                    fill=balken_farbe,
+                    width=1,
+                )
+
                 if phase == "nacht":
                     for glow in range(3, 0, -1):
                         alpha = 20 * (4 - glow)
                         fenster_draw.ellipse(
-                            [fx - 12 - glow*3, y - hoehe + 10 - glow*2, 
-                             fx + 12 + glow*3, y - hoehe + 30 + glow*2],
-                            fill=(255, 200, 100, alpha)
+                            [
+                                fx - 12 - glow * 3,
+                                y - hoehe + 10 - glow * 2,
+                                fx + 12 + glow * 3,
+                                y - hoehe + 30 + glow * 2,
+                            ],
+                            fill=(255, 200, 100, alpha),
                         )
-            
+
             img.paste(Image.alpha_composite(img, fenster_layer))
-            
+
             # Tür
             tuer_farbe = (70, 50, 40) if phase != "tag" else (100, 70, 55)
             draw.rectangle([x - 7, y - 22, x + 7, y], fill=tuer_farbe)
@@ -734,7 +803,8 @@ class VillageRenderer:
             # Highlight auf Steinen
             draw.arc(
                 [x - stein_w + 2, y - stein_h + 2, x + stein_w - 2, y + stein_h - 2],
-                200, 340,
+                200,
+                340,
                 fill=(stein_farbe[0] + 20, stein_farbe[1] + 20, stein_farbe[2] + 20),
             )
 
@@ -761,8 +831,10 @@ class VillageRenderer:
             gx = cx + random.randint(-25, 25)
             gy = cy + random.randint(-8, 8)
             gr = random.randint(2, 5)
-            glut_draw.ellipse([gx - gr, gy - gr, gx + gr, gy + gr], 
-                             fill=(200, 80, 20, random.randint(100, 200)))
+            glut_draw.ellipse(
+                [gx - gr, gy - gr, gx + gr, gy + gr],
+                fill=(200, 80, 20, random.randint(100, 200)),
+            )
         img.paste(Image.alpha_composite(img, glut))
 
         # Feuer (nur nachts und in Dämmerung sichtbar intensiv)
@@ -773,8 +845,13 @@ class VillageRenderer:
                 glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
                 glow_draw = ImageDraw.Draw(glow)
                 glow_draw.ellipse(
-                    [cx - 50 - i * 5, cy - 25 - i * 2, cx + 50 + i * 5, cy + 25 + i * 2],
-                    fill=(255, 150, 50, alpha)
+                    [
+                        cx - 50 - i * 5,
+                        cy - 25 - i * 2,
+                        cx + 50 + i * 5,
+                        cy + 25 + i * 2,
+                    ],
+                    fill=(255, 150, 50, alpha),
                 )
                 img.paste(Image.alpha_composite(img, glow))
 
@@ -782,13 +859,13 @@ class VillageRenderer:
             # Äußere Flamme (rot-orange)
             flammen_layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
             flammen_draw = ImageDraw.Draw(flammen_layer)
-            
+
             # Basis-Flammenform
             for f in range(3):
                 fx_offset = random.randint(-8, 8)
                 fy_offset = random.randint(-5, 5)
                 f_hoehe = 55 + random.randint(-5, 10)
-                
+
                 flammen_punkte = [
                     (cx - 25 + fx_offset, cy + 5),
                     (cx - 15 + fx_offset, cy - f_hoehe * 0.3 + fy_offset),
@@ -798,10 +875,12 @@ class VillageRenderer:
                     (cx + 15 + fx_offset, cy - f_hoehe * 0.3 + fy_offset),
                     (cx + 25 + fx_offset, cy + 5),
                 ]
-                flammen_draw.polygon(flammen_punkte, fill=FARBEN["feuer_aussen"] + (200,))
-            
+                flammen_draw.polygon(
+                    flammen_punkte, fill=FARBEN["feuer_aussen"] + (200,)
+                )
+
             img.paste(Image.alpha_composite(img, flammen_layer))
-            
+
             # Mittlere Flamme (orange)
             inner_layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
             inner_draw = ImageDraw.Draw(inner_layer)
@@ -824,7 +903,7 @@ class VillageRenderer:
                 (cx + 8, cy - 5),
             ]
             draw.polygon(kern_punkte, fill=FARBEN["feuer_innen"])
-            
+
             # Heißer Kern
             draw.ellipse([cx - 4, cy - 18, cx + 4, cy - 8], fill=FARBEN["feuer_kern"])
 
@@ -834,8 +913,10 @@ class VillageRenderer:
             for _ in range(15):
                 fx = cx + random.randint(-30, 30)
                 fy = cy - random.randint(20, 80)
-                funken_draw.ellipse([fx - 1, fy - 1, fx + 1, fy + 1], 
-                                    fill=(255, random.randint(150, 255), 50, random.randint(150, 255)))
+                funken_draw.ellipse(
+                    [fx - 1, fy - 1, fx + 1, fy + 1],
+                    fill=(255, random.randint(150, 255), 50, random.randint(150, 255)),
+                )
             img.paste(Image.alpha_composite(img, funken))
         else:
             # Tagsüber: Rauchende Asche
@@ -856,13 +937,15 @@ class VillageRenderer:
 
         return sorted(spieler, key=y_position)
 
-    def _get_rollen_farbe(self, rolle: Optional[str], team: Optional[str]) -> Tuple[int, int, int]:
+    def _get_rollen_farbe(
+        self, rolle: Optional[str], team: Optional[str]
+    ) -> Tuple[int, int, int]:
         """Gibt die passende Farbe für eine Rolle zurück"""
         if rolle:
             rolle_lower = rolle.lower()
             if rolle_lower in ROLLEN_FARBEN:
                 return ROLLEN_FARBEN[rolle_lower][0]
-        
+
         # Fallback auf Team-Farben
         if team:
             team_lower = team.lower()
@@ -870,7 +953,7 @@ class VillageRenderer:
                 return FARBEN["kleidung_werwolf"]
             elif team_lower == "dorf":
                 return FARBEN["kleidung_dorf"]
-        
+
         return FARBEN["kleidung_neutral"]
 
     def _render_spieler_charakter(
@@ -896,7 +979,7 @@ class VillageRenderer:
 
         # Hole konsistente Charakter-Eigenschaften
         char_props = self._get_charakter_eigenschaften(spieler.id)
-        
+
         # Bestimme Kleidungsfarbe basierend auf Rolle/Team
         if spieler.ist_am_leben:
             kleidung_farbe = self._get_rollen_farbe(spieler.rolle, spieler.team)
@@ -914,37 +997,39 @@ class VillageRenderer:
             img.paste(Image.alpha_composite(img, schatten))
 
         # === AURA-EFFEKTE basierend auf Sichtbarkeit ===
-        
+
         # Werwolf-Sicht: Andere Werwölfe sehen sich
         if spieler.sichtbar_als_werwolf:
-            self._render_aura(img, x, y - 20 * scale, (180, 30, 30, 80), scale, "werwolf")
-        
+            self._render_aura(
+                img, x, y - 20 * scale, (180, 30, 30, 80), scale, "werwolf"
+            )
+
         # Seherin-Enthüllung
         if spieler.sichtbar_als_boese:
             self._render_aura(img, x, y - 20 * scale, (200, 40, 40, 70), scale, "boese")
         elif spieler.sichtbar_als_dorf:
             self._render_aura(img, x, y - 20 * scale, (60, 180, 60, 60), scale, "gut")
-        
+
         # Verliebt-Effekt
         if spieler.ist_verliebt:
             self._render_herz_effekt(img, x, y - 55 * scale)
-        
+
         # Geschützt-Effekt
         if spieler.ist_geschuetzt:
             self._render_schild_effekt(img, draw, x, y - 20 * scale, scale)
 
         if spieler.ist_am_leben:
             # === LEBENDER SPIELER - Detaillierter Charakter ===
-            
+
             # Körper/Robe
             self._render_koerper(draw, x, y, scale, kleidung_farbe, char_props)
-            
+
             # Kopf und Gesicht
             self._render_kopf(draw, x, y, scale, char_props, cx, cy, szene.phase)
-            
+
             # Haare
             self._render_haare(draw, x, y, scale, char_props)
-            
+
             # Rollen-spezifische Accessoires
             if spieler.rolle:
                 self._render_accessoire(img, draw, x, y, scale, spieler.rolle)
@@ -959,18 +1044,29 @@ class VillageRenderer:
         # Name mit schönem Badge
         self._render_spieler_name(draw, x, y, spieler, scale)
 
-    def _render_aura(self, img: Image.Image, x: float, y: float, 
-                     farbe: Tuple[int, int, int, int], scale: float, typ: str):
+    def _render_aura(
+        self,
+        img: Image.Image,
+        x: float,
+        y: float,
+        farbe: Tuple[int, int, int, int],
+        scale: float,
+        typ: str,
+    ):
         """Rendert eine Aura um einen Spieler"""
         aura = Image.new("RGBA", img.size, (0, 0, 0, 0))
         aura_draw = ImageDraw.Draw(aura)
-        
+
         for i in range(8, 0, -1):
             alpha = int(farbe[3] * (1 - i / 8))
             aura_draw.ellipse(
-                [x - (25 + i * 4) * scale, y - (35 + i * 4) * scale,
-                 x + (25 + i * 4) * scale, y + (30 + i * 4) * scale],
-                fill=(farbe[0], farbe[1], farbe[2], alpha)
+                [
+                    x - (25 + i * 4) * scale,
+                    y - (35 + i * 4) * scale,
+                    x + (25 + i * 4) * scale,
+                    y + (30 + i * 4) * scale,
+                ],
+                fill=(farbe[0], farbe[1], farbe[2], alpha),
             )
         img.paste(Image.alpha_composite(img, aura))
 
@@ -978,100 +1074,144 @@ class VillageRenderer:
         """Rendert schwebende Herzen für verliebte Spieler"""
         herz = Image.new("RGBA", img.size, (0, 0, 0, 0))
         herz_draw = ImageDraw.Draw(herz)
-        
+
         # Zwei kleine Herzen
         for offset in [-12, 12]:
             hx, hy = x + offset, y - 10
             # Herz-Form (vereinfacht als zwei Kreise + Dreieck)
-            herz_draw.ellipse([hx - 6, hy - 4, hx - 1, hy + 2], fill=(255, 100, 120, 200))
-            herz_draw.ellipse([hx + 1, hy - 4, hx + 6, hy + 2], fill=(255, 100, 120, 200))
-            herz_draw.polygon([(hx - 6, hy), (hx + 6, hy), (hx, hy + 8)], fill=(255, 100, 120, 200))
-        
+            herz_draw.ellipse(
+                [hx - 6, hy - 4, hx - 1, hy + 2], fill=(255, 100, 120, 200)
+            )
+            herz_draw.ellipse(
+                [hx + 1, hy - 4, hx + 6, hy + 2], fill=(255, 100, 120, 200)
+            )
+            herz_draw.polygon(
+                [(hx - 6, hy), (hx + 6, hy), (hx, hy + 8)], fill=(255, 100, 120, 200)
+            )
+
         img.paste(Image.alpha_composite(img, herz))
 
-    def _render_schild_effekt(self, img: Image.Image, draw: ImageDraw.Draw, 
-                               x: float, y: float, scale: float):
+    def _render_schild_effekt(
+        self, img: Image.Image, draw: ImageDraw.Draw, x: float, y: float, scale: float
+    ):
         """Rendert einen Schutzschild-Effekt"""
         schild = Image.new("RGBA", img.size, (0, 0, 0, 0))
         schild_draw = ImageDraw.Draw(schild)
-        
+
         # Goldener Schild-Glow
         for i in range(5, 0, -1):
             alpha = int(40 * (1 - i / 5))
             schild_draw.ellipse(
-                [x - (28 + i * 2) * scale, y - (40 + i * 2) * scale,
-                 x + (28 + i * 2) * scale, y + (35 + i * 2) * scale],
+                [
+                    x - (28 + i * 2) * scale,
+                    y - (40 + i * 2) * scale,
+                    x + (28 + i * 2) * scale,
+                    y + (35 + i * 2) * scale,
+                ],
                 outline=(255, 215, 0, alpha),
-                width=2
+                width=2,
             )
         img.paste(Image.alpha_composite(img, schild))
 
-    def _render_koerper(self, draw: ImageDraw.Draw, x: float, y: float, 
-                        scale: float, farbe: Tuple[int, int, int], char_props: Dict):
+    def _render_koerper(
+        self,
+        draw: ImageDraw.Draw,
+        x: float,
+        y: float,
+        scale: float,
+        farbe: Tuple[int, int, int],
+        char_props: Dict,
+    ):
         """Rendert den Körper/Robe eines Charakters"""
         # Robe mit Faltenwurf
         robe_punkte = [
             (x - 14 * scale, y + 30 * scale),  # Unten links
-            (x - 18 * scale, y + 5 * scale),   # Hüfte links
+            (x - 18 * scale, y + 5 * scale),  # Hüfte links
             (x - 16 * scale, y - 15 * scale),  # Taille links
             (x - 10 * scale, y - 28 * scale),  # Schulter links
-            (x, y - 32 * scale),               # Kragen
+            (x, y - 32 * scale),  # Kragen
             (x + 10 * scale, y - 28 * scale),  # Schulter rechts
             (x + 16 * scale, y - 15 * scale),  # Taille rechts
-            (x + 18 * scale, y + 5 * scale),   # Hüfte rechts
+            (x + 18 * scale, y + 5 * scale),  # Hüfte rechts
             (x + 14 * scale, y + 30 * scale),  # Unten rechts
         ]
-        
+
         # Robe mit Gradient-Effekt (dunklerer Rand)
         draw.polygon(robe_punkte, fill=farbe)
-        
+
         # Falten/Details
-        dunklere_farbe = (max(0, farbe[0] - 30), max(0, farbe[1] - 30), max(0, farbe[2] - 30))
-        hellere_farbe = (min(255, farbe[0] + 30), min(255, farbe[1] + 30), min(255, farbe[2] + 30))
-        
+        dunklere_farbe = (
+            max(0, farbe[0] - 30),
+            max(0, farbe[1] - 30),
+            max(0, farbe[2] - 30),
+        )
+        hellere_farbe = (
+            min(255, farbe[0] + 30),
+            min(255, farbe[1] + 30),
+            min(255, farbe[2] + 30),
+        )
+
         # Mittlere Falte
-        draw.line([(x, y - 10 * scale), (x, y + 25 * scale)], fill=dunklere_farbe, width=1)
-        
+        draw.line(
+            [(x, y - 10 * scale), (x, y + 25 * scale)], fill=dunklere_farbe, width=1
+        )
+
         # Highlight links
-        draw.line([(x - 8 * scale, y - 20 * scale), (x - 10 * scale, y + 10 * scale)], 
-                  fill=hellere_farbe, width=1)
-        
+        draw.line(
+            [(x - 8 * scale, y - 20 * scale), (x - 10 * scale, y + 10 * scale)],
+            fill=hellere_farbe,
+            width=1,
+        )
+
         # Gürtel
         draw.rectangle(
             [x - 12 * scale, y - 8 * scale, x + 12 * scale, y - 3 * scale],
-            fill=(60, 45, 35)
+            fill=(60, 45, 35),
         )
         # Gürtelschnalle
         draw.ellipse(
             [x - 3 * scale, y - 7 * scale, x + 3 * scale, y - 4 * scale],
-            fill=(180, 150, 80)
+            fill=(180, 150, 80),
         )
 
-    def _render_kopf(self, draw: ImageDraw.Draw, x: float, y: float, scale: float,
-                     char_props: Dict, feuer_x: float, feuer_y: float, phase: str):
+    def _render_kopf(
+        self,
+        draw: ImageDraw.Draw,
+        x: float,
+        y: float,
+        scale: float,
+        char_props: Dict,
+        feuer_x: float,
+        feuer_y: float,
+        phase: str,
+    ):
         """Rendert Kopf und Gesicht"""
         kopf_y = y - 45 * scale
-        
+
         # Hautfarbe
         haut_key = f"haut_{char_props['haut_ton']}"
         haut_farbe = FARBEN.get(haut_key, FARBEN["haut_mittel"])
-        
+
         # Kopf (Oval)
         draw.ellipse(
             [x - 11 * scale, kopf_y - 12 * scale, x + 11 * scale, kopf_y + 12 * scale],
             fill=haut_farbe,
         )
-        
+
         # Ohren
-        draw.ellipse([x - 14 * scale, kopf_y - 3 * scale, x - 10 * scale, kopf_y + 5 * scale], 
-                     fill=haut_farbe)
-        draw.ellipse([x + 10 * scale, kopf_y - 3 * scale, x + 14 * scale, kopf_y + 5 * scale], 
-                     fill=haut_farbe)
+        draw.ellipse(
+            [x - 14 * scale, kopf_y - 3 * scale, x - 10 * scale, kopf_y + 5 * scale],
+            fill=haut_farbe,
+        )
+        draw.ellipse(
+            [x + 10 * scale, kopf_y - 3 * scale, x + 14 * scale, kopf_y + 5 * scale],
+            fill=haut_farbe,
+        )
 
         # Augen (schauen zum Feuer)
         feuer_richtung = math.atan2(feuer_y - kopf_y, feuer_x - x)
         auge_offset_x = math.cos(feuer_richtung) * 2 * scale
-        
+
         # Augenweiß
         draw.ellipse(
             [x - 6 * scale, kopf_y - 3 * scale, x - 1 * scale, kopf_y + 2 * scale],
@@ -1081,144 +1221,217 @@ class VillageRenderer:
             [x + 1 * scale, kopf_y - 3 * scale, x + 6 * scale, kopf_y + 2 * scale],
             fill=(255, 255, 255),
         )
-        
+
         # Pupillen
         pupillen_farbe = (40, 35, 30)
         draw.ellipse(
-            [x - 5 * scale + auge_offset_x, kopf_y - 2 * scale,
-             x - 2 * scale + auge_offset_x, kopf_y + 1 * scale],
+            [
+                x - 5 * scale + auge_offset_x,
+                kopf_y - 2 * scale,
+                x - 2 * scale + auge_offset_x,
+                kopf_y + 1 * scale,
+            ],
             fill=pupillen_farbe,
         )
         draw.ellipse(
-            [x + 2 * scale + auge_offset_x, kopf_y - 2 * scale,
-             x + 5 * scale + auge_offset_x, kopf_y + 1 * scale],
+            [
+                x + 2 * scale + auge_offset_x,
+                kopf_y - 2 * scale,
+                x + 5 * scale + auge_offset_x,
+                kopf_y + 1 * scale,
+            ],
             fill=pupillen_farbe,
         )
-        
+
         # Mund (leichtes Lächeln)
         draw.arc(
             [x - 4 * scale, kopf_y + 4 * scale, x + 4 * scale, kopf_y + 9 * scale],
-            0, 180,
+            0,
+            180,
             fill=(150, 80, 80),
-            width=1
+            width=1,
         )
-        
+
         # Nase
         draw.line(
             [(x, kopf_y), (x, kopf_y + 4 * scale)],
             fill=(haut_farbe[0] - 20, haut_farbe[1] - 20, haut_farbe[2] - 20),
-            width=1
+            width=1,
         )
-        
+
         # Wangen-Rouge bei Feuerschein (Nacht)
         if phase == "nacht":
             wangen = Image.new("RGBA", (self.width, self.height), (0, 0, 0, 0))
             wangen_draw = ImageDraw.Draw(wangen)
             wangen_draw.ellipse(
                 [x - 9 * scale, kopf_y + 1 * scale, x - 4 * scale, kopf_y + 5 * scale],
-                fill=(255, 180, 150, 60)
+                fill=(255, 180, 150, 60),
             )
             wangen_draw.ellipse(
                 [x + 4 * scale, kopf_y + 1 * scale, x + 9 * scale, kopf_y + 5 * scale],
-                fill=(255, 180, 150, 60)
+                fill=(255, 180, 150, 60),
             )
 
-    def _render_haare(self, draw: ImageDraw.Draw, x: float, y: float, 
-                      scale: float, char_props: Dict):
+    def _render_haare(
+        self, draw: ImageDraw.Draw, x: float, y: float, scale: float, char_props: Dict
+    ):
         """Rendert Haare basierend auf Charakter-Eigenschaften"""
         kopf_y = y - 45 * scale
         haar_key = f"haare_{char_props['haar_farbe']}"
         haar_farbe = FARBEN.get(haar_key, FARBEN["haare_braun"])
-        haar_dunkel = (max(0, haar_farbe[0] - 20), max(0, haar_farbe[1] - 20), max(0, haar_farbe[2] - 20))
-        
-        stil = char_props['haar_stil']
-        geschlecht = char_props['geschlecht']
-        
-        if geschlecht == 'w':
+        haar_dunkel = (
+            max(0, haar_farbe[0] - 20),
+            max(0, haar_farbe[1] - 20),
+            max(0, haar_farbe[2] - 20),
+        )
+
+        stil = char_props["haar_stil"]
+        geschlecht = char_props["geschlecht"]
+
+        if geschlecht == "w":
             # Lange Haare für weibliche Charaktere
             if stil == 0:
                 # Glattes langes Haar
                 draw.ellipse(
-                    [x - 14 * scale, kopf_y - 14 * scale, x + 14 * scale, kopf_y + 8 * scale],
-                    fill=haar_farbe
+                    [
+                        x - 14 * scale,
+                        kopf_y - 14 * scale,
+                        x + 14 * scale,
+                        kopf_y + 8 * scale,
+                    ],
+                    fill=haar_farbe,
                 )
                 # Strähnen
-                draw.polygon([
-                    (x - 13 * scale, kopf_y + 5 * scale),
-                    (x - 16 * scale, y - 20 * scale),
-                    (x - 10 * scale, y - 20 * scale),
-                ], fill=haar_farbe)
-                draw.polygon([
-                    (x + 13 * scale, kopf_y + 5 * scale),
-                    (x + 16 * scale, y - 20 * scale),
-                    (x + 10 * scale, y - 20 * scale),
-                ], fill=haar_farbe)
+                draw.polygon(
+                    [
+                        (x - 13 * scale, kopf_y + 5 * scale),
+                        (x - 16 * scale, y - 20 * scale),
+                        (x - 10 * scale, y - 20 * scale),
+                    ],
+                    fill=haar_farbe,
+                )
+                draw.polygon(
+                    [
+                        (x + 13 * scale, kopf_y + 5 * scale),
+                        (x + 16 * scale, y - 20 * scale),
+                        (x + 10 * scale, y - 20 * scale),
+                    ],
+                    fill=haar_farbe,
+                )
             elif stil == 1:
                 # Welliges Haar
                 draw.ellipse(
-                    [x - 15 * scale, kopf_y - 15 * scale, x + 15 * scale, kopf_y + 5 * scale],
-                    fill=haar_farbe
+                    [
+                        x - 15 * scale,
+                        kopf_y - 15 * scale,
+                        x + 15 * scale,
+                        kopf_y + 5 * scale,
+                    ],
+                    fill=haar_farbe,
                 )
                 for i in range(-2, 3):
                     draw.ellipse(
-                        [x + (i * 6 - 5) * scale, kopf_y + 3 * scale,
-                         x + (i * 6 + 5) * scale, y - 18 * scale],
-                        fill=haar_farbe
+                        [
+                            x + (i * 6 - 5) * scale,
+                            kopf_y + 3 * scale,
+                            x + (i * 6 + 5) * scale,
+                            y - 18 * scale,
+                        ],
+                        fill=haar_farbe,
                     )
             else:
                 # Hochgesteckt
                 draw.ellipse(
-                    [x - 12 * scale, kopf_y - 18 * scale, x + 12 * scale, kopf_y + 2 * scale],
-                    fill=haar_farbe
+                    [
+                        x - 12 * scale,
+                        kopf_y - 18 * scale,
+                        x + 12 * scale,
+                        kopf_y + 2 * scale,
+                    ],
+                    fill=haar_farbe,
                 )
                 draw.ellipse(
-                    [x - 8 * scale, kopf_y - 22 * scale, x + 8 * scale, kopf_y - 10 * scale],
-                    fill=haar_dunkel
+                    [
+                        x - 8 * scale,
+                        kopf_y - 22 * scale,
+                        x + 8 * scale,
+                        kopf_y - 10 * scale,
+                    ],
+                    fill=haar_dunkel,
                 )
         else:
             # Kurze Haare für männliche Charaktere
             if stil == 0:
                 # Kurz und ordentlich
                 draw.ellipse(
-                    [x - 12 * scale, kopf_y - 14 * scale, x + 12 * scale, kopf_y + 2 * scale],
-                    fill=haar_farbe
+                    [
+                        x - 12 * scale,
+                        kopf_y - 14 * scale,
+                        x + 12 * scale,
+                        kopf_y + 2 * scale,
+                    ],
+                    fill=haar_farbe,
                 )
             elif stil == 1:
                 # Lockig
                 for i in range(-2, 3):
                     ox = i * 5 * scale
                     draw.ellipse(
-                        [x + ox - 5 * scale, kopf_y - 15 * scale,
-                         x + ox + 5 * scale, kopf_y - 5 * scale],
-                        fill=haar_farbe
+                        [
+                            x + ox - 5 * scale,
+                            kopf_y - 15 * scale,
+                            x + ox + 5 * scale,
+                            kopf_y - 5 * scale,
+                        ],
+                        fill=haar_farbe,
                     )
             else:
                 # Seitenscheitel
-                draw.polygon([
-                    (x - 12 * scale, kopf_y - 8 * scale),
-                    (x - 5 * scale, kopf_y - 15 * scale),
-                    (x + 12 * scale, kopf_y - 12 * scale),
-                    (x + 12 * scale, kopf_y + 2 * scale),
-                    (x - 12 * scale, kopf_y + 2 * scale),
-                ], fill=haar_farbe)
+                draw.polygon(
+                    [
+                        (x - 12 * scale, kopf_y - 8 * scale),
+                        (x - 5 * scale, kopf_y - 15 * scale),
+                        (x + 12 * scale, kopf_y - 12 * scale),
+                        (x + 12 * scale, kopf_y + 2 * scale),
+                        (x - 12 * scale, kopf_y + 2 * scale),
+                    ],
+                    fill=haar_farbe,
+                )
 
-    def _render_accessoire(self, img: Image.Image, draw: ImageDraw.Draw, 
-                           x: float, y: float, scale: float, rolle: str):
+    def _render_accessoire(
+        self,
+        img: Image.Image,
+        draw: ImageDraw.Draw,
+        x: float,
+        y: float,
+        scale: float,
+        rolle: str,
+    ):
         """Rendert rollen-spezifische Accessoires"""
         rolle_lower = rolle.lower()
         kopf_y = y - 45 * scale
-        
+
         if rolle_lower in ["seherin", "aurenseherin", "seherlehrling"]:
             # Mystisches drittes Auge / Stirnband
             draw.ellipse(
-                [x - 4 * scale, kopf_y - 15 * scale, x + 4 * scale, kopf_y - 10 * scale],
-                fill=(180, 100, 255)
+                [
+                    x - 4 * scale,
+                    kopf_y - 15 * scale,
+                    x + 4 * scale,
+                    kopf_y - 10 * scale,
+                ],
+                fill=(180, 100, 255),
             )
             draw.ellipse(
-                [x - 2 * scale, kopf_y - 14 * scale, x + 2 * scale, kopf_y - 11 * scale],
-                fill=(255, 255, 255)
+                [
+                    x - 2 * scale,
+                    kopf_y - 14 * scale,
+                    x + 2 * scale,
+                    kopf_y - 11 * scale,
+                ],
+                fill=(255, 255, 255),
             )
-            
+
         elif rolle_lower in ["hexe", "giftmischerin", "kräuterweib", "kraeuterweib"]:
             # Spitzer Hut
             hut_punkte = [
@@ -1229,45 +1442,54 @@ class VillageRenderer:
             draw.polygon(hut_punkte, fill=(40, 35, 50))
             # Hutband
             draw.line(
-                [(x - 14 * scale, kopf_y - 13 * scale), (x + 14 * scale, kopf_y - 13 * scale)],
+                [
+                    (x - 14 * scale, kopf_y - 13 * scale),
+                    (x + 14 * scale, kopf_y - 13 * scale),
+                ],
                 fill=(100, 60, 120),
-                width=int(3 * scale)
+                width=int(3 * scale),
             )
-            
+
         elif rolle_lower in ["werwolf", "urwolf", "weisser_wolf", "wolfsjunge"]:
             # Wolfsohren-Andeutung
-            draw.polygon([
-                (x - 10 * scale, kopf_y - 10 * scale),
-                (x - 6 * scale, kopf_y - 20 * scale),
-                (x - 2 * scale, kopf_y - 10 * scale),
-            ], fill=(80, 60, 50))
-            draw.polygon([
-                (x + 2 * scale, kopf_y - 10 * scale),
-                (x + 6 * scale, kopf_y - 20 * scale),
-                (x + 10 * scale, kopf_y - 10 * scale),
-            ], fill=(80, 60, 50))
-            
+            draw.polygon(
+                [
+                    (x - 10 * scale, kopf_y - 10 * scale),
+                    (x - 6 * scale, kopf_y - 20 * scale),
+                    (x - 2 * scale, kopf_y - 10 * scale),
+                ],
+                fill=(80, 60, 50),
+            )
+            draw.polygon(
+                [
+                    (x + 2 * scale, kopf_y - 10 * scale),
+                    (x + 6 * scale, kopf_y - 20 * scale),
+                    (x + 10 * scale, kopf_y - 10 * scale),
+                ],
+                fill=(80, 60, 50),
+            )
+
         elif rolle_lower in ["heiler", "leibwächter", "leibwaechter", "ergebene_magd"]:
             # Heiligen-Schein / Kreuz
             draw.line(
                 [(x, y - 30 * scale), (x, y - 38 * scale)],
                 fill=(100, 180, 100),
-                width=2
+                width=2,
             )
             draw.line(
                 [(x - 4 * scale, y - 34 * scale), (x + 4 * scale, y - 34 * scale)],
                 fill=(100, 180, 100),
-                width=2
+                width=2,
             )
-            
+
         elif rolle_lower in ["jaeger", "jäger", "buddler", "inquisitor"]:
             # Armbrust/Waffe am Rücken
             draw.line(
                 [(x - 8 * scale, y - 35 * scale), (x + 15 * scale, y + 5 * scale)],
                 fill=(100, 70, 40),
-                width=3
+                width=3,
             )
-            
+
         elif rolle_lower in ["amor", "hure", "prostituierte"]:
             # Herz-Symbol
             acc = Image.new("RGBA", img.size, (0, 0, 0, 0))
@@ -1275,9 +1497,11 @@ class VillageRenderer:
             hx, hy = x, kopf_y - 18 * scale
             acc_draw.ellipse([hx - 5, hy - 3, hx, hy + 2], fill=(255, 100, 120, 220))
             acc_draw.ellipse([hx, hy - 3, hx + 5, hy + 2], fill=(255, 100, 120, 220))
-            acc_draw.polygon([(hx - 5, hy), (hx + 5, hy), (hx, hy + 6)], fill=(255, 100, 120, 220))
+            acc_draw.polygon(
+                [(hx - 5, hy), (hx + 5, hy), (hx, hy + 6)], fill=(255, 100, 120, 220)
+            )
             img.paste(Image.alpha_composite(img, acc))
-            
+
         elif rolle_lower in ["bürgermeister", "buergermeister", "könig", "koenig"]:
             # Krone
             krone_punkte = [
@@ -1291,37 +1515,60 @@ class VillageRenderer:
             ]
             draw.polygon(krone_punkte, fill=(220, 180, 50))
             # Juwelen
-            draw.ellipse([x - 2 * scale, kopf_y - 16 * scale, x + 2 * scale, kopf_y - 13 * scale],
-                        fill=(200, 50, 50))
+            draw.ellipse(
+                [
+                    x - 2 * scale,
+                    kopf_y - 16 * scale,
+                    x + 2 * scale,
+                    kopf_y - 13 * scale,
+                ],
+                fill=(200, 50, 50),
+            )
 
-    def _render_toter_spieler(self, img: Image.Image, draw: ImageDraw.Draw,
-                               x: float, y: float, scale: float, char_props: Dict):
+    def _render_toter_spieler(
+        self,
+        img: Image.Image,
+        draw: ImageDraw.Draw,
+        x: float,
+        y: float,
+        scale: float,
+        char_props: Dict,
+    ):
         """Rendert einen toten Spieler (liegend mit Grabstein)"""
         # Liegende Silhouette
         draw.ellipse(
             [x - 25 * scale, y + 15 * scale, x + 25 * scale, y + 35 * scale],
             fill=FARBEN["tot"],
         )
-        
+
         # Kleiner Grabstein
         stein_farbe = (70, 65, 65)
         draw.rectangle(
             [x - 8 * scale, y - 5 * scale, x + 8 * scale, y + 15 * scale],
-            fill=stein_farbe
+            fill=stein_farbe,
         )
         # Abgerundete Spitze
         draw.ellipse(
             [x - 8 * scale, y - 15 * scale, x + 8 * scale, y + 5 * scale],
-            fill=stein_farbe
+            fill=stein_farbe,
         )
-        
+
         # RIP-Text oder Kreuz
         draw.line([(x, y - 8 * scale), (x, y + 2 * scale)], fill=(90, 85, 85), width=2)
-        draw.line([(x - 4 * scale, y - 4 * scale), (x + 4 * scale, y - 4 * scale)], 
-                  fill=(90, 85, 85), width=2)
+        draw.line(
+            [(x - 4 * scale, y - 4 * scale), (x + 4 * scale, y - 4 * scale)],
+            fill=(90, 85, 85),
+            width=2,
+        )
 
-    def _render_spieler_name(self, draw: ImageDraw.Draw, x: float, y: float,
-                             spieler: SpielerVisual, scale: float):
+    def _render_spieler_name(
+        self,
+        draw: ImageDraw.Draw,
+        x: float,
+        y: float,
+        spieler: SpielerVisual,
+        scale: float,
+    ):
         """Rendert den Spielernamen mit schönem Badge"""
         name_text = spieler.name[:14]  # Maximal 14 Zeichen
         bbox = draw.textbbox((0, 0), name_text, font=self._font)
@@ -1335,7 +1582,7 @@ class VillageRenderer:
 
         # Badge-Hintergrund mit Gradient-Effekt
         badge_farbe = (30, 25, 25, 220) if spieler.ist_am_leben else (50, 45, 45, 180)
-        
+
         # Rolle-basierte Badge-Akzentfarbe
         if spieler.rolle and spieler.ist_am_leben:
             rolle_lower = spieler.rolle.lower()
@@ -1352,12 +1599,12 @@ class VillageRenderer:
             radius=8,
             fill=badge_farbe[:3],
         )
-        
+
         # Akzent-Linie oben
         draw.line(
             [(badge_x + 4, badge_y + 2), (badge_x + badge_width - 4, badge_y + 2)],
             fill=akzent,
-            width=2
+            width=2,
         )
 
         # Name
@@ -1389,8 +1636,12 @@ class VillageRenderer:
                 glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
                 glow_draw = ImageDraw.Draw(glow)
                 glow_draw.ellipse(
-                    [x - (15 + i * 4) * scale, kopf_y - (15 + i * 4) * scale,
-                     x + (15 + i * 4) * scale, kopf_y + (15 + i * 4) * scale],
+                    [
+                        x - (15 + i * 4) * scale,
+                        kopf_y - (15 + i * 4) * scale,
+                        x + (15 + i * 4) * scale,
+                        kopf_y + (15 + i * 4) * scale,
+                    ],
                     fill=(220, 50, 50, alpha),
                 )
                 img.paste(Image.alpha_composite(img, glow))
@@ -1401,7 +1652,7 @@ class VillageRenderer:
             schatten_draw = ImageDraw.Draw(schatten)
             schatten_draw.ellipse(
                 [x - 35 * scale, y - 55 * scale, x + 45 * scale, y + 35 * scale],
-                fill=(0, 0, 0, int(120 * intensitaet))
+                fill=(0, 0, 0, int(120 * intensitaet)),
             )
             img.paste(Image.alpha_composite(img, schatten))
 
@@ -1425,8 +1676,12 @@ class VillageRenderer:
                 glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
                 glow_draw = ImageDraw.Draw(glow)
                 glow_draw.ellipse(
-                    [x - (22 + i * 5) * scale, y - (35 + i * 5) * scale,
-                     x + (22 + i * 5) * scale, y + (25 + i * 5) * scale],
+                    [
+                        x - (22 + i * 5) * scale,
+                        y - (35 + i * 5) * scale,
+                        x + (22 + i * 5) * scale,
+                        y + (25 + i * 5) * scale,
+                    ],
                     fill=(150, 80, 220, alpha),
                 )
                 img.paste(Image.alpha_composite(img, glow))
@@ -1438,12 +1693,16 @@ class VillageRenderer:
                 glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
                 glow_draw = ImageDraw.Draw(glow)
                 glow_draw.ellipse(
-                    [x - (28 + i * 4) * scale, y - (40 + i * 4) * scale,
-                     x + (28 + i * 4) * scale, y + (30 + i * 4) * scale],
+                    [
+                        x - (28 + i * 4) * scale,
+                        y - (40 + i * 4) * scale,
+                        x + (28 + i * 4) * scale,
+                        y + (30 + i * 4) * scale,
+                    ],
                     fill=(240, 120, 50, alpha),
                 )
                 img.paste(Image.alpha_composite(img, glow))
-                
+
         elif hinweis_typ == "unschuldig":
             # Grünes sanftes Leuchten
             for i in range(int(5 * intensitaet), 0, -1):
@@ -1451,8 +1710,12 @@ class VillageRenderer:
                 glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
                 glow_draw = ImageDraw.Draw(glow)
                 glow_draw.ellipse(
-                    [x - (20 + i * 4) * scale, y - (35 + i * 4) * scale,
-                     x + (20 + i * 4) * scale, y + (25 + i * 4) * scale],
+                    [
+                        x - (20 + i * 4) * scale,
+                        y - (35 + i * 4) * scale,
+                        x + (20 + i * 4) * scale,
+                        y + (25 + i * 4) * scale,
+                    ],
                     fill=(80, 200, 80, alpha),
                 )
                 img.paste(Image.alpha_composite(img, glow))
@@ -1497,13 +1760,13 @@ def get_renderer() -> VillageRenderer:
 
 
 def render_village_for_room(
-    raum_id: int, 
+    raum_id: int,
     hinweise: Dict[int, Tuple[str, float]] = None,
-    betrachter_id: int = None
+    betrachter_id: int = None,
 ) -> str:
     """
     Rendert das Dorf für einen Raum und gibt Base64-Bild zurück.
-    
+
     Berücksichtigt Sichtbarkeit:
     - Werwölfe sehen andere Werwölfe
     - Seherin sieht ihre Enthüllungen
@@ -1526,7 +1789,7 @@ def render_village_for_room(
 
     # Hole alle Spieler
     spieler_db = Spieler.query.filter_by(raum_id=raum_id, ist_erzaehler=False).all()
-    
+
     # Finde den Betrachter
     betrachter = None
     betrachter_rolle = None
@@ -1534,25 +1797,31 @@ def render_village_for_room(
     betrachter_ist_werwolf = False
     betrachter_enthuellung = {}
     betrachter_verliebt_mit = set()
-    
+
     if betrachter_id:
         betrachter = Spieler.query.get(betrachter_id)
         if betrachter and betrachter.rolle_objekt:
             betrachter_rolle = betrachter.rolle
             try:
-                betrachter_team = betrachter.rolle_objekt.team.value if betrachter.rolle_objekt.team else None
+                betrachter_team = (
+                    betrachter.rolle_objekt.team.value
+                    if betrachter.rolle_objekt.team
+                    else None
+                )
             except:
                 betrachter_team = None
-            betrachter_ist_werwolf = betrachter_team == Team.WERWOLF.value if betrachter_team else False
-            
+            betrachter_ist_werwolf = (
+                betrachter_team == Team.WERWOLF.value if betrachter_team else False
+            )
+
             # Hole Enthüllungen der Seherin
-            if hasattr(betrachter.rolle_objekt, 'enthuellung'):
+            if hasattr(betrachter.rolle_objekt, "enthuellung"):
                 betrachter_enthuellung = betrachter.rolle_objekt.enthuellung or {}
-            
+
             # Hole verliebte Partner (Amor)
-            if hasattr(betrachter, 'verliebt_mit'):
+            if hasattr(betrachter, "verliebt_mit"):
                 betrachter_verliebt_mit = set(betrachter.verliebt_mit or [])
-    
+
     # Sammle alle Werwolf-IDs für Werwolf-Sicht
     werwolf_ids = set()
     for s in spieler_db:
@@ -1572,7 +1841,7 @@ def render_village_for_room(
             sitzplatz=s.sitzplatz if s.sitzplatz is not None else i,
             ist_am_leben=s.ist_am_leben,
         )
-        
+
         # Sichtbarkeit für Betrachter
         if betrachter_id:
             # Werwölfe sehen andere Werwölfe
@@ -1580,7 +1849,7 @@ def render_village_for_room(
                 visual.sichtbar_als_werwolf = True
                 visual.rolle = "Werwolf"
                 visual.team = "werwolf"
-            
+
             # Seherin sieht ihre Enthüllungen
             if s.id in betrachter_enthuellung:
                 enth = betrachter_enthuellung[s.id]
@@ -1588,11 +1857,11 @@ def render_village_for_room(
                     visual.sichtbar_als_boese = True
                 else:
                     visual.sichtbar_als_dorf = True
-            
+
             # Verliebte sehen sich
             if s.id in betrachter_verliebt_mit:
                 visual.ist_verliebt = True
-        
+
         spieler_visuals.append(visual)
 
     # Bestimme Phase
@@ -1618,36 +1887,75 @@ def generate_test_village() -> str:
     """Generiert ein Test-Bild für Entwicklung mit allen Features"""
     test_spieler = [
         SpielerVisual(
-            id=1, name="Wolfgang", sitzplatz=0, ist_am_leben=True,
-            rolle="Werwolf", team="werwolf", sichtbar_als_werwolf=True
+            id=1,
+            name="Wolfgang",
+            sitzplatz=0,
+            ist_am_leben=True,
+            rolle="Werwolf",
+            team="werwolf",
+            sichtbar_als_werwolf=True,
         ),
         SpielerVisual(
-            id=2, name="Maria", sitzplatz=1, ist_am_leben=True,
-            rolle="Seherin", team="dorf", sichtbar_als_dorf=True
+            id=2,
+            name="Maria",
+            sitzplatz=1,
+            ist_am_leben=True,
+            rolle="Seherin",
+            team="dorf",
+            sichtbar_als_dorf=True,
         ),
         SpielerVisual(
-            id=3, name="Hans", sitzplatz=2, ist_am_leben=False,
-            rolle="Dorfbewohner", team="dorf"
+            id=3,
+            name="Hans",
+            sitzplatz=2,
+            ist_am_leben=False,
+            rolle="Dorfbewohner",
+            team="dorf",
         ),
         SpielerVisual(
-            id=4, name="Greta", sitzplatz=3, ist_am_leben=True,
-            rolle="Hexe", team="dorf", sichtbar_als_boese=True  # Falsche Seherin-Enthüllung
+            id=4,
+            name="Greta",
+            sitzplatz=3,
+            ist_am_leben=True,
+            rolle="Hexe",
+            team="dorf",
+            sichtbar_als_boese=True,  # Falsche Seherin-Enthüllung
         ),
         SpielerVisual(
-            id=5, name="Friedrich", sitzplatz=4, ist_am_leben=True,
-            rolle="Jäger", team="dorf", ist_verliebt=True
+            id=5,
+            name="Friedrich",
+            sitzplatz=4,
+            ist_am_leben=True,
+            rolle="Jäger",
+            team="dorf",
+            ist_verliebt=True,
         ),
         SpielerVisual(
-            id=6, name="Anna", sitzplatz=5, ist_am_leben=True,
-            rolle="Amor", team="dorf", ist_verliebt=True
+            id=6,
+            name="Anna",
+            sitzplatz=5,
+            ist_am_leben=True,
+            rolle="Amor",
+            team="dorf",
+            ist_verliebt=True,
         ),
         SpielerVisual(
-            id=7, name="Klaus", sitzplatz=6, ist_am_leben=True,
-            rolle="Werwolf", team="werwolf", sichtbar_als_werwolf=True
+            id=7,
+            name="Klaus",
+            sitzplatz=6,
+            ist_am_leben=True,
+            rolle="Werwolf",
+            team="werwolf",
+            sichtbar_als_werwolf=True,
         ),
         SpielerVisual(
-            id=8, name="Sophie", sitzplatz=7, ist_am_leben=True,
-            rolle="Heiler", team="dorf", ist_geschuetzt=True
+            id=8,
+            name="Sophie",
+            sitzplatz=7,
+            ist_am_leben=True,
+            rolle="Heiler",
+            team="dorf",
+            ist_geschuetzt=True,
         ),
     ]
 

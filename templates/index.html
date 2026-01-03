@@ -169,18 +169,24 @@
 
         <div class="form-group" id="erzaehler-auswahl">
           <label class="form-label">Wer erzählt?</label>
-          
+
           <!-- Online-Modus: Nur automatisch -->
-          <div id="erzaehler-online" style="display: none;">
-            <div class="alert alert-success" style="margin-bottom: 0;">
-              <i class="fa-solid fa-robot"></i> <strong>Automatischer Erzähler</strong>
-              <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+          <div id="erzaehler-online" style="display: none">
+            <div class="alert alert-success" style="margin-bottom: 0">
+              <i class="fa-solid fa-robot"></i>
+              <strong>Automatischer Erzähler</strong>
+              <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem">
                 Das Spiel wird automatisch moderiert. Jeder kann mitspielen!
               </p>
             </div>
-            <input type="hidden" name="erzaehler_modus" value="auto" id="erzaehler-modus-online" />
+            <input
+              type="hidden"
+              name="erzaehler_modus"
+              value="auto"
+              id="erzaehler-modus-online"
+            />
           </div>
-          
+
           <!-- Gruppen-Modus: Auswahl -->
           <div id="erzaehler-gruppe">
             <div class="form-radio">
@@ -1652,27 +1658,31 @@
           hinweisOption.style.display = isOnline ? "block" : "none";
         if (audioOption)
           audioOption.style.display = isOnline ? "block" : "none";
-          
+
         // Erzähler-Auswahl umschalten
         const erzaehlerOnline = document.getElementById("erzaehler-online");
         const erzaehlerGruppe = document.getElementById("erzaehler-gruppe");
-        
+
         if (erzaehlerOnline && erzaehlerGruppe) {
           if (isOnline) {
             erzaehlerOnline.style.display = "block";
             erzaehlerGruppe.style.display = "none";
             // Deaktiviere Gruppen-Radios damit sie nicht mitgesendet werden
-            erzaehlerGruppe.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+            erzaehlerGruppe
+              .querySelectorAll('input[type="radio"]')
+              .forEach((r) => (r.disabled = true));
           } else {
             erzaehlerOnline.style.display = "none";
             erzaehlerGruppe.style.display = "block";
-            erzaehlerGruppe.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = false);
+            erzaehlerGruppe
+              .querySelectorAll('input[type="radio"]')
+              .forEach((r) => (r.disabled = false));
           }
         }
       });
-      
+
       // Initial trigger
-      modusSelect.dispatchEvent(new Event('change'));
+      modusSelect.dispatchEvent(new Event("change"));
     }
   });
 </script>

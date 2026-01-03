@@ -6,9 +6,11 @@ Ein Echtzeit-Multiplayer Werwolf-Spiel mit WebSocket-Unterstützung.
 # Gevent monkey-patching MUSS vor allen anderen Imports erfolgen!
 # (Gevent ist der moderne Ersatz für das deprecated eventlet)
 from gevent import monkey
+
 monkey.patch_all()
 
 from dotenv import load_dotenv
+
 load_dotenv()  # Load environment variables from .env file
 
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
@@ -295,8 +297,11 @@ def spiel(code):
     seherin_enthuellung = {}
     try:
         from models import SeherinEnthuellung
-        if spieler.rolle and 'Seher' in spieler.rolle:
-            seherin_enthuellung = SeherinEnthuellung.hole_enthuellung(spieler.id, raum.id)
+
+        if spieler.rolle and "Seher" in spieler.rolle:
+            seherin_enthuellung = SeherinEnthuellung.hole_enthuellung(
+                spieler.id, raum.id
+            )
     except Exception:
         pass  # Tabelle existiert vielleicht noch nicht
 
@@ -329,7 +334,9 @@ def spiel(code):
             erzaehler_text = ERZAEHLER_TEXTE[phase_key]
 
     # Bereite enthuellung für Template vor (ziel_id -> 'gut'/'boese')
-    enthuellung = {ziel_id: data['typ'] for ziel_id, data in seherin_enthuellung.items()}
+    enthuellung = {
+        ziel_id: data["typ"] for ziel_id, data in seherin_enthuellung.items()
+    }
 
     return render_template(
         "spiel.html",
@@ -394,28 +401,32 @@ def get_rollen_vorschau(code):
     erzaehler = next((s for s in alle_spieler if s.ist_erzaehler), None)
     spieler_ohne_erzaehler = [s for s in alle_spieler if not s.ist_erzaehler]
     aktuelle_spielerzahl = len(spieler_ohne_erzaehler)
-    
+
     rollen_vorschau_total = max(5, aktuelle_spielerzahl) + (1 if erzaehler else 0)
     rollen_vorschau = game_logic.berechne_rollen(
         rollen_vorschau_total, mit_erzaehler=bool(erzaehler)
     )
-    
+
     # Rollen mit Farben für Frontend
     rollen_mit_farben = []
     for rollen_name, anzahl in rollen_vorschau.items():
         rolle_info = ROLLEN.get(rollen_name, {})
-        rollen_mit_farben.append({
-            "name": rollen_name,
-            "anzahl": anzahl,
-            "farbe": rolle_info.get("farbe", "var(--text-secondary)")
-        })
+        rollen_mit_farben.append(
+            {
+                "name": rollen_name,
+                "anzahl": anzahl,
+                "farbe": rolle_info.get("farbe", "var(--text-secondary)"),
+            }
+        )
 
-    return jsonify({
-        "success": True,
-        "total": rollen_vorschau_total,
-        "hat_erzaehler": bool(erzaehler),
-        "rollen": rollen_mit_farben
-    })
+    return jsonify(
+        {
+            "success": True,
+            "total": rollen_vorschau_total,
+            "hat_erzaehler": bool(erzaehler),
+            "rollen": rollen_mit_farben,
+        }
+    )
 
 
 @app.route("/api/sitzordnung/<code>", methods=["POST"])
@@ -544,19 +555,23 @@ def api_village(code):
     alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
     players = []
     for s in alle_spieler:
-        players.append({
-            "id": s.id,
-            "name": s.name,
-            "ist_am_leben": s.ist_am_leben,
-            "ist_erzaehler": s.ist_erzaehler,
-            "sitzplatz": s.sitzplatz
-        })
+        players.append(
+            {
+                "id": s.id,
+                "name": s.name,
+                "ist_am_leben": s.ist_am_leben,
+                "ist_erzaehler": s.ist_erzaehler,
+                "sitzplatz": s.sitzplatz,
+            }
+        )
 
-    return jsonify({
-        "players": players,
-        "phase": raum.aktuelle_phase,
-        "runde": raum.runde,
-    })
+    return jsonify(
+        {
+            "players": players,
+            "phase": raum.aktuelle_phase,
+            "runde": raum.runde,
+        }
+    )
 
 
 @app.route("/api/village/test")

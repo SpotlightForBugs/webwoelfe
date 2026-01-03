@@ -67,7 +67,8 @@ spiel_name }}{% endblock %} {% block content %}
             >(<span id="spieler-anzahl" data-min="5"
               >{{ alle_spieler|length }}</span
             >
-            insgesamt{% if raum.erzaehler_modus == 'zufall' %}, Erzähler zählt nicht für die Mindestanzahl{% endif %})</span
+            insgesamt{% if raum.erzaehler_modus == 'zufall' %}, Erzähler zählt
+            nicht für die Mindestanzahl{% endif %})</span
           >
         </h2>
         <div
@@ -130,7 +131,10 @@ spiel_name }}{% endblock %} {% block content %}
               {% endif %}
             </div>
             {% if s.ist_erzaehler %}
-            <div class="erzaehler-badge" style="font-size: 0.75rem; color: var(--accent-gold)">
+            <div
+              class="erzaehler-badge"
+              style="font-size: 0.75rem; color: var(--accent-gold)"
+            >
               <i class="fa-solid fa-book-open"></i> Erzähler
             </div>
             {% endif %}
@@ -165,9 +169,8 @@ spiel_name }}{% endblock %} {% block content %}
       </div>
       <p class="text-muted" id="erzaehler-status" style="margin-bottom: 0.5rem">
         {% if erzaehler %} Erzähler: <strong>{{ erzaehler.name }}</strong>
-        {% else %} Noch kein Erzähler gewählt.
-        Das Glücksrad sucht einen zufälligen Freiwilligen. {%
-        endif %}
+        {% else %} Noch kein Erzähler gewählt. Das Glücksrad sucht einen
+        zufälligen Freiwilligen. {% endif %}
       </p>
       <div
         id="erzaehler-wheel"
@@ -238,9 +241,13 @@ spiel_name }}{% endblock %} {% block content %}
         </h2>
       </div>
       <p class="text-muted mb-2" style="font-size: 0.875rem">
-        <i class="fa-solid fa-shuffle"></i> Die Sitzordnung wird bei Online-Spielen automatisch festgelegt.
+        <i class="fa-solid fa-shuffle"></i> Die Sitzordnung wird bei
+        Online-Spielen automatisch festgelegt.
       </p>
-      <div id="village-3d-lobby-container" style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden;">
+      <div
+        id="village-3d-lobby-container"
+        style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden"
+      >
         <!-- 3D Dorf wird hier geladen -->
       </div>
     </div>
@@ -504,13 +511,16 @@ spiel_name }}{% endblock %} {% block content %}
 {% if raum.modus == 'online' %}
 <script src="https://code.playcanvas.com/playcanvas-stable.min.js"></script>
 <script type="module">
-  import Village3DPlayCanvas from '/static/js/village3d-playcanvas.js';
-  
+  import Village3DPlayCanvas from "/static/js/village3d-playcanvas.js";
+
   // Initialisiere 3D-Dorf in der Lobby
-  document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('village-3d-lobby-container');
-    if (container && typeof pc !== 'undefined') {
-      window.village3dLobby = new Village3DPlayCanvas('village-3d-lobby-container', '{{ raum.code }}');
+  document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("village-3d-lobby-container");
+    if (container && typeof pc !== "undefined") {
+      window.village3dLobby = new Village3DPlayCanvas(
+        "village-3d-lobby-container",
+        "{{ raum.code }}",
+      );
     }
   });
 </script>
@@ -671,18 +681,19 @@ spiel_name }}{% endblock %} {% block content %}
       const data = await response.json();
       if (data.success) {
         // Header aktualisieren
-        const header = document.querySelector('#rollen-vorschau-card h3');
+        const header = document.querySelector("#rollen-vorschau-card h3");
         if (header) {
-          const hatErzaehler = data.hat_erzaehler ? ' inkl. Erzähler' : '';
+          const hatErzaehler = data.hat_erzaehler ? " inkl. Erzähler" : "";
           header.innerHTML = `<i class="fa-solid fa-masks-theater"></i> Rollenverteilung (${data.total} Spieler${hatErzaehler})`;
         }
-        
+
         // Rollen-Liste aktualisieren
-        const rollenListe = document.getElementById('rollen-vorschau-liste');
+        const rollenListe = document.getElementById("rollen-vorschau-liste");
         if (rollenListe) {
-          rollenListe.innerHTML = data.rollen.map(rolle => {
-            const anzahlText = rolle.anzahl > 1 ? ` x${rolle.anzahl}` : '';
-            return `
+          rollenListe.innerHTML = data.rollen
+            .map((rolle) => {
+              const anzahlText = rolle.anzahl > 1 ? ` x${rolle.anzahl}` : "";
+              return `
               <span style="
                 background: ${rolle.farbe};
                 color: white;
@@ -693,11 +704,12 @@ spiel_name }}{% endblock %} {% block content %}
                 ${rolle.name}${anzahlText}
               </span>
             `;
-          }).join('');
+            })
+            .join("");
         }
       }
     } catch (e) {
-      console.error('Fehler beim Aktualisieren der Rollenvorschau:', e);
+      console.error("Fehler beim Aktualisieren der Rollenvorschau:", e);
     }
   }
 
@@ -724,22 +736,24 @@ spiel_name }}{% endblock %} {% block content %}
     const btn = document.getElementById("start-btn");
     btn.disabled = true;
     btn.textContent = "Starte...";
-    
+
     // Auto-spin für zufälligen Erzähler wenn kein Erzähler gewählt wurde
     if (erzaehlerModus === "zufall" && !hatErzaehler()) {
       btn.textContent = "Wähle Erzähler...";
       await spinForErzaehler();
       // Kurze Pause um das Ergebnis zu zeigen
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
     }
-    
+
     btn.textContent = "Starte...";
     socket.emit("spiel_starten", {});
   }
-  
+
   function hatErzaehler() {
     // Prüft ob bereits ein Erzähler gewählt wurde
-    const erzaehlerKarte = document.querySelector('.spieler-karte[data-erzaehler="true"]');
+    const erzaehlerKarte = document.querySelector(
+      '.spieler-karte[data-erzaehler="true"]',
+    );
     return erzaehlerKarte !== null;
   }
 
@@ -765,7 +779,9 @@ spiel_name }}{% endblock %} {% block content %}
       const infoContainer = karte.querySelector("div:nth-child(2)");
       // Check for both class-based AND old inline badges
       const bestehendClass = infoContainer?.querySelector(".erzaehler-badge");
-      const bestehendInline = infoContainer?.querySelector("div[style*='accent-gold']");
+      const bestehendInline = infoContainer?.querySelector(
+        "div[style*='accent-gold']",
+      );
       const hatSchonBadge = bestehendClass || bestehendInline;
 
       if (istMatch) {

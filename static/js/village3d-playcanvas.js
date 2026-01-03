@@ -14,7 +14,7 @@
  */
 
 export default class Village3DPlayCanvas {
-  constructor(containerId, raumCode) {
+  constructor(containerId, raumCode, options = {}) {
     this.containerId = containerId;
     this.raumCode = raumCode;
     this.container = document.getElementById(containerId);
@@ -24,6 +24,9 @@ export default class Village3DPlayCanvas {
     this.buildings = [];
     this.isNight = true;
     this.onPlayerClick = null;
+    
+    // Lobby mode - simplified view with no buildings/environment
+    this.isLobbyMode = options.lobbyMode || false;
 
     // Camera settings
     this.defaultCameraAngle = 0;
@@ -132,17 +135,23 @@ export default class Village3DPlayCanvas {
     // Ground
     this.createDetailedGround();
 
-    // Village Buildings
-    this.createVillageBuildings();
+    // Only create full village in game mode, not in lobby
+    if (!this.isLobbyMode) {
+      // Village Buildings
+      this.createVillageBuildings();
 
-    // Campfire (center)
-    this.createCampfire();
+      // Campfire (center)
+      this.createCampfire();
 
-    // Environment (Trees, Stones, Fence)
-    this.createEnvironment();
+      // Environment (Trees, Stones, Fence)
+      this.createEnvironment();
 
-    // Atmospheric effects
-    this.createAtmosphericEffects();
+      // Atmospheric effects
+      this.createAtmosphericEffects();
+    } else {
+      // Lobby mode: minimal scene - just a simple center marker
+      this.createSimpleCampfire();
+    }
   }
 
   createDetailedGround() {
@@ -447,6 +456,38 @@ export default class Village3DPlayCanvas {
         life: Math.random(),
       });
     }
+
+    // Register update for animation
+    this.app.on("update", (dt) => this.update(dt));
+  }
+
+  createSimpleCampfire() {
+    // Simple center marker for lobby - just a small fire light
+    this.fireLight = new pc.Entity("FireLight");
+    this.fireLight.addComponent("light", {
+      type: "point",
+      color: new pc.Color(1, 0.6, 0.2),
+      intensity: 1.5,
+      range: 12,
+      castShadows: false,
+    });
+    this.fireLight.setPosition(0, 1, 0);
+    this.app.root.addChild(this.fireLight);
+
+    // Small center marker sphere
+    const marker = new pc.Entity("CenterMarker");
+    marker.addComponent("model", { type: "sphere" });
+    marker.setLocalScale(0.5, 0.5, 0.5);
+    marker.setPosition(0, 0.5, 0);
+
+    const mat = new pc.StandardMaterial();
+    mat.emissive = new pc.Color(1, 0.6, 0.2);
+    mat.opacity = 0.8;
+    mat.blendType = pc.BLEND_ADDITIVE;
+    mat.update();
+    marker.model.material = mat;
+
+    this.app.root.addChild(marker);
 
     // Register update for animation
     this.app.on("update", (dt) => this.update(dt));

@@ -1,7 +1,17 @@
 """
 Webwoelfe - Das Online Werwolf-Spiel
-Ein Echtzeit-Multiplayer Werwolf-Spiel mit WebSocket-Unterstuetzung
+Ein Echtzeit-Multiplayer Werwolf-Spiel mit WebSocket-Unterstützung.
 """
+
+# Gevent monkey-patching MUSS vor allen anderen Imports erfolgen!
+# (Gevent ist der moderne Ersatz für das deprecated eventlet)
+from gevent import monkey
+
+monkey.patch_all()
+
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
 
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -33,11 +43,11 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///webwoelfe.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Spielname als Konstante
-SPIEL_NAME = "Webwoelfe"
+SPIEL_NAME = "Webwölfe"
 
 # Initialisierung
 db.init_app(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
 
 # Datenbank erstellen
 with app.app_context():
@@ -283,6 +293,18 @@ def spiel(code):
             .all()
         )
 
+    # Seherin-Enthüllungen als SNAPSHOT holen (ändern sich nicht bei Rollenänderung)
+    seherin_enthuellung = {}
+    try:
+        from models import SeherinEnthuellung
+
+        if spieler.rolle and "Seher" in spieler.rolle:
+            seherin_enthuellung = SeherinEnthuellung.hole_enthuellung(
+                spieler.id, raum.id
+            )
+    except Exception:
+        pass  # Tabelle existiert vielleicht noch nicht
+
     # SICHER: Spieler-Daten werden OHNE Rollen (ausser eigene) gesendet
     sichere_spieler = []
     for s in alle_spieler:
@@ -311,6 +333,11 @@ def spiel(code):
         if phase_key in ERZAEHLER_TEXTE:
             erzaehler_text = ERZAEHLER_TEXTE[phase_key]
 
+    # Bereite enthuellung für Template vor (ziel_id -> 'gut'/'boese')
+    enthuellung = {
+        ziel_id: data["typ"] for ziel_id, data in seherin_enthuellung.items()
+    }
+
     return render_template(
         "spiel.html",
         raum=raum,
@@ -322,6 +349,7 @@ def spiel(code):
         logs=logs,
         phasen=PHASEN,
         erzaehler_text=erzaehler_text,
+        enthuellung=enthuellung,  # Seherin-Snapshot
     )
 
 
@@ -362,6 +390,45 @@ def get_sitzordnung(code):
     )
 
 
+@app.route("/api/rollen_vorschau/<code>", methods=["GET"])
+def get_rollen_vorschau(code):
+    """Gibt die aktuelle Rollenvorschau basierend auf Spieleranzahl zurück"""
+    raum = Raum.query.filter_by(code=code).first()
+    if not raum:
+        return jsonify({"success": False, "error": "Raum nicht gefunden"}), 404
+
+    alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
+    erzaehler = next((s for s in alle_spieler if s.ist_erzaehler), None)
+    spieler_ohne_erzaehler = [s for s in alle_spieler if not s.ist_erzaehler]
+    aktuelle_spielerzahl = len(spieler_ohne_erzaehler)
+
+    rollen_vorschau_total = max(5, aktuelle_spielerzahl) + (1 if erzaehler else 0)
+    rollen_vorschau = game_logic.berechne_rollen(
+        rollen_vorschau_total, mit_erzaehler=bool(erzaehler)
+    )
+
+    # Rollen mit Farben für Frontend
+    rollen_mit_farben = []
+    for rollen_name, anzahl in rollen_vorschau.items():
+        rolle_info = ROLLEN.get(rollen_name, {})
+        rollen_mit_farben.append(
+            {
+                "name": rollen_name,
+                "anzahl": anzahl,
+                "farbe": rolle_info.get("farbe", "var(--text-secondary)"),
+            }
+        )
+
+    return jsonify(
+        {
+            "success": True,
+            "total": rollen_vorschau_total,
+            "hat_erzaehler": bool(erzaehler),
+            "rollen": rollen_mit_farben,
+        }
+    )
+
+
 @app.route("/api/sitzordnung/<code>", methods=["POST"])
 def set_sitzordnung(code):
     """Aktualisiert die Sitzordnung"""
@@ -380,7 +447,7 @@ def set_sitzordnung(code):
     ordnung = data.get("ordnung", [])  # Liste von {id, sitzplatz}
 
     for eintrag in ordnung:
-        s = Spieler.query.get(eintrag.get("id"))
+        s = db.session.get(Spieler, eintrag.get("id"))
         if s and s.raum_id == raum.id:
             s.sitzplatz = eintrag.get("sitzplatz")
 
@@ -469,10 +536,10 @@ _aktive_hinweise = {}  # raum_id -> {spieler_id: (hinweis_typ, intensitaet)}
 @app.route("/api/village/<code>")
 def api_village(code):
     """
-    Rendert das Dorf server-seitig und gibt ein Bild zurück.
+    Gibt Dorf-Daten für 3D-Rendering zurück.
 
     SICHERHEIT:
-    - Keine Rollen-Information im Bild
+    - Keine Rollen-Information
     - Nur öffentliche Daten (Namen, lebendig/tot, Sitzplatz)
     - Hinweise werden vom Server kontrolliert
     """
@@ -484,35 +551,27 @@ def api_village(code):
     if not spieler or spieler.raum_id != raum.id:
         return jsonify({"error": "Nicht autorisiert"}), 403
 
-    # Hole aktive Hinweise für diesen Raum
-    hinweise = _aktive_hinweise.get(raum.id, {})
-
-    try:
-        from village_renderer import render_village_for_room
-
-        base64_img = render_village_for_room(raum.id, hinweise)
-
-        return jsonify(
+    # Hole Spieler-Daten für 3D-Dorf
+    alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
+    players = []
+    for s in alle_spieler:
+        players.append(
             {
-                "image": base64_img,
-                "phase": raum.aktuelle_phase,
-                "runde": raum.runde,
+                "id": s.id,
+                "name": s.name,
+                "ist_am_leben": s.ist_am_leben,
+                "ist_erzaehler": s.ist_erzaehler,
+                "sitzplatz": s.sitzplatz,
             }
         )
-    except ImportError:
-        # Pillow nicht installiert - Fallback
-        return (
-            jsonify(
-                {
-                    "error": "Renderer nicht verfügbar",
-                    "phase": raum.aktuelle_phase,
-                    "runde": raum.runde,
-                }
-            ),
-            503,
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+
+    return jsonify(
+        {
+            "players": players,
+            "phase": raum.aktuelle_phase,
+            "runde": raum.runde,
+        }
+    )
 
 
 @app.route("/api/village/test")
@@ -550,7 +609,7 @@ def handle_connect():
     """Spieler verbindet sich"""
     spieler = hole_aktuellen_spieler()
     if spieler and spieler.raum_id:
-        raum = Raum.query.get(spieler.raum_id)
+        raum = db.session.get(Raum, spieler.raum_id)
         if raum:
             join_room(raum.code)
             # SICHER: Nur Name und ID werden geteilt, keine Rolle
@@ -574,7 +633,7 @@ def handle_disconnect():
     """Spieler trennt Verbindung"""
     spieler = hole_aktuellen_spieler()
     if spieler and spieler.raum_id:
-        raum = Raum.query.get(spieler.raum_id)
+        raum = db.session.get(Raum, spieler.raum_id)
         if raum:
             leave_room(raum.code)
             emit(
@@ -614,7 +673,7 @@ def handle_spiel_starten(data):
         emit("fehler", {"nachricht": "Nicht angemeldet"})
         return
 
-    raum = Raum.query.get(spieler.raum_id)
+    raum = db.session.get(Raum, spieler.raum_id)
     if not raum:
         emit("fehler", {"nachricht": "Raum nicht gefunden"})
         return
@@ -650,7 +709,7 @@ def handle_phase_weiter():
         emit("fehler", {"nachricht": "Nur der Erzaehler kann die Phase wechseln"})
         return
 
-    raum = Raum.query.get(spieler.raum_id)
+    raum = db.session.get(Raum, spieler.raum_id)
     if not raum:
         return
 
@@ -708,7 +767,7 @@ def handle_aktion(data):
         emit("fehler", {"nachricht": "Nicht angemeldet"})
         return
 
-    raum = Raum.query.get(spieler.raum_id)
+    raum = db.session.get(Raum, spieler.raum_id)
     if not raum:
         return
 
@@ -739,7 +798,7 @@ def handle_chat(data):
     if not spieler:
         return
 
-    raum = Raum.query.get(spieler.raum_id)
+    raum = db.session.get(Raum, spieler.raum_id)
     if not raum:
         return
 
@@ -788,7 +847,7 @@ def handle_hinweis_senden(data):
     if not spieler or not spieler.raum_id:
         return
 
-    raum = Raum.query.get(spieler.raum_id)
+    raum = db.session.get(Raum, spieler.raum_id)
     if not raum or not raum.spiel_gestartet:
         return
 
@@ -859,7 +918,7 @@ def generiere_zufalls_hinweis(raum_id: int):
     from models import HINWEIS_CHANCEN
     import random
 
-    raum = Raum.query.get(raum_id)
+    raum = db.session.get(Raum, raum_id)
     if not raum:
         return
 
@@ -923,7 +982,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     elif aktion_typ == "seherin_sehen":
         if spieler.rolle != "Seherin" or raum.aktuelle_phase != "seherin_phase":
             return False
-        ziel = Spieler.query.get(ziel_id)
+        ziel = db.session.get(Spieler, ziel_id)
         if ziel:
             # SICHER: Ergebnis nur an anfragenden Spieler senden
             from roles import RoleRegistry
@@ -966,7 +1025,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             )
             return False
         spieler.heiler_geschuetzt = ziel_id
-        ziel = Spieler.query.get(ziel_id)
+        ziel = db.session.get(Spieler, ziel_id)
         if ziel:
             ziel.ist_beschuetzt = True
         game_logic.registriere_aktion(
@@ -1009,8 +1068,8 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         if len(ziel_ids) != 2:
             return False
 
-        spieler1 = Spieler.query.get(ziel_ids[0])
-        spieler2 = Spieler.query.get(ziel_ids[1])
+        spieler1 = db.session.get(Spieler, ziel_ids[0])
+        spieler2 = db.session.get(Spieler, ziel_ids[1])
 
         if spieler1 and spieler2:
             spieler1.verliebt_mit_id = spieler2.id
@@ -1040,13 +1099,26 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         game_logic.registriere_aktion(
             raum.id, raum.runde, "abstimmung", "tag_wahl", spieler.id, ziel_id
         )
+        # Broadcast: Zeige allen Spielern, wer für wen gestimmt hat
+        ziel = db.session.get(Spieler, ziel_id)
+        if ziel:
+            socketio.emit(
+                "stimme_abgegeben",
+                {
+                    "waehler_id": spieler.id,
+                    "waehler_name": spieler.name,
+                    "ziel_id": ziel.id,
+                    "ziel_name": ziel.name,
+                },
+                room=raum.code,
+            )
         return True
 
     elif aktion_typ == "jaeger_schuss":
         if spieler.rolle != "Jäger" or not spieler.jaeger_schuss:
             return False
         spieler.jaeger_schuss = False
-        ziel = Spieler.query.get(ziel_id)
+        ziel = db.session.get(Spieler, ziel_id)
         if ziel:
             game_logic.toete_spieler(ziel, "jaeger")
             # SICHER: Nur Name wird geteilt, Rolle erst nach Tod
@@ -1110,7 +1182,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
 
         # Werwolf-Opfer (wenn nicht geheilt oder geschuetzt)
         if werwolf_opfer and werwolf_opfer.ziel_spieler_id:
-            opfer = Spieler.query.get(werwolf_opfer.ziel_spieler_id)
+            opfer = db.session.get(Spieler, werwolf_opfer.ziel_spieler_id)
             if opfer and opfer.ist_am_leben:
                 # Pruefen ob geheilt
                 if geheilt and geheilt.ziel_spieler_id == opfer.id:
@@ -1130,7 +1202,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
 
         # Hexen-Gift-Opfer
         if vergiftet and vergiftet.ziel_spieler_id:
-            opfer = Spieler.query.get(vergiftet.ziel_spieler_id)
+            opfer = db.session.get(Spieler, vergiftet.ziel_spieler_id)
             if opfer and opfer.ist_am_leben:
                 game_logic.toete_spieler(opfer, "hexe")
                 tote.append(
@@ -1170,7 +1242,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
                     room=raum.code,
                 )
             else:
-                opfer = Spieler.query.get(ergebnis["opfer_id"])
+                opfer = db.session.get(Spieler, ergebnis["opfer_id"])
                 if opfer:
                     tod_ergebnis = game_logic.toete_spieler(opfer, "abstimmung")
                     socketio.emit(
@@ -1235,4 +1307,5 @@ def server_fehler(e):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8888"))
-    socketio.run(app, debug=True, host="0.0.0.0", port=port)
+    # use_reloader=False verhindert gevent fork-Fehler
+    socketio.run(app, debug=True, host="0.0.0.0", port=port, use_reloader=False)

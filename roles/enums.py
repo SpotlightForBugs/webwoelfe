@@ -1,11 +1,13 @@
 """
 Enums für das Rollensystem.
 """
+
 from enum import Enum, auto
 
 
 class Team(Enum):
     """Teams im Spiel."""
+
     DORF = "dorf"
     WERWOLF = "werwolf"
     SOLO = "solo"
@@ -13,13 +15,14 @@ class Team(Enum):
     VAMPIR = "vampir"
     ZOMBIE = "zombie"
     NEUTRAL = "neutral"
-    
+
     def __str__(self) -> str:
         return self.value
 
 
 class Kategorie(Enum):
     """Kategorien fuer UI-Gruppierung."""
+
     GRUNDROLLEN = "grundrollen"
     DORFBEWOHNER = "dorfbewohner"
     WERWOLF = "werwolf"
@@ -31,13 +34,14 @@ class Kategorie(Enum):
     BOESE = "boese"
     SOLO = "solo"
     SONSTIGE = "sonstige"
-    
+
     def __str__(self) -> str:
         return self.value
 
 
 class Erweiterung(Enum):
     """Erweiterungspakete fuer Rollen."""
+
     BASISSPIEL = "basisspiel"
     NEUMOND = "neumond"
     GEMEINDE = "gemeinde"
@@ -51,6 +55,7 @@ class Erweiterung(Enum):
 
 class Phase(Enum):
     """Spielphasen."""
+
     LOBBY = "lobby"
     NACHT_START = "nacht_start"
     AMOR_PHASE = "amor_phase"
@@ -66,40 +71,41 @@ class Phase(Enum):
     HINRICHTUNG = "hinrichtung"
     JAEGER_PHASE = "jaeger_phase"
     SPIEL_ENDE = "spiel_ende"
-    
+
     def __str__(self) -> str:
         return self.value
 
 
 class TriggerTyp(Enum):
     """Typen von Events die Rollen-Aktionen ausloesen."""
+
     # Spielstart
     SPIEL_START = auto()
-    
+
     # Nacht-Phasen
     NACHT_START = auto()
     NACHT_AKTION = auto()
     NACHT_ENDE = auto()
-    
+
     # Tag-Phasen
     TAG_START = auto()
     DISKUSSION_START = auto()
     ABSTIMMUNG_START = auto()
     ABSTIMMUNG_ENDE = auto()
-    
+
     # Spieler-Events
     SPIELER_STIRBT = auto()
     SPIELER_GEHEILT = auto()
     SPIELER_GESCHUETZT = auto()
     SPIELER_GEWAEHLT = auto()
     SPIELER_ANGEGRIFFEN = auto()
-    
+
     # Spezielle Trigger
     VORBILD_STIRBT = auto()
     VERLIEBTER_STIRBT = auto()
     LETZTE_WORTE = auto()
     AUFERSTEHUNG = auto()
-    
+
     # Spiel-Ende
     SPIEL_ENDE = auto()
     GEWINNER_ERMITTELT = auto()
@@ -107,6 +113,7 @@ class TriggerTyp(Enum):
 
 class AktionsTyp(Enum):
     """Typen von Aktionen die Spieler ausführen können."""
+
     SEHEN = "sehen"
     TOETEN = "toeten"
     HEILEN = "heilen"
@@ -123,11 +130,15 @@ class AktionsTyp(Enum):
     SCHIESSEN = "schiessen"
     OPFERN = "opfern"
     HINWEIS_SENDEN = "hinweis_senden"
+    MANIPULIEREN = "manipulieren"
+    BLOCKIEREN = "blockieren"
+    BESUCHEN = "besuchen"
     KEINE = "keine"
 
 
 class SichtTyp(Enum):
     """Was die Seherin sieht."""
+
     WERWOLF = "werwolf"
     DORF = "dorf"
     NEUTRAL = "neutral"

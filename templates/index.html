@@ -167,26 +167,48 @@
           </small>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="erzaehler-auswahl">
           <label class="form-label">Wer erzählt?</label>
-          <div class="form-radio">
-            <label class="form-checkbox" style="margin-bottom: 0.35rem">
-              <input
-                type="radio"
-                name="erzaehler_modus"
-                value="selbst"
-                checked
-              />
-              <span>Ich erzähle selbst (klassisch, kein Glücksrad)</span>
-            </label>
-            <label class="form-checkbox">
-              <input type="radio" name="erzaehler_modus" value="zufall" />
-              <span>Zufälliger Erzähler in der Lobby per Glücksrad</span>
-            </label>
+
+          <!-- Online-Modus: Nur automatisch -->
+          <div id="erzaehler-online" style="display: none">
+            <div class="alert alert-success" style="margin-bottom: 0">
+              <i class="fa-solid fa-robot"></i>
+              <strong>Automatischer Erzähler</strong>
+              <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem">
+                Das Spiel wird automatisch moderiert. Jeder kann mitspielen!
+              </p>
+            </div>
+            <input
+              type="hidden"
+              name="erzaehler_modus"
+              value="auto"
+              id="erzaehler-modus-online"
+            />
           </div>
-          <small class="form-hint"
-            >Die Zufallsauswahl startet erst, wenn ihr bereit seid.</small
-          >
+
+          <!-- Gruppen-Modus: Auswahl -->
+          <div id="erzaehler-gruppe">
+            <div class="form-radio">
+              <label class="form-checkbox" style="margin-bottom: 0.35rem">
+                <input
+                  type="radio"
+                  name="erzaehler_modus"
+                  value="selbst"
+                  checked
+                />
+                <span>Ich selbst</span>
+              </label>
+              <label class="form-checkbox" style="margin-bottom: 0.35rem">
+                <input type="radio" name="erzaehler_modus" value="zufall" />
+                <span>Zufällig (wird in der Lobby ausgewählt)</span>
+              </label>
+              <label class="form-checkbox">
+                <input type="radio" name="erzaehler_modus" value="auto" />
+                <span>Automatisch (Computer moderiert)</span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div class="alert alert-info" role="status" style="margin-bottom: 1rem">
@@ -1636,7 +1658,31 @@
           hinweisOption.style.display = isOnline ? "block" : "none";
         if (audioOption)
           audioOption.style.display = isOnline ? "block" : "none";
+
+        // Erzähler-Auswahl umschalten
+        const erzaehlerOnline = document.getElementById("erzaehler-online");
+        const erzaehlerGruppe = document.getElementById("erzaehler-gruppe");
+
+        if (erzaehlerOnline && erzaehlerGruppe) {
+          if (isOnline) {
+            erzaehlerOnline.style.display = "block";
+            erzaehlerGruppe.style.display = "none";
+            // Deaktiviere Gruppen-Radios damit sie nicht mitgesendet werden
+            erzaehlerGruppe
+              .querySelectorAll('input[type="radio"]')
+              .forEach((r) => (r.disabled = true));
+          } else {
+            erzaehlerOnline.style.display = "none";
+            erzaehlerGruppe.style.display = "block";
+            erzaehlerGruppe
+              .querySelectorAll('input[type="radio"]')
+              .forEach((r) => (r.disabled = false));
+          }
+        }
       });
+
+      // Initial trigger
+      modusSelect.dispatchEvent(new Event("change"));
     }
   });
 </script>

@@ -1,1107 +1,1507 @@
-{% extends 'struktur.html' %}
-
-{% block title %}{{ raum.name }} - Runde {{ raum.runde }} | {{ spiel_name }}{% endblock %}
-
-{% block head %}
+{% extends 'struktur.html' %} {% block title %}{{ raum.name }} - Runde {{
+raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 <style>
+  .game-container {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 900px) {
     .game-container {
-        display: grid;
-        grid-template-columns: 1fr 300px;
-        gap: 1.5rem;
-        max-width: 1200px;
-        margin: 0 auto;
+      grid-template-columns: 1fr;
     }
-    
-    @media (max-width: 900px) {
-        .game-container {
-            grid-template-columns: 1fr;
-        }
+  }
+
+  .phase-banner {
+    background: linear-gradient(
+      135deg,
+      var(--bg-card) 0%,
+      var(--bg-secondary) 100%
+    );
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .phase-name {
+    font-size: 1.5rem;
+    color: var(--accent-gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .rolle-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  .rolle-werwolf {
+    background: var(--accent-red);
+    color: white;
+  }
+  .rolle-dorf {
+    background: var(--accent-blue);
+    color: white;
+  }
+  .rolle-hexe {
+    background: var(--accent-green);
+    color: white;
+  }
+  .rolle-seherin {
+    background: #7b68ee;
+    color: white;
+  }
+  .rolle-jäger {
+    background: #b8860b;
+    color: white;
+  }
+  .rolle-amor {
+    background: #ff69b4;
+    color: white;
+  }
+  .rolle-erzähler {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+  }
+
+  .spieler-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .spieler-card {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .spieler-card:hover:not(.tot):not(.disabled) {
+    border-color: var(--accent-gold);
+    transform: translateY(-4px);
+  }
+
+  .spieler-card.selected {
+    border-color: var(--accent-red);
+    box-shadow: 0 0 20px var(--accent-red-glow);
+  }
+
+  .spieler-card.tot {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .spieler-card.tot::after {
+    content: "💀";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--accent-red);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  }
+
+  .spieler-avatar {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #3a5a8a 100%);
+    border-radius: 50%;
+    margin: 0 auto 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    position: relative;
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+  }
+
+  .spieler-avatar .avatar-initial {
+    z-index: 1;
+  }
+
+  .spieler-avatar .rolle-icon {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    padding: 3px;
+    z-index: 2;
+  }
+
+  .spieler-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .spieler-label {
+    font-size: 0.75rem;
+    opacity: 0.7;
+  }
+
+  .spieler-label.selbst {
+    color: var(--accent-gold);
+  }
+
+  .spieler-label.erzaehler {
+    color: var(--accent-gold);
+  }
+
+  .spieler-rolle-tag {
+    font-size: 0.65rem;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 0.5rem;
+  }
+
+  .verliebt-herz {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 1rem;
+    animation: heartbeat 1.5s ease-in-out infinite;
+  }
+
+  @keyframes heartbeat {
+    0%,
+    100% {
+      transform: scale(1);
     }
-    
-    .phase-banner {
-        background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
-        margin-bottom: 1.5rem;
+    50% {
+      transform: scale(1.2);
     }
-    
-    .phase-name {
-        font-size: 1.5rem;
-        color: var(--accent-gold);
-        margin-bottom: 0.5rem;
-    }
-    
-    .rolle-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-weight: 600;
-    }
-    
-    .rolle-werwolf { background: var(--accent-red); color: white; }
-    .rolle-dorf { background: var(--accent-blue); color: white; }
-    .rolle-hexe { background: var(--accent-green); color: white; }
-    .rolle-seherin { background: #7b68ee; color: white; }
-    .rolle-jäger { background: #b8860b; color: white; }
-    .rolle-amor { background: #ff69b4; color: white; }
-    .rolle-erzähler { background: var(--accent-gold); color: var(--bg-primary); }
-    
-    .spieler-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 1rem;
-    }
-    
-    .spieler-card {
-        background: var(--bg-primary);
-        border: 2px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-    
-    .spieler-card:hover:not(.tot):not(.disabled) {
-        border-color: var(--accent-gold);
-        transform: translateY(-4px);
-    }
-    
-    .spieler-card.selected {
-        border-color: var(--accent-red);
-        box-shadow: 0 0 20px var(--accent-red-glow);
-    }
-    
-    .spieler-card.tot {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-    
-    .spieler-card.tot::after {
-        content: 'TOT';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-15deg);
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--accent-red);
-    }
-    
-    .spieler-avatar {
-        width: 60px;
-        height: 60px;
-        background: var(--accent-blue);
-        border-radius: 50%;
-        margin: 0 auto 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: white;
-    }
-    
-    .spieler-card.werwolf .spieler-avatar {
-        background: var(--accent-red);
-    }
-    
-    .action-panel {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-top: 1.5rem;
-    }
-    
-    /* ============================================================
+  }
+
+  /* Werwolf-Sicht - Andere Werwölfe sehen sich */
+  .spieler-card.werwolf-team-sichtbar {
+    border-color: var(--accent-red);
+    box-shadow: 0 0 15px rgba(149, 7, 6, 0.5);
+  }
+
+  .spieler-card.werwolf-team-sichtbar .spieler-avatar {
+    background: linear-gradient(135deg, #8a2020 0%, #4a0505 100%);
+    border-color: var(--accent-red);
+  }
+
+  /* Seherin hat als böse enthüllt */
+  .spieler-card.seherin-enthuellt-werwolf {
+    border-color: #cc4444;
+    box-shadow: 0 0 20px rgba(200, 50, 50, 0.6);
+  }
+
+  .spieler-card.seherin-enthuellt-werwolf .spieler-avatar {
+    background: linear-gradient(135deg, #993333 0%, #662222 100%);
+    border-color: #cc4444;
+  }
+
+  /* Seherin hat als gut enthüllt */
+  .spieler-card.seherin-enthuellt-dorf {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 15px rgba(45, 134, 89, 0.4);
+  }
+
+  .spieler-card.seherin-enthuellt-dorf .spieler-avatar {
+    background: linear-gradient(135deg, #2d8659 0%, #1a5035 100%);
+    border-color: var(--accent-green);
+  }
+
+  /* Verliebt (Amor) */
+  .spieler-card.verliebt-partner {
+    border-color: #ff69b4;
+    box-shadow: 0 0 15px rgba(255, 105, 180, 0.4);
+  }
+
+  .spieler-card.verliebt-partner .spieler-avatar {
+    border-color: #ff69b4;
+  }
+
+  /* Eigene Karte */
+  .spieler-card.ist-ich {
+    border-color: var(--accent-gold);
+    background: linear-gradient(
+      135deg,
+      var(--bg-primary) 0%,
+      rgba(212, 165, 116, 0.1) 100%
+    );
+  }
+
+  .spieler-card.ist-ich .spieler-avatar {
+    border-color: var(--accent-gold);
+  }
+
+  /* Alt: .werwolf Klasse für Kompatibilität */
+  .spieler-card.werwolf .spieler-avatar {
+    background: var(--accent-red);
+  }
+
+  .action-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  /* ============================================================
        Custom Audio Player Styling - Narrator Voice
        ============================================================ */
-    .narrator-audio-player {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
-        border: 1px solid var(--accent-gold);
-        border-radius: 50px;
-        padding: 10px 16px;
-        max-width: 320px;
-        margin: 0 auto;
-        box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
-    }
-    
-    .audio-play-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        border: none;
-        background: linear-gradient(135deg, var(--accent-gold) 0%, #c9a035 100%);
-        color: var(--bg-primary);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        transition: all 0.3s ease;
-        flex-shrink: 0;
-    }
-    
-    .audio-play-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
-    }
-    
-    .audio-play-btn:active {
-        transform: scale(0.95);
-    }
-    
-    .audio-play-btn.playing {
-        animation: pulse-glow 1.5s ease-in-out infinite;
-    }
-    
-    @keyframes pulse-glow {
-        0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
-        50% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.8); }
-    }
-    
-    .audio-progress-container {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        min-width: 0;
-    }
-    
-    .audio-progress-bar {
-        width: 100%;
-        height: 6px;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 3px;
-        overflow: hidden;
-        cursor: pointer;
-        position: relative;
-    }
-    
-    .audio-progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--accent-gold) 0%, #f0d78c 100%);
-        border-radius: 3px;
-        width: 0%;
-        transition: width 0.1s linear;
-        position: relative;
-    }
-    
-    .audio-progress-fill::after {
-        content: '';
-        position: absolute;
-        right: -4px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 12px;
-        height: 12px;
-        background: var(--accent-gold);
-        border-radius: 50%;
-        box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
-        opacity: 0;
-        transition: opacity 0.2s;
-    }
-    
-    .audio-progress-bar:hover .audio-progress-fill::after {
-        opacity: 1;
-    }
-    
-    .audio-time {
-        display: flex;
-        justify-content: space-between;
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.6);
-        font-family: monospace;
-    }
-    
-    .audio-volume-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        border: none;
-        background: transparent;
-        color: var(--accent-gold);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        transition: all 0.2s ease;
-        flex-shrink: 0;
-    }
-    
-    .audio-volume-btn:hover {
-        background: rgba(212, 175, 55, 0.15);
-    }
-    
-    .audio-waveform {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        height: 20px;
-        margin-right: 8px;
-    }
-    
-    .audio-waveform-bar {
-        width: 3px;
-        background: var(--accent-gold);
-        border-radius: 2px;
-        animation: waveform 0.8s ease-in-out infinite;
-        opacity: 0.3;
-    }
-    
-    .audio-waveform-bar.active {
-        opacity: 1;
-    }
-    
-    .audio-waveform-bar:nth-child(1) { height: 8px; animation-delay: 0s; }
-    .audio-waveform-bar:nth-child(2) { height: 16px; animation-delay: 0.1s; }
-    .audio-waveform-bar:nth-child(3) { height: 12px; animation-delay: 0.2s; }
-    .audio-waveform-bar:nth-child(4) { height: 20px; animation-delay: 0.3s; }
-    .audio-waveform-bar:nth-child(5) { height: 10px; animation-delay: 0.4s; }
-    
-    @keyframes waveform {
-        0%, 100% { transform: scaleY(0.5); }
-        50% { transform: scaleY(1); }
-    }
-    
-    .narrator-label {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        color: var(--accent-gold);
-        margin-bottom: 8px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    .narrator-label i {
-        font-size: 14px;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .sidebar-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1rem;
-    }
-    
-    .log-list {
-        max-height: 200px;
-        overflow-y: auto;
-        font-size: 0.875rem;
-    }
-    
-    .log-entry {
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .log-entry:last-child {
-        border-bottom: none;
-    }
-    
-    .log-time {
-        color: var(--text-secondary);
-        font-size: 0.75rem;
-    }
-    
-    .chat-input {
-        display: flex;
-        gap: 0.5rem;
-        margin-top: 1rem;
-    }
-    
-    .chat-messages {
-        max-height: 150px;
-        overflow-y: auto;
-        margin-bottom: 0.5rem;
-    }
-    
-    .chat-msg {
-        padding: 0.5rem;
-        background: var(--bg-primary);
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-    }
-    
-    .chat-msg.tot {
-        opacity: 0.6;
-        font-style: italic;
-    }
-    
-    .nacht-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 20, 0.8);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-    
-    .nacht-overlay.aktiv {
-        display: flex;
-    }
-    
-    .nacht-content {
-        text-align: center;
-        color: white;
-    }
-    
-    .nacht-content h2 {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-    }
-    
-    .mond-icon {
-        font-size: 5rem;
-        margin-bottom: 1rem;
-    }
-    
-    /* Erzähler-Panel */
-    .erzaehler-panel {
-        background: linear-gradient(135deg, var(--bg-card) 0%, rgba(212, 165, 116, 0.1) 100%);
-        border: 2px solid var(--accent-gold);
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-top: 1.5rem;
-    }
-    
-    .erzaehler-text {
-        background: var(--bg-primary);
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 1rem 0;
-        border-left: 4px solid var(--accent-gold);
-        font-style: italic;
-    }
-    
-    .erzaehler-anweisung {
-        background: rgba(196, 30, 58, 0.1);
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 1rem 0;
-        border-left: 4px solid var(--accent-red);
-        font-size: 0.9rem;
-    }
-</style>
-{% endblock %}
+  .narrator-audio-player {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.4) 0%,
+      rgba(0, 0, 0, 0.2) 100%
+    );
+    border: 1px solid var(--accent-gold);
+    border-radius: 50px;
+    padding: 10px 16px;
+    max-width: 320px;
+    margin: 0 auto;
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+  }
 
-{% block content %}
+  .audio-play-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--accent-gold) 0%, #c9a035 100%);
+    color: var(--bg-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .audio-play-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+  }
+
+  .audio-play-btn:active {
+    transform: scale(0.95);
+  }
+
+  .audio-play-btn.playing {
+    animation: pulse-glow 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.8);
+    }
+  }
+
+  .audio-progress-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .audio-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .audio-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-gold) 0%, #f0d78c 100%);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.1s linear;
+    position: relative;
+  }
+
+  .audio-progress-fill::after {
+    content: "";
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    background: var(--accent-gold);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .audio-progress-bar:hover .audio-progress-fill::after {
+    opacity: 1;
+  }
+
+  .audio-time {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: monospace;
+  }
+
+  .audio-volume-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--accent-gold);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .audio-volume-btn:hover {
+    background: rgba(212, 175, 55, 0.15);
+  }
+
+  .audio-waveform {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 20px;
+    margin-right: 8px;
+  }
+
+  .audio-waveform-bar {
+    width: 3px;
+    background: var(--accent-gold);
+    border-radius: 2px;
+    animation: waveform 0.8s ease-in-out infinite;
+    opacity: 0.3;
+  }
+
+  .audio-waveform-bar.active {
+    opacity: 1;
+  }
+
+  .audio-waveform-bar:nth-child(1) {
+    height: 8px;
+    animation-delay: 0s;
+  }
+  .audio-waveform-bar:nth-child(2) {
+    height: 16px;
+    animation-delay: 0.1s;
+  }
+  .audio-waveform-bar:nth-child(3) {
+    height: 12px;
+    animation-delay: 0.2s;
+  }
+  .audio-waveform-bar:nth-child(4) {
+    height: 20px;
+    animation-delay: 0.3s;
+  }
+  .audio-waveform-bar:nth-child(5) {
+    height: 10px;
+    animation-delay: 0.4s;
+  }
+
+  @keyframes waveform {
+    0%,
+    100% {
+      transform: scaleY(0.5);
+    }
+    50% {
+      transform: scaleY(1);
+    }
+  }
+
+  .narrator-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--accent-gold);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .narrator-label i {
+    font-size: 14px;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .sidebar-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+  }
+
+  .log-list {
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.875rem;
+  }
+
+  .log-entry {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .log-entry:last-child {
+    border-bottom: none;
+  }
+
+  .log-time {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .chat-input {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .chat-messages {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 0.5rem;
+  }
+
+  .chat-msg {
+    padding: 0.5rem;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+  }
+
+  .chat-msg.tot {
+    opacity: 0.6;
+    font-style: italic;
+  }
+
+  .nacht-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 20, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .nacht-overlay.aktiv {
+    display: flex;
+  }
+
+  .nacht-content {
+    text-align: center;
+    color: white;
+  }
+
+  .nacht-content h2 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .mond-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Erzähler-Panel */
+  .erzaehler-panel {
+    background: linear-gradient(
+      135deg,
+      var(--bg-card) 0%,
+      rgba(212, 165, 116, 0.1) 100%
+    );
+    border: 2px solid var(--accent-gold);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .erzaehler-text {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid var(--accent-gold);
+    font-style: italic;
+  }
+
+  .erzaehler-anweisung {
+    background: rgba(196, 30, 58, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid var(--accent-red);
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %} {% block content %}
 <div class="container">
-    <div class="game-container">
-        <!-- Hauptbereich -->
-        <div class="main-area">
-            <!-- Phasen-Banner -->
-            <div class="phase-banner fade-in">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                        <div class="phase-name" id="phase-name">
-                            <i class="fa-solid fa-{{ 'moon' if 'nacht' in raum.aktuelle_phase else 'sun' }}"></i>
-                            {{ raum.aktuelle_phase|replace('_', ' ')|title }}
-                        </div>
-                        <div class="text-muted">Runde {{ raum.runde }}</div>
-                    </div>
-                    <div>
-                        <span class="rolle-badge rolle-{{ spieler.rolle|lower if spieler.rolle else 'dorf' }}">
-                            {{ spieler.rolle or 'Warte...' }}
-                        </span>
-                    </div>
-                </div>
+  <div class="game-container">
+    <!-- Hauptbereich -->
+    <div class="main-area">
+      <!-- Phasen-Banner -->
+      <div class="phase-banner fade-in">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+          "
+        >
+          <div>
+            <div class="phase-name" id="phase-name">
+              <i
+                class="fa-solid fa-{{ 'moon' if 'nacht' in raum.aktuelle_phase else 'sun' }}"
+              ></i>
+              {{ raum.aktuelle_phase|replace('_', ' ')|title }}
             </div>
-            
-            <!-- Rollenbeschreibung -->
-            {% if rolle_info %}
-            <div class="card mb-3 fade-in delay-1">
-                <h4 style="color: {{ rolle_info.farbe }}; margin-bottom: 0.5rem;">
-                    <i class="{{ rolle_info.icon }}"></i> {{ spieler.rolle }}
-                </h4>
-                <p>{{ rolle_info.beschreibung }}</p>
-            </div>
-            {% endif %}
-            
-            <!-- Status Nachricht -->
-            <div id="status-nachricht" class="alert alert-info mb-3" style="display: none;"></div>
-            
-            <!-- Spielerauswahl -->
-            <div class="card fade-in delay-2">
-                <h3 class="mb-2"><i class="fa-solid fa-users"></i> Spieler</h3>
-                <div class="spieler-grid" id="spieler-grid">
-                    {% for s in alle_spieler %}
-                    <div class="spieler-card {{ 'tot' if not s.ist_am_leben else '' }} {{ 'werwolf' if spieler.rolle == 'Werwolf' and s.rolle == 'Werwolf' and s.id != spieler.id else '' }} {{ 'erzaehler-card' if s.ist_erzaehler else '' }}"
-                         data-id="{{ s.id }}"
-                         data-name="{{ s.name }}"
-                         data-ist-erzaehler="{{ s.ist_erzaehler|lower }}"
-                         onclick="selectSpieler({{ s.id }})">
-                        <div class="spieler-avatar">{{ s.name[0]|upper }}</div>
-                        <div style="font-weight: 600;">{{ s.name }}</div>
-                        {% if s.id == spieler.id %}
-                        <div class="text-muted" style="font-size: 0.75rem;">(Du)</div>
-                        {% endif %}
-                        {% if s.ist_erzaehler %}
-                        <div class="text-muted" style="font-size: 0.75rem;">(Erzaehler)</div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            
-            <!-- Aktions-Panel -->
-            <div class="action-panel fade-in delay-3" id="action-panel">
-                <div class="action-buttons" id="action-buttons">
-                    <!-- Werden dynamisch basierend auf Phase/Rolle gefüllt -->
-                </div>
-            </div>
-            
-            <!-- Erzähler Controls (Gruppen-Modus) -->
-            {% if spieler.ist_erzaehler %}
-            <div class="erzaehler-panel">
-                <h3 style="color: var(--accent-gold);">
-                    <i class="fa-solid fa-book-open"></i> Erzähler-Steuerung
-                </h3>
-                
-                <!-- Erzählertext für aktuelle Phase -->
-                <div id="erzaehler-text-container">
-                    {% if erzaehler_text %}
-                    <div class="erzaehler-text">
-                        <strong>Vorlesen:</strong><br>
-                        "{{ erzaehler_text.text }}"
-                    </div>
-                    {% if erzaehler_text.anweisung %}
-                    <div class="erzaehler-anweisung">
-                        <i class="fa-solid fa-info-circle"></i> <strong>Anweisung:</strong><br>
-                        {{ erzaehler_text.anweisung }}
-                    </div>
-                    {% endif %}
-                    {% endif %}
-                </div>
-                
-                <div class="action-buttons mt-2">
-                    <button class="btn btn-primary" onclick="naechstePhase()">
-                        <i class="fa-solid fa-forward"></i> Nächste Phase
-                    </button>
-                </div>
-            </div>
-            {% endif %}
+            <div class="text-muted">Runde {{ raum.runde }}</div>
+          </div>
+          <div>
+            <span
+              class="rolle-badge rolle-{{ spieler.rolle|lower if spieler.rolle else 'dorf' }}"
+            >
+              {{ spieler.rolle or 'Warte...' }}
+            </span>
+          </div>
         </div>
-        
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <!-- Dein Status -->
-            <div class="sidebar-card">
-                <h4 class="mb-2"><i class="fa-solid fa-user"></i> Dein Status</h4>
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div class="spieler-avatar" style="width: 50px; height: 50px; font-size: 1.25rem;">
-                        {{ spieler.name[0]|upper }}
-                    </div>
-                    <div>
-                        <div style="font-weight: 600;">{{ spieler.name }}</div>
-                        <div class="text-muted">{{ spieler.rolle }}</div>
-                        <div style="color: {{ 'var(--accent-green)' if spieler.ist_am_leben else 'var(--accent-red)' }};">
-                            {{ 'Lebendig' if spieler.ist_am_leben else 'Tot' }}
-                        </div>
-                    </div>
-                </div>
-                
-                {% if spieler.rolle == 'Hexe' %}
-                <div class="mt-2" style="font-size: 0.875rem;">
-                    <div><i class="fa-solid fa-flask"></i> Heiltrank: {{ 'Vorhanden' if spieler.hexe_heiltrank else 'Verbraucht' }}</div>
-                    <div><i class="fa-solid fa-skull-crossbones"></i> Gifttrank: {{ 'Vorhanden' if spieler.hexe_gifttrank else 'Verbraucht' }}</div>
-                </div>
-                {% endif %}
-                
-                {% if spieler.rolle == 'Jäger' %}
-                <div class="mt-2" style="font-size: 0.875rem;">
-                    <div><i class="fa-solid fa-crosshairs"></i> Schuss: {{ 'Bereit' if spieler.jaeger_schuss else 'Abgefeuert' }}</div>
-                </div>
-                {% endif %}
-            </div>
-            
-            <!-- Spielverlauf -->
-            <div class="sidebar-card">
-                <h4 class="mb-2"><i class="fa-solid fa-scroll"></i> Verlauf</h4>
-                <div class="log-list" id="log-list">
-                    {% for log in logs %}
-                    <div class="log-entry">
-                        <div class="log-time">{{ log.zeitpunkt.strftime('%H:%M') }}</div>
-                        <div>{{ log.nachricht }}</div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            
-            <!-- Chat -->
-            <div class="sidebar-card">
-                <h4 class="mb-2"><i class="fa-solid fa-comments"></i> Chat</h4>
-                <div class="chat-messages" id="chat-messages"></div>
-                <div class="chat-input">
-                    <input type="text" class="form-input" id="chat-input" 
-                           placeholder="Nachricht..." maxlength="500">
-                    <button class="btn btn-ghost" onclick="sendChat()">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
+      </div>
+
+      <!-- 3D Dorf Ansicht - Haupt-Interaktionsfläche -->
+      <div
+        id="village-3d-container"
+        class="card mb-3 fade-in delay-1"
+        style="
+          height: 450px;
+          overflow: hidden;
+          padding: 0;
+          border-radius: 12px;
+          position: relative;
+        "
+      >
+        <div id="village-3d" style="width: 100%; height: 100%"></div>
+        <div
+          id="village-3d-controls"
+          style="
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            display: flex;
+            gap: 5px;
+            z-index: 10;
+          "
+        >
+          <button
+            class="btn btn-sm"
+            style="background: rgba(0, 0, 0, 0.6); color: white; border: none"
+            onclick="window.village3d?.resetCamera?.()"
+            title="Reset Kamera"
+          >
+            <i class="fa-solid fa-home"></i>
+          </button>
         </div>
+        <div
+          id="village-3d-hint"
+          style="
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            z-index: 10;
+          "
+        >
+          <i class="fa-solid fa-hand-pointer"></i> Klicke auf einen Spieler zum
+          Auswählen • Ziehen zum Drehen • Pinch zum Zoomen
+        </div>
+      </div>
+
+      <!-- Rollenbeschreibung -->
+      {% if rolle_info %}
+      <div class="card mb-3 fade-in delay-1">
+        <h4 style="color: {{ rolle_info.farbe }}; margin-bottom: 0.5rem;">
+          <i class="{{ rolle_info.icon }}"></i> {{ spieler.rolle }}
+        </h4>
+        <p>{{ rolle_info.beschreibung }}</p>
+      </div>
+      {% endif %}
+
+      <!-- Status Nachricht -->
+      <div
+        id="status-nachricht"
+        class="alert alert-info mb-3"
+        style="display: none"
+      ></div>
+
+      <!-- Spielerauswahl -->
+      <div class="card fade-in delay-2">
+        <h3 class="mb-2"><i class="fa-solid fa-users"></i> Spieler</h3>
+        <div class="spieler-grid" id="spieler-grid">
+          {% for s in alle_spieler %} {% set ist_werwolf_team = spieler.rolle
+          and 'Werwolf' in spieler.rolle and s.rolle and 'Werwolf' in s.rolle
+          and s.id != spieler.id %} {% set ist_seherin_enthuellung = enthuellung
+          and s.id in enthuellung %} {% set ist_verliebt_partner =
+          spieler.verliebt_mit_id and s.id == spieler.verliebt_mit_id %}
+          <div
+            class="spieler-card 
+                         {{ 'tot' if not s.ist_am_leben else '' }}
+                         {{ 'werwolf-team-sichtbar' if ist_werwolf_team and s.ist_am_leben else '' }}
+                         {{ 'seherin-enthuellt-werwolf' if ist_seherin_enthuellung and enthuellung[s.id] == 'boese' else '' }}
+                         {{ 'seherin-enthuellt-dorf' if ist_seherin_enthuellung and enthuellung[s.id] == 'gut' else '' }}
+                         {{ 'verliebt-partner' if ist_verliebt_partner else '' }}
+                         {{ 'ist-ich' if s.id == spieler.id else '' }}
+                         {{ 'erzaehler-card' if s.ist_erzaehler else '' }}
+                         rolle-{{ s.rolle|lower|replace(' ', '-')|default('unbekannt') if spieler.ist_erzaehler or s.id == spieler.id else 'unbekannt' }}"
+            data-id="{{ s.id }}"
+            data-name="{{ s.name }}"
+            data-rolle="{{ s.rolle if spieler.ist_erzaehler or s.id == spieler.id or ist_werwolf_team else '' }}"
+            data-ist-erzaehler="{{ s.ist_erzaehler|lower }}"
+            onclick="selectSpieler({{ s.id }})"
+          >
+            <div class="spieler-avatar">
+              <span class="avatar-initial">{{ s.name[0]|upper }}</span>
+              {% if ist_werwolf_team %}
+              <span class="rolle-icon werwolf-icon">🐺</span>
+              {% elif ist_seherin_enthuellung and enthuellung[s.id] == 'boese'
+              %}
+              <span class="rolle-icon boese-icon">⚠️</span>
+              {% elif ist_seherin_enthuellung and enthuellung[s.id] == 'gut' %}
+              <span class="rolle-icon gut-icon">✓</span>
+              {% endif %}
+            </div>
+            <div class="spieler-name">{{ s.name }}</div>
+            {% if s.id == spieler.id %}
+            <div class="spieler-label selbst">(Du)</div>
+            {% endif %} {% if s.ist_erzaehler %}
+            <div class="spieler-label erzaehler">(Erzähler)</div>
+            {% endif %} {% if ist_verliebt_partner %}
+            <div class="verliebt-herz">💕</div>
+            {% endif %} {% if spieler.ist_erzaehler and s.rolle %}
+            <div class="spieler-rolle-tag">{{ s.rolle }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Aktions-Panel -->
+      <div class="action-panel fade-in delay-3" id="action-panel">
+        <div class="action-buttons" id="action-buttons">
+          <!-- Werden dynamisch basierend auf Phase/Rolle gefüllt -->
+        </div>
+      </div>
+
+      <!-- Erzähler Controls (Gruppen-Modus) -->
+      {% if spieler.ist_erzaehler %}
+      <div class="erzaehler-panel">
+        <h3 style="color: var(--accent-gold)">
+          <i class="fa-solid fa-book-open"></i> Erzähler-Steuerung
+        </h3>
+
+        <!-- Erzählertext für aktuelle Phase -->
+        <div id="erzaehler-text-container">
+          {% if erzaehler_text %}
+          <div class="erzaehler-text">
+            <strong>Vorlesen:</strong><br />
+            "{{ erzaehler_text.text }}"
+          </div>
+          {% if erzaehler_text.anweisung %}
+          <div class="erzaehler-anweisung">
+            <i class="fa-solid fa-info-circle"></i> <strong>Anweisung:</strong
+            ><br />
+            {{ erzaehler_text.anweisung }}
+          </div>
+          {% endif %} {% endif %}
+        </div>
+
+        <div class="action-buttons mt-2">
+          <button class="btn btn-primary" onclick="naechstePhase()">
+            <i class="fa-solid fa-forward"></i> Nächste Phase
+          </button>
+        </div>
+      </div>
+      {% endif %}
     </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Dein Status -->
+      <div class="sidebar-card">
+        <h4 class="mb-2"><i class="fa-solid fa-user"></i> Dein Status</h4>
+        <div style="display: flex; align-items: center; gap: 0.75rem">
+          <div
+            class="spieler-avatar"
+            style="width: 50px; height: 50px; font-size: 1.25rem"
+          >
+            {{ spieler.name[0]|upper }}
+          </div>
+          <div>
+            <div style="font-weight: 600">{{ spieler.name }}</div>
+            <div class="text-muted">{{ spieler.rolle }}</div>
+            <div
+              style="color: {{ 'var(--accent-green)' if spieler.ist_am_leben else 'var(--accent-red)' }};"
+            >
+              {{ 'Lebendig' if spieler.ist_am_leben else 'Tot' }}
+            </div>
+          </div>
+        </div>
+
+        {% if spieler.rolle == 'Hexe' %}
+        <div class="mt-2" style="font-size: 0.875rem">
+          <div>
+            <i class="fa-solid fa-flask"></i> Heiltrank: {{ 'Vorhanden' if
+            spieler.hexe_heiltrank else 'Verbraucht' }}
+          </div>
+          <div>
+            <i class="fa-solid fa-skull-crossbones"></i> Gifttrank: {{
+            'Vorhanden' if spieler.hexe_gifttrank else 'Verbraucht' }}
+          </div>
+        </div>
+        {% endif %} {% if spieler.rolle == 'Jäger' %}
+        <div class="mt-2" style="font-size: 0.875rem">
+          <div>
+            <i class="fa-solid fa-crosshairs"></i> Schuss: {{ 'Bereit' if
+            spieler.jaeger_schuss else 'Abgefeuert' }}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Spielverlauf -->
+      <div class="sidebar-card">
+        <h4 class="mb-2"><i class="fa-solid fa-scroll"></i> Verlauf</h4>
+        <div class="log-list" id="log-list">
+          {% for log in logs %}
+          <div class="log-entry">
+            <div class="log-time">{{ log.zeitpunkt.strftime('%H:%M') }}</div>
+            <div>{{ log.nachricht }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="sidebar-card">
+        <h4 class="mb-2"><i class="fa-solid fa-comments"></i> Chat</h4>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input">
+          <input
+            type="text"
+            class="form-input"
+            id="chat-input"
+            placeholder="Nachricht..."
+            maxlength="500"
+          />
+          <button class="btn btn-ghost" onclick="sendChat()">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Nacht Overlay -->
 <div class="nacht-overlay" id="nacht-overlay">
-    <div class="nacht-content">
-        <div class="mond-icon"><i class="fa-solid fa-moon"></i></div>
-        <h2>Die Nacht bricht an...</h2>
-        <p>Schlafe friedlich, Dorfbewohner.</p>
-    </div>
+  <div class="nacht-content">
+    <div class="mond-icon"><i class="fa-solid fa-moon"></i></div>
+    <h2>Die Nacht bricht an...</h2>
+    <p>Schlafe friedlich, Dorfbewohner.</p>
+  </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script>
-    const socket = io();
-    const raumCode = "{{ raum.code }}";
-    const spielerId = {{ spieler.id }};
-    const spielerRolle = "{{ spieler.rolle }}";
-    const spielerTeam = "{{ rolle_info.team if rolle_info else '' }}";
-    const istErzaehler = {{ 'true' if spieler.ist_erzaehler else 'false' }};
-    const spielModus = "{{ raum.modus }}";
-    
-    let selectedSpielerId = null;
-    let selectedSpielerIds = [];  // Für Amor (2 Spieler)
-    let aktuellePhase = "{{ raum.aktuelle_phase }}";
-    
-    // Raum beitreten
-    socket.emit('raum_beitreten', { code: raumCode });
-    
-    // Event Handler
-    socket.on('phase_geaendert', function(data) {
-        aktuellePhase = data.phase;
-        updatePhase(data.phase, data.runde);
-        if (data.erzaehler_text) {
-            updateErzaehlerText(data.erzaehler_text);
-        }
-    });
-    
-    socket.on('rolle_erhalten', function(data) {
-        showAlert('Deine Rolle: ' + data.rolle, 'success');
-    });
-    
-    socket.on('spieler_gestorben', function(data) {
-        const card = document.querySelector(`[data-id="${data.spieler_id}"]`);
-        if (card) {
-            card.classList.add('tot');
-        }
-        addLog(`${data.spieler_name} ist gestorben (${data.todesart})`);
-    });
-    
-    socket.on('seherin_ergebnis', function(data) {
-        if (data.rolle) {
-            const teamText = data.ist_werwolf ? 'Werwolf-Team' : 'Dorf-Team';
-            showAlert(`${data.ziel_name} ist ${data.rolle} (${teamText})`, data.ist_werwolf ? 'error' : 'success');
-        } else {
-            const typ = data.ist_werwolf ? 'Werwolf!' : 'kein Werwolf';
-            showAlert(`${data.ziel_name} ist ${typ}`, data.ist_werwolf ? 'error' : 'success');
-        }
-    });
-    
-    socket.on('hexe_info', function(data) {
-        if (spielerRolle === 'Hexe') {
-            showAlert(`Das Werwolf-Opfer ist: ${data.opfer_name}`, 'info');
-        }
-    });
-    
-    socket.on('nacht_ergebnis', function(data) {
-        if (data.tote && data.tote.length > 0) {
-            const totenListe = data.tote.map(t => `${t.name} (${t.todesart || 'unbekannt'})`).join(', ');
-            console.log('[NACHT_ERGEBNIS]', totenListe);
-            // Show prominent death announcement
-            showAlert(`TOTE DER NACHT: ${totenListe}`, 'error');
-            addLog(`Tote der Nacht: ${totenListe}`);
-        } else {
-            showAlert('Niemand ist in der Nacht gestorben.', 'success');
-            addLog('Niemand ist in der Nacht gestorben.');
-        }
-    });
-    
-    socket.on('abstimmung_ergebnis', function(data) {
-        if (data.kein_opfer) {
-            showAlert(data.nachricht, 'info');
-        } else {
-            showAlert(`${data.opfer_name} wurde hingerichtet! (Rolle: ${data.opfer_rolle})`, 'error');
-        }
-    });
-    
-    socket.on('spiel_ende', function(data) {
-        showSpielEndeModal(data);
-    });
-    
-    socket.on('navigiere', function(data) {
-        window.location.href = data.ziel;
-    });
-    
-    socket.on('aktion_bestaetigt', function(data) {
-        showAlert('Aktion ausgeführt!', 'success');
-        clearSelection();
-    });
-    
-    socket.on('fehler', function(data) {
-        showAlert(data.nachricht, 'error');
-    });
-    
-    socket.on('chat', function(data) {
-        addChatMessage(data.von, data.nachricht, data.ist_tot);
-    });
-    
-    socket.on('phase_bereit', function(data) {
-        if (istErzaehler) {
-            showAlert('Alle Spieler haben gewählt. Bereit für nächste Phase.', 'info');
-        }
-    });
-    
-    // Online-Modus: Automatische Erzählung
-    socket.on('erzaehlung', function(data) {
-        if (spielModus === 'online') {
-            showErzaehlung(data.text, data.audio);
-        }
-    });
-    
-    // Funktionen
-    function selectSpieler(id) {
-        const card = document.querySelector(`[data-id="${id}"]`);
-        if (card.classList.contains('tot') || card.classList.contains('disabled')) return;
-        
-        // During voting (abstimmung), cannot select the narrator or yourself
-        if (aktuellePhase === 'abstimmung') {
-            const isNarrator = card.getAttribute('data-ist-erzaehler') === 'true';
-            const isSelf = id === spielerId;
-            if (isNarrator || isSelf) return;
-        }
-        
-        // Amor kann 2 Spieler wählen
-        if (spielerRolle === 'Amor' && aktuellePhase === 'armor_phase') {
-            if (selectedSpielerIds.includes(id)) {
-                selectedSpielerIds = selectedSpielerIds.filter(i => i !== id);
-                card.classList.remove('selected');
-            } else if (selectedSpielerIds.length < 2) {
-                selectedSpielerIds.push(id);
-                card.classList.add('selected');
-            }
-            updateActionButtons();
-            return;
-        }
-        
-        // Normale Auswahl (1 Spieler)
-        document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        selectedSpielerId = id;
-        updateActionButtons();
-    }
-    
-    function clearSelection() {
-        document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('selected'));
-        selectedSpielerId = null;
-        selectedSpielerIds = [];
-        updateActionButtons();
-    }
-    
-    function updatePhase(phase, runde) {
-        const phaseEl = document.getElementById('phase-name');
-        const isNacht = phase.includes('nacht') || phase.includes('phase');
-        phaseEl.innerHTML = `<i class="fa-solid fa-${isNacht && !phase.includes('tag') ? 'moon' : 'sun'}"></i> ${phase.replace(/_/g, ' ')}`;
-        
-        // Nacht-Overlay
-        const overlay = document.getElementById('nacht-overlay');
-        const nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'armor_phase'];
-        
-        if (nachtPhasen.includes(phase) && !sollteAktivSein()) {
-            overlay.classList.add('aktiv');
-        } else {
-            overlay.classList.remove('aktiv');
-        }
-        
-        updateActionButtons();
-    }
-    
-    function updateErzaehlerText(data) {
-        const container = document.getElementById('erzaehler-text-container');
-        if (!container) return;
-        
-        let html = '';
-        if (data && data.text) {
-            html = `
-                <div class="erzaehler-text">
-                    <strong>Vorlesen:</strong><br>
-                    "${data.text}"
-                </div>
-            `;
-            if (data.anweisung) {
-                html += `
-                    <div class="erzaehler-anweisung">
-                        <i class="fa-solid fa-info-circle"></i> <strong>Anweisung:</strong><br>
-                        ${data.anweisung}
-                    </div>
-                `;
-            }
-        }
-        container.innerHTML = html;
-    }
-    
-    function showErzaehlung(text, audioPath) {
-        // Zeigt die automatische Erzählung im Online-Modus mit Custom Audio Player
-        const notification = document.createElement('div');
-        notification.className = 'erzaehlung-overlay';
-        notification.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30, 30, 35, 0.98) 100%);
-            border: 2px solid var(--accent-gold);
-            border-radius: 16px;
-            padding: 2rem 2.5rem;
-            max-width: 480px;
-            width: 90%;
-            text-align: center;
-            z-index: 1500;
-            animation: fadeIn 0.4s ease-out;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(212, 175, 55, 0.15);
-        `;
-        
-        const playerId = 'narrator-audio-' + Date.now();
-        
-        let html = `
-            <div style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 1rem; text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);">
-                <i class="fa-solid fa-book-open"></i>
-            </div>
-            <p style="font-size: 1.15rem; font-style: italic; color: rgba(255,255,255,0.9); line-height: 1.6; margin-bottom: 1.5rem;">"${text}"</p>
-        `;
-        
-        // Custom Audio Player wenn Audio verfügbar
-        if (audioPath) {
-            console.log('[showErzaehlung] Audio path:', audioPath);
-            html += `
-                <div class="narrator-label">
-                    <i class="fa-solid fa-microphone"></i>
-                    <span>Erzähler spricht...</span>
-                </div>
-                <div class="narrator-audio-player" id="${playerId}-container">
-                    <button class="audio-play-btn" id="${playerId}-btn" onclick="toggleNarratorAudio('${playerId}')">
-                        <i class="fa-solid fa-pause" id="${playerId}-icon"></i>
-                    </button>
-                    <div class="audio-waveform" id="${playerId}-waveform">
-                        <div class="audio-waveform-bar active"></div>
-                        <div class="audio-waveform-bar active"></div>
-                        <div class="audio-waveform-bar active"></div>
-                        <div class="audio-waveform-bar active"></div>
-                        <div class="audio-waveform-bar active"></div>
-                    </div>
-                    <div class="audio-progress-container">
-                        <div class="audio-progress-bar" id="${playerId}-progress" onclick="seekNarratorAudio(event, '${playerId}')">
-                            <div class="audio-progress-fill" id="${playerId}-fill"></div>
-                        </div>
-                        <div class="audio-time">
-                            <span id="${playerId}-current">0:00</span>
-                            <span id="${playerId}-duration">0:00</span>
-                        </div>
-                    </div>
-                    <button class="audio-volume-btn" onclick="toggleNarratorMute('${playerId}')">
-                        <i class="fa-solid fa-volume-high" id="${playerId}-vol-icon"></i>
-                    </button>
-                </div>
-                <audio id="${playerId}" autoplay playsinline style="display: none;">
-                    <source src="${audioPath}" type="audio/mpeg">
-                </audio>
-            `;
-        } else {
-            console.log('[showErzaehlung] No audio path provided');
-        }
-        
-        notification.innerHTML = html;
-        document.body.appendChild(notification);
-        
-        // Setup custom audio player controls
-        if (audioPath) {
-            const audio = document.getElementById(playerId);
-            const progressFill = document.getElementById(playerId + '-fill');
-            const currentTime = document.getElementById(playerId + '-current');
-            const durationEl = document.getElementById(playerId + '-duration');
-            const playBtn = document.getElementById(playerId + '-btn');
-            const playIcon = document.getElementById(playerId + '-icon');
-            const waveform = document.getElementById(playerId + '-waveform');
-            
-            // Update progress bar
-            audio.addEventListener('timeupdate', () => {
-                if (audio.duration) {
-                    const percent = (audio.currentTime / audio.duration) * 100;
-                    progressFill.style.width = percent + '%';
-                    currentTime.textContent = formatAudioTime(audio.currentTime);
-                }
-            });
-            
-            // Set duration when loaded
-            audio.addEventListener('loadedmetadata', () => {
-                durationEl.textContent = formatAudioTime(audio.duration);
-            });
-            
-            // Handle play/pause states
-            audio.addEventListener('play', () => {
-                playIcon.className = 'fa-solid fa-pause';
-                playBtn.classList.add('playing');
-                waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.add('active'));
-            });
-            
-            audio.addEventListener('pause', () => {
-                playIcon.className = 'fa-solid fa-play';
-                playBtn.classList.remove('playing');
-                waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
-            });
-            
-            audio.addEventListener('ended', () => {
-                playIcon.className = 'fa-solid fa-redo';
-                playBtn.classList.remove('playing');
-                waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
-            });
-        }
-        
-        // Duration: longer if audio is playing, or wait for audio to end
-        const baseDuration = audioPath ? 12000 : 4000;
-        let removeTimeout = setTimeout(() => {
-            notification.style.animation = 'fadeOut 0.4s ease-out';
-            setTimeout(() => notification.remove(), 400);
-        }, baseDuration);
-        
-        // If audio, wait for it to finish instead
-        if (audioPath) {
-            const audio = document.getElementById(playerId);
-            audio.addEventListener('ended', () => {
-                clearTimeout(removeTimeout);
-                setTimeout(() => {
-                    notification.style.animation = 'fadeOut 0.4s ease-out';
-                    setTimeout(() => notification.remove(), 400);
-                }, 1500);
-            });
-        }
-    }
-    
-    // Audio player helper functions
-    function formatAudioTime(seconds) {
-        if (!seconds || isNaN(seconds)) return '0:00';
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return mins + ':' + (secs < 10 ? '0' : '') + secs;
-    }
-    
-    function toggleNarratorAudio(playerId) {
-        const audio = document.getElementById(playerId);
-        const icon = document.getElementById(playerId + '-icon');
-        if (audio.paused) {
-            audio.play();
-        } else {
-            audio.pause();
-        }
-    }
-    
-    function seekNarratorAudio(event, playerId) {
-        const audio = document.getElementById(playerId);
-        const progressBar = document.getElementById(playerId + '-progress');
-        const rect = progressBar.getBoundingClientRect();
-        const percent = (event.clientX - rect.left) / rect.width;
-        audio.currentTime = percent * audio.duration;
-    }
-    
-    function toggleNarratorMute(playerId) {
-        const audio = document.getElementById(playerId);
-        const icon = document.getElementById(playerId + '-vol-icon');
-        audio.muted = !audio.muted;
-        icon.className = audio.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
-    }
-    
-    function sollteAktivSein() {
-        if (istErzaehler) return true;
-        
-        const phasenRollen = {
-            'seherin_phase': 'Seherin',
-            'werwolf_phase': 'Werwolf',
-            'hexe_phase': 'Hexe',
-            'armor_phase': 'Amor'
-        };
-        
-        if (aktuellePhase === 'werwolf_phase') {
-            return spielerTeam === 'werwolf';
-        }
-        return phasenRollen[aktuellePhase] === spielerRolle;
-    }
-    
-    function updateActionButtons() {
-        const container = document.getElementById('action-buttons');
-        let html = '';
-        
-        console.log(`[updateActionButtons] Phase: ${aktuellePhase}, Selected: ${selectedSpielerId}, Role: ${spielerRolle}`);
-        
-        if (!selectedSpielerId && selectedSpielerIds.length === 0) {
-            html = '<p class="text-muted">Wähle einen Spieler</p>';
-        } else {
-            // Phasen-spezifische Aktionen
-            if (aktuellePhase === 'werwolf_phase' && spielerTeam === 'werwolf') {
-                html = `<button class="btn btn-primary" onclick="aktion('werwolf_wahl')"><i class="fa-solid fa-paw"></i> Töten</button>`;
-            } else if (aktuellePhase === 'seherin_phase' && spielerRolle === 'Seherin') {
-                html = `<button class="btn btn-primary" onclick="aktion('seherin_sehen')"><i class="fa-solid fa-eye"></i> Identität sehen</button>`;
-            } else if (aktuellePhase === 'hexe_phase' && spielerRolle === 'Hexe') {
-                html = `
-                    <button class="btn btn-success" onclick="aktion('hexe_heilen')"><i class="fa-solid fa-heart-pulse"></i> Heilen</button>
-                    <button class="btn btn-primary" onclick="aktion('hexe_toeten')"><i class="fa-solid fa-skull-crossbones"></i> Vergiften</button>
-                    <button class="btn btn-ghost" onclick="aktion('hexe_nichts')">Nichts tun</button>
-                `;
-            } else if (aktuellePhase === 'armor_phase' && spielerRolle === 'Amor') {
-                if (selectedSpielerIds.length === 2) {
-                    html = `<button class="btn btn-primary" onclick="aktion('armor_verlieben')"><i class="fa-solid fa-heart"></i> Verlieben</button>`;
-                } else {
-                    html = `<p class="text-muted">Wähle 2 Spieler (${selectedSpielerIds.length}/2)</p>`;
-                }
-            } else if (aktuellePhase === 'abstimmung') {
-                html = `
-                    <button class="btn btn-primary" onclick="aktion('tag_wahl')"><i class="fa-solid fa-check"></i> Abstimmen</button>
-                    <button class="btn btn-ghost" onclick="aktion('tag_wahl', null)">Enthalten</button>
-                `;
-            } else if (aktuellePhase === 'jaeger_phase' && spielerRolle === 'Jäger') {
-                html = `<button class="btn btn-primary" onclick="aktion('jaeger_schuss')"><i class="fa-solid fa-crosshairs"></i> Erschießen</button>`;
-            }
-        }
-        
-        container.innerHTML = html;
-    }
-    
-    function aktion(typ, zielOverride) {
-        const ziel = zielOverride !== undefined ? zielOverride : 
-                     (typ === 'armor_verlieben' ? selectedSpielerIds : selectedSpielerId);
-        
-        socket.emit('aktion_ausfuehren', {
-            aktion: typ,
-            ziel_id: ziel
-        });
-    }
-    
-    function naechstePhase() {
-        socket.emit('phase_weiter');
-    }
-    
-    function showAlert(text, type) {
-        const el = document.getElementById('status-nachricht');
-        el.textContent = text;
-        el.className = `alert alert-${type} mb-3`;
-        el.style.display = 'block';
-        
-        setTimeout(() => {
-            el.style.display = 'none';
-        }, 5000);
-    }
-    
-    function addLog(text) {
-        const container = document.getElementById('log-list');
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        entry.innerHTML = `
-            <div class="log-time">${new Date().toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})}</div>
-            <div>${text}</div>
-        `;
-        container.prepend(entry);
-    }
-    
-    function addChatMessage(von, text, istTot) {
-        const container = document.getElementById('chat-messages');
-        const msg = document.createElement('div');
-        msg.className = 'chat-msg' + (istTot ? ' tot' : '');
-        msg.innerHTML = `<strong>${von}:</strong> ${text}`;
-        container.appendChild(msg);
-        container.scrollTop = container.scrollHeight;
-    }
-    
-    function sendChat() {
-        const input = document.getElementById('chat-input');
-        const text = input.value.trim();
-        if (text) {
-            socket.emit('chat_nachricht', { nachricht: text });
-            input.value = '';
-        }
-    }
-    
-    document.getElementById('chat-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendChat();
-    });
-    
-    function showSpielEndeModal(data) {
-        const overlay = document.createElement('div');
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        `;
-        
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            background: var(--bg-card);
-            padding: 3rem;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 500px;
-            border: 2px solid var(--accent-gold);
-        `;
-        
-        modal.innerHTML = `
-            <h1 style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 1rem;">
-                <i class="fa-solid fa-trophy"></i> Spielende
-            </h1>
-            <p style="font-size: 1.5rem; margin-bottom: 2rem;">${data.nachricht}</p>
-            <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">Gewinner: ${data.gewinner || 'Unbekannt'}</h3>
-            <button class="btn btn-primary btn-lg" onclick="socket.emit('navigiere_zur_lobby')">
-                <i class="fa-solid fa-home"></i> Zurück zur Startseite
-            </button>
-        `;
-        
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-    }
-    
-    socket.on('gehe_zu_startseite', function() {
-        window.location.href = '/';
-    });
-    
-    // Initial
-    updateActionButtons();
-    updatePhase(aktuellePhase, {{ raum.runde }});
+  const socket = io();
+  const raumCode = "{{ raum.code }}";
+  const spielerId = {{ spieler.id }};
+  const spielerRolle = "{{ spieler.rolle }}";
+  const spielerTeam = "{{ rolle_info.team if rolle_info else '' }}";
+  const istErzaehler = {{ 'true' if spieler.ist_erzaehler else 'false' }};
+  const spielModus = "{{ raum.modus }}";
+
+  let selectedSpielerId = null;
+  let selectedSpielerIds = [];  // Für Amor (2 Spieler)
+  let aktuellePhase = "{{ raum.aktuelle_phase }}";
+
+  // Raum beitreten
+  socket.emit('raum_beitreten', { code: raumCode });
+
+  // Event Handler
+  socket.on('phase_geaendert', function(data) {
+      aktuellePhase = data.phase;
+      updatePhase(data.phase, data.runde);
+      if (data.erzaehler_text) {
+          updateErzaehlerText(data.erzaehler_text);
+      }
+  });
+
+  socket.on('rolle_erhalten', function(data) {
+      showAlert('Deine Rolle: ' + data.rolle, 'success');
+  });
+
+  socket.on('spieler_gestorben', function(data) {
+      const card = document.querySelector(`[data-id="${data.spieler_id}"]`);
+      if (card) {
+          card.classList.add('tot');
+      }
+      addLog(`${data.spieler_name} ist gestorben (${data.todesart})`);
+  });
+
+  socket.on('seherin_ergebnis', function(data) {
+      if (data.rolle) {
+          const teamText = data.ist_werwolf ? 'Werwolf-Team' : 'Dorf-Team';
+          showAlert(`${data.ziel_name} ist ${data.rolle} (${teamText})`, data.ist_werwolf ? 'error' : 'success');
+      } else {
+          const typ = data.ist_werwolf ? 'Werwolf!' : 'kein Werwolf';
+          showAlert(`${data.ziel_name} ist ${typ}`, data.ist_werwolf ? 'error' : 'success');
+      }
+  });
+
+  socket.on('hexe_info', function(data) {
+      if (spielerRolle === 'Hexe') {
+          showAlert(`Das Werwolf-Opfer ist: ${data.opfer_name}`, 'info');
+      }
+  });
+
+  socket.on('nacht_ergebnis', function(data) {
+      if (data.tote && data.tote.length > 0) {
+          const totenListe = data.tote.map(t => `${t.name} (${t.todesart || 'unbekannt'})`).join(', ');
+          console.log('[NACHT_ERGEBNIS]', totenListe);
+          // Show prominent death announcement
+          showAlert(`TOTE DER NACHT: ${totenListe}`, 'error');
+          addLog(`Tote der Nacht: ${totenListe}`);
+      } else {
+          showAlert('Niemand ist in der Nacht gestorben.', 'success');
+          addLog('Niemand ist in der Nacht gestorben.');
+      }
+  });
+
+  socket.on('abstimmung_ergebnis', function(data) {
+      if (data.kein_opfer) {
+          showAlert(data.nachricht, 'info');
+      } else {
+          showAlert(`${data.opfer_name} wurde hingerichtet! (Rolle: ${data.opfer_rolle})`, 'error');
+      }
+      // Stimmen-Anzeige zurücksetzen nach Ergebnis
+      document.querySelectorAll('.stimmen-badge').forEach(el => el.remove());
+  });
+
+  // Echtzeit-Anzeige: Wer stimmt für wen
+  socket.on('stimme_abgegeben', function(data) {
+      addLog(`🗳️ ${data.waehler_name} stimmt für ${data.ziel_name}`);
+
+      // Visuelles Feedback: Badge am Ziel-Spieler
+      const zielKarte = document.querySelector(`.spieler-card[data-id="${data.ziel_id}"]`);
+      if (zielKarte) {
+          let stimmenContainer = zielKarte.querySelector('.stimmen-container');
+          if (!stimmenContainer) {
+              stimmenContainer = document.createElement('div');
+              stimmenContainer.className = 'stimmen-container';
+              stimmenContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 2px; margin-top: 5px;';
+              zielKarte.appendChild(stimmenContainer);
+          }
+          const badge = document.createElement('span');
+          badge.className = 'stimmen-badge badge bg-danger';
+          badge.style.cssText = 'font-size: 0.7em; padding: 2px 5px;';
+          badge.textContent = data.waehler_name;
+          badge.title = `${data.waehler_name} stimmt für ${data.ziel_name}`;
+          stimmenContainer.appendChild(badge);
+      }
+
+      showAlert(`${data.waehler_name} stimmt für ${data.ziel_name}`, 'info');
+  });
+
+  socket.on('spiel_ende', function(data) {
+      showSpielEndeModal(data);
+  });
+
+  socket.on('navigiere', function(data) {
+      window.location.href = data.ziel;
+  });
+
+  socket.on('aktion_bestaetigt', function(data) {
+      showAlert('Aktion ausgeführt!', 'success');
+      clearSelection();
+  });
+
+  socket.on('fehler', function(data) {
+      showAlert(data.nachricht, 'error');
+  });
+
+  socket.on('chat', function(data) {
+      addChatMessage(data.von, data.nachricht, data.ist_tot);
+  });
+
+  socket.on('phase_bereit', function(data) {
+      if (istErzaehler) {
+          showAlert('Alle Spieler haben gewählt. Bereit für nächste Phase.', 'info');
+      }
+  });
+
+  // Online-Modus: Automatische Erzählung
+  socket.on('erzaehlung', function(data) {
+      if (spielModus === 'online') {
+          showErzaehlung(data.text, data.audio);
+      }
+  });
+
+  // Funktionen
+  function selectSpieler(id) {
+      const card = document.querySelector(`[data-id="${id}"]`);
+      if (card.classList.contains('tot') || card.classList.contains('disabled')) return;
+
+      // During voting (abstimmung), cannot select the narrator or yourself
+      if (aktuellePhase === 'abstimmung') {
+          const isNarrator = card.getAttribute('data-ist-erzaehler') === 'true';
+          const isSelf = id === spielerId;
+          if (isNarrator || isSelf) return;
+      }
+
+      // Amor kann 2 Spieler wählen
+      if (spielerRolle === 'Amor' && aktuellePhase === 'armor_phase') {
+          if (selectedSpielerIds.includes(id)) {
+              selectedSpielerIds = selectedSpielerIds.filter(i => i !== id);
+              card.classList.remove('selected');
+          } else if (selectedSpielerIds.length < 2) {
+              selectedSpielerIds.push(id);
+              card.classList.add('selected');
+          }
+          updateActionButtons();
+          return;
+      }
+
+      // Normale Auswahl (1 Spieler)
+      document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedSpielerId = id;
+      updateActionButtons();
+  }
+
+  function clearSelection() {
+      document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('selected'));
+      selectedSpielerId = null;
+      selectedSpielerIds = [];
+      updateActionButtons();
+  }
+
+  function updatePhase(phase, runde) {
+      const phaseEl = document.getElementById('phase-name');
+      const isNacht = phase.includes('nacht') || phase.includes('phase');
+      phaseEl.innerHTML = `<i class="fa-solid fa-${isNacht && !phase.includes('tag') ? 'moon' : 'sun'}"></i> ${phase.replace(/_/g, ' ')}`;
+
+      // Nacht-Overlay
+      const overlay = document.getElementById('nacht-overlay');
+      const nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'armor_phase'];
+
+      if (nachtPhasen.includes(phase) && !sollteAktivSein()) {
+          overlay.classList.add('aktiv');
+      } else {
+          overlay.classList.remove('aktiv');
+      }
+
+      updateActionButtons();
+  }
+
+  function updateErzaehlerText(data) {
+      const container = document.getElementById('erzaehler-text-container');
+      if (!container) return;
+
+      let html = '';
+      if (data && data.text) {
+          html = `
+              <div class="erzaehler-text">
+                  <strong>Vorlesen:</strong><br>
+                  "${data.text}"
+              </div>
+          `;
+          if (data.anweisung) {
+              html += `
+                  <div class="erzaehler-anweisung">
+                      <i class="fa-solid fa-info-circle"></i> <strong>Anweisung:</strong><br>
+                      ${data.anweisung}
+                  </div>
+              `;
+          }
+      }
+      container.innerHTML = html;
+  }
+
+  function showErzaehlung(text, audioPath) {
+      // Zeigt die automatische Erzählung im Online-Modus mit Custom Audio Player
+      const notification = document.createElement('div');
+      notification.className = 'erzaehlung-overlay';
+      notification.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30, 30, 35, 0.98) 100%);
+          border: 2px solid var(--accent-gold);
+          border-radius: 16px;
+          padding: 2rem 2.5rem;
+          max-width: 480px;
+          width: 90%;
+          text-align: center;
+          z-index: 1500;
+          animation: fadeIn 0.4s ease-out;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(212, 175, 55, 0.15);
+      `;
+
+      const playerId = 'narrator-audio-' + Date.now();
+
+      let html = `
+          <div style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 1rem; text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);">
+              <i class="fa-solid fa-book-open"></i>
+          </div>
+          <p style="font-size: 1.15rem; font-style: italic; color: rgba(255,255,255,0.9); line-height: 1.6; margin-bottom: 1.5rem;">"${text}"</p>
+      `;
+
+      // Custom Audio Player wenn Audio verfügbar
+      if (audioPath) {
+          console.log('[showErzaehlung] Audio path:', audioPath);
+          html += `
+              <div class="narrator-label">
+                  <i class="fa-solid fa-microphone"></i>
+                  <span>Erzähler spricht...</span>
+              </div>
+              <div class="narrator-audio-player" id="${playerId}-container">
+                  <button class="audio-play-btn" id="${playerId}-btn" onclick="toggleNarratorAudio('${playerId}')">
+                      <i class="fa-solid fa-pause" id="${playerId}-icon"></i>
+                  </button>
+                  <div class="audio-waveform" id="${playerId}-waveform">
+                      <div class="audio-waveform-bar active"></div>
+                      <div class="audio-waveform-bar active"></div>
+                      <div class="audio-waveform-bar active"></div>
+                      <div class="audio-waveform-bar active"></div>
+                      <div class="audio-waveform-bar active"></div>
+                  </div>
+                  <div class="audio-progress-container">
+                      <div class="audio-progress-bar" id="${playerId}-progress" onclick="seekNarratorAudio(event, '${playerId}')">
+                          <div class="audio-progress-fill" id="${playerId}-fill"></div>
+                      </div>
+                      <div class="audio-time">
+                          <span id="${playerId}-current">0:00</span>
+                          <span id="${playerId}-duration">0:00</span>
+                      </div>
+                  </div>
+                  <button class="audio-volume-btn" onclick="toggleNarratorMute('${playerId}')">
+                      <i class="fa-solid fa-volume-high" id="${playerId}-vol-icon"></i>
+                  </button>
+              </div>
+              <audio id="${playerId}" autoplay playsinline style="display: none;">
+                  <source src="${audioPath}" type="audio/mpeg">
+              </audio>
+          `;
+      } else {
+          console.log('[showErzaehlung] No audio path provided');
+      }
+
+      notification.innerHTML = html;
+      document.body.appendChild(notification);
+
+      // Setup custom audio player controls
+      if (audioPath) {
+          const audio = document.getElementById(playerId);
+          const progressFill = document.getElementById(playerId + '-fill');
+          const currentTime = document.getElementById(playerId + '-current');
+          const durationEl = document.getElementById(playerId + '-duration');
+          const playBtn = document.getElementById(playerId + '-btn');
+          const playIcon = document.getElementById(playerId + '-icon');
+          const waveform = document.getElementById(playerId + '-waveform');
+
+          // Update progress bar
+          audio.addEventListener('timeupdate', () => {
+              if (audio.duration) {
+                  const percent = (audio.currentTime / audio.duration) * 100;
+                  progressFill.style.width = percent + '%';
+                  currentTime.textContent = formatAudioTime(audio.currentTime);
+              }
+          });
+
+          // Set duration when loaded
+          audio.addEventListener('loadedmetadata', () => {
+              durationEl.textContent = formatAudioTime(audio.duration);
+          });
+
+          // Handle play/pause states
+          audio.addEventListener('play', () => {
+              playIcon.className = 'fa-solid fa-pause';
+              playBtn.classList.add('playing');
+              waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.add('active'));
+          });
+
+          audio.addEventListener('pause', () => {
+              playIcon.className = 'fa-solid fa-play';
+              playBtn.classList.remove('playing');
+              waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
+          });
+
+          audio.addEventListener('ended', () => {
+              playIcon.className = 'fa-solid fa-redo';
+              playBtn.classList.remove('playing');
+              waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
+          });
+      }
+
+      // Duration: longer if audio is playing, or wait for audio to end
+      const baseDuration = audioPath ? 12000 : 4000;
+      let removeTimeout = setTimeout(() => {
+          notification.style.animation = 'fadeOut 0.4s ease-out';
+          setTimeout(() => notification.remove(), 400);
+      }, baseDuration);
+
+      // If audio, wait for it to finish instead
+      if (audioPath) {
+          const audio = document.getElementById(playerId);
+          audio.addEventListener('ended', () => {
+              clearTimeout(removeTimeout);
+              setTimeout(() => {
+                  notification.style.animation = 'fadeOut 0.4s ease-out';
+                  setTimeout(() => notification.remove(), 400);
+              }, 1500);
+          });
+      }
+  }
+
+  // Audio player helper functions
+  function formatAudioTime(seconds) {
+      if (!seconds || isNaN(seconds)) return '0:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return mins + ':' + (secs < 10 ? '0' : '') + secs;
+  }
+
+  function toggleNarratorAudio(playerId) {
+      const audio = document.getElementById(playerId);
+      const icon = document.getElementById(playerId + '-icon');
+      if (audio.paused) {
+          audio.play();
+      } else {
+          audio.pause();
+      }
+  }
+
+  function seekNarratorAudio(event, playerId) {
+      const audio = document.getElementById(playerId);
+      const progressBar = document.getElementById(playerId + '-progress');
+      const rect = progressBar.getBoundingClientRect();
+      const percent = (event.clientX - rect.left) / rect.width;
+      audio.currentTime = percent * audio.duration;
+  }
+
+  function toggleNarratorMute(playerId) {
+      const audio = document.getElementById(playerId);
+      const icon = document.getElementById(playerId + '-vol-icon');
+      audio.muted = !audio.muted;
+      icon.className = audio.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+  }
+
+  function sollteAktivSein() {
+      if (istErzaehler) return true;
+
+      const phasenRollen = {
+          'seherin_phase': 'Seherin',
+          'werwolf_phase': 'Werwolf',
+          'hexe_phase': 'Hexe',
+          'armor_phase': 'Amor'
+      };
+
+      if (aktuellePhase === 'werwolf_phase') {
+          return spielerTeam === 'werwolf';
+      }
+      return phasenRollen[aktuellePhase] === spielerRolle;
+  }
+
+  function updateActionButtons() {
+      const container = document.getElementById('action-buttons');
+      const panel = document.getElementById('action-panel');
+      let html = '';
+
+      console.log(`[updateActionButtons] Phase: ${aktuellePhase}, Selected: ${selectedSpielerId}, Role: ${spielerRolle}, ShouldBeActive: ${sollteAktivSein()}`);
+
+      // Verstecke Panel wenn Spieler nicht aktiv sein sollte
+      if (!sollteAktivSein()) {
+          panel.style.display = 'none';
+          return;
+      }
+      panel.style.display = 'block';
+
+      if (!selectedSpielerId && selectedSpielerIds.length === 0) {
+          html = '<p class="text-muted">Wähle einen Spieler</p>';
+      } else {
+          // Phasen-spezifische Aktionen
+          if (aktuellePhase === 'werwolf_phase' && spielerTeam === 'werwolf') {
+              html = `<button class="btn btn-primary" onclick="aktion('werwolf_wahl')"><i class="fa-solid fa-paw"></i> Töten</button>`;
+          } else if (aktuellePhase === 'seherin_phase' && spielerRolle === 'Seherin') {
+              html = `<button class="btn btn-primary" onclick="aktion('seherin_sehen')"><i class="fa-solid fa-eye"></i> Identität sehen</button>`;
+          } else if (aktuellePhase === 'hexe_phase' && spielerRolle === 'Hexe') {
+              html = `
+                  <button class="btn btn-success" onclick="aktion('hexe_heilen')"><i class="fa-solid fa-heart-pulse"></i> Heilen</button>
+                  <button class="btn btn-primary" onclick="aktion('hexe_toeten')"><i class="fa-solid fa-skull-crossbones"></i> Vergiften</button>
+                  <button class="btn btn-ghost" onclick="aktion('hexe_nichts')">Nichts tun</button>
+              `;
+          } else if (aktuellePhase === 'armor_phase' && spielerRolle === 'Amor') {
+              if (selectedSpielerIds.length === 2) {
+                  html = `<button class="btn btn-primary" onclick="aktion('armor_verlieben')"><i class="fa-solid fa-heart"></i> Verlieben</button>`;
+              } else {
+                  html = `<p class="text-muted">Wähle 2 Spieler (${selectedSpielerIds.length}/2)</p>`;
+              }
+          } else if (aktuellePhase === 'abstimmung') {
+              html = `
+                  <button class="btn btn-primary" onclick="aktion('tag_wahl')"><i class="fa-solid fa-check"></i> Abstimmen</button>
+                  <button class="btn btn-ghost" onclick="aktion('tag_wahl', null)">Enthalten</button>
+              `;
+          } else if (aktuellePhase === 'jaeger_phase' && spielerRolle === 'Jäger') {
+              html = `<button class="btn btn-primary" onclick="aktion('jaeger_schuss')"><i class="fa-solid fa-crosshairs"></i> Erschießen</button>`;
+          }
+      }
+
+      container.innerHTML = html;
+  }
+
+  function aktion(typ, zielOverride) {
+      const ziel = zielOverride !== undefined ? zielOverride :
+                   (typ === 'armor_verlieben' ? selectedSpielerIds : selectedSpielerId);
+
+      socket.emit('aktion_ausfuehren', {
+          aktion: typ,
+          ziel_id: ziel
+      });
+  }
+
+  function naechstePhase() {
+      socket.emit('phase_weiter');
+  }
+
+  function showAlert(text, type) {
+      const el = document.getElementById('status-nachricht');
+      el.textContent = text;
+      el.className = `alert alert-${type} mb-3`;
+      el.style.display = 'block';
+
+      setTimeout(() => {
+          el.style.display = 'none';
+      }, 5000);
+  }
+
+  function addLog(text) {
+      const container = document.getElementById('log-list');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `
+          <div class="log-time">${new Date().toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})}</div>
+          <div>${text}</div>
+      `;
+      container.prepend(entry);
+  }
+
+  function addChatMessage(von, text, istTot) {
+      const container = document.getElementById('chat-messages');
+      const msg = document.createElement('div');
+      msg.className = 'chat-msg' + (istTot ? ' tot' : '');
+      msg.innerHTML = `<strong>${von}:</strong> ${text}`;
+      container.appendChild(msg);
+      container.scrollTop = container.scrollHeight;
+  }
+
+  function sendChat() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (text) {
+          socket.emit('chat_nachricht', { nachricht: text });
+          input.value = '';
+      }
+  }
+
+  document.getElementById('chat-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') sendChat();
+  });
+
+  function showSpielEndeModal(data) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2000;
+      `;
+
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+          background: var(--bg-card);
+          padding: 3rem;
+          border-radius: 20px;
+          text-align: center;
+          max-width: 500px;
+          border: 2px solid var(--accent-gold);
+      `;
+
+      modal.innerHTML = `
+          <h1 style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 1rem;">
+              <i class="fa-solid fa-trophy"></i> Spielende
+          </h1>
+          <p style="font-size: 1.5rem; margin-bottom: 2rem;">${data.nachricht}</p>
+          <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">Gewinner: ${data.gewinner || 'Unbekannt'}</h3>
+          <button class="btn btn-primary btn-lg" onclick="socket.emit('navigiere_zur_lobby')">
+              <i class="fa-solid fa-home"></i> Zurück zur Startseite
+          </button>
+      `;
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+  }
+
+  socket.on('gehe_zu_startseite', function() {
+      window.location.href = '/';
+  });
+
+  // Initial
+  updateActionButtons();
+  updatePhase(aktuellePhase, {{ raum.runde }});
+
+  // PlayCanvas 3D Village initialisieren
+  const loadPlayCanvas = () => {
+      return new Promise((resolve, reject) => {
+          if (typeof pc !== 'undefined') {
+              resolve();
+              return;
+          }
+
+          const script = document.createElement('script');
+          script.src = 'https://code.playcanvas.com/playcanvas-stable.min.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+      });
+  };
+
+  loadPlayCanvas().then(() => {
+      return import('/static/js/village3d-playcanvas.js');
+  }).then(module => {
+      const Village3DPlayCanvas = module.default;
+      if (typeof Village3DPlayCanvas !== 'undefined') {
+          const village3d = new Village3DPlayCanvas('village-3d', raumCode);
+
+          // Spieler-Klick-Handler für Aktionen
+          village3d.onPlayerClick = (playerId) => {
+              selectSpieler(playerId);
+          };
+
+          // Spieler-Daten für 3D Dorf
+          const spielerDaten = [];
+          document.querySelectorAll('.spieler-card').forEach(card => {
+              spielerDaten.push({
+                  id: parseInt(card.getAttribute('data-id')),
+                  name: card.getAttribute('data-name'),
+                  rolle: card.getAttribute('data-rolle') || null,
+                  ist_am_leben: !card.classList.contains('tot'),
+                  ist_erzaehler: card.getAttribute('data-ist-erzaehler') === 'true'
+              });
+          });
+
+          if (spielerDaten.length > 0) {
+              village3d.setPlayers(spielerDaten);
+          }
+
+          // Initiale Tag/Nacht-Einstellung
+          const isNight = aktuellePhase.includes('nacht') ||
+                         (aktuellePhase.includes('phase') &&
+                          !aktuellePhase.includes('tag') &&
+                          !aktuellePhase.includes('abstimmung'));
+          village3d.setTimeOfDay(isNight);
+
+          // Global speichern für Hints
+          window.village3d = village3d;
+
+          // Update bei Phasenwechsel
+          socket.on('phase_update', function(data) {
+              const newIsNight = data.phase.includes('nacht') ||
+                                (data.phase.includes('phase') &&
+                                 !data.phase.includes('tag') &&
+                                 !data.phase.includes('abstimmung'));
+              village3d.setTimeOfDay(newIsNight ? 'night' : 'day');
+          });
+
+          // Hint-Anzeige in 3D
+          socket.on('hint_anzeigen', function(data) {
+              if (data.spieler_id && data.typ) {
+                  village3d.showHint(data.spieler_id, data.typ);
+              }
+          });
+
+          // Spieler-Highlight bei Abstimmung
+          socket.on('stimme_abgegeben', function(data) {
+              village3d.highlightPlayer(data.ziel_id, 'red');
+          });
+      }
+  }).catch(err => {
+      console.warn('3D Village konnte nicht geladen werden:', err);
+  });
 </script>
 {% endblock %}

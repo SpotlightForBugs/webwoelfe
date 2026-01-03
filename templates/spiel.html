@@ -650,11 +650,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           <button
             class="btn btn-sm"
             style="background: rgba(0, 0, 0, 0.6); color: white; border: none"
-            onclick="
-              window.village3d?.camera?.setPosition(
-                new BABYLON.Vector3(0, 15, 25),
-              )
-            "
+            onclick="window.village3d?.resetCamera?.()"
             title="Reset Kamera"
           >
             <i class="fa-solid fa-home"></i>

@@ -1423,6 +1423,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   let selectedSpielerIds = [];  // Für Amor (2 Spieler)
   let aktuellePhase = "{{ raum.aktuelle_phase }}";
   let aktuelleRunde = {{ raum.runde }};
+  let nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'amor_phase']; // Default fallback
 
   // Expose for test automation
   window.aktuellePhase = aktuellePhase;
@@ -1433,7 +1434,15 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   socket.emit('raum_beitreten', { code: raumCode });
 
   // Event Handler
-  socket.on('phase_geaendert', function(data) {
+  socket.on('phase_geaendert', async function(data) {
+      // Wenn eine neue Nacht beginnt oder die Phase im Mapping fehlt, laden wir das Mapping neu
+      // Dies behebt das Problem, dass die UI nicht weiß, dass sie für eine bestimmte Rolle (die jetzt aktiv wurde)
+      // den Nacht-Overlay ausblenden muss.
+      if (data.phase === 'nacht_start' || (data.phase.includes('phase') && !phaseRoleMapping[data.phase])) {
+          console.log('[Phase] Refreshing mapping for phase:', data.phase);
+          await loadPhaseRoleMapping();
+      }
+
       aktuellePhase = data.phase;
       aktuelleRunde = data.runde || aktuelleRunde;
       window.aktuellePhase = aktuellePhase;
@@ -1724,9 +1733,17 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       // Nacht-Overlay
       const overlay = document.getElementById('nacht-overlay');
-      const nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'amor_phase'];
+      
+      // Dynamic Night Detection logic (No hardcoded list!)
+      // Heuristic: Phase is night if:
+      // 1. It explicitly contains "nacht" (e.g. nacht_start)
+      // 2. OR it ends in "_phase" AND is not a day phase (implies role action phase)
+      
+      const knownDayPhases = ['tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt'];
+      const isDayPhase = knownDayPhases.includes(phase) || phase.includes('tag') || phase.includes('abstimmung') || phase.includes('diskussion');
+      const isNightMode = !isDayPhase && (phase.includes('nacht') || phase.includes('phase') || phase.endsWith('_phase'));
 
-      if (nachtPhasen.includes(phase) && !sollteAktivSein()) {
+      if (isNightMode && !sollteAktivSein()) {
           overlay.classList.add('aktiv');
       } else {
           overlay.classList.remove('aktiv');
@@ -2021,13 +2038,19 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   // Load phase→role mapping from game API on init
   async function loadPhaseRoleMapping() {
       try {
-          const response = await fetch(`/api/game/{{ code }}/phases`);
+          const response = await fetch(`/api/game/${raumCode}/phases`);
           const data = await response.json();
           
           if (data.success && data.phase_mapping) {
               // Use server-provided phase→role mapping
               phaseRoleMapping = data.phase_mapping;
+              if (data.phases) {
+                  nachtPhasen = data.phases;
+              }
               console.log('[Phase Mapping] Loaded from server:', phaseRoleMapping);
+              
+              // WICHTIG: UI aktualisieren, da sollteAktivSein() jetzt korrekte Daten hat
+              updatePhase(aktuellePhase, aktuelleRunde);
           } else {
               console.warn('[Phase Mapping] No phase_mapping in response, using empty mapping');
           }
@@ -2069,7 +2092,21 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       // Check against dynamic phase→role mapping from server
       const mappedRole = phaseRoleMapping[aktuellePhase];
       if (mappedRole) {
-          return mappedRole === spielerRolle;
+          // Normalize for comparison (case-insensitive)
+          return mappedRole.toLowerCase() === spielerRolle.toLowerCase();
+      }
+      
+      // Fallback: Check if phase name matches role name
+      // e.g. "seherin_phase" -> "seherin"
+      // e.g. "alter_mann_phase" -> "alter man" (approx)
+      if (aktuellePhase.endsWith('_phase')) {
+          const simplePhaseName = aktuellePhase.replace('_phase', '').toLowerCase();
+          const simpleRoleName = spielerRolle.toLowerCase().replace(/\s+/g, '_');
+          
+          if (simplePhaseName === simpleRoleName) {
+              console.log('[Phase Check] Fallback match found:', aktuellePhase);
+              return true;
+          }
       }
       
       // No fallback - if server didn't provide mapping, player shouldn't be active

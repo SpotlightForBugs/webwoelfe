@@ -333,47 +333,22 @@ def _normalisiere_phase_name(phase_name: str) -> str:
 def phasennamen_zu_rollen_mapping() -> dict:
     """
     Erstellt ein Mapping zwischen Phasennamen und erforderlichen Rollen dynamisch
-    aus dem Rollen-Registry, so dass neue Rollen keinen Hardcode mehr benötigen.
+    aus dem Rollen-Registry.
     """
-
     mapping = {}
 
     try:
         from roles import RoleRegistry
 
         for rolle in RoleRegistry.get_all():
-            # Bevorzugt den von der Rolle gelieferten Namen, normalisiert ihn aber
-            # in das bestehende PHASEN-Schema (ae/oe/ue/ss statt Umlaute).
-            # Bevorzugt den von der Rolle gelieferten Namen
-            # Wir prüfen NICHT mehr gegen die statische PHASEN-Liste, da diese nur noch Kernphasen enthält.
-            # Jede Rolle definiert ihre Phase selbst.
             phase_key = _normalisiere_phase_name(rolle.get_phase_name())
-            mapping.setdefault(phase_key, rolle.info.name)
+            if phase_key:
+                mapping[phase_key] = rolle.info.name
+                
     except (ImportError, AttributeError) as exc:
         import traceback
-
-        print(f"[ROLLEN] Warnung: Dynamisches Phasen-Mapping deaktiviert: {exc}")
+        print(f"[ROLLEN] Warnung: Dynamisches Phasen-Mapping Fehler: {exc}")
         print(f"[ROLLEN] Traceback: {traceback.format_exc()}")
-
-    # Fallback: baue das Mapping aus dem Legacy-ROLLEN-Dict, falls die Registry
-    # einmal nicht initialisiert werden konnte (z.B. in minimalen Testumgebungen).
-    if not mapping:
-        for rollen_name in ROLLEN.keys():
-            phase_key = _normalisiere_phase_name(f"{rollen_name}_phase")
-            if phase_key in PHASEN:
-                mapping[phase_key] = rollen_name
-
-    # Spezielle Info-Phasen, die eine bestimmte Rolle erfordern
-    # Diese folgen nicht dem _phase-Schema, müssen aber trotzdem übersprungen werden
-    SPEZIELLE_PHASEN_MAPPING = {
-        "verliebte_info": "Amor",  # Nur relevant wenn Amor im Spiel
-        "baerenbaendiger_brummen": "Bärenbändiger",  # Nur relevant wenn Bärenbändiger im Spiel
-        "demoskopin_info": "Demoskopin",  # Nur relevant wenn Demoskopin im Spiel
-        "prinz_enthuellung": "Prinz",  # Nur relevant wenn Prinz im Spiel
-        "hahn_enthuellung": "Hahn",  # Nur relevant wenn Hahn im Spiel
-        "putzfrau_info": "Putzfrau",  # Nur relevant wenn Putzfrau im Spiel
-    }
-    mapping.update(SPEZIELLE_PHASEN_MAPPING)
 
     return mapping
 
@@ -396,25 +371,41 @@ def naechste_phase(raum: Raum) -> str:
     """
     current = raum.aktuelle_phase
     
-    # Phase-Übergangslogik
-    phase_transitions = {
-        "lobby": "rollen_verteilt",
-        "rollen_verteilt": "nacht",
-        "nacht": "tag_start",
-        "tag_start": "diskussion",
-        "diskussion": "abstimmung",
-        "abstimmung": "hinrichtung",
-        "hinrichtung": "tag_ende",
-        "tag_ende": "nacht",  # Neuer Tag-Nacht-Zyklus
-        "spiel_ende": "spiel_ende",  # Bleibt hier
-    }
+    # Hole die Nacht-Phasen für die aktuelle Runde
+    from phase_generator import generate_phases_for_game
+    night_phases = generate_phases_for_game(raum)
     
-    # Spezialfall: tag_ende erhöht die Runde
-    if current == "tag_ende":
-        raum.runde += 1
+    neue_phase = "nacht"
     
-    # Nächste Phase bestimmen
-    neue_phase = phase_transitions.get(current, "nacht")
+    # 1. Prüfe ob wir in einer Nacht-Phase sind
+    if current in night_phases:
+        idx = night_phases.index(current)
+        if idx + 1 < len(night_phases):
+            # Nächste Nacht-Phase
+            neue_phase = night_phases[idx + 1]
+        else:
+            # Nacht zu Ende -> Tag
+            neue_phase = "tag_start"
+            
+    # 2. Prüfe ob wir in die Nacht eintreten (von rollen_verteilt oder tag_ende)
+    elif current in ["rollen_verteilt", "tag_ende"]:
+        if night_phases:
+            neue_phase = night_phases[0]
+        else:
+            neue_phase = "tag_start"
+            
+    # 3. Tag-Phasen Logic
+    else:
+        # Standard Tag-Zyklus
+        tag_transitions = {
+            "tag_start": "diskussion",
+            "diskussion": "abstimmung",  # Legacy fallback, wird oft via Event übersteuert
+            "diskussion_abstimmung": "hinrichtung", # Falls kombiniert
+            "abstimmung": "hinrichtung",
+            "hinrichtung": "tag_ende",
+            "spiel_ende": "spiel_ende"
+        }
+        neue_phase = tag_transitions.get(current, "nacht")
     
     raum.aktuelle_phase = neue_phase
     db.session.commit()

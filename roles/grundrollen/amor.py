@@ -73,7 +73,7 @@ class Amor(Role):
             buttons=[
                 UIButton(
                     label="Verlieben",
-                    action_type="verlieben",
+                    action_type="armor_verlieben",
                     icon="fa-solid fa-heart",
                     css_class="btn-primary",
                     requires_confirmation=True

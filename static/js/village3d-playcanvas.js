@@ -56,18 +56,6 @@ export default class Village3DPlayCanvas {
     // Track sleeping/inactive players for day/night cycle
     this.sleepingPlayers = new Set();
 
-    // Avatar customization - store custom colors/styles per player
-    this.avatarCustomization = new Map();
-
-    // Available avatar styles
-    this.avatarStyles = {
-      normal: { scale: 1.0, headShape: "sphere" },
-      tall: { scale: 1.15, headShape: "sphere" },
-      short: { scale: 0.85, headShape: "sphere" },
-      round: { scale: 1.0, headShape: "sphere", bodyScale: 1.2 },
-      slim: { scale: 1.0, headShape: "sphere", bodyScale: 0.8 },
-    };
-
     // Role colors for player appearance - ALL ROLES
     this.roleColors = {
       // === GRUNDROLLEN ===
@@ -349,7 +337,7 @@ export default class Village3DPlayCanvas {
   }
 
   createDetailedGround() {
-    // Main ground
+    // Main ground - varied grass terrain
     const ground = new pc.Entity("Ground");
     ground.addComponent("model", {
       type: "plane",
@@ -360,30 +348,136 @@ export default class Village3DPlayCanvas {
     ground.setLocalScale(groundSize, 1, groundSize);
 
     const material = new pc.StandardMaterial();
-    material.diffuse = new pc.Color(0.12, 0.18, 0.08); // Rich grass
-    material.specular = new pc.Color(0.02, 0.02, 0.02);
-    material.shininess = 5;
+    material.diffuse = new pc.Color(0.15, 0.22, 0.12); // Richer, more natural grass
+    material.specular = new pc.Color(0.01, 0.01, 0.01);
+    material.shininess = 3;
     material.update();
 
     ground.model.material = material;
     this.app.root.addChild(ground);
 
-    // Center circle
-    const centerCircle = new pc.Entity("CenterCircle");
-    centerCircle.addComponent("model", {
+    // Create dirt paths/roads for village authenticity
+    if (!this.isLobbyMode) {
+      this.createVillagePaths();
+    }
+
+    // Center village square (cobblestone)
+    const centerSquare = new pc.Entity("CenterSquare");
+    centerSquare.addComponent("model", {
       type: "cylinder",
     });
-    const circleSize = this.isLobbyMode ? 12 : 18;
-    centerCircle.setLocalScale(circleSize, 0.05, circleSize);
-    centerCircle.setPosition(0, 0.02, 0); // Offset to avoid Z-fighting
+    const squareSize = this.isLobbyMode ? 10 : 14;
+    centerSquare.setLocalScale(squareSize, 0.05, squareSize);
+    centerSquare.setPosition(0, 0.02, 0); // Offset to avoid Z-fighting
 
-    const circleMat = this.getMaterial({
-      name: "CenterCircle",
-      diffuse: new pc.Color(0.25, 0.22, 0.18),
+    const squareMat = this.getMaterial({
+      name: "VillageSquare",
+      diffuse: new pc.Color(0.35, 0.32, 0.28), // Cobblestone/stone color
+      specular: new pc.Color(0.05, 0.05, 0.05),
+      shininess: 8,
     });
-    centerCircle.model.material = circleMat;
+    centerSquare.model.material = squareMat;
 
-    this.app.root.addChild(centerCircle);
+    this.app.root.addChild(centerSquare);
+
+    // Add some decorative stones around the square
+    if (!this.isLobbyMode) {
+      this.createSquareDecorations();
+    }
+  }
+
+  /**
+   * Create dirt paths connecting the village
+   */
+  createVillagePaths() {
+    // Main cross paths through center
+    const pathPositions = [
+      { x: 0, z: 0, scaleX: 1.5, scaleZ: 35, rotation: 0 },    // North-South path
+      { x: 0, z: 0, scaleX: 35, scaleZ: 1.5, rotation: 0 },    // East-West path
+      { x: -15, z: -12, scaleX: 12, scaleZ: 1.2, rotation: 25 }, // Path to houses
+      { x: 15, z: 10, scaleX: 10, scaleZ: 1.2, rotation: -35 },  // Path to houses
+      { x: -8, z: 15, scaleX: 8, scaleZ: 1.2, rotation: 15 },    // Path to houses
+      { x: 12, z: -10, scaleX: 9, scaleZ: 1.2, rotation: -20 },  // Path to church
+    ];
+
+    pathPositions.forEach((pos, idx) => {
+      const path = new pc.Entity(`Path-${idx}`);
+      path.addComponent("model", { type: "box" });
+      path.setLocalScale(pos.scaleX, 0.02, pos.scaleZ);
+      path.setPosition(pos.x, 0.01, pos.z);
+      path.setEulerAngles(0, pos.rotation, 0);
+
+      const pathMat = this.getMaterial({
+        name: `DirtPath-${idx % 3}`, // Use 3 variants
+        diffuse: new pc.Color(0.28 + (idx % 3) * 0.02, 0.22 + (idx % 3) * 0.02, 0.16),
+        specular: new pc.Color(0.01, 0.01, 0.01),
+        shininess: 1,
+      });
+      path.model.material = pathMat;
+
+      this.app.root.addChild(path);
+    });
+  }
+
+  /**
+   * Create decorative elements around the village square
+   */
+  createSquareDecorations() {
+    // Market stalls/benches around the square
+    const stallPositions = [
+      { x: -8, z: 0, rotation: 90 },
+      { x: 8, z: 0, rotation: -90 },
+      { x: 0, z: -8, rotation: 0 },
+      { x: 0, z: 8, rotation: 180 },
+    ];
+
+    stallPositions.forEach((pos, idx) => {
+      // Simple bench/stall
+      const stall = new pc.Entity(`Bench-${idx}`);
+      stall.addComponent("model", { type: "box" });
+      stall.setLocalScale(2, 0.4, 0.6);
+      stall.setPosition(pos.x, 0.2, pos.z);
+      stall.setEulerAngles(0, pos.rotation, 0);
+
+      const stallMat = this.getMaterial({
+        name: "Bench",
+        diffuse: new pc.Color(0.3, 0.2, 0.1), // Wood
+        shininess: 10,
+      });
+      stall.model.material = stallMat;
+
+      this.app.root.addChild(stall);
+    });
+
+    // Add some barrels/crates near the square
+    const cratePositions = [
+      { x: -9, z: -2 },
+      { x: 9, z: 2 },
+      { x: 2, z: 9 },
+      { x: -2, z: -9 },
+    ];
+
+    cratePositions.forEach((pos, idx) => {
+      const crate = new pc.Entity(`Crate-${idx}`);
+      crate.addComponent("model", { type: "box" });
+      const size = 0.5 + Math.random() * 0.3;
+      crate.setLocalScale(size, size, size);
+      crate.setPosition(pos.x, size / 2, pos.z);
+      crate.setEulerAngles(
+        Math.random() * 10 - 5,
+        Math.random() * 360,
+        Math.random() * 10 - 5
+      );
+
+      const crateMat = this.getMaterial({
+        name: `Crate-${idx % 2}`,
+        diffuse: new pc.Color(0.35, 0.25, 0.15),
+        shininess: 5,
+      });
+      crate.model.material = crateMat;
+
+      this.app.root.addChild(crate);
+    });
   }
 
   // Material caching helper
@@ -640,10 +734,135 @@ export default class Village3DPlayCanvas {
       house.addChild(shutter);
     }
 
+    // Add wooden fence around house
+    this.createHouseFence(house);
+
+    // Add small garden patch
+    if (Math.random() > 0.5) {
+      this.createGardenPatch(house);
+    }
+
     house.setPosition(x, 0, z);
     house.setEulerAngles(0, rotation, 0);
     this.app.root.addChild(house);
     this.buildings.push(house);
+  }
+
+  /**
+   * Create a wooden fence around a house
+   */
+  createHouseFence(house) {
+    const fenceMat = this.getMaterial({
+      name: "WoodenFence",
+      diffuse: new pc.Color(0.3, 0.22, 0.15),
+      shininess: 3,
+    });
+
+    // Fence posts around house perimeter
+    const fenceDistance = 4;
+    const postPositions = [
+      { x: -fenceDistance, z: -3 },
+      { x: -fenceDistance, z: 0 },
+      { x: -fenceDistance, z: 3 },
+      { x: fenceDistance, z: -3 },
+      { x: fenceDistance, z: 0 },
+      { x: fenceDistance, z: 3 },
+      { x: -3, z: -fenceDistance },
+      { x: 0, z: -fenceDistance },
+      { x: 3, z: -fenceDistance },
+      { x: -3, z: fenceDistance },
+      { x: 3, z: fenceDistance },
+    ];
+
+    postPositions.forEach((pos, idx) => {
+      const post = new pc.Entity(`FencePost-${idx}`);
+      post.addComponent("model", { type: "box" });
+      post.setLocalScale(0.12, 0.8, 0.12);
+      post.setLocalPosition(pos.x, 0.4, pos.z);
+      post.model.material = fenceMat;
+      house.addChild(post);
+    });
+
+    // Horizontal fence rails
+    const railHeight = [0.3, 0.6];
+    railHeight.forEach((height, idx) => {
+      // Left side
+      const railL = new pc.Entity(`FenceRail-L-${idx}`);
+      railL.addComponent("model", { type: "box" });
+      railL.setLocalScale(0.08, 0.08, 6.5);
+      railL.setLocalPosition(-fenceDistance, height, 0);
+      railL.model.material = fenceMat;
+      house.addChild(railL);
+
+      // Right side
+      const railR = new pc.Entity(`FenceRail-R-${idx}`);
+      railR.addComponent("model", { type: "box" });
+      railR.setLocalScale(0.08, 0.08, 6.5);
+      railR.setLocalPosition(fenceDistance, height, 0);
+      railR.model.material = fenceMat;
+      house.addChild(railR);
+
+      // Back side
+      const railB = new pc.Entity(`FenceRail-B-${idx}`);
+      railB.addComponent("model", { type: "box" });
+      railB.setLocalScale(6.5, 0.08, 0.08);
+      railB.setLocalPosition(0, height, -fenceDistance);
+      railB.model.material = fenceMat;
+      house.addChild(railB);
+
+      // Front side (with gate opening)
+      const railFL = new pc.Entity(`FenceRail-FL-${idx}`);
+      railFL.addComponent("model", { type: "box" });
+      railFL.setLocalScale(2, 0.08, 0.08);
+      railFL.setLocalPosition(-2.5, height, fenceDistance);
+      railFL.model.material = fenceMat;
+      house.addChild(railFL);
+
+      const railFR = new pc.Entity(`FenceRail-FR-${idx}`);
+      railFR.addComponent("model", { type: "box" });
+      railFR.setLocalScale(2, 0.08, 0.08);
+      railFR.setLocalPosition(2.5, height, fenceDistance);
+      railFR.model.material = fenceMat;
+      house.addChild(railFR);
+    });
+  }
+
+  /**
+   * Create a small garden patch next to house
+   */
+  createGardenPatch(house) {
+    const gardenMat = this.getMaterial({
+      name: "GardenSoil",
+      diffuse: new pc.Color(0.2, 0.15, 0.1),
+      shininess: 1,
+    });
+
+    const garden = new pc.Entity("Garden");
+    garden.addComponent("model", { type: "box" });
+    garden.setLocalScale(2, 0.05, 2);
+    garden.setLocalPosition(-3, 0.025, -3);
+    garden.model.material = gardenMat;
+    house.addChild(garden);
+
+    // Add some small plants/crops
+    for (let i = 0; i < 4; i++) {
+      const plant = new pc.Entity(`Plant-${i}`);
+      plant.addComponent("model", { type: "box" });
+      plant.setLocalScale(0.15, 0.3, 0.15);
+      plant.setLocalPosition(
+        -3.5 + (i % 2) * 0.8,
+        0.15,
+        -3.5 + Math.floor(i / 2) * 0.8
+      );
+
+      const plantMat = this.getMaterial({
+        name: `Plant-${i % 2}`,
+        diffuse: new pc.Color(0.1, 0.3 + (i % 2) * 0.1, 0.1),
+        shininess: 5,
+      });
+      plant.model.material = plantMat;
+      house.addChild(plant);
+    }
   }
 
   createChurch(x, z) {
@@ -1369,12 +1588,6 @@ export default class Village3DPlayCanvas {
 
       // Store data
       entity.playerData = player;
-
-      // Apply avatar customization if available
-      const customization = this.avatarCustomization.get(player.id);
-      if (customization) {
-        this.applyAvatarCustomization(entity, customization);
-      }
 
       console.log(
         `[Village3D] Player ${player.name} fully configured at (${x.toFixed(2)}, 0, ${z.toFixed(2)})`,
@@ -4450,88 +4663,5 @@ export default class Village3DPlayCanvas {
       tombstone.model.material = mat;
       entity.addChild(tombstone);
     }
-  }
-
-  /**
-   * Set custom avatar appearance for a player
-   * @param {string} playerId - Player ID
-   * @param {Object} customization - { color: pc.Color, style: string }
-   */
-  setAvatarCustomization(playerId, customization) {
-    this.avatarCustomization.set(playerId, customization);
-
-    // Apply to existing entity if present
-    const entity = this.playerEntities.get(playerId);
-    if (entity) {
-      this.applyAvatarCustomization(entity, customization);
-    }
-  }
-
-  /**
-   * Apply avatar customization to an entity
-   * @param {pc.Entity} entity
-   * @param {Object} customization
-   */
-  applyAvatarCustomization(entity, customization) {
-    if (!entity || !entity.parts) return;
-
-    const { color, style } = customization;
-    const styleConfig = this.avatarStyles[style] || this.avatarStyles["normal"];
-
-    // Apply custom color to body parts (torso is the main body part)
-    if (color && entity.parts.torso) {
-      const customMat = new pc.StandardMaterial();
-      customMat.diffuse = color;
-      customMat.specular = new pc.Color(0.2, 0.2, 0.2);
-      customMat.shininess = 20;
-      customMat.update();
-
-      entity.parts.torso.model.material = customMat;
-    }
-
-    // Store base scale if not already stored
-    if (!entity.baseScale) {
-      entity.baseScale = entity.getLocalScale().clone();
-    }
-    if (!entity.baseTorsoScale && entity.parts.torso) {
-      entity.baseTorsoScale = entity.parts.torso.getLocalScale().clone();
-    }
-
-    // Apply style scaling from base scale to avoid compounding
-    if (styleConfig.scale !== 1.0 && entity.baseScale) {
-      entity.setLocalScale(
-        entity.baseScale.x * styleConfig.scale,
-        entity.baseScale.y * styleConfig.scale,
-        entity.baseScale.z * styleConfig.scale,
-      );
-    }
-
-    if (styleConfig.bodyScale && entity.parts.torso && entity.baseTorsoScale) {
-      entity.parts.torso.setLocalScale(
-        entity.baseTorsoScale.x * styleConfig.bodyScale,
-        entity.baseTorsoScale.y,
-        entity.baseTorsoScale.z * styleConfig.bodyScale,
-      );
-    }
-  }
-
-  /**
-   * Get available avatar customization options
-   * @returns {Object} Available styles and default colors
-   */
-  getCustomizationOptions() {
-    return {
-      styles: Object.keys(this.avatarStyles),
-      defaultColors: [
-        new pc.Color(0.3, 0.5, 0.8), // Blue
-        new pc.Color(0.8, 0.3, 0.3), // Red
-        new pc.Color(0.3, 0.8, 0.3), // Green
-        new pc.Color(0.8, 0.8, 0.3), // Yellow
-        new pc.Color(0.8, 0.3, 0.8), // Magenta
-        new pc.Color(0.3, 0.8, 0.8), // Cyan
-        new pc.Color(0.8, 0.5, 0.3), // Orange
-        new pc.Color(0.5, 0.3, 0.8), // Purple
-      ],
-    };
   }
 }

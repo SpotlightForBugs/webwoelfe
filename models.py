@@ -41,7 +41,9 @@ class Raum(db.Model):
     aktive_rollen = db.Column(db.Text, default="{}")
 
     # Timer für diskussion_abstimmung Phase
-    timer_start = db.Column(db.DateTime, nullable=True)  # Wann die aktuelle Phase begonnen hat
+    timer_start = db.Column(
+        db.DateTime, nullable=True
+    )  # Wann die aktuelle Phase begonnen hat
     timer_duration = db.Column(db.Integer, default=120)  # Dauer der Phase in Sekunden
 
     # Live-Abstimmungsdaten (JSON: {voter_id: target_id})
@@ -204,7 +206,9 @@ class Spieler(db.Model):
         rechts = self.hole_nachbar_rechts()
         if links:
             nachbarn.append(links)
-        if rechts and (not links or rechts.id != links.id):  # Vermeidung bei nur 2 Spielern
+        if rechts and (
+            not links or rechts.id != links.id
+        ):  # Vermeidung bei nur 2 Spielern
             nachbarn.append(rechts)
         return nachbarn
 
@@ -964,7 +968,6 @@ ROLLEN = _erstelle_rollen_dict()
 
 # Spielphasen in korrekter Reihenfolge (importiert aus phases.py)
 PHASEN = get_phase_list()
-
 
 
 # Rollen-Konfiguration nach Spielerzahl (Empfehlung)

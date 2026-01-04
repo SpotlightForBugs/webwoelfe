@@ -114,7 +114,7 @@ SPIEL_REGELN = {
 # ============================================================================
 # ROLLEN-EMPFEHLUNGEN NACH SPIELERZAHL
 # ============================================================================
-# Für Spiele mit mehr Spielern als hier definiert, verwende berechne_rollen() 
+# Für Spiele mit mehr Spielern als hier definiert, verwende berechne_rollen()
 # aus game_logic.py
 
 ROLLEN_EMPFEHLUNG = {
@@ -230,19 +230,20 @@ ROLLEN_EMPFEHLUNG = {
 # HELPER FUNCTIONS
 # ============================================================================
 
+
 def get_recommended_roles(player_count: int, include_narrator: bool = False) -> list:
     """
     Gibt empfohlene Rollen für eine bestimmte Spieleranzahl zurück.
-    
+
     Args:
         player_count: Anzahl der Spieler
         include_narrator: Ob ein Erzähler dabei ist
-        
+
     Returns:
         Liste der empfohlenen Rollen-Namen
     """
     effective_count = player_count - (1 if include_narrator else 0)
-    
+
     # Suche nächste passende Konfiguration
     if effective_count in ROLLEN_EMPFEHLUNG:
         roles = ROLLEN_EMPFEHLUNG[effective_count].copy()
@@ -255,20 +256,20 @@ def get_recommended_roles(player_count: int, include_narrator: bool = False) -> 
         else:
             # Fallback für sehr kleine Spiele
             roles = ROLLEN_EMPFEHLUNG[5].copy()
-    
+
     if include_narrator:
         roles.insert(0, "Erzaehler")
-    
+
     return roles
 
 
 def get_team_color(team_name: str) -> str:
     """
     Gibt die Farbe eines Teams zurück.
-    
+
     Args:
         team_name: Name des Teams
-        
+
     Returns:
         Hex-Farbcode oder Grau als Fallback
     """

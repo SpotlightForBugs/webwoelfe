@@ -615,7 +615,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     width: 95%;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 0 60px rgba(212, 175, 55, 0.3), 0 20px 40px rgba(0, 0, 0, 0.5);
+    box-shadow:
+      0 0 60px rgba(212, 175, 55, 0.3),
+      0 20px 40px rgba(0, 0, 0, 0.5);
   }
 
   .voting-header {
@@ -665,8 +667,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
   }
 
   .timer-bar-container {
@@ -742,9 +749,15 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   @keyframes voteIn {
-    0% { transform: scale(0); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1); }
+    0% {
+      transform: scale(0);
+    }
+    50% {
+      transform: scale(1.3);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 
   /* Spieler-Karten für Voting */
@@ -756,7 +769,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   .vote-card {
-    background: linear-gradient(135deg, rgba(30, 30, 40, 0.9) 0%, rgba(20, 20, 30, 0.9) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(30, 30, 40, 0.9) 0%,
+      rgba(20, 20, 30, 0.9) 100%
+    );
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 1rem;
@@ -774,7 +791,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   .vote-card.selected {
     border-color: var(--accent-red);
-    background: linear-gradient(135deg, rgba(196, 30, 58, 0.3) 0%, rgba(100, 20, 30, 0.3) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(196, 30, 58, 0.3) 0%,
+      rgba(100, 20, 30, 0.3) 100%
+    );
     box-shadow: 0 0 30px rgba(196, 30, 58, 0.4);
   }
 
@@ -785,7 +806,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   .vote-card.is-me::after {
-    content: '(DU)';
+    content: "(DU)";
     position: absolute;
     top: 8px;
     right: 8px;
@@ -845,8 +866,14 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   @keyframes slideIn {
-    from { transform: translateX(-10px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from {
+      transform: translateX(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
 
   .vote-count-badge {
@@ -868,9 +895,15 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   @keyframes bounceIn {
-    0% { transform: scale(0); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+    0% {
+      transform: scale(0);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 
   /* Enthalten / Skip Button */
@@ -907,7 +940,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: linear-gradient(135deg, rgba(196, 30, 58, 0.95) 0%, rgba(120, 20, 40, 0.95) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(196, 30, 58, 0.95) 0%,
+      rgba(120, 20, 40, 0.95) 100%
+    );
     border: 3px solid #ff6b6b;
     border-radius: 16px;
     padding: 2rem 3rem;
@@ -918,11 +955,22 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   @keyframes shakeIn {
-    0%, 100% { transform: translate(-50%, -50%) rotate(0); }
-    20% { transform: translate(-50%, -50%) rotate(-3deg); }
-    40% { transform: translate(-50%, -50%) rotate(3deg); }
-    60% { transform: translate(-50%, -50%) rotate(-2deg); }
-    80% { transform: translate(-50%, -50%) rotate(2deg); }
+    0%,
+    100% {
+      transform: translate(-50%, -50%) rotate(0);
+    }
+    20% {
+      transform: translate(-50%, -50%) rotate(-3deg);
+    }
+    40% {
+      transform: translate(-50%, -50%) rotate(3deg);
+    }
+    60% {
+      transform: translate(-50%, -50%) rotate(-2deg);
+    }
+    80% {
+      transform: translate(-50%, -50%) rotate(2deg);
+    }
   }
 
   .accused-notification h3 {
@@ -963,7 +1011,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: conic-gradient(var(--accent-gold) 0deg, var(--accent-red) 180deg, rgba(0, 0, 0, 0.1) 180deg);
+    background: conic-gradient(
+      var(--accent-gold) 0deg,
+      var(--accent-red) 180deg,
+      rgba(0, 0, 0, 0.1) 180deg
+    );
     display: flex;
     align-items: center;
     justify-content: center;
@@ -972,7 +1024,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   .timer-circle::before {
-    content: '';
+    content: "";
     position: absolute;
     width: 110px;
     height: 110px;
@@ -1202,7 +1254,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               <span class="avatar-initial">{{ s.name[0]|upper }}</span>
               {% if ist_werwolf_team %}
               <span class="rolle-icon werwolf-icon">🐺</span>
-              {% elif ist_seherin_enthuellung and enthuellung[s.id] == 'boese' %}
+              {% elif ist_seherin_enthuellung and enthuellung[s.id] == 'boese'
+              %}
               <span class="rolle-icon boese-icon">⚠️</span>
               {% elif ist_seherin_enthuellung and enthuellung[s.id] == 'gut' %}
               <span class="rolle-icon gut-icon">✓</span>
@@ -2798,4 +2851,3 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   });
 </script>
 {% endblock %}
-

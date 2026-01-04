@@ -244,6 +244,7 @@ spiel_name }}{% endblock %} {% block content %}
         <i class="fa-solid fa-shuffle"></i> Die Sitzordnung wird bei
         Online-Spielen automatisch festgelegt.
       </p>
+
       <div
         id="village-3d-lobby-container"
         style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden"
@@ -590,16 +591,16 @@ spiel_name }}{% endblock %} {% block content %}
   function updateSpielerListe(spielerListe) {
     const container = document.getElementById("spieler-liste");
     if (!container) return;
-    
+
     container.innerHTML = "";
     spielerListe.forEach((spieler) => {
       addSpielerToList(spieler);
     });
-    
+
     updateSpielerAnzahl();
     updateStartButton();
     updateRollenVorschau();
-    
+
     // Sitzordnung aktualisieren falls vorhanden
     if (typeof initSitzordnungFromSpieler === "function") {
       initSitzordnungFromSpieler();

@@ -244,30 +244,91 @@ spiel_name }}{% endblock %} {% block content %}
         <i class="fa-solid fa-shuffle"></i> Die Sitzordnung wird bei
         Online-Spielen automatisch festgelegt.
       </p>
-      
+
       <!-- Avatar Customization Controls -->
-      <div class="card mb-3" style="background: var(--bg-secondary); padding: 1rem;">
-        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 200px;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--accent-gold);">
+      <div
+        class="card mb-3"
+        style="background: var(--bg-secondary); padding: 1rem"
+      >
+        <div
+          style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap"
+        >
+          <div style="flex: 1; min-width: 200px">
+            <label
+              style="
+                display: block;
+                margin-bottom: 0.5rem;
+                color: var(--accent-gold);
+              "
+            >
               <i class="fa-solid fa-palette"></i> Avatar-Farbe
             </label>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <button class="avatar-color-btn" data-color="0.3,0.5,0.8" style="background: rgb(76, 127, 204);" title="Blau"></button>
-              <button class="avatar-color-btn" data-color="0.8,0.3,0.3" style="background: rgb(204, 76, 76);" title="Rot"></button>
-              <button class="avatar-color-btn" data-color="0.3,0.8,0.3" style="background: rgb(76, 204, 76);" title="Grün"></button>
-              <button class="avatar-color-btn" data-color="0.8,0.8,0.3" style="background: rgb(204, 204, 76);" title="Gelb"></button>
-              <button class="avatar-color-btn" data-color="0.8,0.3,0.8" style="background: rgb(204, 76, 204);" title="Magenta"></button>
-              <button class="avatar-color-btn" data-color="0.3,0.8,0.8" style="background: rgb(76, 204, 204);" title="Cyan"></button>
-              <button class="avatar-color-btn" data-color="0.8,0.5,0.3" style="background: rgb(204, 127, 76);" title="Orange"></button>
-              <button class="avatar-color-btn" data-color="0.5,0.3,0.8" style="background: rgb(127, 76, 204);" title="Lila"></button>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+              <button
+                class="avatar-color-btn"
+                data-color="0.3,0.5,0.8"
+                style="background: rgb(76, 127, 204)"
+                title="Blau"
+              ></button>
+              <button
+                class="avatar-color-btn"
+                data-color="0.8,0.3,0.3"
+                style="background: rgb(204, 76, 76)"
+                title="Rot"
+              ></button>
+              <button
+                class="avatar-color-btn"
+                data-color="0.3,0.8,0.3"
+                style="background: rgb(76, 204, 76)"
+                title="Grün"
+              ></button>
+              <button
+                class="avatar-color-btn"
+                data-color="0.8,0.8,0.3"
+                style="background: rgb(204, 204, 76)"
+                title="Gelb"
+              ></button>
+              <button
+                class="avatar-color-btn"
+                data-color="0.8,0.3,0.8"
+                style="background: rgb(204, 76, 204)"
+                title="Magenta"
+              ></button>
+              <button
+                class="avatar-color-btn"
+                data-color="0.3,0.8,0.8"
+                style="background: rgb(76, 204, 204)"
+                title="Cyan"
+              ></button>
+              <button
+                class="avatar-color-btn"
+                data-color="0.8,0.5,0.3"
+                style="background: rgb(204, 127, 76)"
+                title="Orange"
+              ></button>
+              <button
+                class="avatar-color-btn"
+                data-color="0.5,0.3,0.8"
+                style="background: rgb(127, 76, 204)"
+                title="Lila"
+              ></button>
             </div>
           </div>
-          <div style="flex: 1; min-width: 200px;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--accent-gold);">
+          <div style="flex: 1; min-width: 200px">
+            <label
+              style="
+                display: block;
+                margin-bottom: 0.5rem;
+                color: var(--accent-gold);
+              "
+            >
               <i class="fa-solid fa-user"></i> Avatar-Stil
             </label>
-            <select id="avatar-style-select" class="form-control" style="max-width: 200px;">
+            <select
+              id="avatar-style-select"
+              class="form-control"
+              style="max-width: 200px"
+            >
               <option value="normal">Normal</option>
               <option value="tall">Groß</option>
               <option value="short">Klein</option>
@@ -276,11 +337,12 @@ spiel_name }}{% endblock %} {% block content %}
             </select>
           </div>
         </div>
-        <p class="text-muted mt-2 mb-0" style="font-size: 0.75rem;">
-          <i class="fa-solid fa-info-circle"></i> Wähle deine Avatar-Erscheinung für das 3D-Dorf
+        <p class="text-muted mt-2 mb-0" style="font-size: 0.75rem">
+          <i class="fa-solid fa-info-circle"></i> Wähle deine Avatar-Erscheinung
+          für das 3D-Dorf
         </p>
       </div>
-      
+
       <div
         id="village-3d-lobby-container"
         style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden"
@@ -631,59 +693,62 @@ spiel_name }}{% endblock %} {% block content %}
 
       // Initiale Spieler laden
       updateVillage3D();
-      
+
       // Avatar Customization Setup
       setupAvatarCustomization();
     }
   });
-  
+
   // Setup Avatar Customization Controls
   function setupAvatarCustomization() {
     const currentPlayerId = "{{ spieler.id }}";
     let selectedColor = null;
-    let selectedStyle = 'normal';
-    
+    let selectedStyle = "normal";
+
     // Color button handlers
-    document.querySelectorAll('.avatar-color-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
+    document.querySelectorAll(".avatar-color-btn").forEach((btn) => {
+      btn.addEventListener("click", function () {
         // Remove previous selection
-        document.querySelectorAll('.avatar-color-btn').forEach(b => 
-          b.style.border = '2px solid transparent'
-        );
-        
+        document
+          .querySelectorAll(".avatar-color-btn")
+          .forEach((b) => (b.style.border = "2px solid transparent"));
+
         // Mark as selected
-        this.style.border = '2px solid var(--accent-gold)';
-        
+        this.style.border = "2px solid var(--accent-gold)";
+
         // Parse color
         const colorStr = this.dataset.color;
-        const [r, g, b] = colorStr.split(',').map(parseFloat);
+        const [r, g, b] = colorStr.split(",").map(parseFloat);
         selectedColor = new pc.Color(r, g, b);
-        
+
         // Apply customization
         applyAvatarCustomization();
       });
     });
-    
+
     // Style dropdown handler
-    const styleSelect = document.getElementById('avatar-style-select');
+    const styleSelect = document.getElementById("avatar-style-select");
     if (styleSelect) {
-      styleSelect.addEventListener('change', function() {
+      styleSelect.addEventListener("change", function () {
         selectedStyle = this.value;
         applyAvatarCustomization();
       });
     }
-    
+
     // Apply customization to 3D village
     function applyAvatarCustomization() {
       if (!window.village3dLobby || !selectedColor) return;
-      
+
       const customization = {
         color: selectedColor,
-        style: selectedStyle
+        style: selectedStyle,
       };
-      
-      window.village3dLobby.setAvatarCustomization(currentPlayerId, customization);
-      
+
+      window.village3dLobby.setAvatarCustomization(
+        currentPlayerId,
+        customization,
+      );
+
       // Save to server (optional - can be added later)
       // socket.emit('avatar_customization', { playerId: currentPlayerId, customization });
     }
@@ -702,16 +767,16 @@ spiel_name }}{% endblock %} {% block content %}
   function updateSpielerListe(spielerListe) {
     const container = document.getElementById("spieler-liste");
     if (!container) return;
-    
+
     container.innerHTML = "";
     spielerListe.forEach((spieler) => {
       addSpielerToList(spieler);
     });
-    
+
     updateSpielerAnzahl();
     updateStartButton();
     updateRollenVorschau();
-    
+
     // Sitzordnung aktualisieren falls vorhanden
     if (typeof initSitzordnungFromSpieler === "function") {
       initSitzordnungFromSpieler();

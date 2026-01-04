@@ -392,12 +392,12 @@ export default class Village3DPlayCanvas {
   createVillagePaths() {
     // Main cross paths through center
     const pathPositions = [
-      { x: 0, z: 0, scaleX: 1.5, scaleZ: 35, rotation: 0 },    // North-South path
-      { x: 0, z: 0, scaleX: 35, scaleZ: 1.5, rotation: 0 },    // East-West path
+      { x: 0, z: 0, scaleX: 1.5, scaleZ: 35, rotation: 0 }, // North-South path
+      { x: 0, z: 0, scaleX: 35, scaleZ: 1.5, rotation: 0 }, // East-West path
       { x: -15, z: -12, scaleX: 12, scaleZ: 1.2, rotation: 25 }, // Path to houses
-      { x: 15, z: 10, scaleX: 10, scaleZ: 1.2, rotation: -35 },  // Path to houses
-      { x: -8, z: 15, scaleX: 8, scaleZ: 1.2, rotation: 15 },    // Path to houses
-      { x: 12, z: -10, scaleX: 9, scaleZ: 1.2, rotation: -20 },  // Path to church
+      { x: 15, z: 10, scaleX: 10, scaleZ: 1.2, rotation: -35 }, // Path to houses
+      { x: -8, z: 15, scaleX: 8, scaleZ: 1.2, rotation: 15 }, // Path to houses
+      { x: 12, z: -10, scaleX: 9, scaleZ: 1.2, rotation: -20 }, // Path to church
     ];
 
     pathPositions.forEach((pos, idx) => {
@@ -409,7 +409,11 @@ export default class Village3DPlayCanvas {
 
       const pathMat = this.getMaterial({
         name: `DirtPath-${idx % 3}`, // Use 3 variants
-        diffuse: new pc.Color(0.28 + (idx % 3) * 0.02, 0.22 + (idx % 3) * 0.02, 0.16),
+        diffuse: new pc.Color(
+          0.28 + (idx % 3) * 0.02,
+          0.22 + (idx % 3) * 0.02,
+          0.16,
+        ),
         specular: new pc.Color(0.01, 0.01, 0.01),
         shininess: 1,
       });
@@ -466,7 +470,7 @@ export default class Village3DPlayCanvas {
       crate.setEulerAngles(
         Math.random() * 10 - 5,
         Math.random() * 360,
-        Math.random() * 10 - 5
+        Math.random() * 10 - 5,
       );
 
       const crateMat = this.getMaterial({
@@ -852,7 +856,7 @@ export default class Village3DPlayCanvas {
       plant.setLocalPosition(
         -3.5 + (i % 2) * 0.8,
         0.15,
-        -3.5 + Math.floor(i / 2) * 0.8
+        -3.5 + Math.floor(i / 2) * 0.8,
       );
 
       const plantMat = this.getMaterial({

@@ -722,7 +722,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               <span class="avatar-initial">{{ s.name[0]|upper }}</span>
               {% if ist_werwolf_team %}
               <span class="rolle-icon werwolf-icon">🐺</span>
-              {% elif ist_seherin_enthuellung and enthuellung[s.id] == 'boese' %}
+              {% elif ist_seherin_enthuellung and enthuellung[s.id] == 'boese'
+              %}
               <span class="rolle-icon boese-icon">⚠️</span>
               {% elif ist_seherin_enthuellung and enthuellung[s.id] == 'gut' %}
               <span class="rolle-icon gut-icon">✓</span>
@@ -1821,4 +1822,3 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   });
 </script>
 {% endblock %}
-

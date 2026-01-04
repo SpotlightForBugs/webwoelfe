@@ -310,7 +310,9 @@ def spiel(code):
 
     # Debug logging für Rolle
     if spieler.rolle:
-        log_ts(f"[Spiel] Spieler {spieler.name} hat Rolle: {spieler.rolle}, Team: {rolle_info.get('team', 'NICHT GEFUNDEN')}")
+        log_ts(
+            f"[Spiel] Spieler {spieler.name} hat Rolle: {spieler.rolle}, Team: {rolle_info.get('team', 'NICHT GEFUNDEN')}"
+        )
 
     # Logs fuer Spieler - SICHER: Nur fuer den Spieler sichtbare Logs
     if spieler.ist_erzaehler:
@@ -707,12 +709,18 @@ def handle_raum_beitreten(data):
             )
 
             # Online-Modus: Sende Erzählung für aktuelle Phase wenn Spiel läuft
-            if raum.modus == "online" and raum.spiel_gestartet and raum.aktuelle_phase in ERZAEHLER_TEXTE:
+            if (
+                raum.modus == "online"
+                and raum.spiel_gestartet
+                and raum.aktuelle_phase in ERZAEHLER_TEXTE
+            ):
                 erzaehler_info = ERZAEHLER_TEXTE[raum.aktuelle_phase]
                 erzaehlung_text = erzaehler_info.get("text", "")
                 audio_path = None
                 if erzaehlung_text:
-                    audio_path = generiere_erzaehler_audio(erzaehlung_text, stil="normal")
+                    audio_path = generiere_erzaehler_audio(
+                        erzaehlung_text, stil="normal"
+                    )
                 emit("erzaehlung", {"text": erzaehlung_text, "audio": audio_path})
 
 
@@ -757,19 +765,28 @@ def handle_spiel_starten(data):
                 erzaehlung_text = erzaehler_info.get("text", "")
                 audio_path = None
                 if erzaehlung_text:
-                    audio_path = generiere_erzaehler_audio(erzaehlung_text, stil="normal")
+                    audio_path = generiere_erzaehler_audio(
+                        erzaehlung_text, stil="normal"
+                    )
                 socketio.emit(
-                    "erzaehlung", {"text": erzaehlung_text, "audio": audio_path}, room=raum.code
+                    "erzaehlung",
+                    {"text": erzaehlung_text, "audio": audio_path},
+                    room=raum.code,
                 )
 
             # Starte automatische Phasen-Progression
             import threading
+
             def auto_advance_initial():
                 import time
+
                 time.sleep(5)  # 5 Sekunden für Rollen-Verteilung
                 with app.app_context():
                     raum_aktuell = db.session.get(Raum, raum.id)
-                    if raum_aktuell and raum_aktuell.aktuelle_phase == "rollen_verteilt":
+                    if (
+                        raum_aktuell
+                        and raum_aktuell.aktuelle_phase == "rollen_verteilt"
+                    ):
                         _wechsel_phase_intern(raum_aktuell)
 
             threading.Thread(target=auto_advance_initial, daemon=True).start()
@@ -881,15 +898,19 @@ def _wechsel_phase_intern(raum):
         phase_bei_start = neue_phase
 
         import threading
+
         def auto_advance_fallback():
             import time
+
             # Warte auf Fallback-Timeout (falls Audio nicht abgespielt wird)
             time.sleep(PHASE_WECHSEL_DELAY)
             with app.app_context():
                 raum_aktuell = Raum.query.filter_by(code=raum_code).first()
                 if raum_aktuell and raum_aktuell.aktuelle_phase == phase_bei_start:
                     # Phase wurde noch nicht gewechselt (Audio-Event kam nicht an)
-                    log_ts(f"[Phase] Fallback-Timeout für {phase_bei_start}, wechsle Phase")
+                    log_ts(
+                        f"[Phase] Fallback-Timeout für {phase_bei_start}, wechsle Phase"
+                    )
                     _wechsel_phase_intern(raum_aktuell)
 
         threading.Thread(target=auto_advance_fallback, daemon=True).start()
@@ -1151,12 +1172,16 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     """Verarbeitet eine Spielaktion"""
 
     if aktion_typ == "werwolf_wahl":
-        log_ts(f"[Aktion] werwolf_wahl von {spieler.name} (Rolle: {spieler.rolle}) für Ziel-ID: {ziel_id}")
+        log_ts(
+            f"[Aktion] werwolf_wahl von {spieler.name} (Rolle: {spieler.rolle}) für Ziel-ID: {ziel_id}"
+        )
         if (
             not game_logic.ist_werwolf_rolle(spieler.rolle)
             or raum.aktuelle_phase != "werwolf_phase"
         ):
-            log_ts(f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}")
+            log_ts(
+                f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}"
+            )
             return False
         if game_logic.hat_spieler_gewaehlt(spieler, raum, "werwolf_phase"):
             log_ts(f"[Aktion] ABGELEHNT: {spieler.name} hat bereits gewählt")
@@ -1258,7 +1283,9 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     elif aktion_typ == "armor_verlieben":
         log_ts(f"[Aktion] armor_verlieben von {spieler.name} (Rolle: {spieler.rolle})")
         if spieler.rolle != "Amor" or raum.aktuelle_phase != "amor_phase":
-            log_ts(f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}")
+            log_ts(
+                f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}"
+            )
             return False
         if not spieler.armor_verliebt:
             log_ts(f"[Aktion] ABGELEHNT: armor_verliebt bereits False")
@@ -1352,12 +1379,18 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             return False
 
         # Build a SpielKontext for the role
-        lebende = [s.id for s in Spieler.query.filter_by(
-            raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
-        ).all()]
-        tote = [s.id for s in Spieler.query.filter_by(
-            raum_id=raum.id, ist_am_leben=False, ist_erzaehler=False
-        ).all()]
+        lebende = [
+            s.id
+            for s in Spieler.query.filter_by(
+                raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
+            ).all()
+        ]
+        tote = [
+            s.id
+            for s in Spieler.query.filter_by(
+                raum_id=raum.id, ist_am_leben=False, ist_erzaehler=False
+            ).all()
+        ]
 
         kontext = SpielKontext(
             raum_id=raum.id,
@@ -1387,10 +1420,13 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
             # Send result to the player
             if ergebnis.nachricht:
-                emit("aktion_ergebnis", {
-                    "nachricht": ergebnis.nachricht,
-                    "effekte": ergebnis.effekte,
-                })
+                emit(
+                    "aktion_ergebnis",
+                    {
+                        "nachricht": ergebnis.nachricht,
+                        "effekte": ergebnis.effekte,
+                    },
+                )
 
             db.session.commit()
             return True
@@ -1421,7 +1457,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
                     socketio.emit(
                         "hexe_info",
                         {"opfer_name": opfer.name, "opfer_id": opfer.id},
-                        room=request.sid if hasattr(request, 'sid') else raum.code,
+                        room=request.sid if hasattr(request, "sid") else raum.code,
                     )
 
     # WICHTIG: Nacht-Tode bei nacht_ende verarbeiten!
@@ -1458,7 +1494,9 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         if werwolf_opfer and werwolf_opfer.ziel_spieler_id:
             opfer = db.session.get(Spieler, werwolf_opfer.ziel_spieler_id)
             if opfer:
-                log_ts(f"[Nacht] Werwolf-Opfer: {opfer.name}, am_leben={opfer.ist_am_leben}")
+                log_ts(
+                    f"[Nacht] Werwolf-Opfer: {opfer.name}, am_leben={opfer.ist_am_leben}"
+                )
             if opfer and opfer.ist_am_leben:
                 # Pruefen ob geheilt
                 if geheilt and geheilt.ziel_spieler_id == opfer.id:
@@ -1578,7 +1616,8 @@ def pruefe_phase_abschluss(raum):
             _wechsel_phase_intern(raum)
             return
         alle_fertig = all(
-            game_logic.hat_spieler_gewaehlt(s, raum, "seherin_phase") for s in seherin_spieler
+            game_logic.hat_spieler_gewaehlt(s, raum, "seherin_phase")
+            for s in seherin_spieler
         )
         if alle_fertig:
             log_ts(f"[Phase] seherin_phase abgeschlossen, wechsle Phase")
@@ -1606,7 +1645,8 @@ def pruefe_phase_abschluss(raum):
             _wechsel_phase_intern(raum)
             return
         alle_fertig = all(
-            game_logic.hat_spieler_gewaehlt(h, raum, "heiler_phase") for h in heiler_spieler
+            game_logic.hat_spieler_gewaehlt(h, raum, "heiler_phase")
+            for h in heiler_spieler
         )
         if alle_fertig:
             log_ts(f"[Phase] heiler_phase abgeschlossen, wechsle Phase")
@@ -1644,64 +1684,64 @@ def pruefe_phase_abschluss(raum):
 
         # Mapping of phases to role names (extended list)
         phase_rolle_map = {
-            'seherlehrling_phase': 'Seherlehrling',
-            'aurenseherin_phase': 'Aurenseherin',
-            'medium_phase': 'Medium',
-            'tratschweib_phase': 'Tratschweib',
-            'paranormal_billig_phase': 'Paranormaler Ermittler (billig)',
-            'werwolfseherin_phase': 'Werwolfseherin',
-            'demoskopin_phase': 'Demoskopin',
-            'baerenbaendiger_phase': 'Bärenbändiger',
-            'leibwaechter_phase': 'Leibwächter',
-            'prostituierte_phase': 'Prostituierte',
-            'hure_phase': 'Prostituierte',
-            'nutte_phase': 'Prostituierte',
-            'ergebene_magd_phase': 'Ergebene Magd',
-            'oma_phase': 'Oma',
-            'hexenmeister_phase': 'Hexenmeister',
-            'giftmischerin_phase': 'Giftmischerin',
-            'kraeuterweib_phase': 'Kräuterweib',
-            'zauberer_phase': 'Zauberer',
-            'sandmann_phase': 'Sandmann',
-            'hahn_phase': 'Hahn',
-            'kamikaze_phase': 'Kamikaze',
-            'prinz_phase': 'Prinz',
-            'koenig_phase': 'König',
-            'buddler_phase': 'Buddler',
-            'pyromane_phase': 'Pyromane',
-            'flammenmann_phase': 'Flammenmann',
-            'drachenbaendiger_phase': 'Drachenbändiger',
-            'gaukler_phase': 'Gaukler',
-            'inquisitor_phase': 'Inquisitor',
-            'tanklastwagenfahrer_phase': 'Tanklastwagenfahrer',
-            'einsamer_wolf_phase': 'Einsamer Wolf',
-            'urwolf_phase': 'Urwolf',
-            'weisser_wolf_phase': 'Weißer Wolf',
-            'mordlustiger_phase': 'Mordlustiger Werwolf',
-            'wildes_kind_phase': 'Wildes Kind',
-            'wolfsjunge_phase': 'Wolfsjunge',
-            'teenager_werwolf_phase': 'Teenager-Werwolf',
-            'polarwolf_phase': 'Polarwolf',
-            'lupin_phase': 'Lupin',
-            'wolf_im_schafspelz_phase': 'Wolf im Schafspelz',
-            'vampir_phase': 'Vampir',
-            'zombie_phase': 'Zombie',
-            'floetenspieler_phase': 'Flötenspieler',
-            'henker_phase': 'Henker',
-            'selbstmoerder_phase': 'Selbstmörder',
-            'dieb_phase': 'Dieb',
-            'doppelgaenger_phase': 'Doppelgänger',
-            'dunkler_priester_phase': 'Dunkler Priester',
-            'hund_phase': 'Hund',
-            'tonks_phase': 'Tonks',
-            'griesgram_phase': 'Griesgram',
-            'jesus_phase': 'Jesus',
-            'rabe_phase': 'Rabe',
-            'zahnarzt_phase': 'Zahnarzt',
-            'engel_phase': 'Engel',
-            'gerber_phase': 'Gerber',
-            'kleines_maedchen_phase': 'Kleines Mädchen',
-            'putzfrau_phase': 'Putzfrau',
+            "seherlehrling_phase": "Seherlehrling",
+            "aurenseherin_phase": "Aurenseherin",
+            "medium_phase": "Medium",
+            "tratschweib_phase": "Tratschweib",
+            "paranormal_billig_phase": "Paranormaler Ermittler (billig)",
+            "werwolfseherin_phase": "Werwolfseherin",
+            "demoskopin_phase": "Demoskopin",
+            "baerenbaendiger_phase": "Bärenbändiger",
+            "leibwaechter_phase": "Leibwächter",
+            "prostituierte_phase": "Prostituierte",
+            "hure_phase": "Prostituierte",
+            "nutte_phase": "Prostituierte",
+            "ergebene_magd_phase": "Ergebene Magd",
+            "oma_phase": "Oma",
+            "hexenmeister_phase": "Hexenmeister",
+            "giftmischerin_phase": "Giftmischerin",
+            "kraeuterweib_phase": "Kräuterweib",
+            "zauberer_phase": "Zauberer",
+            "sandmann_phase": "Sandmann",
+            "hahn_phase": "Hahn",
+            "kamikaze_phase": "Kamikaze",
+            "prinz_phase": "Prinz",
+            "koenig_phase": "König",
+            "buddler_phase": "Buddler",
+            "pyromane_phase": "Pyromane",
+            "flammenmann_phase": "Flammenmann",
+            "drachenbaendiger_phase": "Drachenbändiger",
+            "gaukler_phase": "Gaukler",
+            "inquisitor_phase": "Inquisitor",
+            "tanklastwagenfahrer_phase": "Tanklastwagenfahrer",
+            "einsamer_wolf_phase": "Einsamer Wolf",
+            "urwolf_phase": "Urwolf",
+            "weisser_wolf_phase": "Weißer Wolf",
+            "mordlustiger_phase": "Mordlustiger Werwolf",
+            "wildes_kind_phase": "Wildes Kind",
+            "wolfsjunge_phase": "Wolfsjunge",
+            "teenager_werwolf_phase": "Teenager-Werwolf",
+            "polarwolf_phase": "Polarwolf",
+            "lupin_phase": "Lupin",
+            "wolf_im_schafspelz_phase": "Wolf im Schafspelz",
+            "vampir_phase": "Vampir",
+            "zombie_phase": "Zombie",
+            "floetenspieler_phase": "Flötenspieler",
+            "henker_phase": "Henker",
+            "selbstmoerder_phase": "Selbstmörder",
+            "dieb_phase": "Dieb",
+            "doppelgaenger_phase": "Doppelgänger",
+            "dunkler_priester_phase": "Dunkler Priester",
+            "hund_phase": "Hund",
+            "tonks_phase": "Tonks",
+            "griesgram_phase": "Griesgram",
+            "jesus_phase": "Jesus",
+            "rabe_phase": "Rabe",
+            "zahnarzt_phase": "Zahnarzt",
+            "engel_phase": "Engel",
+            "gerber_phase": "Gerber",
+            "kleines_maedchen_phase": "Kleines Mädchen",
+            "putzfrau_phase": "Putzfrau",
         }
 
         rolle_name = phase_rolle_map.get(aktuelle_phase)
@@ -1713,7 +1753,8 @@ def pruefe_phase_abschluss(raum):
                 return
 
             alle_fertig = all(
-                game_logic.hat_spieler_gewaehlt(s, raum, aktuelle_phase) for s in rolle_spieler
+                game_logic.hat_spieler_gewaehlt(s, raum, aktuelle_phase)
+                for s in rolle_spieler
             )
             if alle_fertig:
                 log_ts(f"[Phase] {aktuelle_phase} abgeschlossen, wechsle Phase")

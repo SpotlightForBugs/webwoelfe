@@ -1,5 +1,15 @@
 from datetime import datetime, timedelta
-from models import db, Raum, Spieler, SpielAktion, SpielLog, ErzaehlerEvent, SeherinEnthuellung, SpielerPosition
+from models import (
+    db,
+    Raum,
+    Spieler,
+    SpielAktion,
+    SpielLog,
+    ErzaehlerEvent,
+    SeherinEnthuellung,
+    SpielerPosition,
+)
+
 
 def cleanup_old_games(app, max_age_hours=24):
     """
@@ -17,7 +27,9 @@ def cleanup_old_games(app, max_age_hours=24):
             if count == 0:
                 return
 
-            print(f"[Cleanup] Lösche {count} alte Räume (älter als {max_age_hours}h)...")
+            print(
+                f"[Cleanup] Lösche {count} alte Räume (älter als {max_age_hours}h)..."
+            )
 
             for room in old_rooms:
                 room_id = room.id
@@ -57,4 +69,3 @@ def cleanup_old_games(app, max_age_hours=24):
         except Exception as e:
             db.session.rollback()
             print(f"[Cleanup] Fehler bei der Bereinigung: {e}")
-

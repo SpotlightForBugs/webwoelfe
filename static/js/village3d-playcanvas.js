@@ -50,6 +50,24 @@ export default class Village3DPlayCanvas {
     // Lobby mode - simplified view with no buildings/environment
     this.isLobbyMode = options.lobbyMode || false;
 
+    // Player layout mode: 'circle', 'double_circle', 'clusters', 'grid'
+    this.layoutMode = 'circle';
+    
+    // Track sleeping/inactive players for day/night cycle
+    this.sleepingPlayers = new Set();
+    
+    // Avatar customization - store custom colors/styles per player
+    this.avatarCustomization = new Map();
+    
+    // Available avatar styles
+    this.avatarStyles = {
+      'normal': { scale: 1.0, headShape: 'sphere' },
+      'tall': { scale: 1.15, headShape: 'sphere' },
+      'short': { scale: 0.85, headShape: 'sphere' },
+      'round': { scale: 1.0, headShape: 'sphere', bodyScale: 1.2 },
+      'slim': { scale: 1.0, headShape: 'sphere', bodyScale: 0.8 }
+    };
+
     // Role colors for player appearance - ALL ROLES
     this.roleColors = {
       // === GRUNDROLLEN ===
@@ -168,12 +186,19 @@ export default class Village3DPlayCanvas {
     this.canvas.tabIndex = 0; // Make canvas focusable
     this.container.appendChild(this.canvas);
 
-    // Initialize PlayCanvas
+    // Initialize PlayCanvas with antialiasing for sharper rendering
     this.app = new pc.Application(this.canvas, {
       mouse: new pc.Mouse(this.canvas),
       touch: new pc.TouchDevice(this.canvas),
       keyboard: new pc.Keyboard(window),
       elementInput: new pc.ElementInput(this.canvas),
+      graphicsDeviceOptions: {
+        antialias: true,
+        alpha: false,
+        depth: true,
+        stencil: true,
+        powerPreference: "high-performance"
+      }
     });
 
     this.app.start();
@@ -181,11 +206,15 @@ export default class Village3DPlayCanvas {
     this.app.setCanvasFillMode(pc.FILLMODE_NONE);
     this.app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-    // Resize handler to match container size
+    // Resize handler to match container size with device pixel ratio for sharpness
     const resizeCanvas = () => {
       if (this.container && this.canvas) {
-        this.canvas.width = this.container.clientWidth;
-        this.canvas.height = this.container.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
+        const width = this.container.clientWidth;
+        const height = this.container.clientHeight;
+        // Set canvas buffer size to account for device pixel ratio for sharper rendering
+        this.canvas.width = width * dpr;
+        this.canvas.height = height * dpr;
         this.app.resizeCanvas();
       }
     };
@@ -1138,7 +1167,20 @@ export default class Village3DPlayCanvas {
     console.log("[Village3D] setPlayers called with", players.length, "players");
 
     const count = players.length;
-    const radius = 8;
+    
+    // Adaptive layout based on player count
+    if (count <= 12) {
+      this.layoutMode = 'circle';
+    } else if (count <= 30) {
+      this.layoutMode = 'double_circle';
+    } else if (count <= 60) {
+      this.layoutMode = 'clusters';
+    } else {
+      this.layoutMode = 'grid';
+    }
+    
+    console.log(`[Village3D] Using ${this.layoutMode} layout for ${count} players`);
+    
     const currentIds = new Set(players.map((p) => p.id));
 
     // Remove players that are no longer in the list
@@ -1155,9 +1197,9 @@ export default class Village3DPlayCanvas {
     });
 
     players.forEach((player, index) => {
-      const angle = (index / count) * Math.PI * 2;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
+      const position = this.getPlayerPosition(index, count);
+      const x = position.x;
+      const z = position.z;
 
       let entity = this.playerEntities.get(player.id);
       if (entity) {
@@ -1173,6 +1215,7 @@ export default class Village3DPlayCanvas {
         console.log(
           `[Village3D] Creating player ${player.name} at position (${x.toFixed(2)}, 0, ${z.toFixed(2)})`,
         );
+        const angle = Math.atan2(x, z);
         entity = this.createDetailedPlayer(player, x, z, angle);
         this.app.root.addChild(entity);
         this.playerEntities.set(player.id, entity);
@@ -1183,6 +1226,83 @@ export default class Village3DPlayCanvas {
       "[Village3D] All players processed. Total:",
       this.playerEntities.size,
     );
+  }
+
+  /**
+   * Calculate player position based on layout mode
+   * @param {number} index - Player index
+   * @param {number} total - Total number of players
+   * @returns {{x: number, z: number}} Position coordinates
+   */
+  getPlayerPosition(index, total) {
+    switch (this.layoutMode) {
+      case 'circle':
+        return this.getCirclePosition(index, total, 8);
+      
+      case 'double_circle':
+        // Split into two concentric circles
+        const innerCount = Math.ceil(total / 2);
+        if (index < innerCount) {
+          return this.getCirclePosition(index, innerCount, 6);
+        } else {
+          return this.getCirclePosition(index - innerCount, total - innerCount, 11);
+        }
+      
+      case 'clusters':
+        // Arrange in clusters of ~10 players
+        const clusterSize = 10;
+        const clusterIndex = Math.floor(index / clusterSize);
+        const posInCluster = index % clusterSize;
+        const totalClusters = Math.ceil(total / clusterSize);
+        
+        // Position clusters in a circle
+        const clusterAngle = (clusterIndex / totalClusters) * Math.PI * 2;
+        const clusterRadius = 12;
+        const clusterCenterX = Math.cos(clusterAngle) * clusterRadius;
+        const clusterCenterZ = Math.sin(clusterAngle) * clusterRadius;
+        
+        // Position within cluster (small circle)
+        const inClusterAngle = (posInCluster / clusterSize) * Math.PI * 2;
+        const inClusterRadius = 3;
+        
+        return {
+          x: clusterCenterX + Math.cos(inClusterAngle) * inClusterRadius,
+          z: clusterCenterZ + Math.sin(inClusterAngle) * inClusterRadius
+        };
+      
+      case 'grid':
+        // Arrange in a grid pattern
+        const cols = Math.ceil(Math.sqrt(total * 1.5)); // Wider than tall
+        const row = Math.floor(index / cols);
+        const col = index % cols;
+        
+        const spacing = 2.5;
+        const gridWidth = (cols - 1) * spacing;
+        const gridHeight = (Math.ceil(total / cols) - 1) * spacing;
+        
+        return {
+          x: (col * spacing) - (gridWidth / 2),
+          z: (row * spacing) - (gridHeight / 2)
+        };
+      
+      default:
+        return this.getCirclePosition(index, total, 8);
+    }
+  }
+
+  /**
+   * Get position on a circle
+   * @param {number} index 
+   * @param {number} total 
+   * @param {number} radius 
+   * @returns {{x: number, z: number}}
+   */
+  getCirclePosition(index, total, radius) {
+    const angle = (index / total) * Math.PI * 2;
+    return {
+      x: Math.cos(angle) * radius,
+      z: Math.sin(angle) * radius
+    };
   }
 
   createDetailedPlayer(player, x, z, angle) {
@@ -1222,6 +1342,12 @@ export default class Village3DPlayCanvas {
 
       // Store data
       entity.playerData = player;
+      
+      // Apply avatar customization if available
+      const customization = this.avatarCustomization.get(player.id);
+      if (customization) {
+        this.applyAvatarCustomization(entity, customization);
+      }
       
       console.log(`[Village3D] Player ${player.name} fully configured at (${x.toFixed(2)}, 0, ${z.toFixed(2)})`);
       return entity;
@@ -3252,6 +3378,13 @@ export default class Village3DPlayCanvas {
           }
         });
       });
+      
+      // Make sleeping/inactive players appear to sleep at night
+      this.playerEntities.forEach((entity, playerId) => {
+        if (this.sleepingPlayers.has(playerId)) {
+          this.applySleepingState(entity, true);
+        }
+      });
     } else {
       // Day settings
       this.light.light.color = new pc.Color(1, 0.95, 0.85); // Warm sunlight
@@ -3279,6 +3412,101 @@ export default class Village3DPlayCanvas {
           }
         });
       });
+      
+      // Wake up all players during day
+      this.playerEntities.forEach((entity) => {
+        this.applySleepingState(entity, false);
+      });
+    }
+  }
+
+  /**
+   * Apply or remove sleeping visual state to a player
+   * @param {pc.Entity} entity - Player entity
+   * @param {boolean} isSleeping - Whether player is sleeping
+   */
+  applySleepingState(entity, isSleeping) {
+    if (!entity || !entity.parts) return;
+    
+    if (isSleeping) {
+      // Tilt head down as if sleeping
+      if (entity.parts.head) {
+        entity.parts.head.setLocalEulerAngles(20, 0, 0); // Head tilted down
+      }
+      
+      // Lower arms
+      if (entity.parts.arms && entity.parts.arms.length > 0) {
+        entity.parts.arms.forEach((armPivot) => {
+          armPivot.setLocalEulerAngles(0, 0, 0); // Arms at rest
+        });
+      }
+      
+      // Add Z's floating above head
+      if (!entity.findByName("SleepingZ")) {
+        const zMarker = new pc.Entity("SleepingZ");
+        zMarker.addComponent("model", { type: "plane" });
+        zMarker.setLocalPosition(0, 3.2, 0);
+        zMarker.setLocalScale(0.5, 0.5, 0.5);
+        
+        // Create canvas with "Z" text
+        const canvas = document.createElement("canvas");
+        canvas.width = 128;
+        canvas.height = 128;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.font = "bold 80px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("Z", 64, 64);
+        
+        const texture = new pc.Texture(this.app.graphicsDevice, {
+          width: canvas.width,
+          height: canvas.height,
+          format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        });
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        texture.lock().set(new Uint8Array(pixels.data));
+        texture.unlock();
+        
+        const mat = new pc.StandardMaterial();
+        mat.diffuseMap = texture;
+        mat.emissive = new pc.Color(1, 1, 1);
+        mat.opacity = 0.8;
+        mat.blendType = pc.BLEND_NORMAL;
+        mat.cull = pc.CULLFACE_NONE;
+        mat.update();
+        zMarker.model.material = mat;
+        
+        entity.addChild(zMarker);
+      }
+    } else {
+      // Reset to normal posture
+      if (entity.parts.head) {
+        entity.parts.head.setLocalEulerAngles(0, 0, 0);
+      }
+      
+      // Remove Z marker
+      const zMarker = entity.findByName("SleepingZ");
+      if (zMarker) {
+        zMarker.destroy();
+      }
+    }
+  }
+
+  /**
+   * Mark a player as sleeping/inactive
+   * @param {string} playerId 
+   */
+  setPlayerSleeping(playerId, isSleeping) {
+    if (isSleeping) {
+      this.sleepingPlayers.add(playerId);
+    } else {
+      this.sleepingPlayers.delete(playerId);
+    }
+    
+    const entity = this.playerEntities.get(playerId);
+    if (entity && this.isNight) {
+      this.applySleepingState(entity, isSleeping);
     }
   }
 
@@ -4126,5 +4354,83 @@ export default class Village3DPlayCanvas {
       tombstone.model.material = mat;
       entity.addChild(tombstone);
     }
+  }
+
+  /**
+   * Set custom avatar appearance for a player
+   * @param {string} playerId - Player ID
+   * @param {Object} customization - { color: pc.Color, style: string }
+   */
+  setAvatarCustomization(playerId, customization) {
+    this.avatarCustomization.set(playerId, customization);
+    
+    // Apply to existing entity if present
+    const entity = this.playerEntities.get(playerId);
+    if (entity) {
+      this.applyAvatarCustomization(entity, customization);
+    }
+  }
+
+  /**
+   * Apply avatar customization to an entity
+   * @param {pc.Entity} entity 
+   * @param {Object} customization 
+   */
+  applyAvatarCustomization(entity, customization) {
+    if (!entity || !entity.parts) return;
+    
+    const { color, style } = customization;
+    const styleConfig = this.avatarStyles[style] || this.avatarStyles['normal'];
+    
+    // Apply custom color to body parts
+    if (color && entity.parts.body) {
+      const customMat = new pc.StandardMaterial();
+      customMat.diffuse = color;
+      customMat.specular = new pc.Color(0.2, 0.2, 0.2);
+      customMat.shininess = 20;
+      customMat.update();
+      
+      entity.parts.body.model.material = customMat;
+      if (entity.parts.torso) entity.parts.torso.model.material = customMat;
+    }
+    
+    // Apply style scaling
+    if (styleConfig.scale !== 1.0) {
+      const currentScale = entity.getLocalScale();
+      entity.setLocalScale(
+        currentScale.x * styleConfig.scale,
+        currentScale.y * styleConfig.scale,
+        currentScale.z * styleConfig.scale
+      );
+    }
+    
+    if (styleConfig.bodyScale && entity.parts.torso) {
+      const currentScale = entity.parts.torso.getLocalScale();
+      entity.parts.torso.setLocalScale(
+        currentScale.x * styleConfig.bodyScale,
+        currentScale.y,
+        currentScale.z * styleConfig.bodyScale
+      );
+    }
+  }
+
+  /**
+   * Get available avatar customization options
+   * @returns {Object} Available styles and default colors
+   */
+  getCustomizationOptions() {
+    return {
+      styles: Object.keys(this.avatarStyles),
+      defaultColors: [
+        new pc.Color(0.3, 0.5, 0.8),  // Blue
+        new pc.Color(0.8, 0.3, 0.3),  // Red
+        new pc.Color(0.3, 0.8, 0.3),  // Green
+        new pc.Color(0.8, 0.8, 0.3),  // Yellow
+        new pc.Color(0.8, 0.3, 0.8),  // Magenta
+        new pc.Color(0.3, 0.8, 0.8),  // Cyan
+        new pc.Color(0.8, 0.5, 0.3),  // Orange
+        new pc.Color(0.5, 0.3, 0.8),  // Purple
+      ]
+    };
   }
 }

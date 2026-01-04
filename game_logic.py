@@ -357,6 +357,18 @@ def phasennamen_zu_rollen_mapping() -> dict:
             if phase_key in PHASEN:
                 mapping[phase_key] = rollen_name
 
+    # Spezielle Info-Phasen, die eine bestimmte Rolle erfordern
+    # Diese folgen nicht dem _phase-Schema, müssen aber trotzdem übersprungen werden
+    SPEZIELLE_PHASEN_MAPPING = {
+        "verliebte_info": "Amor",  # Nur relevant wenn Amor im Spiel
+        "baerenbaendiger_brummen": "Bärenbändiger",  # Nur relevant wenn Bärenbändiger im Spiel
+        "demoskopin_info": "Demoskopin",  # Nur relevant wenn Demoskopin im Spiel
+        "prinz_enthuellung": "Prinz",  # Nur relevant wenn Prinz im Spiel
+        "hahn_enthuellung": "Hahn",  # Nur relevant wenn Hahn im Spiel
+        "putzfrau_info": "Putzfrau",  # Nur relevant wenn Putzfrau im Spiel
+    }
+    mapping.update(SPEZIELLE_PHASEN_MAPPING)
+
     return mapping
 
 

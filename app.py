@@ -1246,6 +1246,15 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         db.session.commit()
         return True
 
+    elif aktion_typ == "hexe_nichts":
+        if spieler.rolle != "Hexe" or raum.aktuelle_phase != "hexe_phase":
+            return False
+        game_logic.registriere_aktion(
+            raum.id, raum.runde, "hexe_phase", "nichts", spieler.id
+        )
+        db.session.commit()
+        return True
+
     elif aktion_typ == "armor_verlieben":
         log_ts(f"[Aktion] armor_verlieben von {spieler.name} (Rolle: {spieler.rolle})")
         if spieler.rolle != "Amor" or raum.aktuelle_phase != "amor_phase":

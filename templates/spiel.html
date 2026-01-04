@@ -587,6 +587,486 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     border-left: 4px solid var(--accent-red);
     font-size: 0.9rem;
   }
+
+  /* ===================================================================
+     DISKUSSION & ABSTIMMUNG PHASE - AMONG US STYLE VOTING UI
+     =================================================================== */
+
+  .voting-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .voting-panel {
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    border: 3px solid var(--accent-gold);
+    border-radius: 20px;
+    padding: 1.5rem;
+    max-width: 900px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 0 60px rgba(212, 175, 55, 0.3), 0 20px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .voting-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+  }
+
+  .voting-header h2 {
+    color: var(--accent-gold);
+    font-size: 1.8rem;
+    margin: 0 0 0.5rem 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+  }
+
+  .voting-header .subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  /* Timer mit Fortschrittsbalken */
+  .voting-timer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+  }
+
+  .timer-countdown {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--accent-gold);
+    min-width: 80px;
+    text-align: center;
+    font-family: monospace;
+  }
+
+  .timer-countdown.warning {
+    color: #ff6b6b;
+    animation: pulse 0.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .timer-bar-container {
+    flex: 1;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-gold), #f0d78c);
+    border-radius: 6px;
+    transition: width 1s linear;
+  }
+
+  .timer-bar.warning {
+    background: linear-gradient(90deg, #ff6b6b, #ff4757);
+  }
+
+  /* Voting Progress - Wer hat abgestimmt */
+  .voting-progress {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(45, 134, 89, 0.2);
+    border: 1px solid rgba(45, 134, 89, 0.4);
+    border-radius: 10px;
+  }
+
+  .voting-progress-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  .voting-progress-text strong {
+    color: var(--accent-green);
+    font-size: 1.1rem;
+  }
+
+  .voting-progress-dots {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .voter-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: white;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+  }
+
+  .voter-dot.voted {
+    background: var(--accent-green);
+    border-color: #4ade80;
+    animation: voteIn 0.4s ease;
+  }
+
+  .voter-dot.is-me {
+    border-color: var(--accent-gold);
+  }
+
+  @keyframes voteIn {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  /* Spieler-Karten für Voting */
+  .voting-candidates {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .vote-card {
+    background: linear-gradient(135deg, rgba(30, 30, 40, 0.9) 0%, rgba(20, 20, 30, 0.9) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .vote-card:hover:not(.is-me):not(.voted) {
+    border-color: var(--accent-gold);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2);
+  }
+
+  .vote-card.selected {
+    border-color: var(--accent-red);
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.3) 0%, rgba(100, 20, 30, 0.3) 100%);
+    box-shadow: 0 0 30px rgba(196, 30, 58, 0.4);
+  }
+
+  .vote-card.is-me {
+    border-color: var(--accent-gold);
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  .vote-card.is-me::after {
+    content: '(DU)';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.7rem;
+    color: var(--accent-gold);
+    font-weight: bold;
+  }
+
+  .vote-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .vote-card-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #3a5a8a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .vote-card-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+  }
+
+  /* Stimmen-Anzeige auf der Karte */
+  .vote-card-votes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 28px;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+  }
+
+  .vote-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: rgba(196, 30, 58, 0.6);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: white;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(-10px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .vote-count-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 32px;
+    height: 32px;
+    background: var(--accent-red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 2px 10px rgba(196, 30, 58, 0.5);
+    animation: bounceIn 0.4s ease;
+  }
+
+  @keyframes bounceIn {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  /* Enthalten / Skip Button */
+  .vote-skip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(100, 100, 100, 0.3);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-secondary);
+    font-size: 1rem;
+  }
+
+  .vote-skip:hover {
+    border-color: var(--text-secondary);
+    background: rgba(100, 100, 100, 0.5);
+  }
+
+  .vote-skip.selected {
+    border-color: var(--accent-gold);
+    border-style: solid;
+    background: rgba(212, 175, 55, 0.2);
+    color: var(--accent-gold);
+  }
+
+  /* Angeklagt-Benachrichtigung */
+  .accused-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.95) 0%, rgba(120, 20, 40, 0.95) 100%);
+    border: 3px solid #ff6b6b;
+    border-radius: 16px;
+    padding: 2rem 3rem;
+    text-align: center;
+    z-index: 2000;
+    animation: shakeIn 0.5s ease;
+    box-shadow: 0 0 60px rgba(196, 30, 58, 0.6);
+  }
+
+  @keyframes shakeIn {
+    0%, 100% { transform: translate(-50%, -50%) rotate(0); }
+    20% { transform: translate(-50%, -50%) rotate(-3deg); }
+    40% { transform: translate(-50%, -50%) rotate(3deg); }
+    60% { transform: translate(-50%, -50%) rotate(-2deg); }
+    80% { transform: translate(-50%, -50%) rotate(2deg); }
+  }
+
+  .accused-notification h3 {
+    color: white;
+    font-size: 1.5rem;
+    margin: 0 0 0.5rem 0;
+    text-transform: uppercase;
+  }
+
+  .accused-notification p {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .accused-notification .accuser {
+    color: var(--accent-gold);
+    font-weight: bold;
+  }
+
+  /* Legacy styles for fallback */
+  .abstimmung-container {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .timer-display {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  .timer-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent-gold) 0deg, var(--accent-red) 180deg, rgba(0, 0, 0, 0.1) 180deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .timer-circle::before {
+    content: '';
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .timer-text {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .timer-text #timer-sekunden {
+    display: block;
+    font-size: 2.5rem;
+    color: var(--accent-gold);
+    line-height: 1;
+  }
+
+  .abstimmung-info {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: rgba(196, 30, 58, 0.1);
+    border-radius: 8px;
+  }
+
+  .abstimmung-info p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+
+  .spieler-waehler {
+    text-align: center;
+  }
+
+  .spieler-waehler p {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    color: var(--text-primary);
+  }
+
+  .voting-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.75rem;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .voting-btn {
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .voting-btn:hover {
+    border-color: var(--accent-gold);
+    background: rgba(196, 30, 58, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .voting-btn.selected {
+    border-color: var(--accent-red);
+    background: rgba(196, 30, 58, 0.3);
+    box-shadow: 0 0 15px rgba(196, 30, 58, 0.3);
+  }
+
+  .abstimmung-status-item {
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border-left: 3px solid var(--accent-gold);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .abstimmung-status-item strong {
+    color: var(--accent-gold);
+  }
 </style>
 {% endblock %} {% block content %}
 <div class="container">
@@ -879,9 +1359,22 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   const istErzaehler = {{ 'true' if spieler.ist_erzaehler else 'false' }};
   const spielModus = "{{ raum.modus }}";
 
+  // Alle Spieler für Abstimmungs-UI
+  const alleSpieler = [
+      {% for s in alle_spieler %}
+      { id: {{ s.id }}, name: "{{ s.name }}", istAmLeben: {{ 'true' if s.ist_am_leben else 'false' }}, istErzaehler: {{ 'true' if s.ist_erzaehler else 'false' }} },
+      {% endfor %}
+  ];
+
   let selectedSpielerId = null;
   let selectedSpielerIds = [];  // Für Amor (2 Spieler)
   let aktuellePhase = "{{ raum.aktuelle_phase }}";
+  let aktuelleRunde = {{ raum.runde }};
+
+  // Expose for test automation
+  window.aktuellePhase = aktuellePhase;
+  window.aktuelleRunde = aktuelleRunde;
+  window.socket = socket;
 
   // Raum beitreten
   socket.emit('raum_beitreten', { code: raumCode });
@@ -889,6 +1382,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   // Event Handler
   socket.on('phase_geaendert', function(data) {
       aktuellePhase = data.phase;
+      aktuelleRunde = data.runde || aktuelleRunde;
+      window.aktuellePhase = aktuellePhase;
+      window.aktuelleRunde = aktuelleRunde;
       updatePhase(data.phase, data.runde);
       if (data.erzaehler_text) {
           updateErzaehlerText(data.erzaehler_text);
@@ -939,6 +1435,74 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       }
   });
 
+  // Verliebte-Reveal: Zeige wer dein Partner ist
+  socket.on('verliebte_reveal', function(data) {
+      // Nur anzeigen wenn ich der Empfänger bin (spieler_id === meine ID)
+      if (data.spieler_id !== spielerId) {
+          return; // Diese Nachricht ist nicht für mich
+      }
+
+      // Zeige romantisches Overlay
+      showVerliebteReveal(data.partner_name, data.nachricht);
+  });
+
+  function showVerliebteReveal(partnerName, nachricht) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2000;
+          animation: fadeIn 0.5s ease;
+      `;
+
+      overlay.innerHTML = `
+          <div style="
+              background: linear-gradient(135deg, #ff69b4 0%, #ff1493 50%, #c71585 100%);
+              border-radius: 20px;
+              padding: 3rem;
+              max-width: 500px;
+              text-align: center;
+              box-shadow: 0 0 60px rgba(255, 105, 180, 0.6);
+              animation: heartbeat 1s ease-in-out;
+          ">
+              <div style="font-size: 4rem; margin-bottom: 1rem;">💕</div>
+              <h2 style="color: white; font-size: 2rem; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                  Du bist verliebt!
+              </h2>
+              <p style="color: white; font-size: 1.5rem; margin-bottom: 0.5rem;">
+                  Dein Seelenpartner ist:
+              </p>
+              <p style="color: #fff; font-size: 2.5rem; font-weight: bold; margin-bottom: 1.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+                  ${partnerName} 💘
+              </p>
+              <p style="color: rgba(255,255,255,0.9); font-size: 1rem; line-height: 1.5;">
+                  ${nachricht}
+              </p>
+          </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      // Nach 6 Sekunden automatisch schließen
+      setTimeout(() => {
+          overlay.style.animation = 'fadeOut 0.5s ease';
+          setTimeout(() => overlay.remove(), 500);
+      }, 6000);
+
+      // Oder bei Klick schließen
+      overlay.onclick = () => {
+          overlay.style.animation = 'fadeOut 0.5s ease';
+          setTimeout(() => overlay.remove(), 500);
+      };
+  }
+
   socket.on('abstimmung_ergebnis', function(data) {
       if (data.kein_opfer) {
           showAlert(data.nachricht, 'info');
@@ -949,30 +1513,69 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       document.querySelectorAll('.stimmen-badge').forEach(el => el.remove());
   });
 
-  // Echtzeit-Anzeige: Wer stimmt für wen
-  socket.on('stimme_abgegeben', function(data) {
-      addLog(`🗳️ ${data.waehler_name} stimmt für ${data.ziel_name}`);
-
-      // Visuelles Feedback: Badge am Ziel-Spieler
-      const zielKarte = document.querySelector(`.spieler-card[data-id="${data.ziel_id}"]`);
-      if (zielKarte) {
-          let stimmenContainer = zielKarte.querySelector('.stimmen-container');
-          if (!stimmenContainer) {
-              stimmenContainer = document.createElement('div');
-              stimmenContainer.className = 'stimmen-container';
-              stimmenContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 2px; margin-top: 5px;';
-              zielKarte.appendChild(stimmenContainer);
-          }
-          const badge = document.createElement('span');
-          badge.className = 'stimmen-badge badge bg-danger';
-          badge.style.cssText = 'font-size: 0.7em; padding: 2px 5px;';
-          badge.textContent = data.waehler_name;
-          badge.title = `${data.waehler_name} stimmt für ${data.ziel_name}`;
-          stimmenContainer.appendChild(badge);
+  // Phase gestartet (z.B. diskussion_abstimmung)
+  socket.on('phase_gestartet', function(data) {
+      if (data.phase === 'diskussion_abstimmung') {
+          aktuellePhase = data.phase;
       }
-
-      showAlert(`${data.waehler_name} stimmt für ${data.ziel_name}`, 'info');
   });
+
+  // Phase gestartet - handled by new voting overlay code below
+  // (Legacy handler removed - see showVotingOverlay section)
+
+  function populateVotingButtons() {
+      const container = document.getElementById('voting-buttons');
+      if (!container) return;
+
+      container.innerHTML = '';
+      alleSpieler.forEach(s => {
+          // Skip erzähler and dead players and self
+          if (s.istErzaehler || !s.istAmLeben || s.id === spielerId) return;
+
+          const btn = document.createElement('button');
+          btn.className = 'voting-btn';
+          btn.setAttribute('data-spieler-id', s.id);
+          btn.textContent = s.name;
+          btn.onclick = function() {
+              // Toggle selection
+              document.querySelectorAll('.voting-btn').forEach(b => b.classList.remove('selected'));
+              btn.classList.add('selected');
+              // Emit vote
+              socket.emit('spieler_abstimmen', { ziel_id: s.id });
+          };
+          container.appendChild(btn);
+      });
+
+      // Add "Enthalten" button
+      const enthaltBtn = document.createElement('button');
+      enthaltBtn.className = 'voting-btn';
+      enthaltBtn.style.borderColor = 'var(--text-muted)';
+      enthaltBtn.textContent = '⊘ Enthalten';
+      enthaltBtn.onclick = function() {
+          document.querySelectorAll('.voting-btn').forEach(b => b.classList.remove('selected'));
+          enthaltBtn.classList.add('selected');
+          socket.emit('spieler_abstimmen', { ziel_id: null });
+      };
+      container.appendChild(enthaltBtn);
+  }
+
+  function updateVotingButtons(zielStimmen) {
+      if (!zielStimmen) return;
+      // Update vote counts on buttons
+      document.querySelectorAll('.voting-btn').forEach(btn => {
+          const spielerName = btn.textContent.replace(/\s*\(\d+\)$/, ''); // Remove old count
+          const stimmen = zielStimmen[spielerName] || 0;
+          if (stimmen > 0) {
+              btn.textContent = `${spielerName} (${stimmen})`;
+              btn.style.borderColor = 'var(--accent-red)';
+          } else {
+              btn.textContent = spielerName;
+              btn.style.borderColor = '';
+          }
+      });
+  }
+
+  // Note: timer_update and stimme_abgegeben handlers are in the voting overlay section
 
   socket.on('spiel_ende', function(data) {
       showSpielEndeModal(data);
@@ -1059,6 +1662,12 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       const phaseEl = document.getElementById('phase-name');
       const isNacht = phase.includes('nacht') || phase.includes('phase');
       phaseEl.innerHTML = `<i class="fa-solid fa-${isNacht && !phase.includes('tag') ? 'moon' : 'sun'}"></i> ${phase.replace(/_/g, ' ')}`;
+
+      // Update round display if exists
+      const rundeEl = document.querySelector('.text-muted');
+      if (rundeEl && runde) {
+          rundeEl.textContent = 'Runde ' + runde;
+      }
 
       // Nacht-Overlay
       const overlay = document.getElementById('nacht-overlay');
@@ -1241,38 +1850,68 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               }, 1000);
           });
 
-          // Handle autoplay being blocked
-          audio.play().catch((e) => {
-              console.warn('[Audio] Autoplay blocked:', e);
-              // Show play button more prominently
-              if (playBtn) {
-                  playBtn.style.animation = 'pulse 1s infinite';
-                  playBtn.style.transform = 'scale(1.2)';
-                  playIcon.className = 'fa-solid fa-play';
-              }
+          // Handle autoplay being blocked with fallbacks
+          let autoplayFailed = false;
+          let audioAutoAdvanceTimeout = null;
 
-              // Füge "Überspringen" Button hinzu falls Autoplay blockiert
-              const skipBtn = document.createElement('button');
-              skipBtn.className = 'btn btn-ghost';
-              skipBtn.style.cssText = 'margin-top: 1rem; display: block; margin-left: auto; margin-right: auto;';
-              skipBtn.innerHTML = '<i class="fa-solid fa-forward"></i> Überspringen';
-              skipBtn.onclick = () => {
-                  socket.emit('audio_fertig', { phase: aktuellePhase });
-                  notification.style.animation = 'fadeOut 0.4s ease-out';
-                  setTimeout(() => notification.remove(), 400);
-              };
-              notification.appendChild(skipBtn);
-          });
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+              playPromise.catch((e) => {
+                  console.warn('[Audio] Autoplay blocked:', e);
+                  autoplayFailed = true;
 
-          // Handle audio load error - skip to next phase
-          audio.addEventListener('error', (e) => {
-              console.error('[Audio] Load error:', e);
-              socket.emit('audio_fertig', { phase: aktuellePhase });
-              setTimeout(() => {
-                  notification.style.animation = 'fadeOut 0.4s ease-out';
-                  setTimeout(() => notification.remove(), 400);
-              }, 2000);
-          });
+                  // Show play button more prominently
+                  if (playBtn) {
+                      playBtn.style.animation = 'pulse 1s infinite';
+                      playBtn.style.transform = 'scale(1.2)';
+                      playIcon.className = 'fa-solid fa-play';
+                  }
+
+                  // In automation/test context, try to play with muted attribute
+                  audio.muted = true;
+                  const mutedPlay = audio.play();
+                  if (mutedPlay !== undefined) {
+                      mutedPlay.then(() => {
+                          setTimeout(() => {
+                              audio.muted = false;
+                              console.log('[Audio] Unmuted after autoplay');
+                          }, 100);
+                      }).catch((innerE) => {
+                          console.warn('[Audio] Muted autoplay failed:', innerE);
+                          // Show skip button
+                          const skipBtn = document.createElement('button');
+                          skipBtn.className = 'btn btn-ghost';
+                          skipBtn.style.cssText = 'margin-top: 1rem; display: block; margin-left: auto; margin-right: auto;';
+                          skipBtn.innerHTML = '<i class="fa-solid fa-forward"></i> Überspringen';
+                          skipBtn.onclick = () => {
+                              if (audioAutoAdvanceTimeout) clearTimeout(audioAutoAdvanceTimeout);
+                              socket.emit('audio_fertig', { phase: aktuellePhase });
+                              notification.style.animation = 'fadeOut 0.4s ease-out';
+                              setTimeout(() => notification.remove(), 400);
+                          };
+                          notification.appendChild(skipBtn);
+                      });
+                  }
+              });
+          }
+
+          // Auto-advance timeout for test environments
+          if (audioPath) {
+              audioAutoAdvanceTimeout = setTimeout(() => {
+                  if (notification && notification.parentNode) {
+                      console.log('[Audio] Auto-advance timeout triggered');
+                      socket.emit('audio_fertig', { phase: aktuellePhase });
+                      notification.style.animation = 'fadeOut 0.4s ease-out';
+                      setTimeout(() => {
+                          if (notification && notification.parentNode) notification.remove();
+                      }, 400);
+                  }
+              }, 35000);
+
+              audio.addEventListener('ended', () => {
+                  if (audioAutoAdvanceTimeout) clearTimeout(audioAutoAdvanceTimeout);
+              });
+          }
       }
 
       // Entferne Overlay - bei Audio wird es im 'ended' Event entfernt
@@ -1623,11 +2262,347 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   <button class="btn btn-primary" onclick="aktion('tag_wahl')"><i class="fa-solid fa-check"></i> Abstimmen</button>
                   <button class="btn btn-ghost" onclick="aktion('tag_wahl', null)">Enthalten</button>
               `;
+          } else if (aktuellePhase === 'diskussion_abstimmung') {
+              // Zeige minimale Info hier, das eigentliche Voting-Overlay wird separat geöffnet
+              html = `
+                  <div class="text-center">
+                      <p><i class="fa-solid fa-gavel"></i> Abstimmungsphase läuft...</p>
+                      <p class="text-muted">Schau dir das Voting-Panel an!</p>
+                  </div>
+              `;
+
+              // Zeige das neue Voting-Overlay
+              showVotingOverlay();
           }
       }
 
       container.innerHTML = html;
+
+      // Nach dem Setzen des HTML: Voting-Buttons populieren für diskussion_abstimmung (Legacy-Support)
+      if (aktuellePhase === 'diskussion_abstimmung') {
+          populateVotingButtons();
+      }
   }
+
+  // =========================================================================
+  // AMONG US-STYLE VOTING OVERLAY
+  // =========================================================================
+
+  let votingState = {
+      timerTotal: 120,
+      timerRemaining: 120,
+      votes: {},          // {waehler_id: ziel_id}
+      voteNames: {},      // {waehler_id: waehler_name}
+      myVote: null,
+      hasVoted: false
+  };
+
+  function showVotingOverlay() {
+      // Entferne altes Overlay falls vorhanden
+      const existing = document.querySelector('.voting-overlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'voting-overlay';
+      overlay.id = 'voting-overlay';
+
+      const lebendeSpieler = alleSpieler.filter(s => s.istAmLeben && !s.istErzaehler);
+
+      overlay.innerHTML = `
+          <div class="voting-panel">
+              <div class="voting-header">
+                  <h2><i class="fa-solid fa-gavel"></i> Abstimmung</h2>
+                  <div class="subtitle">Wer soll heute hingerichtet werden?</div>
+              </div>
+
+              <!-- Timer -->
+              <div class="voting-timer">
+                  <div class="timer-countdown" id="voting-timer-countdown">${votingState.timerRemaining}</div>
+                  <div class="timer-bar-container">
+                      <div class="timer-bar" id="voting-timer-bar" style="width: 100%"></div>
+                  </div>
+              </div>
+
+              <!-- Voting Progress -->
+              <div class="voting-progress">
+                  <div class="voting-progress-text">
+                      <i class="fa-solid fa-check-circle"></i>
+                      <strong id="votes-cast">0</strong> / <span id="votes-total">${lebendeSpieler.length}</span> haben abgestimmt
+                  </div>
+                  <div class="voting-progress-dots" id="voter-dots">
+                      ${lebendeSpieler.map(s => `
+                          <div class="voter-dot ${s.id === spielerId ? 'is-me' : ''}"
+                               data-player-id="${s.id}"
+                               title="${s.name}">
+                              ${s.name.charAt(0).toUpperCase()}
+                          </div>
+                      `).join('')}
+                  </div>
+              </div>
+
+              <!-- Kandidaten zum Wählen -->
+              <div class="voting-candidates" id="voting-candidates">
+                  ${lebendeSpieler.map(s => `
+                      <div class="vote-card ${s.id === spielerId ? 'is-me' : ''}"
+                           data-player-id="${s.id}"
+                           onclick="castVote(${s.id})">
+                          <div class="vote-card-header">
+                              <div class="vote-card-avatar">${s.name.charAt(0).toUpperCase()}</div>
+                              <div class="vote-card-name">${s.name}</div>
+                          </div>
+                          <div class="vote-card-votes" id="votes-for-${s.id}">
+                              <!-- Stimmen werden hier dynamisch eingefügt -->
+                          </div>
+                      </div>
+                  `).join('')}
+              </div>
+
+              <!-- Skip Button -->
+              <div class="vote-skip" onclick="castVote(null)">
+                  <i class="fa-solid fa-forward"></i>
+                  <span>Enthaltung (niemanden wählen)</span>
+              </div>
+          </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      // Starte Timer-Updates
+      startVotingTimer();
+
+      // Hole aktuellen Status
+      socket.emit('hole_abstimmung_status');
+  }
+
+  function castVote(targetId) {
+      if (votingState.hasVoted) {
+          showAlert('Du hast bereits abgestimmt!', 'info');
+          return;
+      }
+
+      // Kann nicht für sich selbst stimmen
+      if (targetId === spielerId) {
+          showAlert('Du kannst nicht für dich selbst stimmen!', 'error');
+          return;
+      }
+
+      // Visuelles Feedback
+      document.querySelectorAll('.vote-card').forEach(card => card.classList.remove('selected'));
+      document.querySelector('.vote-skip')?.classList.remove('selected');
+
+      if (targetId === null) {
+          document.querySelector('.vote-skip')?.classList.add('selected');
+      } else {
+          const card = document.querySelector(`.vote-card[data-player-id="${targetId}"]`);
+          if (card) card.classList.add('selected');
+      }
+
+      // Sende Stimme an Server
+      socket.emit('spieler_abstimmen', { ziel_id: targetId });
+      votingState.myVote = targetId;
+      votingState.hasVoted = true;
+
+      // Markiere eigenen Voter-Dot als abgestimmt
+      const myDot = document.querySelector(`.voter-dot[data-player-id="${spielerId}"]`);
+      if (myDot) myDot.classList.add('voted');
+  }
+
+  function startVotingTimer() {
+      const timerInterval = setInterval(() => {
+          if (aktuellePhase !== 'diskussion_abstimmung') {
+              clearInterval(timerInterval);
+              closeVotingOverlay();
+              return;
+          }
+
+          votingState.timerRemaining = Math.max(0, votingState.timerRemaining - 1);
+
+          const countdown = document.getElementById('voting-timer-countdown');
+          const bar = document.getElementById('voting-timer-bar');
+
+          if (countdown) {
+              countdown.textContent = votingState.timerRemaining;
+              if (votingState.timerRemaining <= 10) {
+                  countdown.classList.add('warning');
+              }
+          }
+
+          if (bar) {
+              const percent = (votingState.timerRemaining / votingState.timerTotal) * 100;
+              bar.style.width = percent + '%';
+              if (votingState.timerRemaining <= 10) {
+                  bar.classList.add('warning');
+              }
+          }
+
+          if (votingState.timerRemaining <= 0) {
+              clearInterval(timerInterval);
+          }
+      }, 1000);
+  }
+
+  function closeVotingOverlay() {
+      const overlay = document.getElementById('voting-overlay');
+      if (overlay) {
+          overlay.style.animation = 'fadeOut 0.3s ease';
+          setTimeout(() => overlay.remove(), 300);
+      }
+      // Reset state
+      votingState.hasVoted = false;
+      votingState.myVote = null;
+      votingState.votes = {};
+      votingState.voteNames = {};
+  }
+
+  function updateVotingOverlay(data) {
+      // Update Timer
+      if (data.sekunden_verbleibend !== undefined) {
+          votingState.timerRemaining = data.sekunden_verbleibend;
+          const countdown = document.getElementById('voting-timer-countdown');
+          if (countdown) countdown.textContent = data.sekunden_verbleibend;
+      }
+
+      // Update Vote Count
+      const votesCast = document.getElementById('votes-cast');
+      if (votesCast && data.gesamt_votes !== undefined) {
+          votesCast.textContent = data.gesamt_votes;
+      }
+
+      // Update Ziel-Stimmen auf den Karten
+      if (data.ziel_stimmen) {
+          // Clear all vote displays first
+          document.querySelectorAll('.vote-card-votes').forEach(el => el.innerHTML = '');
+          document.querySelectorAll('.vote-count-badge').forEach(el => el.remove());
+
+          // Add vote indicators
+          for (const [zielName, stimmen] of Object.entries(data.ziel_stimmen)) {
+              if (stimmen > 0) {
+                  // Finde die Karte für diesen Spieler
+                  const spieler = alleSpieler.find(s => s.name === zielName);
+                  if (spieler) {
+                      const container = document.getElementById(`votes-for-${spieler.id}`);
+                      const card = document.querySelector(`.vote-card[data-player-id="${spieler.id}"]`);
+
+                      if (container) {
+                          // Zeige Stimmenanzahl
+                          container.innerHTML = `<span style="color: var(--accent-red);">🗳️ ${stimmen} Stimme${stimmen > 1 ? 'n' : ''}</span>`;
+                      }
+
+                      // Zeige Badge
+                      if (card && !card.querySelector('.vote-count-badge')) {
+                          const badge = document.createElement('div');
+                          badge.className = 'vote-count-badge';
+                          badge.textContent = stimmen;
+                          card.appendChild(badge);
+                      }
+                  }
+              }
+          }
+      }
+  }
+
+  function showAccusedNotification(accuserName) {
+      const notification = document.createElement('div');
+      notification.className = 'accused-notification';
+      notification.innerHTML = `
+          <h3><i class="fa-solid fa-exclamation-triangle"></i> Du wurdest angeklagt!</h3>
+          <p><span class="accuser">${accuserName}</span> hat für dich gestimmt!</p>
+      `;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+          notification.style.animation = 'fadeOut 0.5s ease';
+          setTimeout(() => notification.remove(), 500);
+      }, 3000);
+  }
+
+  // Socket-Event für Echtzeit-Stimmen-Updates
+  socket.on('stimme_abgegeben', function(data) {
+      addLog(`🗳️ ${data.waehler_name} stimmt für ${data.ziel_name}`);
+
+      // Update Voter-Dot
+      const dot = document.querySelector(`.voter-dot[data-player-id="${data.waehler_id}"]`);
+      if (dot) dot.classList.add('voted');
+
+      // Füge Stimmen-Anzeige zur Karte hinzu
+      const container = document.getElementById(`votes-for-${data.ziel_id}`);
+      if (container) {
+          const indicator = document.createElement('div');
+          indicator.className = 'vote-indicator';
+          indicator.innerHTML = `<i class="fa-solid fa-user"></i> ${data.waehler_name}`;
+          container.appendChild(indicator);
+
+          // Update Badge
+          const card = document.querySelector(`.vote-card[data-player-id="${data.ziel_id}"]`);
+          if (card) {
+              let badge = card.querySelector('.vote-count-badge');
+              if (!badge) {
+                  badge = document.createElement('div');
+                  badge.className = 'vote-count-badge';
+                  badge.textContent = '1';
+                  card.appendChild(badge);
+              } else {
+                  badge.textContent = parseInt(badge.textContent) + 1;
+              }
+          }
+      }
+
+      // Zeige Benachrichtigung wenn ICH angeklagt wurde
+      if (data.ziel_id === spielerId) {
+          showAccusedNotification(data.waehler_name);
+      }
+
+      showAlert(`${data.waehler_name} stimmt für ${data.ziel_name}`, 'info');
+  });
+
+  // Socket-Event für Abstimmungs-Status-Updates
+  socket.on('abstimmung_status', function(data) {
+      updateVotingOverlay(data);
+
+      // Legacy support: Update old voting buttons
+      const timerEl = document.getElementById('timer-sekunden');
+      if (timerEl && data.sekunden_verbleibend !== undefined) {
+          timerEl.textContent = data.sekunden_verbleibend;
+      }
+
+      const statusEl = document.getElementById('abstimmung-status');
+      if (statusEl) {
+          statusEl.innerHTML = `Stimmen: ${data.gesamt_votes}/${data.gesamt_spieler} | Noch offen: ${data.noch_zu_waehlen}`;
+      }
+
+      updateVotingButtons(data.ziel_stimmen);
+  });
+
+  // Timer-Updates während diskussion_abstimmung
+  socket.on('timer_update', function(data) {
+      votingState.timerRemaining = data.sekunden_verbleibend;
+      updateVotingOverlay(data);
+
+      const timerEl = document.getElementById('timer-sekunden');
+      if (timerEl && data.sekunden_verbleibend !== undefined) {
+          timerEl.textContent = data.sekunden_verbleibend;
+          if (data.sekunden_verbleibend <= 10) {
+              timerEl.style.color = 'var(--accent-red)';
+          } else {
+              timerEl.style.color = '';
+          }
+      }
+  });
+
+  // Phase gestartet
+  socket.on('phase_gestartet', function(data) {
+      if (data.phase === 'diskussion_abstimmung') {
+          aktuellePhase = data.phase;
+          window.aktuellePhase = aktuellePhase;
+          votingState.timerTotal = data.dauer_sekunden || 120;
+          votingState.timerRemaining = data.dauer_sekunden || 120;
+          votingState.hasVoted = false;
+          votingState.myVote = null;
+          updatePhase(data.phase, aktuelleRunde);
+          updateActionButtons();
+          showAlert(`Abstimmungsphase gestartet! Zeit: ${data.dauer_sekunden || 120} Sekunden`, 'info');
+      }
+  });
 
   function aktion(typ, zielOverride) {
       const ziel = zielOverride !== undefined ? zielOverride :
@@ -1776,6 +2751,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           });
 
           if (spielerDaten.length > 0) {
+              // Sortiere nach ID für konsistente Positionen zwischen Lobby und Spiel
+              spielerDaten.sort((a, b) => a.id - b.id);
               village3d.setPlayers(spielerDaten);
           }
 

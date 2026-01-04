@@ -4,9 +4,13 @@ Rollen-Registry mit automatischer Erkennung und Registrierung.
 Die Registry sammelt alle Rollen-Klassen und stellt sie
 über einen zentralen Zugriffspunkt zur Verfügung.
 """
+import logging
 from typing import Dict, Type, Optional, List, Iterator, Any
 from .base import Role, RollenInfo
 from .enums import Team, Kategorie
+
+# Logger konfigurieren
+logger = logging.getLogger(__name__)
 
 
 class RollenRegistryMeta(type):
@@ -27,9 +31,12 @@ class RollenRegistryMeta(type):
                 rollen_name = instance.info.name
                 mcs._registry[rollen_name] = cls
                 mcs._instances[rollen_name] = instance
-            except (TypeError, AttributeError):
-                # Abstrakte Klassen überspringen
-                pass
+                logger.debug(f"Rolle registriert: {rollen_name}")
+            except (TypeError, AttributeError) as e:
+                # Abstrakte Klassen überspringen (erwartet)
+                # Aber andere Fehler loggen
+                if "abstract" not in str(e).lower():
+                    logger.warning(f"Konnte Rolle {name} nicht registrieren: {e}")
         
         return cls
 
@@ -62,8 +69,9 @@ class RoleRegistry:
             name = instance.info.name
             cls._registry[name] = role_class
             cls._instances[name] = instance
+            logger.info(f"Rolle manuell registriert: {name}")
         except Exception as e:
-            print(f"Warnung: Konnte Rolle nicht registrieren: {e}")
+            logger.error(f"Fehler beim Registrieren der Rolle {role_class.__name__}: {e}")
         return role_class
     
     @classmethod
@@ -161,6 +169,30 @@ class RoleRegistry:
                 phase_name = role.get_phase_name()
                 mapping[phase_name] = name
         return mapping
+    
+    @classmethod
+    def get_role_for_phase(cls, phase_name: str) -> Optional[Role]:
+        """
+        Gibt die Rolle zurück, die für eine bestimmte Phase zuständig ist.
+        
+        Args:
+            phase_name: Name der Phase (z.B. "werwolf_phase")
+            
+        Returns:
+            Role-Instanz oder None
+        """
+        # Normalisiere Phasen-Name (entferne _phase suffix)
+        normalized = phase_name.replace("_phase", "").replace("_", " ").title()
+        
+        # Suche nach passender Rolle
+        for role in cls._instances.values():
+            if role.get_phase_name() == phase_name:
+                return role
+            # Fallback: Prüfe Rollen-Namen
+            if role.info.name.lower().replace(" ", "_") in phase_name.lower():
+                return role
+        
+        return None
     
     @classmethod
     def clear(cls) -> None:

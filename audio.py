@@ -291,19 +291,22 @@ async def generiere_phasen_audio():
 
 async def generiere_rollen_audio():
     """Generiert Erzähler-Audio für alle Rollen."""
-    from models import ROLLEN
+    from roles import RoleRegistry
 
     print("Generiere Rollen-Audio...")
 
-    for rolle_name, rolle_info in ROLLEN.items():
+    for rolle in RoleRegistry.get_all():
+        rolle_dict = rolle.to_dict()
+        rolle_name = rolle.info.name
+        
         # Nacht-Text
-        nacht_text = rolle_info.get("erzaehler_nacht")
+        nacht_text = rolle_dict.get("erzaehler_nacht")
         if nacht_text:
             datei = await text_zu_audio(nacht_text, stil="langsam")
             print(f"  {rolle_name} (Nacht): {datei}")
 
         # Tag-Text
-        tag_text = rolle_info.get("erzaehler_tag")
+        tag_text = rolle_dict.get("erzaehler_tag")
         if tag_text and "{" not in tag_text:  # Nur statische Texte
             datei = await text_zu_audio(tag_text, stil="normal")
             print(f"  {rolle_name} (Tag): {datei}")

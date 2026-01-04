@@ -16,7 +16,7 @@ class KleinesMaedchen(Role):
     """
     Kleines Mädchen
     
-    Kann während der Werwolf-Phase blinzeln, um zu sehen wer die Werwölfe sind.
+    Kann während der Werwolf-Phase blinzeln, um zu sehen, wer die Werwölfe sind.
     Wird es dabei erwischt, wird es sofort von den Werwölfen getötet.
     Das Risiko erwischt zu werden ist zufällig (ca. 30%).
     """
@@ -108,4 +108,26 @@ class KleinesMaedchen(Role):
                     effekte={'erwischt': False}
                 )
     
+    def on_abstimmung(
+        self,
+        spieler: 'Spieler',
+        ziel: 'Spieler',
+        kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
+        """
+        Wird bei der Tagesabstimmung aufgerufen.
+        Das Kleine Mädchen hat keine besonderen Fähigkeiten während der Abstimmung.
+        """
+        return None  # Keine besonderen Effekte
 
+    def on_hinrichtung(
+        self,
+        spieler: 'Spieler',
+        opfer: 'Spieler',
+        kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
+        """
+        Wird bei einer Hinrichtung aufgerufen.
+        Das Kleine Mädchen hat keine besonderen Fähigkeiten bei Hinrichtungen.
+        """
+        return None  # Keine besonderen Effekte

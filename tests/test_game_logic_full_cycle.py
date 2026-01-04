@@ -18,7 +18,9 @@ import unittest
 from flask import Flask
 
 import game_logic
-from game_logic import PHASEN
+from phases import get_phase_list
+
+PHASEN = get_phase_list()
 from models import Raum, Spieler, db
 
 

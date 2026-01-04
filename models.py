@@ -7,6 +7,10 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import secrets
 
+# Import phases and constants from centralized modules
+from phases import get_phase_list
+from constants import TEAMS, SPIEL_REGELN, ROLLEN_EMPFEHLUNG
+
 db = SQLAlchemy()
 
 
@@ -35,6 +39,13 @@ class Raum(db.Model):
 
     # Rollen-Konfiguration (JSON der aktivierten Rollen)
     aktive_rollen = db.Column(db.Text, default="{}")
+
+    # Timer für diskussion_abstimmung Phase
+    timer_start = db.Column(db.DateTime, nullable=True)  # Wann die aktuelle Phase begonnen hat
+    timer_duration = db.Column(db.Integer, default=120)  # Dauer der Phase in Sekunden
+
+    # Live-Abstimmungsdaten (JSON: {voter_id: target_id})
+    phase_votes = db.Column(db.Text, default="{}")
 
     spieler = db.relationship(
         "Spieler", backref="raum", lazy=True, foreign_keys="Spieler.raum_id"
@@ -77,7 +88,7 @@ class Spieler(db.Model):
 
     # Sitzplatz-System für Nachbar-Mechanik und 3D-Visualisierung
     sitzplatz = db.Column(db.Integer, nullable=True)  # Position im Kreis (0-n)
-    # Nachbarn werden dynamisch berechnet basierend auf sitzplatz
+    # Nachbarn werden dynamisch berechnet basierend auf Sitzplatz
 
     # Spezielle Fähigkeiten Status
     hexe_heiltrank = db.Column(db.Boolean, default=True)
@@ -193,7 +204,7 @@ class Spieler(db.Model):
         rechts = self.hole_nachbar_rechts()
         if links:
             nachbarn.append(links)
-        if rechts and rechts.id != links.id:  # Vermeidung bei nur 2 Spielern
+        if rechts and (not links or rechts.id != links.id):  # Vermeidung bei nur 2 Spielern
             nachbarn.append(rechts)
         return nachbarn
 
@@ -410,6 +421,11 @@ ERZAEHLER_PHASEN = {
     "tag_start": {
         "text": "Die Sonne geht auf. Das Dorf erwacht.",
         "anweisung": "Alle öffnen die Augen. Verkünde die Opfer der Nacht.",
+        "wiederholbar": True,
+    },
+    "diskussion_abstimmung": {
+        "text": "Das Dorf hat Zeit zum Diskutieren und Abstimmen. Debattiert, wer verdächtig ist, und stimmt dann ab, wen ihr lynchen wollt!",
+        "anweisung": "Alle Spieler diskutieren offen. Nach einer bestimmten Zeit (oder wenn alle abgestimmt haben) wird die Abstimmung ausgewertet.",
         "wiederholbar": True,
     },
     "diskussion": {
@@ -922,7 +938,7 @@ SPIEL_REGELN = {
 # ============================================================================
 # DYNAMISCHES ROLLEN-SYSTEM
 # Alle Rollen werden jetzt aus roles/*.py geladen.
-# Um eine neue Rolle hinzuzufuegen: Einfach eine .py-Datei in roles/ erstellen!
+# Um eine neue Rolle hinzuzufügen: Einfach eine .py-Datei in roles/ erstellen!
 # ============================================================================
 
 
@@ -930,7 +946,7 @@ def _erstelle_rollen_dict():
     """
     Erstellt das ROLLEN-Dict dynamisch aus dem modularen System (roles/*.py).
 
-    Neue Rollen einfach als .py-Datei in roles/ hinzufuegen - sie werden
+    Neue Rollen einfach als *.py-Datei in roles/ hinzufügen - sie werden
     automatisch erkannt und registriert!
     """
     try:
@@ -946,71 +962,9 @@ def _erstelle_rollen_dict():
 ROLLEN = _erstelle_rollen_dict()
 
 
-# Spielphasen in korrekter Reihenfolge
-PHASEN = [
-    "lobby",
-    "rollen_verteilt",
-    "nacht_start",
-    # Erste-Nacht-Phasen (nur Runde 1)
-    "dieb_phase",
-    "doppelgaenger_phase",
-    "amor_phase",
-    "dunkler_priester_phase",
-    "wildes_kind_phase",
-    "hund_phase",
-    "zwei_schwestern_phase",
-    "drei_brueder_phase",
-    "freimaurer_phase",
-    "fluechtlinge_phase",
-    "verliebte_info",
-    # Reguläre Nacht-Phasen
-    "sandmann_phase",
-    "seherin_phase",
-    "seherlehrling_phase",
-    "aurenseherin_phase",
-    "medium_phase",
-    "tratschweib_phase",
-    "paranormal_billig_phase",
-    "werwolfseherin_phase",
-    "heiler_phase",
-    "leibwaechter_phase",
-    "hure_phase",
-    "prostituierte_phase",
-    "nutte_phase",
-    "werwolf_phase",
-    "einsamer_wolf_phase",
-    "urwolf_phase",
-    "weisser_wolf_phase",
-    "mordlustiger_phase",
-    "hexe_phase",
-    "hexenmeister_phase",
-    "giftmischerin_phase",
-    "kraeuterweib_phase",
-    "zauberer_phase",
-    "zahnarzt_phase",
-    "rabe_phase",
-    "floetenspieler_phase",
-    "vampir_phase",
-    "zombie_phase",
-    "pyromane_phase",
-    "tonks_phase",
-    "buddler_phase",
-    "nacht_ende",
-    # Tag-Phasen
-    "tag_start",
-    "baerenbaendiger_brummen",
-    "demoskopin_info",
-    "diskussion",
-    "abstimmung",
-    "abstimmung_ergebnis",
-    "prinz_enthuellung",
-    "jaeger_phase",
-    "kamikaze_phase",
-    "hahn_enthuellung",
-    "putzfrau_info",
-    "tag_ende",
-    "spiel_ende",
-]
+# Spielphasen in korrekter Reihenfolge (importiert aus phases.py)
+PHASEN = get_phase_list()
+
 
 
 # Rollen-Konfiguration nach Spielerzahl (Empfehlung)
@@ -1248,44 +1202,13 @@ def berechne_balance_statistik(spieler_anzahl: int) -> dict:
     }
 
 
-# Teams und ihre Gewinnbedingungen
-TEAMS = {
-    "dorf": {
-        "name": "Das Dorf",
-        "beschreibung": "Eliminiert alle Werwölfe und andere Bedrohungen!",
-        "farbe": "#3b82f6",
-    },
-    "werwolf": {
-        "name": "Die Werwölfe",
-        "beschreibung": "Bringt das Dorf in die Minderheit!",
-        "farbe": "#dc2626",
-    },
-    "vampir": {
-        "name": "Die Vampire",
-        "beschreibung": "Verwandelt alle lebenden Spieler in Vampire!",
-        "farbe": "#7c2d12",
-    },
-    "zombie": {
-        "name": "Die Zombies",
-        "beschreibung": "Infiziert alle Spieler und erreicht die Mehrheit!",
-        "farbe": "#4ade80",
-    },
-    "solo": {
-        "name": "Einzelspieler",
-        "beschreibung": "Erreiche dein persönliches Ziel!",
-        "farbe": "#6b7280",
-    },
-    "verliebte": {
-        "name": "Die Verliebten",
-        "beschreibung": "Überlebt gemeinsam bis zum Ende!",
-        "farbe": "#ec4899",
-    },
-}
+# Teams und ihre Gewinnbedingungen (imported from constants.py - kept here for legacy compatibility)
+# Use: from constants import TEAMS instead
 
 
 # ============================================================================
 # HELFER-FUNKTIONEN FUER ROLLEN
-# Diese Funktionen nutzen das dynamische ROLLEN-Dict
+# diese Funktionen nutzen das dynamische ROLLEN-Dict
 # ============================================================================
 
 
@@ -1312,7 +1235,7 @@ def get_rollen_nach_kategorie_liste():
     """
     Gibt alle Rollen gruppiert nach Kategorie als Liste zurueck.
     Format: dict[kategorie] = [rolle_data, ...]
-    Sortiert nach ID innerhalb jeder Kategorie.
+    sortiert nach ID innerhalb jeder Kategorie.
     """
     kategorien = {}
     rollen_dict = _erstelle_rollen_dict()  # Frisch laden
@@ -1329,7 +1252,7 @@ def get_rollen_nach_kategorie_liste():
     return kategorien
 
 
-# Kategorienamen fuer UI (mit schoenen deutschen Namen)
+# Kategorienamen für UI (mit schönen deutschen Namen)
 KATEGORIE_NAMEN = {
     "grundrollen": "Grundrollen",
     "dorfbewohner": "Dorfbewohner-Varianten",
@@ -1346,5 +1269,5 @@ KATEGORIE_NAMEN = {
 
 
 def get_rollen_anzahl():
-    """Gibt die Anzahl aller verfuegbaren Rollen zurueck."""
+    """Gibt die Anzahl aller verfügbaren Rollen zurück."""
     return len(_erstelle_rollen_dict())

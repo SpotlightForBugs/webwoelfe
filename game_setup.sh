@@ -7,10 +7,10 @@
 # Usage: ./game_setup.sh <number_of_players> [--hl]
 #        ./game_setup.sh 8          # Creates a game with 8 players
 #        ./game_setup.sh 15         # Creates a game with 15 players
-#        ./game_setup.sh 8 --hl     # 8 players, only Erzähler window visible
+#        ./game_setup.sh 8 --hl     # 8 players, only one window visible
 #
 # Options:
-#   --hl    Headless mode for all players except Erzähler (first window)
+#   --hl    Headless mode for all players except the first window
 #
 # Requirements:
 # - Node.js installed
@@ -126,7 +126,7 @@ fi
 echo ""
 echo "🚀 Starte Browser-Fenster..."
 if [ -n "$HL_FLAG" ]; then
-    echo "   (Headless-Modus: Nur Erzähler-Fenster sichtbar)"
+    echo "   (Headless-Modus: Ein Fenster sichtbar, Rest headless)"
 fi
 echo ""
 

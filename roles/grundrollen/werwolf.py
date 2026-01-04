@@ -70,16 +70,34 @@ class Werwolf(Role):
         Hinweis: Die eigentliche Tötung passiert am Ende der Nacht,
         damit Hexe/Heiler noch eingreifen können.
         """
+        # Check if already voted
+        if self.has_voted_this_phase(spieler, kontext):
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Du hast bereits gewählt.",
+            )
+        
         if ziel is None:
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Die Werwölfe müssen ein Opfer wählen.",
             )
         
+        # Check if target is valid (not self)
         if not self.validate_ziel(spieler, ziel, kontext):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Ungültiges Ziel gewählt.",
+            )
+        
+        # Check if target is another werewolf
+        from ..registry import RoleRegistry
+        from game_logic import ist_werwolf_rolle
+        
+        if ist_werwolf_rolle(ziel.rolle):
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Du kannst keinen anderen Werwolf wählen.",
             )
         
         return AktionsErgebnis(

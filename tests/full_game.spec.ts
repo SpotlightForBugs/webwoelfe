@@ -39,6 +39,71 @@ const HEADLESS_OTHERS = process.env.HL === "1" || process.env.HL === "true";
 const PHASE_DELAY_MS = 2000; // 2 Sekunden für UI-Updates
 const AUDIO_WAIT_MS = 5000; // 5 Sekunden extra Wartezeit nach Aktionen
 
+// Randomization settings for edge case discovery
+const RANDOM_SEED = process.env.SEED ? parseInt(process.env.SEED, 10) : Date.now();
+const SKIP_ACTION_CHANCE = 0.0; // 0% chance to skip any action (find timeout bugs)
+const WRONG_TARGET_CHANCE = 0.1; // 10% chance to target a dead/invalid player
+const SELF_TARGET_CHANCE = 0.05; // 5% chance to try targeting self
+const DOUBLE_ACTION_CHANCE = 0.1; // 10% chance to try same action twice
+const RANDOM_VOTE_CHANCE = 0.4; // 40% chance for completely random voting
+
+// Seeded random for reproducibility
+let randomState = RANDOM_SEED;
+function seededRandom(): number {
+  randomState = (randomState * 1103515245 + 12345) & 0x7fffffff;
+  return randomState / 0x7fffffff;
+}
+
+function randomChoice<T>(arr: T[]): T {
+  return arr[Math.floor(seededRandom() * arr.length)];
+}
+
+function shouldSkipAction(): boolean {
+  return seededRandom() < SKIP_ACTION_CHANCE;
+}
+
+function shouldTargetWrong(): boolean {
+  return seededRandom() < WRONG_TARGET_CHANCE;
+}
+
+function shouldTargetSelf(): boolean {
+  return seededRandom() < SELF_TARGET_CHANCE;
+}
+
+function shouldDoubleAction(): boolean {
+  return seededRandom() < DOUBLE_ACTION_CHANCE;
+}
+
+function shouldRandomVote(): boolean {
+  return seededRandom() < RANDOM_VOTE_CHANCE;
+}
+
+/**
+ * Get a random target for a role action with edge case testing
+ */
+function getRandomTarget(
+  players: PlayerWindow[],
+  actor: PlayerWindow,
+  preferAlive: boolean = true
+): PlayerWindow {
+  // Edge case: target self
+  if (shouldTargetSelf()) {
+    return actor;
+  }
+
+  // Edge case: target dead player
+  if (shouldTargetWrong() && !preferAlive) {
+    const deadPlayers = players.filter((p) => !p.isAlive && p !== actor);
+    if (deadPlayers.length > 0) {
+      return randomChoice(deadPlayers);
+    }
+  }
+
+  // Normal: random alive player (excluding self)
+  const targets = players.filter((p) => p !== actor && (preferAlive ? p.isAlive : true));
+  return targets.length > 0 ? randomChoice(targets) : actor;
+}
+
 // Player names
 const PLAYER_NAMES = [
   "Wolfgang", "Maria", "Hans", "Greta", "Friedrich", "Anna", "Klaus", "Sophie",
@@ -147,11 +212,12 @@ test.describe("Full Game Simulation", () => {
     let roomCode = "";
     let gameState: GameState = { phase: "", runde: 0, isEnded: false };
 
-    log(`🐺 Webwölfe - Full Game Simulation`);
+    log(`🐺 Webwölfe - Full Game Simulation (RANDOM MODE)`);
     log(`==========================================`);
     log(`Spieleranzahl: ${PLAYER_COUNT}`);
     log(`Base URL: ${BASE_URL}`);
     log(`Headless Others: ${HEADLESS_OTHERS ? "Ja" : "Nein"}`);
+    log(`Random Seed: ${RANDOM_SEED} (use SEED=${RANDOM_SEED} to reproduce)`);
     log(`==========================================\n`);
 
     // Launch browsers
@@ -391,16 +457,14 @@ test.describe("Full Game Simulation", () => {
         // Prüfe ob gleiche Phase wie vorher
         if (currentPhase === lastPhase) {
           samePhaseCount++;
+          // In online mode with automatic narrator, phases are controlled by the SERVER.
+          // We cannot and should not try to skip phases manually.
+          // The server has a 30 second fallback timeout for stuck phases.
           if (samePhaseCount > MAX_SAME_PHASE) {
-            log(`  ⚠️ Phase ${currentPhase} hängt - überspringe...`);
-            // Versuche manuell zur nächsten Phase zu wechseln (nur für Host)
-            await hostPage.evaluate(() => {
-              if ((window as any).socket) {
-                (window as any).socket.emit('phase_weiter');
-              }
-            });
-            await sleep(3000);
-            samePhaseCount = 0;
+            log(`  ⏳ Phase ${currentPhase} dauert an - warte auf Server (Fallback-Timeout: 30s)...`);
+            // Just wait - the server will handle phase transitions automatically
+            await sleep(5000);
+            samePhaseCount = Math.max(0, samePhaseCount - 2); // Slowly reset counter
             continue;
           }
           // Warte auf Phasenwechsel
@@ -710,6 +774,13 @@ async function handlePhase(
   // DAY PHASES
   // ========================================================================
 
+  // Combined phase: diskussion_abstimmung - handle both chat AND voting
+  if (normalizedPhase.includes("diskussion") && normalizedPhase.includes("abstimmung")) {
+    await handleDiskussionPhase(players);
+    await handleAbstimmungPhase(players, werwolfe);
+    return;
+  }
+
   if (normalizedPhase.includes("diskussion")) {
     await handleDiskussionPhase(players);
     return;
@@ -741,28 +812,79 @@ async function handleWerwolfPhase(
   werwolfe: PlayerWindow[],
   dorfbewohner: PlayerWindow[]
 ): Promise<void> {
-  log("  🐺 Werwolf-Phase: Wähle Opfer...");
+  log("  🐺 Werwolf-Phase: Wähle Opfer... (RANDOM MODE)");
 
-  // Find alive villager to attack
-  const aliveVillagers = dorfbewohner.filter((p) => p.isAlive);
-  if (aliveVillagers.length === 0) {
-    log("    Keine lebenden Dorfbewohner mehr!");
+  // Random: Sometimes skip the entire phase (only for testing timeout handling)
+  // DISABLED: This causes stuck phases! The server requires votes.
+  // if (shouldSkipAction()) {
+  //   log("    ⚠️ [RANDOM] Wölfe überspringen diese Runde (Test: Timeout-Handling)");
+  //   return;
+  // }
+
+  const aliveWolves = werwolfe.filter((w) => w.isAlive);
+  if (aliveWolves.length === 0) {
+    log("    Keine lebenden Werwölfe!");
     return;
   }
 
-  const target = aliveVillagers[Math.floor(Math.random() * aliveVillagers.length)];
-  log(`    Ziel: ${target.name}`);
+  // Valid targets: alive non-werwolf players only
+  const validTargets = dorfbewohner.filter((p) => p.isAlive);
+  if (validTargets.length === 0) {
+    log("    Keine gültigen Ziele für Werwölfe!");
+    return;
+  }
 
-  // Each werewolf votes for the target
-  // Button-Text ist "Töten", Aktion ist "werwolf_wahl"
-  for (const wolf of werwolfe.filter((w) => w.isAlive)) {
-    const success = await selectTargetAndConfirm(wolf.page, target.name, ["Töten", "Wählen", "Angreifen"]);
-    if (success) {
+  // For edge case testing, keep track of ALL players (including dead and wolves for invalid target tests)
+  const allPlayers = dorfbewohner.concat(werwolfe);
+
+  for (const wolf of aliveWolves) {
+    let target: PlayerWindow;
+    let isInvalidTarget = false;
+
+    // Random targeting strategy - first try invalid, then retry with valid
+    if (shouldTargetSelf()) {
+      target = wolf; // Try to target self (will fail)
+      isInvalidTarget = true;
+      log(`    ⚠️ [RANDOM] ${wolf.name} versucht sich selbst zu wählen`);
+    } else if (shouldTargetWrong()) {
+      // Target a dead player or another wolf (will fail)
+      const wrongTargets = allPlayers.filter((p) => !p.isAlive || werwolfe.includes(p));
+      if (wrongTargets.length > 0) {
+        target = randomChoice(wrongTargets);
+        isInvalidTarget = true;
+        log(`    ⚠️ [RANDOM] ${wolf.name} wählt ungültiges Ziel: ${target.name} (tot: ${!target.isAlive}, wolf: ${werwolfe.includes(target)})`);
+      } else {
+        target = randomChoice(validTargets);
+      }
+    } else {
+      // Normal random target from valid targets
+      target = randomChoice(validTargets);
+    }
+
+    let success = await selectTargetAndConfirmWithRetry(wolf.page, target.name, ["Töten", "Wählen", "Angreifen"]);
+
+    // If the action failed (invalid target), retry with a valid target
+    if (!success && isInvalidTarget && validTargets.length > 0) {
+      log(`    🔄 ${wolf.name} Server hat abgelehnt, wähle gültiges Ziel...`);
+      await sleep(500);
+      const validTarget = randomChoice(validTargets);
+      success = await selectTargetAndConfirmWithRetry(wolf.page, validTarget.name, ["Töten", "Wählen", "Angreifen"]);
+      if (success) {
+        log(`    ✓ ${wolf.name} stimmt für ${validTarget.name}`);
+      }
+    } else if (success) {
       log(`    ${wolf.name} stimmt für ${target.name}`);
     } else {
-      log(`    ${wolf.name} konnte nicht abstimmen`);
+      log(`    ⚠️ ${wolf.name} konnte nicht abstimmen (kein Button gefunden)`);
     }
-    await sleep(500);
+
+    // Random: Try double action (will be rejected by server, that's fine)
+    if (shouldDoubleAction()) {
+      log(`    ⚠️ [RANDOM] ${wolf.name} versucht erneut zu wählen (wird abgelehnt)`);
+      await selectTargetAndConfirmWithRetry(wolf.page, randomChoice(validTargets).name, ["Töten", "Wählen"]);
+    }
+
+    await sleep(300 + Math.floor(seededRandom() * 400)); // Random delay
   }
 }
 
@@ -788,7 +910,7 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
 }
 
 async function handleDoppelgaengerPhase(players: PlayerWindow[]): Promise<void> {
-  log("  👤 Doppelgänger-Phase: Wähle Spieler zum Kopieren...");
+  log("  👤 Doppelgänger-Phase: Wähle Spieler zum Kopieren... (RANDOM MODE)");
 
   const doppelgaenger = findPlayerByRole(players, ["Doppelgänger"]);
   if (!doppelgaenger) {
@@ -796,16 +918,18 @@ async function handleDoppelgaengerPhase(players: PlayerWindow[]): Promise<void> 
     return;
   }
 
-  const targets = players.filter((p) => p !== doppelgaenger && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Doppelgänger überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, doppelgaenger);
   await selectTargetAndConfirm(doppelgaenger.page, target.name, ["Kopieren", "Wählen"]);
   log(`    Doppelgänger kopiert ${target.name}`);
 }
 
 async function handlePriesterPhase(players: PlayerWindow[]): Promise<void> {
-  log("  ⛪ Dunkler Priester-Phase: Markiere einen Spieler...");
+  log("  ⛪ Dunkler Priester-Phase: Markiere einen Spieler... (RANDOM MODE)");
 
   const priester = findPlayerByRole(players, ["Dunkler Priester", "Priester"]);
   if (!priester) {
@@ -813,16 +937,18 @@ async function handlePriesterPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== priester && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Priester überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, priester);
   await selectTargetAndConfirm(priester.page, target.name, ["Markieren", "Wählen"]);
   log(`    Dunkler Priester markiert ${target.name}`);
 }
 
 async function handleWildesKindPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🐕 Wildes Kind-Phase: Wähle Vorbild...");
+  log("  🐕 Wildes Kind-Phase: Wähle Vorbild... (RANDOM MODE)");
 
   const wildesKind = findPlayerByRole(players, ["Wildes Kind"]);
   if (!wildesKind) {
@@ -830,16 +956,18 @@ async function handleWildesKindPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== wildesKind && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Wildes Kind überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, wildesKind);
   await selectTargetAndConfirm(wildesKind.page, target.name, ["Wählen", "Vorbild"]);
   log(`    Wildes Kind wählt ${target.name} als Vorbild`);
 }
 
 async function handleHundPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🐶 Hund-Phase: Wolf oder Dorfbewohner?...");
+  log("  🐶 Hund-Phase: Wolf oder Dorfbewohner?... (RANDOM MODE)");
 
   const hund = findPlayerByRole(players, ["Hund"]);
   if (!hund) {
@@ -847,8 +975,13 @@ async function handleHundPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
+  if (shouldSkipAction()) {
+    log("⚠️ [RANDOM] Hund überspringt");
+    return;
+  }
+
   // Randomly choose wolf or villager
-  const choice = Math.random() > 0.5 ? "Werwolf" : "Dorfbewohner";
+  const choice = seededRandom() > 0.5 ? "Werwolf" : "Dorfbewohner";
   const btn = hund.page.locator(`button:has-text("${choice}")`).first();
   if (await btn.isVisible({ timeout: 2000 }).catch(() => false)) {
     await btn.click();
@@ -869,7 +1002,7 @@ async function handleSeherVariantPhase(players: PlayerWindow[], phase: string): 
     ? ["Paranormaler Ermittler"]
     : ["Seherin"];
 
-  log(`  👁️ ${roleNames[0]}-Phase: Wähle Spieler zum Sehen...`);
+  log(`  👁️ ${roleNames[0]}-Phase: Wähle Spieler zum Sehen... (RANDOM MODE)`);
 
   const seher = findPlayerByRole(players, roleNames);
   if (!seher) {
@@ -877,21 +1010,30 @@ async function handleSeherVariantPhase(players: PlayerWindow[], phase: string): 
     return;
   }
 
-  const targets = players.filter((p) => p !== seher && p.isAlive);
-  if (targets.length === 0) return;
+  // Random: Sometimes skip
+  if (shouldSkipAction()) {
+    log(`    ⚠️ [RANDOM] ${roleNames[0]} überspringt (Test: Keine Aktion)`);
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
-  // Button-Text ist "Identität sehen", Aktion ist "seherin_sehen"
+  const target = getRandomTarget(players, seher, !shouldTargetWrong());
   const success = await selectTargetAndConfirm(seher.page, target.name, ["Identität sehen", "Sehen", "Wählen", "Prüfen"]);
   if (success) {
-    log(`    ${roleNames[0]} sieht ${target.name}`);
+    log(`    ${roleNames[0]} sieht ${target.name} (am Leben: ${target.isAlive})`);
   } else {
     log(`    ${roleNames[0]} konnte niemanden sehen`);
+  }
+
+  // Random: Try double action
+  if (shouldDoubleAction()) {
+    log(`    ⚠️ [RANDOM] ${roleNames[0]} versucht erneut zu sehen`);
+    const target2 = getRandomTarget(players, seher);
+    await selectTargetAndConfirm(seher.page, target2.name, ["Sehen", "Wählen"]);
   }
 }
 
 async function handleMediumPhase(players: PlayerWindow[]): Promise<void> {
-  log("  👻 Medium-Phase: Kontaktiere Tote...");
+  log("  👻 Medium-Phase: Kontaktiere Tote... (RANDOM MODE)");
 
   const medium = findPlayerByRole(players, ["Medium"]);
   if (!medium) {
@@ -899,20 +1041,27 @@ async function handleMediumPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  // Medium sees a dead player
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Medium überspringt");
+    return;
+  }
+
+  // Medium sees a dead player (or tries an alive one for edge case)
   const deadPlayers = players.filter((p) => !p.isAlive);
-  if (deadPlayers.length === 0) {
+  if (deadPlayers.length === 0 && !shouldTargetWrong()) {
     log("    Keine Toten zum Kontaktieren");
     return;
   }
 
-  const target = deadPlayers[Math.floor(Math.random() * deadPlayers.length)];
+  const target = deadPlayers.length > 0 && !shouldTargetWrong()
+    ? randomChoice(deadPlayers)
+    : getRandomTarget(players, medium); // Edge case: target alive
   await selectTargetAndConfirm(medium.page, target.name, ["Kontaktieren", "Sehen", "Wählen"]);
-  log(`    Medium kontaktiert ${target.name}`);
+  log(`    Medium kontaktiert ${target.name} (am Leben: ${target.isAlive})`);
 }
 
 async function handleTratschweibPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🗣️ Tratschweib-Phase: Erfrage Information...");
+  log("  🗣️ Tratschweib-Phase: Erfrage Information... (RANDOM MODE)");
 
   const tratschweib = findPlayerByRole(players, ["Tratschweib"]);
   if (!tratschweib) {
@@ -920,11 +1069,16 @@ async function handleTratschweibPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  // Select two players to compare
-  const targets = players.filter((p) => p !== tratschweib && p.isAlive);
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Tratschweib überspringt");
+    return;
+  }
+
+  // Select two players to compare (randomly, including edge cases)
+  const targets = players.filter((p) => p !== tratschweib);
   if (targets.length < 2) return;
 
-  const shuffled = targets.sort(() => Math.random() - 0.5);
+  const shuffled = [...targets].sort(() => seededRandom() - 0.5);
   await selectTargetAndConfirm(tratschweib.page, shuffled[0].name, ["Wählen"]);
   await sleep(300);
   await selectTargetAndConfirm(tratschweib.page, shuffled[1].name, ["Vergleichen", "Prüfen", "Wählen"]);
@@ -932,7 +1086,7 @@ async function handleTratschweibPhase(players: PlayerWindow[]): Promise<void> {
 }
 
 async function handleWerwolfseherinPhase(players: PlayerWindow[], werwolfe: PlayerWindow[]): Promise<void> {
-  log("  👁️🐺 Werwolfseherin-Phase: Sieht mit den Wölfen...");
+  log("  👁️🐺 Werwolfseherin-Phase: Sieht mit den Wölfen... (RANDOM MODE)");
 
   const werwolfseherin = findPlayerByRole(players, ["Werwolfseherin"]);
   if (!werwolfseherin) {
@@ -940,11 +1094,17 @@ async function handleWerwolfseherinPhase(players: PlayerWindow[], werwolfe: Play
     return;
   }
 
-  // She sees another wolf
-  const otherWolves = werwolfe.filter((w) => w !== werwolfseherin && w.isAlive);
-  if (otherWolves.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Werwolfseherin überspringt");
+    return;
+  }
 
-  const target = otherWolves[Math.floor(Math.random() * otherWolves.length)];
+  // She sees another wolf (or edge case: any player)
+  const otherWolves = werwolfe.filter((w) => w !== werwolfseherin && w.isAlive);
+  const target = (otherWolves.length === 0 || shouldTargetWrong())
+    ? getRandomTarget(players, werwolfseherin)
+    : randomChoice(otherWolves);
+
   await selectTargetAndConfirm(werwolfseherin.page, target.name, ["Sehen", "Wählen"]);
   log(`    Werwolfseherin sieht ${target.name}`);
 }
@@ -962,7 +1122,7 @@ async function handleHeilerVariantPhase(
     ? ["Leibwächter"]
     : ["Heiler"];
 
-  log(`  💉 ${roleNames[0]}-Phase: Wähle Spieler zum Schützen...`);
+  log(`  💉 ${roleNames[0]}-Phase: Wähle Spieler zum Schützen... (RANDOM MODE)`);
 
   const heiler = findPlayerByRole(players, roleNames);
   if (!heiler) {
@@ -970,16 +1130,20 @@ async function handleHeilerVariantPhase(
     return;
   }
 
-  const targets = dorfbewohner.filter((p) => p.isAlive);
-  if (targets.length === 0) return;
+  // Random: Sometimes skip
+  if (shouldSkipAction()) {
+    log(`    ⚠️ [RANDOM] ${roleNames[0]} überspringt (Test: Keine Heilung)`);
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  // Random target from all players (not just dorfbewohner for edge cases)
+  const target = getRandomTarget(players, heiler, !shouldTargetWrong());
   await selectTargetAndConfirm(heiler.page, target.name, ["Schützen", "Heilen", "Wählen"]);
-  log(`    ${roleNames[0]} schützt ${target.name}`);
+  log(`    ${roleNames[0]} schützt ${target.name} (am Leben: ${target.isAlive})`);
 }
 
 async function handleHurePhase(players: PlayerWindow[]): Promise<void> {
-  log("  💋 Hure/Prostituierte-Phase: Besuche Spieler...");
+  log("  💋 Hure/Prostituierte-Phase: Besuche Spieler... (RANDOM MODE)");
 
   const hure = findPlayerByRole(players, ["Hure", "Prostituierte", "Nutte"]);
   if (!hure) {
@@ -987,12 +1151,14 @@ async function handleHurePhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== hure && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Hure überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, hure, !shouldTargetWrong());
   await selectTargetAndConfirm(hure.page, target.name, ["Besuchen", "Wählen"]);
-  log(`    Hure besucht ${target.name}`);
+  log(`    Hure besucht ${target.name} (am Leben: ${target.isAlive})`);
 }
 
 // ============================================================================
@@ -1000,30 +1166,30 @@ async function handleHurePhase(players: PlayerWindow[]): Promise<void> {
 // ============================================================================
 
 async function handleEinsamerWolfPhase(einsameWoelfe: PlayerWindow[], dorfbewohner: PlayerWindow[]): Promise<void> {
-  log("  🐺💀 Einsamer Wolf-Phase: Eigene Tötung (kennt andere Wölfe NICHT!)...");
+  log("  🐺💀 Einsamer Wolf-Phase: Eigene Tötung... (RANDOM MODE)");
 
-  // Der Einsame Wolf jagt ALLEINE!
   const aliveEinsameWoelfe = einsameWoelfe.filter((w) => w.isAlive);
   if (aliveEinsameWoelfe.length === 0) {
     log("    Kein lebender Einsamer Wolf");
     return;
   }
 
-  const targets = dorfbewohner.filter((p) => p.isAlive);
-  if (targets.length === 0) {
-    log("    Keine Ziele verfügbar");
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Einsamer Wolf überspringt");
     return;
   }
 
+  const allPlayers = [...dorfbewohner, ...einsameWoelfe];
+
   for (const wolf of aliveEinsameWoelfe) {
-    const target = targets[Math.floor(Math.random() * targets.length)];
+    const target = getRandomTarget(allPlayers, wolf, !shouldTargetWrong());
     await selectTargetAndConfirm(wolf.page, target.name, ["Töten", "Angreifen", "Wählen"]);
-    log(`    ${wolf.name} (Einsamer Wolf) greift ${target.name} an`);
+    log(`    ${wolf.name} (Einsamer Wolf) greift ${target.name} an (am Leben: ${target.isAlive})`);
   }
 }
 
-async function handleUrwolfPhase(players: PlayerWindow[], dorfbewohner: PlayerWindow[]): Promise<void> {
-  log("  🐺⚡ Urwolf-Phase: Verwandle oder töte...");
+async function handleUrwolfPhase(players: PlayerWindow[], _dorfbewohner: PlayerWindow[]): Promise<void> {
+  log("  🐺⚡ Urwolf-Phase: Verwandle oder töte... (RANDOM MODE)");
 
   const urwolf = findPlayerByRole(players, ["Urwolf"]);
   if (!urwolf) {
@@ -1031,17 +1197,19 @@ async function handleUrwolfPhase(players: PlayerWindow[], dorfbewohner: PlayerWi
     return;
   }
 
-  // Urwolf can convert a villager to wolf
-  const targets = dorfbewohner.filter((p) => p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Urwolf überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  // Random target from all players
+  const target = getRandomTarget(players, urwolf, !shouldTargetWrong());
   await selectTargetAndConfirm(urwolf.page, target.name, ["Verwandeln", "Wählen"]);
-  log(`    Urwolf versucht ${target.name} zu verwandeln`);
+  log(`    Urwolf versucht ${target.name} zu verwandeln (am Leben: ${target.isAlive})`);
 }
 
 async function handleWeisserWolfPhase(players: PlayerWindow[], werwolfe: PlayerWindow[]): Promise<void> {
-  log("  🐺⚪ Weißer Wolf-Phase: Töte Mitwolf...");
+  log("  🐺⚪ Weißer Wolf-Phase: Töte Mitwolf... (RANDOM MODE)");
 
   const weisserWolf = findPlayerByRole(players, ["Weißer Wolf"]);
   if (!weisserWolf) {
@@ -1049,16 +1217,19 @@ async function handleWeisserWolfPhase(players: PlayerWindow[], werwolfe: PlayerW
     return;
   }
 
-  // White wolf kills another wolf
-  const otherWolves = werwolfe.filter((w) => w !== weisserWolf && w.isAlive);
-  if (otherWolves.length === 0) {
-    log("    Keine anderen Wölfe zum Töten");
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Weißer Wolf überspringt");
     return;
   }
 
-  // Only kills every other night (random for simulation)
-  if (Math.random() > 0.5) {
-    const target = otherWolves[Math.floor(Math.random() * otherWolves.length)];
+  // White wolf kills another wolf (or edge case: anyone)
+  const otherWolves = werwolfe.filter((w) => w !== weisserWolf && w.isAlive);
+
+  // Random decision to kill or not
+  if (seededRandom() > 0.5) {
+    const target = (otherWolves.length === 0 || shouldTargetWrong())
+      ? getRandomTarget(players, weisserWolf)
+      : randomChoice(otherWolves);
     await selectTargetAndConfirm(weisserWolf.page, target.name, ["Töten", "Wählen"]);
     log(`    Weißer Wolf tötet ${target.name}`);
   } else {
@@ -1067,7 +1238,7 @@ async function handleWeisserWolfPhase(players: PlayerWindow[], werwolfe: PlayerW
 }
 
 async function handleMordlustigerPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🔪 Mordlustiger-Phase: Zusätzliche Tötung...");
+  log("  🔪 Mordlustiger-Phase: Zusätzliche Tötung... (RANDOM MODE)");
 
   const mordlustiger = findPlayerByRole(players, ["Mordlustiger"]);
   if (!mordlustiger) {
@@ -1075,12 +1246,14 @@ async function handleMordlustigerPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== mordlustiger && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Mordlustiger überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, mordlustiger, !shouldTargetWrong());
   await selectTargetAndConfirm(mordlustiger.page, target.name, ["Töten", "Ermorden", "Wählen"]);
-  log(`    Mordlustiger tötet ${target.name}`);
+  log(`    Mordlustiger tötet ${target.name} (am Leben: ${target.isAlive})`);
 }
 
 // ============================================================================
@@ -1088,7 +1261,7 @@ async function handleMordlustigerPhase(players: PlayerWindow[]): Promise<void> {
 // ============================================================================
 
 async function handleHexePhase(players: PlayerWindow[]): Promise<void> {
-  log("  🧙 Hexe-Phase: Entscheide über Heilen/Töten...");
+  log("  🧙 Hexe-Phase: Entscheide über Heilen/Töten... (RANDOM MODE)");
 
   const hexe = findPlayerByRole(players, ["Hexe"]);
   if (!hexe) {
@@ -1096,41 +1269,59 @@ async function handleHexePhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  // Randomly decide to heal, kill, or pass
-  const action = Math.random();
+  // Random: Sometimes skip entirely
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Hexe überspringt (Test: Keine Aktion)");
+    return;
+  }
+
+  // Fully random decision: 0-1 random actions
+  const actions = ["heal", "kill", "skip", "both"]; // "both" tests doing heal AND kill
+  const action = randomChoice(actions);
 
   try {
-    if (action < 0.4) {
+    if (action === "heal" || action === "both") {
       const healBtn = hexe.page.locator('button:has-text("Heilen")').first();
       if (await healBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
         await healBtn.click();
         log(`    Hexe heilt das Opfer`);
-        return;
-      }
-    } else if (action < 0.6) {
-      // Try to kill someone
-      const targets = players.filter((p) => p.rolle !== "Hexe" && p.isAlive);
-      if (targets.length > 0) {
-        const target = targets[Math.floor(Math.random() * targets.length)];
-        await selectTargetAndConfirm(hexe.page, target.name, ["Töten", "Vergiften"]);
-        log(`    Hexe vergiftet ${target.name}`);
-        return;
+        await sleep(500);
       }
     }
 
-    // Pass
-    const skipBtn = hexe.page.locator('button:has-text("Nicht heilen"), button:has-text("Überspringen"), button:has-text("Weiter"), button:has-text("Nichts tun")').first();
-    if (await skipBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await skipBtn.click();
-      log(`    Hexe überspringt`);
+    if (action === "kill" || action === "both") {
+      // Random target - including dead players for edge case
+      const allPlayers = players.filter((p) => p.rolle !== "Hexe");
+      if (allPlayers.length > 0) {
+        const target = randomChoice(allPlayers);
+        await selectTargetAndConfirm(hexe.page, target.name, ["Töten", "Vergiften"]);
+        log(`    Hexe vergiftet ${target.name} (am Leben: ${target.isAlive})`);
+      }
+    }
+
+    if (action === "skip") {
+      const skipBtn = hexe.page.locator('button:has-text("Nicht heilen"), button:has-text("Überspringen"), button:has-text("Weiter"), button:has-text("Nichts tun")').first();
+      if (await skipBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await skipBtn.click();
+        log(`    Hexe überspringt`);
+      }
+    }
+
+    // Random: Try double action
+    if (shouldDoubleAction()) {
+      log("    ⚠️ [RANDOM] Hexe versucht erneut zu handeln");
+      const healBtn = hexe.page.locator('button:has-text("Heilen")').first();
+      if (await healBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+        await healBtn.click();
+      }
     }
   } catch (e) {
-    log(`    Hexe konnte nicht handeln`);
+    log(`    Hexe konnte nicht handeln: ${e}`);
   }
 }
 
 async function handleHexenmeisterPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🧙‍♂️ Hexenmeister-Phase: Verzaubere...");
+  log("  🧙‍♂️ Hexenmeister-Phase: Verzaubere... (RANDOM MODE)");
 
   const hexenmeister = findPlayerByRole(players, ["Hexenmeister"]);
   if (!hexenmeister) {
@@ -1138,16 +1329,18 @@ async function handleHexenmeisterPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== hexenmeister && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Hexenmeister überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, hexenmeister, !shouldTargetWrong());
   await selectTargetAndConfirm(hexenmeister.page, target.name, ["Verzaubern", "Wählen"]);
   log(`    Hexenmeister verzaubert ${target.name}`);
 }
 
 async function handleGiftmischerinPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🧪 Giftmischerin-Phase: Vergebe Gift...");
+  log("  🧪 Giftmischerin-Phase: Vergebe Gift... (RANDOM MODE)");
 
   const giftmischerin = findPlayerByRole(players, ["Giftmischerin"]);
   if (!giftmischerin) {
@@ -1155,16 +1348,18 @@ async function handleGiftmischerinPhase(players: PlayerWindow[]): Promise<void> 
     return;
   }
 
-  const targets = players.filter((p) => p !== giftmischerin && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Giftmischerin überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, giftmischerin, !shouldTargetWrong());
   await selectTargetAndConfirm(giftmischerin.page, target.name, ["Vergiften", "Wählen"]);
   log(`    Giftmischerin vergiftet ${target.name}`);
 }
 
 async function handleKraeuterweibPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🌿 Kräuterweib-Phase: Verteile Kräuter...");
+  log("  🌿 Kräuterweib-Phase: Verteile Kräuter... (RANDOM MODE)");
 
   const kraeuterweib = findPlayerByRole(players, ["Kräuterweib"]);
   if (!kraeuterweib) {
@@ -1172,16 +1367,18 @@ async function handleKraeuterweibPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== kraeuterweib && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Kräuterweib überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, kraeuterweib, !shouldTargetWrong());
   await selectTargetAndConfirm(kraeuterweib.page, target.name, ["Kräuter geben", "Wählen"]);
   log(`    Kräuterweib gibt ${target.name} Kräuter`);
 }
 
 async function handleZaubererPhase(players: PlayerWindow[]): Promise<void> {
-  log("  ✨ Zauberer-Phase: Wirke Zauber...");
+  log("  ✨ Zauberer-Phase: Wirke Zauber... (RANDOM MODE)");
 
   const zauberer = findPlayerByRole(players, ["Zauberer"]);
   if (!zauberer) {
@@ -1189,16 +1386,18 @@ async function handleZaubererPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== zauberer && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Zauberer überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, zauberer, !shouldTargetWrong());
   await selectTargetAndConfirm(zauberer.page, target.name, ["Zaubern", "Wählen"]);
   log(`    Zauberer zaubert auf ${target.name}`);
 }
 
 async function handleSandmannPhase(players: PlayerWindow[]): Promise<void> {
-  log("  😴 Sandmann-Phase: Schläfere ein...");
+  log("  😴 Sandmann-Phase: Schläfere ein... (RANDOM MODE)");
 
   const sandmann = findPlayerByRole(players, ["Sandmann"]);
   if (!sandmann) {
@@ -1206,10 +1405,12 @@ async function handleSandmannPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== sandmann && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Sandmann überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, sandmann, !shouldTargetWrong());
   await selectTargetAndConfirm(sandmann.page, target.name, ["Einschläfern", "Wählen"]);
   log(`    Sandmann schläfert ${target.name} ein`);
 }
@@ -1219,7 +1420,7 @@ async function handleSandmannPhase(players: PlayerWindow[]): Promise<void> {
 // ============================================================================
 
 async function handleZahnarztPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🦷 Zahnarzt-Phase: Behandle Zähne...");
+  log("  🦷 Zahnarzt-Phase: Behandle Zähne... (RANDOM MODE)");
 
   const zahnarzt = findPlayerByRole(players, ["Zahnarzt"]);
   if (!zahnarzt) {
@@ -1227,16 +1428,18 @@ async function handleZahnarztPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== zahnarzt && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Zahnarzt überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, zahnarzt, !shouldTargetWrong());
   await selectTargetAndConfirm(zahnarzt.page, target.name, ["Behandeln", "Wählen"]);
   log(`    Zahnarzt behandelt ${target.name}`);
 }
 
 async function handleRabePhase(players: PlayerWindow[]): Promise<void> {
-  log("  🐦 Rabe-Phase: Markiere verdächtigen...");
+  log("  🐦 Rabe-Phase: Markiere verdächtigen... (RANDOM MODE)");
 
   const rabe = findPlayerByRole(players, ["Rabe"]);
   if (!rabe) {
@@ -1244,16 +1447,18 @@ async function handleRabePhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== rabe && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Rabe überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, rabe, !shouldTargetWrong());
   await selectTargetAndConfirm(rabe.page, target.name, ["Markieren", "Wählen"]);
   log(`    Rabe markiert ${target.name}`);
 }
 
 async function handleFloetenspielerPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🎵 Flötenspieler-Phase: Verzaubere...");
+  log("  🎵 Flötenspieler-Phase: Verzaubere... (RANDOM MODE)");
 
   const floetenspieler = findPlayerByRole(players, ["Flötenspieler"]);
   if (!floetenspieler) {
@@ -1261,17 +1466,18 @@ async function handleFloetenspielerPhase(players: PlayerWindow[]): Promise<void>
     return;
   }
 
-  // Enchant 1-2 players
-  const targets = players.filter((p) => p !== floetenspieler && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Flötenspieler überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, floetenspieler, !shouldTargetWrong());
   await selectTargetAndConfirm(floetenspieler.page, target.name, ["Verzaubern", "Wählen"]);
   log(`    Flötenspieler verzaubert ${target.name}`);
 }
 
 async function handleVampirPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🧛 Vampir-Phase: Beiße...");
+  log("  🧛 Vampir-Phase: Beiße... (RANDOM MODE)");
 
   const vampir = findPlayerByRole(players, ["Vampir"]);
   if (!vampir) {
@@ -1279,16 +1485,18 @@ async function handleVampirPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== vampir && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Vampir überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, vampir, !shouldTargetWrong());
   await selectTargetAndConfirm(vampir.page, target.name, ["Beißen", "Wählen"]);
   log(`    Vampir beißt ${target.name}`);
 }
 
 async function handleZombiePhase(players: PlayerWindow[]): Promise<void> {
-  log("  🧟 Zombie-Phase: Erwecke Toten...");
+  log("  🧟 Zombie-Phase: Erwecke Toten... (RANDOM MODE)");
 
   const zombie = findPlayerByRole(players, ["Zombie"]);
   if (!zombie) {
@@ -1296,20 +1504,27 @@ async function handleZombiePhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  // Zombie can revive dead players
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Zombie überspringt");
+    return;
+  }
+
+  // Zombie can revive dead players (or try alive for edge case)
   const deadPlayers = players.filter((p) => !p.isAlive);
-  if (deadPlayers.length === 0) {
+  if (deadPlayers.length === 0 && !shouldTargetWrong()) {
     log("    Keine Toten zum Erwecken");
     return;
   }
 
-  const target = deadPlayers[Math.floor(Math.random() * deadPlayers.length)];
+  const target = (deadPlayers.length > 0 && !shouldTargetWrong())
+    ? randomChoice(deadPlayers)
+    : getRandomTarget(players, zombie); // Edge case: target alive
   await selectTargetAndConfirm(zombie.page, target.name, ["Erwecken", "Wählen"]);
-  log(`    Zombie erweckt ${target.name}`);
+  log(`    Zombie erweckt ${target.name} (am Leben: ${target.isAlive})`);
 }
 
 async function handlePyromanePhase(players: PlayerWindow[]): Promise<void> {
-  log("  🔥 Pyromane-Phase: Markiere oder zünde...");
+  log("  🔥 Pyromane-Phase: Markiere oder zünde... (RANDOM MODE)");
 
   const pyromane = findPlayerByRole(players, ["Pyromane"]);
   if (!pyromane) {
@@ -1317,8 +1532,13 @@ async function handlePyromanePhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  // Pyromane can douse or ignite
-  const action = Math.random() > 0.7 ? "ignite" : "douse";
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Pyromane überspringt");
+    return;
+  }
+
+  // Pyromane can douse or ignite (random decision)
+  const action = seededRandom() > 0.7 ? "ignite" : "douse";
 
   if (action === "ignite") {
     const igniteBtn = pyromane.page.locator('button:has-text("Anzünden"), button:has-text("Entzünden")').first();
@@ -1329,16 +1549,13 @@ async function handlePyromanePhase(players: PlayerWindow[]): Promise<void> {
     }
   }
 
-  const targets = players.filter((p) => p !== pyromane && p.isAlive);
-  if (targets.length === 0) return;
-
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, pyromane, !shouldTargetWrong());
   await selectTargetAndConfirm(pyromane.page, target.name, ["Markieren", "Übergießen", "Wählen"]);
   log(`    Pyromane markiert ${target.name}`);
 }
 
 async function handleTonksPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🎭 Tonks-Phase: Verwandle Aussehen...");
+  log("  🎭 Tonks-Phase: Verwandle Aussehen... (RANDOM MODE)");
 
   const tonks = findPlayerByRole(players, ["Tonks"]);
   if (!tonks) {
@@ -1346,16 +1563,18 @@ async function handleTonksPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const targets = players.filter((p) => p !== tonks && p.isAlive);
-  if (targets.length === 0) return;
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Tonks überspringt");
+    return;
+  }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = getRandomTarget(players, tonks, !shouldTargetWrong());
   await selectTargetAndConfirm(tonks.page, target.name, ["Verwandeln", "Wählen"]);
   log(`    Tonks nimmt die Gestalt von ${target.name} an`);
 }
 
 async function handleBuddlerPhase(players: PlayerWindow[]): Promise<void> {
-  log("  ⛏️ Buddler-Phase: Grabe Grab aus...");
+  log("  ⛏️ Buddler-Phase: Grabe Grab aus... (RANDOM MODE)");
 
   const buddler = findPlayerByRole(players, ["Buddler"]);
   if (!buddler) {
@@ -1363,16 +1582,23 @@ async function handleBuddlerPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  // Buddler can dig up dead player's role
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Buddler überspringt");
+    return;
+  }
+
+  // Buddler can dig up dead player's role (or try alive for edge case)
   const deadPlayers = players.filter((p) => !p.isAlive);
-  if (deadPlayers.length === 0) {
+  if (deadPlayers.length === 0 && !shouldTargetWrong()) {
     log("    Keine Toten zum Ausgraben");
     return;
   }
 
-  const target = deadPlayers[Math.floor(Math.random() * deadPlayers.length)];
+  const target = (deadPlayers.length > 0 && !shouldTargetWrong())
+    ? randomChoice(deadPlayers)
+    : getRandomTarget(players, buddler); // Edge case: target alive
   await selectTargetAndConfirm(buddler.page, target.name, ["Ausgraben", "Wählen"]);
-  log(`    Buddler gräbt ${target.name}s Grab aus`);
+  log(`    Buddler gräbt ${target.name}s Grab aus (am Leben: ${target.isAlive})`);
 }
 
 // ============================================================================
@@ -1380,7 +1606,7 @@ async function handleBuddlerPhase(players: PlayerWindow[]): Promise<void> {
 // ============================================================================
 
 async function handleDiskussionPhase(players: PlayerWindow[]): Promise<void> {
-  log("  💬 Diskussion: Spieler chatten...");
+  log("  💬 Diskussion: Spieler chatten... (RANDOM MODE)");
 
   const chatMessages = [
     "Ich bin unschuldig!",
@@ -1394,62 +1620,94 @@ async function handleDiskussionPhase(players: PlayerWindow[]): Promise<void> {
     "Vertraut mir, ich bin Dorfbewohner!",
     "Wir müssen abstimmen!",
     "Die Wölfe haben wieder zugeschlagen...",
+    // Edge case messages
+    "",
+    "   ",
+    "a".repeat(500), // Very long message
+    "<script>alert('xss')</script>", // XSS attempt
+    "🐺🐺🐺🐺🐺🐺🐺🐺", // Lots of emojis
+    "SELECT * FROM users;", // SQL injection attempt
+    "null",
+    "undefined",
+    "{\"test\": true}",
   ];
 
-  const chatters = players.filter((p) => p.isAlive).slice(0, 3);
+  const alivePlayers = players.filter((p) => p.isAlive);
+  const chatCount = Math.floor(seededRandom() * 6) + 1; // 1-6 messages
 
-  for (const chatter of chatters) {
-    const message = chatMessages[Math.floor(Math.random() * chatMessages.length)]
-      .replace("${target}", players[Math.floor(Math.random() * players.length)].name);
+  for (let i = 0; i < chatCount; i++) {
+    if (alivePlayers.length === 0) break;
+
+    const chatter = randomChoice(alivePlayers);
+    let message = randomChoice(chatMessages)
+      .replace("${target}", randomChoice(players).name);
+
+    // Random: Sometimes send rapid-fire messages
+    if (shouldDoubleAction()) {
+      log(`    ⚠️ [RANDOM] ${chatter.name} spammt Chat`);
+      for (let j = 0; j < 3; j++) {
+        try {
+          const chatInput = chatter.page.locator("#chat-input");
+          if (await chatInput.isVisible({ timeout: 500 }).catch(() => false)) {
+            await chatInput.fill(randomChoice(chatMessages));
+            await chatInput.press("Enter");
+          }
+        } catch (e) {}
+        await sleep(50);
+      }
+    }
 
     try {
-      const chatInput = chatter.page.locator("#chat-input, input[name='chat'], .chat-input");
+      const chatInput = chatter.page.locator("#chat-input");
       if (await chatInput.isVisible({ timeout: 1000 }).catch(() => false)) {
         await chatInput.fill(message);
         await chatInput.press("Enter");
-        log(`    ${chatter.name}: "${message}"`);
+        log(`    ${chatter.name}: "${message.substring(0, 50)}${message.length > 50 ? "..." : ""}"`);
       }
     } catch (e) {
       // Chat failed, continue
     }
-    await sleep(500);
+    await sleep(200 + Math.floor(seededRandom() * 500));
   }
 
-  await sleep(2000);
+  await sleep(1000 + Math.floor(seededRandom() * 2000));
 }
 
 async function handleAbstimmungPhase(
   players: PlayerWindow[],
-  werwolfe: PlayerWindow[]
+  _werwolfe: PlayerWindow[]
 ): Promise<void> {
-  log("  🗳️ Abstimmung: Spieler stimmen ab...");
+  log("  🗳️ Abstimmung: Spieler stimmen ab... (RANDOM MODE)");
 
   const alivePlayers = players.filter((p) => p.isAlive);
-  const aliveWolves = werwolfe.filter((w) => w.isAlive);
+  const allPlayers = players; // For edge case testing (voting for dead)
 
-  // WICHTIG: Einsame Wölfe sind NICHT in werwolfe enthalten!
-  // Sie wissen nicht, wer die anderen Wölfe sind und stimmen daher zufällig ab.
-
-  // Villagers vote for suspected wolf, wolves vote for villager
-  const villagerTarget = aliveWolves.length > 0
-    ? aliveWolves[Math.floor(Math.random() * aliveWolves.length)]
-    : alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-
-  log(`    Verdächtiger: ${villagerTarget?.name || "Keiner"}`);
-
+  // Random: Sometimes some players don't vote at all
   for (const voter of alivePlayers) {
+    // Random skip
+    if (shouldSkipAction()) {
+      log(`    ⚠️ [RANDOM] ${voter.name} enthält sich (Test: Unvollständige Abstimmung)`);
+      continue;
+    }
+
     let voteTarget: PlayerWindow;
 
-    if (werwolfe.includes(voter)) {
-      // Rudel-Wölfe stimmen koordiniert für einen Dorfbewohner
-      const villagers = alivePlayers.filter((p) => !werwolfe.includes(p));
-      voteTarget = villagers.length > 0
-        ? villagers[Math.floor(Math.random() * villagers.length)]
-        : villagerTarget;
+    // Full randomness in voting
+    if (shouldRandomVote()) {
+      // Completely random target (including dead, self, etc.)
+      if (shouldTargetSelf()) {
+        voteTarget = voter;
+        log(`    ⚠️ [RANDOM] ${voter.name} versucht für sich selbst zu stimmen`);
+      } else if (shouldTargetWrong()) {
+        const deadPlayers = allPlayers.filter((p) => !p.isAlive);
+        voteTarget = deadPlayers.length > 0 ? randomChoice(deadPlayers) : randomChoice(alivePlayers);
+        log(`    ⚠️ [RANDOM] ${voter.name} stimmt für toten Spieler: ${voteTarget.name}`);
+      } else {
+        voteTarget = randomChoice(alivePlayers);
+      }
     } else {
-      // Einsame Wölfe und Dorfbewohner stimmen für den Verdächtigen
-      // (Einsame Wölfe wissen nicht, wer die anderen Wölfe sind!)
-      voteTarget = villagerTarget;
+      // Slightly smarter but still random voting
+      voteTarget = randomChoice(alivePlayers);
     }
 
     if (!voteTarget) continue;
@@ -1458,17 +1716,25 @@ async function handleAbstimmungPhase(
       await selectTargetAndConfirm(voter.page, voteTarget.name, ["Wählen", "Abstimmen", "Hinrichten"]);
       log(`    ${voter.name} → ${voteTarget.name}`);
     } catch (e) {
-      // Voting failed
+      log(`    ${voter.name} konnte nicht abstimmen`);
     }
-    await sleep(200);
+
+    // Random: Try to vote again
+    if (shouldDoubleAction()) {
+      log(`    ⚠️ [RANDOM] ${voter.name} versucht erneut abzustimmen`);
+      const newTarget = randomChoice(alivePlayers);
+      await selectTargetAndConfirm(voter.page, newTarget.name, ["Wählen", "Abstimmen"]);
+    }
+
+    await sleep(100 + Math.floor(seededRandom() * 300));
   }
 }
 
 async function handleJaegerPhase(
   players: PlayerWindow[],
-  werwolfe: PlayerWindow[]
+  _werwolfe: PlayerWindow[]
 ): Promise<void> {
-  log("  🎯 Jäger-Phase: Wähle Ziel zum Erschießen...");
+  log("  🎯 Jäger-Phase: Wähle Ziel zum Erschießen... (RANDOM MODE)");
 
   // Find dying hunter
   const jaeger = players.find(
@@ -1479,7 +1745,6 @@ async function handleJaegerPhase(
   );
 
   if (!jaeger) {
-    // Check for alive hunter in phase (shouldn't happen normally)
     const aliveJaeger = findPlayerByRole(players, ["Jäger", "Jaeger"]);
     if (!aliveJaeger || aliveJaeger.isAlive) {
       log("    Kein sterbender Jäger");
@@ -1490,25 +1755,27 @@ async function handleJaegerPhase(
   const hunter = jaeger || findPlayerByRole(players, ["Jäger", "Jaeger"]);
   if (!hunter) return;
 
-  // Shoot a werewolf if possible
-  const aliveWolves = werwolfe.filter((w) => w.isAlive);
-  const alivePlayers = players.filter((p) => p.isAlive);
-  const target = aliveWolves.length > 0
-    ? aliveWolves[Math.floor(Math.random() * aliveWolves.length)]
-    : alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+  // Random: Sometimes skip (test: what if hunter doesn't shoot?)
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Jäger schießt nicht (Test: Kein Schuss)");
+    return;
+  }
+
+  // Fully random target (including dead players, wolves, villagers)
+  const target = getRandomTarget(players, hunter, !shouldTargetWrong());
 
   if (!target) return;
 
   await selectTargetAndConfirm(hunter.page, target.name, ["Erschießen", "Wählen"]);
-  log(`    Jäger erschießt ${target.name}`);
-  target.isAlive = false;
+  log(`    Jäger erschießt ${target.name} (am Leben: ${target.isAlive})`);
+  if (target.isAlive) target.isAlive = false;
 }
 
 async function handleKamikazePhase(
   players: PlayerWindow[],
-  werwolfe: PlayerWindow[]
+  _werwolfe: PlayerWindow[]
 ): Promise<void> {
-  log("  💣 Kamikaze-Phase: Selbstmordanschlag...");
+  log("  💣 Kamikaze-Phase: Selbstmordanschlag... (RANDOM MODE)");
 
   const kamikaze = findPlayerByRole(players, ["Kamikaze"]);
   if (!kamikaze) {
@@ -1516,18 +1783,21 @@ async function handleKamikazePhase(
     return;
   }
 
-  // Kamikaze takes someone with them
-  const aliveWolves = werwolfe.filter((w) => w.isAlive);
-  const target = aliveWolves.length > 0
-    ? aliveWolves[Math.floor(Math.random() * aliveWolves.length)]
-    : players.filter((p) => p.isAlive && p !== kamikaze)[0];
+  // Random: Sometimes skip
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Kamikaze zündet nicht (Test: Kein Anschlag)");
+    return;
+  }
+
+  // Fully random target
+  const target = getRandomTarget(players, kamikaze, !shouldTargetWrong());
 
   if (!target) return;
 
   await selectTargetAndConfirm(kamikaze.page, target.name, ["Explodieren", "Mitnehmen", "Wählen"]);
-  log(`    Kamikaze reißt ${target.name} mit in den Tod!`);
-  kamikaze.isAlive = false;
-  target.isAlive = false;
+  log(`    Kamikaze reißt ${target.name} mit in den Tod! (am Leben: ${target.isAlive})`);
+  if (kamikaze.isAlive) kamikaze.isAlive = false;
+  if (target.isAlive) target.isAlive = false;
 }
 
 // ============================================================================
@@ -1535,11 +1805,17 @@ async function handleKamikazePhase(
 // ============================================================================
 
 async function handleAmorPhase(players: PlayerWindow[]): Promise<void> {
-  log("  💕 Amor-Phase (amor_phase): Wähle Liebespaar...");
+  log("  💕 Amor-Phase (amor_phase): Wähle Liebespaar... (RANDOM MODE)");
 
   const amor = findPlayerByRole(players, ["Amor"]);
   if (!amor) {
     log("    Kein Amor im Spiel");
+    return;
+  }
+
+  // Random: Sometimes skip
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Amor überspringt (Test: Kein Liebespaar)");
     return;
   }
 
@@ -1549,9 +1825,19 @@ async function handleAmorPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const shuffled = targets.sort(() => Math.random() - 0.5);
-  const lover1 = shuffled[0];
-  const lover2 = shuffled[1];
+  // Random selection (possibly including dead for edge case)
+  let lover1: PlayerWindow, lover2: PlayerWindow;
+
+  if (shouldTargetWrong()) {
+    // Edge case: Try to include self or same person twice
+    lover1 = shouldTargetSelf() ? amor : randomChoice(targets);
+    lover2 = shouldDoubleAction() ? lover1 : randomChoice(targets); // Same person twice?
+    log(`    ⚠️ [RANDOM] Amor versucht ungültige Kombination`);
+  } else {
+    const shuffled = [...targets].sort(() => seededRandom() - 0.5);
+    lover1 = shuffled[0];
+    lover2 = shuffled[1];
+  }
 
   try {
     // Amor muss 2 Spieler auswählen (selectedSpielerIds Array)
@@ -1668,6 +1954,119 @@ async function selectTargetAndConfirm(
         return true;
       }
     }
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Like selectTargetAndConfirm but waits for server confirmation.
+ * Returns true if server confirmed the action, false if rejected or timeout.
+ */
+async function selectTargetAndConfirmWithRetry(
+  page: Page,
+  targetName: string,
+  buttonTexts: string[]
+): Promise<boolean> {
+  try {
+    // First, check if target card is visible
+    let targetCard = page.locator(`.spieler-card[data-name="${targetName}"]`);
+
+    if (!(await targetCard.isVisible({ timeout: 1000 }).catch(() => false))) {
+      targetCard = page.locator(`.spieler-card:has-text("${targetName}")`).first();
+    }
+
+    if (!(await targetCard.isVisible({ timeout: 2000 }).catch(() => false))) {
+      return false;
+    }
+
+    // Setup the server response listener BEFORE clicking
+    await page.evaluate(() => {
+      // Clear any previous pending response
+      (window as any).__lastActionResult = null;
+      (window as any).__actionPending = true;
+
+      const socket = (window as any).socket;
+      if (!socket) {
+        (window as any).__actionPending = false;
+        (window as any).__lastActionResult = { success: false, error: "No socket" };
+        return;
+      }
+
+      // One-time listeners for this action
+      const onSuccess = () => {
+        (window as any).__actionPending = false;
+        (window as any).__lastActionResult = { success: true };
+        socket.off('aktion_bestaetigt', onSuccess);
+        socket.off('fehler', onError);
+      };
+
+      const onError = (data: any) => {
+        (window as any).__actionPending = false;
+        (window as any).__lastActionResult = { success: false, error: data?.nachricht || "Error" };
+        socket.off('aktion_bestaetigt', onSuccess);
+        socket.off('fehler', onError);
+      };
+
+      socket.on('aktion_bestaetigt', onSuccess);
+      socket.on('fehler', onError);
+
+      // Timeout fallback
+      setTimeout(() => {
+        if ((window as any).__actionPending) {
+          (window as any).__actionPending = false;
+          (window as any).__lastActionResult = { success: false, error: "Timeout" };
+          socket.off('aktion_bestaetigt', onSuccess);
+          socket.off('fehler', onError);
+        }
+      }, 5000);
+    });
+
+    // Now click on the target card
+    await targetCard.click();
+    await sleep(500);
+
+    // Find and click action button
+    let buttonClicked = false;
+    for (const text of buttonTexts) {
+      const btn = page.locator(`button:has-text("${text}")`).first();
+      if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await btn.click();
+        buttonClicked = true;
+        break;
+      }
+    }
+
+    if (!buttonClicked) {
+      const genericBtn = page.locator('button:has-text("Bestätigen"), button:has-text("OK"), button.btn-primary').first();
+      if (await genericBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+        await genericBtn.click();
+        buttonClicked = true;
+      }
+    }
+
+    if (!buttonClicked) {
+      return false;
+    }
+
+    // Poll for server response (max 5 seconds)
+    for (let i = 0; i < 50; i++) {
+      const result = await page.evaluate(() => {
+        if (!(window as any).__actionPending && (window as any).__lastActionResult) {
+          return (window as any).__lastActionResult;
+        }
+        return null;
+      });
+
+      if (result !== null) {
+        return result.success;
+      }
+
+      await sleep(100);
+    }
+
+    // Timeout - assume failure
     return false;
   } catch (e) {
     return false;

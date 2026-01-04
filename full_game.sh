@@ -1,20 +1,27 @@
 #!/bin/bash
 # ============================================================================
-# Webwölfe - Full Game Simulation Script
+# Webwölfe - Full Game Simulation Script (RANDOM MODE)
 # ============================================================================
 # Spawns multiple browser windows, auto-creates a game, and simulates
-# an entire game with chat, voting, and all phases.
+# an entire game with RANDOM actions for edge case discovery.
 #
-# Usage: ./full_game.sh <number_of_players> [--hl]
-#        ./full_game.sh 8          # Simulates a game with 8 players
-#        ./full_game.sh 15         # Simulates a game with 15 players
-#        ./full_game.sh 8 --hl     # 8 players, only Erzähler window visible
+# Usage: ./full_game.sh <number_of_players> [--hl] [--seed=SEED]
+#        ./full_game.sh 8              # Simulates a game with 8 players
+#        ./full_game.sh 15             # Simulates a game with 15 players
+#        ./full_game.sh 8 --hl         # 8 players, only one window visible
+#        ./full_game.sh 8 --seed=12345 # Reproducible run with specific seed
 #
 # Options:
-#   --hl    Headless mode for all players except Erzähler (first window)
+#   --hl           Headless mode for all players except the first window
+#   --seed=SEED    Use specific random seed for reproducibility
 #
-# Server wartet automatisch bis Audio-Erzählung abgespielt wurde bevor
-# die nächste Phase beginnt (siehe PHASE_WECHSEL_DELAY in app.py).
+# Random Behaviors for Edge Case Discovery:
+#   - 20% chance to skip actions (test timeout handling)
+#   - 10% chance to target dead/invalid players
+#   - 5% chance to try self-targeting
+#   - 10% chance to attempt duplicate actions
+#   - 40% chance for completely random voting
+#
 #
 # Requirements:
 # - Node.js installed
@@ -27,6 +34,7 @@ set -e
 # Parse arguments
 PLAYERS=""
 HL_FLAG=""
+SEED=""
 PORT=5001
 
 # ============================================================================
@@ -77,6 +85,9 @@ for arg in "$@"; do
         --hl)
             HL_FLAG="1"
             ;;
+        --seed=*)
+            SEED="${arg#*=}"
+            ;;
         *)
             if [ -z "$PLAYERS" ]; then
                 PLAYERS="$arg"
@@ -94,9 +105,12 @@ if [ "$PLAYERS" -lt 5 ]; then
 fi
 
 echo ""
-echo "🐺 Webwölfe - Full Game Simulation"
+echo "🐺 Webwölfe - Full Game Simulation (RANDOM MODE)"
 echo "==================================="
 echo "Spieleranzahl: $PLAYERS"
+if [ -n "$SEED" ]; then
+    echo "Random Seed: $SEED"
+fi
 echo ""
 
 # Check if Flask app is running, start it if not
@@ -166,9 +180,9 @@ fi
 echo ""
 echo "🚀 Starte Browser-Fenster und Spielsimulation..."
 if [ -n "$HL_FLAG" ]; then
-    echo "   (Headless-Modus: Nur Erzähler-Fenster sichtbar)"
+    echo "   (Headless-Modus: Ein Fenster sichtbar, Rest headless)"
 fi
 
 
-PLAYERS=$PLAYERS HL=$HL_FLAG npx playwright test tests/full_game.spec.ts --headed --timeout=0
+PLAYERS=$PLAYERS HL=$HL_FLAG SEED=$SEED npx playwright test tests/full_game.spec.ts --headed --timeout=0
 

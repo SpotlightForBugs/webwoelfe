@@ -3,7 +3,14 @@ Spiellogik fuer das Werwolf-Spiel
 """
 
 import random
-from models import db, Raum, Spieler, SpielAktion, SpielLog, ROLLEN, PHASEN
+from typing import Optional
+from models import db, Raum, Spieler, SpielAktion, SpielLog, ROLLEN
+from phases import get_phase_list, is_erste_nacht_phase, normalize_phase_name
+import json
+from datetime import datetime, timedelta
+
+# Get PHASEN from centralized module
+PHASEN = get_phase_list()
 
 
 def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
@@ -729,9 +736,10 @@ def log_eintrag(raum_id: int, nachricht: str, sichtbar_fuer: str = "alle"):
         nachricht: Log-Nachricht
         sichtbar_fuer: Wer kann den Eintrag sehen
     """
-    eintrag = SpielLog(
-        raum_id=raum_id, nachricht=nachricht, sichtbar_fuer=sichtbar_fuer
-    )
+    eintrag = SpielLog()
+    eintrag.raum_id = raum_id
+    eintrag.nachricht = nachricht
+    eintrag.sichtbar_fuer = sichtbar_fuer
     db.session.add(eintrag)
     db.session.commit()
 
@@ -742,19 +750,18 @@ def registriere_aktion(
     phase: str,
     aktion_typ: str,
     von_spieler_id: int,
-    ziel_spieler_id: int = None,
+    ziel_spieler_id: Optional[int] = None,
 ):
     """
     Registriert eine Spielaktion.
     """
-    aktion = SpielAktion(
-        raum_id=raum_id,
-        runde=runde,
-        phase=phase,
-        aktion_typ=aktion_typ,
-        von_spieler_id=von_spieler_id,
-        ziel_spieler_id=ziel_spieler_id,
-    )
+    aktion = SpielAktion()
+    aktion.raum_id = raum_id
+    aktion.runde = runde
+    aktion.phase = phase
+    aktion.aktion_typ = aktion_typ
+    aktion.von_spieler_id = von_spieler_id
+    aktion.ziel_spieler_id = ziel_spieler_id
     db.session.add(aktion)
     db.session.commit()
     return aktion
@@ -789,7 +796,7 @@ def hat_spieler_gewaehlt(spieler: Spieler, raum: Raum, phase: str) -> bool:
     return aktion is not None
 
 
-def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: str = None) -> bool:
+def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: Optional[str] = None) -> bool:
     """
     Prueft ob alle relevanten Spieler in der Phase gewaehlt haben.
     """
@@ -802,3 +809,188 @@ def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: str = None) -> bool:
         if not hat_spieler_gewaehlt(s, raum, phase):
             return False
     return True
+
+
+# ============================================================================
+# DISKUSSION & ABSTIMMUNG PHASE FUNKTIONEN
+# ============================================================================
+
+
+def starte_diskussion_abstimmung(raum: Raum, dauer_sekunden: int = 120):
+    """
+    Startet die diskussion_abstimmung Phase mit Timer.
+
+    Args:
+        raum: Der Spielraum
+        dauer_sekunden: Dauer der Phase in Sekunden (default: 120)
+    """
+    raum.aktuelle_phase = "diskussion_abstimmung"
+    raum.timer_start = datetime.utcnow()
+    raum.timer_duration = dauer_sekunden
+    raum.phase_votes = "{}"  # Reset votes
+    db.session.commit()
+
+
+def get_verbleibende_zeit(raum: Raum) -> int:
+    """
+    Berechnet die verbleibende Zeit der aktuellen Phase in Sekunden.
+
+    Args:
+        raum: Der Spielraum
+
+    Returns:
+        Verbleibende Sekunden (0 wenn abgelaufen)
+    """
+    if not raum.timer_start:
+        return 0
+
+    elapsed = (datetime.utcnow() - raum.timer_start).total_seconds()
+    remaining = max(0, raum.timer_duration - int(elapsed))
+    return remaining
+
+
+def timer_abgelaufen(raum: Raum) -> bool:
+    """
+    Prüft ob der Timer abgelaufen ist.
+
+    Args:
+        raum: Der Spielraum
+
+    Returns:
+        True wenn Timer abgelaufen
+    """
+    return get_verbleibende_zeit(raum) <= 0
+
+
+def speichere_abstimmungs_vote(raum: Raum, waehler_id: int, ziel_id: int):
+    """
+    Speichert eine Abstimmungsstimme im phase_votes JSON.
+
+    Args:
+        raum: Der Spielraum
+        waehler_id: ID des wählenden Spielers
+        ziel_id: ID des gewählten Spielers (None für Enthaltung)
+    """
+    try:
+        votes = json.loads(raum.phase_votes or "{}")
+    except json.JSONDecodeError:
+        votes = {}
+
+    votes[str(waehler_id)] = ziel_id
+    raum.phase_votes = json.dumps(votes)
+    db.session.commit()
+
+
+def berechne_abstimmungs_statistik(raum: Raum) -> dict:
+    """
+    Berechnet die aktuelle Abstimmungsstatistik.
+
+    Args:
+        raum: Der Spielraum
+
+    Returns:
+        Dict mit Statistiken:
+        - gesamt_spieler: Anzahl wahlberechtigter Spieler
+        - gesamt_votes: Anzahl abgegebener Stimmen
+        - noch_zu_waehlen: Anzahl noch nicht gewählt
+        - ziel_stimmen: Dict {ziel_id: anzahl}
+        - fuehrender_id: ID des führenden Kandidaten
+        - fuehrende_stimmen: Anzahl Stimmen für den Führenden
+    """
+    lebende = Spieler.query.filter_by(
+        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
+    ).all()
+    gesamt_spieler = len(lebende)
+
+    try:
+        votes = json.loads(raum.phase_votes or "{}")
+    except json.JSONDecodeError:
+        votes = {}
+
+    gesamt_votes = len(votes)
+    noch_zu_waehlen = gesamt_spieler - gesamt_votes
+
+    # Zähle Stimmen pro Ziel
+    ziel_stimmen = {}
+    for waehler_id, ziel_id in votes.items():
+        if ziel_id is not None:  # None = Enthaltung
+            ziel_stimmen[ziel_id] = ziel_stimmen.get(ziel_id, 0) + 1
+
+    # Finde Führenden
+    fuehrender_id = None
+    fuehrende_stimmen = 0
+    if ziel_stimmen:
+        fuehrender_id = max(ziel_stimmen.keys(), key=lambda k: ziel_stimmen[k])
+        fuehrende_stimmen = ziel_stimmen[fuehrender_id]
+
+    return {
+        "gesamt_spieler": gesamt_spieler,
+        "gesamt_votes": gesamt_votes,
+        "noch_zu_waehlen": noch_zu_waehlen,
+        "ziel_stimmen": ziel_stimmen,
+        "fuehrender_id": fuehrender_id,
+        "fuehrende_stimmen": fuehrende_stimmen,
+    }
+
+
+def pruefen_abstimmung_komplett(raum: Raum) -> bool:
+    """
+    Prüft ob alle Spieler abgestimmt haben.
+
+    Args:
+        raum: Der Spielraum
+
+    Returns:
+        True wenn alle abgestimmt haben
+    """
+    stats = berechne_abstimmungs_statistik(raum)
+    return stats["noch_zu_waehlen"] == 0
+
+
+def werte_abstimmung_aus(raum: Raum) -> dict:
+    """
+    Wertet die diskussion_abstimmung Phase aus.
+
+    Args:
+        raum: Der Spielraum
+
+    Returns:
+        Ergebnis der Abstimmung
+    """
+    stats = berechne_abstimmungs_statistik(raum)
+    ziel_stimmen = stats["ziel_stimmen"]
+
+    if not ziel_stimmen:
+        return {"kein_opfer": True, "nachricht": "Niemand wurde gewählt."}
+
+    # Finde Maximum
+    max_stimmen = max(ziel_stimmen.values())
+    opfer_ids = [int(sid) for sid, count in ziel_stimmen.items() if count == max_stimmen]
+
+    # Mehrheit erforderlich
+    lebende = Spieler.query.filter_by(
+        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
+    ).count()
+
+    if max_stimmen <= lebende // 2:
+        return {"kein_opfer": True, "nachricht": "Keine Mehrheit erreicht."}
+
+    # Bei Gleichstand: niemand stirbt
+    if len(opfer_ids) > 1:
+        return {"kein_opfer": True, "nachricht": "Stimmengleichheit - niemand stirbt."}
+
+    opfer_id = opfer_ids[0]
+    opfer = Spieler.query.get(opfer_id)
+
+    # Reset votes nach Auswertung
+    raum.phase_votes = "{}"
+    raum.timer_start = None
+    db.session.commit()
+
+    return {
+        "opfer_id": opfer_id,
+        "opfer_name": opfer.name if opfer else "Unbekannt",
+        "opfer_rolle": opfer.rolle if opfer else "Unbekannt",
+        "stimmen": max_stimmen,
+    }
+

@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="full_game.sh" type="BashProRunConfiguration">
-    <option name="scriptParameters" value="5 --hl " />
+    <option name="scriptParameters" value="12" />
     <option name="scriptPath" value="$PROJECT_DIR$/full_game.sh" />
     <RunnerSettings bashdbVersion="Automatic" bashPathMapper="Automatic" RunnerId="pro.bashsupport.shDebugRunner" />
     <method v="2" />

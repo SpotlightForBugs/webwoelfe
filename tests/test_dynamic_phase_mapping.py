@@ -1,6 +1,9 @@
 import unittest
 
-from game_logic import PHASEN, phasennamen_zu_rollen_mapping
+from phases import get_phase_list
+from game_logic import phasennamen_zu_rollen_mapping
+
+PHASEN = get_phase_list()
 
 
 class DynamicPhaseMappingTests(unittest.TestCase):

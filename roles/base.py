@@ -58,6 +58,10 @@ class SpielKontext:
     tote_spieler: List[int]
     werwolf_opfer_id: Optional[int] = None
     aktionen_diese_runde: List[Dict[str, Any]] = field(default_factory=list)
+    # Dynamically added attributes
+    spieler_rollen: Dict[int, Any] = field(default_factory=dict)
+    spieler_namen: Dict[int, str] = field(default_factory=dict)
+    spieler_teams: Dict[int, Any] = field(default_factory=dict)
     
     def hat_spieler_rolle(self, spieler_id: int, rolle: str) -> bool:
         """Prüft ob ein Spieler eine bestimmte Rolle hat."""
@@ -307,6 +311,14 @@ class Role(ABC):
             return kontext.hat_spieler_rolle(ziel.id, "Werwolf")
         
         return True
+    
+    def has_voted_this_phase(self, spieler: 'Spieler', kontext: SpielKontext) -> bool:
+        """Prueft ob der Spieler bereits in dieser Phase gewaehlt hat."""
+        # Check aktionen_diese_runde for existing vote from this player
+        for aktion in kontext.aktionen_diese_runde:
+            if aktion.get('von_spieler_id') == spieler.id:
+                return True
+        return False
     
     def to_dict(self) -> Dict[str, Any]:
         """Konvertiert die Rolle zu einem Dictionary (fuer Legacy-Kompatibilitaet)."""

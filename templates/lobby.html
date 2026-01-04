@@ -29,7 +29,7 @@ spiel_name }}{% endblock %} {% block content %}
           <div
             class="room-code"
             style="
-              font-family: &quot;Cinzel&quot;, serif;
+              font-family: Cinzel,serif;
               font-size: 2.5rem;
               letter-spacing: 0.3em;
               color: var(--accent-red);
@@ -550,6 +550,8 @@ spiel_name }}{% endblock %} {% block content %}
     });
 
     if (spielerDaten.length > 0) {
+      // Sortiere nach ID für konsistente Positionen zwischen Lobby und Spiel
+      spielerDaten.sort((a, b) => a.id - b.id);
       window.village3dLobby.setPlayers(spielerDaten);
       // Lobby-Ansicht ist immer Tag
       window.village3dLobby.setTimeOfDay(false);
@@ -616,7 +618,7 @@ spiel_name }}{% endblock %} {% block content %}
     addSpielerToList(data.spieler);
     updateSpielerAnzahl();
     updateStartButton();
-    updateRollenVorschau();
+    // updateRollenVorschau() entfernt - wird jetzt per Socket gepusht
     // Auch zur Sitzordnung hinzufügen
     addToSitzordnung(data.spieler);
     // 3D Dorf aktualisieren (Online-Modus)
@@ -630,7 +632,7 @@ spiel_name }}{% endblock %} {% block content %}
     removeSpielerFromList(data.spieler_id);
     updateSpielerAnzahl();
     updateStartButton();
-    updateRollenVorschau();
+    // updateRollenVorschau() entfernt - wird jetzt per Socket gepusht
     // Auch aus Sitzordnung entfernen
     removeFromSitzordnung(data.spieler_id);
     // 3D Dorf aktualisieren (Online-Modus)
@@ -639,8 +641,43 @@ spiel_name }}{% endblock %} {% block content %}
     }
   });
 
+  socket.on("rollen_vorschau_update", function (data) {
+    renderRollenVorschau(data);
+  });
+
+  function renderRollenVorschau(data) {
+    // Header aktualisieren
+    const header = document.querySelector("#rollen-vorschau-card h3");
+    if (header) {
+      const hatErzaehler = data.hat_erzaehler ? " inkl. Erzähler" : "";
+      header.innerHTML = `<i class="fa-solid fa-masks-theater"></i> Rollenverteilung (${data.total} Spieler${hatErzaehler})`;
+    }
+
+    // Rollen-Liste aktualisieren
+    const rollenListe = document.getElementById("rollen-vorschau-liste");
+    if (rollenListe) {
+      rollenListe.innerHTML = data.rollen
+        .map((rolle) => {
+          const anzahlText = rolle.anzahl > 1 ? ` x${rolle.anzahl}` : "";
+          return `
+          <span style="
+            background: ${rolle.farbe};
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+          ">
+            ${rolle.name}${anzahlText}
+          </span>
+        `;
+        })
+        .join("");
+    }
+  }
+
   socket.on("spiel_gestartet", function (data) {
-    socket.emit("navigiere", { ziel: "/spiel/" + raumCode });
+    // Navigate directly to the game page
+    window.location.href = "/spiel/" + raumCode;
   });
 
   socket.on("navigiere", function (data) {
@@ -761,33 +798,7 @@ spiel_name }}{% endblock %} {% block content %}
       const response = await fetch(`/api/rollen_vorschau/${raumCode}`);
       const data = await response.json();
       if (data.success) {
-        // Header aktualisieren
-        const header = document.querySelector("#rollen-vorschau-card h3");
-        if (header) {
-          const hatErzaehler = data.hat_erzaehler ? " inkl. Erzähler" : "";
-          header.innerHTML = `<i class="fa-solid fa-masks-theater"></i> Rollenverteilung (${data.total} Spieler${hatErzaehler})`;
-        }
-
-        // Rollen-Liste aktualisieren
-        const rollenListe = document.getElementById("rollen-vorschau-liste");
-        if (rollenListe) {
-          rollenListe.innerHTML = data.rollen
-            .map((rolle) => {
-              const anzahlText = rolle.anzahl > 1 ? ` x${rolle.anzahl}` : "";
-              return `
-              <span style="
-                background: ${rolle.farbe};
-                color: white;
-                padding: 0.25rem 0.75rem;
-                border-radius: 4px;
-                font-size: 0.75rem;
-              ">
-                ${rolle.name}${anzahlText}
-              </span>
-            `;
-            })
-            .join("");
-        }
+        renderRollenVorschau(data);
       }
     } catch (e) {
       console.error("Fehler beim Aktualisieren der Rollenvorschau:", e);

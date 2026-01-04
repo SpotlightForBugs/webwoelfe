@@ -737,11 +737,13 @@ spiel_name }}{% endblock %} {% block content %}
 
     // Apply customization to 3D village
     function applyAvatarCustomization() {
-      if (!window.village3dLobby || !selectedColor) return;
+      if (!window.village3dLobby) return;
 
+      // Apply customization even if only color or only style is selected
+      // Use default values if not selected
       const customization = {
-        color: selectedColor,
-        style: selectedStyle,
+        color: selectedColor || new pc.Color(0.3, 0.5, 0.8), // Default blue
+        style: selectedStyle || "normal",
       };
 
       window.village3dLobby.setAvatarCustomization(

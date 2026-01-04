@@ -3486,28 +3486,31 @@ export default class Village3DPlayCanvas {
         zMarker.setLocalPosition(0, 3.2, 0);
         zMarker.setLocalScale(0.5, 0.5, 0.5);
 
-        // Create canvas with "Z" text
-        const canvas = document.createElement("canvas");
-        canvas.width = 128;
-        canvas.height = 128;
-        const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-        ctx.font = "bold 80px Arial";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("Z", 64, 64);
+        // Use cached Z texture if available - prevents creating many textures
+        if (!this.sleepZTexture) {
+          // Create canvas with "Z" text
+          const canvas = document.createElement("canvas");
+          canvas.width = 128;
+          canvas.height = 128;
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+          ctx.font = "bold 80px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("Z", 64, 64);
 
-        const texture = new pc.Texture(this.app.graphicsDevice, {
-          width: canvas.width,
-          height: canvas.height,
-          format: pc.PIXELFORMAT_R8_G8_B8_A8,
-        });
-        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        texture.lock().set(new Uint8Array(pixels.data));
-        texture.unlock();
+          this.sleepZTexture = new pc.Texture(this.app.graphicsDevice, {
+            width: canvas.width,
+            height: canvas.height,
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+          });
+          const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          this.sleepZTexture.lock().set(new Uint8Array(pixels.data));
+          this.sleepZTexture.unlock();
+        }
 
         const mat = new pc.StandardMaterial();
-        mat.diffuseMap = texture;
+        mat.diffuseMap = this.sleepZTexture;
         mat.emissive = new pc.Color(1, 1, 1);
         mat.opacity = 0.8;
         mat.blendType = pc.BLEND_NORMAL;
@@ -4475,34 +4478,39 @@ export default class Village3DPlayCanvas {
     const { color, style } = customization;
     const styleConfig = this.avatarStyles[style] || this.avatarStyles["normal"];
 
-    // Apply custom color to body parts
-    if (color && entity.parts.body) {
+    // Apply custom color to body parts (torso is the main body part)
+    if (color && entity.parts.torso) {
       const customMat = new pc.StandardMaterial();
       customMat.diffuse = color;
       customMat.specular = new pc.Color(0.2, 0.2, 0.2);
       customMat.shininess = 20;
       customMat.update();
 
-      entity.parts.body.model.material = customMat;
-      if (entity.parts.torso) entity.parts.torso.model.material = customMat;
+      entity.parts.torso.model.material = customMat;
     }
 
-    // Apply style scaling
-    if (styleConfig.scale !== 1.0) {
-      const currentScale = entity.getLocalScale();
+    // Store base scale if not already stored
+    if (!entity.baseScale) {
+      entity.baseScale = entity.getLocalScale().clone();
+    }
+    if (!entity.baseTorsoScale && entity.parts.torso) {
+      entity.baseTorsoScale = entity.parts.torso.getLocalScale().clone();
+    }
+
+    // Apply style scaling from base scale to avoid compounding
+    if (styleConfig.scale !== 1.0 && entity.baseScale) {
       entity.setLocalScale(
-        currentScale.x * styleConfig.scale,
-        currentScale.y * styleConfig.scale,
-        currentScale.z * styleConfig.scale,
+        entity.baseScale.x * styleConfig.scale,
+        entity.baseScale.y * styleConfig.scale,
+        entity.baseScale.z * styleConfig.scale,
       );
     }
 
-    if (styleConfig.bodyScale && entity.parts.torso) {
-      const currentScale = entity.parts.torso.getLocalScale();
+    if (styleConfig.bodyScale && entity.parts.torso && entity.baseTorsoScale) {
       entity.parts.torso.setLocalScale(
-        currentScale.x * styleConfig.bodyScale,
-        currentScale.y,
-        currentScale.z * styleConfig.bodyScale,
+        entity.baseTorsoScale.x * styleConfig.bodyScale,
+        entity.baseTorsoScale.y,
+        entity.baseTorsoScale.z * styleConfig.bodyScale,
       );
     }
   }

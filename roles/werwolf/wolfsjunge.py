@@ -41,7 +41,6 @@ class Wolfsjunge(Role):
             ),
             icon="fa-solid fa-child",
             farbe="#92400e",
-            nacht_aktiv=True,
             prioritaet=7,
             erzaehler_nacht=(
                 "Das Wolfsjunge erwacht (nur erste Nacht) und waehlt " "sein Vorbild."

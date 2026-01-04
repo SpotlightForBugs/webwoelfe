@@ -44,7 +44,6 @@ class Polarwolf(Role):
             ),
             icon='fa-solid fa-snowflake',
             farbe='#e0f2fe',
-            nacht_aktiv=True,
             prioritaet=50,
             erzaehler_nacht=(
                 'Der Polarwolf ist immun gegen Sandmann und Jäger.'

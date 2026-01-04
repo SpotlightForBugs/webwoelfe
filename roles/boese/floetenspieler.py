@@ -44,7 +44,6 @@ class Floetenspieler(Role):
             ),
             icon='fa-solid fa-music',
             farbe='#84cc16',
-            nacht_aktiv=True,
             prioritaet=70,
             erzaehler_nacht=(
                 'Der Flötenspieler erwacht und verzaubert zwei Spieler.'

@@ -45,7 +45,6 @@ class Zombie(Role):
             ),
             icon='fa-solid fa-biohazard',
             farbe='#4ade80',
-            nacht_aktiv=True,
             prioritaet=54,
             erzaehler_nacht=(
                 'Die Zombies erwachen und infizieren einen Spieler.'

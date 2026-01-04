@@ -43,7 +43,6 @@ class Lupin(Role):
             ),
             icon='fa-solid fa-moon',
             farbe='#ca8a04',
-            nacht_aktiv=True,
             prioritaet=50,
             erzaehler_nacht=(
                 'Lupin ist in geraden Runden Mensch, in ungeraden Wolf. '

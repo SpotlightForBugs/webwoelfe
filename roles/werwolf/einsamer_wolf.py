@@ -44,7 +44,6 @@ class EinsamerWolf(Role):
             ),
             icon='fa-solid fa-paw',
             farbe='#4c1d95',
-            nacht_aktiv=True,
             prioritaet=48,
             erzaehler_nacht=(
                 'Der Einsame Wolf erwacht separat und wählt sein eigenes Opfer.'

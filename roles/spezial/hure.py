@@ -38,7 +38,6 @@ class Hure(Role):
             ),
             icon="fa-solid fa-heart",
             farbe="#f43f5e",
-            nacht_aktiv=True,
             prioritaet=45,
             erzaehler_nacht=("Die Hure erwacht und waehlt bei wem sie uebernachtet."),
         )

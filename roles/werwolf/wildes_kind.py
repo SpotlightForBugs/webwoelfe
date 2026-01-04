@@ -45,7 +45,6 @@ class WildesKind(Role):
             ),
             icon='fa-solid fa-child',
             farbe='#92400e',
-            nacht_aktiv=True,
             prioritaet=6,
             erzaehler_nacht=(
                 'Das Wilde Kind erwacht (erste Nacht) und wählt sein Vorbild.'

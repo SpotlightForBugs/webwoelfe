@@ -31,7 +31,7 @@ All types of contributions are encouraged and valued. See the [Table of Contents
 ## Code of Conduct
 
 This project and everyone participating in it is governed by the
-[Webwoelfe Code of Conduct](https://github.com/SpotlightForBugs/webwoelfeblob/master/CODE_OF_CONDUCT.md).
+[Webwoelfe Code of Conduct](https://github.com/SpotlightForBugs/webwoelfe/blob/Pro/CODE_OF_CONDUCT.md).
 By participating, you are expected to uphold this code. Please report unacceptable behavior
 to <CodeOfConduct@spotlightforbugs.eu>.
 

@@ -44,7 +44,6 @@ class Mordlustiger(Role):
             ),
             icon='fa-solid fa-user-ninja',
             farbe='#7f1d1d',
-            nacht_aktiv=True,
             prioritaet=49,
             erzaehler_nacht=(
                 'Der Mordlustige erwacht und wählt sein nächtliches Opfer.'

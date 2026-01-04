@@ -3,9 +3,9 @@ Spiellogik fuer das Werwolf-Spiel
 """
 
 import random
-from typing import Optional
+from typing import Optional, List, Tuple
 from models import db, Raum, Spieler, SpielAktion, SpielLog, ROLLEN
-from phases import get_phase_list, is_erste_nacht_phase, normalize_phase_name
+from phases import get_phase_list, is_nacht_phase, get_next_phase, Phase
 import json
 from datetime import datetime, timedelta
 
@@ -382,6 +382,12 @@ def phasennamen_zu_rollen_mapping() -> dict:
 def naechste_phase(raum: Raum) -> str:
     """
     Wechselt zur naechsten Spielphase.
+    
+    Mit der vereinfachten Phasen-Architektur gibt es nur noch
+    Kern-Phasen: lobby, rollen_verteilt, nacht, tag_start, 
+    diskussion, abstimmung, hinrichtung, tag_ende, spiel_ende.
+    
+    Rollen agieren WÄHREND der nacht-Phase basierend auf ihrer Priorität.
 
     Args:
         raum: Der Spielraum
@@ -389,61 +395,121 @@ def naechste_phase(raum: Raum) -> str:
     Returns:
         Name der neuen Phase
     """
-    aktuelle_idx = PHASEN.index(raum.aktuelle_phase)
-    phase_mapping = phasennamen_zu_rollen_mapping()
-
-    # Spezielle Phasen-Logik
-    if raum.aktuelle_phase == "amor_phase":
-        # Armor nur in Runde 1
-        if raum.runde > 1:
-            naechste_idx = PHASEN.index("seherin_phase")
-        else:
-            naechste_idx = aktuelle_idx + 1
-    elif raum.aktuelle_phase == "verliebte_info":
-        if raum.runde > 1:
-            naechste_idx = PHASEN.index("seherin_phase")
-        else:
-            naechste_idx = aktuelle_idx + 1
-    elif raum.aktuelle_phase == "tag_ende":
+    current = raum.aktuelle_phase
+    
+    # Phase-Übergangslogik
+    phase_transitions = {
+        "lobby": "rollen_verteilt",
+        "rollen_verteilt": "nacht",
+        "nacht": "tag_start",
+        "tag_start": "diskussion",
+        "diskussion": "abstimmung",
+        "abstimmung": "hinrichtung",
+        "hinrichtung": "tag_ende",
+        "tag_ende": "nacht",  # Neuer Tag-Nacht-Zyklus
+        "spiel_ende": "spiel_ende",  # Bleibt hier
+    }
+    
+    # Spezialfall: tag_ende erhöht die Runde
+    if current == "tag_ende":
         raum.runde += 1
-        naechste_idx = PHASEN.index("nacht_start")
-    elif raum.aktuelle_phase == "spiel_ende":
-        naechste_idx = aktuelle_idx  # Bleibt bei spiel_ende
-    else:
-        naechste_idx = aktuelle_idx + 1
-
-    # Pruefe ob die naechste Phase eine erforderliche Rolle hat
-    max_iterations = len(PHASEN)
-    iterations = 0
-    while iterations < max_iterations:
-        if naechste_idx >= len(PHASEN):
-            naechste_idx = PHASEN.index("nacht_start")
-            raum.runde += 1
-            iterations += 1
-            continue
-
-        naechste_phase_name = PHASEN[naechste_idx]
-
-        # Prüfe ob diese Phase eine erforderliche Rolle benötigt
-        if naechste_phase_name in phase_mapping:
-            erforderliche_rolle = phase_mapping[naechste_phase_name]
-            # Wenn Rolle nicht vorhanden ist, überspringe diese Phase
-            if not hat_spieler_mit_rolle(raum, erforderliche_rolle):
-                naechste_idx += 1
-                iterations += 1
-                continue
-
-        # Phase ist gültig
-        break
-
-    if naechste_idx >= len(PHASEN):
-        naechste_idx = PHASEN.index("nacht_start")
-        raum.runde += 1
-
-    raum.aktuelle_phase = PHASEN[naechste_idx]
+    
+    # Nächste Phase bestimmen
+    neue_phase = phase_transitions.get(current, "nacht")
+    
+    raum.aktuelle_phase = neue_phase
     db.session.commit()
 
     return raum.aktuelle_phase
+
+
+# =============================================================================
+# ROLE-DRIVEN NIGHT EXECUTION
+# =============================================================================
+
+def get_active_roles_for_night(raum: Raum) -> List[Tuple]:
+    """
+    Get all roles that should act this night, sorted by priority.
+    
+    Roles define when they act via is_active_on_every_night() and
+    is_active_on_first_night(). This function collects all active roles
+    for the current night and returns them sorted by priority.
+    
+    Returns:
+        List of (role, spieler) tuples sorted by priority
+    """
+    from roles import RoleRegistry
+    
+    active_roles = []
+    lebende_spieler = hole_lebende_spieler(raum)
+    
+    for spieler in lebende_spieler:
+        role = RoleRegistry.get(spieler.rolle)
+        if not role:
+            continue
+        
+        # Check if role is active this night
+        is_first_night = raum.runde == 1
+        
+        try:
+            # First night: check is_active_on_first_night OR is_active_on_every_night
+            if is_first_night:
+                aktiv = role.is_active_on_first_night() or role.is_active_on_every_night()
+            else:
+                aktiv = role.is_active_on_every_night()
+            
+            if aktiv:
+                active_roles.append((role, spieler))
+        except AttributeError:
+            # Role doesn't have these methods - treat as not active
+            pass
+    
+    # Sort by priority (lower = earlier)
+    active_roles.sort(key=lambda x: x[0].info.prioritaet)
+    
+    return active_roles
+
+
+def get_next_role_to_act(raum: Raum, current_role_name: Optional[str] = None) -> Optional[Tuple]:
+    """
+    Get the next role that should act in the night.
+    
+    Args:
+        raum: The game room
+        current_role_name: Name of role that just finished (None for first)
+        
+    Returns:
+        (role, spieler) tuple or None if night is over
+    """
+    active_roles = get_active_roles_for_night(raum)
+    
+    if not active_roles:
+        return None
+    
+    if current_role_name is None:
+        # Return first role
+        return active_roles[0] if active_roles else None
+    
+    # Find current role and return next
+    for i, (role, spieler) in enumerate(active_roles):
+        if role.info.name == current_role_name:
+            if i + 1 < len(active_roles):
+                return active_roles[i + 1]
+            return None  # Night is over
+    
+    return None
+
+
+def is_night_complete(raum: Raum) -> bool:
+    """
+    Check if all night actions are complete.
+    
+    Returns:
+        True if all active roles have acted or skipped
+    """
+    # Night is complete when we're ready to transition to tag_start
+    # This is checked by the action handler after each role acts
+    return False  # Placeholder - handled by UI flow
 
 
 def ist_werwolf_rolle(rolle: str) -> bool:

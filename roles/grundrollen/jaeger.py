@@ -38,7 +38,6 @@ class Jaeger(Role):
             ),
             icon="fa-solid fa-crosshairs",
             farbe="#b45309",
-            nacht_aktiv=False,
             prioritaet=99,
             erzaehler_nacht=(
                 "Der Jäger schläft mit seiner Flinte unter dem Kopfkissen. "

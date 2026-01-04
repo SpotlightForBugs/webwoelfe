@@ -39,7 +39,6 @@ class Heiler(Role):
             ),
             icon="fa-solid fa-heart-pulse",
             farbe="#10b981",
-            nacht_aktiv=True,
             prioritaet=55,
             erzaehler_nacht=(
                 "Der Heiler erwacht und zeigt auf den Spieler, den er diese "

@@ -39,7 +39,6 @@ class TeenagerWerwolf(Role):
             ),
             icon='fa-solid fa-paw',
             farbe='#f97316',
-            nacht_aktiv=True,
             prioritaet=50,
             erzaehler_nacht=(
                 'Der Teenager-Werwolf kann einmal pro Spiel den Angriff '

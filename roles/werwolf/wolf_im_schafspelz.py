@@ -45,7 +45,6 @@ class WolfimSchafspelz(Role):
             ),
             icon='fa-brands fa-bluesky',
             farbe='#fef3c7',
-            nacht_aktiv=True,
             prioritaet=50,
             erzaehler_nacht=(
                 'Der Wolf im Schafspelz erscheint der Seherin als Dorfbewohner!'

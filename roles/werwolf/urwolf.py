@@ -41,7 +41,6 @@ class Urwolf(Role):
             ),
             icon="fa-solid fa-virus",
             farbe="#7f1d1d",
-            nacht_aktiv=True,
             prioritaet=51,
             erzaehler_nacht=(
                 "Der Urwolf hat die Moeglichkeit zu infizieren statt zu "

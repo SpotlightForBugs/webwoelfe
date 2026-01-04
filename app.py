@@ -411,6 +411,140 @@ def spiel(code):
 
 
 # ============================================================================
+# ROLE API - Dynamic UI and Phase Generation
+# ============================================================================
+
+
+@app.route("/api/role/<role_name>/ui", methods=["GET"])
+def get_role_ui(role_name):
+    """Get UI definition for a specific role."""
+    from roles import RoleRegistry
+    
+    rolle = RoleRegistry.get(role_name)
+    if not rolle:
+        return jsonify({"success": False, "error": "Role not found"}), 404
+    
+    ui = rolle.get_ui_definition()
+    return jsonify({
+        "success": True,
+        "ui": ui.to_dict(),
+        "phase_name": rolle.get_phase_name(),
+    })
+
+
+@app.route("/api/roles", methods=["GET"])
+def get_all_roles_api():
+    """
+    Get all roles with complete metadata for UI generation.
+    
+    Query Parameters:
+    - extension_pack: Filter by extension (base, neumond, gemeinde, charaktere, sonderedition)
+    - kategorie: Filter by category
+    - team: Filter by team (dorf, werwolf, solo)
+    
+    Returns comprehensive role data including:
+    - name, id, team, category
+    - icon (FontAwesome), color (hex)
+    - extension_pack for filtering
+    - description, phase_name
+    - UI definition (buttons, prompts)
+    """
+    from roles import RoleRegistry
+    
+    # Get query parameters
+    extension_filter = request.args.get('extension_pack')
+    kategorie_filter = request.args.get('kategorie')
+    team_filter = request.args.get('team')
+    
+    # Get all roles
+    all_roles = RoleRegistry.get_all()
+    
+    # Apply filters
+    filtered_roles = all_roles
+    if extension_filter:
+        filtered_roles = [r for r in filtered_roles if r.info.extension_pack == extension_filter]
+    if kategorie_filter:
+        from roles.enums import Kategorie
+        filtered_roles = [r for r in filtered_roles if r.info.kategorie.value == kategorie_filter]
+    if team_filter:
+        from roles.enums import Team
+        filtered_roles = [r for r in filtered_roles if r.info.team.value == team_filter]
+    
+    # Convert to dict format
+    roles_data = [role.to_dict() for role in filtered_roles]
+    
+    # Group by extension pack for frontend convenience
+    grouped_by_extension = {}
+    for role in filtered_roles:
+        ext_pack = role.info.extension_pack
+        if ext_pack not in grouped_by_extension:
+            grouped_by_extension[ext_pack] = []
+        grouped_by_extension[ext_pack].append(role.to_dict())
+    
+    return jsonify({
+        "success": True,
+        "roles": roles_data,
+        "grouped_by_extension": grouped_by_extension,
+        "total_count": len(roles_data),
+    })
+
+
+@app.route("/api/role/<role_name>/info", methods=["GET"])
+def get_role_info_api(role_name):
+    """Get complete information about a role."""
+    from roles import RoleRegistry
+    
+    rolle = RoleRegistry.get(role_name)
+    if not rolle:
+        return jsonify({"success": False, "error": "Role not found"}), 404
+    
+    return jsonify({
+        "success": True,
+        "role": rolle.to_dict(),
+    })
+
+
+@app.route("/api/game/<code>/phases", methods=["GET"])
+def get_game_phases(code):
+    """Get dynamic phase list and phase-role mapping for a specific game."""
+    from phase_generator import generate_phases_for_game, get_phase_display_info, build_phase_role_mapping
+    
+    raum = Raum.query.filter_by(code=code).first()
+    if not raum:
+        return jsonify({"success": False, "error": "Room not found"}), 404
+    
+    spieler = hole_aktuellen_spieler()
+    if not spieler or spieler.raum_id != raum.id:
+        return jsonify({"success": False, "error": "Not authorized"}), 403
+    
+    phases = generate_phases_for_game(raum)
+    phase_info = [get_phase_display_info(p) for p in phases]
+    phase_mapping = build_phase_role_mapping(raum)
+    
+    return jsonify({
+        "success": True,
+        "phases": phases,
+        "phase_info": phase_info,
+        "phase_mapping": phase_mapping,  # NEW: Which role acts in which phase
+        "current_phase": raum.aktuelle_phase,
+        "current_round": raum.runde,
+    })
+
+
+@app.route("/api/phase/<phase_name>/info", methods=["GET"])
+def get_phase_info(phase_name):
+    """Get display information for a phase."""
+    from phase_generator import get_phase_display_info
+    
+    info = get_phase_display_info(phase_name)
+    return jsonify({
+        "success": True,
+        "phase": phase_name,
+        "info": info,
+    })
+
+
+# ============================================================================
 # SITZORDNUNG API - Drag & Drop Sitzplatzwahl
 # ============================================================================
 
@@ -680,29 +814,7 @@ def api_village(code):
     )
 
 
-@app.route("/api/village/test")
-def api_village_test():
-    """Test-Endpoint für Village Rendering (nur Entwicklung)"""
-    try:
-        from village_renderer import generate_test_village
 
-        base64_img = generate_test_village()
-        return f"""
-        <!DOCTYPE html>
-        <html>
-        <head><title>Village Test</title></head>
-        <body style="background: #1a1a2e; display: flex; flex-direction: column; align-items: center; padding: 40px; font-family: sans-serif;">
-            <h1 style="color: #c41e3a;">Server-Side Village Rendering</h1>
-            <p style="color: #888;">Dieses Bild wurde komplett auf dem Server gerendert. Der Client hat keinen Zugriff auf Spielzustand!</p>
-            <img src="{base64_img}" style="border: 3px solid #333; border-radius: 12px; max-width: 100%;">
-        </body>
-        </html>
-        """
-    except ImportError as e:
-        return (
-            f"<h1>Pillow nicht installiert!</h1><p>pip install pillow</p><pre>{e}</pre>",
-            503,
-        )
 
 
 # ============================================================================
@@ -917,24 +1029,15 @@ def pruefe_phase_abschluss(raum):
     Prüft ob alle erforderlichen Aktionen in der aktuellen Phase abgeschlossen sind.
     Wenn ja, wechselt automatisch zur nächsten Phase.
     """
+    from roles import RoleRegistry
+    
     phase = raum.aktuelle_phase
 
-    # Mapping von Phasen zu den Rollen die agieren müssen
-    PHASE_ROLLEN = {
-        "seherin_phase": "Seherin",
-        "werwolf_phase": None,  # Alle Werwölfe müssen wählen - spezielle Behandlung
-        "hexe_phase": "Hexe",
-        "heiler_phase": "Heiler",
-        "amor_phase": "Amor",
-        "jaeger_phase": "Jäger",
-    }
-
-    if phase not in PHASE_ROLLEN:
-        # Für unbekannte Phasen nichts tun
-        return
-
-    rolle = PHASE_ROLLEN[phase]
-
+    # Use RoleRegistry for dynamic phase-to-role mapping instead of hardcoded dict
+    rolle_obj = RoleRegistry.get_role_for_phase(phase)
+    rolle = rolle_obj.info.name if rolle_obj else None
+    
+    # Special handling for werwolf_phase - all wolves must vote
     if phase == "werwolf_phase":
         # Alle lebenden Werwölfe müssen gewählt haben
         alle_fertig = game_logic.alle_haben_gewaehlt(raum, phase, rolle=None)
@@ -1002,29 +1105,18 @@ def _wechsel_phase_intern(raum):
         room=raum.code,
     )
 
-    # Automatische Phasen: Diese brauchen keine Spieler-Interaktion
-    # und sollen nach Audio-Wiedergabe automatisch weiterschalten
+    # Automatische Phasen: Nur reine Übergangs-Phasen die keine Aktion erfordern
+    # WICHTIG: Night-Phase ist NIEMALS automatisch - dort agieren Rollen!
+    # Diese Liste ist absichtlich minimal:
     AUTOMATISCHE_PHASEN = {
-        "rollen_verteilt",
-        "nacht_start",
-        "nacht_ende",
-        "tag_start",
-        "tag_ende",
-        "diskussion",
-        "verliebte_info",
-        "baerenbaendiger_brummen",
-        "demoskopin_info",
-        "abstimmung_ergebnis",
-        "prinz_enthuellung",
-        "hahn_enthuellung",
-        "putzfrau_info",
-        "zwei_schwestern_phase",  # Info-only
-        "drei_brueder_phase",  # Info-only
-        "freimaurer_phase",  # Info-only
-        "fluechtlinge_phase",  # Info-only
+        "rollen_verteilt",  # Info-Phase nach Spielstart
+        "tag_start",        # Übergang Nacht -> Tag
+        "tag_ende",         # Übergang am Tagesende
     }
+    
+    ist_automatische_phase = neue_phase in AUTOMATISCHE_PHASEN
 
-    if raum.modus == "online" and neue_phase in AUTOMATISCHE_PHASEN:
+    if raum.modus == "online" and ist_automatische_phase:
         # Markiere Raum als "wartet auf Audio"
         # Der Client sendet 'audio_fertig' wenn Audio abgespielt wurde
         # Fallback: Nach PHASE_WECHSEL_DELAY Sekunden automatisch weiter
@@ -1063,7 +1155,15 @@ def handle_audio_fertig(data):
     # Prüfe ob wir noch in der gleichen Phase sind
     if raum.aktuelle_phase == gemeldete_phase:
         # WICHTIG: Nur automatische Phasen dürfen durch Audio-Ende weitergeschaltet werden!
-        # Interaktive Phasen (wie hexe_phase) warten auf Spieler-Aktion.
+        # Night-Phase ist NIEMALS automatisch - dort agieren Rollen!
+        
+        # Minimale automatische Phasen (nur Übergänge)
+        AUTOMATISCHE_PHASEN = {
+            "rollen_verteilt",
+            "tag_start",
+            "tag_ende",
+        }
+        
         if gemeldete_phase in AUTOMATISCHE_PHASEN:
             log_ts(f"[Audio] Audio fertig für Phase {gemeldete_phase}, wechsle Phase")
             _wechsel_phase_intern(raum)
@@ -1096,17 +1196,45 @@ def handle_aktion(data):
 
     if erfolg:
         # Map action types to 3D effect types
-        effect_map = {
+        # Base mapping for common action types
+        from roles.enums import AktionsTyp
+        AKTION_TYP_EFFEKT = {
+            AktionsTyp.HEILEN.value: "heal",
+            AktionsTyp.SCHUETZEN.value: "protect",
+            AktionsTyp.VERGIFTEN.value: "poison",
+            AktionsTyp.TOETEN.value: "attack",
+            AktionsTyp.VERLIEBEN.value: "love",
+            AktionsTyp.SEHEN.value: "reveal",
+            AktionsTyp.INFIZIEREN.value: "infect",
+            AktionsTyp.MARKIEREN.value: "mark",
+            AktionsTyp.BLOCKIEREN.value: "block",
+        }
+        
+        # Legacy mapping for specific action strings (backwards compatibility)
+        legacy_effect_map = {
             "hexe_heilen": "heal",
             "heiler_schuetzen": "protect",
             "hexe_toeten": "poison",
+            "hexe_vergiften": "poison",
             "werwolf_wahl": "attack",
             "armor_verlieben": "love",
+            "seherin_sehen": "reveal",
         }
 
         effect_data = {"aktion": aktion_typ}
-        if ziel_id and aktion_typ in effect_map:
-            effect_data["effekt"] = effect_map[aktion_typ]
+        
+        # Try to determine effect from action type
+        effekt = legacy_effect_map.get(aktion_typ)
+        if not effekt:
+            # Try to extract base action type (e.g., "sandmann_einschlaefern" -> check role)
+            from roles import RoleRegistry
+            rolle_obj = RoleRegistry.get(spieler.rolle)
+            if rolle_obj:
+                aktions_typ_enum = rolle_obj.aktions_typ
+                effekt = AKTION_TYP_EFFEKT.get(aktions_typ_enum.value if hasattr(aktions_typ_enum, 'value') else str(aktions_typ_enum))
+        
+        if ziel_id and effekt:
+            effect_data["effekt"] = effekt
             effect_data["ziel_id"] = ziel_id
 
         emit("aktion_bestaetigt", effect_data)

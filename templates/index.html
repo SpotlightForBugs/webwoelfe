@@ -228,609 +228,15 @@
             </p>
           </div>
 
-          <!-- ===== BASISSPIEL ===== -->
-          <div class="expansion-card base active" data-expansion="basis">
-            <div class="expansion-header" onclick="toggleExpansion('basis')">
-              <div class="expansion-title">
-                <label class="expansion-check">
-                  <input
-                    type="checkbox"
-                    name="expansion_basis"
-                    checked
-                    disabled
-                  />
-                  <span class="checkmark"></span>
-                </label>
-                <i class="fa-solid fa-house"></i>
-                <span>Basisspiel</span>
-                <span class="expansion-badge required">Pflicht</span>
-              </div>
-              <i class="fa-solid fa-chevron-down expansion-toggle"></i>
-            </div>
-            <div class="expansion-content" style="display: block">
-              <p class="expansion-desc">
-                Die klassischen Rollen aus dem Grundspiel
-              </p>
-              <div class="role-grid">
-                <label class="role-chip evil">
-                  <input
-                    type="checkbox"
-                    name="rollen"
-                    value="Werwolf"
-                    checked
-                    disabled
-                  />
-                  <span><i class="fa-solid fa-paw"></i> Werwolf</span>
-                </label>
-                <label class="role-chip good">
-                  <input
-                    type="checkbox"
-                    name="rollen"
-                    value="Dorfbewohner"
-                    checked
-                    disabled
-                  />
-                  <span><i class="fa-solid fa-user"></i> Dorfbewohner</span>
-                </label>
-                <label class="role-chip good selected">
-                  <input
-                    type="checkbox"
-                    name="rollen"
-                    value="Seherin"
-                    checked
-                  />
-                  <span><i class="fa-solid fa-eye"></i> Seherin</span>
-                </label>
-                <label class="role-chip good">
-                  <input type="checkbox" name="rollen" value="Hexe" />
-                  <span><i class="fa-solid fa-hat-wizard"></i> Hexe</span>
-                </label>
-                <label class="role-chip good">
-                  <input type="checkbox" name="rollen" value="Jaeger" />
-                  <span><i class="fa-solid fa-crosshairs"></i> Jäger</span>
-                </label>
-                <label class="role-chip good">
-                  <input type="checkbox" name="rollen" value="Amor" />
-                  <span><i class="fa-solid fa-heart"></i> Amor</span>
-                </label>
-                <label class="role-chip good">
-                  <input type="checkbox" name="rollen" value="Dieb" />
-                  <span><i class="fa-solid fa-mask"></i> Dieb</span>
-                </label>
-                <label class="role-chip good">
-                  <input type="checkbox" name="rollen" value="Maedchen" />
-                  <span><i class="fa-solid fa-child"></i> Mädchen</span>
-                </label>
-              </div>
+          <!-- Dynamic role selection loaded from API -->
+          <div id="role-selection-container" class="role-selection">
+            <div class="loading-spinner">
+              <i class="fa-solid fa-spinner fa-spin"></i> Lade Rollen...
             </div>
           </div>
 
-          <!-- ===== ERWEITERUNG 1: NEUMOND ===== -->
-          <div class="expansion-card neumond" data-expansion="neumond">
-            <div class="expansion-header" onclick="toggleExpansion('neumond')">
-              <div class="expansion-title">
-                <label class="expansion-check">
-                  <input
-                    type="checkbox"
-                    name="expansion_neumond"
-                    onchange="toggleExpansionRoles('neumond', this.checked)"
-                  />
-                  <span class="checkmark"></span>
-                </label>
-                <i class="fa-solid fa-moon"></i>
-                <span>Neumond</span>
-                <span class="expansion-badge exp1">Erw. 1</span>
-              </div>
-              <i class="fa-solid fa-chevron-down expansion-toggle"></i>
-            </div>
-            <div class="expansion-content">
-              <p class="expansion-desc">
-                Heiler, Alter, Sündenbock, Flötenspieler & mehr
-              </p>
-              <div class="role-grid">
-                <label class="role-chip good">
-                  <input
-                    type="checkbox"
-                    name="rollen"
-                    value="Heiler"
-                    data-exp="neumond"
-                  />
-                  <span><i class="fa-solid fa-heart-pulse"></i> Heiler</span>
-                </label>
-                <label class="role-chip good">
-                  <input
-                    type="checkbox"
-                    name="rollen"
-                    value="Alter Mann"
-                    data-exp="neumond"
-                  />
-                  <span><i class="fa-solid fa-person-cane"></i> Der Alte</span>
-                </label>
-                <label class="role-chip good">
-                  <input
-                    type="checkbox"
-                    name="rollen"
-                    value="Suendenbock"
-                    data-exp="neumond"
-                  />
-                  <span><i class="fa-solid fa-sheep"></i> Sündenbock</span>
-                </label>
-                <label class="role-chip good">
-                  <input
-                    type="checkbox"
-                    name="rollen"
-                    value="Dorfdepp"
-                    data-exp="neumond"
-                  />
-                  <span
-                    ><i class="fa-solid fa-face-grin-tongue"></i> Dorfdepp</span
-                  >
-                </label>
-                <label class="role-chip neutral">
-                  <input
-                    type="checkbox"
-                    name="rollen"
-                    value="Floetenspieler"
-                    data-exp="neumond"
-                  />
-                  <span><i class="fa-solid fa-music"></i> Flötenspieler</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- ===== ERWEITERUNG 2: DIE GEMEINDE ===== -->
-          <div class="expansion-card gemeinde" data-expansion="gemeinde">
-            <div class="expansion-header" onclick="toggleExpansion('gemeinde')">
-              <div class="expansion-title">
-                <label class="expansion-check">
-                  <input
-                    type="checkbox"
-                    name="expansion_gemeinde"
-                    onchange="toggleExpansionRoles('gemeinde', this.checked)"
-                  />
-                  <span class="checkmark"></span>
-                </label>
-                <i class="fa-solid fa-city"></i>
-                <span>Die Gemeinde</span>
-                <span class="expansion-badge exp2">Erw. 2</span>
-              </div>
-              <i class="fa-solid fa-chevron-down expansion-toggle"></i>
-            </div>
-            <div class="expansion-content">
-              <p class="expansion-desc">
-                Gebäude & Berufe: Brandstifter, Rabe & mehr
-              </p>
-              <div class="role-grid">
-                <label class="role-chip good">
-                  <input
-                    type="checkbox"
-                    name="rollen"
-                    value="Brandstifter"
-                    data-exp="gemeinde"
-                  />
-                  <span
-                    ><i class="fa-solid fa-fire-flame-curved"></i>
-                    Brandstifter</span
-                  >
-                </label>
-                <label class="role-chip good">
-                  <input
-                    type="checkbox"
-                    name="rollen"
-                    value="Rabe"
-                    data-exp="gemeinde"
-                  />
-                  <span><i class="fa-solid fa-crow"></i> Schwarzer Rabe</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- ===== ERWEITERUNG 3: CHARAKTERE ===== -->
-          <div class="expansion-card charaktere" data-expansion="charaktere">
-            <div
-              class="expansion-header"
-              onclick="toggleExpansion('charaktere')"
-            >
-              <div class="expansion-title">
-                <label class="expansion-check">
-                  <input
-                    type="checkbox"
-                    name="expansion_charaktere"
-                    onchange="toggleExpansionRoles('charaktere', this.checked)"
-                  />
-                  <span class="checkmark"></span>
-                </label>
-                <i class="fa-solid fa-users"></i>
-                <span>Charaktere</span>
-                <span class="expansion-badge exp3">Erw. 3</span>
-              </div>
-              <i class="fa-solid fa-chevron-down expansion-toggle"></i>
-            </div>
-            <div class="expansion-content">
-              <p class="expansion-desc">
-                16 neue Rollen: Wolfsrudel, Gruppen & mehr!
-              </p>
-
-              <!-- Wölfe -->
-              <div class="role-subcategory">
-                <span class="subcategory-label evil"
-                  ><i class="fa-solid fa-paw"></i> Wölfe</span
-                >
-                <div class="role-grid">
-                  <label class="role-chip evil">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Grosser boeser Wolf"
-                      data-exp="charaktere"
-                    />
-                    <span><i class="fa-solid fa-paw"></i> Gr. Böser Wolf</span>
-                  </label>
-                  <label class="role-chip evil">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Urwolf"
-                      data-exp="charaktere"
-                    />
-                    <span><i class="fa-solid fa-paw"></i> Urwolf</span>
-                  </label>
-                  <label class="role-chip neutral">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Weisser Wolf"
-                      data-exp="charaktere"
-                    />
-                    <span><i class="fa-solid fa-paw"></i> Weißer Wolf</span>
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Wolfshund"
-                      data-exp="charaktere"
-                    />
-                    <span><i class="fa-solid fa-dog"></i> Wolfshund</span>
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Wildes Kind"
-                      data-exp="charaktere"
-                    />
-                    <span
-                      ><i class="fa-solid fa-child-reaching"></i> Wildes
-                      Kind</span
-                    >
-                  </label>
-                </div>
-              </div>
-
-              <!-- Dorf-Gruppen -->
-              <div class="role-subcategory">
-                <span class="subcategory-label good"
-                  ><i class="fa-solid fa-people-group"></i> Gruppen</span
-                >
-                <div class="role-grid">
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Zwei Schwestern"
-                      data-exp="charaktere"
-                    />
-                    <span
-                      ><i class="fa-solid fa-user-group"></i> 2 Schwestern</span
-                    >
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Drei Brueder"
-                      data-exp="charaktere"
-                    />
-                    <span><i class="fa-solid fa-users"></i> 3 Brüder</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Spezialrollen -->
-              <div class="role-subcategory">
-                <span class="subcategory-label good"
-                  ><i class="fa-solid fa-star"></i> Spezial</span
-                >
-                <div class="role-grid">
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Reine Seele"
-                      data-exp="charaktere"
-                    />
-                    <span><i class="fa-solid fa-dove"></i> Reine Seele</span>
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Fuchs"
-                      data-exp="charaktere"
-                    />
-                    <span><i class="fa-solid fa-paw"></i> Fuchs</span>
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Ergebene Magd"
-                      data-exp="charaktere"
-                    />
-                    <span
-                      ><i class="fa-solid fa-hand-holding-heart"></i> Ergebene
-                      Magd</span
-                    >
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Baerenbaendiger"
-                      data-exp="charaktere"
-                    />
-                    <span><i class="fa-solid fa-hippo"></i> Bärenführer</span>
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Ritter"
-                      data-exp="charaktere"
-                    />
-                    <span
-                      ><i class="fa-solid fa-shield-halved"></i> Rostiger
-                      Ritter</span
-                    >
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Gaukler"
-                      data-exp="charaktere"
-                    />
-                    <span
-                      ><i class="fa-solid fa-masks-theater"></i> Gaukler</span
-                    >
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Richter"
-                      data-exp="charaktere"
-                    />
-                    <span><i class="fa-solid fa-gavel"></i> Richter</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Solo/Neutral -->
-              <div class="role-subcategory">
-                <span class="subcategory-label neutral"
-                  ><i class="fa-solid fa-user-secret"></i> Solo</span
-                >
-                <div class="role-grid">
-                  <label class="role-chip neutral">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Engel"
-                      data-exp="charaktere"
-                    />
-                    <span><i class="fa-solid fa-feather"></i> Engel</span>
-                  </label>
-                  <label class="role-chip neutral">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Verbitterter Greis"
-                      data-exp="charaktere"
-                    />
-                    <span
-                      ><i class="fa-solid fa-person-cane"></i> Verb. Greis</span
-                    >
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ===== COMMUNITY ROLLEN ===== -->
-          <div class="expansion-card community" data-expansion="community">
-            <div
-              class="expansion-header"
-              onclick="toggleExpansion('community')"
-            >
-              <div class="expansion-title">
-                <label class="expansion-check">
-                  <input
-                    type="checkbox"
-                    name="expansion_community"
-                    onchange="toggleExpansionRoles('community', this.checked)"
-                  />
-                  <span class="checkmark"></span>
-                </label>
-                <i class="fa-solid fa-puzzle-piece"></i>
-                <span>Community-Rollen</span>
-                <span class="expansion-badge community">Inoffiziell</span>
-              </div>
-              <i class="fa-solid fa-chevron-down expansion-toggle"></i>
-            </div>
-            <div class="expansion-content">
-              <p class="expansion-desc">
-                Beliebte Fan-Kreationen und Varianten
-              </p>
-
-              <!-- Böse -->
-              <div class="role-subcategory">
-                <span class="subcategory-label evil"
-                  ><i class="fa-solid fa-skull"></i> Team Böse</span
-                >
-                <div class="role-grid">
-                  <label class="role-chip evil">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Wolfsjunge"
-                      data-exp="community"
-                    />
-                    <span><i class="fa-solid fa-baby"></i> Wolfsjunge</span>
-                  </label>
-                  <label class="role-chip evil">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Wolf im Schafspelz"
-                      data-exp="community"
-                    />
-                    <span
-                      ><i class="fa-solid fa-sheep"></i> Wolf im
-                      Schafspelz</span
-                    >
-                  </label>
-                  <label class="role-chip evil">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Werwolfseherin"
-                      data-exp="community"
-                    />
-                    <span
-                      ><i class="fa-solid fa-eye-evil"></i>
-                      Werwolf-Seherin</span
-                    >
-                  </label>
-                </div>
-              </div>
-
-              <!-- Gut -->
-              <div class="role-subcategory">
-                <span class="subcategory-label good"
-                  ><i class="fa-solid fa-shield"></i> Team Dorf</span
-                >
-                <div class="role-grid">
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Leibwaechter"
-                      data-exp="community"
-                    />
-                    <span><i class="fa-solid fa-shield"></i> Leibwächter</span>
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Medium"
-                      data-exp="community"
-                    />
-                    <span><i class="fa-solid fa-ghost"></i> Medium</span>
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Aurenseherin"
-                      data-exp="community"
-                    />
-                    <span><i class="fa-solid fa-sun"></i> Aura-Seherin</span>
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Freimaurer"
-                      data-exp="community"
-                    />
-                    <span
-                      ><i class="fa-solid fa-handshake"></i> Freimaurer</span
-                    >
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Prinz"
-                      data-exp="community"
-                    />
-                    <span><i class="fa-solid fa-crown"></i> Prinz</span>
-                  </label>
-                  <label class="role-chip good">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Buergermeister"
-                      data-exp="community"
-                    />
-                    <span
-                      ><i class="fa-solid fa-landmark"></i> Bürgermeister</span
-                    >
-                  </label>
-                </div>
-              </div>
-
-              <!-- Solo/Chaos -->
-              <div class="role-subcategory">
-                <span class="subcategory-label neutral"
-                  ><i class="fa-solid fa-dice"></i> Chaos & Solo</span
-                >
-                <div class="role-grid">
-                  <label class="role-chip neutral">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Vampir"
-                      data-exp="community"
-                    />
-                    <span><i class="fa-solid fa-teeth"></i> Vampir</span>
-                  </label>
-                  <label class="role-chip neutral">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Zombie"
-                      data-exp="community"
-                    />
-                    <span><i class="fa-solid fa-biohazard"></i> Zombie</span>
-                  </label>
-                  <label class="role-chip neutral">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Pyromane"
-                      data-exp="community"
-                    />
-                    <span><i class="fa-solid fa-fire"></i> Pyromane</span>
-                  </label>
-                  <label class="role-chip neutral">
-                    <input
-                      type="checkbox"
-                      name="rollen"
-                      value="Doppelgaenger"
-                      data-exp="community"
-                    />
-                    <span><i class="fa-solid fa-clone"></i> Doppelgänger</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
+          <!-- Static roles - will be replaced by dynamic content above -- >
+         
 
           <!-- Aktive Rollen Übersicht -->
           <div class="roles-summary" id="roles-summary">
@@ -1685,5 +1091,150 @@
       modusSelect.dispatchEvent(new Event("change"));
     }
   });
+
+  // ============================================
+  // DYNAMIC ROLE LOADING FROM API
+  // ============================================
+  
+  // Load roles from backend on page load
+  document.addEventListener('DOMContentLoaded', async function() {
+    await loadRolesFromAPI();
+  });
+
+  async function loadRolesFromAPI() {
+    const container = document.getElementById('role-selection-container');
+    if (!container) return;
+
+    try {
+      const response = await fetch('/api/roles');
+      const data = await response.json();
+      
+      if (!data.success) {
+        container.innerHTML = '<div class="error">Fehler beim Laden der Rollen</div>';
+        return;
+      }
+
+      // Generate HTML from roles grouped by extension
+      container.innerHTML = generateRoleSelectionHTML(data.grouped_by_extension);
+      
+      // Re-attach event listeners
+      updateRoleCount();
+      
+    } catch (error) {
+      console.error('Error loading roles:', error);
+      container.innerHTML = '<div class="error">Fehler: Rollen konnten nicht geladen werden</div>';
+    }
+  }
+
+  function generateRoleSelectionHTML(grouped) {
+    const extensionInfo = {
+      'base': {
+        name: 'Basisspiel',
+        icon: 'fa-house',
+        badge: 'Pflicht',
+        badgeClass: 'required',
+        desc: 'Die klassischen Rollen aus dem Grundspiel',
+        required: true,
+        open: true
+      },
+      'neumond': {
+        name: 'Neumond',
+        icon: 'fa-moon',
+        badge: 'Erw. 1',
+        badgeClass: 'exp1',
+        desc: 'Heiler, Alter, Sündenbock, Flötenspieler & mehr'
+      },
+      'gemeinde': {
+        name: 'Die Gemeinde',
+        icon: 'fa-city',
+        badge: 'Erw. 2',
+        badgeClass: 'exp2',
+        desc: 'Gebäude & Berufe: Brandstifter, Rabe & mehr'
+      },
+      'charaktere': {
+        name: 'Charaktere',
+        icon: 'fa-users',
+        badge: 'Erw. 3',
+        badgeClass: 'exp3',
+        desc: 'Neue Charaktere: Wolfsrudel, Gruppen & mehr!'
+      },
+      'sonderedition': {
+        name: 'Sonderedition',
+        icon: 'fa-star',
+        badge: 'Spezial',
+        badgeClass: 'special',
+        desc: 'Exklusive Sonderrollen'
+      }
+    };
+
+    let html = '';
+    
+    for (const [extPack, roles] of Object.entries(grouped)) {
+      const info = extensionInfo[extPack] || {
+        name: extPack,
+        icon: 'fa-puzzle-piece',
+        badge: extPack,
+        badgeClass: 'community',
+        desc: 'Weitere Rollen'
+      };
+
+      const isRequired = info.required;
+      const isOpen = info.open;
+      
+      html += `
+        <div class="expansion-card ${extPack} ${isOpen ? 'active' : ''}" data-expansion="${extPack}">
+          <div class="expansion-header" onclick="toggleExpansion('${extPack}')">
+            <div class="expansion-title">
+              <label class="expansion-check">
+                <input
+                  type="checkbox"
+                  name="expansion_${extPack}"
+                  ${isRequired ? 'checked disabled' : ''}
+                  onchange="toggleExpansionRoles('${extPack}', this.checked)"
+                />
+                <span class="checkmark"></span>
+              </label>
+              <i class="fa-solid ${info.icon}"></i>
+              <span>${info.name}</span>
+              <span class="expansion-badge ${info.badgeClass}">${info.badge}</span>
+            </div>
+            <i class="fa-solid fa-chevron-down expansion-toggle"></i>
+          </div>
+          <div class="expansion-content" ${isOpen ? 'style="display: block"' : ''}>
+            <p class="expansion-desc">${info.desc}</p>
+            <div class="role-grid">
+              ${generateRoleChips(roles, extPack, isRequired)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    return html;
+  }
+
+  function generateRoleChips(roles, extPack, isRequired) {
+    return roles.map(role => {
+      const team = role.info.team;
+      const chipClass = team === 'werwolf' ? 'evil' : (team === 'dorf' ? 'good' : 'neutral');
+      const isBasicRole = (role.info.name === 'Werwolf' || role.info.name === 'Dorfbewohner');
+      const isPreselected = (role.info.name === 'Seherin');
+      
+      return `
+        <label class="role-chip ${chipClass} ${isPreselected ? 'selected' : ''}">
+          <input
+            type="checkbox"
+            name="rollen"
+            value="${role.info.name}"
+            ${isBasicRole ? 'checked disabled' : ''}
+            ${isPreselected ? 'checked' : ''}
+            data-exp="${extPack}"
+            onchange="updateRoleCount()"
+          />
+          <span><i class="${role.info.icon}"></i> ${role.info.name}</span>
+        </label>
+      `;
+    }).join('');
+  }
 </script>
 {% endblock %}

@@ -30,7 +30,6 @@ class Selbstmoerder(Role):
             beschreibung="Du bist der Selbstmörder. Du gewinnst NUR wenn du vom Dorf gehängt wirst! Versuche verdächtig zu wirken, ohne zu offensichtlich zu sein.",
             icon="fa-solid fa-skull",
             farbe="#374151",
-            nacht_aktiv=False,
             prioritaet=100,
             erzaehler_nacht="Der Selbstmörder liegt wach und plant, wie er morgen möglichst verdächtig wirken kann.",
             erzaehler_tag="Der Selbstmörder erwacht mit einem finsteren Plan. Sein Ziel: Vom Dorf gehängt werden! Aber nicht zu offensichtlich...",

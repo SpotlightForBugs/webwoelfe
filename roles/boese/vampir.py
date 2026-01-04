@@ -45,7 +45,6 @@ class Vampir(Role):
             ),
             icon='fa-solid fa-tooth',
             farbe='#7c2d12',
-            nacht_aktiv=True,
             prioritaet=53,
             erzaehler_nacht=(
                 'Die Vampire erwachen (jede zweite Nacht) und wählen '

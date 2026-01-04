@@ -38,7 +38,6 @@ class Werwolf(Role):
             ),
             icon="fa-solid fa-paw",
             farbe="#dc2626",
-            nacht_aktiv=True,
             prioritaet=50,
             erzaehler_nacht=(
                 "Die Werwölfe erwachen, erkennen sich und wählen "

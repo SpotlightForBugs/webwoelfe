@@ -27,14 +27,30 @@ class RollenInfo:
     team: Team
     kategorie: Kategorie
     beschreibung: str
-    icon: str
-    farbe: str
-    nacht_aktiv: bool = False
-    prioritaet: int = 100  # Niedrigere Werte = frueher in der Nacht
+    icon: str  # FontAwesome class (e.g., "fa-solid fa-eye")
+    farbe: str  # Hex color code (e.g., "#7c3aed")
+    prioritaet: int = 100  # Lower = earlier in night order (e.g., Amor=5, Werwolf=50, Hexe=90)
     erzaehler_nacht: Optional[str] = None
     erzaehler_tag: Optional[str] = None
     hinweis_config: Optional[str] = None
     erweiterung: Erweiterung = Erweiterung.BASISSPIEL
+    
+    # Phase ordering and dependencies
+    requires_roles: List[str] = field(default_factory=list)  # Roles that must act before this one
+    requires_phases: List[str] = field(default_factory=list)  # Generic phases that must happen first
+    
+    # Extension pack for UI filtering
+    @property
+    def extension_pack(self) -> str:
+        """Returns extension pack identifier for frontend filtering."""
+        pack_map = {
+            Erweiterung.BASISSPIEL: "base",
+            Erweiterung.NEUMOND: "neumond",
+            Erweiterung.GEMEINDE: "gemeinde",
+            Erweiterung.CHARAKTERE: "charaktere",
+            Erweiterung.SONDEREDITION: "sonderedition",
+        }
+        return pack_map.get(self.erweiterung, "base")
 
 
 @dataclass
@@ -67,6 +83,47 @@ class SpielKontext:
         """Prüft ob ein Spieler eine bestimmte Rolle hat."""
         # Wird von der Registry implementiert
         return False
+
+
+@dataclass
+class UIButton:
+    """Definition for a UI button in the action panel."""
+    label: str
+    action_type: str
+    icon: Optional[str] = None
+    css_class: str = "btn-primary"
+    requires_confirmation: bool = False
+
+
+@dataclass
+class RollenUI:
+    """UI definition for a role's action panel."""
+    title: str
+    instructions: str
+    buttons: List[UIButton] = field(default_factory=list)
+    requires_target: bool = True
+    allow_multiple_targets: bool = False
+    can_skip: bool = False
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "title": self.title,
+            "instructions": self.instructions,
+            "buttons": [
+                {
+                    "label": btn.label,
+                    "action_type": btn.action_type,
+                    "icon": btn.icon,
+                    "css_class": btn.css_class,
+                    "requires_confirmation": btn.requires_confirmation,
+                }
+                for btn in self.buttons
+            ],
+            "requires_target": self.requires_target,
+            "allow_multiple_targets": self.allow_multiple_targets,
+            "can_skip": self.can_skip,
+        }
 
 
 class Role(ABC):
@@ -137,7 +194,8 @@ class Role(ABC):
     @property
     def kann_ziel_waehlen(self) -> bool:
         """Muss ein Ziel für die Aktion gewählt werden?"""
-        return self.info.nacht_aktiv
+        # Role is active if it acts on first night OR every night
+        return self.is_active_on_first_night() or self.is_active_on_every_night()
     
     @property
     def erlaubte_ziele(self) -> str:
@@ -320,22 +378,59 @@ class Role(ABC):
                 return True
         return False
     
+    # === LIFECYCLE METHODS ===
+    
+    def is_active_on_first_night(self) -> bool:
+        """Returns True if this role acts on the first night only."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Returns True if this role acts every night."""
+        return False
+    
+    # === UI DEFINITION ===
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for this role's action panel."""
+        from .base import RollenUI, UIButton
+        return RollenUI(
+            title=f"{self.info.name} Aktion",
+            instructions=f"Wähle ein Ziel für {self.info.name}",
+            buttons=[
+                UIButton(
+                    label="Aktion ausführen",
+                    action_type=self.aktions_typ.value if hasattr(self.aktions_typ, 'value') else str(self.aktions_typ),
+                    icon=self.info.icon,
+                    css_class="btn-primary"
+                )
+            ],
+            requires_target=self.kann_ziel_waehlen,
+            can_skip=True
+        )
+    
     def to_dict(self) -> Dict[str, Any]:
-        """Konvertiert die Rolle zu einem Dictionary (fuer Legacy-Kompatibilitaet)."""
-        info = self.info
+        """Convert role to dictionary for API/JSON."""
         return {
-            'id': info.id,
-            'team': info.team.value,
-            'kategorie': info.kategorie.value,
-            'beschreibung': info.beschreibung,
-            'nacht_aktiv': info.nacht_aktiv,
-            'prioritaet': info.prioritaet,
-            'icon': info.icon,
-            'farbe': info.farbe,
-            'erzaehler_nacht': info.erzaehler_nacht,
-            'erzaehler_tag': info.erzaehler_tag,
-            'hinweis_config': info.hinweis_config,
-            'erweiterung': info.erweiterung.value,
+            "info": {
+                "id": self.info.id,
+                "name": self.info.name,
+                "team": self.info.team.value if hasattr(self.info.team, 'value') else str(self.info.team),
+                "kategorie": self.info.kategorie.value if hasattr(self.info.kategorie, 'value') else str(self.info.kategorie),
+                "beschreibung": self.info.beschreibung,
+                "icon": self.info.icon,
+                "farbe": self.info.farbe,
+                "prioritaet": self.info.prioritaet,
+                "erweiterung": self.info.erweiterung.value if hasattr(self.info.erweiterung, 'value') else str(self.info.erweiterung),
+                "extension_pack": self.info.extension_pack,
+                "requires_roles": self.info.requires_roles,
+                "requires_phases": self.info.requires_phases,
+            },
+            "lifecycle": {
+                "first_night_only": self.is_active_on_first_night(),
+                "every_night": self.is_active_on_every_night(),
+            },
+            "ui": self.get_ui_definition().to_dict(),
+            "phase_name": self.get_phase_name(),
         }
     
     def __repr__(self) -> str:

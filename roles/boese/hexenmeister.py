@@ -45,7 +45,7 @@ class Hexenmeister(Role):
             ),
             icon='fa-solid fa-hat-wizard',
             farbe='#4c1d95',
-            nacht_aktiv=True,
+
             prioritaet=68,
             erzaehler_nacht=(
                 'Der Hexenmeister kann einen Spieler verfluchen '

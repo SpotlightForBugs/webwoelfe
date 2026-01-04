@@ -6,7 +6,7 @@ stirbt einer, stirbt auch der andere.
 """
 from typing import Optional, List, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -40,12 +40,12 @@ class Amor(Role):
             ),
             icon="fa-solid fa-heart",
             farbe="#ec4899",
-            nacht_aktiv=True,
             prioritaet=5,  # Sehr früh in der Nacht
             erzaehler_nacht=(
                 "Amor erwacht (nur erste Nacht) und zeigt auf zwei Spieler, "
                 "die sich verlieben sollen. Beruehre beide leicht an der Schulter."
             ),
+            erweiterung=Erweiterung.BASISSPIEL,
         )
     
     @property

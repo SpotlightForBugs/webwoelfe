@@ -39,7 +39,6 @@ class Hexe(Role):
             ),
             icon="fa-solid fa-hat-wizard",
             farbe="#059669",
-            nacht_aktiv=True,
             prioritaet=60,
             erzaehler_nacht=(
                 "Die Hexe erwacht. Zeige auf das Werwolf-Opfer. "

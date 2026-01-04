@@ -40,7 +40,6 @@ class WeisserWolf(Role):
             ),
             icon="fa-solid fa-paw",
             farbe="#f5f5f4",
-            nacht_aktiv=True,
             prioritaet=52,
             erzaehler_nacht=(
                 "Der Weisse Wolf erwacht (jede zweite Nacht). "

@@ -39,7 +39,6 @@ class Seherin(Role):
             ),
             icon="fa-solid fa-eye",
             farbe="#7c3aed",
-            nacht_aktiv=True,
             prioritaet=20,
             erzaehler_nacht=(
                 "Die Seherin erwacht und zeigt auf einen Spieler. "

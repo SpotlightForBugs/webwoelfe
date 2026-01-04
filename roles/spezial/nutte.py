@@ -46,7 +46,6 @@ class Nutte(Role):
             ),
             icon='fa-solid fa-house-user',
             farbe='#ec4899',
-            nacht_aktiv=True,
             prioritaet=47,
             erzaehler_nacht=(
                 'Die Nutte erwacht und wählt einen Spieler, '

@@ -43,7 +43,6 @@ class Rabe(Role):
             ),
             icon='fa-solid fa-crow',
             farbe='#1f2937',
-            nacht_aktiv=True,
             prioritaet=65,
             erzaehler_nacht=(
                 'Der Rabe erwacht und markiert einen Spieler '

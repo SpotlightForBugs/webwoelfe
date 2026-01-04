@@ -44,7 +44,6 @@ class Werwolfseherin(Role):
             ),
             icon='fa-solid fa-eye',
             farbe='#b91c1c',
-            nacht_aktiv=True,
             prioritaet=65,  # Nach Werwölfen
             erzaehler_nacht=(
                 'Die Werwolfseherin erwacht nach den Werwölfen und '

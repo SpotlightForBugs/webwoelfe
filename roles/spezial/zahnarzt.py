@@ -43,7 +43,6 @@ class Zahnarzt(Role):
             ),
             icon='fa-solid fa-tooth',
             farbe='#ffffff',
-            nacht_aktiv=True,
             prioritaet=66,
             erzaehler_nacht=(
                 'Der Zahnarzt erwacht und wählt einen Spieler, '

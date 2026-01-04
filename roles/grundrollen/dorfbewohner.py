@@ -6,7 +6,7 @@ aber seine Stimme in der Abstimmung ist entscheidend.
 """
 from typing import Optional
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 
@@ -32,7 +32,6 @@ class Dorfbewohner(Role):
             ),
             icon="fa-solid fa-user",
             farbe="#6b7280",
-            nacht_aktiv=False,
             prioritaet=100,
             erzaehler_nacht=(
                 "Der Dorfbewohner schläft friedlich. "

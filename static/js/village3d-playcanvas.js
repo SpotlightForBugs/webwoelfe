@@ -56,106 +56,13 @@ export default class Village3DPlayCanvas {
     // Track sleeping/inactive players for day/night cycle
     this.sleepingPlayers = new Set();
 
-    // Role colors for player appearance - ALL ROLES
+    // Role colors for player appearance - Loaded dynamically from API
     this.roleColors = {
-      // === GRUNDROLLEN ===
-      Werwolf: new pc.Color(0.6, 0.1, 0.1), // Dark red
-      Dorfbewohner: new pc.Color(0.3, 0.5, 0.8), // Blue
-      Seherin: new pc.Color(0.5, 0.3, 0.9), // Purple
-      Hexe: new pc.Color(0.2, 0.7, 0.3), // Green
-      Jäger: new pc.Color(0.6, 0.5, 0.2), // Brown/Gold
-      Amor: new pc.Color(1.0, 0.4, 0.7), // Pink
-      Heiler: new pc.Color(0.9, 0.9, 0.2), // Yellow
-
-      // === WERWOLF-VARIANTEN ===
-      "Einsamer Wolf": new pc.Color(0.4, 0.15, 0.15), // Darker red
-      Lupin: new pc.Color(0.5, 0.3, 0.2), // Brown-red
-      Polarwolf: new pc.Color(0.85, 0.9, 0.95), // Ice white
-      "Teenager-Werwolf": new pc.Color(0.7, 0.2, 0.3), // Teen red
-      Urwolf: new pc.Color(0.3, 0.08, 0.05), // Ancient dark
-      "Weißer Wolf": new pc.Color(0.95, 0.95, 0.98), // Pure white
-      Werwolfseherin: new pc.Color(0.6, 0.2, 0.5), // Red-purple
-      "Wildes Kind": new pc.Color(0.55, 0.25, 0.15), // Wild brown
-      "Wolf im Schafspelz": new pc.Color(0.9, 0.88, 0.85), // Sheep wool
-      Wolfsjunge: new pc.Color(0.5, 0.15, 0.1), // Young wolf red
-
-      // === BÖSE ROLLEN ===
-      Flötenspieler: new pc.Color(0.4, 0.35, 0.5), // Mysterious purple
-      Hexenmeister: new pc.Color(0.15, 0.1, 0.3), // Dark purple
-      Vampir: new pc.Color(0.2, 0.0, 0.1), // Blood dark
-      Zombie: new pc.Color(0.3, 0.4, 0.25), // Rotten green
-
-      // === DORFBEWOHNER-VARIANTEN ===
-      "Alter Mann": new pc.Color(0.5, 0.5, 0.55), // Gray
-      Dorfdepp: new pc.Color(0.6, 0.5, 0.3), // Tan
-      "Drei Brüder": new pc.Color(0.35, 0.45, 0.7), // Brothers blue
-      Freimaurer: new pc.Color(0.25, 0.25, 0.35), // Mason gray
-      Griesgram: new pc.Color(0.4, 0.35, 0.3), // Grumpy brown
-      Hund: new pc.Color(0.6, 0.45, 0.25), // Dog brown
-      Jesus: new pc.Color(1.0, 0.95, 0.8), // Holy white
-      Tonks: new pc.Color(0.9, 0.4, 0.9), // Metamorph pink
-      "Zwei Schwestern": new pc.Color(0.7, 0.5, 0.7), // Sister purple
-
-      // === HEILER-VARIANTEN ===
-      "Ergebene Magd": new pc.Color(0.7, 0.6, 0.5), // Servant beige
-      Leibwächter: new pc.Color(0.3, 0.35, 0.45), // Guard steel
-      Oma: new pc.Color(0.65, 0.55, 0.6), // Grandma rose
-      Prostituierte: new pc.Color(0.9, 0.3, 0.4), // Red dress
-
-      // === HEXE-VARIANTEN ===
-      Giftmischerin: new pc.Color(0.4, 0.1, 0.5), // Poison purple
-      Hahn: new pc.Color(0.8, 0.4, 0.1), // Rooster orange
-      Kräuterweib: new pc.Color(0.3, 0.5, 0.2), // Herb green
-      Sandmann: new pc.Color(0.7, 0.65, 0.5), // Sandy yellow
-      Zauberer: new pc.Color(0.2, 0.2, 0.6), // Wizard blue
-
-      // === JÄGER-VARIANTEN ===
-      Buddler: new pc.Color(0.5, 0.35, 0.2), // Dirt brown
-      Drachenbändiger: new pc.Color(0.8, 0.3, 0.1), // Dragon orange
-      Flammenmann: new pc.Color(0.95, 0.4, 0.1), // Fire orange
-      Gaukler: new pc.Color(0.9, 0.7, 0.2), // Jester gold
-      Inquisitor: new pc.Color(0.15, 0.1, 0.1), // Dark inquisitor
-      Kamikaze: new pc.Color(0.9, 0.1, 0.1), // Explosive red
-      König: new pc.Color(0.85, 0.7, 0.2), // Royal gold
-      Prinz: new pc.Color(0.6, 0.5, 0.8), // Royal purple
-      Pyromane: new pc.Color(1.0, 0.5, 0.0), // Flame orange
-      Tanklastwagenfahrer: new pc.Color(0.2, 0.3, 0.2), // Military green
-
-      // === SEHER-VARIANTEN ===
-      Aurenseherin: new pc.Color(0.6, 0.4, 0.8), // Aura purple
-      Bärenbändiger: new pc.Color(0.45, 0.3, 0.2), // Bear brown
-      Demoskopin: new pc.Color(0.4, 0.5, 0.6), // Poll gray-blue
-      Medium: new pc.Color(0.6, 0.5, 0.8), // Spirit purple
-      "Paranormaler Ermittler": new pc.Color(0.3, 0.4, 0.5), // Detective gray
-      Seherlehrling: new pc.Color(0.55, 0.4, 0.75), // Apprentice purple
-      Tratschweib: new pc.Color(0.7, 0.5, 0.4), // Gossip peach
-
-      // === SOLO-ROLLEN ===
-      Henker: new pc.Color(0.1, 0.1, 0.1), // Black
-      Selbstmörder: new pc.Color(0.3, 0.3, 0.35), // Sad gray
-
-      // === SONSTIGE ===
-      Bürgermeister: new pc.Color(0.5, 0.4, 0.6), // Mayor purple
-      Dieb: new pc.Color(0.2, 0.2, 0.25), // Thief dark
-      Doppelgänger: new pc.Color(0.5, 0.5, 0.5), // Mirror gray
-      Engel: new pc.Color(1.0, 1.0, 0.9), // Angel white
-      Gerber: new pc.Color(0.55, 0.4, 0.25), // Leather brown
-      "Kleines Mädchen": new pc.Color(0.95, 0.7, 0.75), // Little girl pink
-      Putzfrau: new pc.Color(0.5, 0.6, 0.7), // Cleaning blue
-      Sündenbock: new pc.Color(0.5, 0.4, 0.3), // Scapegoat brown
-
-      // === SPEZIAL ===
-      Chemielaborant: new pc.Color(0.3, 0.7, 0.5), // Chemical green
-      "Dunkler Priester": new pc.Color(0.15, 0.1, 0.2), // Dark priest
-      Flüchtlinge: new pc.Color(0.6, 0.55, 0.45), // Refugee tan
-      Hure: new pc.Color(0.85, 0.25, 0.35), // Red
-      Mordlustiger: new pc.Color(0.7, 0.1, 0.15), // Blood red
-      Nutte: new pc.Color(0.8, 0.3, 0.5), // Pink-red
-      Rabe: new pc.Color(0.1, 0.1, 0.12), // Raven black
-      Zahnarzt: new pc.Color(0.9, 0.95, 1.0), // Dentist white
-
-      default: new pc.Color(0.3, 0.5, 0.8), // Same as Dorfbewohner - villagers can't tell apart
+      default: new pc.Color(0.3, 0.5, 0.8), // Same as Dorfbewohner - default fallback
     };
+    
+    // Load role colors from API
+    this.loadRoleColorsFromAPI();
 
     if (!this.container) {
       console.warn("Village3D container not found:", containerId);
@@ -163,6 +70,40 @@ export default class Village3DPlayCanvas {
     }
 
     this.init();
+  }
+
+  // Load role colors dynamically from API
+  async loadRoleColorsFromAPI() {
+    try {
+      const response = await fetch('/api/roles');
+      const data = await response.json();
+      
+      if (data.success && data.roles) {
+        // Convert hex colors from API to PlayCanvas Color objects
+        data.roles.forEach(role => {
+          const hexColor = role.info.farbe;
+          if (hexColor && hexColor.startsWith('#')) {
+            // Convert hex to RGB (0-1 range)
+            const r = parseInt(hexColor.slice(1, 3), 16) / 255;
+            const g = parseInt(hexColor.slice(3, 5), 16) / 255;
+            const b = parseInt(hexColor.slice(5, 7), 16) / 255;
+            this.roleColors[role.info.name] = new pc.Color(r, g, b);
+          }
+        });
+        
+        console.log('[Village3D] Loaded', Object.keys(this.roleColors).length, 'role colors from API');
+      }
+    } catch (error) {
+      console.warn('[Village3D] Failed to load role colors from API, using defaults:', error);
+      // Fallback to some basic colors if API fails
+      this.roleColors = {
+        Werwolf: new pc.Color(0.6, 0.1, 0.1),
+        Dorfbewohner: new pc.Color(0.3, 0.5, 0.8),
+        Seherin: new pc.Color(0.5, 0.3, 0.9),
+        Hexe: new pc.Color(0.2, 0.7, 0.3),
+        default: new pc.Color(0.3, 0.5, 0.8),
+      };
+    }
   }
 
   init() {

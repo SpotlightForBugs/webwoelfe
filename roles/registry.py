@@ -126,7 +126,7 @@ class RoleRegistry:
     def get_nacht_aktive(cls) -> List[Role]:
         """Gibt alle nachtaktiven Rollen sortiert nach Priorität zurück."""
         aktive = [role for role in cls._instances.values() 
-                  if role.info.nacht_aktiv]
+                  if role.is_active_on_first_night() or role.is_active_on_every_night()]
         return sorted(aktive, key=lambda r: r.info.prioritaet)
     
     @classmethod
@@ -165,7 +165,7 @@ class RoleRegistry:
         """
         mapping = {}
         for name, role in cls._instances.items():
-            if role.info.nacht_aktiv:
+            if role.is_active_on_first_night() or role.is_active_on_every_night():
                 phase_name = role.get_phase_name()
                 mapping[phase_name] = name
         return mapping

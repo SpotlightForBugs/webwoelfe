@@ -60,9 +60,32 @@ class Floetenspieler(Role):
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.DORF  # Erscheint als harmlos
     
-    @property
-    def erlaubte_ziele(self) -> str:
-        return "lebende_andere"
+    def is_active_on_first_night(self) -> bool:
+        """Flötenspieler acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Flötenspieler acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Flötenspieler's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Flötenspieler - Verzaubern",
+            instructions="Wähle Spieler, um sie zu verzaubern.",
+            buttons=[
+                UIButton(
+                    label="Verzaubern",
+                    action_type="verzaubern",
+                    icon="fa-solid fa-music",
+                    css_class="btn-primary"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

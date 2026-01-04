@@ -45,7 +45,6 @@ class Demoskopin(Role):
             ),
             icon='fa-solid fa-chart-column',
             farbe='#06b6d4',
-            nacht_aktiv=False,
             prioritaet=85,
             erzaehler_nacht=(
                 'Die Demoskopin analysiert auch nachts die Stimmung im Dorf.'
@@ -60,6 +59,26 @@ class Demoskopin(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
+    
+    def is_active_on_first_night(self) -> bool:
+        """Demoskopin does not act at night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Demoskopin is passive at night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Demoskopin's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Demoskopin - Passive Rolle",
+            instructions="Du erfährst am Tag, wer die meisten Stimmen bekommen würde.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_tag_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """

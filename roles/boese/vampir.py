@@ -66,16 +66,42 @@ class Vampir(Role):
     def erlaubte_ziele(self) -> str:
         return "lebende_keine_vampire"
     
-    def ist_nacht_aktiv(self, spieler: 'Spieler', kontext: SpielKontext) -> bool:
-        """Vampire erwachen nur jede zweite Nacht."""
-        return kontext.aktuelle_runde % 2 == 0  # Gerade Runden
+    def is_active_on_first_night(self) -> bool:
+        """Vampir starts acting on second night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Vampir is active (periodically). Checks round in on_nacht_aktion."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Vampir's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Vampir - Verwandeln",
+            instructions="Wähle einen Spieler, um ihn zu verwandeln (nur gerade Runden).",
+            buttons=[
+                UIButton(
+                    label="Verwandeln",
+                    action_type="verwandeln",
+                    icon="fa-solid fa-tooth",
+                    css_class="btn-danger"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
         Vampir verwandelt einen Spieler.
         """
-        if not self.ist_nacht_aktiv(spieler, kontext):
+        # Nur jede zweite Nacht (gerade Runden)
+        # Assuming runden start at 1? Or 0?
+        # Vampir desc: "Jede zweite Nacht". Usually night 2, 4, 6...
+        if kontext.runde % 2 != 0:
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht="Du schläfst in deiner Gruft. Nächste Nacht wirst du jagen.",

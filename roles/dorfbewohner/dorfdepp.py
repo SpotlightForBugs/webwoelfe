@@ -40,7 +40,6 @@ class Dorfdepp(Role):
             ),
             icon="fa-solid fa-face-grin-tongue",
             farbe="#f59e0b",
-            nacht_aktiv=False,
             prioritaet=100,
             erzaehler_nacht=(
                 "Der Dorfdepp schläft und träumt davon, endlich "
@@ -51,6 +50,26 @@ class Dorfdepp(Role):
                 "So verdächtig wie möglich wirken, ohne ein Werwolf zu sein!"
             ),
             hinweis_config="Dorfdepp",
+        )
+    
+    def is_active_on_first_night(self) -> bool:
+        """Dorfdepp does not act at night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Dorfdepp is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Dorfdepp's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Dorfdepp - Passive Rolle",
+            instructions="Dein Ziel ist es, gehängt zu werden. Mach dich verdächtig!",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
         )
     
     @property

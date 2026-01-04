@@ -46,43 +46,73 @@ class Wolfsjunge(Role):
                 "Das Wolfsjunge erwacht (nur erste Nacht) und waehlt " "sein Vorbild."
             ),
         )
+    
+    @property
+    def aktions_typ(self) -> 'AktionsTyp':
+        from ..enums import AktionsTyp
+        return AktionsTyp.WAEHLEN
 
     @property
     def sichtbar_als(self) -> SichtTyp:
         # Sieht als Dorf aus, bis Verwandlung
         return SichtTyp.DORF
-
-    def on_spiel_start(
-        self, spieler: "Spieler", kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
-        """
-        Wolfsjunge waehlt sein Vorbild in der ersten Nacht.
-        """
-        return AktionsErgebnis(
-            erfolg=True,
-            nachricht="Waehle dein Vorbild.",
-            effekte={"warte_auf_vorbild_wahl": True},
-            log_sichtbar_fuer=f"spieler_{spieler.id}",
+    
+    def is_active_on_first_night(self) -> bool:
+        """Wolfsjunge acts only on first night to choose role model."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Wolfsjunge does not act every night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Wolfsjunge's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Wolfsjunge - Vorbild wählen",
+            instructions="Wähle dein Vorbild. Stirbt es, wirst du zum Werwolf.",
+            buttons=[
+                UIButton(
+                    label="Vorbild wählen",
+                    action_type="waehlen",
+                    icon="fa-solid fa-child",
+                    css_class="btn-primary",
+                    requires_confirmation=True
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
         )
 
-    def vorbild_waehlen(
-        self, spieler: "Spieler", vorbild: "Spieler", kontext: SpielKontext
-    ) -> AktionsErgebnis:
+    def on_nacht_aktion(self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
-        Setzt das Vorbild.
+        Wolfsjunge wählt sein Vorbild in der ersten Nacht.
         """
-        if vorbild.id == spieler.id:
+        if kontext.runde != 1:
+            return None
+            
+        if ziel is None:
             return AktionsErgebnis(
                 erfolg=False,
-                nachricht="Du kannst dich nicht selbst als Vorbild waehlen.",
+                nachricht="Du musst ein Vorbild wählen!",
+            )
+            
+        if ziel.id == spieler.id:
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Du kannst dich nicht selbst als Vorbild wählen.",
             )
 
+        # Vorbild speichern
+        spieler.vorbild_id = ziel.id
+        
         return AktionsErgebnis(
             erfolg=True,
-            nachricht=f"{vorbild.name} ist nun dein Vorbild.",
-            ziel_spieler_id=vorbild.id,
+            nachricht=f"{ziel.name} ist nun dein Vorbild. Stirbt es, wirst du zum Werwolf.",
+            ziel_spieler_id=ziel.id,
             effekte={
-                "vorbild": vorbild.id,
+                "vorbild": ziel.id,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

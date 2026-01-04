@@ -39,7 +39,6 @@ class AlterMann(Role):
             ),
             icon="fa-solid fa-person-cane",
             farbe="#78716c",
-            nacht_aktiv=False,
             prioritaet=98,
             erzaehler_nacht=(
                 "Der Alte Mann schläft tief. Seine zähe Haut hat "
@@ -50,6 +49,26 @@ class AlterMann(Role):
                 "wurde, hat er überlebt! Aber Vorsicht: Hängt das Dorf ihn, "
                 "verlieren alle Spezialrollen ihre Kräfte."
             ),
+        )
+    
+    def is_active_on_first_night(self) -> bool:
+        """Alter Mann does not act at night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Alter Mann is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Alter Mann's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Alter Mann - Passive Rolle",
+            instructions="Du bist zäh und überlebst den ersten Angriff.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
         )
     
     def on_angegriffen(self, spieler: 'Spieler', angreifer: 'Spieler',

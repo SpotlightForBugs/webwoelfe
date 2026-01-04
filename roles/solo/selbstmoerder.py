@@ -37,9 +37,28 @@ class Selbstmoerder(Role):
             ),
             icon="fa-solid fa-skull",
             farbe="#78716c",
-            nacht_aktiv=False,
             prioritaet=100,
             hinweis_config="Selbstmörder",
+        )
+    
+    def is_active_on_first_night(self) -> bool:
+        """Selbstmörder is passive."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Selbstmörder is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Selbstmörder's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Selbstmörder - Passive Rolle",
+            instructions="Mache dich verdächtig und lass dich hängen!",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
         )
     
     @property

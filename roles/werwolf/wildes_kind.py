@@ -6,7 +6,7 @@ Stirbt dieses, verwandelt es sich in einen Werwolf.
 """
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, SichtTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -57,7 +57,8 @@ class WildesKind(Role):
         )
     
     @property
-    def aktions_typ(self) -> AktionsTyp:
+    def aktions_typ(self) -> 'AktionsTyp':
+        from ..enums import AktionsTyp
         return AktionsTyp.WAEHLEN
     
     @property
@@ -69,10 +70,35 @@ class WildesKind(Role):
     def erlaubte_ziele(self) -> str:
         return "lebende_andere"
     
-    def ist_nacht_aktiv(self, spieler: 'Spieler', kontext: SpielKontext) -> bool:
-        """Nur in der ersten Nacht aktiv (Vorbild wählen)."""
-        vorbild_gewaehlt = getattr(spieler, 'wildes_kind_vorbild_id', None) is not None
-        return kontext.aktuelle_runde == 1 and not vorbild_gewaehlt
+    def is_active_on_first_night(self) -> bool:
+        """Wildes Kind acts only on first night to choose role model."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Wildes Kind does not act every night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Wildes Kind's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Wildes Kind - Vorbild wählen",
+            instructions="Wähle dein Vorbild. Stirbt es, wirst du zum Werwolf.",
+            buttons=[
+                UIButton(
+                    label="Vorbild wählen",
+                    action_type="waehlen",
+                    icon="fa-solid fa-child",
+                    css_class="btn-primary",
+                    requires_confirmation=True
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
+    
+
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

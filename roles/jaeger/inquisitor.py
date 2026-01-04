@@ -46,7 +46,6 @@ class Inquisitor(Role):
             ),
             icon='fa-solid fa-scale-balanced',
             farbe='#1e3a8a',
-            nacht_aktiv=False,
             prioritaet=91,
             erzaehler_nacht=(
                 'Der Inquisitor schärft sein Schwert der Gerechtigkeit im Schlaf.'
@@ -61,6 +60,26 @@ class Inquisitor(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.TOETEN
+    
+    def is_active_on_first_night(self) -> bool:
+        """Inquisitor does not act at night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Inquisitor does not act at night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Inquisitor's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Inquisitor - Tagaktion",
+            instructions="Du kannst einmal am Tag einen Spieler verhören. Werwölfe sterben sofort.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def ist_einmal_faehigkeit(self) -> bool:
         """Inquisitor kann nur einmal verhören."""

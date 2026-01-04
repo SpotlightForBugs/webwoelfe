@@ -43,24 +43,43 @@ PORT=5001
 echo "🔪 Beende laufende Prozesse..."
 
 # Kill any existing Python/Flask processes on our port
-if command -v lsof &> /dev/null; then
-    # Unix/Linux/MacOS
-    EXISTING_PIDS=$(lsof -ti:$PORT 2>/dev/null || true)
-    if [ -n "$EXISTING_PIDS" ]; then
-        echo "   Beende Prozesse auf Port $PORT: $EXISTING_PIDS"
-        echo "$EXISTING_PIDS" | xargs kill -9 2>/dev/null || true
-        sleep 1
+kill_by_port() {
+    local port=$1
+    echo "   Pruefe Port $port..."
+    
+    if command -v lsof &> /dev/null; then
+        # Unix/Linux/MacOS
+        EXISTING_PIDS=$(lsof -ti:$port 2>/dev/null || true)
+        if [ -n "$EXISTING_PIDS" ]; then
+            echo "   Beende Prozesse auf Port $port: $EXISTING_PIDS"
+            echo "$EXISTING_PIDS" | xargs kill -9 2>/dev/null || true
+        fi
+    elif command -v netstat &> /dev/null; then
+        # Windows (Git Bash)
+        # Find PIDs listening on the port. 
+        # Output format: TCP 0.0.0.0:5001 0.0.0.0:0 LISTENING 12345
+        # We extract the last column (PID)
+        PIDS=$(netstat -ano | grep ":$port " | grep "LISTENING" | awk '{print $NF}' | sort -u | tr -d '\r')
+        
+        for pid in $PIDS; do
+            if [ -n "$pid" ] && [ "$pid" != "0" ]; then
+                echo "   Beende Windows-Prozess PID $pid auf Port $port"
+                taskkill //F //PID "$pid" 2>/dev/null || true
+            fi
+        done
     fi
-elif command -v netstat &> /dev/null; then
-    # Windows (Git Bash) fallback
-    # Try to find and kill Python processes
-    pkill -f "python.*app.py" 2>/dev/null || true
-    pkill -f "flask" 2>/dev/null || true
-fi
+}
 
-# Kill any existing Playwright/Chromium processes from previous runs
-pkill -f "chromium" 2>/dev/null || true
-pkill -f "playwright" 2>/dev/null || true
+kill_by_port $PORT
+
+# Additional cleanup for python processes if port check failed
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+    # Windows
+    taskkill //F //IM "python.exe" //FI "WINDOWTITLE eq app.py" 2>/dev/null || true
+else
+    # Unix
+    pkill -f "python.*app.py" 2>/dev/null || true
+fi
 
 echo "✓ Bestehende Prozesse beendet"
 
@@ -158,13 +177,22 @@ cleanup() {
     echo "🛑 Räume auf..."
 
     if [ -n "$SERVER_PID" ]; then
-        echo "   Beende Flask-Server (PID: $SERVER_PID)..."
+        echo "   Beende Flask-Server (PID: $SERVER_PID / Port: $PORT)..."
+        # Try graceful kill of wrapper first
         kill $SERVER_PID 2>/dev/null || true
+        # Ensure deep kill by port (handles Windows python.exe)
+        kill_by_port $PORT
     fi
 
     # Kill any remaining Chromium/Playwright processes
-    pkill -f "chromium" 2>/dev/null || true
-    pkill -f "playwright" 2>/dev/null || true
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+        taskkill //F //IM "chromium.exe" 2>/dev/null || true
+        taskkill //F //IM "chrome.exe" 2>/dev/null || true
+        taskkill //F //IM "node.exe" 2>/dev/null || true
+    else
+        pkill -f "chromium" 2>/dev/null || true
+        pkill -f "playwright" 2>/dev/null || true
+    fi
 
     echo "✓ Alle Prozesse beendet"
 }

@@ -344,12 +344,11 @@ def phasennamen_zu_rollen_mapping() -> dict:
         for rolle in RoleRegistry.get_all():
             # Bevorzugt den von der Rolle gelieferten Namen, normalisiert ihn aber
             # in das bestehende PHASEN-Schema (ae/oe/ue/ss statt Umlaute).
-            kandidaten = [rolle.get_phase_name(), f"{rolle.info.name}_phase"]
-            for kandidat in kandidaten:
-                phase_key = _normalisiere_phase_name(kandidat)
-                if phase_key in PHASEN:
-                    mapping.setdefault(phase_key, rolle.info.name)
-                    break
+            # Bevorzugt den von der Rolle gelieferten Namen
+            # Wir prüfen NICHT mehr gegen die statische PHASEN-Liste, da diese nur noch Kernphasen enthält.
+            # Jede Rolle definiert ihre Phase selbst.
+            phase_key = _normalisiere_phase_name(rolle.get_phase_name())
+            mapping.setdefault(phase_key, rolle.info.name)
     except (ImportError, AttributeError) as exc:
         import traceback
 
@@ -1031,7 +1030,9 @@ def werte_abstimmung_aus(raum: Raum) -> dict:
 
     # Finde Maximum
     max_stimmen = max(ziel_stimmen.values())
-    opfer_ids = [int(sid) for sid, count in ziel_stimmen.items() if count == max_stimmen]
+    opfer_ids = [
+        int(sid) for sid, count in ziel_stimmen.items() if count == max_stimmen
+    ]
 
     # Mehrheit erforderlich
     lebende = Spieler.query.filter_by(
@@ -1059,4 +1060,3 @@ def werte_abstimmung_aus(raum: Raum) -> dict:
         "opfer_rolle": opfer.rolle if opfer else "Unbekannt",
         "stimmen": max_stimmen,
     }
-

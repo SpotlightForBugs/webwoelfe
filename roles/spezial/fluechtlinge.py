@@ -45,7 +45,6 @@ class Fluechtlinge(Role):
             ),
             icon="fa-solid fa-person-running",
             farbe="#0ea5e9",
-            nacht_aktiv=True,
             prioritaet=10,
             erzaehler_nacht=("Die Flüchtlinge erwachen und erkennen sich gegenseitig."),
             erzaehler_tag=None,
@@ -60,9 +59,60 @@ class Fluechtlinge(Role):
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.DORF
 
-    def ist_nacht_aktiv(self, spieler: "Spieler", kontext: SpielKontext) -> bool:
-        """Nur in der ersten Nacht aktiv (zum Erkennen)."""
-        return kontext.aktuelle_runde == 1
+    def is_active_on_first_night(self) -> bool:
+        """Flüchtlinge act on first night (recognition)."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Flüchtlinge only act on first night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Flüchtlinge action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Flüchtlinge - Erkennen",
+            instructions="Du erkennst deine Mitflüchtlinge.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
+
+    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'], kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+        """Bestätigung der Nachtphase."""
+        # Basically reuse the logic from on_spiel_start or just confirm
+        # Alle anderen Flüchtlinge finden
+        andere_fluechtlinge: List[int] = []
+        for sid, rolle in kontext.spieler_rollen.items():
+            # Accessing spieler_rollen.items() might yield (id, RoleObject) or (id, RoleNameString) depending on context structure.
+            # Assuming RoleObject based on previous usage "rolle.lower()" in on_spiel_start implies string?
+            # on_spiel_start L76: if "flüchtling" in rolle.lower()...
+            # So rolle is likely a string there.
+            if isinstance(rolle, str):
+                 name = rolle
+            else:
+                 name = rolle.info.name
+                 
+            if "flüchtling" in name.lower() and sid != spieler.id:
+                andere_fluechtlinge.append(sid)
+
+        effekt_data = {}
+        msg = "Du bist allein... der einzige Flüchtling."
+        if andere_fluechtlinge:
+             namen = [
+                kontext.spieler_namen.get(sid, f"Spieler {sid}")
+                for sid in andere_fluechtlinge
+             ]
+             msg = f"Du erkennst deine Mitflüchtlinge: {', '.join(namen)}. Ihr müsst alle überleben!"
+             effekt_data["fluechtlinge_erkannt"] = andere_fluechtlinge
+             
+        return AktionsErgebnis(
+            erfolg=True,
+            nachricht=msg,
+            effekte=effekt_data,
+            log_sichtbar_fuer=f"spieler_{spieler.id}"
+        )
 
     def on_spiel_start(
         self, spieler: "Spieler", kontext: SpielKontext

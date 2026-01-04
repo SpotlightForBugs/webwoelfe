@@ -55,6 +55,41 @@ class Hexe(Role):
     def erlaubte_ziele(self) -> str:
         return "lebende"
     
+    def is_active_on_first_night(self) -> bool:
+        """Hexe acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Hexe acts every night (but only if she still has potions)."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Hexe's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Hexe - Tränke einsetzen",
+            instructions="Du siehst das Werwolf-Opfer. Möchtest du Heiltrank oder Gifttrank einsetzen?",
+            buttons=[
+                UIButton(
+                    label="Heiltrank",
+                    action_type="heilen",
+                    icon="fa-solid fa-flask",
+                    css_class="btn-success",
+                    requires_confirmation=True
+                ),
+                UIButton(
+                    label="Gifttrank",
+                    action_type="vergiften",
+                    icon="fa-solid fa-skull-crossbones",
+                    css_class="btn-danger",
+                    requires_confirmation=True
+                )
+            ],
+            requires_target=False,  # Healing doesn't need target (uses werewolf victim)
+            allow_multiple_targets=False,
+            can_skip=True  # Can choose not to use potions
+        )
+    
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """

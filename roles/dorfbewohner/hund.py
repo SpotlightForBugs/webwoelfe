@@ -47,7 +47,6 @@ class Hund(Role):
             ),
             icon='fa-solid fa-dog',
             farbe='#a16207',
-            nacht_aktiv=True,
             prioritaet=7,  # Früh in der Nacht, ähnlich wie Amor/Wildes Kind
             erzaehler_nacht='Der Hund erwacht (nur erste Nacht) und wählt sein Herrchen.',
             erzaehler_tag=None,
@@ -74,15 +73,32 @@ class Hund(Role):
         """Kann jeden anderen lebenden Spieler als Herrchen wählen."""
         return "andere"
     
-    def ist_nacht_aktiv(self, spieler: 'Spieler', kontext: SpielKontext) -> bool:
-        """
-        Der Hund ist NUR in der ersten Nacht aktiv.
-        
-        Nach der Herrchen-Wahl hat er keine weitere Nacht-Aktion.
-        """
-        # Nur Runde 1 und noch kein Herrchen gewählt
-        herrchen_gewaehlt = getattr(spieler, 'hund_herrchen_gewaehlt', False)
-        return kontext.runde == 1 and not herrchen_gewaehlt
+    def is_active_on_first_night(self) -> bool:
+        """Hund acts on first night (choosing master)."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Hund only acts on first night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Hund's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Hund - Herrchen wählen",
+            instructions="Wähle dein Herrchen. Wenn es stirbt, wirst du zum Werwolf.",
+            buttons=[
+                UIButton(
+                    label="Herrchen wählen",
+                    action_type="waehlen",
+                    icon="fa-solid fa-dog",
+                    css_class="btn-primary"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
     
     def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
@@ -100,8 +116,8 @@ class Hund(Role):
         """
         Hauptaktion: Herrchen wählen (nur erste Nacht).
         """
-        # Prüfe ob noch aktiv
-        if not self.ist_nacht_aktiv(spieler, kontext):
+        # Prüfe ob noch aktiv (erste Runde)
+        if kontext.runde != 1:
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht="Du hast bereits dein Herrchen gewählt.",

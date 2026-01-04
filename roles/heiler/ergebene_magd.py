@@ -49,7 +49,6 @@ class ErgebeneMagd(Role):
             ),
             icon="fa-solid fa-broom",
             farbe="#14b8a6",
-            nacht_aktiv=False,
             prioritaet=95,
             erzaehler_nacht=(
                 "Die Ergebene Magd ruht im Hintergrund, bereit "
@@ -65,6 +64,26 @@ class ErgebeneMagd(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
+    
+    def is_active_on_first_night(self) -> bool:
+        """Ergebene Magd does not act on first night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Ergebene Magd is passive and does not act at night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Ergebene Magd's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Ergebene Magd - Passive Rolle",
+            instructions="Du wartest darauf, eine wichtige Rolle zu übernehmen.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
 
     def on_spieler_stirbt(
         self,

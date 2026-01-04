@@ -47,7 +47,6 @@ class ParanormalerErmittlerbillig(Role):
             ),
             icon="fa-solid fa-eye-slash",
             farbe="#a3a3a3",
-            nacht_aktiv=True,
             prioritaet=25,
             erzaehler_nacht=(
                 "Der Paranormale Ermittler erwacht. Zeige ihm ein Ergebnis. "
@@ -60,6 +59,37 @@ class ParanormalerErmittlerbillig(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
+    
+    @property
+    def erlaubte_ziele(self) -> str:
+        return "andere"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Paranormaler Ermittler acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Paranormaler Ermittler acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Paranormaler Ermittler's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Paranormaler Ermittler (billig) - Sehen",
+            instructions="Wähle einen Spieler. Achtung: 30% der Ergebnisse sind falsch!",
+            buttons=[
+                UIButton(
+                    label="Vision",
+                    action_type="sehen",
+                    icon="fa-solid fa-eye-slash",
+                    css_class="btn-info"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
 
     def get_phase_name(self) -> str:
         """Gibt den Namen der Nacht-Phase zurück."""

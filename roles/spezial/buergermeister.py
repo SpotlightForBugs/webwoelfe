@@ -36,11 +36,30 @@ class Buergermeister(Role):
             ),
             icon="fa-solid fa-landmark",
             farbe="#6366f1",
-            nacht_aktiv=False,
             prioritaet=95,
             erzaehler_tag=(
                 "Der Buergermeister hat doppeltes Stimmrecht."
             ),
+        )
+    
+    def is_active_on_first_night(self) -> bool:
+        """Bürgermeister is passive."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Bürgermeister is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Bürgermeister's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Bürgermeister - Passive Rolle",
+            instructions="Deine Stimme zählt doppelt. Bei Tod wählst du einen Nachfolger.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
         )
     
     def on_abstimmung(self, spieler: 'Spieler', ziel: 'Spieler',

@@ -6,7 +6,7 @@ erscheint er der Seherin als Mensch, in ungeraden als Wolf.
 """
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, SichtTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -51,7 +51,8 @@ class Lupin(Role):
         )
     
     @property
-    def aktions_typ(self) -> AktionsTyp:
+    def aktions_typ(self) -> 'AktionsTyp':
+        from ..enums import AktionsTyp
         return AktionsTyp.TOETEN
     
     @property
@@ -65,6 +66,33 @@ class Lupin(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "lebende"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Lupin acts on first night with werwolves."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Lupin acts every night with werwolves."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Lupin's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Lupin - Mit Wölfen jagen",
+            instructions="Wähle das Opfer der Wölfe. Deine Form wechselt jede Runde.",
+            buttons=[
+                UIButton(
+                    label="Angreifen",
+                    action_type="toeten",
+                    icon="fa-solid fa-moon",
+                    css_class="btn-danger"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
     
     def on_nacht_start(self, spieler: 'Spieler', 
                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:

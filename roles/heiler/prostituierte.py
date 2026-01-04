@@ -45,7 +45,6 @@ class Prostituierte(Role):
             ),
             icon='fa-solid fa-bed',
             farbe='#f43f5e',
-            nacht_aktiv=True,
             prioritaet=46,  # Vor Werwölfen
             erzaehler_nacht=(
                 'Die Prostituierte erwacht und wählt einen Spieler für '
@@ -63,6 +62,33 @@ class Prostituierte(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Prostituierte acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Prostituierte acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Prostituierte's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Prostituierte - Bei jemandem schlafen",
+            instructions="Wähle einen Spieler, bei dem du diese Nacht schläfst. Ihr beide seid geschützt, aber er erfährt deine Rolle.",
+            buttons=[
+                UIButton(
+                    label="Besuchen",
+                    action_type="schuetzen",
+                    icon="fa-solid fa-bed",
+                    css_class="btn-primary"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

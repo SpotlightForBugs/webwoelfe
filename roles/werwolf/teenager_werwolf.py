@@ -6,7 +6,7 @@ einmal pro Spiel weigern kann, beim Angriff mitzumachen.
 """
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, SichtTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -47,7 +47,8 @@ class TeenagerWerwolf(Role):
         )
     
     @property
-    def aktions_typ(self) -> AktionsTyp:
+    def aktions_typ(self) -> 'AktionsTyp':
+        from ..enums import AktionsTyp
         return AktionsTyp.TOETEN
     
     @property
@@ -57,6 +58,33 @@ class TeenagerWerwolf(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "lebende"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Teenager-Werwolf acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Teenager-Werwolf acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Teenager-Werwolf's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Teenager-Werwolf - Mit Wölfen jagen",
+            instructions="Wähle das Opfer oder verweigere einmal rebellisch den Angriff.",
+            buttons=[
+                UIButton(
+                    label="Angreifen",
+                    action_type="toeten",
+                    icon="fa-solid fa-paw",
+                    css_class="btn-danger"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

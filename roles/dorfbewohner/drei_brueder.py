@@ -39,12 +39,31 @@ class DreiBrueder(Role):
             ),
             icon="fa-solid fa-people-group",
             farbe="#4f46e5",
-            nacht_aktiv=True,
             prioritaet=8,
             erzaehler_nacht=(
                 "Die drei Brüder erwachen und erkennen sich. "
                 "Sie dürfen sich kurz absprechen."
             ),
+        )
+    
+    def is_active_on_first_night(self) -> bool:
+        """Drei Brüder act on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Drei Brüder act every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Drei Brüder's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Drei Brüder - Absprache",
+            instructions="Ihr erkennt euch und dürft kurz sprechen.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
         )
     
     def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:

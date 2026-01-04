@@ -30,7 +30,6 @@ class Suendenbock(Role):
             beschreibung='Du bist der Sündenbock. Wenn es bei einer Abstimmung ein Unentschieden gibt, stirbst DU anstelle der anderen! Versuche das zu verhindern.',
             icon='fa-solid fa-person-falling',
             farbe='#a8a29e',
-            nacht_aktiv=False,
             prioritaet=100,
             erzaehler_nacht='Der Sündenbock ahnt, dass er heute vielleicht für die Unentschlossenheit anderer sterben wird.',
             erzaehler_tag='UNENTSCHIEDEN bei der Abstimmung! Das Dorf kann sich nicht einigen - also muss der Sündenbock sterben!',
@@ -40,6 +39,26 @@ class Suendenbock(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
+    
+    def is_active_on_first_night(self) -> bool:
+        """Sündenbock is passive."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Sündenbock is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Sündenbock's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Sündenbock - Passive Rolle",
+            instructions="Du stirbst bei Unentschieden, darfst dann aber jemanden blockieren.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_abstimmung(
         self,

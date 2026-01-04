@@ -63,9 +63,33 @@ class Hexenmeister(Role):
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.WERWOLF
     
-    @property
-    def erlaubte_ziele(self) -> str:
-        return "lebende_keine_woelfe"  # Keine Wölfe verfluchen
+    def is_active_on_first_night(self) -> bool:
+        """Hexenmeister acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Hexenmeister acts every night until curse is used."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Hexenmeister's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Hexenmeister - Verfluchen",
+            instructions="Wähle einen Spieler, um ihn zu verfluchen (wird bei Angriff zum Werwolf).",
+            buttons=[
+                UIButton(
+                    label="Verfluchen",
+                    action_type="verfluchen",
+                    icon="fa-solid fa-hat-wizard",
+                    css_class="btn-primary",
+                    requires_confirmation=True
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

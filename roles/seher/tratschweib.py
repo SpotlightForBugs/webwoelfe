@@ -45,7 +45,6 @@ class Tratschweib(Role):
             ),
             icon='fa-solid fa-comment-dots',
             farbe='#e11d48',
-            nacht_aktiv=True,
             prioritaet=24,
             erzaehler_nacht=(
                 'Das Tratschweib erwacht. Wähle zwei zufällige Spieler und '
@@ -59,10 +58,27 @@ class Tratschweib(Role):
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
     
-    @property
-    def kann_ziel_waehlen(self) -> bool:
-        """Tratschweib wählt kein Ziel - es ist zufällig!"""
-        return False
+
+    
+    def is_active_on_first_night(self) -> bool:
+        """Tratschweib acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Tratschweib acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Tratschweib's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Tratschweib - Zufällige Information",
+            instructions="Du erfährst automatisch über zwei zufällige Spieler, ob sie im gleichen Team sind.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

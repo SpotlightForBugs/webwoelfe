@@ -44,7 +44,6 @@ class DunklerPriester(Role):
             ),
             icon='fa-solid fa-church',
             farbe='#18181b',
-            nacht_aktiv=True,
             prioritaet=5,
             erzaehler_nacht=(
                 'Der Dunkle Priester erwacht (erste Nacht) und wählt '
@@ -66,10 +65,32 @@ class DunklerPriester(Role):
     def erlaubte_ziele(self) -> str:
         return "lebende"
     
-    def ist_nacht_aktiv(self, spieler: 'Spieler', kontext: SpielKontext) -> bool:
-        """Nur in der ersten Nacht aktiv."""
-        verkuppelt = getattr(spieler, 'dunkler_priester_verkuppelt', False)
-        return kontext.aktuelle_runde == 1 and not verkuppelt
+    def is_active_on_first_night(self) -> bool:
+        """Dunkler Priester acts on first night (matchmaking)."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Dunkler Priester only acts on first night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Dunkler Priester's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Dunkler Priester - Verlieben",
+            instructions="Wähle zwei Spieler, die sich verlieben sollen.",
+            buttons=[
+                UIButton(
+                    label="Verlieben",
+                    action_type="waehlen",
+                    icon="fa-solid fa-heart",
+                    css_class="btn-danger"
+                )
+            ],
+            requires_target=True, # Need to select 2 players? UI handling for 2 targets might be tricky with standard flag.
+            allow_multiple_targets=True, # Set to True for 2 targets
+            can_skip=False
+        )
     
     def verlieben(self, spieler: 'Spieler', ziel1: 'Spieler', ziel2: 'Spieler',
                   kontext: SpielKontext) -> AktionsErgebnis:

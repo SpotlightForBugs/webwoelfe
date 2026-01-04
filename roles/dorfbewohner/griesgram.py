@@ -45,7 +45,6 @@ class Griesgram(Role):
             ),
             icon='fa-solid fa-face-angry',
             farbe='#6b7280',
-            nacht_aktiv=False,
             prioritaet=100,
             erzaehler_nacht=(
                 'Der Griesgram wälzt sich mürrisch im Bett. '
@@ -56,6 +55,26 @@ class Griesgram(Role):
                 'Hinrichtung - egal wer vorgeschlagen wird!'
             ),
             hinweis_config=None,
+        )
+    
+    def is_active_on_first_night(self) -> bool:
+        """Griesgram is passive."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Griesgram is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Griesgram's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Griesgram - Passive Rolle",
+            instructions="Du bist immer dagegen. Deine Stimme ist automatisch NEIN.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
         )
     
     @property

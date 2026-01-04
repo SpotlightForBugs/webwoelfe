@@ -98,20 +98,16 @@ def is_nacht_phase(phase: str) -> bool:
 
 def is_tag_phase(phase: str) -> bool:
     """Prüft ob eine Phase eine Tagphase ist."""
-    phase_type = get_phase_type(phase)
-    return phase_type in [PhaseType.TAG, PhaseType.ABSTIMMUNG]
+    return str(get_phase_type(phase)) in [str(PhaseType.TAG), str(PhaseType.ABSTIMMUNG)]
 
 
-def get_next_phase(current_phase: str, runde: int) -> str:
+def get_next_phase(current_phase: str, runde: int = 1) -> str:
     """
     Gibt die nächste Phase zurück.
     
     Args:
         current_phase: Aktuelle Phase
         runde: Aktuelle Runde
-        
-    Returns:
-        Nächste Phase als String
     """
     try:
         phase_enum = Phase(current_phase)

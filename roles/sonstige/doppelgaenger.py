@@ -45,7 +45,6 @@ class Doppelgaenger(Role):
             ),
             icon='fa-solid fa-clone',
             farbe='#6366f1',
-            nacht_aktiv=True,
             prioritaet=4,
             erzaehler_nacht=(
                 'Der Doppelgänger erwacht (erste Nacht) und wählt sein Ziel.'
@@ -65,10 +64,32 @@ class Doppelgaenger(Role):
     def erlaubte_ziele(self) -> str:
         return "lebende_andere"
     
-    def ist_nacht_aktiv(self, spieler: 'Spieler', kontext: SpielKontext) -> bool:
-        """Nur in der ersten Nacht aktiv."""
-        hat_ziel = getattr(spieler, 'doppelgaenger_ziel_id', None) is not None
-        return kontext.aktuelle_runde == 1 and not hat_ziel
+    def is_active_on_first_night(self) -> bool:
+        """Doppelgänger acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Doppelgänger only acts on first night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Doppelgänger's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Doppelgänger - Ziel wählen",
+            instructions="Wähle einen Spieler. Stirbt er, übernimmst du seine Rolle.",
+            buttons=[
+                UIButton(
+                    label="Ziel wählen",
+                    action_type="waehlen",
+                    icon="fa-solid fa-clone",
+                    css_class="btn-primary"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

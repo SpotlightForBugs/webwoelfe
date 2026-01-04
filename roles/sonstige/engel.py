@@ -46,7 +46,6 @@ class Engel(Role):
             ),
             icon="fa-solid fa-feather",
             farbe="#fef3c7",
-            nacht_aktiv=False,
             prioritaet=100,
             erzaehler_nacht=(
                 "Der Engel wartet sehnsüchtig auf seinen frühen Tod, "
@@ -63,6 +62,26 @@ class Engel(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
+
+    def is_active_on_first_night(self) -> bool:
+        """Engel is passive."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Engel is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Engel's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Engel - Passive Rolle",
+            instructions="Versuche in der ersten Runde zu sterben!",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
 
     @property
     def kann_hinweis_senden(self) -> bool:

@@ -45,7 +45,6 @@ class Tanklastwagenfahrer(Role):
             ),
             icon='fa-solid fa-truck',
             farbe='#64748b',
-            nacht_aktiv=False,
             prioritaet=92,
             erzaehler_nacht=(
                 'Der Tanklastwagenfahrer parkt seinen Laster. '
@@ -61,6 +60,26 @@ class Tanklastwagenfahrer(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.TOETEN
+    
+    def is_active_on_first_night(self) -> bool:
+        """Tanklastwagenfahrer does not act at night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Tanklastwagenfahrer does not act at night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Tanklastwagenfahrer's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Tanklastwagenfahrer - Tagaktion",
+            instructions="Du kannst einmal am Tag jemanden überfahren.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def ist_einmal_faehigkeit(self) -> bool:
         """Kann nur einmal überfahren."""

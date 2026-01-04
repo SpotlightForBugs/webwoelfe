@@ -37,7 +37,6 @@ class Kamikaze(Role):
             ),
             icon="fa-solid fa-bomb",
             farbe="#f97316",
-            nacht_aktiv=True,
             prioritaet=90,
             erzaehler_nacht=(
                 "Der Kamikaze erwacht. Möchte er sich opfern und "
@@ -48,6 +47,34 @@ class Kamikaze(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.OPFERN
+    
+    def is_active_on_first_night(self) -> bool:
+        """Kamikaze can act on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Kamikaze can act every night until bomb is used."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Kamikaze's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Kamikaze - Opfern",
+            instructions="Du kannst dich einmal opfern und einen anderen Spieler mit in den Tod reißen.",
+            buttons=[
+                UIButton(
+                    label="Opfern",
+                    action_type="opfern",
+                    icon="fa-solid fa-bomb",
+                    css_class="btn-danger",
+                    requires_confirmation=True
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
 
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext

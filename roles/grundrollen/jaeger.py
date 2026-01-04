@@ -53,9 +53,35 @@ class Jaeger(Role):
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SCHIESSEN
     
-    @property
-    def kann_ziel_waehlen(self) -> bool:
-        return False  # Nur bei Tod
+
+    
+    def is_active_on_first_night(self) -> bool:
+        """Jaeger does not act on first night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Jaeger does not act every night - only on death."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Jaeger's action panel (when dying)."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Jäger - Letzter Schuss",
+            instructions="Du wurdest getötet! Wähle ein Ziel für deinen letzten Schuss.",
+            buttons=[
+                UIButton(
+                    label="Schießen",
+                    action_type="schiessen",
+                    icon="fa-solid fa-crosshairs",
+                    css_class="btn-danger",
+                    requires_confirmation=True
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True  # Can choose not to shoot
+        )
     
     def on_eigener_tod(self, spieler: 'Spieler', todesursache: str,
                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:

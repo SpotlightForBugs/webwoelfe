@@ -55,6 +55,33 @@ class Zahnarzt(Role):
             hinweis_config=None,
         )
     
+    def is_active_on_first_night(self) -> bool:
+        """Zahnarzt acts every night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Zahnarzt acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Zahnarzt's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Zahnarzt - Mund zunähen",
+            instructions="Blockiere die Stimme eines Spielers für morgen.",
+            buttons=[
+                UIButton(
+                    label="Blockieren",
+                    action_type="blockieren",
+                    icon="fa-solid fa-tooth",
+                    css_class="btn-secondary"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
+    
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.BLOCKIEREN

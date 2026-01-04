@@ -54,6 +54,34 @@ class Seherin(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"  # Kann sich nicht selbst sehen
+    
+    def is_active_on_first_night(self) -> bool:
+        """Seherin acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Seherin acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Seherin's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Seherin - Spieler sehen",
+            instructions="Wähle einen Spieler, dessen wahre Identität du erfahren möchtest.",
+            buttons=[
+                UIButton(
+                    label="Sehen",
+                    action_type="sehen",
+                    icon="fa-solid fa-eye",
+                    css_class="btn-primary",
+                    requires_confirmation=False
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False  # Must act
+        )
 
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext

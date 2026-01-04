@@ -44,7 +44,6 @@ class Hahn(Role):
             ),
             icon='fa-solid fa-sun',
             farbe='#dc2626',
-            nacht_aktiv=False,
             prioritaet=96,
             erzaehler_nacht=(
                 'Der Hahn schläft auf seinem Hühnerstall. '
@@ -60,6 +59,26 @@ class Hahn(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
+    
+    def is_active_on_first_night(self) -> bool:
+        """Hahn does not act on first night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Hahn is passive and does not act at night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Hahn's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Hahn - Passive Rolle",
+            instructions="Wenn du stirbst, wird dein Mörder enthüllt.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_eigener_tod(self, spieler: 'Spieler', todesursache: str,
                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:

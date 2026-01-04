@@ -6,7 +6,7 @@ bestimmte Effekte durch seine Kälteresistenz.
 """
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, SichtTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -53,12 +53,40 @@ class Polarwolf(Role):
         )
     
     @property
-    def aktions_typ(self) -> AktionsTyp:
+    def aktions_typ(self) -> 'AktionsTyp':
+        from ..enums import AktionsTyp
         return AktionsTyp.TOETEN  # Jagt mit Wölfen
     
     @property
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.WERWOLF
+    
+    def is_active_on_first_night(self) -> bool:
+        """Polarwolf acts on first night with werwolves."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Polarwolf acts every night with werwolves."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Polarwolf's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Polarwolf - Mit Wölfen jagen",
+            instructions="Wähle das Opfer der Wölfe. Du bist immun gegen Sandmann und Jäger.",
+            buttons=[
+                UIButton(
+                    label="Angreifen",
+                    action_type="toeten",
+                    icon="fa-solid fa-snowflake",
+                    css_class="btn-danger"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
     
     def ist_immun_gegen(self, effekt_typ: str) -> bool:
         """

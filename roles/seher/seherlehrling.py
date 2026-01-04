@@ -35,12 +35,35 @@ class Seherlehrling(Role):
                 "und kannst selbst sehen."
             ),
             icon="fa-solid fa-eye-low-vision",
-            farbe="#8b5cf6",
-            nacht_aktiv=False,  # Wird aktiv wenn Seherin stirbt
+            farbe="#8b5cf6",  # Wird aktiv wenn Seherin stirbt
             prioritaet=21,
             erzaehler_nacht=(
                 "Der Seherlehrling schläft. Noch lernt er..."
             ),
+        )
+    
+    @property
+    def aktions_typ(self) -> AktionsTyp:
+        return AktionsTyp.SEHEN
+    
+    def is_active_on_first_night(self) -> bool:
+        """Seherlehrling does not act until Seherin dies."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Seherlehrling is passive until activated."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Seherlehrling's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Seherlehrling - Passive Rolle",
+            instructions="Du übernimmst die Sehergabe, wenn die Seherin stirbt.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
         )
     
     def on_spieler_stirbt(self, spieler: 'Spieler', opfer: 'Spieler',

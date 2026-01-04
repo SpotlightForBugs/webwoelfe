@@ -6,7 +6,7 @@ und jagt alleine. Er gewinnt nur als letzter Wolf.
 """
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, SichtTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -53,7 +53,8 @@ class EinsamerWolf(Role):
         )
     
     @property
-    def aktions_typ(self) -> AktionsTyp:
+    def aktions_typ(self) -> 'AktionsTyp':
+        from ..enums import AktionsTyp
         return AktionsTyp.TOETEN
     
     @property
@@ -64,9 +65,34 @@ class EinsamerWolf(Role):
     def erlaubte_ziele(self) -> str:
         return "lebende_andere"  # Kann sich nicht selbst wählen
     
-    def ist_nacht_aktiv(self, spieler: 'Spieler', kontext: SpielKontext) -> bool:
-        """Einsamer Wolf jagt jede Nacht alleine."""
+    def is_active_on_first_night(self) -> bool:
+        """Einsamer Wolf acts on first night."""
         return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Einsamer Wolf acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Einsamer Wolf's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Einsamer Wolf - Alleine jagen",
+            instructions="Wähle dein Opfer. Du jagst alleine.",
+            buttons=[
+                UIButton(
+                    label="Angreifen",
+                    action_type="toeten",
+                    icon="fa-solid fa-paw",
+                    css_class="btn-danger"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
+    
+
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

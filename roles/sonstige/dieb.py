@@ -45,7 +45,6 @@ class Dieb(Role):
             ),
             icon='fa-solid fa-mask',
             farbe='#1e293b',
-            nacht_aktiv=True,
             prioritaet=1,  # Erste Rolle!
             erzaehler_nacht=(
                 'Der Dieb erwacht zuerst und sieht zwei Rollen. '
@@ -59,10 +58,32 @@ class Dieb(Role):
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.WAEHLEN
     
-    def ist_nacht_aktiv(self, spieler: 'Spieler', kontext: SpielKontext) -> bool:
-        """Nur in der ersten Nacht aktiv."""
-        hat_gewaehlt = getattr(spieler, 'dieb_hat_gewaehlt', False)
-        return kontext.aktuelle_runde == 1 and not hat_gewaehlt
+    def is_active_on_first_night(self) -> bool:
+        """Dieb acts on first night (choosing role)."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Dieb only acts on first night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Dieb's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Dieb - Rolle wählen",
+            instructions="Wähle eine der zwei verfügbaren Rollen.",
+            buttons=[
+                UIButton(
+                    label="Rolle wählen",
+                    action_type="waehlen",
+                    icon="fa-solid fa-mask",
+                    css_class="btn-primary"
+                )
+            ],
+            requires_target=True, # Needs to select option 1 or 2 (handled as index?)
+            allow_multiple_targets=False,
+            can_skip=False
+        )
     
     def zeige_rollen(self, spieler: 'Spieler',
                      kontext: SpielKontext) -> AktionsErgebnis:

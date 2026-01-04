@@ -46,3 +46,23 @@ class Dorfbewohner(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
+    
+    def is_active_on_first_night(self) -> bool:
+        """Dorfbewohner does not act on first night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Dorfbewohner does not act every night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Dorfbewohner's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Dorfbewohner - Schlafen",
+            instructions="Du schläfst friedlich. Du hast keine nächtliche Aktion.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )

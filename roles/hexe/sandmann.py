@@ -44,7 +44,6 @@ class Sandmann(Role):
             ),
             icon='fa-solid fa-bed',
             farbe='#ddd6fe',
-            nacht_aktiv=True,
             prioritaet=15,  # Sehr früh, vor allen anderen!
             erzaehler_nacht=(
                 'Der Sandmann erwacht ZUERST und wählt einen Spieler, '
@@ -61,6 +60,33 @@ class Sandmann(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Sandmann acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Sandmann acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Sandmann's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Sandmann - Einschläfern",
+            instructions="Wähle einen Spieler, der diese Nacht einschläft und seine Aktion nicht ausführen kann.",
+            buttons=[
+                UIButton(
+                    label="Einschläfern",
+                    action_type="einschlaefern",
+                    icon="fa-solid fa-bed",
+                    css_class="btn-info"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

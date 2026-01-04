@@ -54,6 +54,33 @@ class Rabe(Role):
             hinweis_config=None,
         )
     
+    def is_active_on_first_night(self) -> bool:
+        """Rabe acts every night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Rabe acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Rabe's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Rabe - Markieren",
+            instructions="Markiere einen Spieler für 2 Extra-Stimmen morgen.",
+            buttons=[
+                UIButton(
+                    label="Markieren",
+                    action_type="manipulieren",
+                    icon="fa-solid fa-crow",
+                    css_class="btn-secondary"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
+    
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.MANIPULIEREN

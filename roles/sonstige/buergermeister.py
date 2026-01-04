@@ -30,7 +30,6 @@ class Buergermeister(Role):
             beschreibung='Du bist der Bürgermeister. Deine Stimme zählt doppelt! Bei deinem Tod bestimmst du deinen Nachfolger, der deine Macht erbt.',
             icon='fa-solid fa-user-tie',
             farbe='#1e40af',
-            nacht_aktiv=False,
             prioritaet=95,
             erzaehler_nacht='Der Bürgermeister ruht in seinem Rathaus. Seine Stimme hat doppeltes Gewicht.',
             erzaehler_tag='Der Bürgermeister ist gefallen! Mit letzter Kraft zeigt er auf seinen Nachfolger, der das Amt und die doppelte Stimme erbt!',
@@ -40,6 +39,26 @@ class Buergermeister(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.WAEHLEN
+    
+    def is_active_on_first_night(self) -> bool:
+        """Bürgermeister is passive."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Bürgermeister is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Bürgermeister's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Bürgermeister - Passive Rolle",
+            instructions="Deine Stimme zählt doppelt. Bei Tod wählst du einen Nachfolger.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_spiel_start(
         self,

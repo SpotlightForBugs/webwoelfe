@@ -6,7 +6,7 @@ jede Nacht die Rolle eines Spielers sehen.
 """
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, SichtTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -54,7 +54,8 @@ class Werwolfseherin(Role):
         )
     
     @property
-    def aktions_typ(self) -> AktionsTyp:
+    def aktions_typ(self) -> 'AktionsTyp':
+        from ..enums import AktionsTyp
         return AktionsTyp.SEHEN
     
     @property
@@ -64,6 +65,33 @@ class Werwolfseherin(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "lebende_andere"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Werwolfseherin acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Werwolfseherin acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Werwolfseherin's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Werwolfseherin - Rolle sehen",
+            instructions="Wähle einen Spieler, um seine Rolle zu erfahren.",
+            buttons=[
+                UIButton(
+                    label="Rolle sehen",
+                    action_type="sehen",
+                    icon="fa-solid fa-eye",
+                    css_class="btn-info"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

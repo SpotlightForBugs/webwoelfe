@@ -34,7 +34,6 @@ class Medium(Role):
             ),
             icon="fa-solid fa-ghost",
             farbe="#c084fc",
-            nacht_aktiv=True,
             prioritaet=25,
             erzaehler_nacht=(
                 "Das Medium erwacht und wählt einen Toten. "
@@ -49,6 +48,33 @@ class Medium(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "tote"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Medium does not act on first night (no dead yet)."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Medium acts every night after first."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Medium's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Medium - Mit Toten sprechen",
+            instructions="Wähle einen Toten, um seine Rolle zu erfahren.",
+            buttons=[
+                UIButton(
+                    label="Geist befragen",
+                    action_type="sehen",
+                    icon="fa-solid fa-ghost",
+                    css_class="btn-secondary"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

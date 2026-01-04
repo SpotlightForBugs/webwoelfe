@@ -45,7 +45,6 @@ class Chemielaborant(Role):
             ),
             icon="fa-solid fa-flask",
             farbe="#10b981",
-            nacht_aktiv=False,
             prioritaet=97,
             erzaehler_nacht=(
                 "Der Chemielaborant experimentiert selbst im Schlaf. "
@@ -61,6 +60,26 @@ class Chemielaborant(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
+
+    def is_active_on_first_night(self) -> bool:
+        """Chemielaborant is passive."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Chemielaborant is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Chemielaborant's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Chemielaborant - Passive Rolle",
+            instructions="Bei Tod explodieren deine Chemikalien und töten Nachbarn.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
 
     def on_eigener_tod(
         self, spieler: "Spieler", kontext: SpielKontext

@@ -1,3 +1,4 @@
+
 """
 Wolf im Schafspelz - Erscheint als Dorfbewohner.
 
@@ -5,12 +6,14 @@ Der Wolf im Schafspelz erscheint für die normale
 Seherin als Dorfbewohner, nur die Aurenseherin erkennt ihn.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
-from ..registry import RoleRegistry
+from roles.base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from roles.enums import Team, Kategorie, SichtTyp
+from roles.registry import RoleRegistry
 
 if TYPE_CHECKING:
     from models import Spieler
+    from roles.enums import AktionsTyp
+    from roles.base import RollenUI
 
 
 @RoleRegistry.register
@@ -54,7 +57,8 @@ class WolfimSchafspelz(Role):
         )
     
     @property
-    def aktions_typ(self) -> AktionsTyp:
+    def aktions_typ(self) -> 'AktionsTyp':
+        from roles.enums import AktionsTyp
         return AktionsTyp.TOETEN  # Jagt mit Wölfen
     
     @property
@@ -64,6 +68,33 @@ class WolfimSchafspelz(Role):
         Aurenseherin sieht trotzdem Werwolf.
         """
         return SichtTyp.DORF  # Getarnt!
+    
+    def is_active_on_first_night(self) -> bool:
+        """Wolf im Schafspelz acts on first night with werwolves."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Wolf im Schafspelz acts every night with werwolves."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Wolf im Schafspelz's action panel."""
+        from roles.base import RollenUI, UIButton
+        return RollenUI(
+            title="Wolf im Schafspelz - Mit Wölfen jagen",
+            instructions="Wähle das Opfer der Wölfe. Du erscheinst der Seherin als Dorf.",
+            buttons=[
+                UIButton(
+                    label="Angreifen",
+                    action_type="toeten",
+                    icon="fa-brands fa-bluesky",
+                    css_class="btn-danger"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
     
     def sichtbar_als_fuer(self, seher_rolle: str) -> SichtTyp:
         """Je nach Seher-Typ unterschiedliche Sichtbarkeit."""

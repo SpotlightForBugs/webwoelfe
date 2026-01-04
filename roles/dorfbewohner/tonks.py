@@ -47,7 +47,6 @@ class Tonks(Role):
             ),
             icon='fa-solid fa-masks-theater',
             farbe='#a855f7',
-            nacht_aktiv=True,
             prioritaet=75,
             erzaehler_nacht=(
                 'Tonks erwacht. Möchte sie ihre Rolle mit einem toten '
@@ -61,20 +60,33 @@ class Tonks(Role):
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.VERWANDELN
     
-    @property
-    def kann_ziel_waehlen(self) -> bool:
-        """Tonks wählt kein spezifisches Ziel - der Tausch ist zufällig."""
-        return False
+    def is_active_on_first_night(self) -> bool:
+        """Tonks can act on first night."""
+        return True
     
-    def ist_nacht_aktiv(self, spieler: 'Spieler', kontext: SpielKontext) -> bool:
-        """
-        Tonks ist nur aktiv wenn:
-        - Sie ihren Tausch noch nicht verwendet hat
-        - Es mindestens einen toten Spieler gibt
-        """
-        tausch_verwendet = getattr(spieler, 'tonks_tausch_verwendet', False)
-        hat_tote = len(kontext.tote_spieler) > 0
-        return not tausch_verwendet and hat_tote
+    def is_active_on_every_night(self) -> bool:
+        """Tonks can act every night until ability is used."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Tonks' action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Tonks - Rollentausch",
+            instructions="Du kannst einmalig deine Rolle mit einem Toten tauschen.",
+            buttons=[
+                UIButton(
+                    label="Tauschen (Zufällig)",
+                    action_type="verwandeln",
+                    icon="fa-solid fa-shuffle",
+                    css_class="btn-warning",
+                    requires_confirmation=True
+                )
+            ],
+            requires_target=False, # Random target logic handled inside action
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

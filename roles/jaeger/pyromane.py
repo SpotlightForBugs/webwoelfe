@@ -46,7 +46,6 @@ class Pyromane(Role):
             ),
             icon='fa-solid fa-fire-flame-curved',
             farbe='#f97316',
-            nacht_aktiv=True,
             prioritaet=75,
             erzaehler_nacht=(
                 'Der Pyromane erwacht. Möchtest du ein Haus mit Benzin '
@@ -67,6 +66,40 @@ class Pyromane(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "lebende"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Pyromane acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Pyromane acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Pyromane's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Pyromane - Übergießen oder Anzünden",
+            instructions="Übergieße Häuser mit Benzin oder zünde alle an (einmalig).",
+            buttons=[
+                UIButton(
+                    label="Übergießen",
+                    action_type="uebergiessen",
+                    icon="fa-solid fa-droplet",
+                    css_class="btn-warning"
+                ),
+                UIButton(
+                    label="Anzünden",
+                    action_type="anzuenden",
+                    icon="fa-solid fa-fire-flame-curved",
+                    css_class="btn-danger",
+                    requires_confirmation=True
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

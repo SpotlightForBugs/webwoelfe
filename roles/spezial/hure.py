@@ -41,6 +41,33 @@ class Hure(Role):
             prioritaet=45,
             erzaehler_nacht=("Die Hure erwacht und waehlt bei wem sie uebernachtet."),
         )
+    
+    def is_active_on_first_night(self) -> bool:
+        """Hure acts every night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Hure acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Hure's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Hure - Übernachtung",
+            instructions="Wähle einen Spieler zum übernachten. Du bist dann nicht zuhause.",
+            buttons=[
+                UIButton(
+                    label="Besuchen",
+                    action_type="besuchen",
+                    icon="fa-solid fa-bed",
+                    css_class="btn-primary"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
 
     @property
     def erlaubte_ziele(self) -> str:

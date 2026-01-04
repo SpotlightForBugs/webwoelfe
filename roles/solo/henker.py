@@ -36,11 +36,37 @@ class Henker(Role):
             ),
             icon="fa-solid fa-gavel",
             farbe="#525252",
-            nacht_aktiv=True,
             prioritaet=6,
             erzaehler_nacht=(
                 "Der Henker erwacht (nur erste Nacht) und waehlt sein Ziel."
             ),
+        )
+    
+    def is_active_on_first_night(self) -> bool:
+        """Henker acts on first night (choosing target)."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Henker only acts on first night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Henker's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Henker - Ziel wählen",
+            instructions="Wähle dein Ziel. Du gewinnst, wenn es gehängt wird.",
+            buttons=[
+                UIButton(
+                    label="Ziel wählen",
+                    action_type="waehlen",
+                    icon="fa-solid fa-gavel",
+                    css_class="btn-danger"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
         )
     
     def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:

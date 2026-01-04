@@ -43,7 +43,6 @@ class Buddler(Role):
             ),
             icon='fa-solid fa-shovel',
             farbe='#78716c',
-            nacht_aktiv=True,
             prioritaet=80,
             erzaehler_nacht=(
                 'Der Buddler erwacht und wählt ein Grab. '
@@ -60,6 +59,33 @@ class Buddler(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "tote"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Buddler does not act on first night (no dead yet)."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Buddler acts every night after first."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Buddler's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Buddler - Grab untersuchen",
+            instructions="Wähle das Grab eines Toten, um die Todesursache zu erfahren.",
+            buttons=[
+                UIButton(
+                    label="Grab untersuchen",
+                    action_type="sehen",
+                    icon="fa-solid fa-shovel",
+                    css_class="btn-secondary"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

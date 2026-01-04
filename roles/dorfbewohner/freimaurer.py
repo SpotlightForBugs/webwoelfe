@@ -39,11 +39,39 @@ class Freimaurer(Role):
             ),
             icon="fa-solid fa-building-columns",
             farbe="#3b82f6",
-            nacht_aktiv=True,
             prioritaet=9,
             erzaehler_nacht=(
                 "Die Freimaurer erwachen und erkennen sich gegenseitig."
             ),
+        )
+    
+    def is_active_on_first_night(self) -> bool:
+        """Freimaurer act on first night (recognition)."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Freimaurer only act on first night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Freimaurer's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Freimaurer - Erkennen",
+            instructions="Du erkennst deine Logenbrüder.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
+
+    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'], kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+        """Bestätigung der Nachtphase."""
+        return AktionsErgebnis(
+            erfolg=True,
+            nachricht="Du hast deine Logenbrüder gesehen.",
+            effekte={},
+            log_sichtbar_fuer=f"spieler_{spieler.id}"
         )
     
     def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:

@@ -36,7 +36,6 @@ class Leibwaechter(Role):
             ),
             icon="fa-solid fa-shield-halved",
             farbe="#0ea5e9",
-            nacht_aktiv=True,
             prioritaet=54,
             erzaehler_nacht=(
                 "Der Leibwächter erwacht und wählt seinen Schützling."
@@ -50,6 +49,33 @@ class Leibwaechter(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Leibwächter acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Leibwächter acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Leibwächter's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Leibwächter - Schützen",
+            instructions="Wähle einen Spieler, den du mit deinem Leben beschützt.",
+            buttons=[
+                UIButton(
+                    label="Beschützen",
+                    action_type="schuetzen",
+                    icon="fa-solid fa-shield-halved",
+                    css_class="btn-primary"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

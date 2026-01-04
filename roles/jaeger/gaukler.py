@@ -45,7 +45,6 @@ class Gaukler(Role):
             ),
             icon='fa-solid fa-masks-theater',
             farbe='#c026d3',
-            nacht_aktiv=False,
             prioritaet=90,
             erzaehler_nacht=(
                 'Der Gaukler probt seine Tricks im Schlaf. '
@@ -61,6 +60,26 @@ class Gaukler(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.MANIPULIEREN
+    
+    def is_active_on_first_night(self) -> bool:
+        """Gaukler does not act at night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Gaukler does not act at night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Gaukler's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Gaukler - Tagaktion",
+            instructions="Du kannst einmal am Tag zwei Spieler ihre Plätze tauschen lassen.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def ist_einmal_faehigkeit(self) -> bool:
         """Gaukler kann nur einmal tauschen."""

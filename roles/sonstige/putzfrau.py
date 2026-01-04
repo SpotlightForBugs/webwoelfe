@@ -31,7 +31,6 @@ class Putzfrau(Role):
             beschreibung="Du bist die Putzfrau. Wenn jemand stirbt, räumst du auf und erfährst dabei seine wahre Rolle. Du teilst dein Wissen mit dem Dorf.",
             icon="fa-solid fa-spray-can-sparkles",
             farbe="#06b6d4",
-            nacht_aktiv=False,
             prioritaet=88,
             erzaehler_nacht="Die Putzfrau wischt durch die leeren Häuser und sammelt wertvolle Informationen.",
             erzaehler_tag="Die Putzfrau hat beim Aufräumen etwas gefunden! Sie enthüllt die wahre Rolle des Toten: {rolle}!",
@@ -41,6 +40,26 @@ class Putzfrau(Role):
     @property
     def aktions_typ(self) -> Optional[AktionsTyp]:
         return AktionsTyp.KEINE
+
+    def is_active_on_first_night(self) -> bool:
+        """Putzfrau is passive."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Putzfrau is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Putzfrau's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Putzfrau - Passive Rolle",
+            instructions="Du erfährst die Rolle von Toten, wenn du aufräumst.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
 
     def on_spieler_stirbt(
         self, spieler: "Spieler", gestorbener: "Spieler", kontext: SpielKontext

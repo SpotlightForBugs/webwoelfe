@@ -39,7 +39,6 @@ class Jesus(Role):
             ),
             icon="fa-solid fa-cross",
             farbe="#fbbf24",
-            nacht_aktiv=False,
             prioritaet=97,
             erzaehler_nacht=(
                 "Jesus ruht friedlich. Der Tod ist für ihn "
@@ -49,6 +48,26 @@ class Jesus(Role):
                 "Falls Jesus vor 3 Tagen gestorben ist: Ein Wunder geschieht! "
                 "Jesus erhebt sich und kehrt triumphierend ins Spiel zurück!"
             ),
+        )
+    
+    def is_active_on_first_night(self) -> bool:
+        """Jesus is passive."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Jesus is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Jesus' action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Jesus - Passive Rolle",
+            instructions="Du stehst nach 3 Tagen wieder auf.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
         )
     
     def on_eigener_tod(self, spieler: 'Spieler', todesursache: str,

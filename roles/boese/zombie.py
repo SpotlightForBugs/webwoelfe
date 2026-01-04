@@ -61,9 +61,32 @@ class Zombie(Role):
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.DORF  # Erscheinen normal
     
-    @property
-    def erlaubte_ziele(self) -> str:
-        return "lebende_andere"
+    def is_active_on_first_night(self) -> bool:
+        """Zombie acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Zombie acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Zombie's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Zombie - Infizieren",
+            instructions="Wähle einen Spieler, um ihn zu infizieren.",
+            buttons=[
+                UIButton(
+                    label="Infizieren",
+                    action_type="infizieren",
+                    icon="fa-solid fa-biohazard",
+                    css_class="btn-success"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

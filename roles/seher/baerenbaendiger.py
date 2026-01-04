@@ -45,7 +45,6 @@ class Baerenbaendiger(Role):
             ),
             icon='fa-solid fa-paw',
             farbe='#78350f',
-            nacht_aktiv=False,
             prioritaet=86,
             erzaehler_nacht=(
                 'Der Bär des Bärenbändigers schläft unruhig. '
@@ -61,6 +60,26 @@ class Baerenbaendiger(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
+    
+    def is_active_on_first_night(self) -> bool:
+        """Bärenbändiger does not act at night."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Bärenbändiger is passive at night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Bärenbändiger's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Bärenbändiger - Passive Rolle",
+            instructions="Dein Bär brummt morgens, wenn ein Werwolf neben dir sitzt.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_tag_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """

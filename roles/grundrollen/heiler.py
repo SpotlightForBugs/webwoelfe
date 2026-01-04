@@ -54,6 +54,34 @@ class Heiler(Role):
     def erlaubte_ziele(self) -> str:
         return "lebende"
     
+    def is_active_on_first_night(self) -> bool:
+        """Heiler acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Heiler acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Heiler's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Heiler - Spieler schützen",
+            instructions="Wähle einen Spieler, den du diese Nacht schützen möchtest. Du kannst nicht zweimal hintereinander denselben Spieler schützen.",
+            buttons=[
+                UIButton(
+                    label="Schützen",
+                    action_type="schuetzen",
+                    icon="fa-solid fa-heart-pulse",
+                    css_class="btn-success",
+                    requires_confirmation=False
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=False  # Must act
+        )
+    
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """

@@ -36,7 +36,6 @@ class Kraeuterweib(Role):
             ),
             icon="fa-solid fa-leaf",
             farbe="#22c55e",
-            nacht_aktiv=True,
             prioritaet=65,
             erzaehler_nacht=(
                 "Das Kräuterweib erwacht und wählt einen Spieler, "
@@ -51,6 +50,33 @@ class Kraeuterweib(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Kräuterweib acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Kräuterweib acts every night."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Kräuterweib's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Kräuterweib - Stumm machen",
+            instructions="Wähle einen Spieler, der morgen stumm sein wird.",
+            buttons=[
+                UIButton(
+                    label="Stumm machen",
+                    action_type="stumm_machen",
+                    icon="fa-solid fa-leaf",
+                    css_class="btn-warning"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

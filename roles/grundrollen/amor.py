@@ -5,7 +5,7 @@ Amor verbindet zwei Spieler auf ewig -
 stirbt einer, stirbt auch der andere.
 """
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenUI
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -52,6 +52,37 @@ class Amor(Role):
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.VERLIEBEN
     
+    @property
+    def erlaubte_ziele(self) -> str:
+        return "lebende"  # Beide Verliebte müssen am Leben sein
+    
+    def is_active_on_first_night(self) -> bool:
+        """Amor is only active on the first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Amor does not act every night."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Amor's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Amor - Verliebte wählen",
+            instructions="Wähle zwei Spieler, die sich verlieben sollen.",
+            buttons=[
+                UIButton(
+                    label="Verlieben",
+                    action_type="verlieben",
+                    icon="fa-solid fa-heart",
+                    css_class="btn-primary",
+                    requires_confirmation=True
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=True,  # Needs 2 targets
+            can_skip=False  # Must act
+        )
 
     def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """

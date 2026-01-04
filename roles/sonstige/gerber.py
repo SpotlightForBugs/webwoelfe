@@ -46,7 +46,6 @@ class Gerber(Role):
             ),
             icon="fa-solid fa-face-angry",
             farbe="#78350f",
-            nacht_aktiv=False,
             prioritaet=100,
             erzaehler_nacht=(
                 "Der Gerber arbeitet an seinen stinkenden Fellen. "
@@ -63,6 +62,26 @@ class Gerber(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
+
+    def is_active_on_first_night(self) -> bool:
+        """Gerber is passive."""
+        return False
+    
+    def is_active_on_every_night(self) -> bool:
+        """Gerber is passive."""
+        return False
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Gerber's action panel."""
+        from ..base import RollenUI
+        return RollenUI(
+            title="Gerber - Passive Rolle",
+            instructions="Dein Ziel ist es, gehängt zu werden (und alle anderen mitzureißen).",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
 
     @property
     def kann_hinweis_senden(self) -> bool:

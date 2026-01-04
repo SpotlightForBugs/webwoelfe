@@ -45,7 +45,6 @@ class Zauberer(Role):
             ),
             icon='fa-solid fa-wand-magic-sparkles',
             farbe='#3b0764',
-            nacht_aktiv=True,
             prioritaet=63,
             erzaehler_nacht=(
                 'Der Zauberer erwacht. Welchen Zauber möchte er einsetzen? '
@@ -62,6 +61,45 @@ class Zauberer(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
+    
+    def is_active_on_first_night(self) -> bool:
+        """Zauberer acts on first night."""
+        return True
+    
+    def is_active_on_every_night(self) -> bool:
+        """Zauberer acts every night until all spells are used."""
+        return True
+    
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Zauberer's action panel."""
+        from ..base import RollenUI, UIButton
+        return RollenUI(
+            title="Zauberer - Zauber wählen",
+            instructions="Wähle einen Zauber: Schutz (1x), Sicht (1x) oder Schweigen (1x).",
+            buttons=[
+                UIButton(
+                    label="Schutz-Zauber",
+                    action_type="schutz",
+                    icon="fa-solid fa-shield",
+                    css_class="btn-primary"
+                ),
+                UIButton(
+                    label="Sicht-Zauber",
+                    action_type="sicht",
+                    icon="fa-solid fa-eye",
+                    css_class="btn-info"
+                ),
+                UIButton(
+                    label="Schweigen-Zauber",
+                    action_type="schweigen",
+                    icon="fa-solid fa-volume-xmark",
+                    css_class="btn-warning"
+                )
+            ],
+            requires_target=True,
+            allow_multiple_targets=False,
+            can_skip=True
+        )
     
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:

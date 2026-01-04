@@ -965,7 +965,9 @@ def werte_abstimmung_aus(raum: Raum) -> dict:
 
     # Finde Maximum
     max_stimmen = max(ziel_stimmen.values())
-    opfer_ids = [int(sid) for sid, count in ziel_stimmen.items() if count == max_stimmen]
+    opfer_ids = [
+        int(sid) for sid, count in ziel_stimmen.items() if count == max_stimmen
+    ]
 
     # Mehrheit erforderlich
     lebende = Spieler.query.filter_by(
@@ -993,4 +995,3 @@ def werte_abstimmung_aus(raum: Raum) -> dict:
         "opfer_rolle": opfer.rolle if opfer else "Unbekannt",
         "stimmen": max_stimmen,
     }
-

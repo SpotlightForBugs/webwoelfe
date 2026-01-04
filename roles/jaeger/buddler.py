@@ -4,6 +4,7 @@ Buddler - Der Grabenanthropöloge.
 Der Buddler kann jede Nacht ein Grab untersuchen
 und die Todesursache erfahren.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -17,60 +18,61 @@ if TYPE_CHECKING:
 class Buddler(Role):
     """
     Buddler - Toten-Informations-Rolle.
-    
+
     Fähigkeiten:
     - Kann jede Nacht ein Grab ausgraben
     - Erfährt wie dieser Spieler gestorben ist
-    
+
     Besonderheiten:
     - Ziel muss tot sein
     - Todesursache kann wichtige Hinweise geben
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=57,
-            name='Buddler',
+            name="Buddler",
             team=Team.DORF,
             kategorie=Kategorie.JAEGER,
             beschreibung=(
-                'Du bist der Buddler. Jede Nacht kannst du ein Grab ausgraben '
-                'und erfährst die Todesursache des Spielers - Werwolf, '
-                'Abstimmung, Gift oder Anderes.'
+                "Du bist der Buddler. Jede Nacht kannst du ein Grab ausgraben "
+                "und erfährst die Todesursache des Spielers - Werwolf, "
+                "Abstimmung, Gift oder Anderes."
             ),
-            icon='fa-solid fa-shovel',
-            farbe='#78716c',
+            icon="fa-solid fa-shovel",
+            farbe="#78716c",
             prioritaet=80,
             erzaehler_nacht=(
-                'Der Buddler erwacht und wählt ein Grab. '
-                'Flüstere ihm die Todesursache zu.'
+                "Der Buddler erwacht und wählt ein Grab. "
+                "Flüstere ihm die Todesursache zu."
             ),
             erzaehler_tag=None,
             hinweis_config=None,
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "tote"
-    
+
     def is_active_on_first_night(self) -> bool:
         """Buddler does not act on first night (no dead yet)."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Buddler acts every night after first."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Buddler's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Buddler - Grab untersuchen",
             instructions="Wähle das Grab eines Toten, um die Todesursache zu erfahren.",
@@ -79,16 +81,17 @@ class Buddler(Role):
                     label="Grab untersuchen",
                     action_type="sehen",
                     icon="fa-solid fa-shovel",
-                    css_class="btn-secondary"
+                    css_class="btn-secondary",
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Buddler untersucht ein Grab.
         """
@@ -99,28 +102,30 @@ class Buddler(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         if ziel.id not in kontext.tote_spieler:
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du kannst nur die Gräber von Toten untersuchen.",
             )
-        
+
         # Die Todesursache wird als Attribut gespeichert
         # In der Praxis muss game_logic dies setzen
-        todesursache = getattr(ziel, 'todesursache', 'unbekannt')
-        
+        todesursache = getattr(ziel, "todesursache", "unbekannt")
+
         todesursachen_text = {
-            'werwolf': 'Werwolf-Bisse',
-            'hexe': 'Vergiftung',
-            'hinrichtung': 'Hinrichtung durch das Dorf',
-            'jaeger': 'Schusswunde',
-            'verbrennung': 'Feuer',
-            'liebeskummer': 'Gebrochenes Herz',
+            "werwolf": "Werwolf-Bisse",
+            "hexe": "Vergiftung",
+            "hinrichtung": "Hinrichtung durch das Dorf",
+            "jaeger": "Schusswunde",
+            "verbrennung": "Feuer",
+            "liebeskummer": "Gebrochenes Herz",
         }
-        
-        text = todesursachen_text.get(todesursache, f'Unbekannte Ursache ({todesursache})')
-        
+
+        text = todesursachen_text.get(
+            todesursache, f"Unbekannte Ursache ({todesursache})"
+        )
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Das Grab von {ziel.name} zeigt: Tod durch {text}",

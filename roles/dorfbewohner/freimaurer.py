@@ -4,6 +4,7 @@ Freimaurer - Geheime Loge im Dorf.
 Die Freimaurer erkennen sich gegenseitig und wissen,
 dass sie auf der gleichen Seite stehen.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie
@@ -17,14 +18,14 @@ if TYPE_CHECKING:
 class Freimaurer(Role):
     """
     Freimaurer - Gruppen-Vertrauensrolle.
-    
+
     Fähigkeiten:
     - Erkennen sich alle in der ersten Nacht
     - Wissen wem sie vertrauen können
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -40,41 +41,44 @@ class Freimaurer(Role):
             icon="fa-solid fa-building-columns",
             farbe="#3b82f6",
             prioritaet=9,
-            erzaehler_nacht=(
-                "Die Freimaurer erwachen und erkennen sich gegenseitig."
-            ),
+            erzaehler_nacht=("Die Freimaurer erwachen und erkennen sich gegenseitig."),
         )
-    
+
     def is_active_on_first_night(self) -> bool:
         """Freimaurer act on first night (recognition)."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Freimaurer only act on first night."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Freimaurer's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Freimaurer - Erkennen",
             instructions="Du erkennst deine Logenbrüder.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'], kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """Bestätigung der Nachtphase."""
         return AktionsErgebnis(
             erfolg=True,
             nachricht="Du hast deine Logenbrüder gesehen.",
             effekte={},
-            log_sichtbar_fuer=f"spieler_{spieler.id}"
+            log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def on_spiel_start(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_spiel_start(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Freimaurer erkennen sich in der ersten Nacht.
         """

@@ -44,21 +44,22 @@ class Putzfrau(Role):
     def is_active_on_first_night(self) -> bool:
         """Putzfrau is passive."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Putzfrau is passive."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Putzfrau's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Putzfrau - Passive Rolle",
             instructions="Du erfährst die Rolle von Toten, wenn du aufräumst.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def on_spieler_stirbt(

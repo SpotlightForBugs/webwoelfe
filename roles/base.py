@@ -31,16 +31,22 @@ class RollenInfo:
     beschreibung: str
     icon: str  # FontAwesome class (e.g., "fa-solid fa-eye")
     farbe: str  # Hex color code (e.g., "#7c3aed")
-    prioritaet: int = 100  # Lower = earlier in night order (e.g., Amor=5, Werwolf=50, Hexe=90)
+    prioritaet: int = (
+        100  # Lower = earlier in night order (e.g., Amor=5, Werwolf=50, Hexe=90)
+    )
     erzaehler_nacht: Optional[str] = None
     erzaehler_tag: Optional[str] = None
     hinweis_config: Optional[str] = None
     erweiterung: Erweiterung = Erweiterung.BASISSPIEL
-    
+
     # Phase ordering and dependencies
-    requires_roles: List[str] = field(default_factory=list)  # Roles that must act before this one
-    requires_phases: List[str] = field(default_factory=list)  # Generic phases that must happen first
-    
+    requires_roles: List[str] = field(
+        default_factory=list
+    )  # Roles that must act before this one
+    requires_phases: List[str] = field(
+        default_factory=list
+    )  # Generic phases that must happen first
+
     # Extension pack for UI filtering
     @property
     def extension_pack(self) -> str:
@@ -92,6 +98,7 @@ class SpielKontext:
 @dataclass
 class UIButton:
     """Definition for a UI button in the action panel."""
+
     label: str
     action_type: str
     icon: Optional[str] = None
@@ -102,13 +109,14 @@ class UIButton:
 @dataclass
 class RollenUI:
     """UI definition for a role's action panel."""
+
     title: str
     instructions: str
     buttons: List[UIButton] = field(default_factory=list)
     requires_target: bool = True
     allow_multiple_targets: bool = False
     can_skip: bool = False
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -199,14 +207,14 @@ class Role(ABC):
     def is_active_on_first_night(self) -> bool:
         """Determines if the role acts on the first night."""
         pass
-    
+
     @abstractmethod
     def is_active_on_every_night(self) -> bool:
         """Determines if the role acts on subsequent nights."""
         pass
-    
+
     @abstractmethod
-    def get_ui_definition(self) -> 'RollenUI':
+    def get_ui_definition(self) -> "RollenUI":
         """Defines the UI for the role's action phase."""
         pass
 
@@ -217,7 +225,7 @@ class Role(ABC):
         # We keep this for backward compatibility or logic that uses it
         # Default behavior: active roles usually select targets unless specified otherwise
         return self.is_active_on_first_night() or self.is_active_on_every_night()
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         """Welche Spieler können als Ziel gewählt werden?"""
@@ -424,22 +432,23 @@ class Role(ABC):
             if aktion.get("von_spieler_id") == spieler.id:
                 return True
         return False
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert role to dictionary for API/JSON."""
         return {
-            'id': self.info.id,
-            'team': self.info.team.value,
-            'kategorie': self.info.kategorie.value,
-            'beschreibung': self.info.beschreibung,
-            'nacht_aktiv': self.is_active_on_first_night() or self.is_active_on_every_night(), # Derived
-            'prioritaet': self.info.prioritaet,
-            'icon': self.info.icon,
-            'farbe': self.info.farbe,
-            'erzaehler_nacht': self.info.erzaehler_nacht,
-            'erzaehler_tag': self.info.erzaehler_tag,
-            'hinweis_config': self.info.hinweis_config,
-            'erweiterung': self.info.erweiterung.value,
+            "id": self.info.id,
+            "team": self.info.team.value,
+            "kategorie": self.info.kategorie.value,
+            "beschreibung": self.info.beschreibung,
+            "nacht_aktiv": self.is_active_on_first_night()
+            or self.is_active_on_every_night(),  # Derived
+            "prioritaet": self.info.prioritaet,
+            "icon": self.info.icon,
+            "farbe": self.info.farbe,
+            "erzaehler_nacht": self.info.erzaehler_nacht,
+            "erzaehler_tag": self.info.erzaehler_tag,
+            "hinweis_config": self.info.hinweis_config,
+            "erweiterung": self.info.erweiterung.value,
         }
 
     def __repr__(self) -> str:

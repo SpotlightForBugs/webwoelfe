@@ -4,6 +4,7 @@ Alter Mann - Zäh aber gefährlich für das Dorf.
 Der Alte Mann überlebt den ersten Werwolf-Angriff,
 aber wenn das Dorf ihn hängt, verlieren alle Spezialrollen ihre Kräfte.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -17,14 +18,14 @@ if TYPE_CHECKING:
 class AlterMann(Role):
     """
     Der Alte Mann - Robuste Dorfrolle mit Risiko.
-    
+
     Fähigkeiten:
     - Überlebt den ersten Werwolf-Angriff
     - Bei Hinrichtung: Alle Spezialrollen verlieren Fähigkeiten
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -50,34 +51,36 @@ class AlterMann(Role):
                 "verlieren alle Spezialrollen ihre Kräfte."
             ),
         )
-    
+
     def is_active_on_first_night(self) -> bool:
         """Alter Mann does not act at night."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Alter Mann is passive."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Alter Mann's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Alter Mann - Passive Rolle",
             instructions="Du bist zäh und überlebst den ersten Angriff.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-    
-    def on_angegriffen(self, spieler: 'Spieler', angreifer: 'Spieler',
-                       kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_angegriffen(
+        self, spieler: "Spieler", angreifer: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Der Alte Mann überlebt den ersten Angriff.
         """
-        leben = getattr(spieler, 'alter_mann_leben', 2)
-        
+        leben = getattr(spieler, "alter_mann_leben", 2)
+
         if leben > 1:
             return AktionsErgebnis(
                 erfolg=False,  # False = Angriff wird geblockt
@@ -88,11 +91,12 @@ class AlterMann(Role):
                 },
                 log_sichtbar_fuer="erzaehler",
             )
-        
+
         return None  # Normaler Tod
-    
-    def on_hinrichtung(self, spieler: 'Spieler', opfer: 'Spieler',
-                       kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_hinrichtung(
+        self, spieler: "Spieler", opfer: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Wenn der Alte Mann gehängt wird, verflucht er das Dorf.
         """
@@ -110,5 +114,5 @@ class AlterMann(Role):
                 },
                 log_sichtbar_fuer="alle",
             )
-        
+
         return None

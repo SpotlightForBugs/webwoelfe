@@ -60,7 +60,7 @@ export default class Village3DPlayCanvas {
     this.roleColors = {
       default: new pc.Color(0.3, 0.5, 0.8), // Same as Dorfbewohner - default fallback
     };
-    
+
     // Load role colors from API
     this.loadRoleColorsFromAPI();
 
@@ -75,14 +75,14 @@ export default class Village3DPlayCanvas {
   // Load role colors dynamically from API
   async loadRoleColorsFromAPI() {
     try {
-      const response = await fetch('/api/roles');
+      const response = await fetch("/api/roles");
       const data = await response.json();
-      
+
       if (data.success && data.roles) {
         // Convert hex colors from API to PlayCanvas Color objects
-        data.roles.forEach(role => {
+        data.roles.forEach((role) => {
           const hexColor = role.info.farbe;
-          if (hexColor && hexColor.startsWith('#')) {
+          if (hexColor && hexColor.startsWith("#")) {
             // Convert hex to RGB (0-1 range)
             const r = parseInt(hexColor.slice(1, 3), 16) / 255;
             const g = parseInt(hexColor.slice(3, 5), 16) / 255;
@@ -90,11 +90,18 @@ export default class Village3DPlayCanvas {
             this.roleColors[role.info.name] = new pc.Color(r, g, b);
           }
         });
-        
-        console.log('[Village3D] Loaded', Object.keys(this.roleColors).length, 'role colors from API');
+
+        console.log(
+          "[Village3D] Loaded",
+          Object.keys(this.roleColors).length,
+          "role colors from API",
+        );
       }
     } catch (error) {
-      console.warn('[Village3D] Failed to load role colors from API, using defaults:', error);
+      console.warn(
+        "[Village3D] Failed to load role colors from API, using defaults:",
+        error,
+      );
       // Fallback to some basic colors if API fails
       this.roleColors = {
         Werwolf: new pc.Color(0.6, 0.1, 0.1),

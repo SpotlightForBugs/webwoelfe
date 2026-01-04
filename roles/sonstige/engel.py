@@ -66,21 +66,22 @@ class Engel(Role):
     def is_active_on_first_night(self) -> bool:
         """Engel is passive."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Engel is passive."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Engel's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Engel - Passive Rolle",
             instructions="Versuche in der ersten Runde zu sterben!",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     @property

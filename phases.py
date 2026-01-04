@@ -12,35 +12,36 @@ from typing import List, Optional
 
 class PhaseType(Enum):
     """Typ der Phase (für Logik-Gruppierung)"""
-    SETUP = "setup"       # Lobby, Rollenzuweisung
-    NACHT = "nacht"       # Nacht - Rollen agieren nach Priorität
-    TAG = "tag"           # Tag-Phasen
+
+    SETUP = "setup"  # Lobby, Rollenzuweisung
+    NACHT = "nacht"  # Nacht - Rollen agieren nach Priorität
+    TAG = "tag"  # Tag-Phasen
     ABSTIMMUNG = "abstimmung"  # Abstimmungsphasen
-    ENDE = "ende"         # Spielende
+    ENDE = "ende"  # Spielende
 
 
 class Phase(Enum):
     """
     Kern-Spielphasen.
-    
+
     KEINE rollen-spezifischen Phasen! Rollen agieren WÄHREND
     der entsprechenden Phase basierend auf ihrem TriggerType.
     """
-    
+
     # Setup
     LOBBY = "lobby"
     ROLLEN_VERTEILT = "rollen_verteilt"
-    
+
     # Nacht - EINE Phase, Rollen agieren nach Priorität
     NACHT = "nacht"
-    
+
     # Tag
     TAG_START = "tag_start"
     DISKUSSION = "diskussion"
     ABSTIMMUNG = "abstimmung"
     HINRICHTUNG = "hinrichtung"
     TAG_ENDE = "tag_ende"
-    
+
     # Ende
     SPIEL_ENDE = "spiel_ende"
 
@@ -104,7 +105,7 @@ def is_tag_phase(phase: str) -> bool:
 def get_next_phase(current_phase: str, runde: int = 1) -> str:
     """
     Gibt die nächste Phase zurück.
-    
+
     Args:
         current_phase: Aktuelle Phase
         runde: Aktuelle Runde
@@ -112,17 +113,17 @@ def get_next_phase(current_phase: str, runde: int = 1) -> str:
     try:
         phase_enum = Phase(current_phase)
         current_idx = PHASE_ORDER.index(phase_enum)
-        
+
         # Nach TAG_ENDE -> zurück zu NACHT
         if phase_enum == Phase.TAG_ENDE:
             return Phase.NACHT.value
-        
+
         # Sonst nächste Phase
         if current_idx + 1 < len(PHASE_ORDER):
             return PHASE_ORDER[current_idx + 1].value
-        
+
         return Phase.NACHT.value
-        
+
     except (ValueError, IndexError):
         return Phase.NACHT.value
 

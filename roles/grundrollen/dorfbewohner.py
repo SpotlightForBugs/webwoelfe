@@ -4,6 +4,7 @@ Dorfbewohner - Die Basis-Rolle für das Dorf-Team.
 Der Dorfbewohner hat keine speziellen Fähigkeiten,
 aber seine Stimme in der Abstimmung ist entscheidend.
 """
+
 from typing import Optional
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
@@ -14,10 +15,10 @@ from ..registry import RoleRegistry
 class Dorfbewohner(Role):
     """
     Einfacher Dorfbewohner ohne spezielle Fähigkeiten.
-    
+
     Gewinnbedingung: Alle Werwoelfe werden eliminiert.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -42,27 +43,28 @@ class Dorfbewohner(Role):
                 "Seine Stimme ist seine einzige Waffe."
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
-    
+
     def is_active_on_first_night(self) -> bool:
         """Dorfbewohner does not act on first night."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Dorfbewohner does not act every night."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Dorfbewohner's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Dorfbewohner - Schlafen",
             instructions="Du schläfst friedlich. Du hast keine nächtliche Aktion.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )

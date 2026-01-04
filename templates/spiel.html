@@ -1733,12 +1733,12 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       // Nacht-Overlay
       const overlay = document.getElementById('nacht-overlay');
-      
+
       // Dynamic Night Detection logic (No hardcoded list!)
       // Heuristic: Phase is night if:
       // 1. It explicitly contains "nacht" (e.g. nacht_start)
       // 2. OR it ends in "_phase" AND is not a day phase (implies role action phase)
-      
+
       const knownDayPhases = ['tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt'];
       const isDayPhase = knownDayPhases.includes(phase) || phase.includes('tag') || phase.includes('abstimmung') || phase.includes('diskussion');
       const isNightMode = !isDayPhase && (phase.includes('nacht') || phase.includes('phase') || phase.endsWith('_phase'));
@@ -2030,17 +2030,17 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   // ===========================================================================
   // DYNAMIC PHASE/ROLE SYSTEM - Loaded from API
   // ===========================================================================
-  
+
   // Cache for phase→role mappings (loaded dynamically)
   let phaseRoleMapping = {};
   let roleUICache = {};
-  
+
   // Load phase→role mapping from game API on init
   async function loadPhaseRoleMapping() {
       try {
           const response = await fetch(`/api/game/${raumCode}/phases`);
           const data = await response.json();
-          
+
           if (data.success && data.phase_mapping) {
               // Use server-provided phase→role mapping
               phaseRoleMapping = data.phase_mapping;
@@ -2048,7 +2048,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   nachtPhasen = data.phases;
               }
               console.log('[Phase Mapping] Loaded from server:', phaseRoleMapping);
-              
+
               // WICHTIG: UI aktualisieren, da sollteAktivSein() jetzt korrekte Daten hat
               updatePhase(aktuellePhase, aktuelleRunde);
           } else {
@@ -2059,17 +2059,17 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Empty mapping - server will control everything
       }
   }
-  
+
   // Load UI definition for a specific role
   async function loadRoleUI(roleName) {
       if (roleUICache[roleName]) {
           return roleUICache[roleName];
       }
-      
+
       try {
           const response = await fetch(`/api/role/${encodeURIComponent(roleName)}/ui`);
           const data = await response.json();
-          
+
           if (data.success) {
               roleUICache[roleName] = data.ui;
               return data.ui;
@@ -2077,7 +2077,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       } catch (error) {
           console.error(`[Role UI] Error loading for ${roleName}:`, error);
       }
-      
+
       return null;
   }
 
@@ -2095,20 +2095,20 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Normalize for comparison (case-insensitive)
           return mappedRole.toLowerCase() === spielerRolle.toLowerCase();
       }
-      
+
       // Fallback: Check if phase name matches role name
       // e.g. "seherin_phase" -> "seherin"
       // e.g. "alter_mann_phase" -> "alter man" (approx)
       if (aktuellePhase.endsWith('_phase')) {
           const simplePhaseName = aktuellePhase.replace('_phase', '').toLowerCase();
           const simpleRoleName = spielerRolle.toLowerCase().replace(/\s+/g, '_');
-          
+
           if (simplePhaseName === simpleRoleName) {
               console.log('[Phase Check] Fallback match found:', aktuellePhase);
               return true;
           }
       }
-      
+
       // No fallback - if server didn't provide mapping, player shouldn't be active
       console.warn(`[Phase Check] No role mapping for phase: ${aktuellePhase}`);
       return false;
@@ -2136,7 +2136,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Try to load UI definition from API
           // =================================================================
           const roleUI = await loadRoleUI(spielerRolle);
-          
+
           if (roleUI && roleUI.buttons && roleUI.buttons.length > 0) {
               // Generate buttons from role UI definition
               html = roleUI.buttons.map(btn => {
@@ -2144,7 +2144,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   const icon = btn.icon ? `<i class="${btn.icon}"></i>` : '';
                   return `<button class="btn ${btnClass}" onclick="aktion('${btn.action_type}')">${icon} ${btn.label}</button>`;
               }).join('\n');
-              
+
               // Add skip button if allowed
               if (roleUI.can_skip) {
                   html += `\n<button class="btn btn-ghost" onclick="aktion('skip')">Überspringen</button>`;

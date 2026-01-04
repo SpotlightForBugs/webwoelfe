@@ -1,6 +1,7 @@
 """
 Seherlehrling - Wird zur Seherin wenn die Original-Seherin stirbt.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
@@ -14,14 +15,14 @@ if TYPE_CHECKING:
 class Seherlehrling(Role):
     """
     Der Seherlehrling - Nachfolger der Seherin.
-    
+
     Fähigkeiten:
     - Keine aktiven Fähigkeiten zu Beginn
     - Wenn Seherin stirbt: Übernimmt ihre Fähigkeit
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -37,37 +38,41 @@ class Seherlehrling(Role):
             icon="fa-solid fa-eye-low-vision",
             farbe="#8b5cf6",  # Wird aktiv wenn Seherin stirbt
             prioritaet=21,
-            erzaehler_nacht=(
-                "Der Seherlehrling schläft. Noch lernt er..."
-            ),
+            erzaehler_nacht=("Der Seherlehrling schläft. Noch lernt er..."),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
-    
+
     def is_active_on_first_night(self) -> bool:
         """Seherlehrling does not act until Seherin dies."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Seherlehrling is passive until activated."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Seherlehrling's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Seherlehrling - Passive Rolle",
             instructions="Du übernimmst die Sehergabe, wenn die Seherin stirbt.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-    
-    def on_spieler_stirbt(self, spieler: 'Spieler', opfer: 'Spieler',
-                          todesursache: str, kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_spieler_stirbt(
+        self,
+        spieler: "Spieler",
+        opfer: "Spieler",
+        todesursache: str,
+        kontext: SpielKontext,
+    ) -> Optional[AktionsErgebnis]:
         """
         Prüft ob die Seherin stirbt und der Lehrling übernimmt.
         """
@@ -84,5 +89,5 @@ class Seherlehrling(Role):
                 },
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         return None

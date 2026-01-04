@@ -4,6 +4,7 @@ Nutte - Übernachtet bei anderen Spielern.
 Die Nutte besucht jede Nacht einen Spieler.
 Sie entgeht Angriffen zuhause, stirbt aber wenn ihr Gastgeber stirbt.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -17,55 +18,55 @@ if TYPE_CHECKING:
 class Nutte(Role):
     """
     Nutte - Besuchsrolle mit Risiko.
-    
+
     Fähigkeiten:
     - Besucht jede Nacht einen Spieler
     - Entgeht Angriffen auf ihr eigenes Haus
     - Stirbt wenn Gastgeber getötet wird
-    
+
     Besonderheiten:
     - Risiko-Rolle
     - Kann bei Wolf übernachten und sterben
     - Aber auch sich vor Angriffen schützen
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=77,
-            name='Nutte',
+            name="Nutte",
             team=Team.DORF,
             kategorie=Kategorie.SPEZIAL,
             beschreibung=(
-                'Du bist die Nutte. Jede Nacht wählst du einen Spieler, '
-                'bei dem du übernachtest. Wird dieser von Werwölfen getötet, '
-                'stirbst auch du! Aber: Wirst du selbst gewählt, überlebst du '
-                '(du bist ja nicht zuhause).'
+                "Du bist die Nutte. Jede Nacht wählst du einen Spieler, "
+                "bei dem du übernachtest. Wird dieser von Werwölfen getötet, "
+                "stirbst auch du! Aber: Wirst du selbst gewählt, überlebst du "
+                "(du bist ja nicht zuhause)."
             ),
-            icon='fa-solid fa-house-user',
-            farbe='#ec4899',
+            icon="fa-solid fa-house-user",
+            farbe="#ec4899",
             prioritaet=47,
             erzaehler_nacht=(
-                'Die Nutte erwacht und wählt einen Spieler, '
-                'bei dem sie übernachtet.'
+                "Die Nutte erwacht und wählt einen Spieler, " "bei dem sie übernachtet."
             ),
             erzaehler_tag=None,
             hinweis_config=None,
         )
-    
+
     def is_active_on_first_night(self) -> bool:
         """Nutte acts every night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Nutte acts every night."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Nutte's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Nutte - Übernachtung",
             instructions="Wähle einen Spieler zum übernachten. Vorsicht vor Werwölfen!",
@@ -74,24 +75,25 @@ class Nutte(Role):
                     label="Besuchen",
                     action_type="besuchen",
                     icon="fa-solid fa-bed",
-                    css_class="btn-primary"
+                    css_class="btn-primary",
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.BESUCHEN
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "lebende_andere"
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Nutte besucht einen Spieler und übernachtet dort.
         """
@@ -104,20 +106,20 @@ class Nutte(Role):
                 },
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         if ziel.id in kontext.tote_spieler:
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du kannst keine Toten besuchen.",
             )
-        
+
         # Speichern wo die Nutte übernachtet
         spieler.nutte_bei = ziel.id
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du übernachtest bei {ziel.name}. "
-                      f"Hoffentlich überlebt er die Nacht...",
+            f"Hoffentlich überlebt er die Nacht...",
             ziel_spieler_id=ziel.id,
             effekte={
                 "nutte_besucht": ziel.id,
@@ -125,14 +127,15 @@ class Nutte(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def on_angegriffen(self, spieler: 'Spieler', angreifer_id: int,
-                       kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_angegriffen(
+        self, spieler: "Spieler", angreifer_id: int, kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Wenn Nutte nicht zuhause ist, überlebt sie den Angriff.
         """
-        nutte_bei = getattr(spieler, 'nutte_bei', None)
-        
+        nutte_bei = getattr(spieler, "nutte_bei", None)
+
         if nutte_bei is not None:
             return AktionsErgebnis(
                 erfolg=True,
@@ -143,17 +146,21 @@ class Nutte(Role):
                 },
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         return None  # Zuhause = normaler Angriff
-    
-    def on_spieler_stirbt(self, spieler: 'Spieler', gestorbener: 'Spieler',
-                          todesursache: str,
-                          kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_spieler_stirbt(
+        self,
+        spieler: "Spieler",
+        gestorbener: "Spieler",
+        todesursache: str,
+        kontext: SpielKontext,
+    ) -> Optional[AktionsErgebnis]:
         """
         Wenn der Gastgeber stirbt, stirbt die Nutte mit.
         """
-        nutte_bei = getattr(spieler, 'nutte_bei', None)
-        
+        nutte_bei = getattr(spieler, "nutte_bei", None)
+
         if nutte_bei is not None and gestorbener.id == nutte_bei:
             return AktionsErgebnis(
                 erfolg=True,
@@ -164,5 +171,5 @@ class Nutte(Role):
                 },
                 log_sichtbar_fuer="alle",
             )
-        
+
         return None

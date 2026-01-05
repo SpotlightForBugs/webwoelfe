@@ -33,6 +33,7 @@ class StateType(Enum):
 
 class StateTarget(Enum):
     """Wer wird von einem State betroffen? Basis-Typen."""
+
     SELF = "self"  # Nur der eigene Spieler
     OTHER = "other"  # Anderer Spieler (z.B. Verliebt, Infiziert)
     GLOBAL = "global"  # Spielweite Auswirkung
@@ -59,6 +60,7 @@ class VisualEffectConfig:
             show_to=lambda viewer, target: True,  # Alle sehen es
         )
     """
+
     css_class: Optional[str] = None
     icon: Optional[str] = None  # Emoji or text
     icon_class: Optional[str] = None  # FontAwesome class
@@ -83,6 +85,7 @@ class VisualEffectConfig:
 # Legacy enum for backward compatibility - prefer VisualEffectConfig
 class StateVisualEffect(Enum):
     """Visuelle Effekte - DEPRECATED, use VisualEffectConfig instead."""
+
     NONE = "none"
     HEART = "heart"
     INFECTED = "infected"
@@ -108,13 +111,15 @@ class TargetingConfig:
             description="Alle Dorfbewohner",
         )
     """
+
     base_target: StateTarget = StateTarget.SELF
     # Lambda: (target_spieler, kontext) -> bool
     filter_fn: Optional[Callable[["Spieler", "SpielKontext"], bool]] = None
     description: str = ""
 
-    def get_targets(self, alle_spieler: List["Spieler"],
-                    kontext: "SpielKontext") -> List["Spieler"]:
+    def get_targets(
+        self, alle_spieler: List["Spieler"], kontext: "SpielKontext"
+    ) -> List["Spieler"]:
         """Ermittelt alle gültigen Ziele."""
         if self.filter_fn:
             return [s for s in alle_spieler if self.filter_fn(s, kontext)]
@@ -163,7 +168,7 @@ class StateField:
 
     def validate(self, value: Any) -> bool:
         """Prüft, ob ein Wert dem Typ entspricht."""
-        #TODO: ADD MORE TYPES (TEAM; EXPANSION; ALIVE_STATE;)
+        # TODO: ADD MORE TYPES (TEAM; EXPANSION; ALIVE_STATE;)
         if value is None:
             return True
         if self.typ == StateType.BOOL:
@@ -203,6 +208,7 @@ class GlobalStateDefinition:
     Wird von Rollen definiert und beim Registry-Laden gesammelt.
     Ermöglicht dynamische Queries statt hardcoded Checks.
     """
+
     key: str  # Voller Key inkl. "global." prefix
     name: str  # Anzeigename
     typ: StateType = StateType.BOOL
@@ -231,6 +237,7 @@ class NachtEvent:
 
     Ermöglicht Rollen, globale Events zu triggern (z.B. Kuh muht).
     """
+
     event_id: str
     sound_file: Optional[str] = None  # z.B. "moo.mp3"
     text: Optional[str] = None  # Text der angezeigt wird
@@ -248,6 +255,7 @@ class UIButtonDefinition:
 
     Beispiel: Kuh fügt "Milch trinken" Button für alle Dorfbewohner hinzu.
     """
+
     button_id: str
     label: str
     action_type: str
@@ -268,6 +276,7 @@ class RollenModell:
 
     Ermöglicht dynamische Modell-Definitionen pro Rolle.
     """
+
     modell_id: str  # z.B. "hund", "werhund", "kuh"
     anzeige_name: str  # Was im UI angezeigt wird
     # Lambda: (spieler, kontext) -> str - Dynamische Modell-Auswahl
@@ -369,8 +378,9 @@ def has_global_state(spieler: "Spieler", state_key: str) -> bool:
     return value is not None and value is not False and value != 0
 
 
-def get_players_with_state(spieler_liste: List["Spieler"], state_key: str,
-                           value: Any = None) -> List["Spieler"]:
+def get_players_with_state(
+    spieler_liste: List["Spieler"], state_key: str, value: Any = None
+) -> List["Spieler"]:
     """
     Findet alle Spieler die einen bestimmten State haben.
 
@@ -393,9 +403,11 @@ def get_players_with_state(spieler_liste: List["Spieler"], state_key: str,
     return result
 
 
-def get_player_visual_effects(spieler: "Spieler",
-                               global_state_defs: Dict[str, "GlobalStateDefinition"],
-                               viewer_id: Optional[int] = None) -> List[Dict[str, Any]]:
+def get_player_visual_effects(
+    spieler: "Spieler",
+    global_state_defs: Dict[str, "GlobalStateDefinition"],
+    viewer_id: Optional[int] = None,
+) -> List[Dict[str, Any]]:
     """
     Ermittelt alle visuellen Effekte die für einen Spieler angezeigt werden sollen.
 
@@ -419,14 +431,18 @@ def get_player_visual_effects(spieler: "Spieler",
         # Suche GlobalStateDefinition
         if key in global_state_defs:
             gsd = global_state_defs[key]
-            effects.append({
-                "key": key,
-                "value": value,
-                "css_class": gsd.css_class,
-                "icon": gsd.icon,
-                "visual_effect": gsd.visual_effect.value if gsd.visual_effect else None,
-                "name": gsd.name,
-            })
+            effects.append(
+                {
+                    "key": key,
+                    "value": value,
+                    "css_class": gsd.css_class,
+                    "icon": gsd.icon,
+                    "visual_effect": (
+                        gsd.visual_effect.value if gsd.visual_effect else None
+                    ),
+                    "name": gsd.name,
+                }
+            )
 
     return effects
 
@@ -457,7 +473,13 @@ def get_role_state_display(spieler: "Spieler") -> List[Dict[str, Any]]:
     all_state = get_all_spieler_state(spieler)
 
     # Hole State-Präfix für diese Rolle (z.B. "hexe", "jaeger")
-    role_prefix = spieler.rolle.lower().replace(" ", "_").replace("ä", "a").replace("ü", "u").replace("ö", "o")
+    role_prefix = (
+        spieler.rolle.lower()
+        .replace(" ", "_")
+        .replace("ä", "a")
+        .replace("ü", "u")
+        .replace("ö", "o")
+    )
 
     for field in role.state_fields():
         # Suche State mit vollem Key
@@ -476,14 +498,16 @@ def get_role_state_display(spieler: "Spieler") -> List[Dict[str, Any]]:
         else:
             display_value = str(value) if value is not None else "Unbekannt"
 
-        state_items.append({
-            "name": field.name,
-            "icon": field.icon,
-            "label": field.beschreibung or field.name,
-            "value": value,
-            "display_value": display_value,
-            "css_class": field.css_class,
-        })
+        state_items.append(
+            {
+                "name": field.name,
+                "icon": field.icon,
+                "label": field.beschreibung or field.name,
+                "value": value,
+                "display_value": display_value,
+                "css_class": field.css_class,
+            }
+        )
 
     return state_items
 
@@ -496,7 +520,7 @@ def get_role_state_display(spieler: "Spieler") -> List[Dict[str, Any]]:
 @dataclass
 class DistributionConfig:
     """Konfiguration für die dynamische Rollenverteilung."""
-    
+
     min_players: int = 0
     # Lambda function: (player_count) -> role_count
     # Standard: 1 wenn min_players erreicht
@@ -513,7 +537,7 @@ class DistributionConfig:
 @dataclass
 class WinCondition:
     """Eine dynamische Gewinnbedingung (z.B. für Verliebte)."""
-    
+
     id: str  # Eindeutige ID (z.B. "verliebte_win")
     # (spieler, kontext) -> bool
     check_func: Callable[["Spieler", "SpielKontext"], bool]
@@ -525,7 +549,7 @@ class WinCondition:
 @dataclass
 class LoseCondition:
     """Eine dynamische Niederlagen-/Todesbedingung (z.B. Partner stirbt)."""
-    
+
     id: str
     trigger: str  # Event trigger (z.B. "on_spieler_stirbt")
     # (spieler, kontext, trigger_data) -> bool (True = condition met)
@@ -551,7 +575,7 @@ class RollenInfo:
     erzaehler_nacht: Optional[str] = None
     erzaehler_tag: Optional[str] = None
     hinweis_config: Optional[str] = None
-    erweiterung: Erweiterung = Erweiterung.BASISSPIEL # TODO: MAKE REQUIRED
+    erweiterung: Erweiterung = Erweiterung.BASISSPIEL  # TODO: MAKE REQUIRED
 
     # Phase ordering and dependencies
     requires_roles: List[str] = field(
@@ -560,14 +584,14 @@ class RollenInfo:
     requires_phases: List[str] = field(
         default_factory=list
     )  # Generic phases that must happen first
-    
-    css_class: str = "" # Frontend CSS class name override
+
+    css_class: str = ""  # Frontend CSS class name override
 
     # NEW: Visual styling fields TODO: MAKE THE VISUAL STYLING FIELDS REQUIRED!
     avatar_gradient_from: str = ""  # e.g., "#b91c1c"
-    avatar_gradient_to: str = ""    # e.g., "#7f1d1d"
-    avatar_border_color: str = ""   # e.g., "#ef4444"
-    badge_emoji: str = ""           # e.g., "🐺"
+    avatar_gradient_to: str = ""  # e.g., "#7f1d1d"
+    avatar_border_color: str = ""  # e.g., "#ef4444"
+    badge_emoji: str = ""  # e.g., "🐺"
     # Dynamic Distribution Configuration
     distribution: Optional[DistributionConfig] = None
 
@@ -579,20 +603,29 @@ class RollenInfo:
             Erweiterung.BASISSPIEL: "base",
             Erweiterung.NEUMOND: "neumond",
             Erweiterung.GEMEINDE: "gemeinde",
-            Erweiterung.CHARAKTERE: "charaktere", 
-            Erweiterung.SONDEREDITION: "sonderedition", # TODO: RENAME TO "COMMUNITY"
+            Erweiterung.CHARAKTERE: "charaktere",
+            Erweiterung.SONDEREDITION: "sonderedition",  # TODO: RENAME TO "COMMUNITY"
         }
         if self.erweiterung is None:
-            raise ValueError("RollenInfo.erweiterung darf nicht None sein") # TODO: LET IT ACTUALLY RAISE AN ERROR
+            raise ValueError(
+                "RollenInfo.erweiterung darf nicht None sein"
+            )  # TODO: LET IT ACTUALLY RAISE AN ERROR
         return pack_map.get(self.erweiterung, "unbekannt")
 
     # Auto-generate css_class from name if not set
-    #TODO: this replace stuff really has to stop for good!
+    # TODO: this replace stuff really has to stop for good!
     @property
     def computed_css_class(self) -> str:
         if self.css_class:
             return self.css_class
-        return self.name.lower().replace(" ", "-").replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+        return (
+            self.name.lower()
+            .replace(" ", "-")
+            .replace("ä", "ae")
+            .replace("ö", "oe")
+            .replace("ü", "ue")
+            .replace("ß", "ss")
+        )
 
 
 @dataclass
@@ -703,14 +736,16 @@ class Role(ABC):
 
     # === PHASEN-LOGIK ===
 
-    def get_phase_start_info(self, spieler: "Spieler", kontext: "SpielKontext") -> Optional[Dict[str, Any]]:
+    def get_phase_start_info(
+        self, spieler: "Spieler", kontext: "SpielKontext"
+    ) -> Optional[Dict[str, Any]]:
         """
         Gibt Informationen zurück, die dem Spieler zu Beginn seiner Phase angezeigt werden sollen.
-        
+
         Zum Beispiel:
         - Die Hexe sieht das Werwolf-Opfer
         - Der Seher sieht wen er gewählt hat (falls Vorwahl-System)
-        
+
         Returns:
             Dict mit Informationen für das Frontend oder None
         """
@@ -1117,7 +1152,9 @@ class Role(ABC):
         Returns:
             AktionsErgebnis oder None (wenn Aktion ungültig)
         """
-        logger.debug(f"Executing night action for {self.info.name} (Player: {spieler.name})")
+        logger.debug(
+            f"Executing night action for {self.info.name} (Player: {spieler.name})"
+        )
         return None
 
     def on_tag_aktion(
@@ -1126,7 +1163,9 @@ class Role(ABC):
         """
         Wird aufgerufen, wenn der Spieler seine Tag-Aktion ausführt.
         """
-        logger.debug(f"Executing day action for {self.info.name} (Player: {spieler.name})")
+        logger.debug(
+            f"Executing day action for {self.info.name} (Player: {spieler.name})"
+        )
         return None
 
     def on_spieler_stirbt(

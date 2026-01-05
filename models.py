@@ -133,6 +133,7 @@ class Spieler(db.Model):
             value: Der Wert
         """
         import json
+
         logger.debug(f"State update: {self.name}.{key} = {value}")
 
         try:
@@ -174,7 +175,7 @@ class Spieler(db.Model):
         if condition_id in conditions:
             conditions.remove(condition_id)
             self.set_state("win_conditions", conditions)
-            
+
     def has_win_condition(self, condition_id: str) -> bool:
         """Prüft ob eine Gewinnbedingung existiert."""
         return condition_id in self.get_state("win_conditions", [])
@@ -193,7 +194,7 @@ class Spieler(db.Model):
         if condition_id in conditions:
             del conditions[condition_id]
             self.set_state("lose_conditions", conditions)
-            
+
     def get_lose_conditions(self) -> dict:
         """Gibt alle aktiven Niederlagenbedingungen zurück."""
         return self.get_state("lose_conditions", {})
@@ -397,7 +398,9 @@ class SeherinEnthuellung(db.Model):
         runde: int,
     ):
         """Speichert eine neue Enthüllung als Snapshot"""
-        logger.info(f"Saving Seherin reveal: Seherin {seherin_id} -> Target {ziel_id} ({rolle})")
+        logger.info(
+            f"Saving Seherin reveal: Seherin {seherin_id} -> Target {ziel_id} ({rolle})"
+        )
         # Prüfe ob bereits enthüllt
         bestehend = SeherinEnthuellung.query.filter_by(
             seherin_id=seherin_id, ziel_id=ziel_id, raum_id=raum_id
@@ -457,7 +460,7 @@ class SeherinEnthuellung(db.Model):
 
 # NO FALLBACKS ALLOWED - ERZAEHLER_PHASEN removed.
 
-#TODO: THESE NEED TO BE MOVED INTO THE ROLES BECAUSE THIS IS PARTIALLY ROLE-SPECIFIC
+# TODO: THESE NEED TO BE MOVED INTO THE ROLES BECAUSE THIS IS PARTIALLY ROLE-SPECIFIC
 ERZAEHLER_EVENTS = {
     # === SETUP EVENTS ===
     "rollen_verteilt": {
@@ -976,6 +979,7 @@ def _erstelle_rollen_dict():
     """
     try:
         from roles import get_alle_rollen
+
         logger.debug("Loading roles from registry...")
         return get_alle_rollen()
     except Exception as e:

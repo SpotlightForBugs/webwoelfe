@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from models import db, Raum
 from logger import logger
 
+
 def cleanup_old_games(app, max_age_hours=24):
     """
     Löscht alte Spiele aus der Datenbank.
@@ -28,4 +29,3 @@ def cleanup_old_games(app, max_age_hours=24):
         except Exception as e:
             logger.error(f"[Cleanup] Fehler beim Bereinigen: {e}")
             db.session.rollback()
-

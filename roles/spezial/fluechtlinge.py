@@ -49,8 +49,14 @@ class Fluechtlinge(Role):
             erzaehler_nacht=("Die Flüchtlinge erwachen und erkennen sich gegenseitig."),
             erzaehler_tag=None,
             hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#0ea5e9",
+            avatar_gradient_to="#0369a1",
+            avatar_border_color="#38bdf8",
+            badge_emoji="🏃",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

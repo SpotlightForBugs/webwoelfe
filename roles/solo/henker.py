@@ -55,7 +55,18 @@ class Henker(Role):
             erzaehler_nacht=(
                 "Der Henker erwacht (nur erste Nacht) und waehlt sein Ziel."
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#525252",
+            avatar_gradient_to="#262626",
+            avatar_border_color="#737373",
+            badge_emoji="🪓",
         )
+
+    @property
+    def aktions_typ(self) -> AktionsTyp:
+        return AktionsTyp.WAEHLEN
 
     def is_active_on_first_night(self) -> bool:
         """Henker acts on first night (choosing target)."""

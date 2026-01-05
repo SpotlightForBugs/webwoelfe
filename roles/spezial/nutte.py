@@ -49,12 +49,16 @@ class Nutte(Role):
             farbe="#ec4899",
             prioritaet=47,
             erzaehler_nacht=(
-                "Die Nutte erwacht und wählt einen Spieler, " "bei dem sie übernachtet."
+                "Die Nutte erwacht und wählt bei wem sie übernachtet."
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#ec4899",
+            avatar_gradient_to="#be185d",
+            avatar_border_color="#f472b6",
+            badge_emoji="👠",
+        )
 
     def is_active_on_first_night(self) -> bool:
         """Nutte acts every night."""

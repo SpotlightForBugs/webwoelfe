@@ -50,12 +50,13 @@ class Chemielaborant(Role):
                 "Der Chemielaborant experimentiert selbst im Schlaf. "
                 "Ein gefährlicher Nachbar..."
             ),
-            erzaehler_tag=(
-                "KABOOM! Der Chemielaborant ist tot und seine instabilen "
-                "Chemikalien explodieren! Seine beiden Nachbarn sterben mit ihm!"
-            ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#10b981",
+            avatar_gradient_to="#047857",
+            avatar_border_color="#34d399",
+            badge_emoji="🧪",
         )
 
     @property

@@ -49,13 +49,14 @@ class WolfimSchafspelz(Role):
             farbe='#fef3c7',
             prioritaet=50,
             erzaehler_nacht=(
-                'Der Wolf im Schafspelz erwacht mit den anderen Werwölfen.'
+                'Der Wolf im Schafspelz jagt mit dem Rudel. '
+                'Er erscheint der Seherin als Dorfbewohner.'
             ),
             erweiterung=Erweiterung.SONDEREDITION,
 
             # Visual Styling
             avatar_gradient_from="#fef3c7",
-            avatar_gradient_to="#fde68a",
+            avatar_gradient_to="#d97706",
             avatar_border_color="#fcd34d",
             badge_emoji="🐑",
         )
@@ -63,51 +64,28 @@ class WolfimSchafspelz(Role):
     @property
     def aktions_typ(self) -> 'AktionsTyp':
         from roles.enums import AktionsTyp
-        return AktionsTyp.TOETEN  # Jagt mit Wölfen
-    
+        return AktionsTyp.KEINE  # Jagt mit dem Rudel
+
     @property
     def sichtbar_als(self) -> SichtTyp:
-        """
-        Erscheint als Dorf für normale Seherin!
-        Aurenseherin sieht trotzdem Werwolf.
-        """
-        return SichtTyp.DORF  # Getarnt!
-    
-    def is_active_on_first_night(self) -> bool:
-        """Wolf im Schafspelz acts on first night with werwolves."""
-        return True
-    
-    def is_active_on_every_night(self) -> bool:
-        """Wolf im Schafspelz acts every night with werwolves."""
-        return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
-        """Returns the UI definition for Wolf im Schafspelz's action panel."""
-        from roles.base import RollenUI, UIButton
-        return RollenUI(
-            title="Wolf im Schafspelz - Mit Wölfen jagen",
-            instructions="Wähle das Opfer der Wölfe. Du erscheinst der Seherin als Dorf.",
-            buttons=[
-                UIButton(
-                    label="Angreifen",
-                    action_type="toeten",
-                    icon="fa-brands fa-bluesky",
-                    css_class="btn-danger"
-                )
-            ],
-            requires_target=True,
-            allow_multiple_targets=False,
-            can_skip=False
-        )
-    
-    def sichtbar_als_fuer(self, seher_rolle: str) -> SichtTyp:
-        """Je nach Seher-Typ unterschiedliche Sichtbarkeit."""
-        if 'aurenseherin' in seher_rolle.lower():
-            return SichtTyp.WERWOLF  # Aurenseherin sieht die Wahrheit
-        return SichtTyp.DORF  # Alle anderen sehen Dorf
+        return SichtTyp.DORF  # Das ist der Trick!
 
-    def sichtbare_rolle_fuer(self, seher_rolle: str) -> str:
-        """Je nach Seher-Typ unterschiedliche Rollenanzeige."""
-        if 'aurenseherin' in seher_rolle.lower():
-            return self.info.name
-        return 'Dorfbewohner'
+    def is_active_on_first_night(self) -> bool:
+        """Wolf im Schafspelz acts with the pack."""
+        return False
+
+    def is_active_on_every_night(self) -> bool:
+        """Wolf im Schafspelz acts with the pack."""
+        return False
+
+    def get_ui_definition(self) -> 'RollenUI':
+        """Returns the UI definition for Wolf im Schafspelz action panel."""
+        from roles.base import RollenUI
+        return RollenUI(
+            title="Wolf im Schafspelz - Passive Rolle",
+            instructions="Du jagst mit den Wölfen. Die Seherin sieht dich als Dorfbewohner.",
+            buttons=[],
+            requires_target=False,
+            allow_multiple_targets=False,
+            can_skip=True
+        )

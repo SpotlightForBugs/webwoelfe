@@ -50,10 +50,14 @@ class DunklerPriester(Role):
                 "Der Dunkle Priester erwacht (erste Nacht) und wählt "
                 "zwei Spieler zum Verlieben."
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#18181b",
+            avatar_gradient_to="#09090b",
+            avatar_border_color="#27272a",
+            badge_emoji="🖤",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

@@ -74,16 +74,16 @@ class Urwolf(Role):
             farbe="#7f1d1d",
             prioritaet=50,
             erzaehler_nacht=(
-                "Der Urwolf erwacht mit den anderen. Er kann entscheiden, "
-                "ob er jemanden infizieren möchte."
+                "Der Urwolf jagt mit dem Rudel. Er kann einmalig "
+                "ein Opfer infizieren statt zu töten."
             ),
-            erweiterung=Erweiterung.CHARAKTERE,
+            erweiterung=Erweiterung.SONDEREDITION,
 
             # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
             avatar_border_color="#b91c1c",
-            badge_emoji="🦠",
+            badge_emoji="🐺",
         )
 
     @property
@@ -95,11 +95,11 @@ class Urwolf(Role):
         return SichtTyp.WERWOLF
 
     def is_active_on_first_night(self) -> bool:
-        """Urwolf acts on first night with werwolves."""
+        """Urwolf acts with the pack."""
         return True
 
     def is_active_on_every_night(self) -> bool:
-        """Urwolf acts every night with werwolves."""
+        """Urwolf acts with the pack."""
         return True
 
     def get_ui_definition(self) -> "RollenUI":
@@ -107,55 +107,44 @@ class Urwolf(Role):
         from ..base import RollenUI, UIButton
 
         return RollenUI(
-            title="Urwolf - Jagen oder Infizieren",
-            instructions="Wähle das Opfer der Wölfe oder infiziere jemanden (einmalig).",
+            title="Urwolf - Infizieren",
+            instructions="Du kannst einmalig das Opfer infizieren statt zu töten.",
             buttons=[
-                UIButton(
-                    label="Angreifen",
-                    action_type="toeten",
-                    icon="fa-solid fa-paw",
-                    css_class="btn-danger",
-                ),
                 UIButton(
                     label="Infizieren",
                     action_type="infizieren",
                     icon="fa-solid fa-virus",
-                    css_class="btn-warning",
+                    css_class="btn-success",
                     requires_confirmation=True,
-                ),
+                )
             ],
-            requires_target=True,
+            requires_target=False,  # Target is the victim of the pack
             allow_multiple_targets=False,
-            can_skip=False,
+            can_skip=True,
         )
 
-    def infizieren(
-        self, spieler: "Spieler", ziel: "Spieler", kontext: SpielKontext
-    ) -> AktionsErgebnis:
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
-        Urwolf infiziert statt zu toeten.
+        Urwolf infiziert das Opfer des Rudels.
         """
-        kann_infizieren = self.get_state(spieler, "infektion")
-
-        if not kann_infizieren:
-            return AktionsErgebnis(
+        # Check if infection is available
+        if not self.get_state(spieler, "infektion"):
+             return AktionsErgebnis(
                 erfolg=False,
-                nachricht="Du hast deine Infektions-Faehigkeit bereits verwendet.",
+                nachricht="Du hast deine Infektion bereits verbraucht!",
             )
 
-        # Infektion verbrauchen
+        # Mark as used
         self.set_state(spieler, "infektion", False)
-
-        # Setze Infiziert-Status auf das Ziel
-        set_spieler_state(ziel, "global.ist_infiziert", True)
 
         return AktionsErgebnis(
             erfolg=True,
-            nachricht=f"Du hast {ziel.name} infiziert! Er wird zum Werwolf.",
-            ziel_spieler_id=ziel.id,
+            nachricht="Du infizierst das Opfer! Es wird nicht sterben, sondern zum Werwolf werden.",
             effekte={
-                "infiziert": ziel.id,
-                "wird_werwolf_in_runde": kontext.runde + 1,
+                "urwolf_infiziert": True,
+                "todesursache_verhindert": True,
             },
             log_sichtbar_fuer="werwolf",
         )

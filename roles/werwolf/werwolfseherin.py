@@ -54,7 +54,7 @@ class Werwolfseherin(Role):
             # Visual Styling
             avatar_gradient_from="#b91c1c",
             avatar_gradient_to="#7f1d1d",
-            avatar_border_color="#a78bfa",
+            avatar_border_color="#ef4444",
             badge_emoji="👁️",
         )
 
@@ -69,10 +69,10 @@ class Werwolfseherin(Role):
     
     @property
     def erlaubte_ziele(self) -> str:
-        return "lebende_andere"
-    
+        return "andere"
+
     def is_active_on_first_night(self) -> bool:
-        """Werwolfseherin acts on first night."""
+        """Werwolfseherin acts every night."""
         return True
     
     def is_active_on_every_night(self) -> bool:
@@ -83,14 +83,14 @@ class Werwolfseherin(Role):
         """Returns the UI definition for Werwolfseherin's action panel."""
         from ..base import RollenUI, UIButton
         return RollenUI(
-            title="Werwolfseherin - Rolle sehen",
+            title="Werwolfseherin - Sehen",
             instructions="Wähle einen Spieler, um seine Rolle zu erfahren.",
             buttons=[
                 UIButton(
-                    label="Rolle sehen",
+                    label="Sehen",
                     action_type="sehen",
                     icon="fa-solid fa-eye",
-                    css_class="btn-info"
+                    css_class="btn-primary"
                 )
             ],
             requires_target=True,
@@ -106,27 +106,25 @@ class Werwolfseherin(Role):
         if ziel is None:
             return AktionsErgebnis(
                 erfolg=True,
-                nachricht="Du verzichtest auf deine Sehergabe diese Nacht.",
+                nachricht="Du hast diese Nacht niemanden beobachtet.",
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
         
-        if ziel.id in kontext.tote_spieler:
-            return AktionsErgebnis(
-                erfolg=False,
-                nachricht="Du kannst nur lebende Spieler betrachten.",
-            )
-        
-        # Rolle des Ziels abrufen
-        ziel_rolle = kontext.spieler_rollen.get(ziel.id, 'Unbekannt')
-        
+        # Rolle ermitteln
+        ziel_rolle = RoleRegistry.get(ziel.rolle)
+        if ziel_rolle:
+            rollen_name = ziel_rolle.info.name
+        else:
+            rollen_name = ziel.rolle or "Unbekannt"
+
         return AktionsErgebnis(
             erfolg=True,
-            nachricht=f"Deine dunkle Gabe zeigt: {ziel.name} ist {ziel_rolle}!",
+            nachricht=f"Deine Vision zeigt: {ziel.name} ist ein {rollen_name}!",
             ziel_spieler_id=ziel.id,
             effekte={
-                "rolle_gesehen": ziel_rolle,
-                "seherin_ziel": ziel.id,
+                "gesehen": ziel.id,
+                "rolle": rollen_name,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

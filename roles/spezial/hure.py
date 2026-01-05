@@ -40,6 +40,13 @@ class Hure(Role):
             farbe="#f43f5e",
             prioritaet=45,
             erzaehler_nacht=("Die Hure erwacht und waehlt bei wem sie uebernachtet."),
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#f43f5e",
+            avatar_gradient_to="#be123c",
+            avatar_border_color="#fb7185",
+            badge_emoji="💋",
         )
 
     def is_active_on_first_night(self) -> bool:

@@ -49,12 +49,13 @@ class Zahnarzt(Role):
                 "Der Zahnarzt erwacht und wählt einen Spieler, "
                 "der morgen nicht abstimmen darf."
             ),
-            erzaehler_tag=(
-                "{spieler} wurde vom Zahnarzt behandelt und darf heute "
-                "nicht abstimmen!"
-            ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#ffffff",
+            avatar_gradient_to="#e5e7eb",
+            avatar_border_color="#d1d5db",
+            badge_emoji="🦷",
         )
 
     def is_active_on_first_night(self) -> bool:

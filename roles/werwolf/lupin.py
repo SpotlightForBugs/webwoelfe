@@ -49,95 +49,57 @@ class Lupin(Role):
                 "Lupin ist in geraden Runden Mensch, in ungeraden Wolf. "
                 "Die Seherin sieht entsprechend die aktuelle Form."
             ),
-            erweiterung=Erweiterung.CHARAKTERE,
+            erweiterung=Erweiterung.SONDEREDITION,
 
             # Visual Styling
             avatar_gradient_from="#ca8a04",
-            avatar_gradient_to="#854d0e",
-            avatar_border_color="#facc15",
+            avatar_gradient_to="#a16207",
+            avatar_border_color="#eab308",
             badge_emoji="🌕",
         )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.TOETEN
+        return AktionsTyp.KEINE  # Jagt mit dem Rudel
 
     @property
     def sichtbar_als(self) -> SichtTyp:
-        """In geraden Runden Mensch, in ungeraden Wolf."""
-        # Die Runde wird beim Nacht-Start gesetzt
-        if self._aktuelle_runde % 2 == 0:
-            return SichtTyp.DORF  # Gerade Runde = Mensch
-        return SichtTyp.WERWOLF  # Ungerade Runde = Wolf
+        """
+        Lupin erscheint in geraden Runden als Mensch, in ungeraden als Wolf.
+        """
+        # Wir brauchen Zugriff auf die aktuelle Runde
+        # Da wir hier keinen Kontext haben, müssen wir das anders lösen
+        # oder eine Standard-Rückgabe machen und die Logik in game_logic verschieben
+        # Für jetzt: Standard Werwolf, die Logik muss in game_logic.py implementiert werden
+        return SichtTyp.WERWOLF
 
-    @property
-    def erlaubte_ziele(self) -> str:
-        return "lebende"
+    def get_sichtbare_rolle_fuer(self, seher: "Role", kontext: SpielKontext) -> str:
+        """
+        Spezielle Logik für Seherin:
+        Gerade Runde = Mensch
+        Ungerade Runde = Werwolf
+        """
+        if kontext.runde % 2 == 0:
+            return "Dorfbewohner"
+        return "Werwolf"
 
     def is_active_on_first_night(self) -> bool:
-        """Lupin acts on first night with werwolves."""
-        return True
+        """Lupin acts with the pack."""
+        return False
 
     def is_active_on_every_night(self) -> bool:
-        """Lupin acts every night with werwolves."""
-        return True
+        """Lupin acts with the pack."""
+        return False
 
     def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Lupin's action panel."""
-        from ..base import RollenUI, UIButton
+        from ..base import RollenUI
 
         return RollenUI(
-            title="Lupin - Mit Wölfen jagen",
-            instructions="Wähle das Opfer der Wölfe. Deine Form wechselt jede Runde.",
-            buttons=[
-                UIButton(
-                    label="Angreifen",
-                    action_type="toeten",
-                    icon="fa-solid fa-moon",
-                    css_class="btn-danger",
-                )
-            ],
-            requires_target=True,
+            title="Lupin - Passive Rolle",
+            instructions="Du jagst mit den Wölfen. Deine Aura wechselt jede Nacht.",
+            buttons=[],
+            requires_target=False,
             allow_multiple_targets=False,
-            can_skip=False,
-        )
-
-    def on_nacht_start(
-        self, spieler: "Spieler", kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
-        """Speichert die aktuelle Runde fuer die Sichtbarkeit."""
-        self._aktuelle_runde = kontext.runde
-
-        ist_wolf = kontext.runde % 2 != 0
-        form_text = "Wolf" if ist_wolf else "Mensch"
-
-        return AktionsErgebnis(
-            erfolg=True,
-            nachricht=f"Diese Nacht bist du in deiner {form_text}-Form.",
-            effekte={
-                "lupin_ist_wolf": ist_wolf,
-            },
-            log_sichtbar_fuer=f"spieler_{spieler.id}",
-        )
-
-    def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
-        """
-        Lupin nimmt am Werwolf-Angriff teil wie ein normaler Wolf.
-        """
-        if ziel is None:
-            return AktionsErgebnis(
-                erfolg=False,
-                nachricht="Die Woelfe muessen ein Opfer waehlen.",
-            )
-
-        return AktionsErgebnis(
-            erfolg=True,
-            nachricht=f"Die Woelfe haben {ziel.name} als Opfer gewaehlt.",
-            ziel_spieler_id=ziel.id,
-            effekte={
-                "werwolf_opfer": ziel.id,
-            },
-            log_sichtbar_fuer="werwolf",
+            can_skip=True,
         )

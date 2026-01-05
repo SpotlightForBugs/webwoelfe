@@ -49,9 +49,14 @@ class Zombie(Role):
             prioritaet=54,
             erzaehler_nacht=("Die Zombies erwachen und infizieren einen Spieler."),
             erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#4ade80",
+            avatar_gradient_to="#166534",
+            avatar_border_color="#22c55e",
+            badge_emoji="🧟",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

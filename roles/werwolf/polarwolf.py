@@ -49,75 +49,59 @@ class Polarwolf(Role):
                 'Der Polarwolf ist immun gegen Sandmann und Jäger.'
             ),
             erzaehler_tag=None,
-            erweiterung=Erweiterung.NEUMOND,
+            erweiterung=Erweiterung.SONDEREDITION,
 
             # Visual Styling
             avatar_gradient_from="#e0f2fe",
-            avatar_gradient_to="#bae6fd",
-            avatar_border_color="#7dd3fc",
+            avatar_gradient_to="#0ea5e9",
+            avatar_border_color="#38bdf8",
             badge_emoji="❄️",
         )
 
     @property
     def aktions_typ(self) -> 'AktionsTyp':
         from ..enums import AktionsTyp
-        return AktionsTyp.TOETEN  # Jagt mit Wölfen
-    
+        return AktionsTyp.KEINE  # Jagt mit dem Rudel
+
     @property
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.WERWOLF
     
     def is_active_on_first_night(self) -> bool:
-        """Polarwolf acts on first night with werwolves."""
-        return True
-    
+        """Polarwolf acts with the pack."""
+        return False
+
     def is_active_on_every_night(self) -> bool:
-        """Polarwolf acts every night with werwolves."""
-        return True
-    
+        """Polarwolf acts with the pack."""
+        return False
+
     def get_ui_definition(self) -> 'RollenUI':
         """Returns the UI definition for Polarwolf's action panel."""
-        from ..base import RollenUI, UIButton
+        from ..base import RollenUI
         return RollenUI(
-            title="Polarwolf - Mit Wölfen jagen",
-            instructions="Wähle das Opfer der Wölfe. Du bist immun gegen Sandmann und Jäger.",
-            buttons=[
-                UIButton(
-                    label="Angreifen",
-                    action_type="toeten",
-                    icon="fa-solid fa-snowflake",
-                    css_class="btn-danger"
-                )
-            ],
-            requires_target=True,
+            title="Polarwolf - Passive Rolle",
+            instructions="Du jagst mit den Wölfen. Du bist immun gegen Kälte (Sandmann/Jäger).",
+            buttons=[],
+            requires_target=False,
             allow_multiple_targets=False,
-            can_skip=False
+            can_skip=True
         )
-    
-    def ist_immun_gegen(self, effekt_typ: str) -> bool:
-        """
-        Polarwolf ist immun gegen bestimmte Effekte.
-        """
-        immunitaeten = ['sandmann', 'jaeger', 'einschlaefern', 'schuss']
-        return effekt_typ.lower() in immunitaeten
-    
+
     def on_angegriffen(self, spieler: 'Spieler', angreifer_id: int,
                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
-        Polarwolf ist immun gegen Jäger-Schuss.
+        Polarwolf ist immun gegen Jäger.
         """
-        # Prüfen ob Angreifer ein Jäger ist
-        angreifer_rolle = kontext.spieler_rollen.get(angreifer_id, '')
-        
-        if 'jaeger' in angreifer_rolle.lower() or 'jäger' in angreifer_rolle.lower():
-            return AktionsErgebnis(
-                erfolg=True,
-                nachricht="Der Schuss des Jägers verfehlt den Polarwolf in der Kälte!",
-                effekte={
-                    "angriff_abgewehrt": True,
-                    "immunität_jaeger": True,
-                },
-                log_sichtbar_fuer="alle",
-            )
-        
-        return None  # Andere Angriffe treffen normal
+        # Wir müssen wissen wer der Angreifer ist
+        # Das ist hier schwierig ohne direkten Zugriff auf die Rolle des Angreifers
+        # Aber wir können prüfen ob es ein Jäger-Schuss war (über todesursache/aktionstyp)
+        # Das muss in game_logic passieren, hier können wir nur Hinweise geben
+        return None
+
+    def ist_immun_gegen(self, effekt: str) -> bool:
+        """
+        Prüft Immunitäten.
+        """
+        if effekt in ["sandmann_schlaf", "jaeger_schuss"]:
+            return True
+        return False

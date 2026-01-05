@@ -64,60 +64,45 @@ class WeisserWolf(Role):
     
     @property
     def erlaubte_ziele(self) -> str:
-        return "werwolf"  # Nur Mitwoelfe
-    
-    @property
-    def basis_hinweis_chance(self) -> float:
-        return 0.08  # Niedriger als normale Woelfe - unauffaelliger
+        return "andere_werwoelfe"
+
     def is_active_on_first_night(self) -> bool:
-        """Weißer Wolf does not act on first night (even round)."""
+        """Weißer Wolf acts on second night."""
         return False
     
     def is_active_on_every_night(self) -> bool:
         """Weißer Wolf acts every second night."""
-        return False  # Special: only every second night
-    
+        return True
+
     def get_ui_definition(self) -> 'RollenUI':
         """Returns the UI definition for Weißer Wolf's action panel."""
         from ..base import RollenUI, UIButton
         return RollenUI(
-            title="Weißer Wolf - Mitwölfe töten",
-            instructions="Jede zweite Nacht kannst du heimlich einen Mitwerwolf töten.",
+            title="Weißer Wolf - Verrat",
+            instructions="Du kannst einen Mitwerwolf töten (jede zweite Nacht).",
             buttons=[
                 UIButton(
                     label="Töten",
                     action_type="toeten",
-                    icon="fa-solid fa-paw",
+                    icon="fa-solid fa-skull",
                     css_class="btn-danger",
                     requires_confirmation=True
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-
-    def get_erzaehler_nacht_text(self, kontext: "SpielKontext") -> Optional[str]:
-        """
-        Gibt den Erzähler-Text nur in geraden Runden zurück.
-        """
-        if kontext.runde % 2 == 0:
-            return (
-                "Der Weisse Wolf erwacht. Er spürt den Hunger nach dem Fleisch "
-                "seiner eigenen Art. Möchte er einen Mitwerwolf töten?"
-            )
-        return None
 
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
-        Weisser Wolf kann jede zweite Nacht einen Mitwolf toeten.
+        Weißer Wolf tötet einen Mitwerwolf.
         """
-        # Nur jede zweite Nacht aktiv
         if kontext.runde % 2 != 0:
             return AktionsErgebnis(
                 erfolg=True,
-                nachricht="Diese Nacht ruhst du.",
+                nachricht="Du wartest auf die nächste Nacht...",
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
@@ -125,22 +110,30 @@ class WeisserWolf(Role):
         if ziel is None:
             return AktionsErgebnis(
                 erfolg=True,
-                nachricht="Du hast diese Nacht keinen Mitwolf getoetet.",
+                nachricht="Du verschonst deine Brüder heute Nacht.",
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
         
+        # Check if target is werewolf
+        ziel_team = kontext.spieler_teams.get(ziel.id, Team.DORF)
+        if ziel_team != Team.WERWOLF:
+             return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Du kannst nur andere Werwölfe töten!",
+            )
+
         return AktionsErgebnis(
             erfolg=True,
-            nachricht=f"Du hast {ziel.name} heimlich getoetet!",
+            nachricht=f"Du tötest {ziel.name}! Ein Konkurrent weniger...",
             ziel_spieler_id=ziel.id,
             effekte={
-                "weisser_wolf_opfer": ziel.id,
-                "todesursache": "weisser_wolf",
+                "weisser_wolf_toetet": ziel.id,
+                "todesursache": "werwolf",
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
+
     def berechne_gewinn(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[Team]:
         """
         Gewinnt als letzter Ueberlebender oder letzter Werwolf.

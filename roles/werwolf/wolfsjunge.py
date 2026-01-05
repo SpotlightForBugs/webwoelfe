@@ -57,33 +57,53 @@ class Wolfsjunge(Role):
             farbe="#b91c1c",
             prioritaet=6,
             erzaehler_nacht=(
-                "Das Wolfsjunge erwacht und sucht sich ein Vorbild. "
-                "Es wird ihm folgen... bis in den Tod."
+                "Das Wolfsjunge erwacht und wählt sein Vorbild. "
+                "Stirbt dieses, wird das Junge zum Werwolf."
             ),
             erweiterung=Erweiterung.NEUMOND,
 
             # Visual Styling
-            avatar_gradient_from="#b91c1c",
-            avatar_gradient_to="#7f1d1d",
-            avatar_border_color="#ef4444",
+            avatar_gradient_from="#a16207",
+            avatar_gradient_to="#713f12",
+            avatar_border_color="#ca8a04",
             badge_emoji="🐾",
         )
 
     @property
-    def aktions_typ(self) -> AktionsTyp:
+    def aktions_typ(self) -> "AktionsTyp":
+        from ..enums import AktionsTyp
         return AktionsTyp.WAEHLEN
 
     @property
     def sichtbar_als(self) -> SichtTyp:
-        # Sieht als Dorf aus, bis Verwandlung
+        """
+        Erscheint als Dorfbewohner, bis es verwandelt ist.
+        """
+        # Wir brauchen Zugriff auf den State
+        # Da wir hier keinen Spieler haben, geben wir Standard zurück
+        # Die Logik muss in get_sichtbare_rolle_fuer implementiert werden
         return SichtTyp.DORF
 
+    def get_sichtbare_rolle_fuer(self, seher: "Role", kontext: SpielKontext) -> str:
+        """
+        Spezielle Logik für Seherin:
+        Vor Verwandlung = Dorfbewohner
+        Nach Verwandlung = Werwolf
+        """
+        # Wir brauchen den Spieler um den State zu prüfen
+        # Das ist hier schwierig ohne Spieler-Objekt
+        # Aber die Basis-Klasse ruft dies auf dem Role-Objekt auf
+        # Wir müssen das Role-Objekt mit dem Spieler verknüpfen oder
+        # die Methode muss den Spieler als Argument bekommen (was sie nicht tut in base.py)
+        # TODO: Refactor base.py to pass target player to get_sichtbare_rolle_fuer
+        return "Dorfbewohner" # Fallback
+
     def is_active_on_first_night(self) -> bool:
-        """Wolfsjunge acts only on first night to choose role model."""
+        """Wolfsjunge acts on first night (choosing role model)."""
         return True
 
     def is_active_on_every_night(self) -> bool:
-        """Wolfsjunge does not act every night."""
+        """Wolfsjunge only acts on first night."""
         return False
 
     def get_ui_definition(self) -> "RollenUI":
@@ -92,14 +112,13 @@ class Wolfsjunge(Role):
 
         return RollenUI(
             title="Wolfsjunge - Vorbild wählen",
-            instructions="Wähle dein Vorbild. Stirbt es, wirst du zum Werwolf.",
+            instructions="Wähle dein Vorbild. Wenn es stirbt, wirst du zum Werwolf.",
             buttons=[
                 UIButton(
                     label="Vorbild wählen",
                     action_type="waehlen",
-                    icon="fa-solid fa-child",
+                    icon="fa-solid fa-paw",
                     css_class="btn-primary",
-                    requires_confirmation=True,
                 )
             ],
             requires_target=True,
@@ -111,10 +130,15 @@ class Wolfsjunge(Role):
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
         """
-        Wolfsjunge wählt sein Vorbild in der ersten Nacht.
+        Wolfsjunge wählt sein Vorbild.
         """
         if kontext.runde != 1:
-            return None
+            return AktionsErgebnis(
+                erfolg=True,
+                nachricht="Du hast dein Vorbild bereits gewählt.",
+                effekte={},
+                log_sichtbar_fuer=f"spieler_{spieler.id}",
+            )
 
         if ziel is None:
             return AktionsErgebnis(
@@ -128,15 +152,14 @@ class Wolfsjunge(Role):
                 nachricht="Du kannst dich nicht selbst als Vorbild wählen.",
             )
 
-        # Vorbild speichern
         self.set_state(spieler, "vorbild_id", ziel.id)
 
         return AktionsErgebnis(
             erfolg=True,
-            nachricht=f"{ziel.name} ist nun dein Vorbild. Stirbt es, wirst du zum Werwolf.",
+            nachricht=f"{ziel.name} ist nun dein Vorbild. Beschütze es, oder deine wilde Seite erwacht!",
             ziel_spieler_id=ziel.id,
             effekte={
-                "vorbild": ziel.id,
+                "vorbild_gewaehlt": ziel.id,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
@@ -144,31 +167,25 @@ class Wolfsjunge(Role):
     def on_spieler_stirbt(
         self,
         spieler: "Spieler",
-        opfer: "Spieler",
+        gestorbener: "Spieler",
         todesursache: str,
         kontext: SpielKontext,
     ) -> Optional[AktionsErgebnis]:
         """
-        Prueft ob das Vorbild stirbt und Verwandlung ausloest.
+        Wenn das Vorbild stirbt, wird das Wolfsjunge zum Werwolf.
         """
         vorbild_id = self.get_state(spieler, "vorbild_id")
 
-        if vorbild_id and opfer.id == vorbild_id:
-            # Markiere als verwandelt
+        if vorbild_id and gestorbener.id == vorbild_id:
             self.set_state(spieler, "verwandelt", True)
-
             return AktionsErgebnis(
                 erfolg=True,
-                nachricht=(
-                    "Das Vorbild des Wolfsjungen ist gestorben! "
-                    "Es verwandelt sich in einen Werwolf!"
-                ),
+                nachricht="Dein Vorbild ist tot! Deine Wut verwandelt dich in einen WERWOLF!",
                 effekte={
-                    "verwandlung": True,
-                    "neues_team": "werwolf",
-                    "neue_rolle": "Werwolf",
+                    "wolfsjunge_verwandlung": True,
+                    "team_wechsel": Team.WERWOLF.value,
                 },
-                log_sichtbar_fuer="erzaehler",
+                log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
 
         return None

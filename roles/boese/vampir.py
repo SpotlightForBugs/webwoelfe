@@ -49,11 +49,15 @@ class Vampir(Role):
             prioritaet=53,
             erzaehler_nacht=(
                 "Die Vampire erwachen (jede zweite Nacht) und wählen "
-                "einen Spieler zur Verwandlung."
+                "ein Opfer zur Verwandlung."
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
             erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#7c2d12",
+            avatar_gradient_to="#451a03",
+            avatar_border_color="#9a3412",
+            badge_emoji="🧛",
         )
 
     @property

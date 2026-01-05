@@ -88,6 +88,12 @@ class Rabe(Role):
             ),
             erweiterung=Erweiterung.GEMEINDE,
             hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#1f2937",
+            avatar_gradient_to="#030712",
+            avatar_border_color="#374151",
+            badge_emoji="🐦‍⬛",
         )
 
     def is_active_on_first_night(self) -> bool:

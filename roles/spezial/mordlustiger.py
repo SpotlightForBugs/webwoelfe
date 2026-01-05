@@ -49,10 +49,14 @@ class Mordlustiger(Role):
             erzaehler_nacht=(
                 "Der Mordlustige erwacht und wählt sein nächtliches Opfer."
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#7f1d1d",
+            avatar_gradient_to="#450a0a",
+            avatar_border_color="#b91c1c",
+            badge_emoji="🔪",
+        )
 
     def is_active_on_first_night(self) -> bool:
         """Mordlustiger acts every night."""

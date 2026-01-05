@@ -1242,24 +1242,21 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       <div class="card fade-in delay-2">
         <h3 class="mb-2"><i class="fa-solid fa-users"></i> Spieler</h3>
         <div class="spieler-grid" id="spieler-grid">
-          {% for s in alle_spieler %}
-          {# ================================================================
-             ALL visibility logic now comes from player_effects (backend)
-             No more hardcoded role checks like ist_werwolf_team!
-             ================================================================ #}
-          {% set spieler_effekte = player_effects.get(s.id, []) if player_effects else [] %}
-
-          {# Build dynamic CSS classes from ALL effects (including visibility) #}
-          {% set dynamic_css = [] %}
-          {% for effect in spieler_effekte %}
-            {% if effect.css_class %}
-              {% set _ = dynamic_css.append(effect.css_class) %}
-            {% endif %}
-          {% endfor %}
-
-          {# Check if player knows this player's role (for data-rolle attribute) #}
-          {% set kennt_rolle = spieler.ist_erzaehler or s.id == spieler.id or not s.ist_am_leben %}
-          {% set ist_werwolf_sichtbar = spieler_effekte|selectattr('key', 'equalto', 'visibility.werwolf_team')|list|length > 0 %}
+          {% for s in alle_spieler %} {#
+          ================================================================ ALL
+          visibility logic now comes from player_effects (backend) No more
+          hardcoded role checks like ist_werwolf_team!
+          ================================================================ #} {%
+          set spieler_effekte = player_effects.get(s.id, []) if player_effects
+          else [] %} {# Build dynamic CSS classes from ALL effects (including
+          visibility) #} {% set dynamic_css = [] %} {% for effect in
+          spieler_effekte %} {% if effect.css_class %} {% set _ =
+          dynamic_css.append(effect.css_class) %} {% endif %} {% endfor %} {#
+          Check if player knows this player's role (for data-rolle attribute) #}
+          {% set kennt_rolle = spieler.ist_erzaehler or s.id == spieler.id or
+          not s.ist_am_leben %} {% set ist_werwolf_sichtbar =
+          spieler_effekte|selectattr('key', 'equalto',
+          'visibility.werwolf_team')|list|length > 0 %}
 
           <div
             class="spieler-card
@@ -1276,21 +1273,19 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           >
             <div class="spieler-avatar">
               <span class="avatar-initial">{{ s.name[0]|upper }}</span>
-              {# Dynamic icons from effects - replaces hardcoded werwolf/seherin icons #}
-              {% for effect in spieler_effekte %}
-                {% if effect.icon %}
-                <span class="rolle-icon effect-icon" title="{{ effect.name }}">{{ effect.icon }}</span>
-                {% endif %}
-              {% endfor %}
+              {# Dynamic icons from effects - replaces hardcoded werwolf/seherin
+              icons #} {% for effect in spieler_effekte %} {% if effect.icon %}
+              <span class="rolle-icon effect-icon" title="{{ effect.name }}"
+                >{{ effect.icon }}</span
+              >
+              {% endif %} {% endfor %}
             </div>
             <div class="spieler-name">{{ s.name }}</div>
             {% if s.id == spieler.id %}
             <div class="spieler-label selbst">(Du)</div>
-            {% endif %}
-            {% if s.ist_erzaehler %}
+            {% endif %} {% if s.ist_erzaehler %}
             <div class="spieler-label erzaehler">(Erzähler)</div>
-            {% endif %}
-            {% if spieler.ist_erzaehler and s.rolle %}
+            {% endif %} {% if spieler.ist_erzaehler and s.rolle %}
             <div class="spieler-rolle-tag">{{ s.rolle }}</div>
             {% endif %}
           </div>

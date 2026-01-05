@@ -546,6 +546,7 @@ def pruefe_spielende(raum: Raum) -> dict | None:
 
     # Verliebten-Check - dynamisch via Registry
     from roles import RoleRegistry
+
     verliebte = RoleRegistry.get_players_by_query(lebende, "verliebte")
 
     if len(verliebte) == 2 and all(v.ist_am_leben for v in verliebte):

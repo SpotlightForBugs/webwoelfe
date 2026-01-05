@@ -70,7 +70,8 @@ with app.app_context():
 # JINJA TEMPLATE FILTERS
 # =============================================================================
 
-@app.template_filter('css_class')
+
+@app.template_filter("css_class")
 def to_css_class(value):
     """
     Konvertiert einen Rollennamen in einen CSS-Klassen-Namen.
@@ -79,11 +80,11 @@ def to_css_class(value):
     Beispiel: "Jäger" -> "jaeger", "Weiße Wölfin" -> "weisse-woelfin"
     """
     if not value:
-        return 'unbekannt'
+        return "unbekannt"
     result = value.lower()
-    result = result.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
-    result = result.replace('ß', 'ss')
-    result = result.replace(' ', '-')
+    result = result.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")
+    result = result.replace("ß", "ss")
+    result = result.replace(" ", "-")
     return result
 
 
@@ -436,7 +437,9 @@ def spiel(code):
             player_effects[s.id] = effects
 
     # Get the visible role for the current player (handles Hund, etc.)
-    sichtbare_rolle = rolle_info.get("name", spieler.rolle) if rolle_info else spieler.rolle
+    sichtbare_rolle = (
+        rolle_info.get("name", spieler.rolle) if rolle_info else spieler.rolle
+    )
     if spieler.rolle:
         role_obj = RoleRegistry.get(spieler.rolle)
         if role_obj:
@@ -450,12 +453,19 @@ def spiel(code):
     for role in RoleRegistry.get_all():
         info = role.info
         # Normalize role name to CSS class name
-        css_name = info.name.lower().replace(' ', '-').replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss')
+        css_name = (
+            info.name.lower()
+            .replace(" ", "-")
+            .replace("ä", "ae")
+            .replace("ö", "oe")
+            .replace("ü", "ue")
+            .replace("ß", "ss")
+        )
         rollen_styles[css_name] = {
-            'name': info.name,
-            'farbe': info.farbe,
-            'icon': info.icon,
-            'team': info.team.value,
+            "name": info.name,
+            "farbe": info.farbe,
+            "icon": info.icon,
+            "team": info.team.value,
         }
 
     return render_template(

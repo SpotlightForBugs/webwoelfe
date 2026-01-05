@@ -29,6 +29,7 @@ class StateType(Enum):
 
 class StateTarget(Enum):
     """Wer wird von einem State betroffen? Basis-Typen."""
+
     SELF = "self"  # Nur der eigene Spieler
     OTHER = "other"  # Anderer Spieler (z.B. Verliebt, Infiziert)
     GLOBAL = "global"  # Spielweite Auswirkung
@@ -55,6 +56,7 @@ class VisualEffectConfig:
             show_to=lambda viewer, target: True,  # Alle sehen es
         )
     """
+
     css_class: Optional[str] = None
     icon: Optional[str] = None  # Emoji or text
     icon_class: Optional[str] = None  # FontAwesome class
@@ -79,6 +81,7 @@ class VisualEffectConfig:
 # Legacy enum for backward compatibility - prefer VisualEffectConfig
 class StateVisualEffect(Enum):
     """Visuelle Effekte - DEPRECATED, use VisualEffectConfig instead."""
+
     NONE = "none"
     HEART = "heart"
     INFECTED = "infected"
@@ -104,13 +107,15 @@ class TargetingConfig:
             description="Alle Dorfbewohner",
         )
     """
+
     base_target: StateTarget = StateTarget.SELF
     # Lambda: (target_spieler, kontext) -> bool
     filter_fn: Optional[Callable[["Spieler", "SpielKontext"], bool]] = None
     description: str = ""
 
-    def get_targets(self, alle_spieler: List["Spieler"],
-                    kontext: "SpielKontext") -> List["Spieler"]:
+    def get_targets(
+        self, alle_spieler: List["Spieler"], kontext: "SpielKontext"
+    ) -> List["Spieler"]:
         """Ermittelt alle gültigen Ziele."""
         if self.filter_fn:
             return [s for s in alle_spieler if self.filter_fn(s, kontext)]
@@ -159,7 +164,7 @@ class StateField:
 
     def validate(self, value: Any) -> bool:
         """Prüft, ob ein Wert dem Typ entspricht."""
-        #TODO: ADD MORE TYPES (TEAM; EXPANSION; ALIVE_STATE;)
+        # TODO: ADD MORE TYPES (TEAM; EXPANSION; ALIVE_STATE;)
         if value is None:
             return True
         if self.typ == StateType.BOOL:
@@ -199,6 +204,7 @@ class GlobalStateDefinition:
     Wird von Rollen definiert und beim Registry-Laden gesammelt.
     Ermöglicht dynamische Queries statt hardcoded Checks.
     """
+
     key: str  # Voller Key inkl. "global." prefix
     name: str  # Anzeigename
     typ: StateType = StateType.BOOL
@@ -227,6 +233,7 @@ class NachtEvent:
 
     Ermöglicht Rollen, globale Events zu triggern (z.B. Kuh muht).
     """
+
     event_id: str
     sound_file: Optional[str] = None  # z.B. "moo.mp3"
     text: Optional[str] = None  # Text der angezeigt wird
@@ -244,6 +251,7 @@ class UIButtonDefinition:
 
     Beispiel: Kuh fügt "Milch trinken" Button für alle Dorfbewohner hinzu.
     """
+
     button_id: str
     label: str
     action_type: str
@@ -264,6 +272,7 @@ class RollenModell:
 
     Ermöglicht dynamische Modell-Definitionen pro Rolle.
     """
+
     modell_id: str  # z.B. "hund", "werhund", "kuh"
     anzeige_name: str  # Was im UI angezeigt wird
     # Lambda: (spieler, kontext) -> str - Dynamische Modell-Auswahl
@@ -365,8 +374,9 @@ def has_global_state(spieler: "Spieler", state_key: str) -> bool:
     return value is not None and value is not False and value != 0
 
 
-def get_players_with_state(spieler_liste: List["Spieler"], state_key: str,
-                           value: Any = None) -> List["Spieler"]:
+def get_players_with_state(
+    spieler_liste: List["Spieler"], state_key: str, value: Any = None
+) -> List["Spieler"]:
     """
     Findet alle Spieler die einen bestimmten State haben.
 
@@ -389,9 +399,11 @@ def get_players_with_state(spieler_liste: List["Spieler"], state_key: str,
     return result
 
 
-def get_player_visual_effects(spieler: "Spieler",
-                               global_state_defs: Dict[str, "GlobalStateDefinition"],
-                               viewer_id: Optional[int] = None) -> List[Dict[str, Any]]:
+def get_player_visual_effects(
+    spieler: "Spieler",
+    global_state_defs: Dict[str, "GlobalStateDefinition"],
+    viewer_id: Optional[int] = None,
+) -> List[Dict[str, Any]]:
     """
     Ermittelt alle visuellen Effekte die für einen Spieler angezeigt werden sollen.
 
@@ -415,14 +427,18 @@ def get_player_visual_effects(spieler: "Spieler",
         # Suche GlobalStateDefinition
         if key in global_state_defs:
             gsd = global_state_defs[key]
-            effects.append({
-                "key": key,
-                "value": value,
-                "css_class": gsd.css_class,
-                "icon": gsd.icon,
-                "visual_effect": gsd.visual_effect.value if gsd.visual_effect else None,
-                "name": gsd.name,
-            })
+            effects.append(
+                {
+                    "key": key,
+                    "value": value,
+                    "css_class": gsd.css_class,
+                    "icon": gsd.icon,
+                    "visual_effect": (
+                        gsd.visual_effect.value if gsd.visual_effect else None
+                    ),
+                    "name": gsd.name,
+                }
+            )
 
     return effects
 

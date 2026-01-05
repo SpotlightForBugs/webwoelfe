@@ -85,7 +85,8 @@ class Kuh(Role):
                     icon="🥛",
                     tooltip="Hat Milch getrunken",
                     # Nur der Spieler selbst und Erzähler sehen es
-                    show_to=lambda viewer, target: viewer.id == target.id or viewer.ist_erzaehler,
+                    show_to=lambda viewer, target: viewer.id == target.id
+                    or viewer.ist_erzaehler,
                 ),
                 query_name="milchtrinker",
                 defined_by="Kuh",
@@ -140,16 +141,17 @@ class Kuh(Role):
                 requires_confirmation=True,
                 # Nur Dorfbewohner können Milch trinken
                 show_to=lambda spieler, kontext: (
-                    spieler.rolle in dorf_rollen and
-                    spieler.ist_am_leben and
-                    not get_spieler_state(spieler, "global.hat_milch_getrunken")
+                    spieler.rolle in dorf_rollen
+                    and spieler.ist_am_leben
+                    and not get_spieler_state(spieler, "global.hat_milch_getrunken")
                 ),
                 on_click=self._handle_milch_trinken,
             ),
         ]
 
-    def _handle_milch_trinken(self, spieler: "Spieler",
-                               kontext: SpielKontext) -> AktionsErgebnis:
+    def _handle_milch_trinken(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> AktionsErgebnis:
         """
         Handler wenn ein Spieler Milch trinkt.
 
@@ -254,9 +256,9 @@ class Kuh(Role):
             can_skip=True,
         )
 
-    def on_tag_start(self, spieler: "Spieler",
-                      kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+    def on_tag_start(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """Reset Milch-Status für neuen Tag."""
         self.set_state(spieler, "milch_gegeben_heute", False)
         return None
-

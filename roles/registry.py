@@ -338,20 +338,25 @@ class RoleRegistry:
                         "typ": gsd.typ.value,
                         "beschreibung": gsd.beschreibung,
                         "default": gsd.default,
-                        "visual_effect": gsd.visual_effect.value if gsd.visual_effect else None,
+                        "visual_effect": (
+                            gsd.visual_effect.value if gsd.visual_effect else None
+                        ),
                         "css_class": gsd.css_class,
                         "icon": gsd.icon,
                         "query_name": gsd.query_name,
                         "defined_by": gsd.defined_by or name,
                     }
             except Exception as e:
-                logger.warning(f"Fehler beim Laden der GlobalStateDefinitions von {name}: {e}")
+                logger.warning(
+                    f"Fehler beim Laden der GlobalStateDefinitions von {name}: {e}"
+                )
 
         return result
 
     @classmethod
-    def get_players_by_query(cls, spieler_liste: List["Spieler"],
-                              query_name: str) -> List["Spieler"]:
+    def get_players_by_query(
+        cls, spieler_liste: List["Spieler"], query_name: str
+    ) -> List["Spieler"]:
         """
         Findet Spieler basierend auf einem Query-Namen.
 
@@ -386,7 +391,9 @@ class RoleRegistry:
         return result
 
     @classmethod
-    def get_all_nacht_events(cls, aktive_rollen: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def get_all_nacht_events(
+        cls, aktive_rollen: Optional[List[str]] = None
+    ) -> List[Dict[str, Any]]:
         """
         Sammelt alle Nacht-Events von allen (oder spezifizierten) Rollen.
 
@@ -403,23 +410,24 @@ class RoleRegistry:
             try:
                 events = role.get_nacht_events()
                 for event in events:
-                    result.append({
-                        "event_id": event.event_id,
-                        "sound_file": event.sound_file,
-                        "text": event.text,
-                        "animation": event.animation,
-                        "phases": event.phases,
-                        "defined_by": name,
-                    })
+                    result.append(
+                        {
+                            "event_id": event.event_id,
+                            "sound_file": event.sound_file,
+                            "text": event.text,
+                            "animation": event.animation,
+                            "phases": event.phases,
+                            "defined_by": name,
+                        }
+                    )
             except Exception as e:
                 logger.warning(f"Fehler beim Laden der NachtEvents von {name}: {e}")
         return result
 
     @classmethod
-    def get_all_ui_buttons_for_others(cls,
-                                       spieler: "Spieler",
-                                       kontext: Any,
-                                       aktive_rollen: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def get_all_ui_buttons_for_others(
+        cls, spieler: "Spieler", kontext: Any, aktive_rollen: Optional[List[str]] = None
+    ) -> List[Dict[str, Any]]:
         """
         Sammelt alle UI-Buttons die andere Rollen für diesen Spieler definiert haben.
 
@@ -441,16 +449,18 @@ class RoleRegistry:
                     # Prüfe ob dieser Spieler den Button sehen soll
                     if btn.show_to and not btn.show_to(spieler, kontext):
                         continue
-                    result.append({
-                        "button_id": btn.button_id,
-                        "label": btn.label,
-                        "action_type": btn.action_type,
-                        "icon": btn.icon,
-                        "css_class": btn.css_class,
-                        "requires_confirmation": btn.requires_confirmation,
-                        "tooltip": btn.tooltip,
-                        "defined_by": name,
-                    })
+                    result.append(
+                        {
+                            "button_id": btn.button_id,
+                            "label": btn.label,
+                            "action_type": btn.action_type,
+                            "icon": btn.icon,
+                            "css_class": btn.css_class,
+                            "requires_confirmation": btn.requires_confirmation,
+                            "tooltip": btn.tooltip,
+                            "defined_by": name,
+                        }
+                    )
             except Exception as e:
                 logger.warning(f"Fehler beim Laden der UIButtons von {name}: {e}")
         return result

@@ -46,7 +46,7 @@ class Erweiterung(Enum):
     NEUMOND = "neumond"
     GEMEINDE = "gemeinde"
     CHARAKTERE = "charaktere"
-    SONDEREDITION = "sonderedition" # THIS MEANS COMMUNITY EDITION
+    SONDEREDITION = "sonderedition"  # THIS MEANS COMMUNITY EDITION
 
     def __str__(self) -> str:
         return self.value

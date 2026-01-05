@@ -52,8 +52,8 @@ class DunklerPriester(Role):
             ),
             erzaehler_tag=None,
             hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

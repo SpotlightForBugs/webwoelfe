@@ -51,8 +51,8 @@ class Mordlustiger(Role):
             ),
             erzaehler_tag=None,
             hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+        )
 
     def is_active_on_first_night(self) -> bool:
         """Mordlustiger acts every night."""

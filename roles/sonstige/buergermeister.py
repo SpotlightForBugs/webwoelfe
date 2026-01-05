@@ -35,8 +35,8 @@ class Buergermeister(Role):
             erzaehler_nacht="Der Bürgermeister ruht in seinem Rathaus. Seine Stimme hat doppeltes Gewicht.",
             erzaehler_tag="Der Bürgermeister ist gefallen! Mit letzter Kraft zeigt er auf seinen Nachfolger, der das Amt und die doppelte Stimme erbt!",
             hinweis_config=None,
-        erweiterung=Erweiterung.CHARAKTERE,
-            )
+            erweiterung=Erweiterung.CHARAKTERE,
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

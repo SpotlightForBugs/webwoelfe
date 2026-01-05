@@ -62,25 +62,26 @@ class Drachenbaendiger(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
-    
+
     def is_active_on_first_night(self) -> bool:
         """Drachenbändiger does not act on first night."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Drachenbändiger is passive."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Drachenbändiger's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Drachenbändiger - Passive Rolle",
             instructions="Dein Drache beschützt dich. Wer dich angreift, wird verbrannt (einmalig).",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def on_angegriffen(

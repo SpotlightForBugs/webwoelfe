@@ -36,8 +36,8 @@ class KleinesMaedchen(Role):
             erzaehler_nacht="Das Kleine Mädchen darf während der Werwolf-Phase blinzeln - auf eigene Gefahr!",
             erzaehler_tag=None,
             hinweis_config=None,
-        erweiterung=Erweiterung.BASISSPIEL,
-            )
+            erweiterung=Erweiterung.BASISSPIEL,
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

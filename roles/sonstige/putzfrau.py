@@ -35,8 +35,8 @@ class Putzfrau(Role):
             erzaehler_nacht="Die Putzfrau wischt durch die leeren Häuser und sammelt wertvolle Informationen.",
             erzaehler_tag="Die Putzfrau hat beim Aufräumen etwas gefunden! Sie enthüllt die wahre Rolle des Toten: {rolle}!",
             hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+        )
 
     @property
     def aktions_typ(self) -> Optional[AktionsTyp]:

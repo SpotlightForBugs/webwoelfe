@@ -63,25 +63,26 @@ class Flammenmann(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.TOETEN
-    
+
     def is_active_on_first_night(self) -> bool:
         """Flammenmann does not act at night."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Flammenmann does not act at night."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Flammenmann's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Flammenmann - Tagaktion",
             instructions="Du kannst einmal am Tag dein Haus anzünden und deine Nachbarn töten.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def ist_einmal_faehigkeit(self) -> bool:

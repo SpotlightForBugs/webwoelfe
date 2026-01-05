@@ -50,8 +50,8 @@ class Zombie(Role):
             erzaehler_nacht=("Die Zombies erwachen und infizieren einen Spieler."),
             erzaehler_tag=None,
             hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

@@ -40,46 +40,46 @@ from .registry import RoleRegistry
 from .enums import Team, Kategorie, Phase, TriggerTyp, Erweiterung
 
 __all__ = [
-    'Role',
-    'RoleRegistry',
-    'Team',
-    'Kategorie',
-    'Phase',
-    'TriggerTyp',
-    'Erweiterung',
-    'get_alle_rollen',
-    'get_rollen_nach_kategorie',
-    'get_rollen_nach_kategorie_liste',
-    'get_rollen_nach_erweiterung',
-    'get_rollen_anzahl',
-    'ROLLEN',
-    'ERWEITERUNG_INFO',
-    'KATEGORIE_INFO',
+    "Role",
+    "RoleRegistry",
+    "Team",
+    "Kategorie",
+    "Phase",
+    "TriggerTyp",
+    "Erweiterung",
+    "get_alle_rollen",
+    "get_rollen_nach_kategorie",
+    "get_rollen_nach_kategorie_liste",
+    "get_rollen_nach_erweiterung",
+    "get_rollen_anzahl",
+    "ROLLEN",
+    "ERWEITERUNG_INFO",
+    "KATEGORIE_INFO",
 ]
 
 
 def _auto_discover_roles():
     """
     Automatische Erkennung und Registrierung aller Rollen.
-    
+
     Durchsucht alle Unterverzeichnisse nach Python-Dateien
     und importiert sie automatisch. Der @RoleRegistry.register
     Decorator in jeder Rolle-Klasse erledigt die Registrierung.
     """
     roles_dir = Path(__file__).parent
-    
+
     # Alle Unterverzeichnisse durchsuchen
     for subdir in roles_dir.iterdir():
         if not subdir.is_dir():
             continue
-        if subdir.name.startswith('_') or subdir.name.startswith('.'):
+        if subdir.name.startswith("_") or subdir.name.startswith("."):
             continue
-        
+
         # Alle .py Dateien im Unterverzeichnis importieren
-        for py_file in subdir.glob('*.py'):
-            if py_file.name.startswith('_'):
+        for py_file in subdir.glob("*.py"):
+            if py_file.name.startswith("_"):
                 continue
-            
+
             # Modul-Name: roles.unterverzeichnis.dateiname
             module_name = f"roles.{subdir.name}.{py_file.stem}"
             try:
@@ -96,6 +96,7 @@ _auto_discover_roles()
 # DYNAMISCHE ROLLEN-ZUGRIFFSFUNKTIONEN
 # Diese ersetzen die statischen Funktionen aus models.py
 # ============================================================================
+
 
 def get_alle_rollen():
     """
@@ -131,13 +132,13 @@ def get_rollen_nach_kategorie_liste():
         if kat not in kategorien:
             kategorien[kat] = []
         rolle_dict = rolle.to_dict()
-        rolle_dict['name'] = rolle.info.name
+        rolle_dict["name"] = rolle.info.name
         kategorien[kat].append(rolle_dict)
-    
+
     # Sortiere nach ID innerhalb jeder Kategorie
     for kat in kategorien:
-        kategorien[kat].sort(key=lambda x: x.get('id', 999))
-    
+        kategorien[kat].sort(key=lambda x: x.get("id", 999))
+
     return kategorien
 
 
@@ -158,112 +159,112 @@ def get_rollen_nach_erweiterung():
         if erw not in erweiterungen:
             erweiterungen[erw] = []
         rolle_dict = rolle.to_dict()
-        rolle_dict['name'] = rolle.info.name
+        rolle_dict["name"] = rolle.info.name
         erweiterungen[erw].append(rolle_dict)
-    
+
     # Sortiere nach ID innerhalb jeder Erweiterung
     for erw in erweiterungen:
-        erweiterungen[erw].sort(key=lambda x: x.get('id', 999))
-    
+        erweiterungen[erw].sort(key=lambda x: x.get("id", 999))
+
     return erweiterungen
 
 
 # Metadaten fuer Erweiterungspakete (fuer UI) #TODO: Dynamic!
 ERWEITERUNG_INFO = {
-    'basisspiel': {
-        'name': 'Basisspiel',
-        'icon': 'fa-solid fa-box',
-        'beschreibung': 'Die klassischen Grundrollen',
-        'badge': 'Basis',
-        'badge_class': 'base',
+    "basisspiel": {
+        "name": "Basisspiel",
+        "icon": "fa-solid fa-box",
+        "beschreibung": "Die klassischen Grundrollen",
+        "badge": "Basis",
+        "badge_class": "base",
     },
-    'neumond': {
-        'name': 'Neumond',
-        'icon': 'fa-solid fa-moon',
-        'beschreibung': 'Heiler, Alter, Suendenbock, Floetenspieler & mehr',
-        'badge': 'Erw. 1',
-        'badge_class': 'exp1',
+    "neumond": {
+        "name": "Neumond",
+        "icon": "fa-solid fa-moon",
+        "beschreibung": "Heiler, Alter, Suendenbock, Floetenspieler & mehr",
+        "badge": "Erw. 1",
+        "badge_class": "exp1",
     },
-    'gemeinde': {
-        'name': 'Die Gemeinde',
-        'icon': 'fa-solid fa-city',
-        'beschreibung': 'Gebaeude & Berufe: Brandstifter, Rabe & mehr',
-        'badge': 'Erw. 2',
-        'badge_class': 'exp2',
+    "gemeinde": {
+        "name": "Die Gemeinde",
+        "icon": "fa-solid fa-city",
+        "beschreibung": "Gebaeude & Berufe: Brandstifter, Rabe & mehr",
+        "badge": "Erw. 2",
+        "badge_class": "exp2",
     },
-    'charaktere': {
-        'name': 'Charaktere',
-        'icon': 'fa-solid fa-users',
-        'beschreibung': 'Neue Charaktere: Wolfsrudel, Gruppen & mehr!',
-        'badge': 'Erw. 3',
-        'badge_class': 'exp3',
+    "charaktere": {
+        "name": "Charaktere",
+        "icon": "fa-solid fa-users",
+        "beschreibung": "Neue Charaktere: Wolfsrudel, Gruppen & mehr!",
+        "badge": "Erw. 3",
+        "badge_class": "exp3",
     },
-    'sonderedition': {
-        'name': 'Sonderedition',
-        'icon': 'fa-solid fa-star',
-        'beschreibung': 'Exklusive Sonderrollen',
-        'badge': 'Spezial',
-        'badge_class': 'special',
+    "sonderedition": {
+        "name": "Sonderedition",
+        "icon": "fa-solid fa-star",
+        "beschreibung": "Exklusive Sonderrollen",
+        "badge": "Spezial",
+        "badge_class": "special",
     },
 }
 
 
 # Metadaten fuer Kategorien (fuer UI)
 KATEGORIE_INFO = {
-    'grundrollen': {
-        'name': 'Grundrollen',
-        'icon': 'fa-solid fa-users',
-        'beschreibung': 'Die klassischen Rollen, die in jedem Spiel vorkommen.',
+    "grundrollen": {
+        "name": "Grundrollen",
+        "icon": "fa-solid fa-users",
+        "beschreibung": "Die klassischen Rollen, die in jedem Spiel vorkommen.",
     },
-    'dorfbewohner': {
-        'name': 'Dorfbewohner-Varianten',
-        'icon': 'fa-solid fa-user',
-        'beschreibung': 'Spezielle Dorfbewohner mit einzigartigen Faehigkeiten.',
+    "dorfbewohner": {
+        "name": "Dorfbewohner-Varianten",
+        "icon": "fa-solid fa-user",
+        "beschreibung": "Spezielle Dorfbewohner mit einzigartigen Faehigkeiten.",
     },
-    'werwolf': {
-        'name': 'Werwolf-Varianten',
-        'icon': 'fa-solid fa-paw',
-        'beschreibung': 'Verschiedene Arten von Werwoelfen mit speziellen Kraeften.',
+    "werwolf": {
+        "name": "Werwolf-Varianten",
+        "icon": "fa-solid fa-paw",
+        "beschreibung": "Verschiedene Arten von Werwoelfen mit speziellen Kraeften.",
     },
-    'seher': {
-        'name': 'Sehende Rollen',
-        'icon': 'fa-solid fa-eye',
-        'beschreibung': 'Rollen mit der Faehigkeit, verborgene Informationen zu enthuellen.',
+    "seher": {
+        "name": "Sehende Rollen",
+        "icon": "fa-solid fa-eye",
+        "beschreibung": "Rollen mit der Faehigkeit, verborgene Informationen zu enthuellen.",
     },
-    'hexe': {
-        'name': 'Hexen & Zauberer',
-        'icon': 'fa-solid fa-hat-wizard',
-        'beschreibung': 'Magische Rollen mit Traenken und Zaubern.',
+    "hexe": {
+        "name": "Hexen & Zauberer",
+        "icon": "fa-solid fa-hat-wizard",
+        "beschreibung": "Magische Rollen mit Traenken und Zaubern.",
     },
-    'jaeger': {
-        'name': 'Jaeger & Kaempfer',
-        'icon': 'fa-solid fa-crosshairs',
-        'beschreibung': 'Aggressive Rollen, die andere Spieler eliminieren koennen.',
+    "jaeger": {
+        "name": "Jaeger & Kaempfer",
+        "icon": "fa-solid fa-crosshairs",
+        "beschreibung": "Aggressive Rollen, die andere Spieler eliminieren koennen.",
     },
-    'heiler': {
-        'name': 'Heiler & Beschuetzer',
-        'icon': 'fa-solid fa-heart-pulse',
-        'beschreibung': 'Rollen, die andere Spieler vor dem Tod bewahren koennen.',
+    "heiler": {
+        "name": "Heiler & Beschuetzer",
+        "icon": "fa-solid fa-heart-pulse",
+        "beschreibung": "Rollen, die andere Spieler vor dem Tod bewahren koennen.",
     },
-    'spezial': {
-        'name': 'Spezialrollen',
-        'icon': 'fa-solid fa-star',
-        'beschreibung': 'Einzigartige Rollen mit besonderen Gewinnbedingungen.',
+    "spezial": {
+        "name": "Spezialrollen",
+        "icon": "fa-solid fa-star",
+        "beschreibung": "Einzigartige Rollen mit besonderen Gewinnbedingungen.",
     },
-    'boese': {
-        'name': 'Vampire & andere Boese',
-        'icon': 'fa-solid fa-skull',
-        'beschreibung': 'Weitere antagonistische Rollen neben den Werwoelfen.',
+    "boese": {
+        "name": "Vampire & andere Boese",
+        "icon": "fa-solid fa-skull",
+        "beschreibung": "Weitere antagonistische Rollen neben den Werwoelfen.",
     },
-    'solo': {
-        'name': 'Einzelkaempfer',
-        'icon': 'fa-solid fa-user-secret',
-        'beschreibung': 'Solo-Rollen mit eigenen Gewinnbedingungen.',
+    "solo": {
+        "name": "Einzelkaempfer",
+        "icon": "fa-solid fa-user-secret",
+        "beschreibung": "Solo-Rollen mit eigenen Gewinnbedingungen.",
     },
-    'sonstige': {
-        'name': 'Sonstige Rollen',
-        'icon': 'fa-solid fa-masks-theater',
-        'beschreibung': 'Weitere interessante Rollen, die das Spiel bereichern.',
+    "sonstige": {
+        "name": "Sonstige Rollen",
+        "icon": "fa-solid fa-masks-theater",
+        "beschreibung": "Weitere interessante Rollen, die das Spiel bereichern.",
     },
 }
 
@@ -273,47 +274,49 @@ KATEGORIE_INFO = {
 # ROLLEN-Dict fuer bestehenden Code (wird dynamisch generiert)
 # ============================================================================
 
+
 class _DynamicRollenDict(dict):
     """
     Ein Dict das sich bei jedem Zugriff aus der Registry aktualisiert.
     Ermoeglicht Lazy-Loading falls Rollen spaeter hinzugefuegt werden.
     """
+
     def __init__(self):
         super().__init__()
         self._update_from_registry()
-    
+
     def _update_from_registry(self):
         self.clear()
         self.update(RoleRegistry.to_legacy_dict())
-    
+
     def get(self, key, default=None):
         # Aktualisiere bei jedem get() fuer maximale Dynamik
         if key not in self:
             self._update_from_registry()
         return super().get(key, default)
-    
+
     def __getitem__(self, key):
         if key not in self:
             self._update_from_registry()
         return super().__getitem__(key)
-    
+
     def __contains__(self, key):
         if not super().__contains__(key):
             self._update_from_registry()
         return super().__contains__(key)
-    
+
     def __len__(self):
         self._update_from_registry()
         return super().__len__()
-    
+
     def items(self):
         self._update_from_registry()
         return super().items()
-    
+
     def keys(self):
         self._update_from_registry()
         return super().keys()
-    
+
     def values(self):
         self._update_from_registry()
         return super().values()

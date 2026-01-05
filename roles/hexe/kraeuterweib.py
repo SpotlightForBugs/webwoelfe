@@ -1,6 +1,7 @@
 """
 Kraeuterweib - Kann Spieler stumm machen.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
@@ -14,14 +15,14 @@ if TYPE_CHECKING:
 class Kraeuterweib(Role):
     """
     Das Kräuterweib - Stummheits-Rolle.
-    
+
     Fähigkeiten:
     - Kann jede Nacht einen Spieler stumm machen
     - Stumme Spieler dürfen am nächsten Tag nicht reden
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -43,26 +44,27 @@ class Kraeuterweib(Role):
             ),
             erweiterung=Erweiterung.SONDEREDITION,
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.STUMM_MACHEN
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
-    
+
     def is_active_on_first_night(self) -> bool:
         """Kräuterweib acts on first night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Kräuterweib acts every night."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Kräuterweib's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Kräuterweib - Stumm machen",
             instructions="Wähle einen Spieler, der morgen stumm sein wird.",
@@ -71,16 +73,17 @@ class Kraeuterweib(Role):
                     label="Stumm machen",
                     action_type="stumm_machen",
                     icon="fa-solid fa-leaf",
-                    css_class="btn-warning"
+                    css_class="btn-warning",
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Kräuterweib macht einen Spieler stumm.
         """
@@ -91,7 +94,7 @@ class Kraeuterweib(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{ziel.name} wird morgen stumm sein.",

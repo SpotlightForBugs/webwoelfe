@@ -34,8 +34,8 @@ class Selbstmoerder(Role):
             erzaehler_nacht="Der Selbstmörder liegt wach und plant, wie er morgen möglichst verdächtig wirken kann.",
             erzaehler_tag="Der Selbstmörder erwacht mit einem finsteren Plan. Sein Ziel: Vom Dorf gehängt werden! Aber nicht zu offensichtlich...",
             hinweis_config="Selbstmörder",
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+        )
 
     def is_active_on_first_night(self) -> bool:
         """Selbstmörder is passive."""

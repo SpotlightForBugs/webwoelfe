@@ -36,7 +36,7 @@ class Suendenbock(Role):
             erzaehler_tag="UNENTSCHIEDEN bei der Abstimmung! Das Dorf kann sich nicht einigen - also muss der Sündenbock sterben!",
             hinweis_config=None,
             erweiterung=Erweiterung.NEUMOND,
-            )
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

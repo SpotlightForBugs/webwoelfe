@@ -52,8 +52,8 @@ class Dieb(Role):
             ),
             erzaehler_tag=None,
             hinweis_config=None,
-        erweiterung=Erweiterung.BASISSPIEL,
-            )
+            erweiterung=Erweiterung.BASISSPIEL,
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

@@ -39,8 +39,8 @@ class Buergermeister(Role):
             farbe="#6366f1",
             prioritaet=95,
             erzaehler_tag=("Der Buergermeister hat doppeltes Stimmrecht."),
-        erweiterung=Erweiterung.CHARAKTERE,
-            )
+            erweiterung=Erweiterung.CHARAKTERE,
+        )
 
     def is_active_on_first_night(self) -> bool:
         """Bürgermeister is passive."""

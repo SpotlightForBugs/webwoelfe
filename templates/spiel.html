@@ -2038,6 +2038,22 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           `;
       } else {
           console.log('[showErzaehlung] No audio path provided');
+
+          // Fallback for no audio: wait for reading time then advance
+          // Estimate reading time: 200 words per minute -> ~3 words per second
+          // Minimum 3 seconds
+          const wordCount = text.split(/\s+/).length;
+          const readingTimeMs = Math.max(3000, (wordCount / 3) * 1000);
+
+          console.log(`[showErzaehlung] Waiting ${readingTimeMs}ms for reading...`);
+
+          setTimeout(() => {
+              socket.emit('audio_fertig', { phase: aktuellePhase });
+              notification.style.animation = 'fadeOut 0.4s ease-out';
+              setTimeout(() => {
+                  if (notification && notification.parentNode) notification.remove();
+              }, 400);
+          }, readingTimeMs);
       }
 
       notification.innerHTML = html;

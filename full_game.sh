@@ -134,7 +134,7 @@ echo ""
 
 # Check if Flask app is running, start it if not
 SERVER_PID=""
-if ! curl -s http://localhost:$PORT > /dev/null 2>&1; then
+if ! curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
     echo "🚀 Starte Flask-Server auf Port $PORT..."
 
     # Aktiviere venv falls vorhanden
@@ -153,7 +153,7 @@ if ! curl -s http://localhost:$PORT > /dev/null 2>&1; then
     # Warte bis Server bereit ist
     echo -n "   Warte auf Server"
     for i in {1..30}; do
-        if curl -s http://localhost:$PORT > /dev/null 2>&1; then
+        if curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
             echo ""
             echo "✓ Flask-Server gestartet (PID: $SERVER_PID)"
             break
@@ -162,7 +162,7 @@ if ! curl -s http://localhost:$PORT > /dev/null 2>&1; then
         sleep 0.5
     done
 
-    if ! curl -s http://localhost:$PORT > /dev/null 2>&1; then
+    if ! curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
         echo ""
         echo "❌ Flask-Server konnte nicht gestartet werden"
         exit 1

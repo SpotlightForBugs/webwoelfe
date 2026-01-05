@@ -11,7 +11,7 @@ from ..base import (
     StateField,
     StateType,
 )
-from ..enums import Team, Kategorie, Erweiterung
+from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:

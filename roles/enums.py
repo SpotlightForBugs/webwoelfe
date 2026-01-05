@@ -132,6 +132,7 @@ class AktionsTyp(Enum):
     MANIPULIEREN = "manipulieren"
     BLOCKIEREN = "blockieren"
     BESUCHEN = "besuchen"
+    PASSIV = "passiv"
     KEINE = "keine"
 
 

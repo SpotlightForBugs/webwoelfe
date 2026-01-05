@@ -459,6 +459,13 @@ class SeherinEnthuellung(db.Model):
 
 #TODO: THESE NEED TO BE MOVED INTO THE ROLES BECAUSE THIS IS PARTIALLY ROLE-SPECIFIC
 ERZAEHLER_EVENTS = {
+    # === SETUP EVENTS ===
+    "rollen_verteilt": {
+        "text": "Die Rollen wurden verteilt. Schaut euch eure Rolle an.",
+        "anweisung": "Die Spieler schauen sich ihre Rollen an.",
+        "bedingung": {"phase": "rollen_verteilt"},
+        "einmalig": True,
+    },
     # === ERSTE NACHT EVENTS (nur in Runde 1) ===
     "erste_nacht_intro": {
         "text": "Willkommen in Düsterwald! Die erste Nacht bricht herein. In diesem Dorf verbergen sich Werwölfe unter den friedlichen Bewohnern.",

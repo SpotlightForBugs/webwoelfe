@@ -27,7 +27,7 @@ import { test, BrowserContext, Page, chromium } from "@playwright/test";
 // ============================================================================
 
 const PLAYER_COUNT = parseInt(process.env.PLAYERS || "8", 10);
-const BASE_URL = process.env.BASE_URL || "http://localhost:5001";
+const BASE_URL = process.env.BASE_URL || "http://127.0.0.1:5001";
 const HEADLESS_OTHERS = process.env.HL === "1" || process.env.HL === "true";
 // Server hat 30 Sekunden Delay für automatische Phasen (PHASE_WECHSEL_DELAY in app.py)
 // Test wartet nur kurz für UI-Interaktionen

@@ -108,6 +108,21 @@ class Jaeger(Role):
             can_skip=False,
         )
 
+    def on_eigener_tod(
+        self, spieler: "Spieler", todesursache: str, kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
+        """
+        Wenn der Jäger stirbt, darf er noch schießen.
+        """
+        if self.get_state(spieler, "schuss"):
+            return AktionsErgebnis(
+                erfolg=True,
+                nachricht="Der Jäger greift zu seiner Waffe!",
+                effekte={"trigger_jaeger_phase": True},
+                log_sichtbar_fuer="alle",
+            )
+        return None
+
     def on_spieler_stirbt(
         self, spieler: "Spieler", opfer: "Spieler", kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:

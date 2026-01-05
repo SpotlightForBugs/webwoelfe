@@ -70,6 +70,23 @@ class WolfimSchafspelz(Role):
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.DORF  # Das ist der Trick!
 
+    def sichtbar_als_fuer(self, seher_rolle: str) -> SichtTyp:
+        """
+        Erscheint als Dorf für normale Seherin,
+        aber als Werwolf für Aurenseherin.
+        """
+        if seher_rolle == "Aurenseherin":
+            return SichtTyp.WERWOLF
+        return SichtTyp.DORF
+
+    def sichtbare_rolle_fuer(self, seher_rolle: str) -> str:
+        """
+        Erscheint als Dorfbewohner für normale Seherin.
+        """
+        if seher_rolle == "Seherin":
+            return "Dorfbewohner"
+        return self.info.name
+
     def is_active_on_first_night(self) -> bool:
         """Wolf im Schafspelz acts with the pack."""
         return False

@@ -6,7 +6,14 @@ einen Dorfbewohner infizieren, der zum Werwolf wird.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
+from ..base import (
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    StateField,
+    StateType,
+)
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -58,22 +65,23 @@ class Urwolf(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.INFIZIEREN
-    
+
     @property
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.WERWOLF
-    
+
     def is_active_on_first_night(self) -> bool:
         """Urwolf acts on first night with werwolves."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Urwolf acts every night with werwolves."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Urwolf's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Urwolf - Jagen oder Infizieren",
             instructions="Wähle das Opfer der Wölfe oder infiziere jemanden (einmalig).",
@@ -82,19 +90,19 @@ class Urwolf(Role):
                     label="Angreifen",
                     action_type="toeten",
                     icon="fa-solid fa-paw",
-                    css_class="btn-danger"
+                    css_class="btn-danger",
                 ),
                 UIButton(
                     label="Infizieren",
                     action_type="infizieren",
                     icon="fa-solid fa-virus",
                     css_class="btn-warning",
-                    requires_confirmation=True
-                )
+                    requires_confirmation=True,
+                ),
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=False
+            can_skip=False,
         )
 
     def infizieren(

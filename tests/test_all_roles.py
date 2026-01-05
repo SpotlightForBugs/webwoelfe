@@ -63,8 +63,9 @@ class MockSpieler:
     def get_state(self, key: str, default: Any = None) -> Any:
         """Get state value from JSON storage."""
         import json
+
         try:
-            state = json.loads(self.rolle_zustand or '{}')
+            state = json.loads(self.rolle_zustand or "{}")
             return state.get(key, default)
         except (json.JSONDecodeError, TypeError):
             return default
@@ -72,8 +73,9 @@ class MockSpieler:
     def set_state(self, key: str, value: Any) -> None:
         """Set state value in JSON storage."""
         import json
+
         try:
-            state = json.loads(self.rolle_zustand or '{}')
+            state = json.loads(self.rolle_zustand or "{}")
         except (json.JSONDecodeError, TypeError):
             state = {}
         state[key] = value
@@ -86,8 +88,9 @@ class MockSpieler:
     def get_all_state(self) -> dict:
         """Get all state."""
         import json
+
         try:
-            return json.loads(self.rolle_zustand or '{}')
+            return json.loads(self.rolle_zustand or "{}")
         except (json.JSONDecodeError, TypeError):
             return {}
 
@@ -243,7 +246,9 @@ class TestHexe(unittest.TestCase):
 
     def test_hexe_ist_nacht_aktiv(self):
         """Hexe ist in der Nacht aktiv."""
-        self.assertTrue(self.hexe.is_active_on_first_night() or self.hexe.is_active_on_every_night())
+        self.assertTrue(
+            self.hexe.is_active_on_first_night() or self.hexe.is_active_on_every_night()
+        )
 
 
 class TestJaeger(unittest.TestCase):
@@ -644,7 +649,9 @@ class TestSpielLogikIntegration(unittest.TestCase):
     def test_nacht_aktive_rollen_haben_on_nacht_aktion(self):
         """Alle nacht-aktiven Rollen haben eine on_nacht_aktion Methode."""
         for rolle in RoleRegistry.get_all():
-            nacht_aktiv = rolle.is_active_on_first_night() or rolle.is_active_on_every_night()
+            nacht_aktiv = (
+                rolle.is_active_on_first_night() or rolle.is_active_on_every_night()
+            )
             if nacht_aktiv:
                 # Prüfe dass die Methode existiert und aufrufbar ist
                 self.assertTrue(

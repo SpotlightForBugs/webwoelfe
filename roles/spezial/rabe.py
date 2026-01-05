@@ -6,7 +6,15 @@ der am nächsten Tag 2 Extra-Stimmen gegen sich erhält.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType, set_spieler_state
+from ..base import (
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    StateField,
+    StateType,
+    set_spieler_state,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -33,7 +41,9 @@ class Rabe(Role):
     def state_fields(self) -> List[StateField]:
         """Definiert die Zustandsfelder des Raben."""
         return [
-            StateField("markiert_id", StateType.PLAYER_ID, None, "Aktuell markierter Spieler"),
+            StateField(
+                "markiert_id", StateType.PLAYER_ID, None, "Aktuell markierter Spieler"
+            ),
         ]
 
     @property

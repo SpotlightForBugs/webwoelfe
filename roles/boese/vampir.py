@@ -53,8 +53,8 @@ class Vampir(Role):
             ),
             erzaehler_tag=None,
             hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
@@ -140,7 +140,7 @@ class Vampir(Role):
             nachricht=f"Du beißt {ziel.name}! In der nächsten Nacht wird "
             f"er als Vampir erwachen!",
             ziel_spieler_id=ziel.id,
-            effekte={ #TODO: MIGRATION!!!!!
+            effekte={  # TODO: MIGRATION!!!!!
                 "vampir_gebissen": ziel.id,
                 "team_wechsel": Team.VAMPIR.value,
             },

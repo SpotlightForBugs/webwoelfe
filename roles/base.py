@@ -1104,7 +1104,7 @@ class Role(ABC):
         return None
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: "SpielKontext"
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: "SpielKontext", aktion: str = None
     ) -> Optional[AktionsErgebnis]:
         """
         Wird aufgerufen, wenn der Spieler seine Nacht-Aktion ausführt.
@@ -1113,11 +1113,12 @@ class Role(ABC):
             spieler: Der handelnde Spieler
             ziel: Das gewählte Ziel (oder None)
             kontext: Der aktuelle Spielkontext
+            aktion: Der Typ der Aktion (z.B. "heilen", "vergiften") - optional
 
         Returns:
             AktionsErgebnis oder None (wenn Aktion ungültig)
         """
-        logger.debug(f"Executing night action for {self.info.name} (Player: {spieler.name})")
+        logger.debug(f"Executing night action for {self.info.name} (Player: {spieler.name}, Action: {aktion})")
         return None
 
     def on_tag_aktion(

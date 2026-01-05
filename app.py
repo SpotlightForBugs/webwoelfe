@@ -6,6 +6,8 @@ Ein Echtzeit-Multiplayer Werwolf-Spiel mit WebSocket-Unterstützung.
 # Gevent monkey-patching MUSS vor allen anderen Imports erfolgen!
 # (Gevent ist der moderne Ersatz für das deprecated eventlet)
 from gevent import monkey
+import gevent
+import inspect
 
 monkey.patch_all()
 
@@ -23,18 +25,21 @@ from models import (
     SpielLog,
     ROLLEN,
     PHASEN,
-    ERZAEHLER_TEXTE,
+    ERZAEHLER_EVENTS,
     get_rollen_nach_kategorie,
     get_rollen_nach_kategorie_liste,
     get_rollen_anzahl,
 )
 from constants import TEAMS, SPIEL_REGELN, ROLLEN_EMPFEHLUNG
 from roles import get_rollen_nach_erweiterung, ERWEITERUNG_INFO, KATEGORIE_INFO
+from logger import logger
 import game_logic
 import secrets
 import os
 import random
+import inspect
 from datetime import datetime
+import inspect
 
 # App Konfiguration
 app = Flask(__name__)
@@ -60,6 +65,58 @@ def log_ts(msg: str):
 # Initialisierung
 db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
+
+
+# ============================================================================
+# TEMPLATE FILTER - Jinja2 Filter
+# ============================================================================
+
+
+@app.template_filter("css_class")
+def css_class_filter(value):
+    """
+    Konvertiert einen String zu einem CSS-klassen-kompatiblen Format.
+    z.B. "Hexe" -> "hexe", "Alter Mann" -> "alter-mann"
+    """
+    if not value:
+        return "unbekannt"
+    # Kleinbuchstaben, Leerzeichen durch Bindestriche ersetzen, Sonderzeichen entfernen
+    import re
+    result = str(value).lower()
+    result = result.replace(" ", "-")
+    result = result.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+    result = re.sub(r"[^a-z0-9\-]", "", result)
+    return result
+
+
+def get_rollen_styles():
+    """
+    Generiert ein Dictionary mit Rollen-Styles für das Template.
+    Verwendet die RoleRegistry, um dynamische Styles zu erstellen.
+    """
+    from roles import RoleRegistry
+    
+    styles = {}
+    for role in RoleRegistry.get_all():
+        info = role.info
+        css_class = info.computed_css_class
+        
+        # Defaults if not set
+        grad_from = info.avatar_gradient_from or info.farbe or "#4a5568"
+        grad_to = info.avatar_gradient_to or grad_from
+        border = info.avatar_border_color or info.farbe or "#5a6678"
+        
+        styles[css_class] = {
+            "name": info.name,
+            "team": info.team.value if info.team else "",
+            "avatar_gradient_from": grad_from,
+            "avatar_gradient_to": grad_to,
+            "avatar_border_color": border,
+            "badge_emoji": info.badge_emoji or "",
+        }
+    
+    return styles
+
 
 # Datenbank erstellen
 with app.app_context():
@@ -389,8 +446,8 @@ def spiel(code):
     erzaehler_text = None
     if spieler.ist_erzaehler and raum.modus == "gruppe":
         phase_key = raum.aktuelle_phase
-        if phase_key in ERZAEHLER_TEXTE:
-            erzaehler_text = ERZAEHLER_TEXTE[phase_key]
+        if phase_key in ERZAEHLER_EVENTS:
+            erzaehler_text = ERZAEHLER_EVENTS[phase_key]
 
     enthuellung = {
         ziel_id: data["typ"] for ziel_id, data in seherin_enthuellung.items()
@@ -408,6 +465,7 @@ def spiel(code):
         phasen=PHASEN,
         erzaehler_text=erzaehler_text,
         enthuellung=enthuellung,  # Seherin-Snapshot
+        rollen_styles=get_rollen_styles(),  # Dynamische Rollen-Styles
     )
 
 
@@ -930,9 +988,9 @@ def handle_raum_beitreten(data):
             if (
                 raum.modus == "online"
                 and raum.spiel_gestartet
-                and raum.aktuelle_phase in ERZAEHLER_TEXTE
+                and raum.aktuelle_phase in ERZAEHLER_EVENTS
             ):
-                erzaehler_info = ERZAEHLER_TEXTE[raum.aktuelle_phase]
+                erzaehler_info = ERZAEHLER_EVENTS[raum.aktuelle_phase]
                 erzaehlung_text = erzaehler_info.get("text", "")
                 audio_path = None
                 if erzaehlung_text:
@@ -978,8 +1036,8 @@ def handle_spiel_starten(data):
         # Online-Modus: Automatisch die erste Phase (rollen_verteilt) anzeigen und weiterschalten
         if raum.modus == "online":
             # Sende initiale Erzählung für rollen_verteilt
-            if raum.aktuelle_phase in ERZAEHLER_TEXTE:
-                erzaehler_info = ERZAEHLER_TEXTE[raum.aktuelle_phase]
+            if raum.aktuelle_phase in ERZAEHLER_EVENTS:
+                erzaehler_info = ERZAEHLER_EVENTS[raum.aktuelle_phase]
                 erzaehler_text = erzaehler_info.get("text", "")
                 audio_path = None
                 if erzaehler_text:
@@ -994,26 +1052,24 @@ def handle_spiel_starten(data):
 
             # Starte Fallback-Timer für automatische Phasen-Progression
             # (gleiche Logik wie in _wechsel_phase_intern für AUTOMATISCHE_PHASEN)
-            import threading
-
+            # WICHTIG: Muss gevent verwenden, da threading mit monkey-patching nicht kooperativ yieldet!
             raum_code = raum.code
             phase_bei_start = raum.aktuelle_phase
 
             def auto_advance_initial():
-                import time
-
                 # Warte auf Fallback-Timeout (falls Audio nicht abgespielt wird)
-                time.sleep(PHASE_WECHSEL_DELAY)
+                gevent.sleep(PHASE_WECHSEL_DELAY)
                 with app.app_context():
                     raum_aktuell = Raum.query.filter_by(code=raum_code).first()
                     if raum_aktuell and raum_aktuell.aktuelle_phase == phase_bei_start:
                         # Phase wurde noch nicht gewechselt (Audio-Event kam nicht an)
-                        log_ts(
-                            f"[Phase] Fallback-Timeout für {phase_bei_start}, wechsle Phase"
+                        # FEHLER: Fallback sollte nie notwendig sein!
+                        logger.error(
+                            f"[Phase] FALLBACK-TIMEOUT für {phase_bei_start} - Dies ist ein Fehler! Audio-Event kam nicht an."
                         )
                         _wechsel_phase_intern(raum_aktuell)
 
-            threading.Thread(target=auto_advance_initial, daemon=True).start()
+            gevent.spawn(auto_advance_initial)
     else:
         emit("fehler", {"nachricht": "Spiel konnte nicht gestartet werden"})
 
@@ -1051,11 +1107,14 @@ def pruefe_phase_abschluss(raum):
     from roles import RoleRegistry
     
     phase = raum.aktuelle_phase
+    log_ts(f"[PhaseCheck] Prüfe Abschluss für Phase {phase} (Runde {raum.runde})")
 
     # Use RoleRegistry for dynamic phase-to-role mapping instead of hardcoded dict
     rolle_obj = RoleRegistry.get_role_for_phase(phase)
     rolle = rolle_obj.info.name if rolle_obj else None
     
+    log_ts(f"[PhaseCheck] Phase {phase} zugeordnet zu Rolle: {rolle}")
+
     # Special handling for werwolf_phase - all wolves must vote
     if phase == "werwolf_phase":
         # Alle lebenden Werwölfe müssen gewählt haben
@@ -1071,12 +1130,27 @@ def pruefe_phase_abschluss(raum):
         )
     elif rolle:
         alle_fertig = game_logic.alle_haben_gewaehlt(raum, phase, rolle)
+        
+        # DEBUG: Wenn nicht fertig, logge warum
+        if not alle_fertig:
+            lebende = game_logic.hole_lebende_spieler(raum)
+            relevant = [s for s in lebende if s.rolle == rolle]
+            log_ts(f"[PhaseCheck] Relevante Spieler für {rolle}: {[s.name for s in relevant]}")
+            missing = [s.name for s in relevant if not game_logic.hat_spieler_gewaehlt(s, raum, phase)]
+            log_ts(f"[PhaseCheck] Fehlende Aktionen von: {missing}")
+            
+            # Defensive Fix: If relevant list is empty but role is assigned, force True?
+            # game_logic.alle_haben_gewaehlt returns True if list is empty.
     else:
+        # Phase ohne zugeordnete Rolle? (z.B. Tag-Phasen, Spezial)
+        log_ts(f"[PhaseCheck] Keine Rolle für Phase {phase} gefunden. Ignoriere.")
         return
 
     if alle_fertig:
         log_ts(f"[Phase] Alle Aktionen in {phase} abgeschlossen, wechsle Phase")
         _wechsel_phase_intern(raum)
+    else:
+        log_ts(f"[PhaseCheck] Phase {phase} noch NICHT abgeschlossen.")
 
 
 def _wechsel_phase_intern(raum):
@@ -1092,12 +1166,12 @@ def _wechsel_phase_intern(raum):
 
     # Erzähler-Text für Gruppen-Modus
     erzaehler_text = None
-    if raum.modus == "gruppe" and neue_phase in ERZAEHLER_TEXTE:
-        erzaehler_text = ERZAEHLER_TEXTE[neue_phase]
+    if raum.modus == "gruppe" and neue_phase in ERZAEHLER_EVENTS:
+        erzaehler_text = ERZAEHLER_EVENTS[neue_phase]
 
     # Online-Modus: Automatische Erzählung mit Audio senden
-    if raum.modus == "online" and neue_phase in ERZAEHLER_TEXTE:
-        erzaehler_info = ERZAEHLER_TEXTE[neue_phase]
+    if raum.modus == "online" and neue_phase in ERZAEHLER_EVENTS:
+        erzaehler_info = ERZAEHLER_EVENTS[neue_phase]
         erzaehlung_text = erzaehler_info.get("text", "")
 
         # Generiere Audio für die Erzählung
@@ -1134,6 +1208,8 @@ def _wechsel_phase_intern(raum):
     # Diese Liste ist absichtlich minimal:
     AUTOMATISCHE_PHASEN = {
         "rollen_verteilt",  # Info-Phase nach Spielstart
+        "nacht_start",      # Übergang Tag -> Nacht
+        "nacht_ende",       # Übergang Nacht -> Tag
         "tag_start",        # Übergang Nacht -> Tag
         "tag_ende",         # Übergang am Tagesende
     }
@@ -1156,8 +1232,9 @@ def _wechsel_phase_intern(raum):
                 raum_aktuell = Raum.query.filter_by(code=raum_code).first()
                 if raum_aktuell and raum_aktuell.aktuelle_phase == phase_bei_start:
                     # Phase wurde noch nicht gewechselt (Audio-Event kam nicht an)
-                    log_ts(
-                        f"[Phase] Fallback-Timeout für {phase_bei_start}, wechsle Phase"
+                    # FEHLER: Fallback sollte nie notwendig sein!
+                    logger.error(
+                        f"[Phase] FALLBACK-TIMEOUT für {phase_bei_start} - Dies ist ein Fehler! Audio-Event kam nicht an."
                     )
                     _wechsel_phase_intern(raum_aktuell)
 
@@ -1187,6 +1264,8 @@ def handle_audio_fertig(data):
         # Minimale automatische Phasen (nur Übergänge)
         AUTOMATISCHE_PHASEN = {
             "rollen_verteilt",
+            "nacht_start",
+            "nacht_ende",
             "tag_start",
             "tag_ende",
         }
@@ -1213,8 +1292,9 @@ def handle_audio_fertig(data):
                         if not raum_aktuell or raum_aktuell.aktuelle_phase != phase_bei_start:
                             return  # Phase hat sich inzwischen geändert
 
-                        log_ts(
-                            f"[Phase] Fallback-Timeout für interaktive Phase {phase_bei_start} -> wechsle automatisch"
+                        # FEHLER: Fallback für interaktive Phasen sollte nie notwendig sein!
+                        logger.error(
+                            f"[Phase] FALLBACK-TIMEOUT für interaktive Phase {phase_bei_start} - Dies ist ein Fehler! Spieler haben nicht reagiert."
                         )
 
                         # Erst reguläre Abschlussprüfung versuchen (falls Aktionen inzwischen eingetroffen sind)
@@ -1693,7 +1773,15 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     # Execute the role's night action
     log_ts(f"[Aktion] Ausfuehren: {spieler.rolle} -> {ziel.name if ziel else 'None'}")
-    ergebnis = rolle_obj.on_nacht_aktion(spieler, ziel, kontext)
+    
+    # Pass 'aktion' only if accepted by the method signature
+    # (Fixes compatibility with legacy roles like Heiler that don't accept 'aktion')
+    sig = inspect.signature(rolle_obj.on_nacht_aktion)
+    call_kwargs = {}
+    if "aktion" in sig.parameters:
+        call_kwargs["aktion"] = aktion_typ
+        
+    ergebnis = rolle_obj.on_nacht_aktion(spieler, ziel, kontext, **call_kwargs)
 
     if ergebnis and ergebnis.erfolg:
         # Register the action
@@ -1778,11 +1866,11 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
     elif neue_phase == "nacht_ende":
         log_ts(f"[Nacht] Verarbeite Nacht-Ende für Runde {raum.runde}")
 
-        werwolf_opfer = SpielAktion.query.filter_by(
-            raum_id=raum.id,
-            runde=raum.runde,
-            phase="werwolf_phase",
-            aktion_typ="werwolf_wahl",
+        werwolf_opfer = SpielAktion.query.filter(
+            SpielAktion.raum_id == raum.id,
+            SpielAktion.runde == raum.runde,
+            SpielAktion.phase == "werwolf_phase",
+            SpielAktion.aktion_typ.in_(["werwolf_wahl", "toeten"])
         ).first()
 
         log_ts(f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}")
@@ -1891,6 +1979,10 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
                     if "jaeger_schuss" in tod_ergebnis.get("folge_aktionen", []):
                         raum.aktuelle_phase = "jaeger_phase"
                         db.session.commit()
+
+        # Initialisierung für Diskussions-Phase (Timer setzen)
+        if neue_phase == "diskussion_abstimmung":
+            game_logic.starte_diskussion_abstimmung(raum)
 
         # Spielende pruefen
         ende = game_logic.pruefe_spielende(raum)

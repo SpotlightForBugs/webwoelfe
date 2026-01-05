@@ -683,11 +683,11 @@ def werwolf_abstimmung(raum: Raum) -> Optional[dict]:
     Bei Gleichstand entscheidet der Zufall (oder Urwolf/Anführer wenn implementiert).
     """
     logger.info(f"Evaluating werewolf vote for room {raum.code}")
-    aktionen = SpielAktion.query.filter_by(
-        raum_id=raum.id,
-        runde=raum.runde,
-        phase="werwolf_phase",
-        aktion_typ="werwolf_wahl"
+    aktionen = SpielAktion.query.filter(
+        SpielAktion.raum_id == raum.id,
+        SpielAktion.runde == raum.runde,
+        SpielAktion.phase == "werwolf_phase",
+        SpielAktion.aktion_typ.in_(["werwolf_wahl", "toeten"])
     ).all()
 
     if not aktionen:

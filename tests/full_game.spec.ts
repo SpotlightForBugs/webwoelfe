@@ -1959,13 +1959,15 @@ async function handleAbstimmungPhase(
 
   // Random: Sometimes some players don't vote at all
   for (const voter of alivePlayers) {
-    // Random skip
+    // Random skip - DISABLED to ensure phase completion
+    /*
     if (shouldSkipAction()) {
       log(
         `    ⚠️ [RANDOM] ${voter.name} enthält sich (Test: Unvollständige Abstimmung)`,
       );
       continue;
     }
+    */
 
     let voteTarget: PlayerWindow;
 

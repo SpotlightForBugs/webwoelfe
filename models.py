@@ -466,6 +466,18 @@ ERZAEHLER_EVENTS = {
         "bedingung": {"phase": "rollen_verteilt"},
         "einmalig": True,
     },
+    "nacht_start": {
+        "text": "Die Nacht bricht herein. Alle Spieler schließen die Augen.",
+        "anweisung": "Alle Spieler schließen die Augen.",
+        "bedingung": {"phase": "nacht_start"},
+        "einmalig": False,
+    },
+    "nacht_ende": {
+        "text": "Die Nacht ist vorbei. Der Morgen graut.",
+        "anweisung": "Die Nacht endet.",
+        "bedingung": {"phase": "nacht_ende"},
+        "einmalig": False,
+    },
     # === ERSTE NACHT EVENTS (nur in Runde 1) ===
     "erste_nacht_intro": {
         "text": "Willkommen in Düsterwald! Die erste Nacht bricht herein. In diesem Dorf verbergen sich Werwölfe unter den friedlichen Bewohnern.",

@@ -62,7 +62,20 @@ def generate_phases_for_game(raum: Raum) -> List[str]:
     phases = []
 
     # Special phases that always happen
-    if raum.aktuelle_phase == "nacht" or "nacht" in str(raum.aktuelle_phase):
+    # Always include start/end markers if we are in a night cycle (including role phases)
+    current_phase_str = str(raum.aktuelle_phase)
+    is_night_cycle = "nacht" in current_phase_str
+    
+    if not is_night_cycle and current_phase_str.endswith("_phase"):
+        # Dynamic check: Does this phase belong to a night-active role?
+        for role in RoleRegistry.get_all():
+            if role.get_phase_name() == current_phase_str:
+                # If role is active at night, treat as night cycle (handles exceptions like Jaeger dynamically)
+                if role.is_active_on_first_night() or role.is_active_on_every_night():
+                    is_night_cycle = True
+                break
+    
+    if is_night_cycle:
         phases.append("nacht_start")
 
     # Add role-specific phases

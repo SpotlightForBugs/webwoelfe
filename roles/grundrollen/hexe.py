@@ -104,7 +104,7 @@ class Hexe(Role):
                     action_type="heilen",
                     icon="fa-solid fa-heart-pulse",
                     css_class="btn-success",
-                    requires_confirmation=True,
+                    requires_confirmation=False,
                 ),
                 UIButton(
                     label="Vergiften",
@@ -126,82 +126,16 @@ class Hexe(Role):
         return None
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
     ) -> Optional[AktionsErgebnis]:
         """
         Hexe verwendet einen Trank.
-        Aktionstyp muss im Kontext oder separat übergeben werden?
-        Die Basis-Logik ruft on_nacht_aktion auf.
-        Wir müssen wissen WELCHE Aktion (heilen/vergiften).
-
-        Das wird aktuell über `aktion_typ` im `registriere_aktion` Aufruf in `app.py` gehandhabt.
-        Aber `on_nacht_aktion` bekommt das nicht direkt.
-
-        Workaround: Wir schauen in `kontext.aktionen_diese_runde`? Nein, das sind vergangene.
-
-        Lösung: `app.py` ruft `on_nacht_aktion` auf. Wir müssen `aktion_typ` irgendwie bekommen.
-        Aktuell wird `aktion_typ` in `app.py` verwendet um `registriere_aktion` zu rufen.
-        Aber `on_nacht_aktion` hat keine `aktion_typ` Parameter.
-
-        Wir können `aktion_typ` aus dem Kontext holen? Nein.
-
-        Wir müssen `on_nacht_aktion` erweitern oder `Role` anpassen?
-        Oder wir nutzen `ziel` um zu raten?
-
-        Wenn `ziel` == `werwolf_opfer` -> Heilen? Nein, man kann auch Opfer vergiften (theoretisch).
-
-        Wir brauchen `aktion_typ`.
-
-        Da wir `app.py` nicht ändern wollen/können (oder doch?),
-        können wir `aktion_typ` nicht einfach hinzufügen.
-
-        ABER: `app.py` ruft `verarbeite_aktion` auf, welches `aktion_typ` hat.
-        Und `verarbeite_aktion` ruft `rolle_obj.on_nacht_aktion(spieler, ziel, kontext)` auf.
-
-        Wir müssen `on_nacht_aktion` in `base.py` ändern, um `aktion_typ` zu akzeptieren?
-        Oder wir packen `aktion_typ` in `kontext`?
-
-        In `app.py`:
-        ```python
-        kontext = SpielKontext(..., aktionen_diese_runde=aktionen_liste)
-        ```
-        Es gibt kein Feld für "aktuelle Aktion".
-
-        Wir können `on_nacht_aktion` überladen oder kwargs nutzen?
-        `def on_nacht_aktion(self, spieler, ziel, kontext, **kwargs):`
-
-        Aber `base.py` definiert es fest.
-
-        Lösung: Wir ändern `base.py` Signatur von `on_nacht_aktion` um `aktion` (str) aufzunehmen.
-        Das ist sauber.
         """
-        # TODO: Refactor base.py to include action_type in on_nacht_aktion
-        # For now, we assume app.py handles the logic or we infer it.
-        # But wait, app.py calls `rolle_obj.on_nacht_aktion(spieler, ziel, kontext)`.
-        # It does NOT pass action_type.
-
-        # This is a problem for Hexe who has 2 actions.
-        # Most roles have 1 action defined by `aktions_typ`.
-
-        # Hexe needs to know if it's heal or poison.
-        # Maybe we can check `ziel`.
-        # If `ziel` is None -> Heal? (No, heal needs target too, usually the victim).
-        # Actually, heal target is implicit (the victim).
-
-        # Let's look at `app.py` again.
-        # `verarbeite_aktion` calls `rolle_obj.on_nacht_aktion`.
-
-        # I will modify `base.py` to accept `aktion: str = None`.
-        pass
-
-    def on_nacht_aktion_with_type(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str
-    ) -> Optional[AktionsErgebnis]:
-        """
-        Spezielle Methode für Hexe, die den Aktionstyp benötigt.
-        Wird von app.py aufgerufen wenn wir base.py anpassen.
-        """
-        if aktion == "heilen":
+        # Mapping legacy action names if necessary
+        # UI uses "action_type": "heilen" or "vergiften"
+        # app.py passes this as 'aktion'
+        
+        if aktion == "heilen" or aktion == "hexe_heilen":
             if not self.get_state(spieler, "heiltrank"):
                 return AktionsErgebnis(False, "Du hast keinen Heiltrank mehr.")
 
@@ -219,11 +153,11 @@ class Hexe(Role):
                 True,
                 "Du hast das Opfer geheilt.",
                 ziel_spieler_id=opfer_id,
-                effekte={"heilen": True, "hexe_heilen": True},
+                effekte={"heilen": True, "hexe_heilen": True, "heiltrank_verbraucht": True},
                 log_sichtbar_fuer=f"spieler_{spieler.id}"
             )
 
-        elif aktion == "vergiften":
+        elif aktion == "vergiften" or aktion == "hexe_vergiften" or aktion == "toeten" or aktion == "hexe_toeten":
             if not self.get_state(spieler, "gifttrank"):
                 return AktionsErgebnis(False, "Du hast keinen Gifttrank mehr.")
 
@@ -235,7 +169,7 @@ class Hexe(Role):
                 True,
                 f"Du hast {ziel.name} vergiftet.",
                 ziel_spieler_id=ziel.id,
-                effekte={"vergiften": True, "hexe_vergiften": True},
+                effekte={"vergiften": True, "hexe_vergiften": True, "gifttrank_verbraucht": True},
                 log_sichtbar_fuer=f"spieler_{spieler.id}"
             )
 

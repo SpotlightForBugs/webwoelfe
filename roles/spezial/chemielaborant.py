@@ -51,7 +51,6 @@ class Chemielaborant(Role):
                 "Ein gefährlicher Nachbar..."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#10b981",
             avatar_gradient_to="#047857",

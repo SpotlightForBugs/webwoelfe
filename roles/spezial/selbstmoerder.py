@@ -35,7 +35,6 @@ class Selbstmoerder(Role):
             erzaehler_tag="Der Selbstmörder erwacht mit einem finsteren Plan. Sein Ziel: Vom Dorf gehängt werden! Aber nicht zu offensichtlich...",
             hinweis_config="Selbstmörder",
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#374151",
             avatar_gradient_to="#111827",

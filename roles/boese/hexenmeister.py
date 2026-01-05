@@ -52,7 +52,6 @@ class Hexenmeister(Role):
                 "oder den Fluch aufheben."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#4c1d95",
             avatar_gradient_to="#2e1065",

@@ -52,7 +52,6 @@ class Vampir(Role):
                 "ein Opfer zur Verwandlung."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#7c2d12",
             avatar_gradient_to="#451a03",

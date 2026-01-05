@@ -78,7 +78,6 @@ class Urwolf(Role):
                 "ein Opfer infizieren statt zu töten."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
@@ -131,7 +130,7 @@ class Urwolf(Role):
         """
         # Check if infection is available
         if not self.get_state(spieler, "infektion"):
-             return AktionsErgebnis(
+            return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du hast deine Infektion bereits verbraucht!",
             )

@@ -71,7 +71,6 @@ class Selbstmoerder(Role):
             farbe="#78716c",
             prioritaet=100,
             hinweis_config="Selbstmörder",
-
             # Visual Styling
             avatar_gradient_from="#78716c",
             avatar_gradient_to="#44403c",

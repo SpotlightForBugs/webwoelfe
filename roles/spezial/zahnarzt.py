@@ -50,7 +50,6 @@ class Zahnarzt(Role):
                 "der morgen nicht abstimmen darf."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#ffffff",
             avatar_gradient_to="#e5e7eb",

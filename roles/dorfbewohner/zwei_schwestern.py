@@ -36,7 +36,7 @@ class ZweiSchwestern(Role):
             beschreibung=(
                 "Du bist eine der zwei Schwestern. In der ersten Nacht "
                 "erkennt ihr euch gegenseitig. Ihr dürft jede Nacht "
-                "kurz die Augen oeffnen und euch absprechen."
+                "kurz die Augen öffnen und euch absprechen."
             ),
             icon="fa-solid fa-user-group",
             farbe="#f472b6",
@@ -46,6 +46,12 @@ class ZweiSchwestern(Role):
                 "Sie dürfen sich kurz absprechen."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+
+            # Visual Styling
+            avatar_gradient_from="#f472b6",
+            avatar_gradient_to="#db2777",
+            avatar_border_color="#fbcfe8",
+            badge_emoji="👭",
         )
 
     def is_active_on_first_night(self) -> bool:

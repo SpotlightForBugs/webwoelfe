@@ -49,22 +49,28 @@ class AlterMann(Role):
             beschreibung=(
                 "Du bist der Alte Mann. Du überlebst den ersten "
                 "Werwolf-Angriff! Aber Vorsicht: Wirst du vom Dorf gehängt, "
-                "verlieren alle Spezialrollen ihre Fähigkeiten."
-            ),
-            icon="fa-solid fa-person-cane",
-            farbe="#78716c",
-            prioritaet=98,
-            erzaehler_nacht=(
-                "Der Alte Mann schläft tief. Seine zähe Haut hat "
-                "schon manchen Biss überstanden."
-            ),
-            erweiterung=Erweiterung.NEUMOND,
-            erzaehler_tag=(
-                "Der Alte Mann erwacht. Falls er von Woelfen angegriffen "
-                "wurde, hat er überlebt! Aber Vorsicht: Hängt das Dorf ihn, "
                 "verlieren alle Spezialrollen ihre Kräfte."
             ),
+            icon="fa-solid fa-person-cane",
+            farbe="#9ca3af",
+            prioritaet=100,
+            erzaehler_nacht=(
+                "Der Alte Mann schläft tief und fest. Seine Weisheit "
+                "schützt ihn vor dem ersten Angriff."
+            ),
+            erweiterung=Erweiterung.CHARAKTERE,
+
+            # Visual Styling
+            avatar_gradient_from="#9ca3af",
+            avatar_gradient_to="#4b5563",
+            avatar_border_color="#d1d5db",
+            badge_emoji="👴",
         )
+
+    @property
+    def aktions_typ(self) -> AktionsTyp:
+        """Alter Mann hat keinen aktiven Nachtschutz."""
+        return AktionsTyp.PASSIV
 
     def is_active_on_first_night(self) -> bool:
         """Alter Mann does not act at night."""

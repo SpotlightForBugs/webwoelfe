@@ -50,10 +50,14 @@ class Dieb(Role):
             erzaehler_nacht=(
                 "Der Dieb erwacht zuerst und sieht zwei Rollen. " "Er muss eine wählen."
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.BASISSPIEL,
-            )
+            erweiterung=Erweiterung.BASISSPIEL,
+
+            # Visual Styling
+            avatar_gradient_from="#1e293b",
+            avatar_gradient_to="#0f172a",
+            avatar_border_color="#334155",
+            badge_emoji="🎭",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

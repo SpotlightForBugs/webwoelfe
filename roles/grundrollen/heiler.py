@@ -25,20 +25,22 @@ if TYPE_CHECKING:
 @RoleRegistry.register
 class Heiler(Role):
     """
-    Der Heiler - Schutz-Rolle.
+    Der Heiler - Beschützer-Rolle.
 
     Fähigkeiten:
-    - Kann jede Nacht einen Spieler schützen
-    - Nicht zweimal hintereinander denselben Spieler
+    - Kann jede Nacht einen Spieler vor Werwölfen schützen
+    - Darf nicht zweimal hintereinander denselben Spieler schützen
 
     Gewinnbedingung: Dorf gewinnt.
     """
 
     def state_fields(self) -> List[StateField]:
-        """Definiert die Zustandsfelder des Heilers."""
         return [
             StateField(
-                "letztes_ziel", StateType.PLAYER_ID, None, "Zuletzt geschützter Spieler"
+                "letztes_ziel_id",
+                StateType.PLAYER_ID,
+                None,
+                "Zuletzt geschützter Spieler",
             ),
         ]
 
@@ -50,23 +52,29 @@ class Heiler(Role):
             team=Team.DORF,
             kategorie=Kategorie.GRUNDROLLEN,
             beschreibung=(
-                "Du bist der Heiler. Jede Nacht kannst du einen Spieler vor "
-                "dem Werwolf-Angriff schützen. Du darfst nicht zweimal "
-                "hintereinander denselben Spieler schützen!"
+                "Du bist der Heiler. Jede Nacht kannst du einen Spieler vor den "
+                "Werwölfen schützen. Du darfst aber nicht zweimal hintereinander "
+                "denselben Spieler schützen."
             ),
-            icon="fa-solid fa-heart-pulse",
+            icon="fa-solid fa-hand-holding-medical",
             farbe="#10b981",
-            prioritaet=55,
+            prioritaet=10,
             erzaehler_nacht=(
-                "Der Heiler erwacht und zeigt auf den Spieler, den er diese "
-                "Nacht beschützen möchte. Nicht denselben wie letzte Nacht!"
+                "Der Heiler erwacht. Wen möchtest du diese Nacht vor den "
+                "Werwölfen schützen?"
             ),
-            erweiterung=Erweiterung.NEUMOND,
+            erweiterung=Erweiterung.BASISSPIEL,
+
+            # Visual Styling
+            avatar_gradient_from="#10b981",
+            avatar_gradient_to="#047857",
+            avatar_border_color="#34d399",
+            badge_emoji="🛡️",
+
             distribution=DistributionConfig(
-                min_players=12,
-                # 1 Heiler ab 12 Spielern
-                count_func=lambda n: max(1, n // 80),
-                priority=55,
+                min_players=6,
+                count_func=lambda n: 1,
+                priority=10,
                 exclusive_with=[],
             ),
         )
@@ -93,19 +101,19 @@ class Heiler(Role):
 
         return RollenUI(
             title="Heiler - Spieler schützen",
-            instructions="Wähle einen Spieler, den du diese Nacht schützen möchtest. Du kannst nicht zweimal hintereinander denselben Spieler schützen.",
+            instructions="Wähle einen Spieler, den du vor den Werwölfen schützen möchtest.",
             buttons=[
                 UIButton(
                     label="Schützen",
                     action_type="schuetzen",
-                    icon="fa-solid fa-heart-pulse",
+                    icon="fa-solid fa-shield-halved",
                     css_class="btn-success",
-                    requires_confirmation=False,
+                    requires_confirmation=True,
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=False,  # Must act
+            can_skip=False,
         )
 
     def on_nacht_aktion(
@@ -117,19 +125,7 @@ class Heiler(Role):
         if ziel is None:
             return AktionsErgebnis(
                 erfolg=False,
-                nachricht="Du musst jemanden zum Schützen wählen.",
-            )
-
-        # Prüfe ob es das gleiche Ziel wie letzte Nacht ist
-        letztes_ziel = self.get_state(spieler, "letztes_ziel")
-
-        if letztes_ziel == ziel.id:
-            return AktionsErgebnis(
-                erfolg=False,
-                nachricht=(
-                    "Du kannst nicht zweimal hintereinander denselben "
-                    "Spieler schützen!"
-                ),
+                nachricht="Du musst einen Spieler wählen.",
             )
 
         if not self.validate_ziel(spieler, ziel, kontext):
@@ -138,15 +134,24 @@ class Heiler(Role):
                 nachricht="Ungültiges Ziel.",
             )
 
-        # Speichere das aktuelle Ziel für die nächste Runde
-        self.set_state(spieler, "letztes_ziel", ziel.id)
+        # Prüfe ob Ziel == letztes Ziel
+        letztes_ziel_id = self.get_state(spieler, "letztes_ziel_id")
+        if letztes_ziel_id == ziel.id:
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Du kannst nicht zweimal hintereinander denselben Spieler schützen.",
+            )
+
+        # Speichere neues Ziel
+        self.set_state(spieler, "letztes_ziel_id", ziel.id)
 
         return AktionsErgebnis(
             erfolg=True,
-            nachricht=f"Du beschützt {ziel.name} diese Nacht.",
+            nachricht=f"Du beschützt {ziel.name} in dieser Nacht.",
             ziel_spieler_id=ziel.id,
             effekte={
                 "geschuetzt": ziel.id,
+                "heiler_schutz": True,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

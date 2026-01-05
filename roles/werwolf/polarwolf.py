@@ -49,10 +49,15 @@ class Polarwolf(Role):
                 'Der Polarwolf ist immun gegen Sandmann und Jäger.'
             ),
             erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
-    
+            erweiterung=Erweiterung.NEUMOND,
+
+            # Visual Styling
+            avatar_gradient_from="#e0f2fe",
+            avatar_gradient_to="#bae6fd",
+            avatar_border_color="#7dd3fc",
+            badge_emoji="❄️",
+        )
+
     @property
     def aktions_typ(self) -> 'AktionsTyp':
         from ..enums import AktionsTyp

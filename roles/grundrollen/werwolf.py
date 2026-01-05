@@ -5,7 +5,7 @@ Werwölfe erkennen sich gegenseitig und wählen
 jede Nacht gemeinsam ein Opfer aus.
 """
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, List
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -45,6 +45,13 @@ class Werwolf(Role):
                 "gemeinsam ein Opfer aus."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
+
+            # Visual Styling
+            avatar_gradient_from="#b91c1c",
+            avatar_gradient_to="#7f1d1d",
+            avatar_border_color="#ef4444",
+            badge_emoji="🐺",
+
             distribution=DistributionConfig(
                 min_players=5,
                 # ~20% Werwölfe, min 1

@@ -49,10 +49,14 @@ class EinsamerWolf(Role):
                 'Der Einsame Wolf erwacht separat und wählt sein eigenes Opfer.'
             ),
             erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
-    
+
+            # Visual Styling
+            avatar_gradient_from="#4c1d95",
+            avatar_gradient_to="#2e1065",
+            avatar_border_color="#8b5cf6",
+            badge_emoji="🐺",
+        )
+
     @property
     def aktions_typ(self) -> 'AktionsTyp':
         from ..enums import AktionsTyp

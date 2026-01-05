@@ -50,7 +50,7 @@ class Urwolf(Role):
                 key="global.ist_infiziert",
                 name="Infiziert",
                 typ=StateType.BOOL,
-                beschreibung="Spieler wurde vom Urwolf infiziert und wird zum Werwolf",
+                beschreibung="Spieler wurde vom Urwolf infiziert",
                 visual_effect=StateVisualEffect.INFECTED,
                 css_class="infiziert",
                 icon="🦠",
@@ -62,23 +62,28 @@ class Urwolf(Role):
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
-            id=123,
+            id=20,
             name="Urwolf",
             team=Team.WERWOLF,
             kategorie=Kategorie.WERWOLF,
             beschreibung=(
-                "Du bist der Urwolf! Einmal pro Spiel kannst du statt "
-                "zu toeten einen Dorfbewohner infizieren. Dieser wird "
-                "zum Werwolf und erwacht in der naechsten Nacht mit euch."
+                "Du bist der Urwolf. Einmal pro Spiel kannst du statt zu töten "
+                "einen Dorfbewohner infizieren. Er wird sofort zum Werwolf!"
             ),
             icon="fa-solid fa-virus",
             farbe="#7f1d1d",
-            prioritaet=51,
+            prioritaet=50,
             erzaehler_nacht=(
-                "Der Urwolf hat die Moeglichkeit zu infizieren statt zu "
-                "toeten. Moechte er seine Faehigkeit einsetzen?"
+                "Der Urwolf erwacht mit den anderen. Er kann entscheiden, "
+                "ob er jemanden infizieren möchte."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+
+            # Visual Styling
+            avatar_gradient_from="#7f1d1d",
+            avatar_gradient_to="#450a0a",
+            avatar_border_color="#b91c1c",
+            badge_emoji="🦠",
         )
 
     @property

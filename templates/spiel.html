@@ -61,13 +61,27 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
      ============================================================ */
   {% if rollen_styles %}
   {% for css_name, style in rollen_styles.items() %}
+  /* Badge styling */
   .rolle-{{ css_name }} {
-    background: {{ style.farbe }};
+    background: linear-gradient(135deg, {{ style.avatar_gradient_from }} 0%, {{ style.avatar_gradient_to }} 100%);
     color: white;
   }
-  .spieler-avatar.rolle-{{ css_name }} {
-    background: linear-gradient(145deg, {{ style.farbe }} 0%, {{ style.farbe }}cc 100%);
-    border-color: {{ style.farbe }};
+
+  /* Avatar styling */
+  .spieler-avatar.rolle-{{ css_name }},
+  .spieler-avatar[data-role="{{ css_name }}"] {
+    background: linear-gradient(145deg, {{ style.avatar_gradient_from }} 0%, {{ style.avatar_gradient_to }} 100%);
+    border-color: {{ style.avatar_border_color }};
+  }
+
+  /* Badge emoji */
+  .spieler-avatar[data-role="{{ css_name }}"]::after {
+    content: "{{ style.badge_emoji }}";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 1rem;
+    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
   }
   {% endfor %}
   {% endif %}
@@ -1271,7 +1285,12 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
             data-ist-erzaehler="{{ s.ist_erzaehler|lower }}"
             onclick="selectSpieler({{ s.id }})"
           >
-            <div class="spieler-avatar">
+            <div class="spieler-avatar"
+                 {% if kennt_rolle and s.rolle %}
+                 data-role="{{ s.rolle|css_class }}"
+                 data-team="{{ rollen_styles[s.rolle|css_class].team if rollen_styles[s.rolle|css_class] else '' }}"
+                 {% endif %}
+            >
               <span class="avatar-initial">{{ s.name[0]|upper }}</span>
               {# Dynamic icons from effects - replaces hardcoded werwolf/seherin icons #}
               {% for effect in spieler_effekte %}

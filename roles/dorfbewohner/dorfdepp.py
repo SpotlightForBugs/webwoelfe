@@ -49,10 +49,19 @@ class Dorfdepp(Role):
             erweiterung=Erweiterung.NEUMOND,
             erzaehler_tag=(
                 "Der Dorfdepp stolpert durch den Tag. Sein Ziel: "
-                "So verdächtig wie möglich wirken, ohne ein Werwolf zu sein!"
+                "Sich so verdächtig wie möglich machen!"
             ),
-            hinweis_config="Dorfdepp",
+
+            # Visual Styling
+            avatar_gradient_from="#a78bfa",
+            avatar_gradient_to="#7c3aed",
+            avatar_border_color="#c4b5fd",
+            badge_emoji="🤪",
         )
+
+    @property
+    def aktions_typ(self) -> AktionsTyp:
+        return AktionsTyp.KEINE
 
     def is_active_on_first_night(self) -> bool:
         """Dorfdepp does not act at night."""

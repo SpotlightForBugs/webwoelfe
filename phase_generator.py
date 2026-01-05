@@ -11,9 +11,7 @@ This module generates the night phase sequence by:
 from typing import List, Dict, Optional, Set, Tuple
 from models import Raum, Spieler
 from roles import RoleRegistry
-import logging
-
-logger = logging.getLogger(__name__)
+from logger import logger
 
 
 def generate_phases_for_game(raum: Raum) -> List[str]:
@@ -29,6 +27,7 @@ def generate_phases_for_game(raum: Raum) -> List[str]:
     Returns:
         List of phase names (e.g., ["werwolf_phase", "seherin_phase", "hexe_phase"])
     """
+    logger.debug(f"Generating phases for room {raum.code} (Round {raum.runde})")
     from game_logic import hole_lebende_spieler
 
     active_roles = []
@@ -57,6 +56,7 @@ def generate_phases_for_game(raum: Raum) -> List[str]:
 
     # Sort by dependencies and priority
     sorted_roles = _sort_roles_by_dependencies(active_roles)
+    logger.debug(f"Sorted active roles: {[r[0].info.name for r in sorted_roles]}")
 
     # Build phase list
     phases = []
@@ -75,6 +75,7 @@ def generate_phases_for_game(raum: Raum) -> List[str]:
     if phases and phases[0].startswith("nacht"):
         phases.append("nacht_ende")
 
+    logger.info(f"Generated phases: {phases}")
     return phases
 
 
@@ -290,3 +291,72 @@ def build_phase_role_mapping(raum: Raum) -> Dict[str, str]:
     mapping["werwolf_phase"] = "Werwolf"
 
     return mapping
+
+
+def initialize_game_phases(raum: Raum):
+    """
+    Initializes the phase generator for a new game.
+    """
+    logger.info(f"Initializing game phases for room {raum.code}")
+    # Currently stateless, but could store cached phases in raum.zusatz_daten if needed
+    pass
+
+
+def get_next_phase(raum: Raum) -> str:
+    """
+    Determines the next phase for the given room.
+    """
+    logger.info(f"Getting next phase for room {raum.code} (Current: {raum.aktuelle_phase})")
+
+    current_phase = raum.aktuelle_phase
+
+    # 1. Handle Standard Day Cycle (Fixed Order)
+    # tag_start -> diskussion_abstimmung -> tag_ende -> nacht_start
+
+    if current_phase == "rollen_verteilt":
+        return "nacht_start"
+
+    if current_phase == "tag_start":
+        return "diskussion_abstimmung"
+
+    if current_phase == "diskussion_abstimmung":
+        # Check if voting resulted in death (handled in game_logic)
+        # Usually goes to tag_ende or jaeger_phase
+        # If jaeger_phase is active, it will be set by game_logic
+        return "tag_ende"
+
+    if current_phase == "jaeger_phase":
+        return "tag_ende" # Back to normal flow
+
+    if current_phase == "tag_ende":
+        return "nacht_start"
+
+    # 2. Handle Night Cycle (Dynamic)
+    # nacht_start -> [role phases] -> nacht_ende -> tag_start
+
+    if current_phase == "nacht_start" or "nacht" in current_phase or "phase" in current_phase:
+        # Generate dynamic night phases
+        night_phases = generate_phases_for_game(raum)
+
+        if not night_phases:
+            logger.warning("No night phases generated! Skipping to day.")
+            return "tag_start"
+
+        # Find current index
+        try:
+            idx = night_phases.index(current_phase)
+            if idx + 1 < len(night_phases):
+                return night_phases[idx + 1]
+            else:
+                # End of night phases
+                return "tag_start"
+        except ValueError:
+            # Current phase not in night list (maybe we just started night?)
+            if current_phase == "nacht_start":
+                return night_phases[0] if night_phases else "tag_start"
+
+            # Fallback: Start of night or Day if lost
+            logger.warning(f"Current phase {current_phase} not found in night phases {night_phases}")
+            return "tag_start"
+
+    return "tag_start" # Fallback

@@ -50,13 +50,17 @@ class Tonks(Role):
             farbe="#a855f7",
             prioritaet=75,
             erzaehler_nacht=(
-                "Tonks erwacht. Möchte sie ihre Rolle mit einem toten "
-                "Spieler tauschen? (Einmal pro Spiel, zufällig)"
+                "Tonks erwacht. Sie überlegt, ob sie ihre Gestalt wandeln "
+                "und die Rolle eines Toten übernehmen soll."
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#a855f7",
+            avatar_gradient_to="#7e22ce",
+            avatar_border_color="#c084fc",
+            badge_emoji="🎭",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

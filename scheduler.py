@@ -10,9 +10,9 @@ from dataclasses import dataclass
 from models import Raum, SpielAktion, Spieler
 from roles import RoleRegistry
 from roles.enums import Phase
-import logging
+from logger import logger
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__) # Use centralized logger
 
 @dataclass
 class PhaseState:
@@ -24,6 +24,7 @@ def get_next_phase_state(raum: "Raum") -> PhaseState:
     """
     Ermittelt den nächsten Spielzustand (Phase + Aktive Rolle).
     """
+    logger.debug(f"Scheduler: Calculating next phase state for room {raum.code} (Current: {raum.aktuelle_phase})")
     current_phase = raum.aktuelle_phase
     
     # 1. Start -> Rollen Verteilung
@@ -59,6 +60,7 @@ def get_next_night_step(raum: "Raum") -> PhaseState:
     """
     Iteriert durch alle Rollen und prüft, wer noch agieren muss.
     """
+    logger.debug(f"Scheduler: Calculating next night step for room {raum.code}")
     # 1. Hole alle aktiven Rollen für diese Nacht (sortiert)
     active_roles = get_active_roles_ordered(raum)
     
@@ -66,6 +68,7 @@ def get_next_night_step(raum: "Raum") -> PhaseState:
     for role_obj, spieler_liste in active_roles:
         if not is_role_done(raum, role_obj, spieler_liste):
             # Diese Rolle ist dran!
+            logger.info(f"Scheduler: Next active role is {role_obj.info.name}")
             return PhaseState(
                 phase="nacht",
                 active_role=role_obj.info.name,
@@ -73,6 +76,7 @@ def get_next_night_step(raum: "Raum") -> PhaseState:
             )
             
     # Alle fertig -> Tag
+    logger.info("Scheduler: Night finished, transitioning to day")
     return PhaseState("tag_start")
 
 def get_active_roles_ordered(raum: "Raum") -> List[Any]:
@@ -160,7 +164,10 @@ def is_role_done(raum: "Raum", role: Any, spieler_liste: List["Spieler"]) -> boo
         
         # If any player acted "skip" (if wolves can skip?), logic might differ.
         # But for Wernerwolf, usually all vote.
-        return len(acted_ids) >= needed_count
+        is_done = len(acted_ids) >= needed_count
+        if not is_done:
+            logger.debug(f"Role {role.info.name} waiting for group action ({len(acted_ids)}/{needed_count})")
+        return is_done
 
     else:
         # Individual Actions: Check if ALL players acted
@@ -172,7 +179,9 @@ def is_role_done(raum: "Raum", role: Any, spieler_liste: List["Spieler"]) -> boo
                 if ui_def.can_skip:
                     # If can skip, we might need explicit "skip" action in DB?
                     # Yes, "skip" action should be recorded.
+                    logger.debug(f"Role {role.info.name} waiting for player {s.name} (can skip: {ui_def.can_skip})")
                     return False
+                logger.debug(f"Role {role.info.name} waiting for player {s.name}")
                 return False
                 
     return True

@@ -34,9 +34,14 @@ class Buergermeister(Role):
             prioritaet=95,
             erzaehler_nacht="Der Bürgermeister ruht in seinem Rathaus. Seine Stimme hat doppeltes Gewicht.",
             erzaehler_tag="Der Bürgermeister ist gefallen! Mit letzter Kraft zeigt er auf seinen Nachfolger, der das Amt und die doppelte Stimme erbt!",
-            hinweis_config=None,
-        erweiterung=Erweiterung.CHARAKTERE,
-            )
+            erweiterung=Erweiterung.CHARAKTERE,
+
+            # Visual Styling
+            avatar_gradient_from="#1e40af",
+            avatar_gradient_to="#1e3a8a",
+            avatar_border_color="#3b82f6",
+            badge_emoji="🎖️",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

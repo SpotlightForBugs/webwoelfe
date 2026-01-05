@@ -4,8 +4,9 @@ Alle Rollen basierend auf: https://werwolf.fandom.com/de/wiki/Werwolf-Rollen-Sam
 """
 
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 import secrets
+from logger import logger
 
 # Import phases from centralized modules
 from phases import get_phase_list
@@ -24,7 +25,7 @@ class Raum(db.Model):
     modus = db.Column(
         db.String(20), nullable=False, default="online"
     )  # 'online' oder 'gruppe'
-    erstellt_am = db.Column(db.DateTime, default=datetime.utcnow)
+    erstellt_am = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     spieler_anzahl = db.Column(db.Integer, default=8)
     spiel_gestartet = db.Column(db.Boolean, default=False)
     aktuelle_phase = db.Column(db.String(30), default="lobby")
@@ -60,6 +61,7 @@ class Raum(db.Model):
                 secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(6)
             )
             if not Raum.query.filter_by(code=code).first():
+                logger.debug(f"Generated new room code: {code}")
                 return code
 
 
@@ -78,7 +80,7 @@ class Spieler(db.Model):
     ist_am_leben = db.Column(db.Boolean, default=True, index=True)
     ist_erzaehler = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), default="wartend")  # wartend, schläft, aktiv, tot
-    beigetreten_am = db.Column(db.DateTime, default=datetime.utcnow)
+    beigetreten_am = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Composite indexes for common query patterns in large games
     __table_args__ = (
@@ -115,8 +117,11 @@ class Spieler(db.Model):
 
         try:
             state = json.loads(self.rolle_zustand or "{}")
-            return state.get(key, default)
-        except (json.JSONDecodeError, TypeError):
+            val = state.get(key, default)
+            # logger.debug(f"State read: {self.name}.{key} = {val}") # Too verbose
+            return val
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.error(f"Error reading state for {self.name}: {e}")
             return default
 
     def set_state(self, key: str, value):
@@ -128,6 +133,7 @@ class Spieler(db.Model):
             value: Der Wert
         """
         import json
+        logger.debug(f"State update: {self.name}.{key} = {value}")
 
         try:
             state = json.loads(self.rolle_zustand or "{}")
@@ -195,7 +201,9 @@ class Spieler(db.Model):
     @staticmethod
     def generiere_session():
         """Generiert eine einzigartige Session-ID"""
-        return secrets.token_hex(32)
+        sid = secrets.token_hex(32)
+        # logger.debug(f"Generated session ID: {sid[:8]}...") # Too verbose
+        return sid
 
     def hole_nachbar_links(self):
         """Gibt den linken Nachbarn zurück (im Uhrzeigersinn)"""
@@ -279,7 +287,7 @@ class SpielAktion(db.Model):
     von_spieler_id = db.Column(db.Integer, db.ForeignKey("spieler.id"), nullable=False)
     ziel_spieler_id = db.Column(db.Integer, db.ForeignKey("spieler.id"), nullable=True)
     zusatz_daten = db.Column(db.Text, nullable=True)  # JSON für komplexe Aktionen
-    zeitpunkt = db.Column(db.DateTime, default=datetime.utcnow)
+    zeitpunkt = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     von_spieler = db.relationship("Spieler", foreign_keys=[von_spieler_id])
     ziel_spieler = db.relationship("Spieler", foreign_keys=[ziel_spieler_id])
@@ -293,7 +301,7 @@ class SpielLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     raum_id = db.Column(db.Integer, db.ForeignKey("raeume.id"), nullable=False)
     nachricht = db.Column(db.Text, nullable=False)
-    zeitpunkt = db.Column(db.DateTime, default=datetime.utcnow)
+    zeitpunkt = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     sichtbar_fuer = db.Column(
         db.String(100), default="alle"
     )  # alle, erzähler, werwolf, spieler_id
@@ -311,7 +319,7 @@ class ErzaehlerEvent(db.Model):
     )  # z.B. 'amor_verliebte', 'wildes_kind_vorbild'
     runde = db.Column(db.Integer, nullable=True)  # In welcher Runde Event passierte
     ziel_spieler_ids = db.Column(db.String(100), nullable=True)  # Komma-getrennte IDs
-    gespielt_am = db.Column(db.DateTime, default=datetime.utcnow)
+    gespielt_am = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     @staticmethod
     def event_bereits_gespielt(raum_id, event_typ):
@@ -324,6 +332,7 @@ class ErzaehlerEvent(db.Model):
     @staticmethod
     def registriere_event(raum_id, event_typ, runde=None, ziel_spieler_ids=None):
         """Registriert ein gespieltes Event"""
+        logger.info(f"Registering narrator event: {event_typ} in room {raum_id}")
         event = ErzaehlerEvent(
             raum_id=raum_id,
             event_typ=event_typ,
@@ -376,7 +385,7 @@ class SeherinEnthuellung(db.Model):
         db.String(50), nullable=True
     )  # Die Rolle die gesehen wurde
     runde = db.Column(db.Integer, nullable=False)  # In welcher Runde enthüllt
-    enthuellt_am = db.Column(db.DateTime, default=datetime.utcnow)
+    enthuellt_am = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     @staticmethod
     def speichere_enthuellung(
@@ -388,6 +397,7 @@ class SeherinEnthuellung(db.Model):
         runde: int,
     ):
         """Speichert eine neue Enthüllung als Snapshot"""
+        logger.info(f"Saving Seherin reveal: Seherin {seherin_id} -> Target {ziel_id} ({rolle})")
         # Prüfe ob bereits enthüllt
         bestehend = SeherinEnthuellung.query.filter_by(
             seherin_id=seherin_id, ziel_id=ziel_id, raum_id=raum_id
@@ -417,7 +427,7 @@ class SeherinEnthuellung(db.Model):
         Returns:
             Dict von ziel_id -> {'typ': 'gut'/'boese', 'rolle': 'Werwolf', 'runde': 2}
         """
-        enthüllungen = SeherinEnthuellung.query.filter_by(
+        enthuellungen = SeherinEnthuellung.query.filter_by(
             seherin_id=seherin_id, raum_id=raum_id
         ).all()
 
@@ -427,7 +437,7 @@ class SeherinEnthuellung(db.Model):
                 "rolle": e.gesehene_rolle,
                 "runde": e.runde,
             }
-            for e in enthüllungen
+            for e in enthuellungen
         }
 
     # Relationships mit expliziten foreign_keys
@@ -445,9 +455,9 @@ class SeherinEnthuellung(db.Model):
 # See roles/base.py RollenInfo for the schema.
 # ============================================================================
 
-# Removed: ERZAEHLER_PHASEN (500+ lines of hardcoded phase texts)
+# NO FALLBACKS ALLOWED - ERZAEHLER_PHASEN removed.
 
-# EVENT-BASIERTE TEXTE (nur einmal pro Spiel!)
+#TODO: THESE NEED TO BE MOVED INTO THE ROLES BECAUSE THIS IS PARTIALLY ROLE-SPECIFIC
 ERZAEHLER_EVENTS = {
     # === ERSTE NACHT EVENTS (nur in Runde 1) ===
     "erste_nacht_intro": {
@@ -599,13 +609,15 @@ def hole_erzaehler_text(raum_id, event_typ, kontext=None):
     Gibt den passenden Erzählertext zurück, wenn er noch nicht gespielt wurde.
     kontext: Dict mit Variablen für Platzhalter (z.B. {opfer}, {spieler})
     """
+    # logger.debug(f"Fetching narrator text for event: {event_typ}") # Too verbose
     # Prüfe ob Event bereits gespielt
     if ERZAEHLER_EVENTS.get(event_typ, {}).get("einmalig", True):
         if ErzaehlerEvent.event_bereits_gespielt(raum_id, event_typ):
             return None
 
-    event = ERZAEHLER_EVENTS.get(event_typ) or ERZAEHLER_PHASEN.get(event_typ)
+    event = ERZAEHLER_EVENTS.get(event_typ)
     if not event:
+        logger.warning(f"Narrator event not found: {event_typ}")
         return None
 
     text = event["text"]
@@ -624,8 +636,7 @@ def hole_erzaehler_text(raum_id, event_typ, kontext=None):
     }
 
 
-# Legacy-Kompatibilität
-ERZAEHLER_TEXTE = ERZAEHLER_PHASEN
+# NO FALLBACKS ALLOWED - ERZAEHLER_TEXTE removed.
 
 
 # ============================================================================
@@ -958,9 +969,10 @@ def _erstelle_rollen_dict():
     """
     try:
         from roles import get_alle_rollen
-
+        logger.debug("Loading roles from registry...")
         return get_alle_rollen()
     except Exception as e:
+        logger.error(f"[ROLLEN] Fehler beim Laden: {e}")
         print(f"[ROLLEN] Fehler beim Laden: {e}")
         return {}
 

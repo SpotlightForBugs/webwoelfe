@@ -43,9 +43,15 @@ class WeisserWolf(Role):
             prioritaet=52,
             erzaehler_nacht=(
                 "Der Weisse Wolf erwacht (jede zweite Nacht). "
-                "Moechte er einen Mitwerwolf toeten?"
+                "Möchte er einen Mitwerwolf töten?"
             ),
             erweiterung=Erweiterung.GEMEINDE,
+
+            # Visual Styling
+            avatar_gradient_from="#f5f5f4",
+            avatar_gradient_to="#d6d3d1",
+            avatar_border_color="#e7e5e4",
+            badge_emoji="🐺",
         )
     
     @property
@@ -90,6 +96,18 @@ class WeisserWolf(Role):
             allow_multiple_targets=False,
             can_skip=True
         )
+
+    def get_erzaehler_nacht_text(self, kontext: "SpielKontext") -> Optional[str]:
+        """
+        Gibt den Erzähler-Text nur in geraden Runden zurück.
+        """
+        if kontext.runde % 2 == 0:
+            return (
+                "Der Weisse Wolf erwacht. Er spürt den Hunger nach dem Fleisch "
+                "seiner eigenen Art. Möchte er einen Mitwerwolf töten?"
+            )
+        return None
+
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """

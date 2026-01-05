@@ -49,14 +49,15 @@ class Griesgram(Role):
             prioritaet=100,
             erzaehler_nacht=(
                 "Der Griesgram wälzt sich mürrisch im Bett. "
-                "Selbst im Schlaf ist er schlecht gelaunt."
+                "Er träumt davon, morgen wieder gegen alles zu sein."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-            erzaehler_tag=(
-                "Der Griesgram erwacht grantig. Er stimmt IMMER für eine "
-                "Hinrichtung - egal wer vorgeschlagen wird!"
-            ),
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#6b7280",
+            avatar_gradient_to="#374151",
+            avatar_border_color="#9ca3af",
+            badge_emoji="😠",
         )
 
     def is_active_on_first_night(self) -> bool:

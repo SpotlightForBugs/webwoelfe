@@ -69,7 +69,12 @@ class Doppelgaenger(Role):
                 "Das Ziel des Doppelgängers ist tot! " "Er übernimmt dessen Rolle."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#6366f1",
+            avatar_gradient_to="#4338ca",
+            avatar_border_color="#818cf8",
+            badge_emoji="👥",
         )
 
     @property

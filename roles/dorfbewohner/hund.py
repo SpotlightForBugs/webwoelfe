@@ -95,22 +95,19 @@ class Hund(Role):
             icon="fa-solid fa-dog",
             farbe="#a16207",
             prioritaet=7,  # Früh in der Nacht, ähnlich wie Amor/Wildes Kind
-            erzaehler_nacht="Der Hund erwacht (nur erste Nacht) und wählt sein Herrchen.",
-            erzaehler_tag=None,
-            hinweis_config=None,
-            erweiterung=Erweiterung.SONDEREDITION,
+            erzaehler_nacht=(
+                "Der Hund erwacht und sucht sich ein Herrchen. "
+                "Er wird ihm treu ergeben sein... bis in den Tod."
+            ),
+            erweiterung=Erweiterung.CHARAKTERE,
+
+            # Visual Styling
+            avatar_gradient_from="#78350f",
+            avatar_gradient_to="#451a03",
+            avatar_border_color="#b45309",
+            badge_emoji="🐕",
         )
 
-    @property
-    def sichtbar_als(self) -> SichtTyp:
-        """
-        Der Hund sieht für die Seherin als Dorf aus.
-
-        Auch nach der Verwandlung sieht er als Dorf aus,
-        da er technisch immer noch ein Hund ist - nur sein
-        Loyalitäts-Team hat sich geändert.
-        """
-        return SichtTyp.DORF
 
     @property
     def aktions_typ(self) -> AktionsTyp:

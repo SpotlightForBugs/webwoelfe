@@ -40,6 +40,13 @@ class Aurenseherin(Role):
                 "Die Aurenseherin erwacht und wählt einen Spieler. "
                 "Zeige: Goldenes Licht (gut) oder dunkler Schatten (böse)."
             ),
+            erweiterung=Erweiterung.CHARAKTERE,
+
+            # Visual Styling
+            avatar_gradient_from="#a78bfa",
+            avatar_gradient_to="#7c3aed",
+            avatar_border_color="#c4b5fd",
+            badge_emoji="✨",
         )
     
     @property

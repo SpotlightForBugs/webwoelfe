@@ -11,6 +11,7 @@ import hashlib
 import threading
 from pathlib import Path
 import requests
+from logger import logger
 
 # Ordner für Audio-Cache
 AUDIO_CACHE_DIR = Path("static/audio/cache")
@@ -89,7 +90,7 @@ def text_zu_audio_elevenlabs(
     Returns None, falls ElevenLabs nicht aktiviert oder nicht konfiguriert ist.
     """
     if not elevenlabs_aktiv():
-        print("[ELEVENLABS] Nicht aktiviert oder kein API-Key")
+        logger.debug("[ELEVENLABS] Nicht aktiviert oder kein API-Key")
         return None
 
     voice_id = stimme or ELEVENLABS_VOICE_ID
@@ -99,20 +100,20 @@ def text_zu_audio_elevenlabs(
 
     # Schneller Check ohne Lock - wenn Datei existiert, sofort zurückgeben
     if audio_datei.exists() and not force_regenerate:
-        print(f"[ELEVENLABS] Cache-Hit: {audio_datei}")
+        logger.debug(f"[ELEVENLABS] Cache-Hit: {audio_datei}")
         return str(audio_datei)
 
     # Lock-basierte Synchronisation für gleichzeitige Anfragen
     with _audio_generation_lock:
         # Prüfe erneut nach Lock-Erwerb (könnte inzwischen generiert worden sein)
         if audio_datei.exists() and not force_regenerate:
-            print(f"[ELEVENLABS] Cache-Hit (nach Lock): {audio_datei}")
+            logger.debug(f"[ELEVENLABS] Cache-Hit (nach Lock): {audio_datei}")
             return str(audio_datei)
 
         # Prüfe ob bereits eine Generierung für diesen Key läuft
         if cache_key in _audio_in_progress:
             wait_event = _audio_in_progress[cache_key]
-            print(f"[ELEVENLABS] Warte auf laufende Generierung: {cache_key[:20]}...")
+            logger.info(f"[ELEVENLABS] Warte auf laufende Generierung: {cache_key[:20]}...")
         else:
             # Markiere als "in Bearbeitung"
             wait_event = threading.Event()
@@ -123,16 +124,16 @@ def text_zu_audio_elevenlabs(
     if wait_event is not None:
         wait_event.wait(timeout=60)  # Max 60 Sekunden warten
         if audio_datei.exists():
-            print(f"[ELEVENLABS] Cache-Hit (nach Warten): {audio_datei}")
+            logger.debug(f"[ELEVENLABS] Cache-Hit (nach Warten): {audio_datei}")
             return str(audio_datei)
         # Andere Generierung fehlgeschlagen, wir geben None zurück
-        print(f"[ELEVENLABS] Andere Generierung fehlgeschlagen")
+        logger.warning(f"[ELEVENLABS] Andere Generierung fehlgeschlagen")
         return None
 
     # Wir sind verantwortlich für die Generierung
     response = None
     try:
-        print(f"[ELEVENLABS] Generiere Audio für: {text[:50]}...")
+        logger.info(f"[ELEVENLABS] Generiere Audio für: {text[:50]}...")
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {"xi-api-key": ELEVENLABS_API_KEY, "Accept": "audio/mpeg"}
         payload = {
@@ -150,18 +151,18 @@ def text_zu_audio_elevenlabs(
         response.raise_for_status()
 
         audio_datei.write_bytes(response.content)
-        print(f"[ELEVENLABS] Gespeichert: {audio_datei}")
+        logger.info(f"[ELEVENLABS] Gespeichert: {audio_datei}")
         return str(audio_datei)
     except requests.exceptions.HTTPError as e:
         if response is not None and response.status_code == 429:
-            print(f"[ELEVENLABS] Rate-Limit erreicht! Fallback zu edge-tts...")
+            logger.warning(f"[ELEVENLABS] Rate-Limit erreicht! Fallback zu edge-tts...")
         elif response is not None:
-            print(f"[ELEVENLABS] HTTP-Fehler {response.status_code}: {e}")
+            logger.error(f"[ELEVENLABS] HTTP-Fehler {response.status_code}: {e}")
         else:
-            print(f"[ELEVENLABS] HTTP-Fehler: {e}")
+            logger.error(f"[ELEVENLABS] HTTP-Fehler: {e}")
         return None
     except (requests.RequestException, IOError) as e:
-        print(f"[ELEVENLABS] API-Fehler: {e}")
+        logger.error(f"[ELEVENLABS] API-Fehler: {e}")
         return None
     finally:
         # Entferne aus in_progress und signalisiere wartenden Threads
@@ -214,7 +215,7 @@ async def text_zu_audio(
     if elevenlabs_aktiv():
         # Prüfe ob ElevenLabs-Cache existiert
         if elevenlabs_datei.exists() and not force_regenerate:
-            print(f"[ELEVENLABS] Cache-Hit: {elevenlabs_datei}")
+            logger.debug(f"[ELEVENLABS] Cache-Hit: {elevenlabs_datei}")
             return str(elevenlabs_datei)
 
         # Versuche ElevenLabs zu generieren
@@ -225,15 +226,15 @@ async def text_zu_audio(
             return result
 
         # ElevenLabs fehlgeschlagen, Fallback zu EdgeTTS unten
-        print("[ELEVENLABS] Fehlgeschlagen, Fallback zu EdgeTTS...")
+        logger.warning("[ELEVENLABS] Fehlgeschlagen, Fallback zu EdgeTTS...")
 
     # 2. Prüfe ob EdgeTTS bereits gecacht
     if audio_datei.exists() and not force_regenerate:
-        print(f"[EDGE-TTS] Cache-Hit: {audio_datei}")
+        logger.debug(f"[EDGE-TTS] Cache-Hit: {audio_datei}")
         return str(audio_datei)
 
     # 3. Generiere mit EdgeTTS
-    print(f"[EDGE-TTS] Generiere Audio für: {text[:50]}...")
+    logger.info(f"[EDGE-TTS] Generiere Audio für: {text[:50]}...")
 
     # Hole Einstellungen für den Stil
     einstellungen = AUDIO_EINSTELLUNGEN.get(stil, AUDIO_EINSTELLUNGEN["normal"])
@@ -250,9 +251,9 @@ async def text_zu_audio(
 
         # Speichere Audio
         await communicate.save(str(audio_datei))
-        print(f"[EDGE-TTS] Gespeichert: {audio_datei}")
+        logger.info(f"[EDGE-TTS] Gespeichert: {audio_datei}")
     except Exception as e:
-        print(f"[EDGE-TTS] Fehler: {e}")
+        logger.error(f"[EDGE-TTS] Fehler: {e}")
 
     return str(audio_datei)
 
@@ -269,24 +270,8 @@ def text_zu_audio_sync(
 
 async def generiere_phasen_audio():
     """Generiert alle Standard-Phasen-Audio-Dateien vorab."""
-    from models import PHASEN_TEXTE
-
-    print("Generiere Phasen-Audio...")
-
-    for phase_id, phase_info in PHASEN_TEXTE.items():
-        text = phase_info.get("text", "")
-        if text:
-            # Bestimme Stil basierend auf Phase
-            stil = "normal"
-            if "werwolf" in phase_id.lower():
-                stil = "dramatisch"
-            elif "tot" in text.lower() or "stirbt" in text.lower():
-                stil = "dramatisch"
-            elif "schläft" in text.lower():
-                stil = "langsam"
-
-            datei = await text_zu_audio(text, stil=stil)
-            print(f"  {phase_id}: {datei}")
+    # DEPRECATED: Static phase texts removed.
+    pass
 
     print("Fertig!")
 
@@ -408,20 +393,14 @@ async def generiere_erzaehler_audio_cache():
     Pre-generiert alle Erzähler-Audio-Dateien für den Online-Modus.
     Sollte beim Server-Start oder manuell ausgeführt werden.
     """
-    from models import ERZAEHLER_PHASEN, ERZAEHLER_EVENTS
+    from models import ERZAEHLER_EVENTS
 
-    print("=" * 60)
-    print("Generiere Erzähler-Audio-Cache...")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("Generiere Erzähler-Audio-Cache...")
+    logger.info("=" * 60)
 
     alle_texte = []
 
-    # Sammle alle Phasen-Texte
-    for phase_id, phase_info in ERZAEHLER_PHASEN.items():
-        text = phase_info.get("text", "")
-        if text:
-            stil = "dramatisch" if "werwolf" in phase_id.lower() else "normal"
-            alle_texte.append((phase_id, text, stil))
 
     # Sammle alle Event-Texte
     for event_id, event_info in ERZAEHLER_EVENTS.items():
@@ -434,7 +413,7 @@ async def generiere_erzaehler_audio_cache():
             )
             alle_texte.append((event_id, text, stil))
 
-    print(f"Gefunden: {len(alle_texte)} Texte zu generieren")
+    logger.info(f"Gefunden: {len(alle_texte)} Texte zu generieren")
 
     generated = 0
     cached = 0
@@ -453,19 +432,19 @@ async def generiere_erzaehler_audio_cache():
                 result = text_zu_audio_elevenlabs(text, stil=stil)
                 if result:
                     generated += 1
-                    print(f"  ✓ {name} (ElevenLabs)")
+                    logger.info(f"  ✓ {name} (ElevenLabs)")
                     continue
 
             # Fallback zu edge-tts
             await text_zu_audio(text, stil=stil)
             generated += 1
-            print(f"  ✓ {name} (edge-tts)")
+            logger.info(f"  ✓ {name} (edge-tts)")
         except Exception as e:
-            print(f"  ✗ {name}: {e}")
+            logger.error(f"  ✗ {name}: {e}")
 
-    print("-" * 60)
-    print(f"Fertig! Generiert: {generated}, Bereits gecacht: {cached}")
-    print("=" * 60)
+    logger.info("-" * 60)
+    logger.info(f"Fertig! Generiert: {generated}, Bereits gecacht: {cached}")
+    logger.info("=" * 60)
 
 
 def generiere_erzaehler_audio_cache_sync():

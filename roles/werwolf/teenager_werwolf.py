@@ -49,18 +49,24 @@ class TeenagerWerwolf(Role):
             team=Team.WERWOLF,
             kategorie=Kategorie.WERWOLF,
             beschreibung=(
-                "Du bist der Teenager-Werwolf. Du bist rebellisch - einmal "
-                "pro Spiel kannst du dich weigern, beim Werwolf-Angriff "
-                "mitzumachen, ohne aufzufallen."
+                "Du bist der Teenager-Werwolf. Du jagst mit den Wölfen, "
+                "aber einmal pro Spiel kannst du dich weigern, beim Angriff "
+                "mitzumachen."
             ),
-            icon="fa-solid fa-paw",
-            farbe="#f97316",
+            icon="fa-solid fa-user-ninja",
+            farbe="#b91c1c",
             prioritaet=50,
             erzaehler_nacht=(
-                "Der Teenager-Werwolf kann einmal pro Spiel den Angriff "
-                "verweigern - ohne dass die anderen Woelfe es merken."
+                "Der Teenager-Werwolf erwacht mit den anderen. "
+                "Er überlegt, ob er heute rebellieren soll."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.CHARAKTERE,
+
+            # Visual Styling
+            avatar_gradient_from="#b91c1c",
+            avatar_gradient_to="#991b1b",
+            avatar_border_color="#ef4444",
+            badge_emoji="🧢",
         )
 
     @property

@@ -1,4 +1,3 @@
-
 """
 Wolf im Schafspelz - Erscheint als Dorfbewohner.
 
@@ -50,13 +49,17 @@ class WolfimSchafspelz(Role):
             farbe='#fef3c7',
             prioritaet=50,
             erzaehler_nacht=(
-                'Der Wolf im Schafspelz erscheint der Seherin als Dorfbewohner!'
+                'Der Wolf im Schafspelz erwacht mit den anderen Werwölfen.'
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
-    
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#fef3c7",
+            avatar_gradient_to="#fde68a",
+            avatar_border_color="#fcd34d",
+            badge_emoji="🐑",
+        )
+
     @property
     def aktions_typ(self) -> 'AktionsTyp':
         from roles.enums import AktionsTyp

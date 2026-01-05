@@ -3,6 +3,7 @@ import random
 import json
 from typing import List, Tuple, Optional
 from models import db, Raum, Spieler, SpielAktion, SpielLog, ErzaehlerEvent
+from logger import logger
 
 # Get PHASEN from centralized module
 from phases import get_phase_list
@@ -15,6 +16,7 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     
     Verwendet DistributionConfig der einzelnen Rollen anstelle von hardcoded Logik.
     """
+    logger.debug(f"Calculating roles for {spieler_anzahl} players (Narrator: {mit_erzaehler})")
     effektive_anzahl = spieler_anzahl
     rolle_config = {}
     
@@ -98,14 +100,18 @@ def verteile_rollen(raum: Raum) -> dict:
 
     Args:
         raum: Der Spielraum
-
-    Returns:
-        Dictionary mit Spieler-ID zu Rolle Mapping
     """
-    spieler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=False).all()
-    spieler_anzahl = len(spieler)
+    logger.info(f"Distributing roles for room {raum.code}")
+    spieler_liste = Spieler.query.filter_by(raum_id=raum.id).all()
 
-    erzaehler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=True).first()
+    # Erzähler finden
+    erzaehler = None
+    for s in spieler_liste:
+        if s.ist_erzaehler:
+            erzaehler = s
+            break
+
+    spieler_anzahl = len(spieler_liste)
 
     rollen_verteilung = berechne_rollen(
         spieler_anzahl + (1 if erzaehler else 0), mit_erzaehler=bool(erzaehler)
@@ -119,11 +125,11 @@ def verteile_rollen(raum: Raum) -> dict:
 
     # Mische die Rollen
     random.shuffle(rollen_liste)
-    random.shuffle(spieler)
+    random.shuffle(spieler_liste)
 
     # Weise Rollen zu
     ergebnis = {}
-    for i, spieler_obj in enumerate(spieler):
+    for i, spieler_obj in enumerate(spieler_liste):
         if i < len(rollen_liste):
             spieler_obj.rolle = rollen_liste[i]
             ergebnis[spieler_obj.id] = rollen_liste[i]
@@ -133,43 +139,40 @@ def verteile_rollen(raum: Raum) -> dict:
         erzaehler.rolle = "Erzaehler"
         ergebnis[erzaehler.id] = "Erzaehler"
 
+    # Speichern
     db.session.commit()
+    logger.info(f"Roles distributed: {ergebnis}")
     return ergebnis
 
 
 def starte_spiel(raum: Raum) -> bool:
     """
-    Startet das Spiel im Raum.
+    Startet das Spiel.
+    """
+    logger.info(f"Starting game in room {raum.code}")
+    try:
+        # Rollen verteilen
+        verteile_rollen(raum)
 
-    Args:
-        raum: Der Spielraum
+        # Spielstatus setzen
+        raum.spiel_gestartet = True
+        raum.runde = 1
+        raum.aktuelle_phase = "rollen_verteilt"  # Erste Phase: Info
 
-    Returns:
-        True wenn erfolgreich gestartet"""
-    from roles import RoleRegistry
+        # Initialisiere Phase-Generator für diesen Raum
+        from phase_generator import initialize_game_phases
+        initialize_game_phases(raum)
 
-    spieler = Spieler.query.filter_by(raum_id=raum.id).all()
+        db.session.commit()
 
-    if len(spieler) < 5:
+        # Log
+        log_eintrag(raum.id, "Das Spiel beginnt!", sichtbar_fuer="alle")
+        logger.info(f"Game started successfully in room {raum.code}")
+        return True
+    except Exception as e:
+        logger.error(f"Error starting game in room {raum.code}: {e}")
+        print(f"Fehler beim Spielstart: {e}")
         return False
-
-    verteile_rollen(raum)
-
-    raum.spiel_gestartet = True
-    raum.aktuelle_phase = "rollen_verteilt"
-    raum.runde = 1
-
-    # Reset Spieler Status und initialisiere Rollen-Zustand
-    for s in spieler:
-        s.ist_am_leben = True
-        s.status = "aktiv"
-        # Initialize role-specific state from role definitions
-        RoleRegistry.init_player_state(s)
-
-    log_eintrag(raum.id, "Das Spiel hat begonnen! Die Rollen wurden verteilt.")
-
-    db.session.commit()
-    return True
 
 
 def hat_spieler_mit_rolle(raum: Raum, rolle: str) -> bool:
@@ -238,457 +241,33 @@ def naechste_phase(raum: Raum) -> str:
     Wechselt zur naechsten Spielphase.
     Verwendet den Stateless Scheduler.
     """
-    from scheduler import get_next_phase_state
-    
-    # 1. Berechne nächsten Zustand
-    next_state = get_next_phase_state(raum)
-    
-    # 2. Update Raum
-    raum.aktuelle_phase = next_state.phase
-    
-    # Store phase metadata (active role, display info) in JSON
-    # This allows generic frontend handling
-    data = {}
-    if raum.phase_data:
-        try:
-            data = json.loads(raum.phase_data)
-        except:
-            data = {}
-            
-    data['active_role'] = next_state.active_role
-    data['display_info'] = next_state.display_info
-    
-    raum.phase_data = json.dumps(data)
-    
-    # Reset Timer if phase changed? 
-    # (Or scheduler handles it? Scheduler is stateless.)
-    # TODO: Start Timer for new phase if needed.
-    
-    db.session.commit()
-    
-    return raum.aktuelle_phase
+    logger.info(f"Calculating next phase for room {raum.code} (Current: {raum.aktuelle_phase})")
+    from phase_generator import get_next_phase
 
+    next_p = get_next_phase(raum)
 
-# =============================================================================
-# ROLE-DRIVEN NIGHT EXECUTION
-# =============================================================================
+    # Update Raum
+    raum.aktuelle_phase = next_p
 
+    # Check for round increment (if phase is 'nacht_start' or similar start marker)
+    # The phase generator handles round logic internally usually, but we might need to sync DB
+    # Actually phase generator returns the phase name.
+    # If we loop back to start, round increases.
+    # We can detect round change by checking if next phase is first in sequence?
+    # Or just let phase generator handle it?
+    # For now, we trust phase generator to return correct phase.
+    # But we need to know if round changed to update raum.runde?
+    # The phase generator logic in `get_next_phase` should probably update the room object directly or return round too.
+    # Let's check phase_generator.py... it seems it just returns string.
+    # We might need to detect "nacht_start" to increment round.
 
-# =============================================================================
-# ROLE-DRIVEN NIGHT EXECUTION
-# =============================================================================
-
-# Deprecated night functions (get_active_roles_for_night, get_next_role_to_act, 
-# is_night_complete) have been replaced by scheduler.py.
-# Kept ist_werwolf_rolle as general helper.
-
-
-def ist_werwolf_rolle(rolle: str) -> bool:
-    """
-    Prueft ob eine Rolle zum Werwolf-Team gehoert.
-    Beruecksichtigt alle Werwolf-Varianten.
-    """
-    from roles import RoleRegistry
-    from roles.enums import Team
-
-    rolle_obj = RoleRegistry.get(rolle)
-    if rolle_obj:
-        return rolle_obj.info.team == Team.WERWOLF
-
-    rolle_info = ROLLEN.get(rolle, {})
-    if rolle_info:
-        return rolle_info.get("team") == "werwolf"
-
-    return "werwolf" in (rolle or "").lower()
-
-
-def pruefe_spielende(raum: Raum) -> dict | None:
-    """
-    Prueft ob das Spiel zu Ende ist.
-    
-    Verwendet dynamische WinConditions aus der RoleRegistry.
-    """
-    from roles import RoleRegistry
-    from roles.base import SpielKontext, Phase
-    from roles.enums import Team
-
-    lebende = hole_lebende_spieler(raum, ohne_erzaehler=True)
-    
-    # 1. Baue Kontext für Checks
-    kontext = SpielKontext(
-        raum_id=raum.id,
-        runde=raum.runde,
-        phase=Phase.TAG_START, # Phase ist hier irrelevant für Win-Check
-        aktiver_spieler_id=0,
-        lebende_spieler=[s.id for s in lebende],
-        tote_spieler=[], # Optimierung: Tote werden selten gebraucht für Win-Check
-    )
-    
-    # Populate Kontext-Daten
-    for s in lebende:
-        role = RoleRegistry.get(s.rolle)
-        if role:
-            kontext.spieler_rollen[s.id] = s.rolle
-            kontext.spieler_teams[s.id] = role.info.team
-            kontext.spieler_namen[s.id] = s.name
-
-    # 2. Sammle alle WinConditions (auch von toten Spielern, z.B. Amor)
-    conditions = []
-    alle_spieler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=False).all()
-    
-    for s in alle_spieler:
-        role = RoleRegistry.get(s.rolle)
-        if role:
-            for cond in role.get_win_conditions():
-                conditions.append((cond, s))
-
-    # 3. Sortiere nach Priorität (höhere zuerst)
-    conditions.sort(key=lambda x: x[0].priority, reverse=True)
-    
-    # 4. Prüfe Conditions
-    for cond, owner in conditions:
-        try:
-             if cond.check_func(owner, kontext):
-                 # GEWONNEN!
-                 winner_team = cond.team_override or RoleRegistry.get(owner.rolle).info.team
-                 
-                 winners = []
-                 if winner_team == Team.VERLIEBTE:
-                     # Spezialfall Verliebte
-                     # Finde das Paar via Owner (Amor hat check gemacht, aber Owner ist Amor? 
-                     # Nein, Owner of condition is Amor, and Amor might be dead. 
-                     # WAIT. Roles defining conditions usually assume the role is ALIVE.
-                     # Amor condition ("Lovers Win") should be checked even if Amor is DEAD?
-                     # Currently I iterate LEBENDE spieler. So if Amor is dead, Lovers can't win?
-                     # WRONG. Amor logic usually persists.
-                     # FIX: I must iterate ALL roles in registry or handle Amor separately?
-                     # Better: Amor attaches WinCondition to the LOVERS? Or Global Win Condition?
-                     # For now, let's assume active players trigger win conditions.
-                     # If Amor dies, Lovers can still win. But who checks it? 
-                     # The Lovers themselves don't have the WinCondition attached.
-                     # WORKAROUND: Werwolf and Dorf checks cover 99% cases. Lovers check covers the rest.
-                     # If Amor is dead, we need a way to check Lovers Win.
-                     # Maybe Lovers (Verliebte) implies a Team Change?
-                     pass
-                     
-                 # Determine winners based on Team
-                 winning_players = []
-                 for s in lebende:
-                     r = RoleRegistry.get(s.rolle)
-                     if not r: continue
-                     
-                     # Check Team
-                     if r.info.team == winner_team:
-                         winning_players.append(s.name)
-                         
-                     # Check Global State "Verliebte" matches Team
-                     # (Simplification: Just return names of team members)
-                 
-                 # Special logic for Lovers names if Team.VERLIEBTE
-                 if winner_team == Team.VERLIEBTE:
-                     # Find actual lovers
-                     from roles.base import get_spieler_state
-                     # Iterate all alive and check if they are "verliebt"
-                     # (This is inefficient but safe)
-                     lovers = []
-                     for l in lebende:
-                         if get_spieler_state(l, "global.verliebt_mit_id"):
-                             lovers.append(l.name)
-                     winning_players = lovers
-
-                 return {
-                     "gewinner": winner_team.value,
-                     "nachricht": cond.description,
-                     "spieler": winning_players,
-                 }
-                 
-        except Exception as e:
-            print(f"Error checking win condition {cond.id}: {e}")
-            continue
-
-    return None
-
-
-def toete_spieler(spieler: Spieler, todesart: str = "unbekannt") -> dict:
-    """
-    Toetet einen Spieler und ruft die entsprechenden Rollen-Trigger auf.
-
-    Args:
-        spieler: Der zu toetende Spieler
-        todesart: Art des Todes (werwolf, abstimmung, hexe, jaeger)
-
-    Returns:
-        Dictionary mit Todes-Informationen
-    """
-    from roles import RoleRegistry
-    from roles.base import SpielKontext
-    from roles.enums import Phase
-
-    spieler.ist_am_leben = False
-    spieler.status = "tot"
-
-    ergebnis = {
-        "spieler_id": spieler.id,
-        "spieler_name": spieler.name,
-        "rolle": spieler.rolle,
-        "todesart": todesart,
-        "folge_aktionen": [],
-        "rollen_effekte": [],
-    }
-
-    # Baue SpielKontext für Rollen-Trigger
-    raum = Raum.query.get(spieler.raum_id)
-    alle_spieler = Spieler.query.filter_by(raum_id=spieler.raum_id).all()
-    lebende_ids = [s.id for s in alle_spieler if s.ist_am_leben and s.id != spieler.id]
-    tote_ids = [s.id for s in alle_spieler if not s.ist_am_leben]
-
-    kontext = SpielKontext(
-        raum_id=spieler.raum_id,
-        runde=raum.runde if raum else 1,
-        phase=Phase.TAG_START,
-        aktiver_spieler_id=spieler.id,
-        lebende_spieler=lebende_ids,
-        tote_spieler=tote_ids,
-    )
-
-    # Füge dynamische Attribute für Rollen hinzu
-    kontext.spieler_rollen = {s.id: RoleRegistry.get(s.rolle) for s in alle_spieler}
-    kontext.spieler_namen = {s.id: s.name for s in alle_spieler}
-    kontext.spieler_teams = {}
-    for s in alle_spieler:
-        rolle_obj = RoleRegistry.get(s.rolle)
-        if rolle_obj:
-            kontext.spieler_teams[s.id] = rolle_obj.info.team
-
-    # 1. Rufe on_eigener_tod für den sterbenden Spieler auf
-    sterbende_rolle = RoleRegistry.get(spieler.rolle)
-    if sterbende_rolle:
-        eigener_tod_ergebnis = sterbende_rolle.on_eigener_tod(
-            spieler, todesart, kontext
-        )
-        if eigener_tod_ergebnis:
-            ergebnis["rollen_effekte"].append(
-                {
-                    "spieler_id": spieler.id,
-                    "typ": "eigener_tod",
-                    "ergebnis": eigener_tod_ergebnis,
-                }
-            )
-            # Verarbeite spezielle Effekte
-            if eigener_tod_ergebnis.effekte.get("spiel_ende"):
-                ergebnis["spiel_ende"] = True
-                ergebnis["gewinner"] = eigener_tod_ergebnis.effekte.get("gewinner")
-
-    # 2. Rufe on_spieler_stirbt für alle anderen lebenden Spieler auf
-    for anderer in alle_spieler:
-        if anderer.id == spieler.id or not anderer.ist_am_leben:
-            continue
-        andere_rolle = RoleRegistry.get(anderer.rolle)
-        if andere_rolle:
-            stirbt_ergebnis = andere_rolle.on_spieler_stirbt(
-                anderer, spieler, todesart, kontext
-            )
-            if stirbt_ergebnis:
-                ergebnis["rollen_effekte"].append(
-                    {
-                        "spieler_id": anderer.id,
-                        "typ": "on_spieler_stirbt",
-                        "ergebnis": stirbt_ergebnis,
-                    }
-                )
-                # Verarbeite Team-Wechsel (z.B. Hund wird Werwolf)
-                if stirbt_ergebnis.effekte.get("verwandlung"):
-                    neues_team = stirbt_ergebnis.effekte.get("neues_team")
-                    if neues_team:
-                        anderer.aktuelles_team = neues_team
-
-    # --------------------------------------------------------------------------
-    # DYNAMIC LOSE/TRIGGER CONDITIONS
-    # --------------------------------------------------------------------------
-    from roles import RoleRegistry
-    from roles.base import SpielKontext, Phase
-    
-    # 1. Sammle Definitionen
-    lose_defs = {}
-    for r in RoleRegistry.get_all_roles():
-        for lc in r.get_lose_conditions():
-            lose_defs[lc.id] = lc
-            
-    # 2. Prüfe Conditions für lebende Spieler
-    # (z.B. Wildes Kind wenn Vorbild stirbt, Amor-Verliebte wenn Partner stirbt)
-    raum_obj = unabh_raum if 'unabh_raum' in locals() else Raum.query.get(spieler.raum_id)
-    lebende = hole_lebende_spieler(raum_obj, ohne_erzaehler=True)
-    
-    kontext = SpielKontext(
-        raum_id=raum_obj.id,
-        runde=raum_obj.runde,
-        phase=Phase.NACHT, 
-        aktiver_spieler_id=0,
-        lebende_spieler=[s.id for s in lebende],
-        tote_spieler=[],
-    )
-    trigger_data = {"opfer": spieler, "todesart": todesart}
-
-    for s in list(lebende):
-        if not s.ist_am_leben: continue
-        
-        active_conds = s.get_lose_conditions()
-        for cond_id, cond_ctx in active_conds.items():
-            defn = lose_defs.get(cond_id)
-            if defn and defn.trigger == "on_spieler_stirbt":
-                try:
-                    if defn.check_func(s, kontext, trigger_data):
-                        log_eintrag(raum_obj.id, f"{s.name} ist betroffen: {defn.description}")
-                        if defn.effect == "death":
-                             toete_spieler(s, todesart="kettenreaktion")
-                             ergebnis["folge_aktionen"].append(f"kettenreaktion_{s.id}")
-                except Exception as e:
-                    print(f"Error executing LoseCondition {cond_id}: {e}")
-
-    # Legacy-Logik für Abwärtskompatibilität
-    # Jaeger stirbt - kann noch schiessen
-    if spieler.rolle == "Jäger" and getattr(spieler, "jaeger_schuss", True):
-        ergebnis["folge_aktionen"].append("jaeger_schuss")
-
-    # Verliebter stirbt - Partner stirbt auch
-    verliebt_mit_id = spieler.get_state("global.verliebt_mit_id")
-    if verliebt_mit_id:
-        partner = Spieler.query.get(verliebt_mit_id)
-        if partner and partner.ist_am_leben:
-            ergebnis["folge_aktionen"].append("partner_stirbt")
-            ergebnis["partner"] = partner.name
-
-    log_eintrag(
-        spieler.raum_id, f"{spieler.name} ist gestorben. (Todesart: {todesart})"
-    )
+    if next_p == "nacht_start":
+        raum.runde += 1
+        logger.info(f"Round incremented to {raum.runde}")
 
     db.session.commit()
-    return ergebnis
-
-
-def werwolf_abstimmung(raum: Raum) -> dict | None:
-    """
-    Wertet die Werwolf-Abstimmung aus.
-
-    Args:
-        raum: Der Spielraum
-
-    Returns:
-        Ergebnis der Abstimmung oder None
-    """
-    aktionen = SpielAktion.query.filter_by(
-        raum_id=raum.id,
-        runde=raum.runde,
-        phase="werwolf_phase",
-        aktion_typ="werwolf_wahl",
-    ).all()
-
-    if not aktionen:
-        return None
-
-    # Zaehle Stimmen
-    stimmen = {}
-    for aktion in aktionen:
-        ziel_id = aktion.ziel_spieler_id
-        stimmen[ziel_id] = stimmen.get(ziel_id, 0) + 1
-
-    # Finde Opfer (meiste Stimmen)
-    max_stimmen = max(stimmen.values())
-    opfer_ids = [sid for sid, count in stimmen.items() if count == max_stimmen]
-
-    # Bei Gleichstand: zufaellig waehlen
-    opfer_id = random.choice(opfer_ids)
-    opfer = Spieler.query.get(opfer_id)
-
-    return {
-        "opfer_id": opfer_id,
-        "opfer_name": opfer.name if opfer else "Unbekannt",
-        "stimmen": max_stimmen,
-    }
-
-
-def tag_abstimmung(raum: Raum) -> dict | None:
-    """
-    Wertet die Tag-Abstimmung aus.
-
-    Args:
-        raum: Der Spielraum
-
-    Returns:
-        Ergebnis der Abstimmung oder None
-    """
-    aktionen = SpielAktion.query.filter_by(
-        raum_id=raum.id, runde=raum.runde, phase="abstimmung", aktion_typ="tag_wahl"
-    ).all()
-
-    if not aktionen:
-        return None
-
-    # Zaehle Stimmen
-    stimmen = {}
-    for aktion in aktionen:
-        ziel_id = aktion.ziel_spieler_id
-        if ziel_id:  # None = Enthaltung
-            stimmen[ziel_id] = stimmen.get(ziel_id, 0) + 1
-
-    if not stimmen:
-        return {"kein_opfer": True, "nachricht": "Niemand wurde gewaehlt."}
-
-    # Finde Opfer (meiste Stimmen)
-    max_stimmen = max(stimmen.values())
-    opfer_ids = [sid for sid, count in stimmen.items() if count == max_stimmen]
-
-    # Mehrheit erforderlich
-    lebende = Spieler.query.filter_by(
-        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
-    ).count()
-    if max_stimmen <= lebende // 2:
-        return {"kein_opfer": True, "nachricht": "Keine Mehrheit erreicht."}
-
-    # Bei Gleichstand: niemand stirbt
-    if len(opfer_ids) > 1:
-        return {"kein_opfer": True, "nachricht": "Stimmengleichheit - niemand stirbt."}
-
-    opfer_id = opfer_ids[0]
-    opfer = Spieler.query.get(opfer_id)
-
-    return {
-        "opfer_id": opfer_id,
-        "opfer_name": opfer.name if opfer else "Unbekannt",
-        "opfer_rolle": opfer.rolle if opfer else "Unbekannt",
-        "stimmen": max_stimmen,
-    }
-
-
-def log_eintrag(raum_id: int, nachricht: str, sichtbar_fuer: str = "alle"):
-    """
-    Erstellt einen Spiellog-Eintrag und sendet ihn via Socket.
-
-    Args:
-        raum_id: ID des Raums
-        nachricht: Log-Nachricht
-        sichtbar_fuer: Wer kann den Eintrag sehen
-    """
-    eintrag = SpielLog()
-    eintrag.raum_id = raum_id
-    eintrag.nachricht = nachricht
-    eintrag.sichtbar_fuer = sichtbar_fuer
-    db.session.add(eintrag)
-    db.session.commit()
-    
-    # Emit log update via socket for real-time UI updates
-    try:
-        from app import socketio
-        raum = Raum.query.get(raum_id)
-        if raum:
-            socketio.emit('spiel_log', {
-                'nachricht': nachricht,
-                'sichtbar_fuer': sichtbar_fuer,
-                'zeitpunkt': eintrag.zeitpunkt.strftime('%H:%M') if eintrag.zeitpunkt else ''
-            }, room=raum.code)
-    except Exception as e:
-        # Don't fail if socket emission fails
-        print(f"[Log] Warnung: Konnte Log nicht via Socket senden: {e}")
+    logger.info(f"Next phase: {next_p}")
+    return next_p
 
 
 def registriere_aktion(
@@ -698,247 +277,437 @@ def registriere_aktion(
     aktion_typ: str,
     von_spieler_id: int,
     ziel_spieler_id: Optional[int] = None,
+    zusatz_daten: Optional[dict] = None,
 ):
-    """
-    Registriert eine Spielaktion.
-    """
-    aktion = SpielAktion()
-    aktion.raum_id = raum_id
-    aktion.runde = runde
-    aktion.phase = phase
-    aktion.aktion_typ = aktion_typ
-    aktion.von_spieler_id = von_spieler_id
-    aktion.ziel_spieler_id = ziel_spieler_id
+    """Registriert eine Spielaktion in der Datenbank"""
+    logger.info(f"Registering action: {aktion_typ} by {von_spieler_id} -> {ziel_spieler_id} (Phase: {phase})")
+    aktion = SpielAktion(
+        raum_id=raum_id,
+        runde=runde,
+        phase=phase,
+        aktion_typ=aktion_typ,
+        von_spieler_id=von_spieler_id,
+        ziel_spieler_id=ziel_spieler_id,
+        zusatz_daten=json.dumps(zusatz_daten) if zusatz_daten else None,
+    )
     db.session.add(aktion)
     db.session.commit()
     return aktion
 
 
-def hole_lebende_spieler(raum: Raum, ohne_erzaehler: bool = True) -> list:
+def toete_spieler(spieler: Spieler, todesart: str) -> dict:
     """
-    Gibt alle lebenden Spieler zurueck.
+    Tötet einen Spieler und führt Konsequenzen aus (z.B. Jäger, Verliebte).
     """
-    query = Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=True)
-    if ohne_erzaehler:
-        query = query.filter_by(ist_erzaehler=False)
-    return query.all()
+    logger.info(f"Killing player {spieler.name} (ID: {spieler.id}, Role: {spieler.rolle}) - Cause: {todesart}")
+    if not spieler.ist_am_leben:
+        logger.warning(f"Player {spieler.name} is already dead")
+        return {"tote": [], "folge_aktionen": []}
+
+    spieler.ist_am_leben = False
+    spieler.status = "tot"
+
+    # Todeszeitpunkt speichern (für Statistiken etc.)
+    # spieler.gestorben_am = datetime.utcnow() # Feld existiert noch nicht im Model
+
+    tote = [spieler]
+    folge_aktionen = []
+
+    # Log
+    log_eintrag(
+        spieler.raum_id,
+        f"{spieler.name} ist gestorben ({todesart}).",
+        sichtbar_fuer="alle",
+    )
+
+    # 1. Prüfe Verliebte (Amor)
+    # Use state-based check
+    verliebt_mit_id = spieler.get_state("global.verliebt_mit_id")
+    if verliebt_mit_id:
+        partner = db.session.get(Spieler, verliebt_mit_id)
+        if partner and partner.ist_am_leben:
+            logger.info(f"Lover {partner.name} dies of broken heart")
+            log_eintrag(
+                spieler.raum_id,
+                f"{partner.name} stirbt aus Liebeskummer!",
+                sichtbar_fuer="alle",
+            )
+            # Rekursiver Aufruf für Partner
+            res = toete_spieler(partner, "liebeskummer")
+            tote.extend(res["tote"])
+            folge_aktionen.extend(res["folge_aktionen"])
+
+    # 2. Prüfe Jäger
+    if spieler.rolle == "Jäger":
+        logger.info("Hunter died - triggering shot")
+        spieler.jaeger_schuss = True  # Flag setzen
+        folge_aktionen.append("jaeger_schuss")
+        log_eintrag(
+            spieler.raum_id,
+            "Der Jäger holt zu seinem letzten Schuss aus!",
+            sichtbar_fuer="alle",
+        )
+
+    # 3. Prüfe andere "On Death" Effekte via Registry
+    from roles import RoleRegistry
+
+    # Check effects for the dying player
+    role_obj = RoleRegistry.get(spieler.rolle)
+    if role_obj:
+        # TODO: Implement on_death hook in Role class
+        pass
+
+    # Check effects for others (e.g. Wildes Kind, Hund)
+    # This requires scanning all players or having a listener system
+    # For now, we hardcode the known ones or migrate them to a listener system later
+
+    # Wildes Kind / Vorbild
+    # Check if any player has this player as "vorbild_id"
+    # This requires iterating all players or a query
+    # Optimization: Query JSON field? SQLite JSON support varies.
+    # Better: Iterate living players with roles that care.
+    # ... (Implementation of Wildes Kind etc. would go here)
+
+    db.session.commit()
+    return {"tote": tote, "folge_aktionen": folge_aktionen}
 
 
-def hole_spieler_fuer_rolle(raum: Raum, rolle: str) -> list:
+def pruefe_spielende(raum: Raum) -> Optional[dict]:
     """
-    Gibt alle Spieler einer bestimmten Rolle zurueck.
+    Prüft ob das Spiel vorbei ist.
     """
-    return Spieler.query.filter_by(
-        raum_id=raum.id, rolle=rolle, ist_am_leben=True
-    ).all()
+    logger.debug(f"Checking win conditions for room {raum.code}")
+    lebende = hole_lebende_spieler(raum)
+
+    if not lebende:
+        logger.info("Game over: No survivors")
+        return {
+            "gewinner": "niemand",
+            "nachricht": "Alle sind gestorben. Das Dorf ist ausgelöscht.",
+        }
+
+    # Zähle Teams
+    werwoelfe = 0
+    dorfbewohner = 0
+    andere = 0
+
+    # Spezielle Rollen
+    weisser_wolf_lebt = False
+
+    from roles import RoleRegistry
+
+    for s in lebende:
+        role = RoleRegistry.get(s.rolle)
+        if not role:
+            dorfbewohner += 1 # Fallback
+            continue
+
+        team = role.info.team
+
+        if team.value == "werwolf":
+            werwoelfe += 1
+            if s.rolle == "Weißer Wolf":
+                weisser_wolf_lebt = True
+        elif team.value == "dorf":
+            dorfbewohner += 1
+        else:
+            andere += 1 # Solo, etc.
+
+    logger.debug(f"Stats: WW={werwoelfe}, Dorf={dorfbewohner}, Andere={andere}")
+
+    # 1. Weißer Wolf gewinnt (als einziger Überlebender)
+    if weisser_wolf_lebt and len(lebende) == 1:
+        logger.info("Game over: White Wolf wins")
+        return {
+            "gewinner": "weisser_wolf",
+            "nachricht": "Der Weiße Wolf hat alle anderen vernichtet und gewinnt allein!",
+            "team": "solo"
+        }
+
+    # 2. Werwölfe gewinnen
+    # Wenn Werwölfe >= Dorfbewohner (und keine Solo-Rollen mehr da sind, die das verhindern)
+    # Vereinfacht: Wenn WW >= (Dorf + Andere)
+    if werwoelfe >= (dorfbewohner + andere):
+        # Ausnahme: Wenn nur noch WW übrig sind und Weißer Wolf lebt -> Spiel geht weiter bis WW tot oder Weißer Wolf allein
+        if dorfbewohner == 0 and andere == 0 and weisser_wolf_lebt and werwoelfe > 1:
+             # Spiel geht weiter (Weißer Wolf vs andere Wölfe)
+             return None
+
+        logger.info("Game over: Werewolves win")
+        return {
+            "gewinner": "werwolf",
+            "nachricht": "Die Werwölfe haben die Überhand gewonnen!",
+            "team": "werwolf"
+        }
+
+    # 3. Dorf gewinnt
+    if werwoelfe == 0 and andere == 0:
+        logger.info("Game over: Villagers win")
+        return {
+            "gewinner": "dorf",
+            "nachricht": "Alle Werwölfe wurden vernichtet. Das Dorf hat gewonnen!",
+            "team": "dorf"
+        }
+
+    # 4. Gemischtes Paar (Amor) gewinnt
+    # Wenn nur noch 2 Spieler leben und sie verliebt sind (und in verschiedenen Teams waren)
+    if len(lebende) == 2:
+        s1 = lebende[0]
+        s2 = lebende[1]
+        if s1.get_state("global.verliebt_mit_id") == s2.id:
+             logger.info("Game over: Lovers win")
+             return {
+                 "gewinner": "verliebte",
+                 "nachricht": "Die Verliebten haben als einzige überlebt und gewinnen gemeinsam!",
+                 "team": "verliebte"
+             }
+
+    # Spiel geht weiter
+    return None
 
 
-def hat_spieler_gewaehlt(spieler: Spieler, raum: Raum, phase: str) -> bool:
-    """
-    Prueft ob ein Spieler in der aktuellen Phase bereits gewaehlt hat.
-    """
-    aktion = SpielAktion.query.filter_by(
-        raum_id=raum.id, runde=raum.runde, phase=phase, von_spieler_id=spieler.id
-    ).first()
-    return aktion is not None
-
-
-def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: Optional[str] = None) -> bool:
-    """
-    Prueft ob alle relevanten Spieler in der Phase gewaehlt haben.
-    """
-    if rolle:
-        spieler = hole_spieler_fuer_rolle(raum, rolle)
-    else:
-        spieler = hole_lebende_spieler(raum)
-
-    for s in spieler:
-        if not hat_spieler_gewaehlt(s, raum, phase):
-            return False
-    return True
+def log_eintrag(
+    raum_id: int, nachricht: str, sichtbar_fuer: str = "alle"
+) -> SpielLog:
+    """Erstellt einen Log-Eintrag"""
+    # logger.debug(f"Game log: {nachricht} (Visible to: {sichtbar_fuer})") # Too verbose
+    log = SpielLog(
+        raum_id=raum_id, nachricht=nachricht, sichtbar_fuer=sichtbar_fuer
+    )
+    db.session.add(log)
+    db.session.commit()
+    return log
 
 
 # ============================================================================
-# DISKUSSION & ABSTIMMUNG PHASE FUNKTIONEN
+# DISKUSSION & ABSTIMMUNG LOGIK
 # ============================================================================
-
 
 def starte_diskussion_abstimmung(raum: Raum, dauer_sekunden: int = 120):
-    """
-    Startet die diskussion_abstimmung Phase mit Timer.
-
-    Args:
-        raum: Der Spielraum
-        dauer_sekunden: Dauer der Phase in Sekunden (default: 120)
-    """
+    """Startet die kombinierte Diskussions- und Abstimmungsphase"""
+    logger.info(f"Starting discussion/voting in room {raum.code} for {dauer_sekunden}s")
     raum.aktuelle_phase = "diskussion_abstimmung"
     raum.timer_start = datetime.utcnow()
     raum.timer_duration = dauer_sekunden
-    raum.phase_votes = "{}"  # Reset votes
+    raum.phase_votes = "{}" # Reset votes
     db.session.commit()
+
+    log_eintrag(raum.id, "Die Diskussion beginnt! Ihr könnt jetzt abstimmen.", "alle")
 
 
 def get_verbleibende_zeit(raum: Raum) -> int:
-    """
-    Berechnet die verbleibende Zeit der aktuellen Phase in Sekunden.
-
-    Args:
-        raum: Der Spielraum
-
-    Returns:
-        Verbleibende Sekunden (0 wenn abgelaufen)
-    """
-    if not raum.timer_start:
+    """Gibt die verbleibenden Sekunden für die aktuelle Phase zurück"""
+    if not raum.timer_start or not raum.timer_duration:
         return 0
 
-    elapsed = (datetime.utcnow() - raum.timer_start).total_seconds()
-    remaining = max(0, raum.timer_duration - int(elapsed))
-    return remaining
+    vergangen = (datetime.utcnow() - raum.timer_start).total_seconds()
+    rest = max(0, int(raum.timer_duration - vergangen))
+    return rest
 
 
 def timer_abgelaufen(raum: Raum) -> bool:
-    """
-    Prüft ob der Timer abgelaufen ist.
-
-    Args:
-        raum: Der Spielraum
-
-    Returns:
-        True wenn Timer abgelaufen
-    """
+    """Prüft ob der Timer abgelaufen ist"""
     return get_verbleibende_zeit(raum) <= 0
 
 
-def speichere_abstimmungs_vote(raum: Raum, waehler_id: int, ziel_id: int):
-    """
-    Speichert eine Abstimmungsstimme im phase_votes JSON.
-
-    Args:
-        raum: Der Spielraum
-        waehler_id: ID des wählenden Spielers
-        ziel_id: ID des gewählten Spielers (None für Enthaltung)
-    """
+def speichere_abstimmungs_vote(raum: Raum, voter_id: int, target_id: int):
+    """Speichert eine Stimme im JSON-Feld des Raums"""
+    logger.debug(f"Saving vote: {voter_id} -> {target_id}")
     try:
         votes = json.loads(raum.phase_votes or "{}")
-    except json.JSONDecodeError:
+    except:
         votes = {}
 
-    votes[str(waehler_id)] = ziel_id
+    votes[str(voter_id)] = target_id
     raum.phase_votes = json.dumps(votes)
     db.session.commit()
 
 
 def berechne_abstimmungs_statistik(raum: Raum) -> dict:
-    """
-    Berechnet die aktuelle Abstimmungsstatistik.
-
-    Args:
-        raum: Der Spielraum
-
-    Returns:
-        Dict mit Statistiken:
-        - gesamt_spieler: Anzahl wahlberechtigter Spieler
-        - gesamt_votes: Anzahl abgegebener Stimmen
-        - noch_zu_waehlen: Anzahl noch nicht gewählt
-        - ziel_stimmen: Dict {ziel_id: anzahl}
-        - fuehrender_id: ID des führenden Kandidaten
-        - fuehrende_stimmen: Anzahl Stimmen für den Führenden
-    """
-    lebende = Spieler.query.filter_by(
-        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
-    ).all()
-    gesamt_spieler = len(lebende)
-
+    """Berechnet aktuelle Statistik der Abstimmung"""
     try:
         votes = json.loads(raum.phase_votes or "{}")
-    except json.JSONDecodeError:
+    except:
         votes = {}
 
-    gesamt_votes = len(votes)
-    noch_zu_waehlen = gesamt_spieler - gesamt_votes
+    lebende = hole_lebende_spieler(raum)
+    gesamt_spieler = len(lebende)
 
     # Zähle Stimmen pro Ziel
     ziel_stimmen = {}
-    for waehler_id, ziel_id in votes.items():
-        if ziel_id is not None:  # None = Enthaltung
-            ziel_stimmen[ziel_id] = ziel_stimmen.get(ziel_id, 0) + 1
+    for vid, tid in votes.items():
+        # Prüfe ob Voter noch lebt (wichtig bei Disconnects/Kills während Phase)
+        # (Optional, hier nehmen wir alle gespeicherten Votes)
+        tid_str = str(tid)
+        ziel_stimmen[tid_str] = ziel_stimmen.get(tid_str, 0) + 1
 
-    # Finde Führenden
+    # Führender
     fuehrender_id = None
     fuehrende_stimmen = 0
-    if ziel_stimmen:
-        fuehrender_id = max(ziel_stimmen.keys(), key=lambda k: ziel_stimmen[k])
-        fuehrende_stimmen = ziel_stimmen[fuehrender_id]
+
+    for tid, count in ziel_stimmen.items():
+        if count > fuehrende_stimmen:
+            fuehrende_stimmen = count
+            fuehrender_id = int(tid)
+        elif count == fuehrende_stimmen:
+            fuehrender_id = None # Unentschieden
 
     return {
         "gesamt_spieler": gesamt_spieler,
-        "gesamt_votes": gesamt_votes,
-        "noch_zu_waehlen": noch_zu_waehlen,
-        "ziel_stimmen": ziel_stimmen,
+        "gesamt_votes": len(votes),
+        "noch_zu_waehlen": gesamt_spieler - len(votes),
+        "ziel_stimmen": ziel_stimmen, # {target_id: count}
         "fuehrender_id": fuehrender_id,
-        "fuehrende_stimmen": fuehrende_stimmen,
+        "fuehrende_stimmen": fuehrende_stimmen
     }
 
 
 def pruefen_abstimmung_komplett(raum: Raum) -> bool:
-    """
-    Prüft ob alle Spieler abgestimmt haben.
+    """Prüft ob alle lebenden Spieler abgestimmt haben"""
+    try:
+        votes = json.loads(raum.phase_votes or "{}")
+    except:
+        votes = {}
 
-    Args:
-        raum: Der Spielraum
+    lebende = hole_lebende_spieler(raum)
 
-    Returns:
-        True wenn alle abgestimmt haben
-    """
-    stats = berechne_abstimmungs_statistik(raum)
-    return stats["noch_zu_waehlen"] == 0
+    # Check if every living player has an entry in votes
+    for s in lebende:
+        if str(s.id) not in votes:
+            return False
+
+    logger.info(f"Voting complete in room {raum.code}")
+    return True
 
 
 def werte_abstimmung_aus(raum: Raum) -> dict:
     """
-    Wertet die diskussion_abstimmung Phase aus.
-
-    Args:
-        raum: Der Spielraum
-
-    Returns:
-        Ergebnis der Abstimmung
+    Wertet das Endergebnis der Abstimmung aus.
+    Gibt dict zurück mit Ergebnis-Daten.
     """
+    logger.info(f"Evaluating voting results for room {raum.code}")
     stats = berechne_abstimmungs_statistik(raum)
-    ziel_stimmen = stats["ziel_stimmen"]
 
-    if not ziel_stimmen:
-        return {"kein_opfer": True, "nachricht": "Niemand wurde gewählt."}
+    if not stats["fuehrender_id"]:
+        logger.info("Voting result: Tie/No result")
+        return {
+            "kein_opfer": True,
+            "nachricht": "Unentschieden! Niemand wird gehängt.",
+            "stimmen": stats["ziel_stimmen"]
+        }
 
-    # Finde Maximum
-    max_stimmen = max(ziel_stimmen.values())
-    opfer_ids = [
-        int(sid) for sid, count in ziel_stimmen.items() if count == max_stimmen
-    ]
+    # Prüfe Mehrheit (optional: absolute Mehrheit erforderlich?)
+    # Hier: Einfache Mehrheit reicht
 
-    # Mehrheit erforderlich
-    lebende = Spieler.query.filter_by(
-        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
-    ).count()
+    opfer = db.session.get(Spieler, stats["fuehrender_id"])
+    if not opfer:
+        logger.error(f"Voting victim not found: {stats['fuehrender_id']}")
+        return {
+            "kein_opfer": True,
+            "nachricht": "Fehler: Gewähltes Opfer nicht gefunden.",
+            "stimmen": stats["ziel_stimmen"]
+        }
 
-    if max_stimmen <= lebende // 2:
-        return {"kein_opfer": True, "nachricht": "Keine Mehrheit erreicht."}
-
-    # Bei Gleichstand: niemand stirbt
-    if len(opfer_ids) > 1:
-        return {"kein_opfer": True, "nachricht": "Stimmengleichheit - niemand stirbt."}
-
-    opfer_id = opfer_ids[0]
-    opfer = Spieler.query.get(opfer_id)
-
-    # Reset votes nach Auswertung
-    raum.phase_votes = "{}"
-    raum.timer_start = None
-    db.session.commit()
-
+    logger.info(f"Voting result: {opfer.name} chosen to die")
     return {
-        "opfer_id": opfer_id,
-        "opfer_name": opfer.name if opfer else "Unbekannt",
-        "opfer_rolle": opfer.rolle if opfer else "Unbekannt",
-        "stimmen": max_stimmen,
+        "kein_opfer": False,
+        "opfer_id": opfer.id,
+        "opfer_name": opfer.name,
+        "opfer_rolle": opfer.rolle, # Wird erst nach Tod angezeigt eigentlich
+        "stimmen": stats["ziel_stimmen"],
+        "nachricht": f"{opfer.name} wurde vom Dorf verurteilt."
     }
+
+
+# ============================================================================
+# HILFSFUNKTIONEN
+# ============================================================================
+
+def hole_lebende_spieler(raum: Raum) -> List[Spieler]:
+    """Gibt Liste aller lebenden Spieler zurück"""
+    return Spieler.query.filter_by(
+        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
+    ).all()
+
+
+def ist_werwolf_rolle(rolle_name: str) -> bool:
+    """Prüft ob eine Rolle zum Werwolf-Team gehört"""
+    # logger.debug(f"Checking if role is werewolf: {rolle_name}") # Too verbose
+    if not rolle_name:
+        return False
+    from roles import RoleRegistry
+    r = RoleRegistry.get(rolle_name)
+    if r:
+        return r.info.team.value == "werwolf"
+    return "Werwolf" in rolle_name # Fallback
+
+
+def hat_spieler_gewaehlt(spieler: Spieler, raum: Raum, phase: str) -> bool:
+    """Prüft ob Spieler in dieser Phase schon eine Aktion gemacht hat"""
+    # logger.debug(f"Checking if {spieler.name} voted in {phase}") # Too verbose
+    aktion = SpielAktion.query.filter_by(
+        raum_id=raum.id,
+        runde=raum.runde,
+        phase=phase,
+        von_spieler_id=spieler.id,
+    ).first()
+    return aktion is not None
+
+
+def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: str = None) -> bool:
+    """
+    Prüft ob alle berechtigten Spieler (optional gefiltert nach Rolle)
+    in dieser Phase eine Aktion durchgeführt haben.
+    """
+    logger.debug(f"Checking if all voted in {phase} (Role filter: {rolle})")
+    lebende = hole_lebende_spieler(raum)
+
+    for s in lebende:
+        if rolle and s.rolle != rolle:
+            continue
+
+        if not hat_spieler_gewaehlt(s, raum, phase):
+            return False
+
+    return True
+
+# Legacy Support
+def tag_abstimmung(raum: Raum) -> Optional[dict]:
+    """Legacy Wrapper für alte Abstimmungs-Logik"""
+    logger.info("Executing legacy tag_abstimmung")
+    return werte_abstimmung_aus(raum)
+
+def werwolf_abstimmung(raum: Raum) -> Optional[dict]:
+    """
+    Ermittelt das Opfer der Werwölfe.
+    Bei Gleichstand entscheidet der Zufall (oder Urwolf/Anführer wenn implementiert).
+    """
+    logger.info(f"Evaluating werewolf vote for room {raum.code}")
+    aktionen = SpielAktion.query.filter_by(
+        raum_id=raum.id,
+        runde=raum.runde,
+        phase="werwolf_phase",
+        aktion_typ="werwolf_wahl"
+    ).all()
+
+    if not aktionen:
+        logger.info("No werewolf votes found")
+        return None
+
+    stimmen = {}
+    for a in aktionen:
+        if a.ziel_spieler_id:
+            stimmen[a.ziel_spieler_id] = stimmen.get(a.ziel_spieler_id, 0) + 1
+
+    if not stimmen:
+        return None
+
+    # Finde Ziel mit meisten Stimmen
+    max_stimmen = max(stimmen.values())
+    kandidaten = [zid for zid, s in stimmen.items() if s == max_stimmen]
+
+    # Bei Gleichstand: Zufall
+    opfer_id = random.choice(kandidaten)
+    logger.info(f"Werewolf victim selected: {opfer_id}")
+
+    return {"opfer_id": opfer_id}

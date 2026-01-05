@@ -49,16 +49,24 @@ class Wolfsjunge(Role):
             team=Team.DORF,  # Startet als Dorf
             kategorie=Kategorie.WERWOLF,
             beschreibung=(
-                "Du bist das Wolfsjunge. Du waehlst in der ersten Nacht "
-                "ein Vorbild. Solange dein Vorbild lebt, gehoerst du zum "
-                "Dorf. Stirbt es, wirst du zum Werwolf!"
+                "Du bist das Wolfsjunge. Du wählst in der ersten Nacht ein "
+                "Vorbild. Solange dein Vorbild lebt, gehörst du zum Dorf. "
+                "Stirbt dein Vorbild, wirst du zum Werwolf!"
             ),
-            icon="fa-solid fa-child",
-            farbe="#92400e",
-            prioritaet=7,
+            icon="fa-solid fa-paw",
+            farbe="#b91c1c",
+            prioritaet=6,
             erzaehler_nacht=(
-                "Das Wolfsjunge erwacht (nur erste Nacht) und waehlt " "sein Vorbild."
+                "Das Wolfsjunge erwacht und sucht sich ein Vorbild. "
+                "Es wird ihm folgen... bis in den Tod."
             ),
+            erweiterung=Erweiterung.NEUMOND,
+
+            # Visual Styling
+            avatar_gradient_from="#b91c1c",
+            avatar_gradient_to="#7f1d1d",
+            avatar_border_color="#ef4444",
+            badge_emoji="🐾",
         )
 
     @property

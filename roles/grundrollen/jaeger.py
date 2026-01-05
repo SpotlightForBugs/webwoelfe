@@ -25,25 +25,17 @@ if TYPE_CHECKING:
 @RoleRegistry.register
 class Jaeger(Role):
     """
-    Der Jäger - Todes-Trigger Rolle.
+    Der Jäger - Rache-Rolle.
 
     Fähigkeiten:
-    - Bei Tod: Kann einen Spieler erschießen (einmalig)
+    - Wenn er stirbt, kann er einen anderen Spieler mit in den Tod reißen.
 
     Gewinnbedingung: Dorf gewinnt.
     """
 
     def state_fields(self) -> List[StateField]:
-        """Definiert die Zustandsfelder des Jägers."""
         return [
-            StateField(
-                name="schuss",
-                typ=StateType.BOOL,
-                default=True,
-                beschreibung="Schuss",
-                icon="fa-solid fa-crosshairs",
-                css_class="status-schuss",
-            ),
+            StateField("schuss", StateType.BOOL, True, "Schuss bereit"),
         ]
 
     @property
@@ -55,53 +47,57 @@ class Jaeger(Role):
             kategorie=Kategorie.GRUNDROLLEN,
             beschreibung=(
                 "Du bist der Jäger. Wenn du stirbst, kannst du einen letzten "
-                "Schuss abfeuern und einen Spieler deiner Wahl mit in den Tod "
-                "reißen!"
+                "Schuss abfeuern und einen Spieler deiner Wahl mit in den Tod reißen."
             ),
             icon="fa-solid fa-crosshairs",
-            farbe="#b45309",
-            prioritaet=99,
+            farbe="#f97316",
+            prioritaet=100,
             erzaehler_nacht=(
-                "Der Jäger schläft mit seiner Flinte unter dem Kopfkissen. "
-                "Bereit für seinen letzten Schuss."
-            ),
-            erzaehler_tag=(
-                "Der Jäger ist gestorben! Mit zitternder Hand hebt er seine "
-                "Flinte. Auf wen feuert er seinen letzten Schuss?"
+                "Der Jäger schläft. Er wird nur aktiv, wenn er stirbt."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
+
+            # Visual Styling
+            avatar_gradient_from="#f97316",
+            avatar_gradient_to="#c2410c",
+            avatar_border_color="#fb923c",
+            badge_emoji="🔫",
+
             distribution=DistributionConfig(
-                min_players=10,
-                # 1 Jäger ab 10 Spielern
-                count_func=lambda n: max(1, n // 60),
-                priority=99,
+                min_players=5,
+                count_func=lambda n: 1,
+                priority=10,
                 exclusive_with=[],
             ),
         )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.SCHIESSEN
+        return AktionsTyp.TOETEN
+
+    @property
+    def erlaubte_ziele(self) -> str:
+        return "lebende"
 
     def is_active_on_first_night(self) -> bool:
-        """Jaeger does not act on first night."""
+        """Jäger does not act on first night."""
         return False
 
     def is_active_on_every_night(self) -> bool:
-        """Jaeger does not act every night - only on death."""
+        """Jäger does not act every night."""
         return False
 
     def get_ui_definition(self) -> "RollenUI":
-        """Returns the UI definition for Jaeger's action panel (when dying)."""
+        """Returns the UI definition for Jäger's action panel (only when dead)."""
         from ..base import RollenUI, UIButton
 
         return RollenUI(
             title="Jäger - Letzter Schuss",
-            instructions="Du wurdest getötet! Wähle ein Ziel für deinen letzten Schuss.",
+            instructions="Du stirbst! Wähle jemanden, den du mit in den Tod reißen willst.",
             buttons=[
                 UIButton(
                     label="Schießen",
-                    action_type="schiessen",
+                    action_type="jaeger_schuss",
                     icon="fa-solid fa-crosshairs",
                     css_class="btn-danger",
                     requires_confirmation=True,
@@ -109,60 +105,23 @@ class Jaeger(Role):
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True,  # Can choose not to shoot
+            can_skip=False,
         )
 
-    def on_eigener_tod(
-        self, spieler: "Spieler", todesursache: str, kontext: SpielKontext
+    def on_spieler_stirbt(
+        self, spieler: "Spieler", opfer: "Spieler", kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
         """
-        Jäger stirbt und kann seinen Schuss abfeuern.
+        Wenn der Jäger stirbt, wird seine Phase aktiviert.
         """
-        hat_schuss = self.get_state(spieler, "schuss")
-
-        if not hat_schuss:
+        if opfer.id == spieler.id and self.get_state(spieler, "schuss"):
+            # Jäger stirbt -> Trigger Jäger-Phase
+            # Das wird aktuell in app.py gehandhabt ("jaeger_phase")
+            # Aber wir können hier Effekte zurückgeben
             return AktionsErgebnis(
-                erfolg=False,
-                nachricht="Der Jäger hat seinen Schuss bereits verwendet.",
+                erfolg=True,
+                nachricht="Der Jäger greift zu seiner Waffe!",
+                effekte={"trigger_jaeger_phase": True},
+                log_sichtbar_fuer="alle",
             )
-
-        # Markiere dass Schuss verfügbar ist - Zielwahl kommt separat
-        return AktionsErgebnis(
-            erfolg=True,
-            nachricht=(
-                "Der Jäger wurde getötet! Mit seinem letzten Atemzug "
-                "greift er zur Flinte!"
-            ),
-            effekte={
-                "jaeger_schuss_verfuegbar": True,
-                "warte_auf_zielwahl": True,
-            },
-            log_sichtbar_fuer="alle",
-        )
-
-    def schiessen(
-        self, spieler: "Spieler", ziel: "Spieler", kontext: SpielKontext
-    ) -> AktionsErgebnis:
-        """
-        Jäger feuert seinen letzten Schuss.
-        """
-        hat_schuss = self.get_state(spieler, "schuss")
-
-        if not hat_schuss:
-            return AktionsErgebnis(
-                erfolg=False,
-                nachricht="Kein Schuss mehr verfügbar.",
-            )
-
-        # Schuss verbrauchen
-        self.set_state(spieler, "schuss", False)
-
-        return AktionsErgebnis(
-            erfolg=True,
-            nachricht=f"Der Jäger erschießt {ziel.name} mit seinem letzten Schuss!",
-            ziel_spieler_id=ziel.id,
-            effekte={
-                "erschossen": ziel.id,
-            },
-            log_sichtbar_fuer="alle",
-        )
+        return None

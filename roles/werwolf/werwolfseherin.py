@@ -49,11 +49,15 @@ class Werwolfseherin(Role):
                 'Die Werwolfseherin erwacht nach den Werwölfen und '
                 'erfährt die Rolle eines Spielers.'
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
-    
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#b91c1c",
+            avatar_gradient_to="#7f1d1d",
+            avatar_border_color="#a78bfa",
+            badge_emoji="👁️",
+        )
+
     @property
     def aktions_typ(self) -> 'AktionsTyp':
         from ..enums import AktionsTyp

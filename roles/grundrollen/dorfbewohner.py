@@ -5,7 +5,7 @@ Der Dorfbewohner hat keine speziellen Fähigkeiten,
 aber seine Stimme in der Abstimmung ist entscheidend.
 """
 
-from typing import Optional
+from typing import Optional, List
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -43,6 +43,13 @@ class Dorfbewohner(Role):
                 "Der Dorfbewohner erwacht und hofft, die Woelfe zu entlarven. "
                 "Seine Stimme ist seine einzige Waffe."
             ),
+
+            # Visual Styling
+            avatar_gradient_from="#0369a1",
+            avatar_gradient_to="#075985",
+            avatar_border_color="#0ea5e9",
+            badge_emoji="🏠",
+
             distribution=DistributionConfig(
                 min_players=0,
                 count_func=lambda n: 0,  # Wird als Filler berechnet
@@ -64,6 +71,8 @@ class Dorfbewohner(Role):
         """Dorfbewohner does not act every night."""
         return False
 
+    def get_ui_definition(self) -> "RollenUI":
+        from ..base import RollenUI
         return RollenUI(
             title="Dorfbewohner - Schlafen",
             instructions="Du schläfst friedlich. Du hast keine nächtliche Aktion.",

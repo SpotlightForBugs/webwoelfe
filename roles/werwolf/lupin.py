@@ -49,11 +49,17 @@ class Lupin(Role):
                 "Lupin ist in geraden Runden Mensch, in ungeraden Wolf. "
                 "Die Seherin sieht entsprechend die aktuelle Form."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.CHARAKTERE,
+
+            # Visual Styling
+            avatar_gradient_from="#ca8a04",
+            avatar_gradient_to="#854d0e",
+            avatar_border_color="#facc15",
+            badge_emoji="🌕",
         )
 
     @property
-    def aktions_typ(self) -> "AktionsTyp":
+    def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.TOETEN
 
     @property

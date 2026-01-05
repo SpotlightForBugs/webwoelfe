@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any, TYPE_CHECKING, Union, Callable
 from enum import Enum
 import json
+from logger import logger
 
 from .enums import Team, Kategorie, Phase, TriggerTyp, AktionsTyp, SichtTyp, Erweiterung
 
@@ -562,6 +563,11 @@ class RollenInfo:
     
     css_class: str = "" # Frontend CSS class name override
 
+    # NEW: Visual styling fields TODO: MAKE THE VISUAL STYLING FIELDS REQUIRED!
+    avatar_gradient_from: str = ""  # e.g., "#b91c1c"
+    avatar_gradient_to: str = ""    # e.g., "#7f1d1d"
+    avatar_border_color: str = ""   # e.g., "#ef4444"
+    badge_emoji: str = ""           # e.g., "🐺"
     # Dynamic Distribution Configuration
     distribution: Optional[DistributionConfig] = None
 
@@ -579,6 +585,14 @@ class RollenInfo:
         if self.erweiterung is None:
             raise ValueError("RollenInfo.erweiterung darf nicht None sein") # TODO: LET IT ACTUALLY RAISE AN ERROR
         return pack_map.get(self.erweiterung, "unbekannt")
+
+    # Auto-generate css_class from name if not set
+    #TODO: this replace stuff really has to stop for good!
+    @property
+    def computed_css_class(self) -> str:
+        if self.css_class:
+            return self.css_class
+        return self.name.lower().replace(" ", "-").replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
 
 
 @dataclass
@@ -615,11 +629,11 @@ class SpielKontext:
 
     @property
     def aktuelle_runde(self) -> int:
-        """Alias für runde (wird von einigen Rollen verwendet)."""
+        """Alias für Runde (wird von einigen Rollen verwendet)."""
         return self.runde
 
     def hat_spieler_rolle(self, spieler_id: int, rolle: str) -> bool:
-        """Prüft ob ein Spieler eine bestimmte Rolle hat."""
+        """Prüft, ob ein Spieler eine bestimmte Rolle hat."""
         return self.spieler_rollen.get(spieler_id) == rolle
 
 
@@ -675,8 +689,8 @@ class Role(ABC):
 
     STATE MANAGEMENT:
     Rollen definieren ihre Zustandsfelder über state_fields().
-    Zugriff erfolgt über get_state()/set_state() mit automatischer
-    Namespace-Verwaltung (z.B. "hexe.heiltrank").
+    Der Zugriff erfolgt über get_state()/set_state() mit automatischer
+    Namespace-Verwaltung (z. B. "hexe.heiltrank").
     """
 
     # === ABSTRAKTE EIGENSCHAFTEN (müssen in jeder Rolle definiert sein) ===
@@ -700,6 +714,7 @@ class Role(ABC):
         Returns:
             Dict mit Informationen für das Frontend oder None
         """
+        # logger.debug(f"Getting phase start info for {self.info.name} (Player: {spieler.name})") # Too verbose
         return None
 
     # === STATE MANAGEMENT ===
@@ -1089,137 +1104,54 @@ class Role(ABC):
         return None
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: "SpielKontext"
     ) -> Optional[AktionsErgebnis]:
         """
-        Hauptaktion während der Nacht.
+        Wird aufgerufen, wenn der Spieler seine Nacht-Aktion ausführt.
 
-        Wird aufgerufen wenn die Phase dieser Rolle aktiv ist.
+        Args:
+            spieler: Der handelnde Spieler
+            ziel: Das gewählte Ziel (oder None)
+            kontext: Der aktuelle Spielkontext
+
+        Returns:
+            AktionsErgebnis oder None (wenn Aktion ungültig)
         """
+        logger.debug(f"Executing night action for {self.info.name} (Player: {spieler.name})")
         return None
 
-    def on_nacht_ende(
-        self, spieler: "Spieler", kontext: SpielKontext
+    def on_tag_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: "SpielKontext"
     ) -> Optional[AktionsErgebnis]:
         """
-        Wird am Ende jeder Nacht aufgerufen.
-
-        Nützlich für:
-        - Berechnungen nach allen Aktionen
-        - Infektionen auswerten
+        Wird aufgerufen, wenn der Spieler seine Tag-Aktion ausführt.
         """
-        return None
-
-    def on_tag_start(
-        self, spieler: "Spieler", kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
-        """
-        Wird zu Beginn jedes Tages aufgerufen.
-
-        Nützlich für:
-        - Gift-Countdown
-        - Auferstehungen
-        """
+        logger.debug(f"Executing day action for {self.info.name} (Player: {spieler.name})")
         return None
 
     def on_spieler_stirbt(
-        self,
-        spieler: "Spieler",
-        opfer: "Spieler",
-        todesursache: str,
-        kontext: SpielKontext,
+        self, spieler: "Spieler", opfer: "Spieler", kontext: "SpielKontext"
     ) -> Optional[AktionsErgebnis]:
         """
-        Wird aufgerufen wenn irgendein Spieler stirbt.
-
-        Parameter:
-            spieler: Der Spieler mit dieser Rolle
-            opfer: Der sterbende Spieler
-            todesursache: werwolf, hexe, jäger, hinrichtung, etc.
-            kontext: Spielkontext
-
-        Nützlich für:
-        - Jäger: Letzter Schuss wenn selbst gestorben
-        - Wildes Kind: Vorbild-Check
-        - Verliebte: Mit-Sterben
+        Trigger: Ein Spieler stirbt.
         """
+        # logger.debug(f"Trigger: Player died for {self.info.name}") # Too verbose
         return None
 
-    def on_eigener_tod(
-        self, spieler: "Spieler", todesursache: str, kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
+    def on_spiel_start(self, spieler: "Spieler", kontext: "SpielKontext"):
         """
-        Wird aufgerufen wenn der Spieler mit dieser Rolle stirbt.
-
-        Nützlich für:
-        - Jäger: Letzter Schuss
-        - Jesus: Auferstehungs-Timer
-        - Gerber: Gewinn-Check
+        Trigger: Spiel startet.
         """
-        return None
+        logger.info(f"Game start trigger for {self.info.name} (Player: {spieler.name})")
+        pass
 
-    def on_angegriffen(
-        self, spieler: "Spieler", angreifer: "Spieler", kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
+    def get_erzaehler_nacht_text(self, kontext: "SpielKontext") -> str:
         """
-        Wird aufgerufen wenn der Spieler angegriffen wird (vor dem Tod).
-
-        Nützlich für:
-        - Alter Mann: Erstes Leben verlieren
-        - Leibwächter: Sich opfern
-
-        Return AktionsErgebnis mit erfolg=False um Angriff zu blocken.
+        Gibt den Text zurück, den der Erzähler in der Nacht vorlesen soll.
+        Kann dynamisch basierend auf dem Kontext sein.
         """
-        return None
-
-    def on_geheilt(
-        self, spieler: "Spieler", heiler: "Spieler", kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
-        """
-        Wird aufgerufen wenn der Spieler geheilt wird.
-        """
-        return None
-
-    def on_abstimmung(
-        self, spieler: "Spieler", ziel: "Spieler", kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
-        """
-        Wird bei der Tagesabstimmung aufgerufen.
-
-        Nützlich für:
-        - Bürgermeister: Doppelstimme
-        - Prinz: Immunität gegen Hinrichtung
-        """
-        return None
-
-    def on_hinrichtung(
-        self, spieler: "Spieler", opfer: "Spieler", kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
-        """
-        Wird bei einer Hinrichtung aufgerufen.
-
-        Nützlich für:
-        - Prinz: Hinrichtung verhindern (einmalig)
-        - Alter Mann: Dorf verfluchen
-        """
-        return None
-
-    def on_spiel_ende(
-        self, spieler: "Spieler", gewinner_team: Team, kontext: SpielKontext
-    ) -> bool:
-        """
-        Wird am Spielende aufgerufen.
-
-        Return True wenn dieser Spieler auch gewonnen hat.
-
-        Nützlich für:
-        - Solo-Rollen mit speziellen Gewinnbedingungen
-        - Verliebte
-        """
-        return (
-            self.info.team == gewinner_team
-            or self.info.team.value == gewinner_team.value
-        )
+        # logger.debug(f"Getting narrator text for {self.info.name}") # Too verbose
+        return self.info.erzaehler_nacht or ""
 
     def berechne_gewinn(
         self, spieler: "Spieler", kontext: SpielKontext

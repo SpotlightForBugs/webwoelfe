@@ -9,9 +9,10 @@ import logging
 from typing import Dict, Type, Optional, List, Iterator, Any
 from .base import Role, RollenInfo
 from .enums import Team, Kategorie
+from logger import logger
 
 # Logger konfigurieren
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__) # Use centralized logger
 
 
 class RollenRegistryMeta(type):
@@ -89,6 +90,7 @@ class RoleRegistry:
         Returns:
             Role-Instanz oder None wenn nicht gefunden
         """
+        # logger.debug(f"Fetching role instance: {name}") # Too verbose
         return cls._instances.get(name)
 
     @classmethod
@@ -188,6 +190,7 @@ class RoleRegistry:
         Returns:
             Role-Instanz oder None
         """
+        # logger.debug(f"Finding role for phase: {phase_name}") # Too verbose
         # Normalisiere Phasen-Name (entferne _phase suffix)
         normalized = phase_name.replace("_phase", "").replace("_", " ").title()
 
@@ -272,6 +275,7 @@ class RoleRegistry:
         if not spieler.rolle:
             return
 
+        logger.debug(f"Initializing state for player {spieler.name} (Role: {spieler.rolle})")
         role = cls.get(spieler.rolle)
         if role:
             role.init_state(spieler)

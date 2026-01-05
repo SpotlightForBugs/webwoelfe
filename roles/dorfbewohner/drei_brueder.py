@@ -46,6 +46,12 @@ class DreiBrueder(Role):
                 "Sie dürfen sich kurz absprechen."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+
+            # Visual Styling
+            avatar_gradient_from="#4f46e5",
+            avatar_gradient_to="#3730a3",
+            avatar_border_color="#818cf8",
+            badge_emoji="👨‍👦‍👦",
         )
 
     def is_active_on_first_night(self) -> bool:

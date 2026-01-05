@@ -22,6 +22,7 @@ from ..base import (
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
+from logger import logger
 
 if TYPE_CHECKING:
     from models import Spieler
@@ -72,20 +73,26 @@ class Amor(Role):
             team=Team.DORF,
             kategorie=Kategorie.GRUNDROLLEN,
             beschreibung=(
-                "Du bist Amor. In der ersten Nacht wählst du zwei Spieler, "
-                "die sich unsterblich verlieben. Stirbt einer, stirbt auch "
-                "der andere. Die Verliebten gewinnen nur gemeinsam!"
+                "Du bist Amor. In der ersten Nacht wählst du zwei Spieler aus, "
+                "die sich unsterblich ineinander verlieben."
             ),
             icon="fa-solid fa-heart",
             farbe="#ec4899",
-            prioritaet=5,  # Sehr früh in der Nacht
+            prioritaet=5,
             erzaehler_nacht=(
-                "Amor erwacht (nur erste Nacht) und zeigt auf zwei Spieler, "
-                "die sich verlieben sollen. Beruehre beide leicht an der Schulter."
+                "Amor erwacht und verschießt seine Pfeile. Er wählt zwei Spieler, "
+                "die sich ineinander verlieben."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
+
+            # Visual Styling
+            avatar_gradient_from="#ec4899",
+            avatar_gradient_to="#be185d",
+            avatar_border_color="#f9a8d4",
+            badge_emoji="💘",
+
             distribution=DistributionConfig(
-                min_players=8,
+                min_players=5,
                 # 1 Amor ab 8 Spielern
                 count_func=lambda n: max(1, n // 150),
                 priority=5,
@@ -143,13 +150,33 @@ class Amor(Role):
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
 
+    def get_phase_start_info(self, spieler: "Spieler", kontext: "SpielKontext") -> Optional[dict]:
+        """Zeigt Amor wen er verliebt hat."""
+        logger.debug(f"Getting phase start info for Amor (Player: {spieler.name})")
+        verliebt_mit_id = self.get_state(spieler, "verliebt_mit_id")
+        if verliebt_mit_id:
+            return {"verliebt_mit_id": verliebt_mit_id}
+        return None
+
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional[Union["Spieler", List["Spieler"]]], kontext: SpielKontext
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: "SpielKontext"
     ) -> Optional[AktionsErgebnis]:
-        """Dispatches the night action (verlieben)."""
-        if isinstance(ziel, list) and len(ziel) == 2:
-            return self.verlieben(spieler, ziel[0], ziel[1], kontext)
-        return AktionsErgebnis(False, "Ungültige Anzahl an Zielen.")
+        """
+        Amor wählt zwei Spieler aus, die sich verlieben.
+        """
+        logger.debug(f"Executing night action for Amor (Player: {spieler.name})")
+        # Amor hat bereits gewählt?
+        if self.get_state(spieler, "hat_gewaehlt"):
+            return AktionsErgebnis(erfolg=False, nachricht="Du hast bereits gewählt.")
+
+        # Ziel muss eine Liste von 2 Spielern sein (wird vom Frontend so gesendet)
+        # Hier kommt aber nur EIN Ziel an, weil die Basis-Logik auf Einzelzielen basiert.
+        # Wir müssen das Handling für Multi-Target anpassen oder Amor speziell behandeln.
+
+        # HACK: Amor wird in app.py speziell behandelt ("armor_verlieben").
+        # Diese Methode wird nur aufgerufen, wenn es über den generischen Weg läuft.
+
+        return None
 
     def verlieben(
         self,

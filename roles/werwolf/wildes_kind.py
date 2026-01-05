@@ -54,21 +54,24 @@ class WildesKind(Role):
             team=Team.DORF,  # Startet als Dorf
             kategorie=Kategorie.WERWOLF,
             beschreibung=(
-                "Du bist das Wilde Kind. In der ersten Nacht wählst du "
-                "ein Vorbild. Solange es lebt, bist du Dorfbewohner. "
-                "Stirbt es, wirst du zum Werwolf!"
+                "Du bist das Wilde Kind. Du wählst in der ersten Nacht ein "
+                "Vorbild. Solange dein Vorbild lebt, gehörst du zum Dorf. "
+                "Stirbt dein Vorbild, wirst du zum Werwolf!"
             ),
-            icon="fa-solid fa-child",
-            farbe="#92400e",
-            prioritaet=6,
+            icon="fa-solid fa-child-reaching",
+            farbe="#a16207",
+            prioritaet=6,  # Sehr früh
             erzaehler_nacht=(
-                "Das Wilde Kind erwacht (erste Nacht) und wählt sein Vorbild."
-            ),
-            erzaehler_tag=(
-                "Das Vorbild des Wilden Kindes ist gestorben - " "es wird zum Werwolf!"
+                "Das Wilde Kind erwacht und sucht sich ein Vorbild. "
+                "Es wird ihm folgen... bis in den Tod."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#78350f",
+            avatar_gradient_to="#451a03",
+            avatar_border_color="#b45309",
+            badge_emoji="👶",
         )
 
     @property

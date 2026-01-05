@@ -180,7 +180,7 @@ class Seherin(Role):
                     "ziel_name": ziel.name,
                     "rolle": rollen_name,
                     "ist_werwolf": ist_werwolf,
-                    "nachricht": nachricht
+                    "nachricht": nachricht,
                 }
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",

@@ -6,18 +6,19 @@ from models import db, Raum, Spieler, SpielAktion, SpielLog, ErzaehlerEvent
 
 # Get PHASEN from centralized module
 from phases import get_phase_list
+
 PHASEN = get_phase_list()
 
 
 def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     """
     Berechnet die Rollenverteilung dynamisch basierend auf der Registry.
-    
+
     Verwendet DistributionConfig der einzelnen Rollen anstelle von hardcoded Logik.
     """
     effektive_anzahl = spieler_anzahl
     rolle_config = {}
-    
+
     if mit_erzaehler:
         rolle_config["Erzaehler"] = 1
         effektive_anzahl -= 1
@@ -28,22 +29,22 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     # 1. Hole alle verfügbaren Rollen
     verfuegbare_rollen = []
     from roles import RoleRegistry
-    
+
     for role in RoleRegistry.get_all():
         if not role.info.distribution:
             continue
-            
+
         dist = role.info.distribution
-        
+
         # Check preconditions
         if effektive_anzahl < dist.min_players:
             continue
-            
+
         verfuegbare_rollen.append(role)
-        
+
     # 2. Sortiere nach Priorität (höhere zuerst)
     verfuegbare_rollen.sort(key=lambda r: r.info.distribution.priority, reverse=True)
-    
+
     # 3. Verteile Rollen
     aktuelle_anzahl = 0
     zugewiesene_rollen = set()
@@ -51,15 +52,15 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
 
     for role in verfuegbare_rollen:
         dist = role.info.distribution
-        
+
         if dist.is_filler:
             fillers.append(role)
             continue
-            
+
         # Check exklusive Rollen
         if any(ex in zugewiesene_rollen for ex in dist.exclusive_with):
             continue
-            
+
         # Check required roles (nur wenn schon verteilt)
         if dist.requires_roles:
             if not all(req in zugewiesene_rollen for req in dist.requires_roles):
@@ -67,19 +68,19 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
 
         # Berechne Anzahl via Lambda
         anzahl = dist.count_func(effektive_anzahl)
-        
+
         if anzahl > 0:
             # Check ob genug Platz
             if aktuelle_anzahl + anzahl > effektive_anzahl:
                 continue
-                
+
             rolle_config[role.info.name] = anzahl
             aktuelle_anzahl += anzahl
             zugewiesene_rollen.add(role.info.name)
-            
+
     # 4. Fülle mit Filler-Rollen auf (z.B. Dorfbewohner)
     rest_plaetze = effektive_anzahl - aktuelle_anzahl
-    
+
     if rest_plaetze > 0:
         if fillers:
             # Standard: Nehme den ersten Filler (meist Dorfbewohner)
@@ -239,13 +240,13 @@ def naechste_phase(raum: Raum) -> str:
     Verwendet den Stateless Scheduler.
     """
     from scheduler import get_next_phase_state
-    
+
     # 1. Berechne nächsten Zustand
     next_state = get_next_phase_state(raum)
-    
+
     # 2. Update Raum
     raum.aktuelle_phase = next_state.phase
-    
+
     # Store phase metadata (active role, display info) in JSON
     # This allows generic frontend handling
     data = {}
@@ -254,18 +255,18 @@ def naechste_phase(raum: Raum) -> str:
             data = json.loads(raum.phase_data)
         except:
             data = {}
-            
-    data['active_role'] = next_state.active_role
-    data['display_info'] = next_state.display_info
-    
+
+    data["active_role"] = next_state.active_role
+    data["display_info"] = next_state.display_info
+
     raum.phase_data = json.dumps(data)
-    
-    # Reset Timer if phase changed? 
+
+    # Reset Timer if phase changed?
     # (Or scheduler handles it? Scheduler is stateless.)
     # TODO: Start Timer for new phase if needed.
-    
+
     db.session.commit()
-    
+
     return raum.aktuelle_phase
 
 
@@ -278,7 +279,7 @@ def naechste_phase(raum: Raum) -> str:
 # ROLE-DRIVEN NIGHT EXECUTION
 # =============================================================================
 
-# Deprecated night functions (get_active_roles_for_night, get_next_role_to_act, 
+# Deprecated night functions (get_active_roles_for_night, get_next_role_to_act,
 # is_night_complete) have been replaced by scheduler.py.
 # Kept ist_werwolf_rolle as general helper.
 
@@ -305,7 +306,7 @@ def ist_werwolf_rolle(rolle: str) -> bool:
 def pruefe_spielende(raum: Raum) -> dict | None:
     """
     Prueft ob das Spiel zu Ende ist.
-    
+
     Verwendet dynamische WinConditions aus der RoleRegistry.
     """
     from roles import RoleRegistry
@@ -313,17 +314,17 @@ def pruefe_spielende(raum: Raum) -> dict | None:
     from roles.enums import Team
 
     lebende = hole_lebende_spieler(raum, ohne_erzaehler=True)
-    
+
     # 1. Baue Kontext für Checks
     kontext = SpielKontext(
         raum_id=raum.id,
         runde=raum.runde,
-        phase=Phase.TAG_START, # Phase ist hier irrelevant für Win-Check
+        phase=Phase.TAG_START,  # Phase ist hier irrelevant für Win-Check
         aktiver_spieler_id=0,
         lebende_spieler=[s.id for s in lebende],
-        tote_spieler=[], # Optimierung: Tote werden selten gebraucht für Win-Check
+        tote_spieler=[],  # Optimierung: Tote werden selten gebraucht für Win-Check
     )
-    
+
     # Populate Kontext-Daten
     for s in lebende:
         role = RoleRegistry.get(s.rolle)
@@ -335,7 +336,7 @@ def pruefe_spielende(raum: Raum) -> dict | None:
     # 2. Sammle alle WinConditions (auch von toten Spielern, z.B. Amor)
     conditions = []
     alle_spieler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=False).all()
-    
+
     for s in alle_spieler:
         role = RoleRegistry.get(s.rolle)
         if role:
@@ -344,64 +345,68 @@ def pruefe_spielende(raum: Raum) -> dict | None:
 
     # 3. Sortiere nach Priorität (höhere zuerst)
     conditions.sort(key=lambda x: x[0].priority, reverse=True)
-    
+
     # 4. Prüfe Conditions
     for cond, owner in conditions:
         try:
-             if cond.check_func(owner, kontext):
-                 # GEWONNEN!
-                 winner_team = cond.team_override or RoleRegistry.get(owner.rolle).info.team
-                 
-                 winners = []
-                 if winner_team == Team.VERLIEBTE:
-                     # Spezialfall Verliebte
-                     # Finde das Paar via Owner (Amor hat check gemacht, aber Owner ist Amor? 
-                     # Nein, Owner of condition is Amor, and Amor might be dead. 
-                     # WAIT. Roles defining conditions usually assume the role is ALIVE.
-                     # Amor condition ("Lovers Win") should be checked even if Amor is DEAD?
-                     # Currently I iterate LEBENDE spieler. So if Amor is dead, Lovers can't win?
-                     # WRONG. Amor logic usually persists.
-                     # FIX: I must iterate ALL roles in registry or handle Amor separately?
-                     # Better: Amor attaches WinCondition to the LOVERS? Or Global Win Condition?
-                     # For now, let's assume active players trigger win conditions.
-                     # If Amor dies, Lovers can still win. But who checks it? 
-                     # The Lovers themselves don't have the WinCondition attached.
-                     # WORKAROUND: Werwolf and Dorf checks cover 99% cases. Lovers check covers the rest.
-                     # If Amor is dead, we need a way to check Lovers Win.
-                     # Maybe Lovers (Verliebte) implies a Team Change?
-                     pass
-                     
-                 # Determine winners based on Team
-                 winning_players = []
-                 for s in lebende:
-                     r = RoleRegistry.get(s.rolle)
-                     if not r: continue
-                     
-                     # Check Team
-                     if r.info.team == winner_team:
-                         winning_players.append(s.name)
-                         
-                     # Check Global State "Verliebte" matches Team
-                     # (Simplification: Just return names of team members)
-                 
-                 # Special logic for Lovers names if Team.VERLIEBTE
-                 if winner_team == Team.VERLIEBTE:
-                     # Find actual lovers
-                     from roles.base import get_spieler_state
-                     # Iterate all alive and check if they are "verliebt"
-                     # (This is inefficient but safe)
-                     lovers = []
-                     for l in lebende:
-                         if get_spieler_state(l, "global.verliebt_mit_id"):
-                             lovers.append(l.name)
-                     winning_players = lovers
+            if cond.check_func(owner, kontext):
+                # GEWONNEN!
+                winner_team = (
+                    cond.team_override or RoleRegistry.get(owner.rolle).info.team
+                )
 
-                 return {
-                     "gewinner": winner_team.value,
-                     "nachricht": cond.description,
-                     "spieler": winning_players,
-                 }
-                 
+                winners = []
+                if winner_team == Team.VERLIEBTE:
+                    # Spezialfall Verliebte
+                    # Finde das Paar via Owner (Amor hat check gemacht, aber Owner ist Amor?
+                    # Nein, Owner of condition is Amor, and Amor might be dead.
+                    # WAIT. Roles defining conditions usually assume the role is ALIVE.
+                    # Amor condition ("Lovers Win") should be checked even if Amor is DEAD?
+                    # Currently I iterate LEBENDE spieler. So if Amor is dead, Lovers can't win?
+                    # WRONG. Amor logic usually persists.
+                    # FIX: I must iterate ALL roles in registry or handle Amor separately?
+                    # Better: Amor attaches WinCondition to the LOVERS? Or Global Win Condition?
+                    # For now, let's assume active players trigger win conditions.
+                    # If Amor dies, Lovers can still win. But who checks it?
+                    # The Lovers themselves don't have the WinCondition attached.
+                    # WORKAROUND: Werwolf and Dorf checks cover 99% cases. Lovers check covers the rest.
+                    # If Amor is dead, we need a way to check Lovers Win.
+                    # Maybe Lovers (Verliebte) implies a Team Change?
+                    pass
+
+                # Determine winners based on Team
+                winning_players = []
+                for s in lebende:
+                    r = RoleRegistry.get(s.rolle)
+                    if not r:
+                        continue
+
+                    # Check Team
+                    if r.info.team == winner_team:
+                        winning_players.append(s.name)
+
+                    # Check Global State "Verliebte" matches Team
+                    # (Simplification: Just return names of team members)
+
+                # Special logic for Lovers names if Team.VERLIEBTE
+                if winner_team == Team.VERLIEBTE:
+                    # Find actual lovers
+                    from roles.base import get_spieler_state
+
+                    # Iterate all alive and check if they are "verliebt"
+                    # (This is inefficient but safe)
+                    lovers = []
+                    for l in lebende:
+                        if get_spieler_state(l, "global.verliebt_mit_id"):
+                            lovers.append(l.name)
+                    winning_players = lovers
+
+                return {
+                    "gewinner": winner_team.value,
+                    "nachricht": cond.description,
+                    "spieler": winning_players,
+                }
+
         except Exception as e:
             print(f"Error checking win condition {cond.id}: {e}")
             continue
@@ -507,22 +512,24 @@ def toete_spieler(spieler: Spieler, todesart: str = "unbekannt") -> dict:
     # --------------------------------------------------------------------------
     from roles import RoleRegistry
     from roles.base import SpielKontext, Phase
-    
+
     # 1. Sammle Definitionen
     lose_defs = {}
     for r in RoleRegistry.get_all_roles():
         for lc in r.get_lose_conditions():
             lose_defs[lc.id] = lc
-            
+
     # 2. Prüfe Conditions für lebende Spieler
     # (z.B. Wildes Kind wenn Vorbild stirbt, Amor-Verliebte wenn Partner stirbt)
-    raum_obj = unabh_raum if 'unabh_raum' in locals() else Raum.query.get(spieler.raum_id)
+    raum_obj = (
+        unabh_raum if "unabh_raum" in locals() else Raum.query.get(spieler.raum_id)
+    )
     lebende = hole_lebende_spieler(raum_obj, ohne_erzaehler=True)
-    
+
     kontext = SpielKontext(
         raum_id=raum_obj.id,
         runde=raum_obj.runde,
-        phase=Phase.NACHT, 
+        phase=Phase.NACHT,
         aktiver_spieler_id=0,
         lebende_spieler=[s.id for s in lebende],
         tote_spieler=[],
@@ -530,18 +537,21 @@ def toete_spieler(spieler: Spieler, todesart: str = "unbekannt") -> dict:
     trigger_data = {"opfer": spieler, "todesart": todesart}
 
     for s in list(lebende):
-        if not s.ist_am_leben: continue
-        
+        if not s.ist_am_leben:
+            continue
+
         active_conds = s.get_lose_conditions()
         for cond_id, cond_ctx in active_conds.items():
             defn = lose_defs.get(cond_id)
             if defn and defn.trigger == "on_spieler_stirbt":
                 try:
                     if defn.check_func(s, kontext, trigger_data):
-                        log_eintrag(raum_obj.id, f"{s.name} ist betroffen: {defn.description}")
+                        log_eintrag(
+                            raum_obj.id, f"{s.name} ist betroffen: {defn.description}"
+                        )
                         if defn.effect == "death":
-                             toete_spieler(s, todesart="kettenreaktion")
-                             ergebnis["folge_aktionen"].append(f"kettenreaktion_{s.id}")
+                            toete_spieler(s, todesart="kettenreaktion")
+                            ergebnis["folge_aktionen"].append(f"kettenreaktion_{s.id}")
                 except Exception as e:
                     print(f"Error executing LoseCondition {cond_id}: {e}")
 

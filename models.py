@@ -168,7 +168,7 @@ class Spieler(db.Model):
         if condition_id in conditions:
             conditions.remove(condition_id)
             self.set_state("win_conditions", conditions)
-            
+
     def has_win_condition(self, condition_id: str) -> bool:
         """Prüft ob eine Gewinnbedingung existiert."""
         return condition_id in self.get_state("win_conditions", [])
@@ -187,7 +187,7 @@ class Spieler(db.Model):
         if condition_id in conditions:
             del conditions[condition_id]
             self.set_state("lose_conditions", conditions)
-            
+
     def get_lose_conditions(self) -> dict:
         """Gibt alle aktiven Niederlagenbedingungen zurück."""
         return self.get_state("lose_conditions", {})

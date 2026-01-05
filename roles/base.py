@@ -1211,6 +1211,11 @@ class Role(ABC):
             "erzaehler_tag": self.info.erzaehler_tag,
             "hinweis_config": self.info.hinweis_config,
             "erweiterung": self.info.erweiterung.value,
+            # Visual Styling
+            "avatar_gradient_from": self.info.avatar_gradient_from,
+            "avatar_gradient_to": self.info.avatar_gradient_to,
+            "avatar_border_color": self.info.avatar_border_color,
+            "badge_emoji": self.info.badge_emoji,
             "state_fields": [
                 {
                     "name": sf.name,

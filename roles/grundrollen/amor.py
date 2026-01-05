@@ -6,7 +6,7 @@ stirbt einer, stirbt auch der andere.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenUI
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenUI, StateField, StateType, get_spieler_state, set_spieler_state
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -26,6 +26,12 @@ class Amor(Role):
 
     Gewinnbedingung: Dorf gewinnt ODER Verliebte überleben als Letzte.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder von Amor."""
+        return [
+            StateField("hat_verkuppelt", StateType.BOOL, False, "Hat bereits Verliebte gewählt"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -125,12 +131,18 @@ class Amor(Role):
                 nachricht="Beide Spieler müssen am Leben sein.",
             )
 
+        # Setze Verliebte-Status auf beide Spieler (global state)
+        set_spieler_state(ziel1, "global.verliebt_mit_id", ziel2.id)
+        set_spieler_state(ziel2, "global.verliebt_mit_id", ziel1.id)
+
+        # Markiere Amor als hat verkuppelt
+        self.set_state(spieler, "hat_verkuppelt", True)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{ziel1.name} und {ziel2.name} haben sich verliebt!",
             effekte={
                 "verliebte": [ziel1.id, ziel2.id],
-                "amor_aktion_abgeschlossen": True,
             },
             log_sichtbar_fuer="erzaehler",
         )
@@ -145,7 +157,7 @@ class Amor(Role):
         """
         Prüft ob ein Verliebter stirbt und der andere folgen muss.
         """
-        verliebt_mit = getattr(opfer, "verliebt_mit_id", None)
+        verliebt_mit = get_spieler_state(opfer, "global.verliebt_mit_id")
 
         if verliebt_mit and verliebt_mit in kontext.lebende_spieler:
             return AktionsErgebnis(
@@ -166,7 +178,7 @@ class Amor(Role):
         """
         Verliebte gewinnen wenn sie die letzten Überlebenden sind.
         """
-        verliebt_mit = getattr(spieler, "verliebt_mit_id", None)
+        verliebt_mit = get_spieler_state(spieler, "global.verliebt_mit_id")
 
         if verliebt_mit:
             # Prüfe ob nur noch die Verliebten leben

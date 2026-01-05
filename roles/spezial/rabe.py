@@ -5,8 +5,8 @@ Der Rabe markiert jede Nacht einen Spieler,
 der am nächsten Tag 2 Extra-Stimmen gegen sich erhält.
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType, set_spieler_state
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 @RoleRegistry.register
 class Rabe(Role):
     """
-    Rabe - Markierungs-Rolle.
+    Rabe
 
     Fähigkeiten:
     - Markiert jede Nacht einen Spieler
@@ -29,6 +29,12 @@ class Rabe(Role):
 
     Gewinnbedingung: Dorf gewinnt.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Raben."""
+        return [
+            StateField("markiert_id", StateType.PLAYER_ID, None, "Aktuell markierter Spieler"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -112,12 +118,16 @@ class Rabe(Role):
                 nachricht="Du kannst keine Toten markieren.",
             )
 
+        # Speichere Markierung im State
+        self.set_state(spieler, "markiert_id", ziel.id)
+        # Setze globalen Status auf Ziel
+        set_spieler_state(ziel, "global.rabe_markiert", True)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du markierst {ziel.name}. Er wird morgen +2 Stimmen gegen sich haben!",
             ziel_spieler_id=ziel.id,
             effekte={
-                "rabe_markiert": ziel.id,
                 "extra_stimmen_gegen": 2,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",

@@ -2,8 +2,8 @@
 Henker - Will einen bestimmten Spieler toeten lassen.
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
 from ..enums import Team, Kategorie, Erweiterung
 from ..registry import RoleRegistry
 
@@ -22,6 +22,13 @@ class Henker(Role):
 
     Gewinnbedingung: Ziel wird vom Dorf gehaengt.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Henkers."""
+        return [
+            StateField("ziel_id", StateType.PLAYER_ID, None, "ID des Ziels"),
+            StateField("gewonnen", StateType.BOOL, False, "Hat gewonnen"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -96,13 +103,13 @@ class Henker(Role):
                 nachricht="Du kannst dich nicht selbst waehlen.",
             )
 
+        self.set_state(spieler, "ziel_id", ziel.id)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{ziel.name} ist dein Ziel. Sorge dafuer, dass er gehaengt wird!",
             ziel_spieler_id=ziel.id,
-            effekte={
-                "henker_ziel": ziel.id,
-            },
+            effekte={},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
 
@@ -112,9 +119,10 @@ class Henker(Role):
         """
         Prueft ob das Henker-Ziel gehaengt wird.
         """
-        henker_ziel = getattr(spieler, "henker_ziel_id", None)
+        henker_ziel = self.get_state(spieler, "ziel_id")
 
         if henker_ziel and opfer.id == henker_ziel:
+            self.set_state(spieler, "gewonnen", True)
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht=("Das Ziel des Henkers wurde gehaengt! Der Henker gewinnt!"),
@@ -132,7 +140,7 @@ class Henker(Role):
         """
         Gewinnt wenn Ziel gehaengt wurde.
         """
-        gewonnen = getattr(spieler, "henker_gewonnen", False)
+        gewonnen = self.get_state(spieler, "gewonnen")
         if gewonnen:
             return Team.SOLO
         return None

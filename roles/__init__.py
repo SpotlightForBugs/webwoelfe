@@ -35,18 +35,53 @@ import importlib
 import pkgutil
 from pathlib import Path
 
-from .base import Role
+from .base import (
+    Role,
+    StateType,
+    StateField,
+    ErzaehlerEvent,
+    HinweisConfig,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    UIButton,
+    RollenUI,
+    get_spieler_state,
+    set_spieler_state,
+    get_all_spieler_state,
+    init_spieler_state,
+    reset_spieler_state,
+)
 from .registry import RoleRegistry
 from .enums import Team, Kategorie, Phase, TriggerTyp, Erweiterung
 
 __all__ = [
+    # Base classes
     'Role',
+    'RollenInfo',
+    'AktionsErgebnis',
+    'SpielKontext',
+    'UIButton',
+    'RollenUI',
+    # State management
+    'StateType',
+    'StateField',
+    'ErzaehlerEvent',
+    'HinweisConfig',
+    'get_spieler_state',
+    'set_spieler_state',
+    'get_all_spieler_state',
+    'init_spieler_state',
+    'reset_spieler_state',
+    # Registry
     'RoleRegistry',
+    # Enums
     'Team',
     'Kategorie',
     'Phase',
     'TriggerTyp',
     'Erweiterung',
+    # Legacy functions
     'get_alle_rollen',
     'get_rollen_nach_kategorie',
     'get_rollen_nach_kategorie_liste',

@@ -6,7 +6,7 @@ erscheint er der Seherin als Mensch, in ungeraden als Wolf.
 """
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, SichtTyp, Erweiterung
+from ..enums import Team, Kategorie, SichtTyp, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -53,7 +53,6 @@ class Lupin(Role):
     
     @property
     def aktions_typ(self) -> 'AktionsTyp':
-        from ..enums import Team, Kategorie, SichtTyp, Erweiterung
         return AktionsTyp.TOETEN
     
     @property

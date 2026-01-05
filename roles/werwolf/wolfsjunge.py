@@ -5,9 +5,9 @@ Der Wolfsjunge waehlt in der ersten Nacht ein Vorbild.
 Stirbt dieses, verwandelt er sich in einen Werwolf.
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, SichtTyp, Erweiterung
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
+from ..enums import Team, Kategorie, SichtTyp, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -26,6 +26,13 @@ class Wolfsjunge(Role):
 
     Gewinnbedingung: Abhaengig von Verwandlung.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Wolfsjungen."""
+        return [
+            StateField("vorbild_id", StateType.PLAYER_ID, None, "ID des Vorbilds"),
+            StateField("verwandelt", StateType.BOOL, False, "Zum Werwolf verwandelt"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -48,8 +55,7 @@ class Wolfsjunge(Role):
         )
     
     @property
-    def aktions_typ(self) -> 'AktionsTyp':
-        from ..enums import Team, Kategorie, SichtTyp, Erweiterung
+    def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.WAEHLEN
 
     @property
@@ -105,8 +111,8 @@ class Wolfsjunge(Role):
             )
 
         # Vorbild speichern
-        spieler.vorbild_id = ziel.id
-        
+        self.set_state(spieler, "vorbild_id", ziel.id)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{ziel.name} ist nun dein Vorbild. Stirbt es, wirst du zum Werwolf.",
@@ -127,9 +133,12 @@ class Wolfsjunge(Role):
         """
         Prueft ob das Vorbild stirbt und Verwandlung ausloest.
         """
-        vorbild_id = getattr(spieler, "vorbild_id", None)
+        vorbild_id = self.get_state(spieler, "vorbild_id")
 
         if vorbild_id and opfer.id == vorbild_id:
+            # Markiere als verwandelt
+            self.set_state(spieler, "verwandelt", True)
+
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht=(

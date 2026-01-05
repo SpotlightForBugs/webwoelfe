@@ -4,9 +4,9 @@ Teenager-Werwolf - Der rebellische Wolf.
 Der Teenager-Werwolf ist ein normaler Werwolf, der sich
 einmal pro Spiel weigern kann, beim Angriff mitzumachen.
 """
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, SichtTyp, Erweiterung
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
+from ..enums import Team, Kategorie, SichtTyp, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -16,15 +16,21 @@ if TYPE_CHECKING:
 @RoleRegistry.register
 class TeenagerWerwolf(Role):
     """
-    Der Teenager-Werwolf - Rebellischer Wolf.
+    Der Teenager-Werwolf
     
-    Faehigkeiten:
+    Fähigkeiten:
     - Jagt mit den Woelfen
     - Kann einmal pro Spiel den Angriff verweigern
     
     Gewinnbedingung: Werwoelfe gewinnen.
     """
     
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Teenager-Werwolfs."""
+        return [
+            StateField("hat_verweigert", StateType.BOOL, False, "Hat bereits verweigert"),
+        ]
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -48,8 +54,7 @@ class TeenagerWerwolf(Role):
         )
     
     @property
-    def aktions_typ(self) -> 'AktionsTyp':
-        from ..enums import Team, Kategorie, SichtTyp, Erweiterung
+    def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.TOETEN
     
     @property
@@ -96,8 +101,8 @@ class TeenagerWerwolf(Role):
         kein Opfer, aber die anderen Woelfe sehen das nicht.
         """
         # Pruefe ob schon verweigert wurde
-        hat_verweigert = getattr(spieler, 'teenager_hat_verweigert', False)
-        
+        hat_verweigert = self.get_state(spieler, "hat_verweigert")
+
         if ziel is None:
             # Teenager verweigert den Angriff
             if hat_verweigert:
@@ -108,12 +113,14 @@ class TeenagerWerwolf(Role):
                     log_sichtbar_fuer=f"spieler_{spieler.id}",
                 )
             
+            # Verweigerung speichern
+            self.set_state(spieler, "hat_verweigert", True)
+
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht='Du verweigerst diese Nacht den Angriff - rebellisch!',
                 effekte={
                     'teenager_verweigert': True,
-                    'teenager_hat_verweigert': True,
                 },
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )

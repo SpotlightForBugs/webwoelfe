@@ -5,8 +5,8 @@ Die Hexe kann einmal pro Spiel jemanden heilen
 und einmal jemanden vergiften.
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -25,6 +25,13 @@ class Hexe(Role):
 
     Gewinnbedingung: Dorf gewinnt.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder der Hexe."""
+        return [
+            StateField("heiltrank", StateType.BOOL, True, "Hat noch Heiltrank"),
+            StateField("gifttrank", StateType.BOOL, True, "Hat noch Gifttrank"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -104,10 +111,9 @@ class Hexe(Role):
         - vergiften: Optional[spieler_id]
         """
         effekte = {}
-        nachrichten = []
 
         # Prüfe Heiltrank
-        hat_heiltrank = getattr(spieler, "hexe_heiltrank", True)
+        hat_heiltrank = self.get_state(spieler, "heiltrank")
 
         if hat_heiltrank and kontext.werwolf_opfer_id:
             # Kann heilen - Entscheidung kommt über zusätzliche Daten
@@ -115,7 +121,7 @@ class Hexe(Role):
             effekte["werwolf_opfer"] = kontext.werwolf_opfer_id
 
         # Prüfe Gifttrank
-        hat_gifttrank = getattr(spieler, "hexe_gifttrank", True)
+        hat_gifttrank = self.get_state(spieler, "gifttrank")
 
         if hat_gifttrank:
             effekte["kann_vergiften"] = True
@@ -129,7 +135,7 @@ class Hexe(Role):
 
     def heilen(self, spieler: "Spieler", kontext: SpielKontext) -> AktionsErgebnis:
         """Setzt den Heiltrank ein."""
-        if not getattr(spieler, "hexe_heiltrank", True):
+        if not self.get_state(spieler, "heiltrank"):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Der Heiltrank wurde bereits verwendet.",
@@ -141,13 +147,15 @@ class Hexe(Role):
                 nachricht="Es gibt kein Opfer zum Heilen.",
             )
 
+        # Heiltrank verbrauchen
+        self.set_state(spieler, "heiltrank", False)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht="Du setzt den Heiltrank ein und rettest das Opfer!",
             ziel_spieler_id=kontext.werwolf_opfer_id,
             effekte={
                 "geheilt": kontext.werwolf_opfer_id,
-                "heiltrank_verbraucht": True,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
@@ -156,7 +164,7 @@ class Hexe(Role):
         self, spieler: "Spieler", ziel: "Spieler", kontext: SpielKontext
     ) -> AktionsErgebnis:
         """Setzt den Gifttrank ein."""
-        if not getattr(spieler, "hexe_gifttrank", True):
+        if not self.get_state(spieler, "gifttrank"):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Der Gifttrank wurde bereits verwendet.",
@@ -168,13 +176,15 @@ class Hexe(Role):
                 nachricht="Ungültiges Ziel für Gift.",
             )
 
+        # Gifttrank verbrauchen
+        self.set_state(spieler, "gifttrank", False)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du vergiftest {ziel.name}!",
             ziel_spieler_id=ziel.id,
             effekte={
                 "vergiftet": ziel.id,
-                "gifttrank_verbraucht": True,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

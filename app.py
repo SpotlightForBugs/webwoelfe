@@ -396,6 +396,9 @@ def spiel(code):
         ziel_id: data["typ"] for ziel_id, data in seherin_enthuellung.items()
     }
 
+    # Get verliebt_mit_id from state for template
+    verliebt_mit_id = spieler.get_state("global.verliebt_mit_id")
+
     return render_template(
         "spiel.html",
         raum=raum,
@@ -408,6 +411,7 @@ def spiel(code):
         phasen=PHASEN,
         erzaehler_text=erzaehler_text,
         enthuellung=enthuellung,  # Seherin-Snapshot
+        verliebt_mit_id=verliebt_mit_id,  # From state
     )
 
 
@@ -1589,9 +1593,9 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         spieler2 = db.session.get(Spieler, ziel_ids[1])
 
         if spieler1 and spieler2:
-            spieler1.verliebt_mit_id = spieler2.id
-            spieler2.verliebt_mit_id = spieler1.id
-            spieler.armor_verliebt = False
+            # Use state-based storage
+            spieler1.set_state("global.verliebt_mit_id", spieler2.id)
+            spieler2.set_state("global.verliebt_mit_id", spieler1.id)
             db.session.commit()
             log_ts(f"[Aktion] ERFOLG: {spieler1.name} ❤️ {spieler2.name}")
 

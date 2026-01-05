@@ -201,6 +201,117 @@ class RoleRegistry:
 
         return None
 
+    # === AGGREGATION FUNCTIONS ===
+
+    @classmethod
+    def get_all_erzaehler_events(cls) -> Dict[str, Any]:
+        """
+        Sammelt alle Erzähler-Events aus allen registrierten Rollen.
+
+        Returns:
+            Dict von event_id -> ErzaehlerEvent
+        """
+        from .base import ErzaehlerEvent
+
+        all_events = {}
+        for role in cls._instances.values():
+            try:
+                events = role.get_erzaehler_events()
+                for event in events:
+                    all_events[event.event_id] = {
+                        "text": event.text,
+                        "anweisung": event.anweisung,
+                        "bedingung": event.bedingung,
+                        "einmalig": event.einmalig,
+                        "rolle": role.info.name,
+                    }
+            except Exception as e:
+                logger.warning(f"Fehler beim Laden der Events von {role.info.name}: {e}")
+
+        return all_events
+
+    @classmethod
+    def get_all_hinweis_configs(cls) -> Dict[str, Any]:
+        """
+        Sammelt alle Hinweis-Konfigurationen aus allen registrierten Rollen.
+
+        Returns:
+            Dict von rolle_name -> HinweisConfig
+        """
+        configs = {}
+        for name, role in cls._instances.items():
+            try:
+                config = role.get_hinweis_config()
+                if config.kann_senden or config.basis_chance > 0:
+                    configs[name] = {
+                        "kann_senden": config.kann_senden,
+                        "verfuegbare_hinweise": config.verfuegbare_hinweise,
+                        "hinweise_pro_tag": config.hinweise_pro_tag,
+                        "basis_chance": config.basis_chance,
+                        "beschreibung": config.beschreibung,
+                    }
+            except Exception as e:
+                logger.warning(f"Fehler beim Laden der Hint-Config von {name}: {e}")
+
+        return configs
+
+    @classmethod
+    def init_player_state(cls, spieler: "Spieler") -> None:
+        """
+        Initialisiert den Zustand für die Rolle eines Spielers.
+
+        Ruft init_state() auf der entsprechenden Rolle auf.
+
+        Args:
+            spieler: Der Spieler dessen Zustand initialisiert werden soll
+        """
+        from .base import reset_spieler_state
+
+        if not spieler.rolle:
+            return
+
+        role = cls.get(spieler.rolle)
+        if role:
+            role.init_state(spieler)
+
+    @classmethod
+    def init_all_players_state(cls, spieler_liste: List["Spieler"]) -> None:
+        """
+        Initialisiert den Zustand für alle Spieler.
+
+        Args:
+            spieler_liste: Liste aller Spieler
+        """
+        from .base import reset_spieler_state
+
+        for spieler in spieler_liste:
+            reset_spieler_state(spieler)
+            cls.init_player_state(spieler)
+
+    @classmethod
+    def get_all_state_fields(cls) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Sammelt alle State-Field-Definitionen aus allen Rollen.
+
+        Returns:
+            Dict von rolle_name -> Liste von StateField-Dicts
+        """
+        result = {}
+        for name, role in cls._instances.items():
+            fields = role.state_fields()
+            if fields:
+                result[name] = [
+                    {
+                        "name": sf.name,
+                        "typ": sf.typ.value,
+                        "default": sf.default,
+                        "beschreibung": sf.beschreibung,
+                        "persistent": sf.persistent,
+                    }
+                    for sf in fields
+                ]
+        return result
+
     @classmethod
     def clear(cls) -> None:
         """Löscht alle registrierten Rollen (für Tests)."""

@@ -5,8 +5,8 @@ Der Jäger kann bei seinem Tod einen letzten Schuss abfeuern
 und einen beliebigen Spieler mit in den Tod reißen.
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -24,6 +24,12 @@ class Jaeger(Role):
 
     Gewinnbedingung: Dorf gewinnt.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Jägers."""
+        return [
+            StateField("schuss", StateType.BOOL, True, "Hat noch einen Schuss"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -90,7 +96,7 @@ class Jaeger(Role):
         """
         Jäger stirbt und kann seinen Schuss abfeuern.
         """
-        hat_schuss = getattr(spieler, "jaeger_schuss", True)
+        hat_schuss = self.get_state(spieler, "schuss")
 
         if not hat_schuss:
             return AktionsErgebnis(
@@ -118,7 +124,7 @@ class Jaeger(Role):
         """
         Jäger feuert seinen letzten Schuss.
         """
-        hat_schuss = getattr(spieler, "jaeger_schuss", True)
+        hat_schuss = self.get_state(spieler, "schuss")
 
         if not hat_schuss:
             return AktionsErgebnis(
@@ -126,13 +132,15 @@ class Jaeger(Role):
                 nachricht="Kein Schuss mehr verfügbar.",
             )
 
+        # Schuss verbrauchen
+        self.set_state(spieler, "schuss", False)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Der Jäger erschießt {ziel.name} mit seinem letzten Schuss!",
             ziel_spieler_id=ziel.id,
             effekte={
                 "erschossen": ziel.id,
-                "schuss_verbraucht": True,
             },
             log_sichtbar_fuer="alle",
         )

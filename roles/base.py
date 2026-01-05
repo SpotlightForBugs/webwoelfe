@@ -1,23 +1,169 @@
-"""
-Abstrakte Basisklasse fuer alle Rollen.
-
-Jede Rolle erbt von dieser Klasse und implementiert
-ihre spezifischen Faehigkeiten ueber die Trigger-Methoden.
-
-Design-Prinzipien:
-- Single Responsibility: Jede Rolle ist fuer ihre eigene Logik verantwortlich
-- Open/Closed: Neue Rollen durch Vererbung, keine Aenderung der Basis
-- DRY: Gemeinsame Logik in der Basisklasse
-- Dependency Injection: Spielkontext wird per Parameter uebergeben
-"""
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from typing import Optional, List, Dict, Any, TYPE_CHECKING, Union
+from enum import Enum
+import json
+
 from .enums import Team, Kategorie, Phase, TriggerTyp, AktionsTyp, SichtTyp, Erweiterung
 
 if TYPE_CHECKING:
     from models import Spieler, Raum
+
+
+# =============================================================================
+# DYNAMIC STATE MANAGEMENT SYSTEM
+# =============================================================================
+
+
+class StateType(Enum):
+    """Typen für Rollen-Zustandsfelder."""
+    BOOL = "bool"
+    INT = "int"
+    FLOAT = "float"
+    STRING = "string"
+    PLAYER_ID = "player_id"  # Reference to another player
+    PLAYER_IDS = "player_ids"  # List of player references
+    JSON = "json"  # Arbitrary JSON data
+
+
+@dataclass
+class StateField:
+    """
+    Definition eines Zustandsfeldes für eine Rolle.
+
+    Beispiel:
+        StateField("heiltrank", StateType.BOOL, True, "Hat noch Heiltrank")
+        StateField("ziel_id", StateType.PLAYER_ID, None, "Gewähltes Ziel")
+    """
+    name: str
+    typ: StateType
+    default: Any
+    beschreibung: str = ""
+    persistent: bool = True  # Bleibt über Runden erhalten
+
+    def validate(self, value: Any) -> bool:
+        """Prüft, ob ein Wert dem Typ entspricht."""
+        if value is None:
+            return True
+        if self.typ == StateType.BOOL:
+            return isinstance(value, bool)
+        elif self.typ == StateType.INT:
+            return isinstance(value, int)
+        elif self.typ == StateType.FLOAT:
+            return isinstance(value, (int, float))
+        elif self.typ == StateType.STRING:
+            return isinstance(value, str)
+        elif self.typ == StateType.PLAYER_ID:
+            return isinstance(value, int) or value is None
+        elif self.typ == StateType.PLAYER_IDS:
+            return isinstance(value, list)
+        elif self.typ == StateType.JSON:
+            return True
+        return True
+
+    def deserialize(self, value: Any) -> Any:
+        """Konvertiert Werte aus JSON-Speicherung."""
+        if value is None:
+            return self.default
+        if self.typ == StateType.BOOL:
+            return bool(value)
+        elif self.typ == StateType.INT:
+            return int(value) if value is not None else self.default
+        elif self.typ == StateType.FLOAT:
+            return float(value) if value is not None else self.default
+        return value
+
+
+@dataclass
+class ErzaehlerEvent:
+    """Definition eines Erzähler-Events für eine Rolle."""
+    event_id: str
+    text: str
+    anweisung: str
+    bedingung: Dict[str, Any] = field(default_factory=dict)
+    einmalig: bool = True
+
+
+@dataclass
+class HinweisConfig:
+    """Hinweis-Konfiguration für eine Rolle."""
+    kann_senden: bool = False
+    verfuegbare_hinweise: List[str] = field(default_factory=list)
+    hinweise_pro_tag: int = 0
+    basis_chance: float = 0.0
+    beschreibung: str = ""
+
+
+# =============================================================================
+# STATE ACCESS HELPERS (Module-level for use without Role instance)
+# =============================================================================
+
+
+def get_spieler_state(spieler: "Spieler", key: str, default: Any = None) -> Any:
+    """
+    Liest einen Zustandswert vom Spieler.
+
+    Args:
+        spieler: Der Spieler
+        key: Der Schlüssel (z.B. "hexe.heiltrank" oder "global.verliebt_mit_id")
+        default: Standardwert wenn nicht gefunden
+
+    Returns:
+        Der Zustandswert oder default
+    """
+    try:
+        state_json = getattr(spieler, 'rolle_zustand', None) or '{}'
+        state = json.loads(state_json) if isinstance(state_json, str) else state_json
+        return state.get(key, default)
+    except (json.JSONDecodeError, AttributeError):
+        return default
+
+
+def set_spieler_state(spieler: "Spieler", key: str, value: Any) -> None:
+    """
+    Setzt einen Zustandswert auf dem Spieler.
+
+    Args:
+        spieler: Der Spieler
+        key: Der Schlüssel (z.B. "hexe.heiltrank")
+        value: Der zu speichernde Wert
+    """
+    try:
+        state_json = getattr(spieler, 'rolle_zustand', None) or '{}'
+        state = json.loads(state_json) if isinstance(state_json, str) else {}
+        state[key] = value
+        spieler.rolle_zustand = json.dumps(state)
+    except (json.JSONDecodeError, AttributeError):
+        spieler.rolle_zustand = json.dumps({key: value})
+
+
+def get_all_spieler_state(spieler: "Spieler") -> Dict[str, Any]:
+    """Liest alle Zustandswerte eines Spielers."""
+    try:
+        state_json = getattr(spieler, 'rolle_zustand', None) or '{}'
+        return json.loads(state_json) if isinstance(state_json, str) else {}
+    except (json.JSONDecodeError, AttributeError):
+        return {}
+
+
+def init_spieler_state(spieler: "Spieler", defaults: Dict[str, Any]) -> None:
+    """Initialisiert den Spieler-Zustand mit Standardwerten (überschreibt nicht)."""
+    current = get_all_spieler_state(spieler)
+    for key, value in defaults.items():
+        if key not in current:
+            current[key] = value
+    spieler.rolle_zustand = json.dumps(current)
+
+
+def reset_spieler_state(spieler: "Spieler") -> None:
+    """Setzt den kompletten Spieler-Zustand zurück."""
+    spieler.rolle_zustand = "{}"
+
+
+# =============================================================================
+# DATACLASSES
+# =============================================================================
 
 
 @dataclass
@@ -72,6 +218,8 @@ class AktionsErgebnis:
     ziel_spieler_id: Optional[int] = None
     effekte: Dict[str, Any] = field(default_factory=dict)
     log_sichtbar_fuer: str = "alle"  # alle, erzaehler, werwolf, spieler_id
+    # State changes to apply after action (key -> value)
+    state_updates: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -91,10 +239,14 @@ class SpielKontext:
     spieler_namen: Dict[int, str] = field(default_factory=dict)
     spieler_teams: Dict[int, Any] = field(default_factory=dict)
 
+    @property
+    def aktuelle_runde(self) -> int:
+        """Alias für runde (wird von einigen Rollen verwendet)."""
+        return self.runde
+
     def hat_spieler_rolle(self, spieler_id: int, rolle: str) -> bool:
         """Prüft ob ein Spieler eine bestimmte Rolle hat."""
-        # Wird von der Registry implementiert
-        return False
+        return self.spieler_rollen.get(spieler_id) == rolle
 
 
 @dataclass
@@ -146,6 +298,11 @@ class Role(ABC):
 
     Jede Rolle muss die abstrakten Methoden implementieren
     und kann optionale Trigger-Methoden überschreiben.
+
+    STATE MANAGEMENT:
+    Rollen definieren ihre Zustandsfelder über state_fields().
+    Zugriff erfolgt über get_state()/set_state() mit automatischer
+    Namespace-Verwaltung (z.B. "hexe.heiltrank").
     """
 
     # === ABSTRAKTE EIGENSCHAFTEN (müssen in jeder Rolle definiert sein) ===
@@ -156,34 +313,170 @@ class Role(ABC):
         """Gibt die statischen Informationen der Rolle zurück."""
         pass
 
+    # === STATE MANAGEMENT ===
+
+    def state_fields(self) -> List[StateField]:
+        """
+        Definiert die Zustandsfelder dieser Rolle.
+
+        Jede Rolle überschreibt diese Methode um ihre
+        spezifischen Datenfelder zu definieren.
+
+        Returns:
+            Liste von StateField-Definitionen
+
+        Beispiel:
+            def state_fields(self):
+                return [
+                    StateField("heiltrank", StateType.BOOL, True),
+                    StateField("gifttrank", StateType.BOOL, True),
+                ]
+        """
+        return []
+
+    def _state_key(self, field_name: str) -> str:
+        """Generiert den vollständigen State-Key mit Rollen-Namespace."""
+        namespace = self.info.name.lower().replace(' ', '_').replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss')
+        return f"{namespace}.{field_name}"
+
+    def get_state(self, spieler: "Spieler", field_name: str, default: Any = None) -> Any:
+        """
+        Liest einen Zustandswert für diese Rolle.
+
+        Args:
+            spieler: Der Spieler
+            field_name: Name des Feldes (ohne Namespace)
+            default: Standardwert (überschreibt StateField.default)
+
+        Returns:
+            Der Zustandswert
+        """
+        key = self._state_key(field_name)
+
+        # Finde StateField für korrekten Default
+        if default is None:
+            for sf in self.state_fields():
+                if sf.name == field_name:
+                    default = sf.default
+                    break
+
+        return get_spieler_state(spieler, key, default)
+
+    def set_state(self, spieler: "Spieler", field_name: str, value: Any) -> None:
+        """
+        Setzt einen Zustandswert für diese Rolle.
+
+        Args:
+            spieler: Der Spieler
+            field_name: Name des Feldes (ohne Namespace)
+            value: Der zu speichernde Wert
+        """
+        key = self._state_key(field_name)
+        set_spieler_state(spieler, key, value)
+
+    def init_state(self, spieler: "Spieler") -> None:
+        """
+        Initialisiert den Zustand für diese Rolle mit Standardwerten.
+
+        Wird beim Spielstart aufgerufen.
+        """
+        defaults = {}
+        for sf in self.state_fields():
+            key = self._state_key(sf.name)
+            defaults[key] = sf.default
+
+        if defaults:
+            init_spieler_state(spieler, defaults)
+
+    def get_all_state(self, spieler: "Spieler") -> Dict[str, Any]:
+        """
+        Liest alle Zustandswerte dieser Rolle.
+
+        Returns:
+            Dict mit field_name -> value (ohne Namespace)
+        """
+        all_state = get_all_spieler_state(spieler)
+        namespace = self._state_key("")
+
+        result = {}
+        for key, value in all_state.items():
+            if key.startswith(namespace):
+                field_name = key[len(namespace):]
+                result[field_name] = value
+        return result
+
+    # === ERZÄHLER-EVENTS ===
+
+    def get_erzaehler_events(self) -> List[ErzaehlerEvent]:
+        """
+        Gibt die Erzähler-Events dieser Rolle zurück.
+
+        Überschreibe diese Methode um rollenspezifische
+        Erzähler-Texte zu definieren.
+
+        Returns:
+            Liste von ErzaehlerEvent-Definitionen
+        """
+        events = []
+
+        # Standard-Events aus RollenInfo
+        if self.info.erzaehler_nacht:
+            events.append(ErzaehlerEvent(
+                event_id=f"{self.info.name.lower().replace(' ', '_')}_nacht",
+                text=self.info.erzaehler_nacht,
+                anweisung=self.info.erzaehler_nacht,
+                einmalig=False,
+            ))
+
+        if self.info.erzaehler_tag:
+            events.append(ErzaehlerEvent(
+                event_id=f"{self.info.name.lower().replace(' ', '_')}_tag",
+                text=self.info.erzaehler_tag,
+                anweisung=self.info.erzaehler_tag,
+                einmalig=False,
+            ))
+
+        return events
+
+    # === HINWEIS-SYSTEM ===
+
+    def get_hinweis_config(self) -> HinweisConfig:
+        """
+        Gibt die Hinweis-Konfiguration dieser Rolle zurück.
+
+        Überschreibe diese Methode für Rollen die aktiv
+        Hinweise senden können (z.B. Selbstmörder).
+        """
+        team = self.info.team
+        if team == Team.WERWOLF:
+            return HinweisConfig(basis_chance=0.15)
+        elif team == Team.DORF:
+            return HinweisConfig(basis_chance=0.05)
+        elif team == Team.SOLO:
+            return HinweisConfig(basis_chance=0.10)
+        return HinweisConfig(basis_chance=0.08)
+
     # === STANDARD-EIGENSCHAFTEN (können überschrieben werden) ===
 
     @property
     def kann_hinweis_senden(self) -> bool:
         """Kann diese Rolle aktiv Hinweise auf sich ziehen?"""
-        return False
+        return self.get_hinweis_config().kann_senden
 
     @property
     def verfuegbare_hinweise(self) -> List[str]:
         """Welche Hinweise kann die Rolle senden?"""
-        return []
+        return self.get_hinweis_config().verfuegbare_hinweise
 
     @property
     def hinweise_pro_tag(self) -> int:
         """Wie viele Hinweise pro Tag?"""
-        return 0
+        return self.get_hinweis_config().hinweise_pro_tag
 
     @property
     def basis_hinweis_chance(self) -> float:
         """Basis-Wahrscheinlichkeit für automatische Hinweise."""
-        team = self.info.team
-        if team == Team.WERWOLF:
-            return 0.15
-        elif team == Team.DORF:
-            return 0.05
-        elif team == Team.SOLO:
-            return 0.10
-        return 0.08
+        return self.get_hinweis_config().basis_chance
 
     @property
     def sichtbar_als(self) -> SichtTyp:
@@ -451,6 +744,10 @@ class Role(ABC):
             "erzaehler_tag": self.info.erzaehler_tag,
             "hinweis_config": self.info.hinweis_config,
             "erweiterung": self.info.erweiterung.value,
+            "state_fields": [
+                {"name": sf.name, "typ": sf.typ.value, "default": sf.default, "beschreibung": sf.beschreibung}
+                for sf in self.state_fields()
+            ],
         }
 
     def __repr__(self) -> str:

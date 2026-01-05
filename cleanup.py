@@ -34,14 +34,10 @@ def cleanup_old_games(app, max_age_hours=24):
                     # Lösche Spieler-Positionen
                     SpielerPosition.query.filter_by(spieler_id=player.id).delete()
 
-                    # Setze Selbst-Referenzen auf None um FK-Fehler zu vermeiden
-                    player.verliebt_mit_id = None
-                    player.vorbild_id = None
-                    player.doppelgaenger_ziel_id = None
-                    player.henker_ziel_id = None
-                    player.herrchen_id = None
+                    # Reset state (no more FK-constraints to worry about)
+                    player.reset_state()
 
-                # Commit um FK-Constraints zu lösen
+                # Commit um Änderungen zu speichern
                 db.session.commit()
 
                 # Jetzt Spieler löschen

@@ -92,52 +92,61 @@ class Spieler(db.Model):
     sitzplatz = db.Column(db.Integer, nullable=True)  # Position im Kreis (0-n)
     # Nachbarn werden dynamisch berechnet basierend auf Sitzplatz
 
-    # Spezielle Fähigkeiten Status
-    hexe_heiltrank = db.Column(db.Boolean, default=True)
-    hexe_gifttrank = db.Column(db.Boolean, default=True)
-    jaeger_schuss = db.Column(db.Boolean, default=True)
-    armor_verliebt = db.Column(db.Boolean, default=True)
-    heiler_geschuetzt = db.Column(
-        db.Integer, nullable=True
-    )  # ID des zuletzt geschützten Spielers
+    # ==========================================================================
+    # DYNAMIC STATE STORAGE
+    # All role-specific state is stored as JSON in this column.
+    # Access via roles.base.get_spieler_state() / set_spieler_state()
+    # Each role defines its state fields via Role.state_fields()
+    # ==========================================================================
+    rolle_zustand = db.Column(db.Text, default="{}")  # JSON: {"rolle.field": value}
 
-    # Einmalige Fähigkeiten
-    urwolf_infektion = db.Column(db.Boolean, default=True)  # Kann noch infizieren
-    kamikaze_bombe = db.Column(db.Boolean, default=True)  # Kann sich noch opfern
-    jesus_auferstehung = db.Column(db.Boolean, default=True)  # Kann noch auferstehen
-    leibwaechter_opfer = db.Column(db.Boolean, default=True)  # Kann sich noch opfern
+    # ==========================================================================
+    # HELPER METHODS FOR STATE ACCESS
+    # ==========================================================================
 
-    # Spezielle Rollen-Flags
-    ist_infiziert = db.Column(db.Boolean, default=False)  # Urwolf-Infektion
-    ist_verzaubert = db.Column(db.Boolean, default=False)  # Flötenspieler-Verzauberung
-    ist_verflucht = db.Column(db.Boolean, default=False)  # Fluch (wird zum Werwolf)
-    ist_beschuetzt = db.Column(
-        db.Boolean, default=False
-    )  # Heiler-Schutz für diese Nacht
-    ist_stumm = db.Column(db.Boolean, default=False)  # Kräuterweib-Stummheit
-    ist_vergiftet = db.Column(db.Integer, default=0)  # Giftmischerin - Tage bis Tod
-    rabe_markiert = db.Column(db.Boolean, default=False)  # Rabe-Markierung
-    alter_mann_leben = db.Column(db.Integer, default=2)  # Anzahl Leben
+    def get_state(self, key: str, default=None):
+        """
+        Liest einen Zustandswert.
 
-    # Verliebt mit
-    verliebt_mit_id = db.Column(db.Integer, db.ForeignKey("spieler.id"), nullable=True)
+        Args:
+            key: Der Schlüssel (z.B. "hexe.heiltrank" oder "global.verliebt_mit_id")
+            default: Standardwert wenn nicht gefunden
+        """
+        import json
+        try:
+            state = json.loads(self.rolle_zustand or '{}')
+            return state.get(key, default)
+        except (json.JSONDecodeError, TypeError):
+            return default
 
-    # Vorbild (für Wildes Kind)
-    vorbild_id = db.Column(db.Integer, db.ForeignKey("spieler.id"), nullable=True)
+    def set_state(self, key: str, value):
+        """
+        Setzt einen Zustandswert.
 
-    # Doppelgänger-Ziel
-    doppelgaenger_ziel_id = db.Column(
-        db.Integer, db.ForeignKey("spieler.id"), nullable=True
-    )
+        Args:
+            key: Der Schlüssel
+            value: Der Wert
+        """
+        import json
+        try:
+            state = json.loads(self.rolle_zustand or '{}')
+        except (json.JSONDecodeError, TypeError):
+            state = {}
+        state[key] = value
+        self.rolle_zustand = json.dumps(state)
 
-    # Henker-Ziel
-    henker_ziel_id = db.Column(db.Integer, db.ForeignKey("spieler.id"), nullable=True)
+    def get_all_state(self) -> dict:
+        """Liest alle Zustandswerte."""
+        import json
+        try:
+            return json.loads(self.rolle_zustand or '{}')
+        except (json.JSONDecodeError, TypeError):
+            return {}
 
-    # Herrchen (für Hund)
-    herrchen_id = db.Column(db.Integer, db.ForeignKey("spieler.id"), nullable=True)
+    def reset_state(self):
+        """Setzt den Zustand zurück."""
+        self.rolle_zustand = "{}"
 
-    # Hund hat sein Herrchen bereits gewählt
-    hund_herrchen_gewaehlt = db.Column(db.Boolean, default=False)
 
     @staticmethod
     def generiere_session():

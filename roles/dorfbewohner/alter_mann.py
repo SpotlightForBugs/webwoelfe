@@ -5,8 +5,8 @@ Der Alte Mann überlebt den ersten Werwolf-Angriff,
 aber wenn das Dorf ihn hängt, verlieren alle Spezialrollen ihre Kräfte.
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -25,6 +25,12 @@ class AlterMann(Role):
 
     Gewinnbedingung: Dorf gewinnt.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Alten Mannes."""
+        return [
+            StateField("leben", StateType.INT, 2, "Anzahl der verbleibenden Leben"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -80,14 +86,16 @@ class AlterMann(Role):
         """
         Der Alte Mann überlebt den ersten Angriff.
         """
-        leben = getattr(spieler, "alter_mann_leben", 2)
+        leben = self.get_state(spieler, "leben")
 
         if leben > 1:
+            # Leben reduzieren
+            self.set_state(spieler, "leben", leben - 1)
+
             return AktionsErgebnis(
                 erfolg=False,  # False = Angriff wird geblockt
                 nachricht="Der Alte Mann überlebt den Angriff!",
                 effekte={
-                    "alter_mann_leben": leben - 1,
                     "angriff_geblockt": True,
                 },
                 log_sichtbar_fuer="erzaehler",

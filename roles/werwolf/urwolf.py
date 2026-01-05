@@ -5,8 +5,8 @@ Der Urwolf kann einmalig statt zu toeten
 einen Dorfbewohner infizieren, der zum Werwolf wird.
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -26,6 +26,12 @@ class Urwolf(Role):
 
     Gewinnbedingung: Werwolf-Team gewinnt.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Urwolfs."""
+        return [
+            StateField("infektion", StateType.BOOL, True, "Kann noch infizieren"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -97,7 +103,7 @@ class Urwolf(Role):
         """
         Urwolf infiziert statt zu toeten.
         """
-        kann_infizieren = getattr(spieler, "urwolf_infektion", True)
+        kann_infizieren = self.get_state(spieler, "infektion")
 
         if not kann_infizieren:
             return AktionsErgebnis(
@@ -105,13 +111,15 @@ class Urwolf(Role):
                 nachricht="Du hast deine Infektions-Faehigkeit bereits verwendet.",
             )
 
+        # Infektion verbrauchen
+        self.set_state(spieler, "infektion", False)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du hast {ziel.name} infiziert! Er wird zum Werwolf.",
             ziel_spieler_id=ziel.id,
             effekte={
                 "infiziert": ziel.id,
-                "urwolf_infektion_verbraucht": True,
                 "wird_werwolf_in_runde": kontext.runde + 1,
             },
             log_sichtbar_fuer="werwolf",

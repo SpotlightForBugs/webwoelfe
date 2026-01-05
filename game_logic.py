@@ -264,8 +264,9 @@ def starte_spiel(raum: Raum) -> bool:
         raum: Der Spielraum
 
     Returns:
-        True wenn erfolgreich gestartet
-    """
+        True wenn erfolgreich gestartet"""
+    from roles import RoleRegistry
+
     spieler = Spieler.query.filter_by(raum_id=raum.id).all()
 
     if len(spieler) < 5:
@@ -277,15 +278,12 @@ def starte_spiel(raum: Raum) -> bool:
     raum.aktuelle_phase = "rollen_verteilt"
     raum.runde = 1
 
-    # Reset Spieler Status
+    # Reset Spieler Status und initialisiere Rollen-Zustand
     for s in spieler:
         s.ist_am_leben = True
         s.status = "aktiv"
-        s.hexe_heiltrank = True
-        s.hexe_gifttrank = True
-        s.jaeger_schuss = True
-        s.armor_verliebt = True
-        s.verliebt_mit_id = None
+        # Initialize role-specific state from role definitions
+        RoleRegistry.init_player_state(s)
 
     log_eintrag(raum.id, "Das Spiel hat begonnen! Die Rollen wurden verteilt.")
 
@@ -295,14 +293,14 @@ def starte_spiel(raum: Raum) -> bool:
 
 def hat_spieler_mit_rolle(raum: Raum, rolle: str) -> bool:
     """
-    Prueft ob es einen lebenden Spieler mit der gegebenen Rolle gibt.
+    Prüft, ob es einen lebenden Spieler mit der gegebenen Rolle gibt.
 
     Args:
         raum: Der Spielraum
         rolle: Die zu prüfende Rolle
 
     Returns:
-        True wenn Rolle existiert, False sonst
+        True wenn die Rolle existiert, False sonst
     """
     return (
         Spieler.query.filter_by(raum_id=raum.id, rolle=rolle, ist_am_leben=True).first()
@@ -546,10 +544,8 @@ def pruefe_spielende(raum: Raum) -> dict | None:
     werwoelfe = [s for s in lebende if ist_werwolf_rolle(s.rolle)]
     dorfbewohner = [s for s in lebende if not ist_werwolf_rolle(s.rolle)]
 
-    # Verliebten-Check
-    verliebte = Spieler.query.filter(
-        Spieler.raum_id == raum.id, Spieler.verliebt_mit_id.isnot(None)
-    ).all()
+    # Verliebten-Check - use state-based lookup
+    verliebte = [s for s in lebende if s.get_state("global.verliebt_mit_id")]
 
     if len(verliebte) == 2 and all(v.ist_am_leben for v in verliebte):
         # Pruefen ob nur noch die Verliebten leben
@@ -682,8 +678,9 @@ def toete_spieler(spieler: Spieler, todesart: str = "unbekannt") -> dict:
         ergebnis["folge_aktionen"].append("jaeger_schuss")
 
     # Verliebter stirbt - Partner stirbt auch
-    if spieler.verliebt_mit_id:
-        partner = Spieler.query.get(spieler.verliebt_mit_id)
+    verliebt_mit_id = spieler.get_state("global.verliebt_mit_id")
+    if verliebt_mit_id:
+        partner = Spieler.query.get(verliebt_mit_id)
         if partner and partner.ist_am_leben:
             ergebnis["folge_aktionen"].append("partner_stirbt")
             ergebnis["partner"] = partner.name

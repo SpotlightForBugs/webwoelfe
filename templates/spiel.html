@@ -1233,7 +1233,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           and 'Werwolf' in spieler.rolle and s.rolle and 'Werwolf' in s.rolle
           and s.id != spieler.id %} {% set ist_seherin_enthuellung = enthuellung
           and s.id in enthuellung %} {% set ist_verliebt_partner =
-          spieler.verliebt_mit_id and s.id == spieler.verliebt_mit_id %}
+          verliebt_mit_id and s.id == verliebt_mit_id %}
           <div
             class="spieler-card 
                          {{ 'tot' if not s.ist_am_leben else '' }}

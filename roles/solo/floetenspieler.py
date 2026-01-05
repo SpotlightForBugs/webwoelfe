@@ -1,9 +1,9 @@
 """
-Floetenspieler - Verzaubert alle Spieler.
+Floetenspieler - verzaubert alle Spieler.
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType, set_spieler_state, get_spieler_state
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -22,6 +22,12 @@ class Floetenspieler(Role):
 
     Gewinnbedingung: Alle Lebenden sind verzaubert.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Flötenspielers."""
+        return [
+            StateField("verzauberte", StateType.PLAYER_IDS, [], "Liste verzauberter Spieler-IDs"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -82,7 +88,6 @@ class Floetenspieler(Role):
         """
         Floetenspieler verzaubert Spieler.
         """
-        # Vereinfachte Version - normalerweise 2 Ziele
         if ziel is None:
             return AktionsErgebnis(
                 erfolg=True,
@@ -90,6 +95,14 @@ class Floetenspieler(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
+
+        # Add to verzauberte list
+        verzauberte = self.get_state(spieler, "verzauberte") or []
+        if ziel.id not in verzauberte:
+            verzauberte.append(ziel.id)
+            self.set_state(spieler, "verzauberte", verzauberte)
+            # Mark target as verzaubert (global state)
+            set_spieler_state(ziel, "global.ist_verzaubert", True)
 
         return AktionsErgebnis(
             erfolg=True,
@@ -107,6 +120,14 @@ class Floetenspieler(Role):
         """
         Gewinnt wenn alle Lebenden verzaubert sind.
         """
-        # Diese Logik muesste die verzauberten Spieler pruefen
-        # Vereinfachte Version
-        return None
+        verzauberte = self.get_state(spieler, "verzauberte") or []
+
+        # Check if all living players are verzaubert
+        for lebender_id in kontext.lebende_spieler:
+            if lebender_id == spieler.id:
+                continue  # Flötenspieler selbst zählt nicht
+            if lebender_id not in verzauberte:
+                return None  # Noch nicht alle verzaubert
+
+        # Alle verzaubert!
+        return Team.SOLO

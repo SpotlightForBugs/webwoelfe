@@ -5,8 +5,8 @@ Der Doppelgänger wählt ein Ziel. Stirbt dieses,
 übernimmt er dessen Rolle und Team.
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -31,6 +31,14 @@ class Doppelgaenger(Role):
 
     Gewinnbedingung: Abhängig von übernommener Rolle.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Doppelgängers."""
+        return [
+            StateField("ziel_id", StateType.PLAYER_ID, None, "ID des Ziels"),
+            StateField("uebernommen", StateType.BOOL, False, "Rolle übernommen"),
+            StateField("neues_team", StateType.STRING, None, "Team nach Übernahme"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -108,7 +116,7 @@ class Doppelgaenger(Role):
                 nachricht="Du musst ein Ziel wählen!",
             )
 
-        spieler.doppelgaenger_ziel_id = ziel.id
+        self.set_state(spieler, "ziel_id", ziel.id)
 
         return AktionsErgebnis(
             erfolg=True,
@@ -131,7 +139,7 @@ class Doppelgaenger(Role):
         """
         Wenn das Ziel stirbt, übernimmt der Doppelgänger die Rolle.
         """
-        ziel_id = getattr(spieler, "doppelgaenger_ziel_id", None)
+        ziel_id = self.get_state(spieler, "ziel_id")
 
         if ziel_id is None:
             return None
@@ -140,22 +148,23 @@ class Doppelgaenger(Role):
             return None
 
         # Bereits übernommen?
-        if getattr(spieler, "doppelgaenger_uebernommen", False):
+        if self.get_state(spieler, "uebernommen"):
             return None
 
-        spieler.doppelgaenger_uebernommen = True
+        self.set_state(spieler, "uebernommen", True)
 
         # Rolle des Gestorbenen ermitteln
         gestorbene_rolle = kontext.spieler_rollen.get(gestorbener.id, "Dorfbewohner")
         gestorbenes_team = kontext.spieler_teams.get(gestorbener.id, Team.DORF)
+
+        self.set_state(spieler, "neues_team", gestorbenes_team.value if hasattr(gestorbenes_team, 'value') else str(gestorbenes_team))
 
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Dein Ziel ist gestorben! Du übernimmst die Rolle: {gestorbene_rolle}!",
             effekte={
                 "rolle_wechsel": gestorbene_rolle,
-                "team_wechsel": gestorbenes_team.value,
-                "doppelgaenger_uebernommen": True,
+                "team_wechsel": gestorbenes_team.value if hasattr(gestorbenes_team, 'value') else str(gestorbenes_team),
             },
             log_sichtbar_fuer="alle",
         )
@@ -166,7 +175,9 @@ class Doppelgaenger(Role):
         """
         Team hängt von Übernahmestatus ab.
         """
-        if getattr(spieler, "doppelgaenger_uebernommen", False):
-            # Übernommenes Team aus Kontext holen
-            return getattr(spieler, "neues_team", Team.DORF)
+        if self.get_state(spieler, "uebernommen"):
+            # Übernommenes Team aus State holen
+            neues_team = self.get_state(spieler, "neues_team")
+            if neues_team:
+                return Team(neues_team) if isinstance(neues_team, str) else neues_team
         return Team.DORF

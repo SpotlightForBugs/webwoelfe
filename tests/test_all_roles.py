@@ -41,7 +41,10 @@ class MockSpieler:
     status: str = "aktiv"
     raum_id: int = 1
 
-    # Dynamische Attribute für Rollen
+    # Dynamic state storage (JSON string like real model)
+    rolle_zustand: str = "{}"
+
+    # Legacy attributes for backward compatibility in tests
     hund_herrchen_gewaehlt: bool = False
     herrchen_id: Optional[int] = None
     jaeger_schuss: bool = True
@@ -56,6 +59,37 @@ class MockSpieler:
     def __setattr__(self, name: str, value: Any) -> None:
         """Erlaube das Setzen beliebiger Attribute."""
         object.__setattr__(self, name, value)
+
+    def get_state(self, key: str, default: Any = None) -> Any:
+        """Get state value from JSON storage."""
+        import json
+        try:
+            state = json.loads(self.rolle_zustand or '{}')
+            return state.get(key, default)
+        except (json.JSONDecodeError, TypeError):
+            return default
+
+    def set_state(self, key: str, value: Any) -> None:
+        """Set state value in JSON storage."""
+        import json
+        try:
+            state = json.loads(self.rolle_zustand or '{}')
+        except (json.JSONDecodeError, TypeError):
+            state = {}
+        state[key] = value
+        self.rolle_zustand = json.dumps(state)
+
+    def reset_state(self) -> None:
+        """Reset state."""
+        self.rolle_zustand = "{}"
+
+    def get_all_state(self) -> dict:
+        """Get all state."""
+        import json
+        try:
+            return json.loads(self.rolle_zustand or '{}')
+        except (json.JSONDecodeError, TypeError):
+            return {}
 
 
 def create_mock_kontext(
@@ -209,7 +243,7 @@ class TestHexe(unittest.TestCase):
 
     def test_hexe_ist_nacht_aktiv(self):
         """Hexe ist in der Nacht aktiv."""
-        self.assertTrue(self.hexe.info.nacht_aktiv)
+        self.assertTrue(self.hexe.is_active_on_first_night() or self.hexe.is_active_on_every_night())
 
 
 class TestJaeger(unittest.TestCase):
@@ -248,13 +282,15 @@ class TestHund(unittest.TestCase):
 
         self.assertIsNotNone(ergebnis)
         self.assertTrue(ergebnis.erfolg)
-        self.assertEqual(ergebnis.effekte.get("herrchen_id"), 2)
+        # Check state was set
+        self.assertEqual(self.hund.get_state(spieler, "herrchen_id"), 2)
 
     def test_hund_verwandlung_bei_herrchen_tod(self):
         """Hund verwandelt sich wenn Herrchen stirbt."""
         spieler = MockSpieler(id=1, name="Fido", rolle="Hund")
-        spieler.herrchen_id = 2
-        spieler.hund_herrchen_gewaehlt = True
+        # Set state instead of model attribute
+        self.hund.set_state(spieler, "herrchen_id", 2)
+        self.hund.set_state(spieler, "gewaehlt", True)
 
         herrchen = MockSpieler(id=2, name="Max", rolle="Dorfbewohner")
         kontext = create_mock_kontext(lebende_spieler=[1, 3, 4])
@@ -268,8 +304,9 @@ class TestHund(unittest.TestCase):
     def test_hund_verwandlung_nicht_oeffentlich(self):
         """Die Verwandlung des Hundes ist nicht öffentlich."""
         spieler = MockSpieler(id=1, name="Fido", rolle="Hund")
-        spieler.herrchen_id = 2
-        spieler.hund_herrchen_gewaehlt = True
+        # Set state instead of model attribute
+        self.hund.set_state(spieler, "herrchen_id", 2)
+        self.hund.set_state(spieler, "gewaehlt", True)
 
         herrchen = MockSpieler(id=2, name="Max", rolle="Dorfbewohner")
         kontext = create_mock_kontext(lebende_spieler=[1, 3, 4])
@@ -427,7 +464,7 @@ class TestEngel(unittest.TestCase):
 
         spieler = MockSpieler(id=1, name="Engel", rolle="Engel")
         kontext = create_mock_kontext(runde=1)
-        kontext.aktuelle_runde = 1  # type: ignore
+        # aktuelle_runde is now a property derived from runde
 
         ergebnis = self.engel.on_eigener_tod(spieler, "werwolf", kontext)
 
@@ -607,7 +644,8 @@ class TestSpielLogikIntegration(unittest.TestCase):
     def test_nacht_aktive_rollen_haben_on_nacht_aktion(self):
         """Alle nacht-aktiven Rollen haben eine on_nacht_aktion Methode."""
         for rolle in RoleRegistry.get_all():
-            if rolle.info.nacht_aktiv:
+            nacht_aktiv = rolle.is_active_on_first_night() or rolle.is_active_on_every_night()
+            if nacht_aktiv:
                 # Prüfe dass die Methode existiert und aufrufbar ist
                 self.assertTrue(
                     callable(getattr(rolle, "on_nacht_aktion", None)),

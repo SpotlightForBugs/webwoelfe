@@ -5,8 +5,8 @@ Der Heiler kann jede Nacht einen Spieler schützen,
 aber nicht zweimal hintereinander denselben.
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -25,6 +25,12 @@ class Heiler(Role):
 
     Gewinnbedingung: Dorf gewinnt.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Heilers."""
+        return [
+            StateField("letztes_ziel", StateType.PLAYER_ID, None, "Zuletzt geschützter Spieler"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -98,7 +104,7 @@ class Heiler(Role):
             )
 
         # Prüfe ob es das gleiche Ziel wie letzte Nacht ist
-        letztes_ziel = getattr(spieler, "heiler_geschuetzt", None)
+        letztes_ziel = self.get_state(spieler, "letztes_ziel")
 
         if letztes_ziel == ziel.id:
             return AktionsErgebnis(
@@ -115,13 +121,15 @@ class Heiler(Role):
                 nachricht="Ungültiges Ziel.",
             )
 
+        # Speichere das aktuelle Ziel für die nächste Runde
+        self.set_state(spieler, "letztes_ziel", ziel.id)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du beschützt {ziel.name} diese Nacht.",
             ziel_spieler_id=ziel.id,
             effekte={
                 "geschuetzt": ziel.id,
-                "heiler_ziel_merken": ziel.id,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

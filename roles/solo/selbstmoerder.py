@@ -3,7 +3,7 @@ Selbstmörder - Will vom Dorf gehängt werden.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType, HinweisConfig
 from ..enums import Team, Kategorie
 from ..registry import RoleRegistry
 
@@ -23,6 +23,22 @@ class Selbstmoerder(Role):
 
     Gewinnbedingung: Wird vom Dorf gehängt.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Selbstmörders."""
+        return [
+            StateField("gewonnen", StateType.BOOL, False, "Hat gewonnen (wurde gehängt)"),
+        ]
+
+    def get_hinweis_config(self) -> HinweisConfig:
+        """Selbstmörder kann aktiv Hinweise senden."""
+        return HinweisConfig(
+            kann_senden=True,
+            verfuegbare_hinweise=["selbst_verdaechtigung", "nervoes", "stolpern", "blick_abwenden"],
+            hinweise_pro_tag=3,
+            basis_chance=0.0,
+            beschreibung="Mache dich verdächtig und lass dich hängen!",
+        )
 
     @property
     def info(self) -> RollenInfo:
@@ -63,18 +79,6 @@ class Selbstmoerder(Role):
             can_skip=True,
         )
 
-    @property
-    def kann_hinweis_senden(self) -> bool:
-        return True
-
-    @property
-    def verfuegbare_hinweise(self) -> List[str]:
-        return ["selbst_verdächtigung", "nervös", "stolpern", "blick_abwenden"]
-
-    @property
-    def hinweise_pro_tag(self) -> int:
-        return 3
-
     def on_hinrichtung(
         self, spieler: "Spieler", opfer: "Spieler", kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
@@ -82,6 +86,7 @@ class Selbstmoerder(Role):
         Prüft ob der Selbstmörder gehängt wird.
         """
         if opfer.id == spieler.id:
+            self.set_state(spieler, "gewonnen", True)
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht=(
@@ -89,7 +94,6 @@ class Selbstmoerder(Role):
                     "gehängt und hat sein Ziel erreicht! Er gewinnt alleine!"
                 ),
                 effekte={
-                    "selbstmoerder_gewonnen": True,
                     "spiel_ende": True,
                     "gewinner": "selbstmoerder",
                 },
@@ -104,7 +108,7 @@ class Selbstmoerder(Role):
         """
         Gewinnt nur wenn gehängt.
         """
-        wurde_gehaengt = getattr(spieler, "selbstmoerder_gewonnen", False)
+        wurde_gehaengt = self.get_state(spieler, "gewonnen")
         if wurde_gehaengt:
             return Team.SOLO
         return None

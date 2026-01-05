@@ -4,8 +4,8 @@ Wildes Kind - Wird zum Werwolf wenn Vorbild stirbt.
 Das Wilde Kind wählt in der ersten Nacht ein Vorbild.
 Stirbt dieses, verwandelt es sich in einen Werwolf.
 """
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -31,6 +31,13 @@ class WildesKind(Role):
     Gewinnbedingung: Abhängig von Verwandlung.
     """
     
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Wilden Kindes."""
+        return [
+            StateField("vorbild_id", StateType.PLAYER_ID, None, "ID des Vorbilds"),
+            StateField("verwandelt", StateType.BOOL, False, "Zum Werwolf verwandelt"),
+        ]
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -99,8 +106,6 @@ class WildesKind(Role):
             can_skip=False
         )
     
-
-    
     def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
                         kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
@@ -116,8 +121,8 @@ class WildesKind(Role):
             )
         
         # Vorbild speichern
-        spieler.wildes_kind_vorbild_id = ziel.id
-        
+        self.set_state(spieler, "vorbild_id", ziel.id)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du hast {ziel.name} als dein Vorbild gewählt. "
@@ -129,25 +134,25 @@ class WildesKind(Role):
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
     
-    def on_spieler_stirbt(self, spieler: 'Spieler', gestorbener_id: int,
-                          kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+    def on_spieler_stirbt(self, spieler: 'Spieler', gestorbener: 'Spieler',
+                          todesursache: str, kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
         Wenn das Vorbild stirbt, verwandelt sich das Wilde Kind.
         """
-        vorbild_id = getattr(spieler, 'wildes_kind_vorbild_id', None)
-        
+        vorbild_id = self.get_state(spieler, "vorbild_id")
+
         if vorbild_id is None:
             return None
         
-        if gestorbener_id != vorbild_id:
+        if gestorbener.id != vorbild_id:
             return None
         
         # Bereits verwandelt?
-        if getattr(spieler, 'wildes_kind_verwandelt', False):
+        if self.get_state(spieler, "verwandelt"):
             return None
         
-        spieler.wildes_kind_verwandelt = True
-        
+        self.set_state(spieler, "verwandelt", True)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht="Dein Vorbild ist tot! Die Wildheit übernimmt dich - "
@@ -155,7 +160,6 @@ class WildesKind(Role):
             effekte={
                 "verwandlung": "werwolf",
                 "team_wechsel": Team.WERWOLF.value,
-                "wildes_kind_verwandelt": True,
             },
             log_sichtbar_fuer="alle",  # Wird verkündet
         )
@@ -165,6 +169,6 @@ class WildesKind(Role):
         """
         Team hängt von Verwandlungsstatus ab.
         """
-        if getattr(spieler, 'wildes_kind_verwandelt', False):
+        if self.get_state(spieler, "verwandelt"):
             return Team.WERWOLF
         return Team.DORF

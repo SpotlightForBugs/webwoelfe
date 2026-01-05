@@ -5,8 +5,8 @@ Der Hund wählt in der ersten Nacht sein Herrchen.
 Stirbt das Herrchen, wird der Hund zum Werwolf!
 """
 
-from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from typing import Optional, List, TYPE_CHECKING
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
 from ..enums import Team, Kategorie, SichtTyp, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -33,6 +33,14 @@ class Hund(Role):
     - Vor Verwandlung: Dorf gewinnt
     - Nach Verwandlung: Werwölfe gewinnen
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Hundes."""
+        return [
+            StateField("herrchen_id", StateType.PLAYER_ID, None, "ID des Herrchens"),
+            StateField("gewaehlt", StateType.BOOL, False, "Herrchen bereits gewählt"),
+            StateField("verwandelt", StateType.BOOL, False, "Zum Werwolf verwandelt"),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -148,14 +156,6 @@ class Hund(Role):
     ) -> AktionsErgebnis:
         """
         Setzt das gewählte Herrchen.
-
-        Args:
-            spieler: Der Hund
-            herrchen: Das gewählte Herrchen
-            kontext: Spielkontext
-
-        Returns:
-            Ergebnis der Aktion
         """
         # Validierung: Kann sich nicht selbst wählen
         if herrchen.id == spieler.id:
@@ -171,14 +171,15 @@ class Hund(Role):
                 nachricht="Das Herrchen muss am Leben sein.",
             )
 
-        # Erfolg!
+        # Herrchen speichern
+        self.set_state(spieler, "herrchen_id", herrchen.id)
+        self.set_state(spieler, "gewaehlt", True)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{herrchen.name} ist nun dein Herrchen. Beschütze es mit deinem Leben!",
             ziel_spieler_id=herrchen.id,
             effekte={
-                "herrchen_id": herrchen.id,
-                "herrchen_gewaehlt": True,
                 "event_typ": "hund_herrchen",
             },
             log_sichtbar_fuer="erzaehler",
@@ -193,22 +194,10 @@ class Hund(Role):
     ) -> Optional[AktionsErgebnis]:
         """
         Prüft ob das Herrchen stirbt und löst Verwandlung aus.
-
-        Wenn das Herrchen des Hundes stirbt:
-        - Der Hund wechselt zum Werwolf-Team
-        - Er nimmt an Werwolf-Beratungen teil
-        - Er stimmt über Opfer mit ab
-        - Die Seherin sieht ihn weiterhin als Dorf (da SichtTyp.DORF)
-
-        Args:
-            spieler: Der Hund
-            opfer: Der sterbende Spieler
-            todesursache: Art des Todes
-            kontext: Spielkontext
         """
-        herrchen_id = getattr(spieler, "herrchen_id", None)
+        herrchen_id = self.get_state(spieler, "herrchen_id")
 
-        # Kein Herrchen gesetzt (sollte nicht passieren)
+        # Kein Herrchen gesetzt
         if herrchen_id is None:
             return None
 
@@ -221,6 +210,8 @@ class Hund(Role):
             return None
 
         # Das Herrchen stirbt! Verwandlung auslösen!
+        self.set_state(spieler, "verwandelt", True)
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=(
@@ -233,8 +224,6 @@ class Hund(Role):
                 "neues_team": Team.WERWOLF.value,
                 "ist_jetzt_werwolf": True,
                 "event_typ": "hund_verwandelt",
-                # Der Hund behält seinen Rollennamen, wechselt aber das Team
-                # Dies erlaubt der Seherin weiterhin "Dorf" zu sehen
             },
             log_sichtbar_fuer="erzaehler",
         )
@@ -242,21 +231,13 @@ class Hund(Role):
     def berechne_aktuelles_team(self, spieler: "Spieler") -> Team:
         """
         Berechnet das aktuelle Team des Hundes.
-
-        Nützlich für Gewinnbedingung-Prüfungen.
         """
-        # Prüfe ob Herrchen noch lebt
-        herrchen_id = getattr(spieler, "herrchen_id", None)
+        herrchen_id = self.get_state(spieler, "herrchen_id")
 
         if herrchen_id is None:
-            # Noch kein Herrchen gewählt, gehört zum Dorf
             return Team.DORF
 
-        # Wenn Hund verwandelt ist (über Effekt gesetzt)
-        ist_werwolf = getattr(
-            spieler, "ist_verflucht", False
-        )  # Wiederverwendung des Flags
-        if ist_werwolf:
+        if self.get_state(spieler, "verwandelt"):
             return Team.WERWOLF
 
         return Team.DORF
@@ -266,10 +247,6 @@ class Hund(Role):
     ) -> bool:
         """
         Prüft ob der Hund gewonnen hat.
-
-        Der Hund gewinnt mit dem Team, zu dem er aktuell gehört:
-        - Vor Verwandlung: Dorf
-        - Nach Verwandlung: Werwölfe
         """
         aktuelles_team = self.berechne_aktuelles_team(spieler)
         return aktuelles_team == gewinner_team

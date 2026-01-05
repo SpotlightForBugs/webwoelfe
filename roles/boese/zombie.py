@@ -7,7 +7,7 @@ Stirbt ein Infizierter, wird er zum Zombie.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -50,7 +50,8 @@ class Zombie(Role):
             erzaehler_nacht=("Die Zombies erwachen und infizieren einen Spieler."),
             erzaehler_tag=None,
             hinweis_config=None,
-        )
+        erweiterung=Erweiterung.SONDEREDITION,
+            )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

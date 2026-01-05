@@ -7,7 +7,7 @@ verfluchen - werden diese angegriffen, werden sie zu Werwölfen.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -53,7 +53,8 @@ class Hexenmeister(Role):
             ),
             erzaehler_tag=None,
             hinweis_config=None,
-        )
+        erweiterung=Erweiterung.SONDEREDITION,
+            )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
@@ -64,11 +65,11 @@ class Hexenmeister(Role):
         return SichtTyp.WERWOLF
 
     def is_active_on_first_night(self) -> bool:
-        """Hexenmeister acts on first night."""
+        """Hexenmeister acts on the first night."""
         return True
 
     def is_active_on_every_night(self) -> bool:
-        """Hexenmeister acts every night until curse is used."""
+        """Hexenmeister acts every night until the curse is used."""
         return True
 
     def get_ui_definition(self) -> "RollenUI":

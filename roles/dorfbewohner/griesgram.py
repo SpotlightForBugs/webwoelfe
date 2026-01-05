@@ -7,7 +7,7 @@ bei jeder Hinrichtung automatisch mit JA.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 @RoleRegistry.register
 class Griesgram(Role):
     """
-    Griesgram - Zwanghafte Abstimmungsrolle.
+    Griesgram - zwanghafte Abstimmungsrolle.
 
     Fähigkeiten:
     - Stimmt IMMER mit JA bei Hinrichtungen
@@ -51,6 +51,7 @@ class Griesgram(Role):
                 "Der Griesgram wälzt sich mürrisch im Bett. "
                 "Selbst im Schlaf ist er schlecht gelaunt."
             ),
+            erweiterung=Erweiterung.CHARAKTERE,
             erzaehler_tag=(
                 "Der Griesgram erwacht grantig. Er stimmt IMMER für eine "
                 "Hinrichtung - egal wer vorgeschlagen wird!"

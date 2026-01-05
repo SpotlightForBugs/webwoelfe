@@ -7,7 +7,7 @@ zufälligen toten Spieler tauschen.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 import random
 
@@ -55,7 +55,8 @@ class Tonks(Role):
             ),
             erzaehler_tag=None,
             hinweis_config=None,
-        )
+        erweiterung=Erweiterung.SONDEREDITION,
+            )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

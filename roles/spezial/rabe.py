@@ -7,7 +7,7 @@ der am nächsten Tag 2 Extra-Stimmen gegen sich erhält.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -52,6 +52,7 @@ class Rabe(Role):
             erzaehler_tag=(
                 "{spieler} wurde vom Raben markiert und hat +2 Stimmen gegen sich!"
             ),
+            erweiterung=Erweiterung.GEMEINDE,
             hinweis_config=None,
         )
 

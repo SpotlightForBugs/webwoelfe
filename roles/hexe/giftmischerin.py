@@ -4,7 +4,7 @@ Giftmischerin - Verzögerte Tötung.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -41,24 +41,24 @@ class Giftmischerin(Role):
             erzaehler_nacht=(
                 "Die Giftmischerin erwacht. Möchte sie ihr Gift einsetzen?"
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
         )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.VERGIFTEN
-
+    
     def is_active_on_first_night(self) -> bool:
         """Giftmischerin can act on first night."""
         return True
-
+    
     def is_active_on_every_night(self) -> bool:
         """Giftmischerin acts every night until poison is used."""
         return True
-
-    def get_ui_definition(self) -> "RollenUI":
+    
+    def get_ui_definition(self) -> 'RollenUI':
         """Returns the UI definition for Giftmischerin's action panel."""
         from ..base import RollenUI, UIButton
-
         return RollenUI(
             title="Giftmischerin - Vergiften",
             instructions="Du kannst einmal pro Spiel einen Spieler vergiften. Dieser stirbt nach 2 Tagen.",
@@ -68,12 +68,12 @@ class Giftmischerin(Role):
                     action_type="vergiften",
                     icon="fa-solid fa-flask-vial",
                     css_class="btn-danger",
-                    requires_confirmation=True,
+                    requires_confirmation=True
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True,
+            can_skip=True
         )
 
     def on_nacht_aktion(

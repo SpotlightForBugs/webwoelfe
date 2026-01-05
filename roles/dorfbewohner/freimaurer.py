@@ -7,7 +7,7 @@ dass sie auf der gleichen Seite stehen.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie
+from ..enums import Team, Kategorie, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -42,6 +42,7 @@ class Freimaurer(Role):
             farbe="#3b82f6",
             prioritaet=9,
             erzaehler_nacht=("Die Freimaurer erwachen und erkennen sich gegenseitig."),
+            erweiterung=Erweiterung.SONDEREDITION,
         )
 
     def is_active_on_first_night(self) -> bool:

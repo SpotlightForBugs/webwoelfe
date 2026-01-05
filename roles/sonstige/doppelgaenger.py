@@ -7,7 +7,7 @@ Der Doppelgänger wählt ein Ziel. Stirbt dieses,
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -53,6 +53,7 @@ class Doppelgaenger(Role):
             erzaehler_tag=(
                 "Das Ziel des Doppelgängers ist tot! " "Er übernimmt dessen Rolle."
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
             hinweis_config=None,
         )
 

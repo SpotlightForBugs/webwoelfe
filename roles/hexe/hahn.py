@@ -3,11 +3,10 @@ Hahn - Der krähende Verräter.
 
 Der Hahn entlarvt seinen Mörder bei seinem Tod.
 """
-
 from typing import Optional, TYPE_CHECKING
 import random
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -18,76 +17,75 @@ if TYPE_CHECKING:
 class Hahn(Role):
     """
     Hahn - Todes-Enthüllungs-Rolle.
-
+    
     Fähigkeiten:
     - Keine aktive Fähigkeit
     - Bei Tod: Enthüllt wer ihn getötet hat
-
+    
     Besonderheiten:
     - Passive Rolle (keine Nacht-Aktion)
     - Schreckt Werwölfe ab, ihn zu töten
     - Sehr mächtig gegen Werwölfe
-
+    
     Gewinnbedingung: Dorf gewinnt.
     """
-
+    
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=45,
-            name="Hahn",
+            name='Hahn',
             team=Team.DORF,
             kategorie=Kategorie.HEXE,
             beschreibung=(
-                "Du bist der Hahn. Du krähst bei Sonnenaufgang! Wenn du "
-                "stirbst, wird die Identität des Spielers, der dich "
-                "getötet hat, enthüllt."
+                'Du bist der Hahn. Du krähst bei Sonnenaufgang! Wenn du '
+                'stirbst, wird die Identität des Spielers, der dich '
+                'getötet hat, enthüllt.'
             ),
-            icon="fa-solid fa-sun",
-            farbe="#dc2626",
+            icon='fa-solid fa-sun',
+            farbe='#dc2626',
             prioritaet=96,
             erzaehler_nacht=(
-                "Der Hahn schläft auf seinem Hühnerstall. "
-                "Er wird jeden Mörder entlarven, der ihn tötet."
+                'Der Hahn schläft auf seinem Hühnerstall. '
+                'Er wird jeden Mörder entlarven, der ihn tötet.'
             ),
             erzaehler_tag=(
-                "KIKERIKI! Der Hahn wurde getötet! Mit letzter Kraft "
-                "verrät er seinen Mörder!"
+                'KIKERIKI! Der Hahn wurde getötet! Mit letzter Kraft '
+                'verrät er seinen Mörder!'
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
             hinweis_config=None,
         )
-
+    
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
-
+    
     def is_active_on_first_night(self) -> bool:
         """Hahn does not act on first night."""
         return False
-
+    
     def is_active_on_every_night(self) -> bool:
         """Hahn is passive and does not act at night."""
         return False
-
-    def get_ui_definition(self) -> "RollenUI":
+    
+    def get_ui_definition(self) -> 'RollenUI':
         """Returns the UI definition for Hahn's action panel."""
         from ..base import RollenUI
-
         return RollenUI(
             title="Hahn - Passive Rolle",
             instructions="Wenn du stirbst, wird dein Mörder enthüllt.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True,
+            can_skip=True
         )
-
-    def on_eigener_tod(
-        self, spieler: "Spieler", todesursache: str, kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
+    
+    def on_eigener_tod(self, spieler: 'Spieler', todesursache: str,
+                       kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
         Der Hahn entlarvt seinen Mörder.
-
+        
         Die Todesursache gibt Hinweise auf den Mörder:
         - "werwolf": Die Werwölfe
         - "hexe": Die Hexe
@@ -108,40 +106,37 @@ class Hahn(Role):
                 },
                 log_sichtbar_fuer="alle",
             )
-
-        spieler_namen = getattr(kontext, "spieler_namen", {})
-        spieler_rollen = getattr(kontext, "spieler_rollen", {})
-        lebende = getattr(kontext, "lebende_spieler", [])
-        aktionen = getattr(kontext, "aktionen_diese_runde", [])
-
+        
+        spieler_namen = getattr(kontext, 'spieler_namen', {})
+        spieler_rollen = getattr(kontext, 'spieler_rollen', {})
+        lebende = getattr(kontext, 'lebende_spieler', [])
+        aktionen = getattr(kontext, 'aktionen_diese_runde', [])
+        
         def name_fuer(spieler_id: Optional[int]) -> str:
             if not spieler_id:
                 return "Unbekannt"
             return spieler_namen.get(spieler_id, f"Spieler {spieler_id}")
-
+        
         def finde_taeter_id(moerder_aktionen) -> Optional[int]:
             for aktion in aktionen:
-                ziel_id = aktion.get("ziel_spieler_id") or aktion.get("ziel_id")
+                ziel_id = aktion.get('ziel_spieler_id') or aktion.get('ziel_id')
                 if ziel_id != spieler.id:
                     continue
-                aktion_typ = aktion.get("aktion_typ") or aktion.get("typ")
+                aktion_typ = aktion.get('aktion_typ') or aktion.get('typ')
                 if aktion_typ in moerder_aktionen:
-                    return aktion.get("von_spieler_id") or aktion.get("spieler_id")
+                    return aktion.get('von_spieler_id') or aktion.get('spieler_id')
             return None
-
+        
         def zufaelliger_werwolf_id() -> Optional[int]:
-            if hasattr(kontext, "spieler_teams"):
+            if hasattr(kontext, 'spieler_teams'):
                 for sid in lebende:
                     if kontext.spieler_teams.get(sid) == Team.WERWOLF:
-                        return random.choice(
-                            [
-                                lid
-                                for lid in lebende
-                                if kontext.spieler_teams.get(lid) == Team.WERWOLF
-                            ]
-                        )
+                        return random.choice([
+                            lid for lid in lebende
+                            if kontext.spieler_teams.get(lid) == Team.WERWOLF
+                        ])
                 return None
-
+            
             werwolf_ids = []
             for sid in lebende:
                 rolle_name = spieler_rollen.get(sid)
@@ -151,9 +146,9 @@ class Hahn(Role):
                 if rolle_obj and rolle_obj.info.team == Team.WERWOLF:
                     werwolf_ids.append(sid)
             return random.choice(werwolf_ids) if werwolf_ids else None
-
+        
         moerder_id = None
-
+        
         if todesursache == "werwolf":
             moerder_id = zufaelliger_werwolf_id()
             if moerder_id:
@@ -180,7 +175,7 @@ class Hahn(Role):
                 nachricht = "Die Giftmischerin hat den Hahn vergiftet!"
         else:
             nachricht = f"Der Hahn wurde durch {todesursache} getötet!"
-
+        
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"KIKERIKI! {nachricht}",

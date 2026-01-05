@@ -4,7 +4,7 @@ Bürgermeister - Doppelte Stimme bei Abstimmungen, kann Nachfolger bestimmen
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -35,7 +35,8 @@ class Buergermeister(Role):
             erzaehler_nacht="Der Bürgermeister ruht in seinem Rathaus. Seine Stimme hat doppeltes Gewicht.",
             erzaehler_tag="Der Bürgermeister ist gefallen! Mit letzter Kraft zeigt er auf seinen Nachfolger, der das Amt und die doppelte Stimme erbt!",
             hinweis_config=None,
-        )
+        erweiterung=Erweiterung.CHARAKTERE,
+            )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

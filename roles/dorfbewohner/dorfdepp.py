@@ -7,7 +7,7 @@ Er kann sich aktiv verdächtig machen.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -46,6 +46,7 @@ class Dorfdepp(Role):
                 "Der Dorfdepp schläft und träumt davon, endlich "
                 "ernst genommen zu werden... oder auch nicht."
             ),
+            erweiterung=Erweiterung.NEUMOND,
             erzaehler_tag=(
                 "Der Dorfdepp stolpert durch den Tag. Sein Ziel: "
                 "So verdächtig wie möglich wirken, ohne ein Werwolf zu sein!"

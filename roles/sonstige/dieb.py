@@ -7,7 +7,7 @@ und muss eine davon wählen.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -52,7 +52,8 @@ class Dieb(Role):
             ),
             erzaehler_tag=None,
             hinweis_config=None,
-        )
+        erweiterung=Erweiterung.BASISSPIEL,
+            )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

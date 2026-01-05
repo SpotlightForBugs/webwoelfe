@@ -7,7 +7,7 @@ Chemikalien und töten die Nachbarn.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -54,6 +54,7 @@ class Chemielaborant(Role):
                 "KABOOM! Der Chemielaborant ist tot und seine instabilen "
                 "Chemikalien explodieren! Seine beiden Nachbarn sterben mit ihm!"
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
             hinweis_config=None,
         )
 

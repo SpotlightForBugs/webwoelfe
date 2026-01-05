@@ -7,7 +7,7 @@ bis zum Ende überleben um zu gewinnen.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -49,7 +49,8 @@ class Fluechtlinge(Role):
             erzaehler_nacht=("Die Flüchtlinge erwachen und erkennen sich gegenseitig."),
             erzaehler_tag=None,
             hinweis_config=None,
-        )
+        erweiterung=Erweiterung.SONDEREDITION,
+            )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

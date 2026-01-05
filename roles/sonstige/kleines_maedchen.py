@@ -5,7 +5,7 @@ Kleines Mädchen - Kann nachts blinzeln um Werwölfe zu sehen, riskiert aber ent
 from typing import Optional, List, TYPE_CHECKING
 import random
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -36,7 +36,8 @@ class KleinesMaedchen(Role):
             erzaehler_nacht="Das Kleine Mädchen darf während der Werwolf-Phase blinzeln - auf eigene Gefahr!",
             erzaehler_tag=None,
             hinweis_config=None,
-        )
+        erweiterung=Erweiterung.BASISSPIEL,
+            )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

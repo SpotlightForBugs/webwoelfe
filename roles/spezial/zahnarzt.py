@@ -7,7 +7,7 @@ sodass dieser am nächsten Tag nicht abstimmen darf.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -53,6 +53,7 @@ class Zahnarzt(Role):
                 "{spieler} wurde vom Zahnarzt behandelt und darf heute "
                 "nicht abstimmen!"
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
             hinweis_config=None,
         )
 

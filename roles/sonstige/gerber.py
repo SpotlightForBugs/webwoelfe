@@ -7,7 +7,7 @@ Anders als Selbstmörder: Alle anderen verlieren!
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -56,6 +56,7 @@ class Gerber(Role):
                 "triumphierend! Sein Fluch verflucht das gesamte Dorf - "
                 "ALLE verlieren außer ihm!"
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
             hinweis_config="Gerber",
         )
 

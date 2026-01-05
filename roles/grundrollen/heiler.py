@@ -7,7 +7,7 @@ aber nicht zweimal hintereinander denselben.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -45,6 +45,7 @@ class Heiler(Role):
                 "Der Heiler erwacht und zeigt auf den Spieler, den er diese "
                 "Nacht beschützen möchte. Nicht denselben wie letzte Nacht!"
             ),
+            erweiterung=Erweiterung.NEUMOND,
         )
 
     @property

@@ -46,8 +46,7 @@ class Erweiterung(Enum):
     NEUMOND = "neumond"
     GEMEINDE = "gemeinde"
     CHARAKTERE = "charaktere"
-    SONDEREDITION = "sonderedition"
-    #  community rollen Fehlt! #TODO: Darum kümmern!
+    SONDEREDITION = "sonderedition" # THIS MEANS COMMUNITY EDITION
 
     def __str__(self) -> str:
         return self.value

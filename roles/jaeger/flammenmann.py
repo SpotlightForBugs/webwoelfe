@@ -7,7 +7,7 @@ sein Haus anzünden - die Nachbarn sterben.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -56,32 +56,32 @@ class Flammenmann(Role):
                 "Die Flammen greifen auf die Nachbarhäuser über - "
                 "alle Nachbarn sterben!"
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
             hinweis_config=None,
         )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.TOETEN
-
+    
     def is_active_on_first_night(self) -> bool:
         """Flammenmann does not act at night."""
         return False
-
+    
     def is_active_on_every_night(self) -> bool:
         """Flammenmann does not act at night."""
         return False
-
-    def get_ui_definition(self) -> "RollenUI":
+    
+    def get_ui_definition(self) -> 'RollenUI':
         """Returns the UI definition for Flammenmann's action panel."""
         from ..base import RollenUI
-
         return RollenUI(
             title="Flammenmann - Tagaktion",
             instructions="Du kannst einmal am Tag dein Haus anzünden und deine Nachbarn töten.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True,
+            can_skip=True
         )
 
     def ist_einmal_faehigkeit(self) -> bool:

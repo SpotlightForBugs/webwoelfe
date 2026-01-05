@@ -7,7 +7,7 @@ wichtigen verstorbenen Person.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -58,6 +58,7 @@ class ErgebeneMagd(Role):
                 "Die Ergebene Magd tritt vor! Sie übernimmt die Rolle "
                 "und Fähigkeiten der verstorbenen Rolle!"
             ),
+            erweiterung=Erweiterung.CHARAKTERE,
             hinweis_config=None,
         )
 

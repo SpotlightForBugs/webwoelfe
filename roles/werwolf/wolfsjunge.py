@@ -7,7 +7,7 @@ Stirbt dieses, verwandelt er sich in einen Werwolf.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, SichtTyp
+from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -46,30 +46,28 @@ class Wolfsjunge(Role):
                 "Das Wolfsjunge erwacht (nur erste Nacht) und waehlt " "sein Vorbild."
             ),
         )
-
+    
     @property
-    def aktions_typ(self) -> "AktionsTyp":
-        from ..enums import AktionsTyp
-
+    def aktions_typ(self) -> 'AktionsTyp':
+        from ..enums import Team, Kategorie, SichtTyp, Erweiterung
         return AktionsTyp.WAEHLEN
 
     @property
     def sichtbar_als(self) -> SichtTyp:
         # Sieht als Dorf aus, bis Verwandlung
         return SichtTyp.DORF
-
+    
     def is_active_on_first_night(self) -> bool:
         """Wolfsjunge acts only on first night to choose role model."""
         return True
-
+    
     def is_active_on_every_night(self) -> bool:
         """Wolfsjunge does not act every night."""
         return False
-
-    def get_ui_definition(self) -> "RollenUI":
+    
+    def get_ui_definition(self) -> 'RollenUI':
         """Returns the UI definition for Wolfsjunge's action panel."""
         from ..base import RollenUI, UIButton
-
         return RollenUI(
             title="Wolfsjunge - Vorbild wählen",
             instructions="Wähle dein Vorbild. Stirbt es, wirst du zum Werwolf.",
@@ -79,29 +77,27 @@ class Wolfsjunge(Role):
                     action_type="waehlen",
                     icon="fa-solid fa-child",
                     css_class="btn-primary",
-                    requires_confirmation=True,
+                    requires_confirmation=True
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=False,
+            can_skip=False
         )
 
-    def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
+    def on_nacht_aktion(self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext) -> Optional[AktionsErgebnis]:
         """
         Wolfsjunge wählt sein Vorbild in der ersten Nacht.
         """
         if kontext.runde != 1:
             return None
-
+            
         if ziel is None:
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du musst ein Vorbild wählen!",
             )
-
+            
         if ziel.id == spieler.id:
             return AktionsErgebnis(
                 erfolg=False,
@@ -110,7 +106,7 @@ class Wolfsjunge(Role):
 
         # Vorbild speichern
         spieler.vorbild_id = ziel.id
-
+        
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{ziel.name} ist nun dein Vorbild. Stirbt es, wirst du zum Werwolf.",

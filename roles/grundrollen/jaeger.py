@@ -7,7 +7,7 @@ und einen beliebigen Spieler mit in den Tod reißen.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -48,6 +48,7 @@ class Jaeger(Role):
                 "Der Jäger ist gestorben! Mit zitternder Hand hebt er seine "
                 "Flinte. Auf wen feuert er seinen letzten Schuss?"
             ),
+            erweiterung=Erweiterung.BASISSPIEL,
         )
 
     @property

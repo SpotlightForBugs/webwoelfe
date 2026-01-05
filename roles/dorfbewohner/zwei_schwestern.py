@@ -7,7 +7,7 @@ und können sich jede Nacht kurz absprechen.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie
+from ..enums import Team, Kategorie, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -45,6 +45,7 @@ class ZweiSchwestern(Role):
                 "Die zwei Schwestern erwachen und erkennen sich. "
                 "Sie dürfen sich kurz absprechen."
             ),
+            erweiterung=Erweiterung.CHARAKTERE,
         )
 
     def is_active_on_first_night(self) -> bool:

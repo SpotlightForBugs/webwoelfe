@@ -168,7 +168,7 @@ def get_rollen_nach_erweiterung():
     return erweiterungen
 
 
-# Metadaten fuer Erweiterungspakete (fuer UI)
+# Metadaten fuer Erweiterungspakete (fuer UI) #TODO: Dynamic!
 ERWEITERUNG_INFO = {
     'basisspiel': {
         'name': 'Basisspiel',

@@ -7,7 +7,7 @@ stirbt. Danach wird er zum normalen Dorfbewohner.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -56,6 +56,7 @@ class Engel(Role):
                 "Seine Flügel erstrahlen und er steigt siegreich "
                 "in den Himmel auf!"
             ),
+            erweiterung=Erweiterung.CHARAKTERE,
             hinweis_config="Engel",
         )
 

@@ -7,7 +7,7 @@ und schützt beide, aber verrät ihre Identität.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -54,7 +54,8 @@ class Prostituierte(Role):
             ),
             erzaehler_tag=None,
             hinweis_config=None,
-        )
+        erweiterung=Erweiterung.SONDEREDITION,
+            )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

@@ -7,7 +7,7 @@ Jede Nacht kann er einen Spieler ermorden.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -51,7 +51,8 @@ class Mordlustiger(Role):
             ),
             erzaehler_tag=None,
             hinweis_config=None,
-        )
+        erweiterung=Erweiterung.SONDEREDITION,
+            )
 
     def is_active_on_first_night(self) -> bool:
         """Mordlustiger acts every night."""

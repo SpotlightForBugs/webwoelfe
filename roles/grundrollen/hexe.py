@@ -7,7 +7,7 @@ und einmal jemanden vergiften.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -46,6 +46,7 @@ class Hexe(Role):
                 "Frage: Heiltrank einsetzen? (Daumen hoch/runter) "
                 "Gifttrank einsetzen? (Zeige auf Spieler oder schuettle Kopf)"
             ),
+            erweiterung=Erweiterung.BASISSPIEL,
         )
 
     @property

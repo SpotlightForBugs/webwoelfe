@@ -7,7 +7,7 @@ und weiterspielen.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie
+from ..enums import Team, Kategorie, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -49,6 +49,7 @@ class Jesus(Role):
                 "Falls Jesus vor 3 Tagen gestorben ist: Ein Wunder geschieht! "
                 "Jesus erhebt sich und kehrt triumphierend ins Spiel zurück!"
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
         )
 
     def is_active_on_first_night(self) -> bool:

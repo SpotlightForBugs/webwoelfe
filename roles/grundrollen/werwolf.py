@@ -7,7 +7,7 @@ jede Nacht gemeinsam ein Opfer aus.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -44,6 +44,7 @@ class Werwolf(Role):
                 "Die Werwölfe erwachen, erkennen sich und wählen "
                 "gemeinsam ein Opfer aus."
             ),
+            erweiterung=Erweiterung.BASISSPIEL,
         )
 
     @property

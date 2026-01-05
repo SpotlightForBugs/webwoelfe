@@ -7,7 +7,7 @@ sie ist zu alt und schwach.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -54,6 +54,7 @@ class Oma(Role):
                 "Die Werwölfe haben die Oma verschont! Sie ist zu alt "
                 "und schwach - kein würdiger Gegner für die Bestien."
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
             hinweis_config=None,
         )
 

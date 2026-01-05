@@ -34,6 +34,7 @@ class Dorfbewohner(Role):
             icon="fa-solid fa-user",
             farbe="#6b7280",
             prioritaet=100,
+            erweiterung=Erweiterung.BASISSPIEL,
             erzaehler_nacht=(
                 "Der Dorfbewohner schläft friedlich. "
                 "Er hat keine nächtlichen Fähigkeiten."
@@ -49,7 +50,7 @@ class Dorfbewohner(Role):
         return AktionsTyp.KEINE
 
     def is_active_on_first_night(self) -> bool:
-        """Dorfbewohner does not act on first night."""
+        """Dorfbewohner does not act on the first night."""
         return False
 
     def is_active_on_every_night(self) -> bool:

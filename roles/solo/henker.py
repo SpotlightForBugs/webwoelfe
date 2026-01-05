@@ -4,7 +4,7 @@ Henker - Will einen bestimmten Spieler toeten lassen.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie
+from ..enums import Team, Kategorie, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:

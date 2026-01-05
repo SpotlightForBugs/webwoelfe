@@ -4,7 +4,7 @@ Kamikaze - Opfert sich um einen Werwolf zu toeten.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -42,24 +42,24 @@ class Kamikaze(Role):
                 "Der Kamikaze erwacht. Möchte er sich opfern und "
                 "jemanden mit in den Tod reissen?"
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
         )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.OPFERN
-
+    
     def is_active_on_first_night(self) -> bool:
         """Kamikaze can act on first night."""
         return True
-
+    
     def is_active_on_every_night(self) -> bool:
         """Kamikaze can act every night until bomb is used."""
         return True
-
-    def get_ui_definition(self) -> "RollenUI":
+    
+    def get_ui_definition(self) -> 'RollenUI':
         """Returns the UI definition for Kamikaze's action panel."""
         from ..base import RollenUI, UIButton
-
         return RollenUI(
             title="Kamikaze - Opfern",
             instructions="Du kannst dich einmal opfern und einen anderen Spieler mit in den Tod reißen.",
@@ -69,12 +69,12 @@ class Kamikaze(Role):
                     action_type="opfern",
                     icon="fa-solid fa-bomb",
                     css_class="btn-danger",
-                    requires_confirmation=True,
+                    requires_confirmation=True
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True,
+            can_skip=True
         )
 
     def on_nacht_aktion(

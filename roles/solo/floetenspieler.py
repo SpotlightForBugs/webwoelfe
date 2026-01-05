@@ -4,7 +4,7 @@ Floetenspieler - Verzaubert alle Spieler.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 @RoleRegistry.register
 class Floetenspieler(Role):
     """
-    Der Floetenspieler - Verzauberungs-Solo.
+    Der Flötenspieler - Verzauberungs-Solo.
 
     Faehigkeiten:
     - Kann jede Nacht 2 Spieler verzaubern
@@ -41,6 +41,7 @@ class Floetenspieler(Role):
             erzaehler_nacht=(
                 "Der Floetenspieler erwacht und waehlt 2 Spieler " "zum Verzaubern."
             ),
+            erweiterung=Erweiterung.NEUMOND,
         )
 
     @property

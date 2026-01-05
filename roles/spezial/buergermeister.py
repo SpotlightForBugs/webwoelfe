@@ -4,7 +4,7 @@ Buergermeister - Hat doppeltes Stimmrecht.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie
+from ..enums import Team, Kategorie, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -14,9 +14,9 @@ if TYPE_CHECKING:
 @RoleRegistry.register
 class Buergermeister(Role):
     """
-    Der Buergermeister - Doppelte Stimme.
+    Der Bürgermeister - doppelte Stimme.
 
-    Faehigkeiten:
+    Fähigkeiten:
     - Seine Stimme zaehlt doppelt bei Abstimmungen
     - Kann Buergermeister-Amt weitergeben bei Tod
 
@@ -39,7 +39,8 @@ class Buergermeister(Role):
             farbe="#6366f1",
             prioritaet=95,
             erzaehler_tag=("Der Buergermeister hat doppeltes Stimmrecht."),
-        )
+        erweiterung=Erweiterung.CHARAKTERE,
+            )
 
     def is_active_on_first_night(self) -> bool:
         """Bürgermeister is passive."""

@@ -58,7 +58,9 @@ class RollenInfo:
             Erweiterung.CHARAKTERE: "charaktere",
             Erweiterung.SONDEREDITION: "sonderedition",
         }
-        return pack_map.get(self.erweiterung, "base")
+        if self.erweiterung is None:
+            raise ValueError("RollenInfo.erweiterung darf nicht None sein")
+        return pack_map.get(self.erweiterung, "unbekannt")
 
 
 @dataclass

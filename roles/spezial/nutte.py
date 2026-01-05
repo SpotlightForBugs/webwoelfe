@@ -2,12 +2,12 @@
 Nutte - Übernachtet bei anderen Spielern.
 
 Die Nutte besucht jede Nacht einen Spieler.
-Sie entgeht Angriffen zuhause, stirbt aber wenn ihr Gastgeber stirbt.
+Sie entgeht Angriffen zu Hause, stirbt aber, wenn ihr Gastgeber stirbt.
 """
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -53,7 +53,8 @@ class Nutte(Role):
             ),
             erzaehler_tag=None,
             hinweis_config=None,
-        )
+        erweiterung=Erweiterung.SONDEREDITION,
+            )
 
     def is_active_on_first_night(self) -> bool:
         """Nutte acts every night."""

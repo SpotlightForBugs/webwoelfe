@@ -7,7 +7,7 @@ aber wenn das Dorf ihn hängt, verlieren alle Spezialrollen ihre Kräfte.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -45,6 +45,7 @@ class AlterMann(Role):
                 "Der Alte Mann schläft tief. Seine zähe Haut hat "
                 "schon manchen Biss überstanden."
             ),
+            erweiterung=Erweiterung.NEUMOND,
             erzaehler_tag=(
                 "Der Alte Mann erwacht. Falls er von Woelfen angegriffen "
                 "wurde, hat er überlebt! Aber Vorsicht: Hängt das Dorf ihn, "

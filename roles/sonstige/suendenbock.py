@@ -4,7 +4,7 @@ Sündenbock - Stirbt bei Unentschieden in Abstimmungen, darf dann bestimmen wer 
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -35,7 +35,8 @@ class Suendenbock(Role):
             erzaehler_nacht="Der Sündenbock ahnt, dass er heute vielleicht für die Unentschlossenheit anderer sterben wird.",
             erzaehler_tag="UNENTSCHIEDEN bei der Abstimmung! Das Dorf kann sich nicht einigen - also muss der Sündenbock sterben!",
             hinweis_config=None,
-        )
+            erweiterung=Erweiterung.NEUMOND,
+            )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

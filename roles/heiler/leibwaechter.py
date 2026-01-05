@@ -4,7 +4,7 @@ Leibwächter - Kann sich für einen anderen opfern.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -39,6 +39,7 @@ class Leibwaechter(Role):
             farbe="#0ea5e9",
             prioritaet=54,
             erzaehler_nacht=("Der Leibwächter erwacht und wählt seinen Schützling."),
+            erweiterung=Erweiterung.SONDEREDITION,
         )
 
     @property

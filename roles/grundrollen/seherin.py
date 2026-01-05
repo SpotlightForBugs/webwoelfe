@@ -7,7 +7,7 @@ eines Spielers erfahren.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp, SichtTyp
+from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -45,6 +45,7 @@ class Seherin(Role):
                 "Du zeigst ihr mit Daumen hoch (Dorf) oder runter (Werwolf) "
                 "die Zugehörigkeit."
             ),
+            erweiterung=Erweiterung.BASISSPIEL,
         )
 
     @property

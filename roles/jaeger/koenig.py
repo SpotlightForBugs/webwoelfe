@@ -7,7 +7,7 @@ wählt das Dorf einen neuen König.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, AktionsTyp
+from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -53,32 +53,32 @@ class Koenig(Role):
                 "Der König ist gefallen! Sein Erbe muss bestimmt werden - "
                 "das Dorf wählt einen neuen König mit doppelter Stimme!"
             ),
+            erweiterung=Erweiterung.SONDEREDITION,
             hinweis_config=None,
         )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
-
+    
     def is_active_on_first_night(self) -> bool:
         """König does not act at night."""
         return False
-
+    
     def is_active_on_every_night(self) -> bool:
         """König is passive."""
         return False
-
-    def get_ui_definition(self) -> "RollenUI":
+    
+    def get_ui_definition(self) -> 'RollenUI':
         """Returns the UI definition for König's action panel."""
         from ..base import RollenUI
-
         return RollenUI(
             title="König - Passive Rolle",
             instructions="Deine Stimme zählt doppelt bei Abstimmungen.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True,
+            can_skip=True
         )
 
     def get_stimm_gewicht(self, spieler: "Spieler", kontext: SpielKontext) -> int:

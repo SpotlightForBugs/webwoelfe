@@ -6,7 +6,14 @@ aber nicht zweimal hintereinander denselben.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
+from ..base import (
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    StateField,
+    StateType,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -29,7 +36,9 @@ class Heiler(Role):
     def state_fields(self) -> List[StateField]:
         """Definiert die Zustandsfelder des Heilers."""
         return [
-            StateField("letztes_ziel", StateType.PLAYER_ID, None, "Zuletzt geschützter Spieler"),
+            StateField(
+                "letztes_ziel", StateType.PLAYER_ID, None, "Zuletzt geschützter Spieler"
+            ),
         ]
 
     @property

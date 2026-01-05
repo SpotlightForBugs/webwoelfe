@@ -6,7 +6,14 @@ und einmal jemanden vergiften.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
+from ..base import (
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    StateField,
+    StateType,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 

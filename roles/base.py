@@ -1,4 +1,3 @@
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any, TYPE_CHECKING, Union
@@ -18,6 +17,7 @@ if TYPE_CHECKING:
 
 class StateType(Enum):
     """Typen für Rollen-Zustandsfelder."""
+
     BOOL = "bool"
     INT = "int"
     FLOAT = "float"
@@ -36,6 +36,7 @@ class StateField:
         StateField("heiltrank", StateType.BOOL, True, "Hat noch Heiltrank")
         StateField("ziel_id", StateType.PLAYER_ID, None, "Gewähltes Ziel")
     """
+
     name: str
     typ: StateType
     default: Any
@@ -78,6 +79,7 @@ class StateField:
 @dataclass
 class ErzaehlerEvent:
     """Definition eines Erzähler-Events für eine Rolle."""
+
     event_id: str
     text: str
     anweisung: str
@@ -88,6 +90,7 @@ class ErzaehlerEvent:
 @dataclass
 class HinweisConfig:
     """Hinweis-Konfiguration für eine Rolle."""
+
     kann_senden: bool = False
     verfuegbare_hinweise: List[str] = field(default_factory=list)
     hinweise_pro_tag: int = 0
@@ -113,7 +116,7 @@ def get_spieler_state(spieler: "Spieler", key: str, default: Any = None) -> Any:
         Der Zustandswert oder default
     """
     try:
-        state_json = getattr(spieler, 'rolle_zustand', None) or '{}'
+        state_json = getattr(spieler, "rolle_zustand", None) or "{}"
         state = json.loads(state_json) if isinstance(state_json, str) else state_json
         return state.get(key, default)
     except (json.JSONDecodeError, AttributeError):
@@ -130,7 +133,7 @@ def set_spieler_state(spieler: "Spieler", key: str, value: Any) -> None:
         value: Der zu speichernde Wert
     """
     try:
-        state_json = getattr(spieler, 'rolle_zustand', None) or '{}'
+        state_json = getattr(spieler, "rolle_zustand", None) or "{}"
         state = json.loads(state_json) if isinstance(state_json, str) else {}
         state[key] = value
         spieler.rolle_zustand = json.dumps(state)
@@ -141,7 +144,7 @@ def set_spieler_state(spieler: "Spieler", key: str, value: Any) -> None:
 def get_all_spieler_state(spieler: "Spieler") -> Dict[str, Any]:
     """Liest alle Zustandswerte eines Spielers."""
     try:
-        state_json = getattr(spieler, 'rolle_zustand', None) or '{}'
+        state_json = getattr(spieler, "rolle_zustand", None) or "{}"
         return json.loads(state_json) if isinstance(state_json, str) else {}
     except (json.JSONDecodeError, AttributeError):
         return {}
@@ -336,10 +339,19 @@ class Role(ABC):
 
     def _state_key(self, field_name: str) -> str:
         """Generiert den vollständigen State-Key mit Rollen-Namespace."""
-        namespace = self.info.name.lower().replace(' ', '_').replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss')
+        namespace = (
+            self.info.name.lower()
+            .replace(" ", "_")
+            .replace("ä", "ae")
+            .replace("ö", "oe")
+            .replace("ü", "ue")
+            .replace("ß", "ss")
+        )
         return f"{namespace}.{field_name}"
 
-    def get_state(self, spieler: "Spieler", field_name: str, default: Any = None) -> Any:
+    def get_state(
+        self, spieler: "Spieler", field_name: str, default: Any = None
+    ) -> Any:
         """
         Liest einen Zustandswert für diese Rolle.
 
@@ -401,7 +413,7 @@ class Role(ABC):
         result = {}
         for key, value in all_state.items():
             if key.startswith(namespace):
-                field_name = key[len(namespace):]
+                field_name = key[len(namespace) :]
                 result[field_name] = value
         return result
 
@@ -421,20 +433,24 @@ class Role(ABC):
 
         # Standard-Events aus RollenInfo
         if self.info.erzaehler_nacht:
-            events.append(ErzaehlerEvent(
-                event_id=f"{self.info.name.lower().replace(' ', '_')}_nacht",
-                text=self.info.erzaehler_nacht,
-                anweisung=self.info.erzaehler_nacht,
-                einmalig=False,
-            ))
+            events.append(
+                ErzaehlerEvent(
+                    event_id=f"{self.info.name.lower().replace(' ', '_')}_nacht",
+                    text=self.info.erzaehler_nacht,
+                    anweisung=self.info.erzaehler_nacht,
+                    einmalig=False,
+                )
+            )
 
         if self.info.erzaehler_tag:
-            events.append(ErzaehlerEvent(
-                event_id=f"{self.info.name.lower().replace(' ', '_')}_tag",
-                text=self.info.erzaehler_tag,
-                anweisung=self.info.erzaehler_tag,
-                einmalig=False,
-            ))
+            events.append(
+                ErzaehlerEvent(
+                    event_id=f"{self.info.name.lower().replace(' ', '_')}_tag",
+                    text=self.info.erzaehler_tag,
+                    anweisung=self.info.erzaehler_tag,
+                    einmalig=False,
+                )
+            )
 
         return events
 
@@ -745,7 +761,12 @@ class Role(ABC):
             "hinweis_config": self.info.hinweis_config,
             "erweiterung": self.info.erweiterung.value,
             "state_fields": [
-                {"name": sf.name, "typ": sf.typ.value, "default": sf.default, "beschreibung": sf.beschreibung}
+                {
+                    "name": sf.name,
+                    "typ": sf.typ.value,
+                    "default": sf.default,
+                    "beschreibung": sf.beschreibung,
+                }
                 for sf in self.state_fields()
             ],
         }

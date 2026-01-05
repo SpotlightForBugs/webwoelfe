@@ -3,7 +3,15 @@ Selbstmörder - Will vom Dorf gehängt werden.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType, HinweisConfig
+from ..base import (
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    StateField,
+    StateType,
+    HinweisConfig,
+)
 from ..enums import Team, Kategorie
 from ..registry import RoleRegistry
 
@@ -27,14 +35,21 @@ class Selbstmoerder(Role):
     def state_fields(self) -> List[StateField]:
         """Definiert die Zustandsfelder des Selbstmörders."""
         return [
-            StateField("gewonnen", StateType.BOOL, False, "Hat gewonnen (wurde gehängt)"),
+            StateField(
+                "gewonnen", StateType.BOOL, False, "Hat gewonnen (wurde gehängt)"
+            ),
         ]
 
     def get_hinweis_config(self) -> HinweisConfig:
         """Selbstmörder kann aktiv Hinweise senden."""
         return HinweisConfig(
             kann_senden=True,
-            verfuegbare_hinweise=["selbst_verdaechtigung", "nervoes", "stolpern", "blick_abwenden"],
+            verfuegbare_hinweise=[
+                "selbst_verdaechtigung",
+                "nervoes",
+                "stolpern",
+                "blick_abwenden",
+            ],
             hinweise_pro_tag=3,
             basis_chance=0.0,
             beschreibung="Mache dich verdächtig und lass dich hängen!",

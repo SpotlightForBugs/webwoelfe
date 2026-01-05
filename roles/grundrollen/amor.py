@@ -6,7 +6,17 @@ stirbt einer, stirbt auch der andere.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenUI, StateField, StateType, get_spieler_state, set_spieler_state
+from ..base import (
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    RollenUI,
+    StateField,
+    StateType,
+    get_spieler_state,
+    set_spieler_state,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -30,7 +40,9 @@ class Amor(Role):
     def state_fields(self) -> List[StateField]:
         """Definiert die Zustandsfelder von Amor."""
         return [
-            StateField("hat_verkuppelt", StateType.BOOL, False, "Hat bereits Verliebte gewählt"),
+            StateField(
+                "hat_verkuppelt", StateType.BOOL, False, "Hat bereits Verliebte gewählt"
+            ),
         ]
 
     @property

@@ -3,7 +3,16 @@ Floetenspieler - verzaubert alle Spieler.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType, set_spieler_state, get_spieler_state
+from ..base import (
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    StateField,
+    StateType,
+    set_spieler_state,
+    get_spieler_state,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -26,7 +35,12 @@ class Floetenspieler(Role):
     def state_fields(self) -> List[StateField]:
         """Definiert die Zustandsfelder des Flötenspielers."""
         return [
-            StateField("verzauberte", StateType.PLAYER_IDS, [], "Liste verzauberter Spieler-IDs"),
+            StateField(
+                "verzauberte",
+                StateType.PLAYER_IDS,
+                [],
+                "Liste verzauberter Spieler-IDs",
+            ),
         ]
 
     @property

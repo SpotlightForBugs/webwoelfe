@@ -6,7 +6,14 @@ Der Doppelgänger wählt ein Ziel. Stirbt dieses,
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
+from ..base import (
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    StateField,
+    StateType,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -157,14 +164,26 @@ class Doppelgaenger(Role):
         gestorbene_rolle = kontext.spieler_rollen.get(gestorbener.id, "Dorfbewohner")
         gestorbenes_team = kontext.spieler_teams.get(gestorbener.id, Team.DORF)
 
-        self.set_state(spieler, "neues_team", gestorbenes_team.value if hasattr(gestorbenes_team, 'value') else str(gestorbenes_team))
+        self.set_state(
+            spieler,
+            "neues_team",
+            (
+                gestorbenes_team.value
+                if hasattr(gestorbenes_team, "value")
+                else str(gestorbenes_team)
+            ),
+        )
 
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Dein Ziel ist gestorben! Du übernimmst die Rolle: {gestorbene_rolle}!",
             effekte={
                 "rolle_wechsel": gestorbene_rolle,
-                "team_wechsel": gestorbenes_team.value if hasattr(gestorbenes_team, 'value') else str(gestorbenes_team),
+                "team_wechsel": (
+                    gestorbenes_team.value
+                    if hasattr(gestorbenes_team, "value")
+                    else str(gestorbenes_team)
+                ),
             },
             log_sichtbar_fuer="alle",
         )

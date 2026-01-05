@@ -6,7 +6,14 @@ Stirbt das Herrchen, wird der Hund zum Werwolf!
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, StateField, StateType
+from ..base import (
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    StateField,
+    StateType,
+)
 from ..enums import Team, Kategorie, SichtTyp, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -60,8 +67,8 @@ class Hund(Role):
             erzaehler_nacht="Der Hund erwacht (nur erste Nacht) und wählt sein Herrchen.",
             erzaehler_tag=None,
             hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+        )
 
     @property
     def sichtbar_als(self) -> SichtTyp:

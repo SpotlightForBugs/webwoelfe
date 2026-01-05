@@ -113,8 +113,9 @@ class Spieler(db.Model):
             default: Standardwert wenn nicht gefunden
         """
         import json
+
         try:
-            state = json.loads(self.rolle_zustand or '{}')
+            state = json.loads(self.rolle_zustand or "{}")
             return state.get(key, default)
         except (json.JSONDecodeError, TypeError):
             return default
@@ -128,8 +129,9 @@ class Spieler(db.Model):
             value: Der Wert
         """
         import json
+
         try:
-            state = json.loads(self.rolle_zustand or '{}')
+            state = json.loads(self.rolle_zustand or "{}")
         except (json.JSONDecodeError, TypeError):
             state = {}
         state[key] = value
@@ -138,15 +140,15 @@ class Spieler(db.Model):
     def get_all_state(self) -> dict:
         """Liest alle Zustandswerte."""
         import json
+
         try:
-            return json.loads(self.rolle_zustand or '{}')
+            return json.loads(self.rolle_zustand or "{}")
         except (json.JSONDecodeError, TypeError):
             return {}
 
     def reset_state(self):
         """Setzt den Zustand zurück."""
         self.rolle_zustand = "{}"
-
 
     @staticmethod
     def generiere_session():

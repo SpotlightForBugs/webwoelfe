@@ -226,7 +226,9 @@ class RoleRegistry:
                         "rolle": role.info.name,
                     }
             except Exception as e:
-                logger.warning(f"Fehler beim Laden der Events von {role.info.name}: {e}")
+                logger.warning(
+                    f"Fehler beim Laden der Events von {role.info.name}: {e}"
+                )
 
         return all_events
 

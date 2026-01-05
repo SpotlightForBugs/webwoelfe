@@ -1,6 +1,7 @@
 """
 Floetenspieler - Verzaubert alle Spieler.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -14,14 +15,14 @@ if TYPE_CHECKING:
 class Floetenspieler(Role):
     """
     Der Floetenspieler - Verzauberungs-Solo.
-    
+
     Faehigkeiten:
     - Kann jede Nacht 2 Spieler verzaubern
     - Gewinnt wenn alle Lebenden verzaubert sind
-    
+
     Gewinnbedingung: Alle Lebenden sind verzaubert.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -38,26 +39,26 @@ class Floetenspieler(Role):
             farbe="#8b5cf6",
             prioritaet=70,
             erzaehler_nacht=(
-                "Der Floetenspieler erwacht und waehlt 2 Spieler "
-                "zum Verzaubern."
+                "Der Floetenspieler erwacht und waehlt 2 Spieler " "zum Verzaubern."
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.VERZAUBERN
-    
+
     def is_active_on_first_night(self) -> bool:
         """Flötenspieler acts on first night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Flötenspieler acts every night."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Flötenspieler's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Flötenspieler - Verzaubern",
             instructions="Wähle Spieler, um sie zu verzaubern.",
@@ -66,16 +67,17 @@ class Floetenspieler(Role):
                     label="Verzaubern",
                     action_type="verzaubern",
                     icon="fa-solid fa-magic",
-                    css_class="btn-primary"
+                    css_class="btn-primary",
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=False
+            can_skip=False,
         )
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Floetenspieler verzaubert Spieler.
         """
@@ -87,7 +89,7 @@ class Floetenspieler(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du verzauberst {ziel.name} mit deiner Melodie.",
@@ -97,8 +99,10 @@ class Floetenspieler(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def berechne_gewinn(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[Team]:
+
+    def berechne_gewinn(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[Team]:
         """
         Gewinnt wenn alle Lebenden verzaubert sind.
         """

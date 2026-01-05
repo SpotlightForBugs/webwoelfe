@@ -129,8 +129,11 @@ class RoleRegistry:
     @classmethod
     def get_nacht_aktive(cls) -> List[Role]:
         """Gibt alle nachtaktiven Rollen sortiert nach Priorität zurück."""
-        aktive = [role for role in cls._instances.values() 
-                  if role.is_active_on_first_night() or role.is_active_on_every_night()]
+        aktive = [
+            role
+            for role in cls._instances.values()
+            if role.is_active_on_first_night() or role.is_active_on_every_night()
+        ]
         return sorted(aktive, key=lambda r: r.info.prioritaet)
 
     @classmethod

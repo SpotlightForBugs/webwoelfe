@@ -64,21 +64,22 @@ class Chemielaborant(Role):
     def is_active_on_first_night(self) -> bool:
         """Chemielaborant is passive."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Chemielaborant is passive."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Chemielaborant's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Chemielaborant - Passive Rolle",
             instructions="Bei Tod explodieren deine Chemikalien und töten Nachbarn.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def on_eigener_tod(

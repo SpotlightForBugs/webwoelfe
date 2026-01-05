@@ -4,6 +4,7 @@ Heiler - Schützt Spieler vor nächtlichen Angriffen.
 Der Heiler kann jede Nacht einen Spieler schützen,
 aber nicht zweimal hintereinander denselben.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -17,14 +18,14 @@ if TYPE_CHECKING:
 class Heiler(Role):
     """
     Der Heiler - Schutz-Rolle.
-    
+
     Fähigkeiten:
     - Kann jede Nacht einen Spieler schützen
     - Nicht zweimal hintereinander denselben Spieler
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -45,26 +46,27 @@ class Heiler(Role):
                 "Nacht beschützen möchte. Nicht denselben wie letzte Nacht!"
             ),
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SCHUETZEN
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "lebende"
-    
+
     def is_active_on_first_night(self) -> bool:
         """Heiler acts on first night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Heiler acts every night."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Heiler's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Heiler - Spieler schützen",
             instructions="Wähle einen Spieler, den du diese Nacht schützen möchtest. Du kannst nicht zweimal hintereinander denselben Spieler schützen.",
@@ -74,16 +76,17 @@ class Heiler(Role):
                     action_type="schuetzen",
                     icon="fa-solid fa-heart-pulse",
                     css_class="btn-success",
-                    requires_confirmation=False
+                    requires_confirmation=False,
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=False  # Must act
+            can_skip=False,  # Must act
         )
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Heiler schützt einen Spieler.
         """
@@ -92,10 +95,10 @@ class Heiler(Role):
                 erfolg=False,
                 nachricht="Du musst jemanden zum Schützen wählen.",
             )
-        
+
         # Prüfe ob es das gleiche Ziel wie letzte Nacht ist
-        letztes_ziel = getattr(spieler, 'heiler_geschuetzt', None)
-        
+        letztes_ziel = getattr(spieler, "heiler_geschuetzt", None)
+
         if letztes_ziel == ziel.id:
             return AktionsErgebnis(
                 erfolg=False,
@@ -104,13 +107,13 @@ class Heiler(Role):
                     "Spieler schützen!"
                 ),
             )
-        
+
         if not self.validate_ziel(spieler, ziel, kontext):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Ungültiges Ziel.",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du beschützt {ziel.name} diese Nacht.",

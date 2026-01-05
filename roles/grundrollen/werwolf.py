@@ -61,18 +61,19 @@ class Werwolf(Role):
     @property
     def basis_hinweis_chance(self) -> float:
         return 0.15  # Höhere Chance für verdächtige Hinweise
-    
+
     def is_active_on_first_night(self) -> bool:
         """Werwolf acts on first night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Werwolf acts every night."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Werwolf's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Werwolf - Opfer wählen",
             instructions="Wähle gemeinsam mit den anderen Werwölfen ein Opfer.",
@@ -82,12 +83,12 @@ class Werwolf(Role):
                     action_type="toeten",
                     icon="fa-solid fa-paw",
                     css_class="btn-danger",
-                    requires_confirmation=True
+                    requires_confirmation=True,
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=False  # Must vote
+            can_skip=False,  # Must vote
         )
 
     def on_nacht_aktion(

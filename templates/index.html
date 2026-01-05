@@ -1095,101 +1095,104 @@
   // ============================================
   // DYNAMIC ROLE LOADING FROM API
   // ============================================
-  
+
   // Load roles from backend on page load
-  document.addEventListener('DOMContentLoaded', async function() {
+  document.addEventListener("DOMContentLoaded", async function () {
     await loadRolesFromAPI();
   });
 
   async function loadRolesFromAPI() {
-    const container = document.getElementById('role-selection-container');
+    const container = document.getElementById("role-selection-container");
     if (!container) return;
 
     try {
-      const response = await fetch('/api/roles');
+      const response = await fetch("/api/roles");
       const data = await response.json();
-      
+
       if (!data.success) {
-        container.innerHTML = '<div class="error">Fehler beim Laden der Rollen</div>';
+        container.innerHTML =
+          '<div class="error">Fehler beim Laden der Rollen</div>';
         return;
       }
 
       // Generate HTML from roles grouped by extension
-      container.innerHTML = generateRoleSelectionHTML(data.grouped_by_extension);
-      
+      container.innerHTML = generateRoleSelectionHTML(
+        data.grouped_by_extension,
+      );
+
       // Re-attach event listeners
       updateRoleCount();
-      
     } catch (error) {
-      console.error('Error loading roles:', error);
-      container.innerHTML = '<div class="error">Fehler: Rollen konnten nicht geladen werden</div>';
+      console.error("Error loading roles:", error);
+      container.innerHTML =
+        '<div class="error">Fehler: Rollen konnten nicht geladen werden</div>';
     }
   }
 
   function generateRoleSelectionHTML(grouped) {
     const extensionInfo = {
-      'base': {
-        name: 'Basisspiel',
-        icon: 'fa-house',
-        badge: 'Pflicht',
-        badgeClass: 'required',
-        desc: 'Die klassischen Rollen aus dem Grundspiel',
+      base: {
+        name: "Basisspiel",
+        icon: "fa-house",
+        badge: "Pflicht",
+        badgeClass: "required",
+        desc: "Die klassischen Rollen aus dem Grundspiel",
         required: true,
-        open: true
+        open: true,
       },
-      'neumond': {
-        name: 'Neumond',
-        icon: 'fa-moon',
-        badge: 'Erw. 1',
-        badgeClass: 'exp1',
-        desc: 'Heiler, Alter, Sündenbock, Flötenspieler & mehr'
+      neumond: {
+        name: "Neumond",
+        icon: "fa-moon",
+        badge: "Erw. 1",
+        badgeClass: "exp1",
+        desc: "Heiler, Alter, Sündenbock, Flötenspieler & mehr",
       },
-      'gemeinde': {
-        name: 'Die Gemeinde',
-        icon: 'fa-city',
-        badge: 'Erw. 2',
-        badgeClass: 'exp2',
-        desc: 'Gebäude & Berufe: Brandstifter, Rabe & mehr'
+      gemeinde: {
+        name: "Die Gemeinde",
+        icon: "fa-city",
+        badge: "Erw. 2",
+        badgeClass: "exp2",
+        desc: "Gebäude & Berufe: Brandstifter, Rabe & mehr",
       },
-      'charaktere': {
-        name: 'Charaktere',
-        icon: 'fa-users',
-        badge: 'Erw. 3',
-        badgeClass: 'exp3',
-        desc: 'Neue Charaktere: Wolfsrudel, Gruppen & mehr!'
+      charaktere: {
+        name: "Charaktere",
+        icon: "fa-users",
+        badge: "Erw. 3",
+        badgeClass: "exp3",
+        desc: "Neue Charaktere: Wolfsrudel, Gruppen & mehr!",
       },
-      'sonderedition': {
-        name: 'Sonderedition',
-        icon: 'fa-star',
-        badge: 'Spezial',
-        badgeClass: 'special',
-        desc: 'Exklusive Sonderrollen'
-      }
+      sonderedition: {
+        name: "Sonderedition",
+        icon: "fa-star",
+        badge: "Spezial",
+        badgeClass: "special",
+        desc: "Exklusive Sonderrollen",
+      },
     };
 
-    let html = '';
-    
+    let html = "";
+
     for (const [extPack, roles] of Object.entries(grouped)) {
       const info = extensionInfo[extPack] || {
         name: extPack,
-        icon: 'fa-puzzle-piece',
+        icon: "fa-puzzle-piece",
         badge: extPack,
-        badgeClass: 'community',
-        desc: 'Weitere Rollen'
+        badgeClass: "community",
+        desc: "Weitere Rollen",
       };
 
       const isRequired = info.required;
       const isOpen = info.open;
-      
+
       html += `
-        <div class="expansion-card ${extPack} ${isOpen ? 'active' : ''}" data-expansion="${extPack}">
+        <div class="expansion-card ${extPack} ${isOpen ? "active" : ""}" data-expansion="${extPack}">
           <div class="expansion-header" onclick="toggleExpansion('${extPack}')">
             <div class="expansion-title">
               <label class="expansion-check">
                 <input
                   type="checkbox"
                   name="expansion_${extPack}"
-                  ${isRequired ? 'checked disabled' : ''}
+                  ${isRequired ? "checked disabled" : ""}
                   onchange="toggleExpansionRoles('${extPack}', this.checked)"
                 />
                 <span class="checkmark"></span>
@@ -1200,7 +1203,7 @@
             </div>
             <i class="fa-solid fa-chevron-down expansion-toggle"></i>
           </div>
-          <div class="expansion-content" ${isOpen ? 'style="display: block"' : ''}>
+          <div class="expansion-content" ${isOpen ? 'style="display: block"' : ""}>
             <p class="expansion-desc">${info.desc}</p>
             <div class="role-grid">
               ${generateRoleChips(roles, extPack, isRequired)}
@@ -1209,32 +1212,36 @@
         </div>
       `;
     }
-    
+
     return html;
   }
 
   function generateRoleChips(roles, extPack, isRequired) {
-    return roles.map(role => {
-      const team = role.info.team;
-      const chipClass = team === 'werwolf' ? 'evil' : (team === 'dorf' ? 'good' : 'neutral');
-      const isBasicRole = (role.info.name === 'Werwolf' || role.info.name === 'Dorfbewohner');
-      const isPreselected = (role.info.name === 'Seherin');
-      
-      return `
-        <label class="role-chip ${chipClass} ${isPreselected ? 'selected' : ''}">
+    return roles
+      .map((role) => {
+        const team = role.info.team;
+        const chipClass =
+          team === "werwolf" ? "evil" : team === "dorf" ? "good" : "neutral";
+        const isBasicRole =
+          role.info.name === "Werwolf" || role.info.name === "Dorfbewohner";
+        const isPreselected = role.info.name === "Seherin";
+
+        return `
+        <label class="role-chip ${chipClass} ${isPreselected ? "selected" : ""}">
           <input
             type="checkbox"
             name="rollen"
             value="${role.info.name}"
-            ${isBasicRole ? 'checked disabled' : ''}
-            ${isPreselected ? 'checked' : ''}
+            ${isBasicRole ? "checked disabled" : ""}
+            ${isPreselected ? "checked" : ""}
             data-exp="${extPack}"
             onchange="updateRoleCount()"
           />
           <span><i class="${role.info.icon}"></i> ${role.info.name}</span>
         </label>
       `;
-    }).join('');
+      })
+      .join("");
   }
 </script>
 {% endblock %}

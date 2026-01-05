@@ -4,6 +4,7 @@ Dorfdepp - Will gehängt werden.
 Der Dorfdepp gewinnt, wenn er vom Dorf gehängt wird.
 Er kann sich aktiv verdächtig machen.
 """
+
 from typing import Optional, List, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp
@@ -17,15 +18,15 @@ if TYPE_CHECKING:
 class Dorfdepp(Role):
     """
     Der Dorfdepp - Solo-Sieg durch Hinrichtung.
-    
+
     Fähigkeiten:
     - Kann sich aktiv verdächtig machen (Hinweise senden)
     - Gewinnt wenn vom Dorf gehängt
     - Gewinnt MIT dem eigentlichen Gewinner
-    
+
     Gewinnbedingung: Wird vom Dorf gehängt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -51,41 +52,43 @@ class Dorfdepp(Role):
             ),
             hinweis_config="Dorfdepp",
         )
-    
+
     def is_active_on_first_night(self) -> bool:
         """Dorfdepp does not act at night."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Dorfdepp is passive."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Dorfdepp's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Dorfdepp - Passive Rolle",
             instructions="Dein Ziel ist es, gehängt zu werden. Mach dich verdächtig!",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-    
+
     @property
     def kann_hinweis_senden(self) -> bool:
         return True
-    
+
     @property
     def verfuegbare_hinweise(self) -> List[str]:
-        return ['stolpern', 'nervös']
-    
+        return ["stolpern", "nervös"]
+
     @property
     def hinweise_pro_tag(self) -> int:
         return 2
-    
-    def on_hinrichtung(self, spieler: 'Spieler', opfer: 'Spieler',
-                       kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_hinrichtung(
+        self, spieler: "Spieler", opfer: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Prüft ob der Dorfdepp gehängt wird.
         """
@@ -101,13 +104,14 @@ class Dorfdepp(Role):
                 },
                 log_sichtbar_fuer="alle",
             )
-        
+
         return None
-    
-    def on_spiel_ende(self, spieler: 'Spieler', gewinner_team: Team,
-                      kontext: SpielKontext) -> bool:
+
+    def on_spiel_ende(
+        self, spieler: "Spieler", gewinner_team: Team, kontext: SpielKontext
+    ) -> bool:
         """
         Dorfdepp gewinnt mit, wenn er gehängt wurde.
         """
-        wurde_gehaengt = getattr(spieler, 'dorfdepp_gewonnen', False)
+        wurde_gehaengt = getattr(spieler, "dorfdepp_gewonnen", False)
         return wurde_gehaengt  # Gewinnt mit dem normalen Gewinner

@@ -50,14 +50,15 @@ class KleinesMaedchen(Role):
     def is_active_on_first_night(self) -> bool:
         """Kleines Mädchen acts every night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Kleines Mädchen acts every night."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for actions."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Kleines Mädchen - Blinzeln",
             instructions="Du kannst blinzeln um Werwölfe zu sehen (30% Risiko entdeckt zu werden).",
@@ -67,12 +68,12 @@ class KleinesMaedchen(Role):
                     action_type="sehen",
                     icon="fa-solid fa-eye",
                     css_class="btn-warning",
-                    requires_confirmation=True
+                    requires_confirmation=True,
                 )
             ],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def on_nacht_aktion(
@@ -83,11 +84,11 @@ class KleinesMaedchen(Role):
         zusatz_info: Optional[str] = None,
     ) -> AktionsErgebnis:
         """Das Kleine Mädchen blinzelt und sieht die Werwölfe - oder wird erwischt."""
-        
+
         # NOTE: With new UI, calling this method implies "Blinzeln" was clicked.
         # Unless explicitly skipped which game logic shouldn't call this for?
         # We assume if called, it's an action.
-        
+
         # Finde alle lebenden Werwölfe
         werwoelfe = []
         spieler_rollen = getattr(kontext, "spieler_rollen", {})

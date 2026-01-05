@@ -66,21 +66,22 @@ class Gerber(Role):
     def is_active_on_first_night(self) -> bool:
         """Gerber is passive."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Gerber is passive."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Gerber's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Gerber - Passive Rolle",
             instructions="Dein Ziel ist es, gehängt zu werden (und alle anderen mitzureißen).",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     @property

@@ -416,7 +416,7 @@ def spiel(code):
     # DYNAMIC STATE EFFECTS
     # Get all global state definitions for dynamic UI effects
     # =========================================================================
-    from roles import RoleRegistry, get_spieler_state, get_player_visual_effects
+    from roles import RoleRegistry, get_spieler_state, get_player_visual_effects, get_role_state_display
 
     global_state_defs = RoleRegistry.get_all_global_state_definitions()
 
@@ -429,6 +429,9 @@ def spiel(code):
         effects = get_player_visual_effects(s, global_state_defs, spieler.id)
         if effects:
             player_effects[s.id] = effects
+
+    # Get dynamic role state display for sidebar (replaces hardcoded Hexe/Jäger checks)
+    role_state_display = get_role_state_display(spieler)
 
     # Get the visible role for the current player (handles Hund, etc.)
     sichtbare_rolle = rolle_info.get("name", spieler.rolle) if rolle_info else spieler.rolle
@@ -470,6 +473,7 @@ def spiel(code):
         global_state_defs=global_state_defs,  # For template logic
         sichtbare_rolle=sichtbare_rolle,  # What player sees as their role
         rollen_styles=rollen_styles,  # Dynamic role colors/icons for CSS
+        role_state_display=role_state_display,  # Dynamic role state for sidebar
     )
 
 

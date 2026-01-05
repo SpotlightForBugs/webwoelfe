@@ -37,8 +37,22 @@ class Hexe(Role):
     def state_fields(self) -> List[StateField]:
         """Definiert die Zustandsfelder der Hexe."""
         return [
-            StateField("heiltrank", StateType.BOOL, True, "Hat noch Heiltrank"),
-            StateField("gifttrank", StateType.BOOL, True, "Hat noch Gifttrank"),
+            StateField(
+                name="heiltrank",
+                typ=StateType.BOOL,
+                default=True,
+                beschreibung="Heiltrank",
+                icon="fa-solid fa-flask",
+                css_class="status-heiltrank",
+            ),
+            StateField(
+                name="gifttrank",
+                typ=StateType.BOOL,
+                default=True,
+                beschreibung="Gifttrank",
+                icon="fa-solid fa-skull-crossbones",
+                css_class="status-gifttrank",
+            ),
         ]
 
     @property
@@ -154,9 +168,9 @@ class Hexe(Role):
             # Hole Opfer Namen
             opfer_name = kontext.spieler_namen.get(kontext.werwolf_opfer_id, "Unbekannt")
             return {
-                "opfer_name": opfer_name,
+                # Generic format - no hardcoded type needed
+                "nachricht": f"Das Werwolf-Opfer ist: {opfer_name}",
                 "opfer_id": kontext.werwolf_opfer_id,
-                "type": "werwolf_opfer"
             }
         return None
 

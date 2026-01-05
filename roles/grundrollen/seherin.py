@@ -176,11 +176,9 @@ class Seherin(Role):
             },
             private_infos={
                 spieler.id: {
-                    "type": "seherin_reveal",
-                    "ziel_name": ziel.name,
-                    "rolle": rollen_name,
-                    "ist_werwolf": ist_werwolf,
-                    "nachricht": nachricht
+                    # Generic format - no hardcoded type needed
+                    "nachricht": nachricht,
+                    "alert_type": "error" if ist_werwolf else "success",
                 }
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",

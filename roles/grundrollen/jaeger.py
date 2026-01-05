@@ -36,7 +36,14 @@ class Jaeger(Role):
     def state_fields(self) -> List[StateField]:
         """Definiert die Zustandsfelder des Jägers."""
         return [
-            StateField("schuss", StateType.BOOL, True, "Hat noch einen Schuss"),
+            StateField(
+                name="schuss",
+                typ=StateType.BOOL,
+                default=True,
+                beschreibung="Schuss",
+                icon="fa-solid fa-crosshairs",
+                css_class="status-schuss",
+            ),
         ]
 
     @property

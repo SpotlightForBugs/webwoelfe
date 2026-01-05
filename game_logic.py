@@ -662,7 +662,7 @@ def tag_abstimmung(raum: Raum) -> dict | None:
 
 def log_eintrag(raum_id: int, nachricht: str, sichtbar_fuer: str = "alle"):
     """
-    Erstellt einen Spiellog-Eintrag.
+    Erstellt einen Spiellog-Eintrag und sendet ihn via Socket.
 
     Args:
         raum_id: ID des Raums
@@ -675,6 +675,20 @@ def log_eintrag(raum_id: int, nachricht: str, sichtbar_fuer: str = "alle"):
     eintrag.sichtbar_fuer = sichtbar_fuer
     db.session.add(eintrag)
     db.session.commit()
+    
+    # Emit log update via socket for real-time UI updates
+    try:
+        from app import socketio
+        raum = Raum.query.get(raum_id)
+        if raum:
+            socketio.emit('spiel_log', {
+                'nachricht': nachricht,
+                'sichtbar_fuer': sichtbar_fuer,
+                'zeitpunkt': eintrag.zeitpunkt.strftime('%H:%M') if eintrag.zeitpunkt else ''
+            }, room=raum.code)
+    except Exception as e:
+        # Don't fail if socket emission fails
+        print(f"[Log] Warnung: Konnte Log nicht via Socket senden: {e}")
 
 
 def registriere_aktion(

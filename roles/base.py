@@ -430,6 +430,63 @@ def get_player_visual_effects(spieler: "Spieler",
     return effects
 
 
+def get_role_state_display(spieler: "Spieler") -> List[Dict[str, Any]]:
+    """
+    Ermittelt alle anzeigbaren Zustandsfelder für einen Spieler basierend auf
+    seiner Rolle und den state_fields() der Rolle.
+
+    Verwendet für die dynamische Sidebar-Anzeige statt hardcoded Hexe/Jäger checks.
+
+    Args:
+        spieler: Der Spieler dessen Status angezeigt werden soll
+
+    Returns:
+        Liste von Dicts mit {name, icon, label, value, display_value}
+    """
+    from . import RoleRegistry
+
+    if not spieler.rolle:
+        return []
+
+    role = RoleRegistry.get(spieler.rolle)
+    if not role:
+        return []
+
+    state_items = []
+    all_state = get_all_spieler_state(spieler)
+
+    # Hole State-Präfix für diese Rolle (z.B. "hexe", "jaeger")
+    role_prefix = spieler.rolle.lower().replace(" ", "_").replace("ä", "a").replace("ü", "u").replace("ö", "o")
+
+    for field in role.state_fields():
+        # Suche State mit vollem Key
+        full_key = f"{role_prefix}.{field.name}"
+        value = all_state.get(full_key, field.default)
+
+        # Nur Felder mit Icon/Beschreibung sind für Anzeige gedacht
+        if not field.icon and not field.beschreibung:
+            continue
+
+        # Bestimme Anzeigewert für Bool-Typen
+        if field.typ == StateType.BOOL:
+            display_value = "Vorhanden" if value else "Verbraucht"
+            if field.name == "schuss":
+                display_value = "Bereit" if value else "Abgefeuert"
+        else:
+            display_value = str(value) if value is not None else "Unbekannt"
+
+        state_items.append({
+            "name": field.name,
+            "icon": field.icon,
+            "label": field.beschreibung or field.name,
+            "value": value,
+            "display_value": display_value,
+            "css_class": field.css_class,
+        })
+
+    return state_items
+
+
 # =============================================================================
 # DATACLASSES
 # =============================================================================

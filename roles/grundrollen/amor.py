@@ -193,14 +193,29 @@ class Amor(Role):
             log_sichtbar_fuer="erzaehler",
             private_infos={
                 ziel1.id: {
-                    "type": "verliebt_reveal",
-                    "partner_name": ziel2.name,
-                    "nachricht": f"Du bist verliebt in {ziel2.name}! Eure Schicksale sind verbunden."
+                    # Generic overlay format - no hardcoded type needed
+                    "overlay": {
+                        "title": "Du bist verliebt!",
+                        "subtitle": "Dein Seelenpartner ist:",
+                        "highlight": f"{ziel2.name} 💘",
+                        "content": "Eure Schicksale sind verbunden. Stirbt einer, stirbt auch der andere!",
+                        "icon": "💕",
+                        "color": "#ec4899",
+                        "gradient": "linear-gradient(135deg, #ff69b4 0%, #ff1493 50%, #c71585 100%)",
+                        "animation": "heartbeat",
+                    }
                 },
                 ziel2.id: {
-                    "type": "verliebt_reveal",
-                    "partner_name": ziel1.name,
-                    "nachricht": f"Du bist verliebt in {ziel1.name}! Eure Schicksale sind verbunden."
+                    "overlay": {
+                        "title": "Du bist verliebt!",
+                        "subtitle": "Dein Seelenpartner ist:",
+                        "highlight": f"{ziel1.name} 💘",
+                        "content": "Eure Schicksale sind verbunden. Stirbt einer, stirbt auch der andere!",
+                        "icon": "💕",
+                        "color": "#ec4899",
+                        "gradient": "linear-gradient(135deg, #ff69b4 0%, #ff1493 50%, #c71585 100%)",
+                        "animation": "heartbeat",
+                    }
                 }
             }
         )

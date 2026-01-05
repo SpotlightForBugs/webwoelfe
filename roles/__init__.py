@@ -62,6 +62,7 @@ from .base import (
     has_global_state,
     get_players_with_state,
     get_player_visual_effects,
+    get_role_state_display,
 )
 from .registry import RoleRegistry
 from .enums import Team, Kategorie, Phase, TriggerTyp, Erweiterung
@@ -92,6 +93,7 @@ __all__ = [
     "get_all_spieler_state",
     "init_spieler_state",
     "reset_spieler_state",
+    "get_role_state_display",
     # Registry
     "RoleRegistry",
     # Enums

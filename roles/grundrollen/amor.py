@@ -14,6 +14,8 @@ from ..base import (
     RollenUI,
     StateField,
     StateType,
+    StateVisualEffect,
+    GlobalStateDefinition,
     get_spieler_state,
     set_spieler_state,
 )
@@ -42,6 +44,22 @@ class Amor(Role):
         return [
             StateField(
                 "hat_verkuppelt", StateType.BOOL, False, "Hat bereits Verliebte gewählt"
+            ),
+        ]
+
+    def global_state_definitions(self) -> List[GlobalStateDefinition]:
+        """Definiert den Verliebt-State der auf andere Spieler gesetzt wird."""
+        return [
+            GlobalStateDefinition(
+                key="global.verliebt_mit_id",
+                name="Verliebt",
+                typ=StateType.PLAYER_ID,
+                beschreibung="ID des Partners mit dem der Spieler verliebt ist",
+                visual_effect=StateVisualEffect.HEART,
+                css_class="verliebt-partner",
+                icon="💕",
+                query_name="verliebte",
+                defined_by="Amor",
             ),
         ]
 

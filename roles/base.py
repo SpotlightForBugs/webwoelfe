@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any, TYPE_CHECKING, Union
+from typing import Optional, List, Dict, Any, TYPE_CHECKING, Union, Callable
 from enum import Enum
 import json
 
@@ -27,6 +27,96 @@ class StateType(Enum):
     JSON = "json"  # Arbitrary JSON data
 
 
+class StateTarget(Enum):
+    """Wer wird von einem State betroffen? Basis-Typen."""
+    SELF = "self"  # Nur der eigene Spieler
+    OTHER = "other"  # Anderer Spieler (z.B. Verliebt, Infiziert)
+    GLOBAL = "global"  # Spielweite Auswirkung
+    ALL_PLAYERS = "all_players"  # Alle Spieler
+    TEAM = "team"  # Alle im selben Team
+    CUSTOM = "custom"  # Custom lambda function
+
+
+@dataclass
+class VisualEffectConfig:
+    """
+    Dynamische Konfiguration für visuelle Effekte.
+
+    Statt hardcoded Enum-Werte können Rollen ihre eigenen
+    visuellen Effekte komplett definieren.
+
+    Beispiel:
+        VisualEffectConfig(
+            css_class="kuh-milch",
+            icon="🥛",
+            icon_class="fa-solid fa-glass",
+            animation="pulse",
+            sound_on_show="moo.mp3",
+            show_to=lambda viewer, target: True,  # Alle sehen es
+        )
+    """
+    css_class: Optional[str] = None
+    icon: Optional[str] = None  # Emoji or text
+    icon_class: Optional[str] = None  # FontAwesome class
+    animation: Optional[str] = None  # CSS animation name
+    sound_on_show: Optional[str] = None  # Sound file to play
+    tooltip: Optional[str] = None
+    # Lambda: (viewer_spieler, target_spieler) -> bool
+    # Determines who can see this effect
+    show_to: Optional[Callable[["Spieler", "Spieler"], bool]] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "css_class": self.css_class,
+            "icon": self.icon,
+            "icon_class": self.icon_class,
+            "animation": self.animation,
+            "sound_on_show": self.sound_on_show,
+            "tooltip": self.tooltip,
+        }
+
+
+# Legacy enum for backward compatibility - prefer VisualEffectConfig
+class StateVisualEffect(Enum):
+    """Visuelle Effekte - DEPRECATED, use VisualEffectConfig instead."""
+    NONE = "none"
+    HEART = "heart"
+    INFECTED = "infected"
+    MARKED = "marked"
+    ENCHANTED = "enchanted"
+    PROTECTED = "protected"
+    CURSED = "cursed"
+    WOLF_ICON = "wolf"
+    CUSTOM = "custom"
+
+
+@dataclass
+class TargetingConfig:
+    """
+    Dynamische Targeting-Konfiguration.
+
+    Ermöglicht komplexe Targeting-Logik über Lambda-Funktionen.
+
+    Beispiel:
+        TargetingConfig(
+            base_target=StateTarget.ALL_PLAYERS,
+            filter_fn=lambda spieler, kontext: spieler.rolle != "Werwolf",
+            description="Alle Dorfbewohner",
+        )
+    """
+    base_target: StateTarget = StateTarget.SELF
+    # Lambda: (target_spieler, kontext) -> bool
+    filter_fn: Optional[Callable[["Spieler", "SpielKontext"], bool]] = None
+    description: str = ""
+
+    def get_targets(self, alle_spieler: List["Spieler"],
+                    kontext: "SpielKontext") -> List["Spieler"]:
+        """Ermittelt alle gültigen Ziele."""
+        if self.filter_fn:
+            return [s for s in alle_spieler if self.filter_fn(s, kontext)]
+        return alle_spieler
+
+
 @dataclass
 class StateField:
     """
@@ -43,8 +133,33 @@ class StateField:
     beschreibung: str = ""
     persistent: bool = True  # Bleibt über Runden erhalten
 
+    # Für States die auf ANDERE Spieler wirken
+    target: StateTarget = StateTarget.SELF
+
+    # Advanced targeting with lambda support
+    targeting_config: Optional[TargetingConfig] = None
+
+    # Legacy visual effect enum (deprecated)
+    visual_effect: StateVisualEffect = StateVisualEffect.NONE
+
+    # New: Dynamic visual effect config
+    visual_config: Optional[VisualEffectConfig] = None
+
+    # CSS-Klasse für Spielerkarte wenn State aktiv
+    css_class: Optional[str] = None
+
+    # Icon/Emoji für Anzeige
+    icon: Optional[str] = None
+
+    # Soll dieser State bei Spielabfragen berücksichtigt werden?
+    queryable: bool = False
+
+    # Query-Name für dynamische Abfragen (z.B. "verliebte", "infizierte")
+    query_name: Optional[str] = None
+
     def validate(self, value: Any) -> bool:
         """Prüft, ob ein Wert dem Typ entspricht."""
+        #TODO: ADD MORE TYPES (TEAM; EXPANSION; ALIVE_STATE;)
         if value is None:
             return True
         if self.typ == StateType.BOOL:
@@ -74,6 +189,86 @@ class StateField:
         elif self.typ == StateType.FLOAT:
             return float(value) if value is not None else self.default
         return value
+
+
+@dataclass
+class GlobalStateDefinition:
+    """
+    Definition eines globalen States der auf ANDERE Spieler gesetzt werden kann.
+
+    Wird von Rollen definiert und beim Registry-Laden gesammelt.
+    Ermöglicht dynamische Queries statt hardcoded Checks.
+    """
+    key: str  # Voller Key inkl. "global." prefix
+    name: str  # Anzeigename
+    typ: StateType = StateType.BOOL
+    beschreibung: str = ""
+    default: Any = None
+
+    # Legacy visual effect (deprecated)
+    visual_effect: StateVisualEffect = StateVisualEffect.NONE
+
+    # New: Dynamic visual config
+    visual_config: Optional[VisualEffectConfig] = None
+
+    css_class: Optional[str] = None
+    icon: Optional[str] = None
+    query_name: Optional[str] = None
+    defined_by: str = ""
+
+    # Targeting config for complex targeting
+    targeting_config: Optional[TargetingConfig] = None
+
+
+@dataclass
+class NachtEvent:
+    """
+    Definition eines Nacht-Events das für ALLE Spieler sichtbar/hörbar ist.
+
+    Ermöglicht Rollen, globale Events zu triggern (z.B. Kuh muht).
+    """
+    event_id: str
+    sound_file: Optional[str] = None  # z.B. "moo.mp3"
+    text: Optional[str] = None  # Text der angezeigt wird
+    animation: Optional[str] = None  # CSS animation
+    # Lambda: (kontext) -> bool - Wann soll Event triggern
+    trigger_condition: Optional[Callable[["SpielKontext"], bool]] = None
+    # Für welche Phasen
+    phases: List[str] = field(default_factory=lambda: ["nacht"])
+
+
+@dataclass
+class UIButtonDefinition:
+    """
+    Dynamische Button-Definition die Rollen für andere Spieler hinzufügen können.
+
+    Beispiel: Kuh fügt "Milch trinken" Button für alle Dorfbewohner hinzu.
+    """
+    button_id: str
+    label: str
+    action_type: str
+    icon: Optional[str] = None
+    css_class: str = "btn-primary"
+    # Lambda: (spieler, kontext) -> bool - Wer sieht diesen Button
+    show_to: Optional[Callable[["Spieler", "SpielKontext"], bool]] = None
+    # Lambda: (spieler, kontext) -> AktionsErgebnis - Was passiert bei Klick
+    on_click: Optional[Callable[["Spieler", "SpielKontext"], "AktionsErgebnis"]] = None
+    requires_confirmation: bool = False
+    tooltip: Optional[str] = None
+
+
+@dataclass
+class RollenModell:
+    """
+    Definition des 3D/2D Modells für eine Rolle.
+
+    Ermöglicht dynamische Modell-Definitionen pro Rolle.
+    """
+    modell_id: str  # z.B. "hund", "werhund", "kuh"
+    anzeige_name: str  # Was im UI angezeigt wird
+    # Lambda: (spieler, kontext) -> str - Dynamische Modell-Auswahl
+    modell_selector: Optional[Callable[["Spieler", "SpielKontext"], str]] = None
+    beschreibung: str = ""
 
 
 @dataclass
@@ -162,6 +357,74 @@ def init_spieler_state(spieler: "Spieler", defaults: Dict[str, Any]) -> None:
 def reset_spieler_state(spieler: "Spieler") -> None:
     """Setzt den kompletten Spieler-Zustand zurück."""
     spieler.rolle_zustand = "{}"
+
+
+def has_global_state(spieler: "Spieler", state_key: str) -> bool:
+    """Prüft ob ein Spieler einen bestimmten globalen State hat (truthy)."""
+    value = get_spieler_state(spieler, state_key)
+    return value is not None and value is not False and value != 0
+
+
+def get_players_with_state(spieler_liste: List["Spieler"], state_key: str,
+                           value: Any = None) -> List["Spieler"]:
+    """
+    Findet alle Spieler die einen bestimmten State haben.
+
+    Args:
+        spieler_liste: Liste aller Spieler
+        state_key: Der State-Key (z.B. "global.verliebt_mit_id")
+        value: Optional - wenn gesetzt, nur Spieler mit diesem Wert
+
+    Returns:
+        Liste der Spieler mit dem State
+    """
+    result = []
+    for s in spieler_liste:
+        state_value = get_spieler_state(s, state_key)
+        if value is not None:
+            if state_value == value:
+                result.append(s)
+        elif state_value is not None and state_value is not False and state_value != 0:
+            result.append(s)
+    return result
+
+
+def get_player_visual_effects(spieler: "Spieler",
+                               global_state_defs: Dict[str, "GlobalStateDefinition"],
+                               viewer_id: Optional[int] = None) -> List[Dict[str, Any]]:
+    """
+    Ermittelt alle visuellen Effekte die für einen Spieler angezeigt werden sollen.
+
+    Args:
+        spieler: Der Spieler dessen Effekte ermittelt werden
+        global_state_defs: Dict aller GlobalStateDefinitions
+        viewer_id: ID des betrachtenden Spielers (für Sichtbarkeit)
+
+    Returns:
+        Liste von Effekt-Dicts mit css_class, icon, etc.
+    """
+    effects = []
+    all_state = get_all_spieler_state(spieler)
+
+    for key, value in all_state.items():
+        if not key.startswith("global."):
+            continue
+        if value is None or value is False or value == 0:
+            continue
+
+        # Suche GlobalStateDefinition
+        if key in global_state_defs:
+            gsd = global_state_defs[key]
+            effects.append({
+                "key": key,
+                "value": value,
+                "css_class": gsd.css_class,
+                "icon": gsd.icon,
+                "visual_effect": gsd.visual_effect.value if gsd.visual_effect else None,
+                "name": gsd.name,
+            })
+
+    return effects
 
 
 # =============================================================================
@@ -333,6 +596,108 @@ class Role(ABC):
                 return [
                     StateField("heiltrank", StateType.BOOL, True),
                     StateField("gifttrank", StateType.BOOL, True),
+                ]
+        """
+        return []
+
+    def global_state_definitions(self) -> List[GlobalStateDefinition]:
+        """
+        Definiert globale States die diese Rolle auf ANDERE Spieler setzen kann.
+
+        Diese werden beim Registry-Laden gesammelt und ermöglichen:
+        - Dynamische Abfragen ("finde alle Verliebten")
+        - Automatische UI-Effekte (Herz bei Verliebten)
+        - Keine hardcoded Checks in game_logic
+
+        Returns:
+            Liste von GlobalStateDefinition
+
+        Beispiel (Amor):
+            def global_state_definitions(self):
+                return [
+                    GlobalStateDefinition(
+                        key="global.verliebt_mit_id",
+                        name="Verliebt",
+                        typ=StateType.PLAYER_ID,
+                        visual_effect=StateVisualEffect.HEART,
+                        css_class="verliebt-partner",
+                        icon="💕",
+                        query_name="verliebte",
+                        defined_by="Amor",
+                    )
+                ]
+        """
+        return []
+
+    def get_sichtbare_rolle(self, spieler: "Spieler") -> str:
+        """
+        Gibt die Rolle zurück die der Spieler für SICH SELBST sieht.
+
+        Wichtig für Rollen die ihre Identität ändern können (Hund, Wildes Kind).
+        Kann überschrieben werden um dynamisch die sichtbare Rolle zu ändern.
+
+        Args:
+            spieler: Der Spieler mit dieser Rolle
+
+        Returns:
+            Der Rollenname der angezeigt werden soll
+        """
+        return self.info.name
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """
+        Gibt die 3D/2D Modell-Definition für diese Rolle zurück.
+
+        Kann überschrieben werden für dynamische Modell-Auswahl
+        (z.B. Hund -> Werhund wenn verwandelt).
+
+        Args:
+            spieler: Der Spieler mit dieser Rolle
+
+        Returns:
+            RollenModell-Definition
+        """
+        return RollenModell(
+            modell_id=self.info.name.lower().replace(" ", "_"),
+            anzeige_name=self.info.name,
+        )
+
+    def get_nacht_events(self) -> List[NachtEvent]:
+        """
+        Gibt Nacht-Events zurück die diese Rolle triggert.
+
+        Diese Events sind für ALLE Spieler sichtbar/hörbar.
+
+        Beispiel (Kuh):
+            def get_nacht_events(self):
+                return [
+                    NachtEvent(
+                        event_id="kuh_muht",
+                        sound_file="moo.mp3",
+                        text="Die Kuh muht in der Nacht...",
+                        phases=["nacht"],
+                    )
+                ]
+        """
+        return []
+
+    def get_ui_buttons_for_others(self) -> List[UIButtonDefinition]:
+        """
+        Gibt UI-Buttons zurück die diese Rolle für ANDERE Spieler hinzufügt.
+
+        Ermöglicht Rollen, Interaktions-Buttons für andere Spieler zu definieren.
+
+        Beispiel (Kuh):
+            def get_ui_buttons_for_others(self):
+                return [
+                    UIButtonDefinition(
+                        button_id="milch_trinken",
+                        label="Milch trinken",
+                        action_type="milch_trinken",
+                        icon="fa-solid fa-glass",
+                        show_to=lambda s, k: s.rolle in ["Dorfbewohner", ...],
+                        on_click=self.handle_milch_trinken,
+                    )
                 ]
         """
         return []

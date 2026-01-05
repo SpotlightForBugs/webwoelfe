@@ -10,6 +10,8 @@ from ..base import (
     SpielKontext,
     StateField,
     StateType,
+    StateVisualEffect,
+    GlobalStateDefinition,
     set_spieler_state,
     get_spieler_state,
 )
@@ -40,6 +42,22 @@ class Floetenspieler(Role):
                 StateType.PLAYER_IDS,
                 [],
                 "Liste verzauberter Spieler-IDs",
+            ),
+        ]
+
+    def global_state_definitions(self) -> List[GlobalStateDefinition]:
+        """Definiert den Verzaubert-State der auf andere Spieler gesetzt wird."""
+        return [
+            GlobalStateDefinition(
+                key="global.ist_verzaubert",
+                name="Verzaubert",
+                typ=StateType.BOOL,
+                beschreibung="Spieler wurde vom Flötenspieler verzaubert",
+                visual_effect=StateVisualEffect.ENCHANTED,
+                css_class="verzaubert",
+                icon="🎵",
+                query_name="verzauberte",
+                defined_by="Floetenspieler",
             ),
         ]
 

@@ -315,6 +315,176 @@ class RoleRegistry:
         return result
 
     @classmethod
+    def get_all_global_state_definitions(cls) -> Dict[str, Any]:
+        """
+        Sammelt alle GlobalStateDefinitions aus allen Rollen.
+
+        Diese definieren States die Rollen auf ANDERE Spieler setzen können
+        (z.B. Amor setzt verliebt_mit_id, Urwolf setzt ist_infiziert).
+
+        Returns:
+            Dict von state_key -> GlobalStateDefinition-Dict
+        """
+        from .base import GlobalStateDefinition
+
+        result = {}
+        for name, role in cls._instances.items():
+            try:
+                defs = role.global_state_definitions()
+                for gsd in defs:
+                    result[gsd.key] = {
+                        "key": gsd.key,
+                        "name": gsd.name,
+                        "typ": gsd.typ.value,
+                        "beschreibung": gsd.beschreibung,
+                        "default": gsd.default,
+                        "visual_effect": gsd.visual_effect.value if gsd.visual_effect else None,
+                        "css_class": gsd.css_class,
+                        "icon": gsd.icon,
+                        "query_name": gsd.query_name,
+                        "defined_by": gsd.defined_by or name,
+                    }
+            except Exception as e:
+                logger.warning(f"Fehler beim Laden der GlobalStateDefinitions von {name}: {e}")
+
+        return result
+
+    @classmethod
+    def get_players_by_query(cls, spieler_liste: List["Spieler"],
+                              query_name: str) -> List["Spieler"]:
+        """
+        Findet Spieler basierend auf einem Query-Namen.
+
+        Args:
+            spieler_liste: Liste aller Spieler
+            query_name: Der Query-Name (z.B. "verliebte", "infizierte")
+
+        Returns:
+            Liste der passenden Spieler
+        """
+        from .base import get_spieler_state
+
+        all_defs = cls.get_all_global_state_definitions()
+
+        # Finde den State-Key für den Query-Namen
+        target_key = None
+        for key, gsd in all_defs.items():
+            if gsd.get("query_name") == query_name:
+                target_key = key
+                break
+
+        if not target_key:
+            return []
+
+        # Finde Spieler mit diesem State
+        result = []
+        for s in spieler_liste:
+            value = get_spieler_state(s, target_key)
+            if value is not None and value is not False and value != 0:
+                result.append(s)
+
+        return result
+
+    @classmethod
+    def get_all_nacht_events(cls, aktive_rollen: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        """
+        Sammelt alle Nacht-Events von allen (oder spezifizierten) Rollen.
+
+        Args:
+            aktive_rollen: Optional - Liste der aktiven Rollennamen im Spiel
+
+        Returns:
+            Liste von NachtEvent-Dicts
+        """
+        result = []
+        for name, role in cls._instances.items():
+            if aktive_rollen and name not in aktive_rollen:
+                continue
+            try:
+                events = role.get_nacht_events()
+                for event in events:
+                    result.append({
+                        "event_id": event.event_id,
+                        "sound_file": event.sound_file,
+                        "text": event.text,
+                        "animation": event.animation,
+                        "phases": event.phases,
+                        "defined_by": name,
+                    })
+            except Exception as e:
+                logger.warning(f"Fehler beim Laden der NachtEvents von {name}: {e}")
+        return result
+
+    @classmethod
+    def get_all_ui_buttons_for_others(cls,
+                                       spieler: "Spieler",
+                                       kontext: Any,
+                                       aktive_rollen: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        """
+        Sammelt alle UI-Buttons die andere Rollen für diesen Spieler definiert haben.
+
+        Args:
+            spieler: Der Spieler für den Buttons gesammelt werden
+            kontext: SpielKontext
+            aktive_rollen: Optional - Liste der aktiven Rollennamen im Spiel
+
+        Returns:
+            Liste von UIButtonDefinition-Dicts
+        """
+        result = []
+        for name, role in cls._instances.items():
+            if aktive_rollen and name not in aktive_rollen:
+                continue
+            try:
+                buttons = role.get_ui_buttons_for_others()
+                for btn in buttons:
+                    # Prüfe ob dieser Spieler den Button sehen soll
+                    if btn.show_to and not btn.show_to(spieler, kontext):
+                        continue
+                    result.append({
+                        "button_id": btn.button_id,
+                        "label": btn.label,
+                        "action_type": btn.action_type,
+                        "icon": btn.icon,
+                        "css_class": btn.css_class,
+                        "requires_confirmation": btn.requires_confirmation,
+                        "tooltip": btn.tooltip,
+                        "defined_by": name,
+                    })
+            except Exception as e:
+                logger.warning(f"Fehler beim Laden der UIButtons von {name}: {e}")
+        return result
+
+    @classmethod
+    def get_modell_for_player(cls, spieler: "Spieler") -> Optional[Dict[str, Any]]:
+        """
+        Ermittelt das 3D/2D Modell für einen Spieler basierend auf seiner Rolle.
+
+        Args:
+            spieler: Der Spieler
+
+        Returns:
+            RollenModell-Dict oder None
+        """
+        if not spieler.rolle:
+            return None
+
+        role = cls.get(spieler.rolle)
+        if not role:
+            return None
+
+        try:
+            modell = role.get_modell_definition(spieler)
+            return {
+                "modell_id": modell.modell_id,
+                "anzeige_name": modell.anzeige_name,
+                "beschreibung": modell.beschreibung,
+            }
+        except Exception as e:
+            logger.warning(f"Fehler beim Laden des Modells für {spieler.rolle}: {e}")
+            return None
+
+    @classmethod
     def clear(cls) -> None:
         """Löscht alle registrierten Rollen (für Tests)."""
         cls._registry.clear()

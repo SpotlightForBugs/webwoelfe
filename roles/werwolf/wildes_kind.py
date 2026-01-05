@@ -36,11 +36,11 @@ class WildesKind(Role):
     - Team wechselt bei Verwandlung
     - Nach Verwandlung: Jagt mit den Wölfen
 
-    Gewinnbedingung: Abhängig von Verwandlung.
+    Gewinnbedingung: Abhängig von der Verwandlung.
     """
 
     def state_fields(self) -> List[StateField]:
-        """Definiert die Zustandsfelder des Wilden Kindes."""
+        """Definiert die Zustandsfelder des wilden Kindes."""
         return [
             StateField("vorbild_id", StateType.PLAYER_ID, None, "ID des Vorbilds"),
             StateField("verwandelt", StateType.BOOL, False, "Zum Werwolf verwandelt"),

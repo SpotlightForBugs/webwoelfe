@@ -43,34 +43,34 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     font-weight: 600;
   }
 
-  .rolle-werwolf {
-    background: var(--accent-red);
-    color: white;
+  /* Fallback for unknown roles */
+  .rolle-unbekannt {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
   }
-  .rolle-dorf {
-    background: var(--accent-blue);
-    color: white;
-  }
-  .rolle-hexe {
-    background: var(--accent-green);
-    color: white;
-  }
-  .rolle-seherin {
-    background: #7b68ee;
-    color: white;
-  }
-  .rolle-jäger {
-    background: #b8860b;
-    color: white;
-  }
-  .rolle-amor {
-    background: #ff69b4;
-    color: white;
-  }
-  .rolle-erzähler {
+
+  /* Erzähler special case */
+  .rolle-erzaehler {
     background: var(--accent-gold);
     color: var(--bg-primary);
   }
+
+  /* ============================================================
+     DYNAMISCH GENERIERTE ROLLEN-STYLES
+     Farben kommen aus RollenInfo.farbe im Backend
+     ============================================================ */
+  {% if rollen_styles %}
+  {% for css_name, style in rollen_styles.items() %}
+  .rolle-{{ css_name }} {
+    background: {{ style.farbe }};
+    color: white;
+  }
+  .spieler-avatar.rolle-{{ css_name }} {
+    background: linear-gradient(145deg, {{ style.farbe }} 0%, {{ style.farbe }}cc 100%);
+    border-color: {{ style.farbe }};
+  }
+  {% endfor %}
+  {% endif %}
 
   .spieler-grid {
     display: grid;
@@ -233,6 +233,19 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   .spieler-card.verliebt-partner .spieler-avatar {
     border-color: #ff69b4;
+  }
+
+  /* Dynamic effect icons from player_effects (in avatar) */
+  .spieler-avatar .effect-icon {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    padding: 3px;
+    z-index: 2;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
   }
 
   /* Eigene Karte */
@@ -1147,7 +1160,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           </div>
           <div>
             <span
-              class="rolle-badge rolle-{{ spieler.rolle|lower if spieler.rolle else 'dorf' }}"
+              class="rolle-badge rolle-{{ spieler.rolle|css_class if spieler.rolle else 'unbekannt' }}"
             >
               {{ spieler.rolle or 'Warte...' }}
             </span>
@@ -1229,46 +1242,55 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       <div class="card fade-in delay-2">
         <h3 class="mb-2"><i class="fa-solid fa-users"></i> Spieler</h3>
         <div class="spieler-grid" id="spieler-grid">
-          {% for s in alle_spieler %} {% set ist_werwolf_team = spieler.rolle
-          and 'Werwolf' in spieler.rolle and s.rolle and 'Werwolf' in s.rolle
-          and s.id != spieler.id %} {% set ist_seherin_enthuellung = enthuellung
-          and s.id in enthuellung %} {% set ist_verliebt_partner =
-          verliebt_mit_id and s.id == verliebt_mit_id %}
+          {% for s in alle_spieler %}
+          {# ================================================================
+             ALL visibility logic now comes from player_effects (backend)
+             No more hardcoded role checks like ist_werwolf_team!
+             ================================================================ #}
+          {% set spieler_effekte = player_effects.get(s.id, []) if player_effects else [] %}
+
+          {# Build dynamic CSS classes from ALL effects (including visibility) #}
+          {% set dynamic_css = [] %}
+          {% for effect in spieler_effekte %}
+            {% if effect.css_class %}
+              {% set _ = dynamic_css.append(effect.css_class) %}
+            {% endif %}
+          {% endfor %}
+
+          {# Check if player knows this player's role (for data-rolle attribute) #}
+          {% set kennt_rolle = spieler.ist_erzaehler or s.id == spieler.id or not s.ist_am_leben %}
+          {% set ist_werwolf_sichtbar = spieler_effekte|selectattr('key', 'equalto', 'visibility.werwolf_team')|list|length > 0 %}
+
           <div
-            class="spieler-card 
+            class="spieler-card
                          {{ 'tot' if not s.ist_am_leben else '' }}
-                         {{ 'werwolf-team-sichtbar' if ist_werwolf_team and s.ist_am_leben else '' }}
-                         {{ 'seherin-enthuellt-werwolf' if ist_seherin_enthuellung and enthuellung[s.id] == 'boese' else '' }}
-                         {{ 'seherin-enthuellt-dorf' if ist_seherin_enthuellung and enthuellung[s.id] == 'gut' else '' }}
-                         {{ 'verliebt-partner' if ist_verliebt_partner else '' }}
+                         {{ dynamic_css|join(' ') }}
                          {{ 'ist-ich' if s.id == spieler.id else '' }}
                          {{ 'erzaehler-card' if s.ist_erzaehler else '' }}
-                         rolle-{{ s.rolle|lower|replace(' ', '-')|default('unbekannt') if spieler.ist_erzaehler or s.id == spieler.id else 'unbekannt' }}"
+                         rolle-{{ s.rolle|css_class if kennt_rolle and s.rolle else 'unbekannt' }}"
             data-id="{{ s.id }}"
             data-name="{{ s.name }}"
-            data-rolle="{{ s.rolle if spieler.ist_erzaehler or s.id == spieler.id or ist_werwolf_team else '' }}"
+            data-rolle="{{ s.rolle if kennt_rolle or ist_werwolf_sichtbar else '' }}"
             data-ist-erzaehler="{{ s.ist_erzaehler|lower }}"
             onclick="selectSpieler({{ s.id }})"
           >
             <div class="spieler-avatar">
               <span class="avatar-initial">{{ s.name[0]|upper }}</span>
-              {% if ist_werwolf_team %}
-              <span class="rolle-icon werwolf-icon">🐺</span>
-              {% elif ist_seherin_enthuellung and enthuellung[s.id] == 'boese'
-              %}
-              <span class="rolle-icon boese-icon">⚠️</span>
-              {% elif ist_seherin_enthuellung and enthuellung[s.id] == 'gut' %}
-              <span class="rolle-icon gut-icon">✓</span>
-              {% endif %}
+              {# Dynamic icons from effects - replaces hardcoded werwolf/seherin icons #}
+              {% for effect in spieler_effekte %}
+                {% if effect.icon %}
+                <span class="rolle-icon effect-icon" title="{{ effect.name }}">{{ effect.icon }}</span>
+                {% endif %}
+              {% endfor %}
             </div>
             <div class="spieler-name">{{ s.name }}</div>
             {% if s.id == spieler.id %}
             <div class="spieler-label selbst">(Du)</div>
-            {% endif %} {% if s.ist_erzaehler %}
+            {% endif %}
+            {% if s.ist_erzaehler %}
             <div class="spieler-label erzaehler">(Erzähler)</div>
-            {% endif %} {% if ist_verliebt_partner %}
-            <div class="verliebt-herz">💕</div>
-            {% endif %} {% if spieler.ist_erzaehler and s.rolle %}
+            {% endif %}
+            {% if spieler.ist_erzaehler and s.rolle %}
             <div class="spieler-rolle-tag">{{ s.rolle }}</div>
             {% endif %}
           </div>

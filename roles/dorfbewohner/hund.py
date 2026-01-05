@@ -13,6 +13,7 @@ from ..base import (
     SpielKontext,
     StateField,
     StateType,
+    RollenModell,
 )
 from ..enums import Team, Kategorie, SichtTyp, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 @RoleRegistry.register
 class Hund(Role):
     """
-    Hund - Bedingte Verwandlungs-Rolle.
+    Hund
 
     Fähigkeiten:
     - Wählt in der ersten Nacht sein Herrchen
@@ -48,6 +49,36 @@ class Hund(Role):
             StateField("gewaehlt", StateType.BOOL, False, "Herrchen bereits gewählt"),
             StateField("verwandelt", StateType.BOOL, False, "Zum Werwolf verwandelt"),
         ]
+
+    def get_sichtbare_rolle(self, spieler: "Spieler") -> str:
+        """
+        Der Hund sieht sich als "Hund" oder "Werhund" je nach Verwandlung.
+
+        - Vor Verwandlung: "Hund"
+        - Nach Verwandlung: "Werhund" (behält Hund-Identität, aber mit Wolf-Aspekt)
+        """
+        if self.get_state(spieler, "verwandelt"):
+            return "Werhund"
+        return "Hund"
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """
+        Dynamische Modell-Auswahl basierend auf Verwandlungsstatus.
+
+        - Vor Verwandlung: hund (normaler Hund)
+        - Nach Verwandlung: werhund (Wolf-Hund Hybrid)
+        """
+        if self.get_state(spieler, "verwandelt"):
+            return RollenModell(
+                modell_id="werhund",
+                anzeige_name="Werhund",
+                beschreibung="Ein Hund der zum Werwolf wurde",
+            )
+        return RollenModell(
+            modell_id="hund",
+            anzeige_name="Hund",
+            beschreibung="Ein treuer Hund",
+        )
 
     @property
     def info(self) -> RollenInfo:

@@ -544,8 +544,9 @@ def pruefe_spielende(raum: Raum) -> dict | None:
     werwoelfe = [s for s in lebende if ist_werwolf_rolle(s.rolle)]
     dorfbewohner = [s for s in lebende if not ist_werwolf_rolle(s.rolle)]
 
-    # Verliebten-Check - use state-based lookup
-    verliebte = [s for s in lebende if s.get_state("global.verliebt_mit_id")]
+    # Verliebten-Check - dynamisch via Registry
+    from roles import RoleRegistry
+    verliebte = RoleRegistry.get_players_by_query(lebende, "verliebte")
 
     if len(verliebte) == 2 and all(v.ist_am_leben for v in verliebte):
         # Pruefen ob nur noch die Verliebten leben

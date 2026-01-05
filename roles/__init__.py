@@ -38,7 +38,15 @@ from pathlib import Path
 from .base import (
     Role,
     StateType,
+    StateTarget,
+    StateVisualEffect,
+    VisualEffectConfig,
+    TargetingConfig,
     StateField,
+    GlobalStateDefinition,
+    NachtEvent,
+    UIButtonDefinition,
+    RollenModell,
     ErzaehlerEvent,
     HinweisConfig,
     RollenInfo,
@@ -51,6 +59,9 @@ from .base import (
     get_all_spieler_state,
     init_spieler_state,
     reset_spieler_state,
+    has_global_state,
+    get_players_with_state,
+    get_player_visual_effects,
 )
 from .registry import RoleRegistry
 from .enums import Team, Kategorie, Phase, TriggerTyp, Erweiterung
@@ -65,7 +76,15 @@ __all__ = [
     "RollenUI",
     # State management
     "StateType",
+    "StateTarget",
+    "StateVisualEffect",
+    "VisualEffectConfig",
+    "TargetingConfig",
     "StateField",
+    "GlobalStateDefinition",
+    "NachtEvent",
+    "UIButtonDefinition",
+    "RollenModell",
     "ErzaehlerEvent",
     "HinweisConfig",
     "get_spieler_state",

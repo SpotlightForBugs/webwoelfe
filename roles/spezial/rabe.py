@@ -13,6 +13,8 @@ from ..base import (
     SpielKontext,
     StateField,
     StateType,
+    StateVisualEffect,
+    GlobalStateDefinition,
     set_spieler_state,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
@@ -43,6 +45,22 @@ class Rabe(Role):
         return [
             StateField(
                 "markiert_id", StateType.PLAYER_ID, None, "Aktuell markierter Spieler"
+            ),
+        ]
+
+    def global_state_definitions(self) -> List[GlobalStateDefinition]:
+        """Definiert den Markiert-State der auf andere Spieler gesetzt wird."""
+        return [
+            GlobalStateDefinition(
+                key="global.rabe_markiert",
+                name="Vom Raben markiert",
+                typ=StateType.BOOL,
+                beschreibung="Spieler wurde vom Raben markiert (+2 Stimmen gegen sich)",
+                visual_effect=StateVisualEffect.MARKED,
+                css_class="rabe-markiert",
+                icon="🐦‍⬛",
+                query_name="markierte",
+                defined_by="Rabe",
             ),
         ]
 

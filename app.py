@@ -66,6 +66,27 @@ with app.app_context():
     db.create_all()
 
 
+# =============================================================================
+# JINJA TEMPLATE FILTERS
+# =============================================================================
+
+@app.template_filter('css_class')
+def to_css_class(value):
+    """
+    Konvertiert einen Rollennamen in einen CSS-Klassen-Namen.
+    Ersetzt Umlaute und Sonderzeichen für valide CSS-Klassennamen.
+
+    Beispiel: "Jäger" -> "jaeger", "Weiße Wölfin" -> "weisse-woelfin"
+    """
+    if not value:
+        return 'unbekannt'
+    result = value.lower()
+    result = result.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
+    result = result.replace('ß', 'ss')
+    result = result.replace(' ', '-')
+    return result
+
+
 # Cleanup Task starten
 def start_cleanup_task():
     """Startet den Hintergrund-Task zur Bereinigung alter Spiele"""
@@ -396,8 +417,46 @@ def spiel(code):
         ziel_id: data["typ"] for ziel_id, data in seherin_enthuellung.items()
     }
 
-    # Get verliebt_mit_id from state for template
+    # =========================================================================
+    # DYNAMIC STATE EFFECTS
+    # Get all global state definitions for dynamic UI effects
+    # =========================================================================
+    from roles import RoleRegistry, get_spieler_state, get_player_visual_effects
+
+    global_state_defs = RoleRegistry.get_all_global_state_definitions()
+
+    # Get verliebt_mit_id from state for template (still needed for backward compat)
     verliebt_mit_id = spieler.get_state("global.verliebt_mit_id")
+
+    # Build player visual effects map: {player_id: [effect_dicts]}
+    player_effects = {}
+    for s in alle_spieler:
+        effects = get_player_visual_effects(s, global_state_defs, spieler.id)
+        if effects:
+            player_effects[s.id] = effects
+
+    # Get the visible role for the current player (handles Hund, etc.)
+    sichtbare_rolle = rolle_info.get("name", spieler.rolle) if rolle_info else spieler.rolle
+    if spieler.rolle:
+        role_obj = RoleRegistry.get(spieler.rolle)
+        if role_obj:
+            sichtbare_rolle = role_obj.get_sichtbare_rolle(spieler)
+
+    # =========================================================================
+    # DYNAMIC ROLE STYLES
+    # Build role style data for dynamic CSS generation in template
+    # =========================================================================
+    rollen_styles = {}
+    for role in RoleRegistry.get_all():
+        info = role.info
+        # Normalize role name to CSS class name
+        css_name = info.name.lower().replace(' ', '-').replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss')
+        rollen_styles[css_name] = {
+            'name': info.name,
+            'farbe': info.farbe,
+            'icon': info.icon,
+            'team': info.team.value,
+        }
 
     return render_template(
         "spiel.html",
@@ -411,7 +470,11 @@ def spiel(code):
         phasen=PHASEN,
         erzaehler_text=erzaehler_text,
         enthuellung=enthuellung,  # Seherin-Snapshot
-        verliebt_mit_id=verliebt_mit_id,  # From state
+        verliebt_mit_id=verliebt_mit_id,  # From state (backward compat)
+        player_effects=player_effects,  # Dynamic visual effects
+        global_state_defs=global_state_defs,  # For template logic
+        sichtbare_rolle=sichtbare_rolle,  # What player sees as their role
+        rollen_styles=rollen_styles,  # Dynamic role colors/icons for CSS
     )
 
 

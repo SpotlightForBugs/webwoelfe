@@ -13,6 +13,9 @@ from ..base import (
     SpielKontext,
     StateField,
     StateType,
+    StateVisualEffect,
+    GlobalStateDefinition,
+    set_spieler_state,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -38,6 +41,22 @@ class Urwolf(Role):
         """Definiert die Zustandsfelder des Urwolfs."""
         return [
             StateField("infektion", StateType.BOOL, True, "Kann noch infizieren"),
+        ]
+
+    def global_state_definitions(self) -> List[GlobalStateDefinition]:
+        """Definiert den Infiziert-State der auf andere Spieler gesetzt wird."""
+        return [
+            GlobalStateDefinition(
+                key="global.ist_infiziert",
+                name="Infiziert",
+                typ=StateType.BOOL,
+                beschreibung="Spieler wurde vom Urwolf infiziert und wird zum Werwolf",
+                visual_effect=StateVisualEffect.INFECTED,
+                css_class="infiziert",
+                icon="🦠",
+                query_name="infizierte",
+                defined_by="Urwolf",
+            ),
         ]
 
     @property
@@ -121,6 +140,9 @@ class Urwolf(Role):
 
         # Infektion verbrauchen
         self.set_state(spieler, "infektion", False)
+
+        # Setze Infiziert-Status auf das Ziel
+        set_spieler_state(ziel, "global.ist_infiziert", True)
 
         return AktionsErgebnis(
             erfolg=True,

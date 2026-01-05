@@ -5,12 +5,14 @@
 ## Current State Analysis
 
 ### Backend (Python)
+
 - **Role System:** Well-structured with `Role` base class in `roles/base.py`
 - **Registry:** Auto-discovery system in `roles/__init__.py` that imports all role files
 - **Phase Generation:** `phase_generator.py` dynamically builds phases from active roles
 - **RollenInfo:** Already has `icon`, `farbe`, `prioritaet`, but lacks `css_class`, gradient colors, emoji badges
 
 ### Frontend (JavaScript/CSS)
+
 - **Hardcoded Phase Lists:**
   - `spiel.html:1446` - `nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'amor_phase']`
   - `spiel.html:1899` - `knownDayPhases = ['tag_start', 'diskussion', 'abstimmung', ...]`
@@ -18,6 +20,7 @@
 - **Dynamic Loading:** Already uses `/api/role/{name}/ui` for button configs
 
 ### Role Files Structure
+
 ```
 roles/
 ├── grundrollen/    (7 roles: amor, dorfbewohner, heiler, hexe, jaeger, seherin, werwolf)
@@ -32,6 +35,7 @@ roles/
 ├── solo/           (3 roles)
 └── sonstige/       (10 roles)
 ```
+
 **Total: ~69 roles** that need migration
 
 ---
@@ -48,14 +52,14 @@ Add new fields to `RollenInfo` dataclass:
 @dataclass
 class RollenInfo:
     # ...existing fields...
-    
+
     # NEW: Visual styling fields
     css_class: str = ""  # Already exists but unused - use for override
     avatar_gradient_from: str = ""  # e.g., "#b91c1c"
     avatar_gradient_to: str = ""    # e.g., "#7f1d1d"
     avatar_border_color: str = ""   # e.g., "#ef4444"
     badge_emoji: str = ""           # e.g., "🐺"
-    
+
     # Auto-generate css_class from name if not set
     @property
     def computed_css_class(self) -> str:
@@ -97,16 +101,16 @@ Replace hardcoded selectors with dynamic `[data-role]` selectors:
 ```css
 /* Dynamic role styling via data attributes */
 .spieler-avatar[data-role] {
-    /* Base styling - will be overridden by inline styles from API */
+  /* Base styling - will be overridden by inline styles from API */
 }
 
 /* Keep a few common base styles for teams */
 .spieler-avatar[data-team="werwolf"] {
-    --glow-color: rgba(185, 28, 28, 0.4);
+  --glow-color: rgba(185, 28, 28, 0.4);
 }
 
 .spieler-avatar[data-team="dorf"] {
-    --glow-color: rgba(59, 130, 246, 0.3);
+  --glow-color: rgba(59, 130, 246, 0.3);
 }
 ```
 
@@ -126,42 +130,45 @@ let allPhaseInfo = {};
 let allRoleStyles = {};
 
 async function loadGameMetadata() {
-    // Load phase info from existing API
-    const phaseResp = await fetch(`/api/game/${raumCode}/phases`);
-    const phaseData = await phaseResp.json();
-    if (phaseData.success) {
-        allPhaseInfo = phaseData.phase_info || {};
-    }
-    
-    // Load role styles
-    const styleResp = await fetch('/api/roles/styles');
-    const styleData = await styleResp.json();
-    if (styleData.success) {
-        allRoleStyles = styleData.styles;
-        applyDynamicRoleStyles();
-    }
+  // Load phase info from existing API
+  const phaseResp = await fetch(`/api/game/${raumCode}/phases`);
+  const phaseData = await phaseResp.json();
+  if (phaseData.success) {
+    allPhaseInfo = phaseData.phase_info || {};
+  }
+
+  // Load role styles
+  const styleResp = await fetch("/api/roles/styles");
+  const styleData = await styleResp.json();
+  if (styleData.success) {
+    allRoleStyles = styleData.styles;
+    applyDynamicRoleStyles();
+  }
 }
 
 function isNightPhase(phase) {
-    // Dynamic detection instead of hardcoded list
-    const info = allPhaseInfo[phase];
-    if (info && info.is_night !== undefined) return info.is_night;
-    
-    // Fallback heuristic
-    return phase.includes('nacht') || phase.endsWith('_phase');
+  // Dynamic detection instead of hardcoded list
+  const info = allPhaseInfo[phase];
+  if (info && info.is_night !== undefined) return info.is_night;
+
+  // Fallback heuristic
+  return phase.includes("nacht") || phase.endsWith("_phase");
 }
 
 function applyDynamicRoleStyles() {
-    // Apply inline styles to player cards based on role
-    document.querySelectorAll('.spieler-avatar[data-role]').forEach(el => {
-        const roleName = el.dataset.role;
-        const style = allRoleStyles[roleName];
-        if (style) {
-            el.style.setProperty('--avatar-gradient-from', style.avatar_gradient_from);
-            el.style.setProperty('--avatar-gradient-to', style.avatar_gradient_to);
-            el.style.setProperty('--avatar-border-color', style.avatar_border_color);
-        }
-    });
+  // Apply inline styles to player cards based on role
+  document.querySelectorAll(".spieler-avatar[data-role]").forEach((el) => {
+    const roleName = el.dataset.role;
+    const style = allRoleStyles[roleName];
+    if (style) {
+      el.style.setProperty(
+        "--avatar-gradient-from",
+        style.avatar_gradient_from,
+      );
+      el.style.setProperty("--avatar-gradient-to", style.avatar_gradient_to);
+      el.style.setProperty("--avatar-border-color", style.avatar_border_color);
+    }
+  });
 }
 ```
 
@@ -170,6 +177,7 @@ function applyDynamicRoleStyles() {
 For each role file, add the styling fields. Example migration:
 
 **Before (`roles/grundrollen/werwolf.py`):**
+
 ```python
 @property
 def info(self) -> RollenInfo:
@@ -187,6 +195,7 @@ def info(self) -> RollenInfo:
 ```
 
 **After:**
+
 ```python
 @property
 def info(self) -> RollenInfo:
@@ -218,7 +227,7 @@ from roles import RoleRegistry
 
 def generate_css():
     css_lines = ["/* AUTO-GENERATED - DO NOT EDIT */\n"]
-    
+
     for role in RoleRegistry.get_all():
         info = role.info
         css_lines.append(f"""
@@ -237,7 +246,7 @@ def generate_css():
     font-size: 0.9rem;
 }}
 """)
-    
+
     return "\n".join(css_lines)
 ```
 
@@ -246,6 +255,7 @@ def generate_css():
 ## Role Migration Checklist
 
 ### Grundrollen (7)
+
 - [ ] `amor.py` - 💕
 - [ ] `dorfbewohner.py` - 🏠
 - [ ] `heiler.py` - 💚
@@ -255,6 +265,7 @@ def generate_css():
 - [ ] `werwolf.py` - 🐺
 
 ### Dorfbewohner (9)
+
 - [ ] `alter_mann.py`
 - [ ] `dorfdepp.py` - 🤪
 - [ ] `drei_brueder.py`
@@ -266,6 +277,7 @@ def generate_css():
 - [ ] `zwei_schwestern.py`
 
 ### Werwolf-Varianten (11)
+
 - [ ] `einsamer_wolf.py`
 - [ ] `lupin.py`
 - [ ] `polarwolf.py`
@@ -278,6 +290,7 @@ def generate_css():
 - [ ] `wolf_im_schafspelz.py`
 
 ### Seher (7)
+
 - [ ] `aurenseherin.py`
 - [ ] `baerenbaendiger.py`
 - [ ] `demoskopin.py`
@@ -287,6 +300,7 @@ def generate_css():
 - [ ] `tratschweib.py`
 
 ### Hexe (5)
+
 - [ ] `giftmischerin.py`
 - [ ] `hahn.py`
 - [ ] `kraeuterweib.py`
@@ -294,12 +308,14 @@ def generate_css():
 - [ ] `zauberer.py`
 
 ### Heiler (4)
+
 - [ ] `ergebene_magd.py`
 - [ ] `leibwaechter.py` - 🛡️
 - [ ] `oma.py`
 - [ ] `prostituierte.py` - 💋
 
 ### Jaeger (10)
+
 - [ ] `buddler.py`
 - [ ] `drachenbaendiger.py`
 - [ ] `flammenmann.py`
@@ -312,6 +328,7 @@ def generate_css():
 - [ ] `tanklastwagenfahrer.py`
 
 ### Spezial (10)
+
 - [ ] `buergermeister.py` - 👑
 - [ ] `chemielaborant.py`
 - [ ] `dunkler_priester.py`
@@ -324,16 +341,19 @@ def generate_css():
 - [ ] `zahnarzt.py`
 
 ### Böse (3)
+
 - [ ] `hexenmeister.py`
 - [ ] `vampir.py` - 🦇
 - [ ] `zombie.py` - 🧟
 
 ### Solo (3)
+
 - [ ] `floetenspieler.py`
 - [ ] `henker.py` - ⚔️
 - [ ] `selbstmoerder.py`
 
 ### Sonstige (10)
+
 - [ ] `buergermeister.py`
 - [ ] `dieb.py`
 - [ ] `doppelgaenger.py`
@@ -351,11 +371,10 @@ def generate_css():
 1. **Performance:** Cache role styles in localStorage with version key from server
 2. **Backward Compatibility:** DO NOT Keep legacy `.rolle-werwolf` classes as aliases during migration
 3. **Test Coverage:** Extend `tests/test_all_roles.py` to verify all roles have styling fields
-5. **Phase Info API:** Extend `/api/game/{code}/phases` to include `is_night` boolean per phase
+4. **Phase Info API:** Extend `/api/game/{code}/phases` to include `is_night` boolean per phase
 
 ## Dependencies
 
 - `phase_generator.py` - Already generates dynamic phases, no changes needed
 - `registry.py` - Already collects all roles, no changes needed
 - `game_logic.py` - May need updates if phase detection logic is refactored
-

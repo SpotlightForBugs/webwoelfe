@@ -51,7 +51,6 @@ class Dorfdepp(Role):
                 "Der Dorfdepp stolpert durch den Tag. Sein Ziel: "
                 "Sich so verdächtig wie möglich machen!"
             ),
-
             # Visual Styling
             avatar_gradient_from="#a78bfa",
             avatar_gradient_to="#7c3aed",

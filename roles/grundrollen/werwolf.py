@@ -45,13 +45,11 @@ class Werwolf(Role):
                 "gemeinsam ein Opfer aus."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#b91c1c",
             avatar_gradient_to="#7f1d1d",
             avatar_border_color="#ef4444",
             badge_emoji="🐺",
-
             distribution=DistributionConfig(
                 min_players=5,
                 # ~20% Werwölfe, min 1

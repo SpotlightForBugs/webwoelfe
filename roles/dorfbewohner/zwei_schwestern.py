@@ -46,7 +46,6 @@ class ZweiSchwestern(Role):
                 "Sie dürfen sich kurz absprechen."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#f472b6",
             avatar_gradient_to="#db2777",

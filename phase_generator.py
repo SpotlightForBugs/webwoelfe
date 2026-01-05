@@ -306,7 +306,9 @@ def get_next_phase(raum: Raum) -> str:
     """
     Determines the next phase for the given room.
     """
-    logger.info(f"Getting next phase for room {raum.code} (Current: {raum.aktuelle_phase})")
+    logger.info(
+        f"Getting next phase for room {raum.code} (Current: {raum.aktuelle_phase})"
+    )
 
     current_phase = raum.aktuelle_phase
 
@@ -326,7 +328,7 @@ def get_next_phase(raum: Raum) -> str:
         return "tag_ende"
 
     if current_phase == "jaeger_phase":
-        return "tag_ende" # Back to normal flow
+        return "tag_ende"  # Back to normal flow
 
     if current_phase == "tag_ende":
         return "nacht_start"
@@ -334,7 +336,11 @@ def get_next_phase(raum: Raum) -> str:
     # 2. Handle Night Cycle (Dynamic)
     # nacht_start -> [role phases] -> nacht_ende -> tag_start
 
-    if current_phase == "nacht_start" or "nacht" in current_phase or "phase" in current_phase:
+    if (
+        current_phase == "nacht_start"
+        or "nacht" in current_phase
+        or "phase" in current_phase
+    ):
         # Generate dynamic night phases
         night_phases = generate_phases_for_game(raum)
 
@@ -356,7 +362,9 @@ def get_next_phase(raum: Raum) -> str:
                 return night_phases[0] if night_phases else "tag_start"
 
             # Fallback: Start of night or Day if lost
-            logger.warning(f"Current phase {current_phase} not found in night phases {night_phases}")
+            logger.warning(
+                f"Current phase {current_phase} not found in night phases {night_phases}"
+            )
             return "tag_start"
 
-    return "tag_start" # Fallback
+    return "tag_start"  # Fallback

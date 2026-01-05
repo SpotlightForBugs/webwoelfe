@@ -61,7 +61,6 @@ class TeenagerWerwolf(Role):
                 "Er überlegt, ob er heute rebellieren soll."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#b91c1c",
             avatar_gradient_to="#991b1b",

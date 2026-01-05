@@ -3,6 +3,7 @@ import sys
 import os
 from logging.handlers import RotatingFileHandler
 
+
 def setup_logger(name="webwoelfe", log_file="webwoelfe.log", level=logging.INFO):
     """
     Sets up a logger with console and file handlers.
@@ -18,8 +19,8 @@ def setup_logger(name="webwoelfe", log_file="webwoelfe.log", level=logging.INFO)
     # Create formatters
     # Detailed format: Time [Level] [Module:Function:Line] Message
     formatter = logging.Formatter(
-        '%(asctime)s [%(levelname)s] [%(module)s:%(funcName)s:%(lineno)d] %(message)s',
-        datefmt='%H:%M:%S'
+        "%(asctime)s [%(levelname)s] [%(module)s:%(funcName)s:%(lineno)d] %(message)s",
+        datefmt="%H:%M:%S",
     )
 
     # Console Handler
@@ -35,7 +36,7 @@ def setup_logger(name="webwoelfe", log_file="webwoelfe.log", level=logging.INFO)
             os.makedirs(log_dir)
 
         file_handler = RotatingFileHandler(
-            log_file, maxBytes=10*1024*1024, backupCount=5, encoding='utf-8'
+            log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
         )
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -44,6 +45,6 @@ def setup_logger(name="webwoelfe", log_file="webwoelfe.log", level=logging.INFO)
 
     return logger
 
+
 # Initialize global logger
 logger = setup_logger()
-

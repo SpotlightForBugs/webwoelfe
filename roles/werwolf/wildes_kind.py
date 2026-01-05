@@ -66,7 +66,6 @@ class WildesKind(Role):
                 "Es wird ihm folgen... bis in den Tod."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#78350f",
             avatar_gradient_to="#451a03",

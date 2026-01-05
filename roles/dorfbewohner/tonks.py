@@ -54,7 +54,6 @@ class Tonks(Role):
                 "und die Rolle eines Toten übernehmen soll."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#a855f7",
             avatar_gradient_to="#7e22ce",

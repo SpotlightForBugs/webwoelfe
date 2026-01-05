@@ -5,6 +5,7 @@ Der Weisse Wolf jagt mit den Woelfen, aber kann
 jede zweite Nacht auch einen Mitwerwolf toeten.
 Er gewinnt nur alleine.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
@@ -18,14 +19,14 @@ if TYPE_CHECKING:
 class WeisserWolf(Role):
     """
     Der Weisse Wolf - Solo-Werwolf.
-    
+
     Faehigkeiten:
     - Jagt mit den Woelfen
     - Kann jede zweite Nacht einen Mitwerwolf toeten
-    
+
     Gewinnbedingung: Als letzter ueberlebender Werwolf.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -46,40 +47,41 @@ class WeisserWolf(Role):
                 "Möchte er einen Mitwerwolf töten?"
             ),
             erweiterung=Erweiterung.GEMEINDE,
-
             # Visual Styling
             avatar_gradient_from="#f5f5f4",
             avatar_gradient_to="#d6d3d1",
             avatar_border_color="#e7e5e4",
             badge_emoji="🐺",
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.TOETEN
-    
+
     @property
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.WERWOLF
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "werwolf"  # Nur Mitwoelfe
-    
+
     @property
     def basis_hinweis_chance(self) -> float:
         return 0.08  # Niedriger als normale Woelfe - unauffaelliger
+
     def is_active_on_first_night(self) -> bool:
         """Weißer Wolf does not act on first night (even round)."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Weißer Wolf acts every second night."""
         return False  # Special: only every second night
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Weißer Wolf's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Weißer Wolf - Mitwölfe töten",
             instructions="Jede zweite Nacht kannst du heimlich einen Mitwerwolf töten.",
@@ -89,12 +91,12 @@ class WeisserWolf(Role):
                     action_type="toeten",
                     icon="fa-solid fa-paw",
                     css_class="btn-danger",
-                    requires_confirmation=True
+                    requires_confirmation=True,
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def get_erzaehler_nacht_text(self, kontext: "SpielKontext") -> Optional[str]:
@@ -108,8 +110,9 @@ class WeisserWolf(Role):
             )
         return None
 
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Weisser Wolf kann jede zweite Nacht einen Mitwolf toeten.
         """
@@ -121,7 +124,7 @@ class WeisserWolf(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         if ziel is None:
             return AktionsErgebnis(
                 erfolg=True,
@@ -129,7 +132,7 @@ class WeisserWolf(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du hast {ziel.name} heimlich getoetet!",
@@ -140,8 +143,10 @@ class WeisserWolf(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-    
-    def berechne_gewinn(self, spieler: 'Spieler', kontext: SpielKontext) -> Optional[Team]:
+
+    def berechne_gewinn(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[Team]:
         """
         Gewinnt als letzter Ueberlebender oder letzter Werwolf.
         """

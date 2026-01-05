@@ -59,7 +59,6 @@ class AlterMann(Role):
                 "schützt ihn vor dem ersten Angriff."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#9ca3af",
             avatar_gradient_to="#4b5563",

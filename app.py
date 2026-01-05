@@ -71,7 +71,8 @@ with app.app_context():
 # JINJA TEMPLATE FILTERS
 # =============================================================================
 
-@app.template_filter('css_class')
+
+@app.template_filter("css_class")
 def to_css_class(role_name):
     """
     Konvertiert einen Rollennamen in einen CSS-Klassen-Namen.
@@ -79,16 +80,24 @@ def to_css_class(role_name):
     """
     # logger.debug(f"Converting role name to css class: {role_name}") # Too verbose
     if not role_name:
-        return 'unbekannt'
-        
+        return "unbekannt"
+
     # Try Registry first
     from roles import RoleRegistry
+
     r = RoleRegistry.get(role_name)
-    if r and hasattr(r.info, 'css_class') and r.info.css_class:
+    if r and hasattr(r.info, "css_class") and r.info.css_class:
         return r.info.css_class
-        
+
     # Fallback to standard normalization
-    return role_name.lower().replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss').replace(' ', '-')
+    return (
+        role_name.lower()
+        .replace("ä", "ae")
+        .replace("ö", "oe")
+        .replace("ü", "ue")
+        .replace("ß", "ss")
+        .replace(" ", "-")
+    )
 
 
 # Cleanup Task starten
@@ -109,7 +118,9 @@ def start_cleanup_task():
 
         gevent.spawn(run_cleanup)
     except ImportError:
-        logger.warning("[System] Warnung: Gevent nicht verfügbar, Cleanup-Task deaktiviert.")
+        logger.warning(
+            "[System] Warnung: Gevent nicht verfügbar, Cleanup-Task deaktiviert."
+        )
     except Exception as e:
         logger.error(f"[System] Fehler beim Starten des Cleanup-Tasks: {e}")
 
@@ -119,6 +130,7 @@ start_cleanup_task()
 # Generate CSS on startup
 try:
     from generate_css import generate_characters_css
+
     logger.info("Generating CSS...")
     generate_characters_css()
 except Exception as e:
@@ -236,7 +248,9 @@ def raum_erstellen():
     erzaehler_modus = request.form.get("erzaehler_modus", "selbst")
     ist_erzaehler = erzaehler_modus == "selbst"
 
-    logger.info(f"Creating new room: {name} (Mode: {modus}, Narrator: {erzaehler_modus})")
+    logger.info(
+        f"Creating new room: {name} (Mode: {modus}, Narrator: {erzaehler_modus})"
+    )
 
     # Raum erstellen
     # Spieleranzahl wird jetzt dynamisch aus der Lobby berechnet – keine manuelle Eingabe nötig
@@ -447,7 +461,7 @@ def spiel(code):
         # or just skip it if not found.
         # Legacy support:
         if phase_key in ERZAEHLER_EVENTS:
-             erzaehler_text = ERZAEHLER_EVENTS[phase_key]
+            erzaehler_text = ERZAEHLER_EVENTS[phase_key]
 
     enthuellung = {
         ziel_id: data["typ"] for ziel_id, data in seherin_enthuellung.items()
@@ -457,7 +471,12 @@ def spiel(code):
     # DYNAMIC STATE EFFECTS
     # Get all global state definitions for dynamic UI effects
     # =========================================================================
-    from roles import RoleRegistry, get_spieler_state, get_player_visual_effects, get_role_state_display
+    from roles import (
+        RoleRegistry,
+        get_spieler_state,
+        get_player_visual_effects,
+        get_role_state_display,
+    )
 
     global_state_defs = RoleRegistry.get_all_global_state_definitions()
 
@@ -475,7 +494,9 @@ def spiel(code):
     role_state_display = get_role_state_display(spieler)
 
     # Get the visible role for the current player (handles Hund, etc.)
-    sichtbare_rolle = rolle_info.get("name", spieler.rolle) if rolle_info else spieler.rolle
+    sichtbare_rolle = (
+        rolle_info.get("name", spieler.rolle) if rolle_info else spieler.rolle
+    )
     if spieler.rolle:
         role_obj = RoleRegistry.get(spieler.rolle)
         if role_obj:
@@ -489,12 +510,19 @@ def spiel(code):
     for role in RoleRegistry.get_all():
         info = role.info
         # Normalize role name to CSS class name
-        css_name = info.name.lower().replace(' ', '-').replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss')
+        css_name = (
+            info.name.lower()
+            .replace(" ", "-")
+            .replace("ä", "ae")
+            .replace("ö", "oe")
+            .replace("ü", "ue")
+            .replace("ß", "ss")
+        )
         rollen_styles[css_name] = {
-            'name': info.name,
-            'farbe': info.farbe,
-            'icon': info.icon,
-            'team': info.team.value,
+            "name": info.name,
+            "farbe": info.farbe,
+            "icon": info.icon,
+            "team": info.team.value,
         }
 
     return render_template(
@@ -551,7 +579,7 @@ def get_roles():
     return jsonify(get_rollen_nach_erweiterung())
 
 
-@app.route('/api/roles/styles')
+@app.route("/api/roles/styles")
 def get_all_role_styles():
     """Returns all role visual definitions for dynamic CSS."""
     logger.debug("Fetching all role styles")
@@ -561,7 +589,7 @@ def get_all_role_styles():
 
         # Helper to darken color if needed (simple version)
         def _darken_color(hex_color, factor=0.8):
-            if not hex_color or not hex_color.startswith('#'):
+            if not hex_color or not hex_color.startswith("#"):
                 return hex_color
             try:
                 r = int(hex_color[1:3], 16)
@@ -798,9 +826,6 @@ def get_phase_role_mapping():
     )
 
 
-
-
-
 @app.route("/api/raum/<code>/erzaehler/random", methods=["POST"])
 def waehle_zufaelligen_erzaehler(code):
     """Wählt einen zufälligen Erzähler aus allen Spielern des Raums."""
@@ -1026,10 +1051,7 @@ def handle_raum_beitreten(data):
             )
 
             # Online-Modus: Sende Erzählung für aktuelle Phase wenn Spiel läuft
-            if (
-                raum.modus == "online"
-                and raum.spiel_gestartet
-            ):
+            if raum.modus == "online" and raum.spiel_gestartet:
                 # Try to find event for phase
                 event_key = raum.aktuelle_phase
                 if event_key in ERZAEHLER_EVENTS:
@@ -1173,7 +1195,9 @@ def _wechsel_phase_intern(raum):
     alte_phase = raum.aktuelle_phase
     neue_phase = game_logic.naechste_phase(raum)
 
-    logger.info(f"Internal phase change: {alte_phase} -> {neue_phase} (Room: {raum.code})")
+    logger.info(
+        f"Internal phase change: {alte_phase} -> {neue_phase} (Room: {raum.code})"
+    )
 
     # Phase-spezifische Aktionen
     handle_phase_wechsel(raum, alte_phase, neue_phase)
@@ -1194,16 +1218,26 @@ def _wechsel_phase_intern(raum):
         role_obj = RoleRegistry.get_role_for_phase(neue_phase)
         if role_obj:
             # Kontext erstellen für dynamische Text-Generierung
-            lebende = [s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False).all()]
-            tote = [s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=False, ist_erzaehler=False).all()]
+            lebende = [
+                s.id
+                for s in Spieler.query.filter_by(
+                    raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
+                ).all()
+            ]
+            tote = [
+                s.id
+                for s in Spieler.query.filter_by(
+                    raum_id=raum.id, ist_am_leben=False, ist_erzaehler=False
+                ).all()
+            ]
 
             kontext = SpielKontext(
                 raum_id=raum.id,
                 runde=raum.runde,
-                phase=Phase.NACHT, # Meistens Nacht-Phasen
+                phase=Phase.NACHT,  # Meistens Nacht-Phasen
                 aktiver_spieler_id=0,
                 lebende_spieler=lebende,
-                tote_spieler=tote
+                tote_spieler=tote,
             )
 
             dynamic_text = role_obj.get_erzaehler_nacht_text(kontext)
@@ -1269,7 +1303,9 @@ def handle_audio_fertig(data):
         return
 
     gemeldete_phase = data.get("phase", "")
-    logger.debug(f"Audio finished reported for phase {gemeldete_phase} by {spieler.name}")
+    logger.debug(
+        f"Audio finished reported for phase {gemeldete_phase} by {spieler.name}"
+    )
 
     # Nur der erste Spieler der meldet löst den Phasenwechsel aus
     # Prüfe ob wir noch in der gleichen Phase sind
@@ -1285,7 +1321,9 @@ def handle_audio_fertig(data):
         }
 
         if gemeldete_phase in AUTOMATISCHE_PHASEN:
-            logger.info(f"[Audio] Audio fertig für Phase {gemeldete_phase}, wechsle Phase")
+            logger.info(
+                f"[Audio] Audio fertig für Phase {gemeldete_phase}, wechsle Phase"
+            )
             _wechsel_phase_intern(raum)
         else:
             logger.info(
@@ -1451,7 +1489,9 @@ def handle_hinweis_senden(data):
     hinweis_typ = data.get("hintTyp")
     selbst_ausgeloest = data.get("selbst_ausgeloest", False)
 
-    logger.info(f"Hint request: {hinweis_typ} by {spieler.name} (Self-triggered: {selbst_ausgeloest})")
+    logger.info(
+        f"Hint request: {hinweis_typ} by {spieler.name} (Self-triggered: {selbst_ausgeloest})"
+    )
 
     # Validierung: Darf dieser Spieler Hinweise senden?
     if selbst_ausgeloest:
@@ -1641,7 +1681,9 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     # Special case: Amor's love connection (requires 2 targets)
     elif aktion_typ == "armor_verlieben":
-        logger.info(f"[Aktion] armor_verlieben von {spieler.name} (Rolle: {spieler.rolle})")
+        logger.info(
+            f"[Aktion] armor_verlieben von {spieler.name} (Rolle: {spieler.rolle})"
+        )
         if spieler.rolle != "Amor" or raum.aktuelle_phase != "amor_phase":
             logger.warning(
                 f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}"
@@ -1763,17 +1805,19 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     ziel = None
     if ziel_id:
         if isinstance(ziel_id, list):
-             # Resolve list of IDs to list of objects
-             ziel = [db.session.get(Spieler, zid) for zid in ziel_id]
-             # Filter out None values just in case
-             ziel = [z for z in ziel if z]
-             if not ziel: # If all invalid
-                 ziel = None
+            # Resolve list of IDs to list of objects
+            ziel = [db.session.get(Spieler, zid) for zid in ziel_id]
+            # Filter out None values just in case
+            ziel = [z for z in ziel if z]
+            if not ziel:  # If all invalid
+                ziel = None
         else:
-             ziel = db.session.get(Spieler, ziel_id)
+            ziel = db.session.get(Spieler, ziel_id)
 
     # Execute the role's night action
-    logger.info(f"[Aktion] Ausfuehren: {spieler.rolle} -> {ziel.name if ziel else 'None'}")
+    logger.info(
+        f"[Aktion] Ausfuehren: {spieler.rolle} -> {ziel.name if ziel else 'None'}"
+    )
     ergebnis = rolle_obj.on_nacht_aktion(spieler, ziel, kontext)
 
     if ergebnis and ergebnis.erfolg:
@@ -1788,13 +1832,13 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             # Effects are keyed like "state_key" -> value
             # The Role class defines what states it uses.
             # Example: {"hexe.heiltrank": False, "global.verliebt_mit_id": 5}
-            
+
             for effect_key, effect_value in ergebnis.effekte.items():
                 # Check if it's a state key (contains a dot = role.field)
                 if "." in effect_key:
                     # Set player state dynamically
                     spieler.set_state(effect_key, effect_value)
-                    
+
             # Legacy effect handling (for backwards compatibility)
             # TODO: Migrate all roles to use state keys instead of these
             if "geschuetzt" in ergebnis.effekte:
@@ -1807,23 +1851,31 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         # Send role-specific results (Generic)
         if hasattr(ergebnis, "private_infos") and ergebnis.private_infos:
             for pid, info in ergebnis.private_infos.items():
-                p_sock_id = None # Need to find socket ID for player ID
+                p_sock_id = None  # Need to find socket ID for player ID
                 # We don't have direct mapping here easily without tracking.
                 # But we can emit to the room and let client filter if we trust it,
                 # OR better: use socketio.emit to room=player_session_id if we had it.
                 # Current app structure uses room=code for game.
                 # We can use room=sid for requests, but here the recipients are distinct.
-                
+
                 # Helper to find session/sid for player:
                 p_obj = db.session.get(Spieler, pid)
-                if p_obj: 
+                if p_obj:
                     # We can target the player via a room named after their ID if we joined them to it?
                     # Or just emit "private_info" to the game room with "recipient_id"
-                    socketio.emit("private_info", {"recipient_id": pid, "payload": info}, room=raum.code)
+                    socketio.emit(
+                        "private_info",
+                        {"recipient_id": pid, "payload": info},
+                        room=raum.code,
+                    )
 
         # Legacy Seherin Support (can be removed if Seherin migrated to private_infos)
-        if spieler.rolle == "Seherin" and ergebnis.effekte and not getattr(ergebnis, "private_infos", None):
-             socketio.emit(
+        if (
+            spieler.rolle == "Seherin"
+            and ergebnis.effekte
+            and not getattr(ergebnis, "private_infos", None)
+        ):
+            socketio.emit(
                 "seherin_ergebnis",
                 {
                     "ziel_name": ziel.name if ziel else "Unbekannt",
@@ -1832,13 +1884,14 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                 },
                 room=request.sid,
             )
-        
+
         if ergebnis.nachricht or ergebnis.effekte:
             # Determine visual effect (from Role or Default)
             # Default fallback mapping
             from roles.enums import AktionsTyp
+
             visual_effect = "sparkle"
-            
+
             DEFAULT_EFFECTS = {
                 AktionsTyp.HEILEN.value: "heal",
                 AktionsTyp.SCHUETZEN.value: "protect",
@@ -1850,9 +1903,9 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                 AktionsTyp.MARKIEREN.value: "mark",
                 AktionsTyp.BLOCKIEREN.value: "block",
             }
-            
+
             # Check if result has visual_effect or map from action type
-            if hasattr(ergebnis, 'visual_effect') and ergebnis.visual_effect:
+            if hasattr(ergebnis, "visual_effect") and ergebnis.visual_effect:
                 visual_effect = ergebnis.visual_effect
             else:
                 visual_effect = DEFAULT_EFFECTS.get(aktion_typ, "sparkle")
@@ -1864,7 +1917,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                     "nachricht": ergebnis.nachricht,
                     "effekte": ergebnis.effekte,
                     "ziel_id": ziel_id,
-                    "effekt": visual_effect 
+                    "effekt": visual_effect,
                 },
             )
 
@@ -1882,14 +1935,12 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
     if alte_phase == "heiler_phase":
         pass  # Schutz bleibt bis Nacht-Ende
 
-    
-    
     # Generic Phase Start Info (Scheduler Based)
     # --------------------------------------------------------------------------
     import json
     from roles import RoleRegistry
     from roles.base import SpielKontext, Phase
-    
+
     # Load Scheduler Data
     phase_data = {}
     if raum.phase_data:
@@ -1897,68 +1948,88 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             phase_data = json.loads(raum.phase_data)
         except:
             pass
-            
-    active_role = phase_data.get('active_role')
-    display_info = phase_data.get('display_info')
-    
+
+    active_role = phase_data.get("active_role")
+    display_info = phase_data.get("display_info")
+
     # 1. Broadcast Generic Phase Update (Public)
-    socketio.emit("phase_update", {
-        "phase": neue_phase,       # e.g. "nacht"
-        "active_role": active_role, # e.g. "Seherin" (or None)
-        "display_info": display_info # UI Metadata
-    }, room=raum.code)
-    
+    socketio.emit(
+        "phase_update",
+        {
+            "phase": neue_phase,  # e.g. "nacht"
+            "active_role": active_role,  # e.g. "Seherin" (or None)
+            "display_info": display_info,  # UI Metadata
+        },
+        room=raum.code,
+    )
+
     # 2. Send Private Info to Active Player
     if active_role:
         role_obj = RoleRegistry.get(active_role)
         if role_obj:
             # Find active player(s)
             # Handle list for group roles? generic get_phase_start_info usually for specific player.
-            # But get_phase_start_info takes (spieler, kontext). 
+            # But get_phase_start_info takes (spieler, kontext).
             # We iterate all potential active players of this role.
-            active_players = Spieler.query.filter_by(raum_id=raum.id, rolle=active_role, ist_am_leben=True).all()
-            
+            active_players = Spieler.query.filter_by(
+                raum_id=raum.id, rolle=active_role, ist_am_leben=True
+            ).all()
+
             # Helper to get Werwolf Victim (generic)
             # TODO: Move this logic into Werwolf.get_phase_start_info or generic "Context Builder"
             werwolf_opfer_id = None
             if active_role == "Hexe":
-                 # Hexe needs victim info. 
-                 # We can rely on Hexe.get_phase_start_info fetching it via Context?
-                 # Need to populate context.
-                 # Optimization: game_logic.werwolf_abstimmung(raum) call?
-                 res = game_logic.werwolf_abstimmung(raum)
-                 if res:
-                     werwolf_opfer_id = res.get("opfer_id")
-                     
+                # Hexe needs victim info.
+                # We can rely on Hexe.get_phase_start_info fetching it via Context?
+                # Need to populate context.
+                # Optimization: game_logic.werwolf_abstimmung(raum) call?
+                res = game_logic.werwolf_abstimmung(raum)
+                if res:
+                    werwolf_opfer_id = res.get("opfer_id")
+
             # Build Context
-            lebende = [s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False).all()]
-            tote = [s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=False, ist_erzaehler=False).all()]
-            
+            lebende = [
+                s.id
+                for s in Spieler.query.filter_by(
+                    raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
+                ).all()
+            ]
+            tote = [
+                s.id
+                for s in Spieler.query.filter_by(
+                    raum_id=raum.id, ist_am_leben=False, ist_erzaehler=False
+                ).all()
+            ]
+
             kontext = SpielKontext(
                 raum_id=raum.id,
                 runde=raum.runde,
-                phase=Phase.NACHT, 
+                phase=Phase.NACHT,
                 aktiver_spieler_id=0,
                 lebende_spieler=lebende,
                 tote_spieler=tote,
                 werwolf_opfer_id=werwolf_opfer_id,
-                spieler_namen={s.id: s.name for s in Spieler.query.filter_by(raum_id=raum.id).all()}
+                spieler_namen={
+                    s.id: s.name for s in Spieler.query.filter_by(raum_id=raum.id).all()
+                },
             )
-            
+
             for player in active_players:
                 info = role_obj.get_phase_start_info(player, kontext)
                 if info:
                     # Emit private info
-                    socketio.emit("private_phase_info", {
-                        "recipient_id": player.id,
-                        "payload": info
-                    }, room=raum.code)
-                    
+                    socketio.emit(
+                        "private_phase_info",
+                        {"recipient_id": player.id, "payload": info},
+                        room=raum.code,
+                    )
+
                     # Legacy Compatibility (e.g. for Hexe JS handler if not updated yet)
                     if active_role == "Hexe":
-                        socketio.emit("hexe_info", info, room=raum.code) # TODO: Remove after frontend update
+                        socketio.emit(
+                            "hexe_info", info, room=raum.code
+                        )  # TODO: Remove after frontend update
 
-  
     elif neue_phase == "nacht_ende":
         logger.info(f"[Nacht] Verarbeite Nacht-Ende für Runde {raum.runde}")
 
@@ -1969,7 +2040,9 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             aktion_typ="werwolf_wahl",
         ).first()
 
-        logger.debug(f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}")
+        logger.debug(
+            f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}"
+        )
         if werwolf_opfer:
             logger.debug(f"[Nacht] Werwolf-Ziel-ID: {werwolf_opfer.ziel_spieler_id}")
 
@@ -2252,4 +2325,3 @@ def handle_starte_diskussion_abstimmung(data):
         },
         room=raum.code,
     )
-

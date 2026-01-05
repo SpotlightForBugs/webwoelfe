@@ -60,13 +60,11 @@ class Hexe(Role):
                 "Möchtest du es retten? Möchtest du jemanden vergiften?"
             ),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#d946ef",
             avatar_gradient_to="#a21caf",
             avatar_border_color="#f0abfc",
             badge_emoji="🧪",
-
             distribution=DistributionConfig(
                 min_players=5,
                 count_func=lambda n: 1,
@@ -119,7 +117,9 @@ class Hexe(Role):
             can_skip=True,  # Can choose to do nothing
         )
 
-    def get_phase_start_info(self, spieler: "Spieler", kontext: "SpielKontext") -> Optional[dict]:
+    def get_phase_start_info(
+        self, spieler: "Spieler", kontext: "SpielKontext"
+    ) -> Optional[dict]:
         """Zeigt der Hexe das Werwolf-Opfer."""
         if kontext.werwolf_opfer_id:
             return {"werwolf_opfer_id": kontext.werwolf_opfer_id}
@@ -195,7 +195,11 @@ class Hexe(Role):
         pass
 
     def on_nacht_aktion_with_type(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str,
     ) -> Optional[AktionsErgebnis]:
         """
         Spezielle Methode für Hexe, die den Aktionstyp benötigt.
@@ -212,7 +216,7 @@ class Hexe(Role):
 
             # Wenn Ziel übergeben wurde, muss es das Opfer sein
             if ziel and ziel.id != opfer_id:
-                 return AktionsErgebnis(False, "Du kannst nur das Werwolf-Opfer heilen.")
+                return AktionsErgebnis(False, "Du kannst nur das Werwolf-Opfer heilen.")
 
             self.set_state(spieler, "heiltrank", False)
             return AktionsErgebnis(
@@ -220,7 +224,7 @@ class Hexe(Role):
                 "Du hast das Opfer geheilt.",
                 ziel_spieler_id=opfer_id,
                 effekte={"heilen": True, "hexe_heilen": True},
-                log_sichtbar_fuer=f"spieler_{spieler.id}"
+                log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
 
         elif aktion == "vergiften":
@@ -236,7 +240,7 @@ class Hexe(Role):
                 f"Du hast {ziel.name} vergiftet.",
                 ziel_spieler_id=ziel.id,
                 effekte={"vergiften": True, "hexe_vergiften": True},
-                log_sichtbar_fuer=f"spieler_{spieler.id}"
+                log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
 
         return None

@@ -100,14 +100,12 @@ class Hund(Role):
                 "Er wird ihm treu ergeben sein... bis in den Tod."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#78350f",
             avatar_gradient_to="#451a03",
             avatar_border_color="#b45309",
             badge_emoji="🐕",
         )
-
 
     @property
     def aktions_typ(self) -> AktionsTyp:

@@ -61,7 +61,6 @@ class Wolfsjunge(Role):
                 "Es wird ihm folgen... bis in den Tod."
             ),
             erweiterung=Erweiterung.NEUMOND,
-
             # Visual Styling
             avatar_gradient_from="#b91c1c",
             avatar_gradient_to="#7f1d1d",

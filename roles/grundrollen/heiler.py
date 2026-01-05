@@ -64,13 +64,11 @@ class Heiler(Role):
                 "Werwölfen schützen?"
             ),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#10b981",
             avatar_gradient_to="#047857",
             avatar_border_color="#34d399",
             badge_emoji="🛡️",
-
             distribution=DistributionConfig(
                 min_players=6,
                 count_func=lambda n: 1,

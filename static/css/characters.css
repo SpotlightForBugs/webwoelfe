@@ -29,7 +29,7 @@
 
 /* Aura/Glow effect behind avatar */
 .spieler-avatar::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -6px;
   border-radius: 50%;
@@ -57,7 +57,7 @@
 
 /* Hexenmeister */
 .spieler-avatar.rolle-hexenmeister,
-.spieler-avatar[data-role='hexenmeister'] {
+.spieler-avatar[data-role="hexenmeister"] {
   background: linear-gradient(145deg, #4c1d95 0%, #3c1777 100%);
   border-color: #4c1d95;
 }
@@ -69,7 +69,7 @@
 
 /* Vampir */
 .spieler-avatar.rolle-vampir,
-.spieler-avatar[data-role='vampir'] {
+.spieler-avatar[data-role="vampir"] {
   background: linear-gradient(145deg, #7c2d12 0%, #63240e 100%);
   border-color: #7c2d12;
 }
@@ -81,7 +81,7 @@
 
 /* Zombie */
 .spieler-avatar.rolle-zombie,
-.spieler-avatar[data-role='zombie'] {
+.spieler-avatar[data-role="zombie"] {
   background: linear-gradient(145deg, #4ade80 0%, #3bb166 100%);
   border-color: #4ade80;
 }
@@ -93,14 +93,14 @@
 
 /* Alter Mann */
 .spieler-avatar.rolle-alter-mann,
-.spieler-avatar[data-role='alter-mann'] {
+.spieler-avatar[data-role="alter-mann"] {
   background: linear-gradient(145deg, #9ca3af 0%, #4b5563 100%);
   border-color: #d1d5db;
 }
 
 .spieler-avatar.rolle-alter-mann::after,
-.spieler-avatar[data-role='alter-mann']::after {
-  content: '👴';
+.spieler-avatar[data-role="alter-mann"]::after {
+  content: "👴";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -115,14 +115,14 @@
 
 /* Dorfdepp */
 .spieler-avatar.rolle-dorfdepp,
-.spieler-avatar[data-role='dorfdepp'] {
+.spieler-avatar[data-role="dorfdepp"] {
   background: linear-gradient(145deg, #a78bfa 0%, #7c3aed 100%);
   border-color: #c4b5fd;
 }
 
 .spieler-avatar.rolle-dorfdepp::after,
-.spieler-avatar[data-role='dorfdepp']::after {
-  content: '🤪';
+.spieler-avatar[data-role="dorfdepp"]::after {
+  content: "🤪";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -137,14 +137,14 @@
 
 /* Drei Brüder */
 .spieler-avatar.rolle-drei-brueder,
-.spieler-avatar[data-role='drei-brueder'] {
+.spieler-avatar[data-role="drei-brueder"] {
   background: linear-gradient(145deg, #4f46e5 0%, #3730a3 100%);
   border-color: #818cf8;
 }
 
 .spieler-avatar.rolle-drei-brueder::after,
-.spieler-avatar[data-role='drei-brueder']::after {
-  content: '👨‍👦‍👦';
+.spieler-avatar[data-role="drei-brueder"]::after {
+  content: "👨‍👦‍👦";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -159,14 +159,14 @@
 
 /* Zwei Schwestern */
 .spieler-avatar.rolle-zwei-schwestern,
-.spieler-avatar[data-role='zwei-schwestern'] {
+.spieler-avatar[data-role="zwei-schwestern"] {
   background: linear-gradient(145deg, #f472b6 0%, #db2777 100%);
   border-color: #fbcfe8;
 }
 
 .spieler-avatar.rolle-zwei-schwestern::after,
-.spieler-avatar[data-role='zwei-schwestern']::after {
-  content: '👭';
+.spieler-avatar[data-role="zwei-schwestern"]::after {
+  content: "👭";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -181,14 +181,14 @@
 
 /* Freimaurer */
 .spieler-avatar.rolle-freimaurer,
-.spieler-avatar[data-role='freimaurer'] {
+.spieler-avatar[data-role="freimaurer"] {
   background: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 100%);
   border-color: #60a5fa;
 }
 
 .spieler-avatar.rolle-freimaurer::after,
-.spieler-avatar[data-role='freimaurer']::after {
-  content: '🏛️';
+.spieler-avatar[data-role="freimaurer"]::after {
+  content: "🏛️";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -203,14 +203,14 @@
 
 /* Jesus */
 .spieler-avatar.rolle-jesus,
-.spieler-avatar[data-role='jesus'] {
+.spieler-avatar[data-role="jesus"] {
   background: linear-gradient(145deg, #fbbf24 0%, #d97706 100%);
   border-color: #fcd34d;
 }
 
 .spieler-avatar.rolle-jesus::after,
-.spieler-avatar[data-role='jesus']::after {
-  content: '✝️';
+.spieler-avatar[data-role="jesus"]::after {
+  content: "✝️";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -225,14 +225,14 @@
 
 /* Griesgram */
 .spieler-avatar.rolle-griesgram,
-.spieler-avatar[data-role='griesgram'] {
+.spieler-avatar[data-role="griesgram"] {
   background: linear-gradient(145deg, #6b7280 0%, #374151 100%);
   border-color: #9ca3af;
 }
 
 .spieler-avatar.rolle-griesgram::after,
-.spieler-avatar[data-role='griesgram']::after {
-  content: '😠';
+.spieler-avatar[data-role="griesgram"]::after {
+  content: "😠";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -247,14 +247,14 @@
 
 /* Hund */
 .spieler-avatar.rolle-hund,
-.spieler-avatar[data-role='hund'] {
+.spieler-avatar[data-role="hund"] {
   background: linear-gradient(145deg, #78350f 0%, #451a03 100%);
   border-color: #b45309;
 }
 
 .spieler-avatar.rolle-hund::after,
-.spieler-avatar[data-role='hund']::after {
-  content: '🐕';
+.spieler-avatar[data-role="hund"]::after {
+  content: "🐕";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -269,14 +269,14 @@
 
 /* Tonks */
 .spieler-avatar.rolle-tonks,
-.spieler-avatar[data-role='tonks'] {
+.spieler-avatar[data-role="tonks"] {
   background: linear-gradient(145deg, #a855f7 0%, #7e22ce 100%);
   border-color: #c084fc;
 }
 
 .spieler-avatar.rolle-tonks::after,
-.spieler-avatar[data-role='tonks']::after {
-  content: '🎭';
+.spieler-avatar[data-role="tonks"]::after {
+  content: "🎭";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -291,14 +291,14 @@
 
 /* Dorfbewohner */
 .spieler-avatar.rolle-dorfbewohner,
-.spieler-avatar[data-role='dorfbewohner'] {
+.spieler-avatar[data-role="dorfbewohner"] {
   background: linear-gradient(145deg, #0369a1 0%, #075985 100%);
   border-color: #0ea5e9;
 }
 
 .spieler-avatar.rolle-dorfbewohner::after,
-.spieler-avatar[data-role='dorfbewohner']::after {
-  content: '🏠';
+.spieler-avatar[data-role="dorfbewohner"]::after {
+  content: "🏠";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -313,14 +313,14 @@
 
 /* Werwolf */
 .spieler-avatar.rolle-werwolf,
-.spieler-avatar[data-role='werwolf'] {
+.spieler-avatar[data-role="werwolf"] {
   background: linear-gradient(145deg, #b91c1c 0%, #7f1d1d 100%);
   border-color: #ef4444;
 }
 
 .spieler-avatar.rolle-werwolf::after,
-.spieler-avatar[data-role='werwolf']::after {
-  content: '🐺';
+.spieler-avatar[data-role="werwolf"]::after {
+  content: "🐺";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -335,14 +335,14 @@
 
 /* Seherin */
 .spieler-avatar.rolle-seherin,
-.spieler-avatar[data-role='seherin'] {
+.spieler-avatar[data-role="seherin"] {
   background: linear-gradient(145deg, #7c3aed 0%, #5b21b6 100%);
   border-color: #a78bfa;
 }
 
 .spieler-avatar.rolle-seherin::after,
-.spieler-avatar[data-role='seherin']::after {
-  content: '👁️';
+.spieler-avatar[data-role="seherin"]::after {
+  content: "👁️";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -357,14 +357,14 @@
 
 /* Hexe */
 .spieler-avatar.rolle-hexe,
-.spieler-avatar[data-role='hexe'] {
+.spieler-avatar[data-role="hexe"] {
   background: linear-gradient(145deg, #d946ef 0%, #a21caf 100%);
   border-color: #f0abfc;
 }
 
 .spieler-avatar.rolle-hexe::after,
-.spieler-avatar[data-role='hexe']::after {
-  content: '🧪';
+.spieler-avatar[data-role="hexe"]::after {
+  content: "🧪";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -379,14 +379,14 @@
 
 /* Jäger */
 .spieler-avatar.rolle-jaeger,
-.spieler-avatar[data-role='jaeger'] {
+.spieler-avatar[data-role="jaeger"] {
   background: linear-gradient(145deg, #f97316 0%, #c2410c 100%);
   border-color: #fb923c;
 }
 
 .spieler-avatar.rolle-jaeger::after,
-.spieler-avatar[data-role='jaeger']::after {
-  content: '🔫';
+.spieler-avatar[data-role="jaeger"]::after {
+  content: "🔫";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -401,14 +401,14 @@
 
 /* Heiler */
 .spieler-avatar.rolle-heiler,
-.spieler-avatar[data-role='heiler'] {
+.spieler-avatar[data-role="heiler"] {
   background: linear-gradient(145deg, #10b981 0%, #047857 100%);
   border-color: #34d399;
 }
 
 .spieler-avatar.rolle-heiler::after,
-.spieler-avatar[data-role='heiler']::after {
-  content: '🛡️';
+.spieler-avatar[data-role="heiler"]::after {
+  content: "🛡️";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -423,14 +423,14 @@
 
 /* Amor */
 .spieler-avatar.rolle-amor,
-.spieler-avatar[data-role='amor'] {
+.spieler-avatar[data-role="amor"] {
   background: linear-gradient(145deg, #ec4899 0%, #be185d 100%);
   border-color: #f9a8d4;
 }
 
 .spieler-avatar.rolle-amor::after,
-.spieler-avatar[data-role='amor']::after {
-  content: '💘';
+.spieler-avatar[data-role="amor"]::after {
+  content: "💘";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -445,7 +445,7 @@
 
 /* Leibwächter */
 .spieler-avatar.rolle-leibwaechter,
-.spieler-avatar[data-role='leibwaechter'] {
+.spieler-avatar[data-role="leibwaechter"] {
   background: linear-gradient(145deg, #0ea5e9 0%, #0b84ba 100%);
   border-color: #0ea5e9;
 }
@@ -457,7 +457,7 @@
 
 /* Ergebene Magd */
 .spieler-avatar.rolle-ergebene-magd,
-.spieler-avatar[data-role='ergebene-magd'] {
+.spieler-avatar[data-role="ergebene-magd"] {
   background: linear-gradient(145deg, #14b8a6 0%, #109384 100%);
   border-color: #14b8a6;
 }
@@ -469,7 +469,7 @@
 
 /* Oma */
 .spieler-avatar.rolle-oma,
-.spieler-avatar[data-role='oma'] {
+.spieler-avatar[data-role="oma"] {
   background: linear-gradient(145deg, #fda4af 0%, #ca838c 100%);
   border-color: #fda4af;
 }
@@ -481,7 +481,7 @@
 
 /* Prostituierte */
 .spieler-avatar.rolle-prostituierte,
-.spieler-avatar[data-role='prostituierte'] {
+.spieler-avatar[data-role="prostituierte"] {
   background: linear-gradient(145deg, #f43f5e 0%, #c3324b 100%);
   border-color: #f43f5e;
 }
@@ -493,7 +493,7 @@
 
 /* Kräuterweib */
 .spieler-avatar.rolle-kraeuterweib,
-.spieler-avatar[data-role='kraeuterweib'] {
+.spieler-avatar[data-role="kraeuterweib"] {
   background: linear-gradient(145deg, #22c55e 0%, #1b9d4b 100%);
   border-color: #22c55e;
 }
@@ -505,7 +505,7 @@
 
 /* Giftmischerin */
 .spieler-avatar.rolle-giftmischerin,
-.spieler-avatar[data-role='giftmischerin'] {
+.spieler-avatar[data-role="giftmischerin"] {
   background: linear-gradient(145deg, #84cc16 0%, #69a311 100%);
   border-color: #84cc16;
 }
@@ -517,7 +517,7 @@
 
 /* Hahn */
 .spieler-avatar.rolle-hahn,
-.spieler-avatar[data-role='hahn'] {
+.spieler-avatar[data-role="hahn"] {
   background: linear-gradient(145deg, #dc2626 0%, #b01e1e 100%);
   border-color: #dc2626;
 }
@@ -529,7 +529,7 @@
 
 /* Sandmann */
 .spieler-avatar.rolle-sandmann,
-.spieler-avatar[data-role='sandmann'] {
+.spieler-avatar[data-role="sandmann"] {
   background: linear-gradient(145deg, #ddd6fe 0%, #b0abcb 100%);
   border-color: #ddd6fe;
 }
@@ -541,7 +541,7 @@
 
 /* Zauberer */
 .spieler-avatar.rolle-zauberer,
-.spieler-avatar[data-role='zauberer'] {
+.spieler-avatar[data-role="zauberer"] {
   background: linear-gradient(145deg, #3b0764 0%, #2f0550 100%);
   border-color: #3b0764;
 }
@@ -553,7 +553,7 @@
 
 /* Prinz */
 .spieler-avatar.rolle-prinz,
-.spieler-avatar[data-role='prinz'] {
+.spieler-avatar[data-role="prinz"] {
   background: linear-gradient(145deg, #eab308 0%, #bb8f06 100%);
   border-color: #eab308;
 }
@@ -565,7 +565,7 @@
 
 /* Kamikaze */
 .spieler-avatar.rolle-kamikaze,
-.spieler-avatar[data-role='kamikaze'] {
+.spieler-avatar[data-role="kamikaze"] {
   background: linear-gradient(145deg, #f97316 0%, #c75c11 100%);
   border-color: #f97316;
 }
@@ -577,7 +577,7 @@
 
 /* Buddler */
 .spieler-avatar.rolle-buddler,
-.spieler-avatar[data-role='buddler'] {
+.spieler-avatar[data-role="buddler"] {
   background: linear-gradient(145deg, #78716c 0%, #605a56 100%);
   border-color: #78716c;
 }
@@ -589,7 +589,7 @@
 
 /* Drachenbändiger */
 .spieler-avatar.rolle-drachenbaendiger,
-.spieler-avatar[data-role='drachenbaendiger'] {
+.spieler-avatar[data-role="drachenbaendiger"] {
   background: linear-gradient(145deg, #7c3aed 0%, #632ebd 100%);
   border-color: #7c3aed;
 }
@@ -601,7 +601,7 @@
 
 /* Flammenmann */
 .spieler-avatar.rolle-flammenmann,
-.spieler-avatar[data-role='flammenmann'] {
+.spieler-avatar[data-role="flammenmann"] {
   background: linear-gradient(145deg, #ea580c 0%, #bb4609 100%);
   border-color: #ea580c;
 }
@@ -613,7 +613,7 @@
 
 /* Gaukler */
 .spieler-avatar.rolle-gaukler,
-.spieler-avatar[data-role='gaukler'] {
+.spieler-avatar[data-role="gaukler"] {
   background: linear-gradient(145deg, #c026d3 0%, #991ea8 100%);
   border-color: #c026d3;
 }
@@ -625,7 +625,7 @@
 
 /* Inquisitor */
 .spieler-avatar.rolle-inquisitor,
-.spieler-avatar[data-role='inquisitor'] {
+.spieler-avatar[data-role="inquisitor"] {
   background: linear-gradient(145deg, #1e3a8a 0%, #182e6e 100%);
   border-color: #1e3a8a;
 }
@@ -637,7 +637,7 @@
 
 /* König */
 .spieler-avatar.rolle-koenig,
-.spieler-avatar[data-role='koenig'] {
+.spieler-avatar[data-role="koenig"] {
   background: linear-gradient(145deg, #ca8a04 0%, #a16e03 100%);
   border-color: #ca8a04;
 }
@@ -649,7 +649,7 @@
 
 /* Pyromane */
 .spieler-avatar.rolle-pyromane,
-.spieler-avatar[data-role='pyromane'] {
+.spieler-avatar[data-role="pyromane"] {
   background: linear-gradient(145deg, #f97316 0%, #c75c11 100%);
   border-color: #f97316;
 }
@@ -661,7 +661,7 @@
 
 /* Tanklastwagenfahrer */
 .spieler-avatar.rolle-tanklastwagenfahrer,
-.spieler-avatar[data-role='tanklastwagenfahrer'] {
+.spieler-avatar[data-role="tanklastwagenfahrer"] {
   background: linear-gradient(145deg, #64748b 0%, #505c6f 100%);
   border-color: #64748b;
 }
@@ -673,7 +673,7 @@
 
 /* Seherlehrling */
 .spieler-avatar.rolle-seherlehrling,
-.spieler-avatar[data-role='seherlehrling'] {
+.spieler-avatar[data-role="seherlehrling"] {
   background: linear-gradient(145deg, #8b5cf6 0%, #6f49c4 100%);
   border-color: #8b5cf6;
 }
@@ -685,7 +685,7 @@
 
 /* Aurenseherin */
 .spieler-avatar.rolle-aurenseherin,
-.spieler-avatar[data-role='aurenseherin'] {
+.spieler-avatar[data-role="aurenseherin"] {
   background: linear-gradient(145deg, #a78bfa 0%, #856fc8 100%);
   border-color: #a78bfa;
 }
@@ -697,7 +697,7 @@
 
 /* Medium */
 .spieler-avatar.rolle-medium,
-.spieler-avatar[data-role='medium'] {
+.spieler-avatar[data-role="medium"] {
   background: linear-gradient(145deg, #c084fc 0%, #9969c9 100%);
   border-color: #c084fc;
 }
@@ -709,7 +709,7 @@
 
 /* Bärenbändiger */
 .spieler-avatar.rolle-baerenbaendiger,
-.spieler-avatar[data-role='baerenbaendiger'] {
+.spieler-avatar[data-role="baerenbaendiger"] {
   background: linear-gradient(145deg, #78350f 0%, #602a0c 100%);
   border-color: #78350f;
 }
@@ -721,7 +721,7 @@
 
 /* Demoskopin */
 .spieler-avatar.rolle-demoskopin,
-.spieler-avatar[data-role='demoskopin'] {
+.spieler-avatar[data-role="demoskopin"] {
   background: linear-gradient(145deg, #06b6d4 0%, #0491a9 100%);
   border-color: #06b6d4;
 }
@@ -733,7 +733,7 @@
 
 /* Paranormaler Ermittler (billig) */
 .spieler-avatar.rolle-paranormaler-ermittler-(billig),
-.spieler-avatar[data-role='paranormaler-ermittler-(billig)'] {
+.spieler-avatar[data-role="paranormaler-ermittler-(billig)"] {
   background: linear-gradient(145deg, #a3a3a3 0%, #828282 100%);
   border-color: #a3a3a3;
 }
@@ -745,7 +745,7 @@
 
 /* Tratschweib */
 .spieler-avatar.rolle-tratschweib,
-.spieler-avatar[data-role='tratschweib'] {
+.spieler-avatar[data-role="tratschweib"] {
   background: linear-gradient(145deg, #e11d48 0%, #b41739 100%);
   border-color: #e11d48;
 }
@@ -757,7 +757,7 @@
 
 /* Selbstmoerder */
 .spieler-avatar.rolle-selbstmoerder,
-.spieler-avatar[data-role='selbstmoerder'] {
+.spieler-avatar[data-role="selbstmoerder"] {
   background: linear-gradient(145deg, #78716c 0%, #605a56 100%);
   border-color: #78716c;
 }
@@ -769,7 +769,7 @@
 
 /* Floetenspieler */
 .spieler-avatar.rolle-floetenspieler,
-.spieler-avatar[data-role='floetenspieler'] {
+.spieler-avatar[data-role="floetenspieler"] {
   background: linear-gradient(145deg, #8b5cf6 0%, #6f49c4 100%);
   border-color: #8b5cf6;
 }
@@ -781,7 +781,7 @@
 
 /* Henker */
 .spieler-avatar.rolle-henker,
-.spieler-avatar[data-role='henker'] {
+.spieler-avatar[data-role="henker"] {
   background: linear-gradient(145deg, #525252 0%, #414141 100%);
   border-color: #525252;
 }
@@ -793,7 +793,7 @@
 
 /* Bürgermeister */
 .spieler-avatar.rolle-buergermeister,
-.spieler-avatar[data-role='buergermeister'] {
+.spieler-avatar[data-role="buergermeister"] {
   background: linear-gradient(145deg, #1e40af 0%, #18338c 100%);
   border-color: #1e40af;
 }
@@ -805,7 +805,7 @@
 
 /* Dieb */
 .spieler-avatar.rolle-dieb,
-.spieler-avatar[data-role='dieb'] {
+.spieler-avatar[data-role="dieb"] {
   background: linear-gradient(145deg, #1e293b 0%, #18202f 100%);
   border-color: #1e293b;
 }
@@ -817,7 +817,7 @@
 
 /* Doppelgänger */
 .spieler-avatar.rolle-doppelgaenger,
-.spieler-avatar[data-role='doppelgaenger'] {
+.spieler-avatar[data-role="doppelgaenger"] {
   background: linear-gradient(145deg, #6366f1 0%, #4f51c0 100%);
   border-color: #6366f1;
 }
@@ -829,7 +829,7 @@
 
 /* Engel */
 .spieler-avatar.rolle-engel,
-.spieler-avatar[data-role='engel'] {
+.spieler-avatar[data-role="engel"] {
   background: linear-gradient(145deg, #fef3c7 0%, #cbc29f 100%);
   border-color: #fef3c7;
 }
@@ -841,7 +841,7 @@
 
 /* Gerber */
 .spieler-avatar.rolle-gerber,
-.spieler-avatar[data-role='gerber'] {
+.spieler-avatar[data-role="gerber"] {
   background: linear-gradient(145deg, #78350f 0%, #602a0c 100%);
   border-color: #78350f;
 }
@@ -853,7 +853,7 @@
 
 /* Kleines Mädchen */
 .spieler-avatar.rolle-kleines-maedchen,
-.spieler-avatar[data-role='kleines-maedchen'] {
+.spieler-avatar[data-role="kleines-maedchen"] {
   background: linear-gradient(145deg, #fbbf24 0%, #c8981c 100%);
   border-color: #fbbf24;
 }
@@ -865,19 +865,19 @@
 
 /* Kuh */
 .spieler-avatar.rolle-kuh,
-.spieler-avatar[data-role='kuh'] {
-  background: linear-gradient(145deg, #8B4513 0%, #6f370f 100%);
-  border-color: #8B4513;
+.spieler-avatar[data-role="kuh"] {
+  background: linear-gradient(145deg, #8b4513 0%, #6f370f 100%);
+  border-color: #8b4513;
 }
 
 .rolle-badge.rolle-kuh {
-  background: linear-gradient(135deg, #8B4513 0%, #6f370f 100%);
+  background: linear-gradient(135deg, #8b4513 0%, #6f370f 100%);
   color: white;
 }
 
 /* Putzfrau */
 .spieler-avatar.rolle-putzfrau,
-.spieler-avatar[data-role='putzfrau'] {
+.spieler-avatar[data-role="putzfrau"] {
   background: linear-gradient(145deg, #06b6d4 0%, #0491a9 100%);
   border-color: #06b6d4;
 }
@@ -889,7 +889,7 @@
 
 /* Sündenbock */
 .spieler-avatar.rolle-suendenbock,
-.spieler-avatar[data-role='suendenbock'] {
+.spieler-avatar[data-role="suendenbock"] {
   background: linear-gradient(145deg, #a8a29e 0%, #86817e 100%);
   border-color: #a8a29e;
 }
@@ -901,7 +901,7 @@
 
 /* Buergermeister */
 .spieler-avatar.rolle-buergermeister,
-.spieler-avatar[data-role='buergermeister'] {
+.spieler-avatar[data-role="buergermeister"] {
   background: linear-gradient(145deg, #6366f1 0%, #4f51c0 100%);
   border-color: #6366f1;
 }
@@ -913,7 +913,7 @@
 
 /* Hure */
 .spieler-avatar.rolle-hure,
-.spieler-avatar[data-role='hure'] {
+.spieler-avatar[data-role="hure"] {
   background: linear-gradient(145deg, #f43f5e 0%, #c3324b 100%);
   border-color: #f43f5e;
 }
@@ -925,7 +925,7 @@
 
 /* Chemielaborant */
 .spieler-avatar.rolle-chemielaborant,
-.spieler-avatar[data-role='chemielaborant'] {
+.spieler-avatar[data-role="chemielaborant"] {
   background: linear-gradient(145deg, #10b981 0%, #0c9467 100%);
   border-color: #10b981;
 }
@@ -937,7 +937,7 @@
 
 /* Dunkler Priester */
 .spieler-avatar.rolle-dunkler-priester,
-.spieler-avatar[data-role='dunkler-priester'] {
+.spieler-avatar[data-role="dunkler-priester"] {
   background: linear-gradient(145deg, #18181b 0%, #131315 100%);
   border-color: #18181b;
 }
@@ -949,7 +949,7 @@
 
 /* Flüchtlinge */
 .spieler-avatar.rolle-fluechtlinge,
-.spieler-avatar[data-role='fluechtlinge'] {
+.spieler-avatar[data-role="fluechtlinge"] {
   background: linear-gradient(145deg, #0ea5e9 0%, #0b84ba 100%);
   border-color: #0ea5e9;
 }
@@ -961,7 +961,7 @@
 
 /* Mordlustiger */
 .spieler-avatar.rolle-mordlustiger,
-.spieler-avatar[data-role='mordlustiger'] {
+.spieler-avatar[data-role="mordlustiger"] {
   background: linear-gradient(145deg, #7f1d1d 0%, #651717 100%);
   border-color: #7f1d1d;
 }
@@ -973,7 +973,7 @@
 
 /* Nutte */
 .spieler-avatar.rolle-nutte,
-.spieler-avatar[data-role='nutte'] {
+.spieler-avatar[data-role="nutte"] {
   background: linear-gradient(145deg, #ec4899 0%, #bc397a 100%);
   border-color: #ec4899;
 }
@@ -985,7 +985,7 @@
 
 /* Rabe */
 .spieler-avatar.rolle-rabe,
-.spieler-avatar[data-role='rabe'] {
+.spieler-avatar[data-role="rabe"] {
   background: linear-gradient(145deg, #1f2937 0%, #18202c 100%);
   border-color: #1f2937;
 }
@@ -997,7 +997,7 @@
 
 /* Selbstmörder */
 .spieler-avatar.rolle-selbstmoerder,
-.spieler-avatar[data-role='selbstmoerder'] {
+.spieler-avatar[data-role="selbstmoerder"] {
   background: linear-gradient(145deg, #374151 0%, #2c3440 100%);
   border-color: #374151;
 }
@@ -1009,7 +1009,7 @@
 
 /* Zahnarzt */
 .spieler-avatar.rolle-zahnarzt,
-.spieler-avatar[data-role='zahnarzt'] {
+.spieler-avatar[data-role="zahnarzt"] {
   background: linear-gradient(145deg, #ffffff 0%, #cccccc 100%);
   border-color: #ffffff;
 }
@@ -1021,14 +1021,14 @@
 
 /* Weißer Wolf */
 .spieler-avatar.rolle-weisser-wolf,
-.spieler-avatar[data-role='weisser-wolf'] {
+.spieler-avatar[data-role="weisser-wolf"] {
   background: linear-gradient(145deg, #f5f5f4 0%, #d6d3d1 100%);
   border-color: #e7e5e4;
 }
 
 .spieler-avatar.rolle-weisser-wolf::after,
-.spieler-avatar[data-role='weisser-wolf']::after {
-  content: '🐺';
+.spieler-avatar[data-role="weisser-wolf"]::after {
+  content: "🐺";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -1043,14 +1043,14 @@
 
 /* Urwolf */
 .spieler-avatar.rolle-urwolf,
-.spieler-avatar[data-role='urwolf'] {
+.spieler-avatar[data-role="urwolf"] {
   background: linear-gradient(145deg, #7f1d1d 0%, #450a0a 100%);
   border-color: #b91c1c;
 }
 
 .spieler-avatar.rolle-urwolf::after,
-.spieler-avatar[data-role='urwolf']::after {
-  content: '🦠';
+.spieler-avatar[data-role="urwolf"]::after {
+  content: "🦠";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -1065,14 +1065,14 @@
 
 /* Wolfsjunge */
 .spieler-avatar.rolle-wolfsjunge,
-.spieler-avatar[data-role='wolfsjunge'] {
+.spieler-avatar[data-role="wolfsjunge"] {
   background: linear-gradient(145deg, #b91c1c 0%, #7f1d1d 100%);
   border-color: #ef4444;
 }
 
 .spieler-avatar.rolle-wolfsjunge::after,
-.spieler-avatar[data-role='wolfsjunge']::after {
-  content: '🐾';
+.spieler-avatar[data-role="wolfsjunge"]::after {
+  content: "🐾";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -1087,14 +1087,14 @@
 
 /* Einsamer Wolf */
 .spieler-avatar.rolle-einsamer-wolf,
-.spieler-avatar[data-role='einsamer-wolf'] {
+.spieler-avatar[data-role="einsamer-wolf"] {
   background: linear-gradient(145deg, #4c1d95 0%, #2e1065 100%);
   border-color: #8b5cf6;
 }
 
 .spieler-avatar.rolle-einsamer-wolf::after,
-.spieler-avatar[data-role='einsamer-wolf']::after {
-  content: '🐺';
+.spieler-avatar[data-role="einsamer-wolf"]::after {
+  content: "🐺";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -1109,14 +1109,14 @@
 
 /* Lupin */
 .spieler-avatar.rolle-lupin,
-.spieler-avatar[data-role='lupin'] {
+.spieler-avatar[data-role="lupin"] {
   background: linear-gradient(145deg, #ca8a04 0%, #854d0e 100%);
   border-color: #facc15;
 }
 
 .spieler-avatar.rolle-lupin::after,
-.spieler-avatar[data-role='lupin']::after {
-  content: '🌕';
+.spieler-avatar[data-role="lupin"]::after {
+  content: "🌕";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -1131,14 +1131,14 @@
 
 /* Polarwolf */
 .spieler-avatar.rolle-polarwolf,
-.spieler-avatar[data-role='polarwolf'] {
+.spieler-avatar[data-role="polarwolf"] {
   background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 100%);
   border-color: #7dd3fc;
 }
 
 .spieler-avatar.rolle-polarwolf::after,
-.spieler-avatar[data-role='polarwolf']::after {
-  content: '❄️';
+.spieler-avatar[data-role="polarwolf"]::after {
+  content: "❄️";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -1153,14 +1153,14 @@
 
 /* Teenager-Werwolf */
 .spieler-avatar.rolle-teenager-werwolf,
-.spieler-avatar[data-role='teenager-werwolf'] {
+.spieler-avatar[data-role="teenager-werwolf"] {
   background: linear-gradient(145deg, #b91c1c 0%, #991b1b 100%);
   border-color: #ef4444;
 }
 
 .spieler-avatar.rolle-teenager-werwolf::after,
-.spieler-avatar[data-role='teenager-werwolf']::after {
-  content: '🧢';
+.spieler-avatar[data-role="teenager-werwolf"]::after {
+  content: "🧢";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -1175,14 +1175,14 @@
 
 /* Werwolfseherin */
 .spieler-avatar.rolle-werwolfseherin,
-.spieler-avatar[data-role='werwolfseherin'] {
+.spieler-avatar[data-role="werwolfseherin"] {
   background: linear-gradient(145deg, #b91c1c 0%, #7f1d1d 100%);
   border-color: #a78bfa;
 }
 
 .spieler-avatar.rolle-werwolfseherin::after,
-.spieler-avatar[data-role='werwolfseherin']::after {
-  content: '👁️';
+.spieler-avatar[data-role="werwolfseherin"]::after {
+  content: "👁️";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -1197,14 +1197,14 @@
 
 /* Wildes Kind */
 .spieler-avatar.rolle-wildes-kind,
-.spieler-avatar[data-role='wildes-kind'] {
+.spieler-avatar[data-role="wildes-kind"] {
   background: linear-gradient(145deg, #78350f 0%, #451a03 100%);
   border-color: #b45309;
 }
 
 .spieler-avatar.rolle-wildes-kind::after,
-.spieler-avatar[data-role='wildes-kind']::after {
-  content: '👶';
+.spieler-avatar[data-role="wildes-kind"]::after {
+  content: "👶";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -1219,14 +1219,14 @@
 
 /* Wolf im Schafspelz */
 .spieler-avatar.rolle-wolf-im-schafspelz,
-.spieler-avatar[data-role='wolf-im-schafspelz'] {
+.spieler-avatar[data-role="wolf-im-schafspelz"] {
   background: linear-gradient(145deg, #fef3c7 0%, #fde68a 100%);
   border-color: #fcd34d;
 }
 
 .spieler-avatar.rolle-wolf-im-schafspelz::after,
-.spieler-avatar[data-role='wolf-im-schafspelz']::after {
-  content: '🐑';
+.spieler-avatar[data-role="wolf-im-schafspelz"]::after {
+  content: "🐑";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -1244,7 +1244,7 @@
    ============================================================================ */
 
 /* Werwolf Team */
-.spieler-avatar[data-team='werwolf'] {
+.spieler-avatar[data-team="werwolf"] {
   background: linear-gradient(145deg, #b91c1c 0%, #7f1d1d 100%);
   border-color: #ef4444;
   box-shadow:
@@ -1252,7 +1252,7 @@
     inset 0 2px 10px rgba(255, 255, 255, 0.1);
 }
 
-.spieler-avatar[data-team='werwolf']::before {
+.spieler-avatar[data-team="werwolf"]::before {
   background: radial-gradient(
     circle,
     rgba(239, 68, 68, 0.3) 0%,
@@ -1262,13 +1262,13 @@
 }
 
 /* Dorf Team */
-.spieler-avatar[data-team='dorf'] {
+.spieler-avatar[data-team="dorf"] {
   background: linear-gradient(145deg, #0369a1 0%, #075985 100%);
   border-color: #0ea5e9;
 }
 
 /* Solo/Other */
-.spieler-avatar[data-team='solo'] {
+.spieler-avatar[data-team="solo"] {
   background: linear-gradient(145deg, #7c3aed 0%, #5b21b6 100%);
   border-color: #a78bfa;
 }
@@ -1278,35 +1278,64 @@
    ============================================================================ */
 
 @keyframes pulse-red {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.1); }
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 @keyframes selected-pulse {
-  0%, 100% {
-    box-shadow: 0 4px 20px rgba(149, 7, 6, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.1);
+  0%,
+  100% {
+    box-shadow:
+      0 4px 20px rgba(149, 7, 6, 0.3),
+      inset 0 2px 10px rgba(255, 255, 255, 0.1);
   }
   50% {
-    box-shadow: 0 4px 30px rgba(149, 7, 6, 0.5), 0 0 40px rgba(149, 7, 6, 0.2), inset 0 2px 10px rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 4px 30px rgba(149, 7, 6, 0.5),
+      0 0 40px rgba(149, 7, 6, 0.2),
+      inset 0 2px 10px rgba(255, 255, 255, 0.1);
   }
 }
 
 @keyframes heartbeat {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.1); }
-  35% { transform: scale(1); }
-  45% { transform: scale(1.15); }
-  55% { transform: scale(1); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  35% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.15);
+  }
+  55% {
+    transform: scale(1);
+  }
 }
 
 /* Visibility Indicators */
 .spieler-card.werwolf-team-sichtbar::before {
-  content: '🐺';
+  content: "🐺";
   position: absolute;
   top: 5px;
   left: 5px;
@@ -1317,7 +1346,7 @@
 }
 
 .spieler-card.seherin-enthüllt-werwolf::before {
-  content: '👁️‍🗨️';
+  content: "👁️‍🗨️";
   position: absolute;
   top: 5px;
   left: 5px;
@@ -1327,7 +1356,7 @@
 }
 
 .spieler-card.seherin-enthüllt-dorf::before {
-  content: '✓';
+  content: "✓";
   position: absolute;
   top: 5px;
   left: 5px;
@@ -1338,7 +1367,7 @@
 }
 
 .spieler-card.verliebt::before {
-  content: '💕';
+  content: "💕";
   position: absolute;
   top: 5px;
   left: 5px;
@@ -1359,7 +1388,7 @@
 }
 
 .spieler-card.tot::before {
-  content: '💀';
+  content: "💀";
   position: absolute;
   top: 50%;
   left: 50%;

@@ -52,7 +52,6 @@ class Griesgram(Role):
                 "Er träumt davon, morgen wieder gegen alles zu sein."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#6b7280",
             avatar_gradient_to="#374151",

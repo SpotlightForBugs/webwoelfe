@@ -35,7 +35,6 @@ class Buergermeister(Role):
             erzaehler_nacht="Der Bürgermeister ruht in seinem Rathaus. Seine Stimme hat doppeltes Gewicht.",
             erzaehler_tag="Der Bürgermeister ist gefallen! Mit letzter Kraft zeigt er auf seinen Nachfolger, der das Amt und die doppelte Stimme erbt!",
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#1e40af",
             avatar_gradient_to="#1e3a8a",

@@ -51,7 +51,6 @@ class Dieb(Role):
                 "Der Dieb erwacht zuerst und sieht zwei Rollen. " "Er muss eine wählen."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#1e293b",
             avatar_gradient_to="#0f172a",

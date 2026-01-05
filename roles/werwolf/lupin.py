@@ -50,7 +50,6 @@ class Lupin(Role):
                 "Die Seherin sieht entsprechend die aktuelle Form."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#ca8a04",
             avatar_gradient_to="#854d0e",

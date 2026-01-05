@@ -78,7 +78,6 @@ class Urwolf(Role):
                 "ob er jemanden infizieren möchte."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",

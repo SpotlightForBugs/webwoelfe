@@ -7,19 +7,22 @@ from logger import logger
 
 # Get PHASEN from centralized module
 from phases import get_phase_list
+
 PHASEN = get_phase_list()
 
 
 def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     """
     Berechnet die Rollenverteilung dynamisch basierend auf der Registry.
-    
+
     Verwendet DistributionConfig der einzelnen Rollen anstelle von hardcoded Logik.
     """
-    logger.debug(f"Calculating roles for {spieler_anzahl} players (Narrator: {mit_erzaehler})")
+    logger.debug(
+        f"Calculating roles for {spieler_anzahl} players (Narrator: {mit_erzaehler})"
+    )
     effektive_anzahl = spieler_anzahl
     rolle_config = {}
-    
+
     if mit_erzaehler:
         rolle_config["Erzaehler"] = 1
         effektive_anzahl -= 1
@@ -30,22 +33,22 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     # 1. Hole alle verfügbaren Rollen
     verfuegbare_rollen = []
     from roles import RoleRegistry
-    
+
     for role in RoleRegistry.get_all():
         if not role.info.distribution:
             continue
-            
+
         dist = role.info.distribution
-        
+
         # Check preconditions
         if effektive_anzahl < dist.min_players:
             continue
-            
+
         verfuegbare_rollen.append(role)
-        
+
     # 2. Sortiere nach Priorität (höhere zuerst)
     verfuegbare_rollen.sort(key=lambda r: r.info.distribution.priority, reverse=True)
-    
+
     # 3. Verteile Rollen
     aktuelle_anzahl = 0
     zugewiesene_rollen = set()
@@ -53,15 +56,15 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
 
     for role in verfuegbare_rollen:
         dist = role.info.distribution
-        
+
         if dist.is_filler:
             fillers.append(role)
             continue
-            
+
         # Check exklusive Rollen
         if any(ex in zugewiesene_rollen for ex in dist.exclusive_with):
             continue
-            
+
         # Check required roles (nur wenn schon verteilt)
         if dist.requires_roles:
             if not all(req in zugewiesene_rollen for req in dist.requires_roles):
@@ -69,19 +72,19 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
 
         # Berechne Anzahl via Lambda
         anzahl = dist.count_func(effektive_anzahl)
-        
+
         if anzahl > 0:
             # Check ob genug Platz
             if aktuelle_anzahl + anzahl > effektive_anzahl:
                 continue
-                
+
             rolle_config[role.info.name] = anzahl
             aktuelle_anzahl += anzahl
             zugewiesene_rollen.add(role.info.name)
-            
+
     # 4. Fülle mit Filler-Rollen auf (z.B. Dorfbewohner)
     rest_plaetze = effektive_anzahl - aktuelle_anzahl
-    
+
     if rest_plaetze > 0:
         if fillers:
             # Standard: Nehme den ersten Filler (meist Dorfbewohner)
@@ -161,6 +164,7 @@ def starte_spiel(raum: Raum) -> bool:
 
         # Initialisiere Phase-Generator für diesen Raum
         from phase_generator import initialize_game_phases
+
         initialize_game_phases(raum)
 
         db.session.commit()
@@ -241,7 +245,9 @@ def naechste_phase(raum: Raum) -> str:
     Wechselt zur naechsten Spielphase.
     Verwendet den Stateless Scheduler.
     """
-    logger.info(f"Calculating next phase for room {raum.code} (Current: {raum.aktuelle_phase})")
+    logger.info(
+        f"Calculating next phase for room {raum.code} (Current: {raum.aktuelle_phase})"
+    )
     from phase_generator import get_next_phase
 
     next_p = get_next_phase(raum)
@@ -280,7 +286,9 @@ def registriere_aktion(
     zusatz_daten: Optional[dict] = None,
 ):
     """Registriert eine Spielaktion in der Datenbank"""
-    logger.info(f"Registering action: {aktion_typ} by {von_spieler_id} -> {ziel_spieler_id} (Phase: {phase})")
+    logger.info(
+        f"Registering action: {aktion_typ} by {von_spieler_id} -> {ziel_spieler_id} (Phase: {phase})"
+    )
     aktion = SpielAktion(
         raum_id=raum_id,
         runde=runde,
@@ -299,7 +307,9 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
     """
     Tötet einen Spieler und führt Konsequenzen aus (z.B. Jäger, Verliebte).
     """
-    logger.info(f"Killing player {spieler.name} (ID: {spieler.id}, Role: {spieler.rolle}) - Cause: {todesart}")
+    logger.info(
+        f"Killing player {spieler.name} (ID: {spieler.id}, Role: {spieler.rolle}) - Cause: {todesart}"
+    )
     if not spieler.ist_am_leben:
         logger.warning(f"Player {spieler.name} is already dead")
         return {"tote": [], "folge_aktionen": []}
@@ -399,7 +409,7 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
     for s in lebende:
         role = RoleRegistry.get(s.rolle)
         if not role:
-            dorfbewohner += 1 # Fallback
+            dorfbewohner += 1  # Fallback
             continue
 
         team = role.info.team
@@ -411,7 +421,7 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
         elif team.value == "dorf":
             dorfbewohner += 1
         else:
-            andere += 1 # Solo, etc.
+            andere += 1  # Solo, etc.
 
     logger.debug(f"Stats: WW={werwoelfe}, Dorf={dorfbewohner}, Andere={andere}")
 
@@ -421,7 +431,7 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
         return {
             "gewinner": "weisser_wolf",
             "nachricht": "Der Weiße Wolf hat alle anderen vernichtet und gewinnt allein!",
-            "team": "solo"
+            "team": "solo",
         }
 
     # 2. Werwölfe gewinnen
@@ -430,14 +440,14 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
     if werwoelfe >= (dorfbewohner + andere):
         # Ausnahme: Wenn nur noch WW übrig sind und Weißer Wolf lebt -> Spiel geht weiter bis WW tot oder Weißer Wolf allein
         if dorfbewohner == 0 and andere == 0 and weisser_wolf_lebt and werwoelfe > 1:
-             # Spiel geht weiter (Weißer Wolf vs andere Wölfe)
-             return None
+            # Spiel geht weiter (Weißer Wolf vs andere Wölfe)
+            return None
 
         logger.info("Game over: Werewolves win")
         return {
             "gewinner": "werwolf",
             "nachricht": "Die Werwölfe haben die Überhand gewonnen!",
-            "team": "werwolf"
+            "team": "werwolf",
         }
 
     # 3. Dorf gewinnt
@@ -446,7 +456,7 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
         return {
             "gewinner": "dorf",
             "nachricht": "Alle Werwölfe wurden vernichtet. Das Dorf hat gewonnen!",
-            "team": "dorf"
+            "team": "dorf",
         }
 
     # 4. Gemischtes Paar (Amor) gewinnt
@@ -455,25 +465,21 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
         s1 = lebende[0]
         s2 = lebende[1]
         if s1.get_state("global.verliebt_mit_id") == s2.id:
-             logger.info("Game over: Lovers win")
-             return {
-                 "gewinner": "verliebte",
-                 "nachricht": "Die Verliebten haben als einzige überlebt und gewinnen gemeinsam!",
-                 "team": "verliebte"
-             }
+            logger.info("Game over: Lovers win")
+            return {
+                "gewinner": "verliebte",
+                "nachricht": "Die Verliebten haben als einzige überlebt und gewinnen gemeinsam!",
+                "team": "verliebte",
+            }
 
     # Spiel geht weiter
     return None
 
 
-def log_eintrag(
-    raum_id: int, nachricht: str, sichtbar_fuer: str = "alle"
-) -> SpielLog:
+def log_eintrag(raum_id: int, nachricht: str, sichtbar_fuer: str = "alle") -> SpielLog:
     """Erstellt einen Log-Eintrag"""
     # logger.debug(f"Game log: {nachricht} (Visible to: {sichtbar_fuer})") # Too verbose
-    log = SpielLog(
-        raum_id=raum_id, nachricht=nachricht, sichtbar_fuer=sichtbar_fuer
-    )
+    log = SpielLog(raum_id=raum_id, nachricht=nachricht, sichtbar_fuer=sichtbar_fuer)
     db.session.add(log)
     db.session.commit()
     return log
@@ -483,13 +489,14 @@ def log_eintrag(
 # DISKUSSION & ABSTIMMUNG LOGIK
 # ============================================================================
 
+
 def starte_diskussion_abstimmung(raum: Raum, dauer_sekunden: int = 120):
     """Startet die kombinierte Diskussions- und Abstimmungsphase"""
     logger.info(f"Starting discussion/voting in room {raum.code} for {dauer_sekunden}s")
     raum.aktuelle_phase = "diskussion_abstimmung"
     raum.timer_start = datetime.utcnow()
     raum.timer_duration = dauer_sekunden
-    raum.phase_votes = "{}" # Reset votes
+    raum.phase_votes = "{}"  # Reset votes
     db.session.commit()
 
     log_eintrag(raum.id, "Die Diskussion beginnt! Ihr könnt jetzt abstimmen.", "alle")
@@ -550,15 +557,15 @@ def berechne_abstimmungs_statistik(raum: Raum) -> dict:
             fuehrende_stimmen = count
             fuehrender_id = int(tid)
         elif count == fuehrende_stimmen:
-            fuehrender_id = None # Unentschieden
+            fuehrender_id = None  # Unentschieden
 
     return {
         "gesamt_spieler": gesamt_spieler,
         "gesamt_votes": len(votes),
         "noch_zu_waehlen": gesamt_spieler - len(votes),
-        "ziel_stimmen": ziel_stimmen, # {target_id: count}
+        "ziel_stimmen": ziel_stimmen,  # {target_id: count}
         "fuehrender_id": fuehrender_id,
-        "fuehrende_stimmen": fuehrende_stimmen
+        "fuehrende_stimmen": fuehrende_stimmen,
     }
 
 
@@ -593,7 +600,7 @@ def werte_abstimmung_aus(raum: Raum) -> dict:
         return {
             "kein_opfer": True,
             "nachricht": "Unentschieden! Niemand wird gehängt.",
-            "stimmen": stats["ziel_stimmen"]
+            "stimmen": stats["ziel_stimmen"],
         }
 
     # Prüfe Mehrheit (optional: absolute Mehrheit erforderlich?)
@@ -605,7 +612,7 @@ def werte_abstimmung_aus(raum: Raum) -> dict:
         return {
             "kein_opfer": True,
             "nachricht": "Fehler: Gewähltes Opfer nicht gefunden.",
-            "stimmen": stats["ziel_stimmen"]
+            "stimmen": stats["ziel_stimmen"],
         }
 
     logger.info(f"Voting result: {opfer.name} chosen to die")
@@ -613,15 +620,16 @@ def werte_abstimmung_aus(raum: Raum) -> dict:
         "kein_opfer": False,
         "opfer_id": opfer.id,
         "opfer_name": opfer.name,
-        "opfer_rolle": opfer.rolle, # Wird erst nach Tod angezeigt eigentlich
+        "opfer_rolle": opfer.rolle,  # Wird erst nach Tod angezeigt eigentlich
         "stimmen": stats["ziel_stimmen"],
-        "nachricht": f"{opfer.name} wurde vom Dorf verurteilt."
+        "nachricht": f"{opfer.name} wurde vom Dorf verurteilt.",
     }
 
 
 # ============================================================================
 # HILFSFUNKTIONEN
 # ============================================================================
+
 
 def hole_lebende_spieler(raum: Raum) -> List[Spieler]:
     """Gibt Liste aller lebenden Spieler zurück"""
@@ -636,10 +644,11 @@ def ist_werwolf_rolle(rolle_name: str) -> bool:
     if not rolle_name:
         return False
     from roles import RoleRegistry
+
     r = RoleRegistry.get(rolle_name)
     if r:
         return r.info.team.value == "werwolf"
-    return "Werwolf" in rolle_name # Fallback
+    return "Werwolf" in rolle_name  # Fallback
 
 
 def hat_spieler_gewaehlt(spieler: Spieler, raum: Raum, phase: str) -> bool:
@@ -671,11 +680,13 @@ def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: str = None) -> bool:
 
     return True
 
+
 # Legacy Support
 def tag_abstimmung(raum: Raum) -> Optional[dict]:
     """Legacy Wrapper für alte Abstimmungs-Logik"""
     logger.info("Executing legacy tag_abstimmung")
     return werte_abstimmung_aus(raum)
+
 
 def werwolf_abstimmung(raum: Raum) -> Optional[dict]:
     """
@@ -687,7 +698,7 @@ def werwolf_abstimmung(raum: Raum) -> Optional[dict]:
         raum_id=raum.id,
         runde=raum.runde,
         phase="werwolf_phase",
-        aktion_typ="werwolf_wahl"
+        aktion_typ="werwolf_wahl",
     ).all()
 
     if not aktionen:

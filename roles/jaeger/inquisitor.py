@@ -50,12 +50,13 @@ class Inquisitor(Role):
             erzaehler_nacht=(
                 'Der Inquisitor schärft sein Schwert der Gerechtigkeit im Schlaf.'
             ),
-            erzaehler_tag=(
-                'Der Inquisitor tritt vor! "Im Namen der Wahrheit - GESTEHE!" '
-                'Ist das Ziel ein Werwolf, stirbt es auf der Stelle!'
-            ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#1e3a8a",
+            avatar_gradient_to="#172554",
+            avatar_border_color="#2563eb",
+            badge_emoji="⚖️",
         )
     
     @property

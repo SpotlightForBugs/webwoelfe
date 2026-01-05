@@ -49,11 +49,15 @@ class Sandmann(Role):
                 'Der Sandmann erwacht ZUERST und wählt einen Spieler, '
                 'der diese Nacht verschläft und seine Aktion nicht ausführen kann.'
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
-    
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#ddd6fe",
+            avatar_gradient_to="#c4b5fd",
+            avatar_border_color="#ede9fe",
+            badge_emoji="💤",
+        )
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.AUFWECKEN  # Ironischerweise schläfert er ein

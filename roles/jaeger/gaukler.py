@@ -50,12 +50,13 @@ class Gaukler(Role):
                 'Der Gaukler probt seine Tricks im Schlaf. '
                 'Ein Meister der Verwirrung.'
             ),
-            erzaehler_tag=(
-                'HOKUSPOKUS! Der Gaukler wirbelt herum und lässt '
-                'zwei Spieler ihre Plätze tauschen! Alle Effekte wandern mit!'
-            ),
-            erweiterung=Erweiterung.CHARAKTERE,
-            hinweis_config=None,
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#c026d3",
+            avatar_gradient_to="#a21caf",
+            avatar_border_color="#d946ef",
+            badge_emoji="🎭",
         )
     
     @property

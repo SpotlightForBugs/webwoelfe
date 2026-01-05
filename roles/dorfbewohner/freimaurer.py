@@ -7,7 +7,7 @@ dass sie auf der gleichen Seite stehen.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, Erweiterung
+from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -51,8 +51,12 @@ class Freimaurer(Role):
             badge_emoji="🏛️",
         )
 
+    @property
+    def aktions_typ(self) -> AktionsTyp:
+        return AktionsTyp.KEINE
+
     def is_active_on_first_night(self) -> bool:
-        """Freimaurer act on first night (recognition)."""
+        """Freimaurer act on first night (recognize each other)."""
         return True
 
     def is_active_on_every_night(self) -> bool:
@@ -60,38 +64,27 @@ class Freimaurer(Role):
         return False
 
     def get_ui_definition(self) -> "RollenUI":
-        """Returns the UI definition for Freimaurer's action panel."""
+        """Returns the UI definition for Freimaurer action panel."""
         from ..base import RollenUI
 
         return RollenUI(
             title="Freimaurer - Erkennen",
-            instructions="Du erkennst deine Logenbrüder.",
+            instructions="Du erkennst die anderen Freimaurer.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
             can_skip=True,
         )
 
-    def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
-        """Bestätigung der Nachtphase."""
-        return AktionsErgebnis(
-            erfolg=True,
-            nachricht="Du hast deine Logenbrüder gesehen.",
-            effekte={},
-            log_sichtbar_fuer=f"spieler_{spieler.id}",
-        )
-
     def on_spiel_start(
         self, spieler: "Spieler", kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
         """
-        Freimaurer erkennen sich in der ersten Nacht.
+        Die Freimaurer erkennen sich.
         """
         return AktionsErgebnis(
             erfolg=True,
-            nachricht="Du erkennst deine Logenbrüder.",
+            nachricht="Du erkennst deine Logen-Brüder.",
             effekte={"erkennt_freimaurer": True},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

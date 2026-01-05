@@ -42,6 +42,12 @@ class Prinz(Role):
                 "wird enthüllt."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#eab308",
+            avatar_gradient_to="#a16207",
+            avatar_border_color="#facc15",
+            badge_emoji="🤴",
         )
     
     @property

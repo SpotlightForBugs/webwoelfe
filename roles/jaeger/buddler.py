@@ -48,11 +48,15 @@ class Buddler(Role):
                 'Der Buddler erwacht und wählt ein Grab. '
                 'Flüstere ihm die Todesursache zu.'
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
-    
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#78716c",
+            avatar_gradient_to="#57534e",
+            avatar_border_color="#a8a29e",
+            badge_emoji="⛏️",
+        )
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN

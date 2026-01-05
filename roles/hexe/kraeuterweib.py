@@ -42,6 +42,12 @@ class Kraeuterweib(Role):
                 "der morgen stumm sein wird."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#22c55e",
+            avatar_gradient_to="#15803d",
+            avatar_border_color="#4ade80",
+            badge_emoji="🌿",
         )
     
     @property

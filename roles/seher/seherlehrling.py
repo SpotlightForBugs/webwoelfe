@@ -41,6 +41,12 @@ class Seherlehrling(Role):
                 "Der Seherlehrling schläft. Noch lernt er..."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#8b5cf6",
+            avatar_gradient_to="#6d28d9",
+            avatar_border_color="#a78bfa",
+            badge_emoji="🎓",
         )
     
     @property

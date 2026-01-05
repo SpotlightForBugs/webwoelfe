@@ -49,26 +49,30 @@ class DreiBrueder(Role):
 
             # Visual Styling
             avatar_gradient_from="#4f46e5",
-            avatar_gradient_to="#3730a3",
-            avatar_border_color="#818cf8",
+            avatar_gradient_to="#312e81",
+            avatar_border_color="#6366f1",
             badge_emoji="👨‍👦‍👦",
         )
 
+    @property
+    def aktions_typ(self) -> AktionsTyp:
+        return AktionsTyp.KEINE
+
     def is_active_on_first_night(self) -> bool:
-        """Drei Brüder act on first night."""
+        """Drei Brüder act on first night (recognize each other)."""
         return True
 
     def is_active_on_every_night(self) -> bool:
-        """Drei Brüder act every night."""
+        """Drei Brüder act every night (chat)."""
         return True
 
     def get_ui_definition(self) -> "RollenUI":
-        """Returns the UI definition for Drei Brüder's action panel."""
+        """Returns the UI definition for Drei Brüder action panel."""
         from ..base import RollenUI
 
         return RollenUI(
             title="Drei Brüder - Absprache",
-            instructions="Ihr erkennt euch und dürft kurz sprechen.",
+            instructions="Ihr kennt euch und dürft euch absprechen.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
@@ -79,7 +83,7 @@ class DreiBrueder(Role):
         self, spieler: "Spieler", kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
         """
-        Brueder erkennen sich in der ersten Nacht.
+        Die drei Brüder erkennen sich.
         """
         return AktionsErgebnis(
             erfolg=True,

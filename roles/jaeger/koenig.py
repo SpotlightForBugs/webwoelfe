@@ -49,12 +49,13 @@ class Koenig(Role):
                 "Der König ruht auf seinem Thron. "
                 "Seine Stimme wiegt schwerer als alle anderen."
             ),
-            erzaehler_tag=(
-                "Der König ist gefallen! Sein Erbe muss bestimmt werden - "
-                "das Dorf wählt einen neuen König mit doppelter Stimme!"
-            ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#ca8a04",
+            avatar_gradient_to="#a16207",
+            avatar_border_color="#eab308",
+            badge_emoji="👑",
         )
 
     @property

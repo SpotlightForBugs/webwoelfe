@@ -52,10 +52,14 @@ class ParanormalerErmittlerbillig(Role):
                 "Der Paranormale Ermittler erwacht. Zeige ihm ein Ergebnis. "
                 "ACHTUNG: 30% Chance dass du lügen musst! (Würfle heimlich)"
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#a3a3a3",
+            avatar_gradient_to="#737373",
+            avatar_border_color="#d4d4d4",
+            badge_emoji="🔮",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

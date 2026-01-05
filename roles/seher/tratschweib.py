@@ -50,11 +50,15 @@ class Tratschweib(Role):
                 'Das Tratschweib erwacht. Wähle zwei zufällige Spieler und '
                 'zeige ob sie im gleichen Team sind (Daumen hoch/runter).'
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
-    
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#e11d48",
+            avatar_gradient_to="#be123c",
+            avatar_border_color="#fb7185",
+            badge_emoji="🗣️",
+        )
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN

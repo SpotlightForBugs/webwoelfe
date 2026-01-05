@@ -40,6 +40,12 @@ class Medium(Role):
                 "Flüster dem Medium die Rolle des Toten zu."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#c084fc",
+            avatar_gradient_to="#9333ea",
+            avatar_border_color="#d8b4fe",
+            badge_emoji="👻",
         )
     
     @property

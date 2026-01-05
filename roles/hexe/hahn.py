@@ -54,7 +54,12 @@ class Hahn(Role):
                 'verrät er seinen Mörder!'
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#dc2626",
+            avatar_gradient_to="#991b1b",
+            avatar_border_color="#ef4444",
+            badge_emoji="🐓",
         )
     
     @property

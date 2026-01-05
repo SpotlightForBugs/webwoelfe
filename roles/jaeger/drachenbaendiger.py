@@ -49,14 +49,15 @@ class Drachenbaendiger(Role):
             prioritaet=93,
             erzaehler_nacht=(
                 "Der Drachenbändiger schläft friedlich, "
-                "sein Drache wacht über ihn mit feurigem Atem."
-            ),
-            erzaehler_tag=(
-                "FEUER-ATEM! Der Drache des Drachenbändigers "
-                "verbrennt seinen Angreifer zu Asche!"
+                "bewacht von seinem Drachen."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#7c3aed",
+            avatar_gradient_to="#5b21b6",
+            avatar_border_color="#8b5cf6",
+            badge_emoji="🐉",
         )
 
     @property

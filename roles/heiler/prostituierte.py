@@ -49,13 +49,16 @@ class Prostituierte(Role):
             prioritaet=46,  # Vor Werwölfen
             erzaehler_nacht=(
                 "Die Prostituierte erwacht und wählt einen Spieler für "
-                "die Nacht. Beide sind geschützt, aber der Partner "
-                "erfährt wer sie ist."
+                "die Nacht."
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#f43f5e",
+            avatar_gradient_to="#be123c",
+            avatar_border_color="#fb7185",
+            badge_emoji="💋",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:

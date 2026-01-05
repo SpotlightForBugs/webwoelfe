@@ -50,12 +50,13 @@ class Oma(Role):
                 "Die Oma schnarcht leise in ihrem Bett. Die Werwölfe "
                 "haben Mitleid mit der alten Frau."
             ),
-            erzaehler_tag=(
-                "Die Werwölfe haben die Oma verschont! Sie ist zu alt "
-                "und schwach - kein würdiger Gegner für die Bestien."
-            ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#fda4af",
+            avatar_gradient_to="#f43f5e",
+            avatar_border_color="#fb7185",
+            badge_emoji="👵",
         )
 
     @property

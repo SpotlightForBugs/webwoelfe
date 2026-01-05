@@ -49,15 +49,15 @@ class Flammenmann(Role):
             prioritaet=94,
             erzaehler_nacht=(
                 "Der Flammenmann träumt von lodernden Flammen. "
-                "Er wartet auf den richtigen Moment."
-            ),
-            erzaehler_tag=(
-                "FEUER! Der Flammenmann zündet sein Haus an! "
-                "Die Flammen greifen auf die Nachbarhäuser über - "
-                "alle Nachbarn sterben!"
+                "Er kann nur am Tag aktiv werden."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#ea580c",
+            avatar_gradient_to="#c2410c",
+            avatar_border_color="#f97316",
+            badge_emoji="🔥",
         )
 
     @property

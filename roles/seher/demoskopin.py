@@ -54,7 +54,12 @@ class Demoskopin(Role):
                 '(Zeige ihr heimlich den beliebtesten Kandidaten)'
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#06b6d4",
+            avatar_gradient_to="#0891b2",
+            avatar_border_color="#22d3ee",
+            badge_emoji="📊",
         )
     
     @property

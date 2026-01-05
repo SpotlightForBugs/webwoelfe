@@ -50,11 +50,15 @@ class Zauberer(Role):
                 'Der Zauberer erwacht. Welchen Zauber möchte er einsetzen? '
                 '(Schutz/Sicht/Schweigen) und auf wen?'
             ),
-            erzaehler_tag=None,
-            hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
-    
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#3b0764",
+            avatar_gradient_to="#2e1065",
+            avatar_border_color="#581c87",
+            badge_emoji="🧙‍♂️",
+        )
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.WAEHLEN

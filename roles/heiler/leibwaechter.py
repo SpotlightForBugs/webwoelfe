@@ -40,6 +40,12 @@ class Leibwaechter(Role):
             prioritaet=54,
             erzaehler_nacht=("Der Leibwächter erwacht und wählt seinen Schützling."),
             erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#0ea5e9",
+            avatar_gradient_to="#0284c7",
+            avatar_border_color="#38bdf8",
+            badge_emoji="🛡️",
         )
 
     @property

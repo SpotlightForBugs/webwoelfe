@@ -50,8 +50,8 @@ class Tonks(Role):
             farbe="#a855f7",
             prioritaet=75,
             erzaehler_nacht=(
-                "Tonks erwacht. Sie überlegt, ob sie ihre Gestalt wandeln "
-                "und die Rolle eines Toten übernehmen soll."
+                "Tonks erwacht. Möchte sie ihre Gestalt wandeln und "
+                "die Rolle eines Toten annehmen?"
             ),
             erweiterung=Erweiterung.SONDEREDITION,
 

@@ -50,12 +50,13 @@ class Tanklastwagenfahrer(Role):
                 'Der Tanklastwagenfahrer parkt seinen Laster. '
                 'Er wartet auf den richtigen Moment.'
             ),
-            erzaehler_tag=(
-                'HUUUP! Der Tanklastwagenfahrer startet seinen Motor '
-                'und überfährt sein Ziel! Keine Chance zu überleben!'
-            ),
             erweiterung=Erweiterung.SONDEREDITION,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#64748b",
+            avatar_gradient_to="#475569",
+            avatar_border_color="#94a3b8",
+            badge_emoji="🚛",
         )
     
     @property

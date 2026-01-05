@@ -49,13 +49,13 @@ class Griesgram(Role):
             prioritaet=100,
             erzaehler_nacht=(
                 "Der Griesgram wälzt sich mürrisch im Bett. "
-                "Er träumt davon, morgen wieder gegen alles zu sein."
+                "Er freut sich schon auf die nächste Hinrichtung."
             ),
-            erweiterung=Erweiterung.CHARAKTERE,
+            erweiterung=Erweiterung.SONDEREDITION,
 
             # Visual Styling
             avatar_gradient_from="#6b7280",
-            avatar_gradient_to="#374151",
+            avatar_gradient_to="#4b5563",
             avatar_border_color="#9ca3af",
             badge_emoji="😠",
         )

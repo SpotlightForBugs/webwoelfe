@@ -49,17 +49,17 @@ class ErgebeneMagd(Role):
             ),
             icon="fa-solid fa-broom",
             farbe="#14b8a6",
-            prioritaet=95,
+            prioritaet=100,
             erzaehler_nacht=(
-                "Die Ergebene Magd ruht im Hintergrund, bereit "
-                "ihre Herrin zu ersetzen wenn nötig."
+                "Die Ergebene Magd schläft. Sie wartet auf ihre Bestimmung."
             ),
-            erzaehler_tag=(
-                "Die Ergebene Magd tritt vor! Sie übernimmt die Rolle "
-                "und Fähigkeiten der verstorbenen Rolle!"
-            ),
-            erweiterung=Erweiterung.CHARAKTERE,
-            hinweis_config=None,
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#14b8a6",
+            avatar_gradient_to="#0f766e",
+            avatar_border_color="#2dd4bf",
+            badge_emoji="🧹",
         )
 
     @property

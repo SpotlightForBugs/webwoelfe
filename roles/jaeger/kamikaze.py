@@ -43,6 +43,12 @@ class Kamikaze(Role):
                 "jemanden mit in den Tod reissen?"
             ),
             erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#f97316",
+            avatar_gradient_to="#c2410c",
+            avatar_border_color="#fb923c",
+            badge_emoji="💣",
         )
 
     @property

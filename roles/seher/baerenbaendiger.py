@@ -55,7 +55,12 @@ class Baerenbaendiger(Role):
                 'dem Bärenbändiger sitzt)'
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-            hinweis_config=None,
+
+            # Visual Styling
+            avatar_gradient_from="#78350f",
+            avatar_gradient_to="#451a03",
+            avatar_border_color="#92400e",
+            badge_emoji="🐻",
         )
     
     @property

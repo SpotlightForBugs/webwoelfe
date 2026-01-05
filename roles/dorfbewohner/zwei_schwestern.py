@@ -7,7 +7,7 @@ und können sich jede Nacht kurz absprechen.
 
 from typing import Optional, TYPE_CHECKING
 from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
-from ..enums import Team, Kategorie, Erweiterung
+from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -50,25 +50,29 @@ class ZweiSchwestern(Role):
             # Visual Styling
             avatar_gradient_from="#f472b6",
             avatar_gradient_to="#db2777",
-            avatar_border_color="#fbcfe8",
+            avatar_border_color="#f9a8d4",
             badge_emoji="👭",
         )
 
+    @property
+    def aktions_typ(self) -> AktionsTyp:
+        return AktionsTyp.KEINE
+
     def is_active_on_first_night(self) -> bool:
-        """Zwei Schwestern act on first night."""
+        """Zwei Schwestern act on first night (recognize each other)."""
         return True
 
     def is_active_on_every_night(self) -> bool:
-        """Zwei Schwestern act every night."""
+        """Zwei Schwestern act every night (chat)."""
         return True
 
     def get_ui_definition(self) -> "RollenUI":
-        """Returns the UI definition for Zwei Schwestern's action panel."""
+        """Returns the UI definition for Zwei Schwestern action panel."""
         from ..base import RollenUI
 
         return RollenUI(
             title="Zwei Schwestern - Absprache",
-            instructions="Ihr erkennt euch und dürft kurz sprechen.",
+            instructions="Ihr kennt euch und dürft euch absprechen.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
@@ -79,12 +83,12 @@ class ZweiSchwestern(Role):
         self, spieler: "Spieler", kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
         """
-        Schwestern erkennen sich in der ersten Nacht.
+        Die zwei Schwestern erkennen sich.
         """
         return AktionsErgebnis(
             erfolg=True,
             nachricht="Du erkennst deine Schwester.",
-            effekte={"erkennt_schwester": True},
+            effekte={"erkennt_schwestern": True},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
 

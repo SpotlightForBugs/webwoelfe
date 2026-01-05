@@ -63,23 +63,32 @@ with app.app_context():
 # JINJA TEMPLATE FILTERS
 # =============================================================================
 
-@app.template_filter('css_class')
+
+@app.template_filter("css_class")
 def to_css_class(role_name):
     """
     Konvertiert einen Rollennamen in einen CSS-Klassen-Namen.
     Uses RoleRegistry if available.
     """
     if not role_name:
-        return 'unbekannt'
-        
+        return "unbekannt"
+
     # Try Registry first
     from roles import RoleRegistry
+
     r = RoleRegistry.get(role_name)
-    if r and hasattr(r.info, 'css_class') and r.info.css_class:
+    if r and hasattr(r.info, "css_class") and r.info.css_class:
         return r.info.css_class
-        
+
     # Fallback to standard normalization
-    return role_name.lower().replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss').replace(' ', '-')
+    return (
+        role_name.lower()
+        .replace("ä", "ae")
+        .replace("ö", "oe")
+        .replace("ü", "ue")
+        .replace("ß", "ss")
+        .replace(" ", "-")
+    )
 
 
 # Cleanup Task starten
@@ -416,7 +425,12 @@ def spiel(code):
     # DYNAMIC STATE EFFECTS
     # Get all global state definitions for dynamic UI effects
     # =========================================================================
-    from roles import RoleRegistry, get_spieler_state, get_player_visual_effects, get_role_state_display
+    from roles import (
+        RoleRegistry,
+        get_spieler_state,
+        get_player_visual_effects,
+        get_role_state_display,
+    )
 
     global_state_defs = RoleRegistry.get_all_global_state_definitions()
 
@@ -434,7 +448,9 @@ def spiel(code):
     role_state_display = get_role_state_display(spieler)
 
     # Get the visible role for the current player (handles Hund, etc.)
-    sichtbare_rolle = rolle_info.get("name", spieler.rolle) if rolle_info else spieler.rolle
+    sichtbare_rolle = (
+        rolle_info.get("name", spieler.rolle) if rolle_info else spieler.rolle
+    )
     if spieler.rolle:
         role_obj = RoleRegistry.get(spieler.rolle)
         if role_obj:
@@ -448,12 +464,19 @@ def spiel(code):
     for role in RoleRegistry.get_all():
         info = role.info
         # Normalize role name to CSS class name
-        css_name = info.name.lower().replace(' ', '-').replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss')
+        css_name = (
+            info.name.lower()
+            .replace(" ", "-")
+            .replace("ä", "ae")
+            .replace("ö", "oe")
+            .replace("ü", "ue")
+            .replace("ß", "ss")
+        )
         rollen_styles[css_name] = {
-            'name': info.name,
-            'farbe': info.farbe,
-            'icon': info.icon,
-            'team': info.team.value,
+            "name": info.name,
+            "farbe": info.farbe,
+            "icon": info.icon,
+            "team": info.team.value,
         }
 
     return render_template(
@@ -1793,14 +1816,14 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     ziel = None
     if ziel_id:
         if isinstance(ziel_id, list):
-             # Resolve list of IDs to list of objects
-             ziel = [db.session.get(Spieler, zid) for zid in ziel_id]
-             # Filter out None values just in case
-             ziel = [z for z in ziel if z]
-             if not ziel: # If all invalid
-                 ziel = None
+            # Resolve list of IDs to list of objects
+            ziel = [db.session.get(Spieler, zid) for zid in ziel_id]
+            # Filter out None values just in case
+            ziel = [z for z in ziel if z]
+            if not ziel:  # If all invalid
+                ziel = None
         else:
-             ziel = db.session.get(Spieler, ziel_id)
+            ziel = db.session.get(Spieler, ziel_id)
 
     # Execute the role's night action
     log_ts(f"[Aktion] Ausfuehren: {spieler.rolle} -> {ziel.name if ziel else 'None'}")
@@ -1818,13 +1841,13 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             # Effects are keyed like "state_key" -> value
             # The Role class defines what states it uses.
             # Example: {"hexe.heiltrank": False, "global.verliebt_mit_id": 5}
-            
+
             for effect_key, effect_value in ergebnis.effekte.items():
                 # Check if it's a state key (contains a dot = role.field)
                 if "." in effect_key:
                     # Set player state dynamically
                     spieler.set_state(effect_key, effect_value)
-                    
+
             # Legacy effect handling (for backwards compatibility)
             # TODO: Migrate all roles to use state keys instead of these
             if "geschuetzt" in ergebnis.effekte:
@@ -1837,23 +1860,31 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         # Send role-specific results (Generic)
         if hasattr(ergebnis, "private_infos") and ergebnis.private_infos:
             for pid, info in ergebnis.private_infos.items():
-                p_sock_id = None # Need to find socket ID for player ID
+                p_sock_id = None  # Need to find socket ID for player ID
                 # We don't have direct mapping here easily without tracking.
                 # But we can emit to the room and let client filter if we trust it,
                 # OR better: use socketio.emit to room=player_session_id if we had it.
                 # Current app structure uses room=code for game.
                 # We can use room=sid for requests, but here the recipients are distinct.
-                
+
                 # Helper to find session/sid for player:
                 p_obj = db.session.get(Spieler, pid)
-                if p_obj: 
+                if p_obj:
                     # We can target the player via a room named after their ID if we joined them to it?
                     # Or just emit "private_info" to the game room with "recipient_id"
-                    socketio.emit("private_info", {"recipient_id": pid, "payload": info}, room=raum.code)
+                    socketio.emit(
+                        "private_info",
+                        {"recipient_id": pid, "payload": info},
+                        room=raum.code,
+                    )
 
         # Legacy Seherin Support (can be removed if Seherin migrated to private_infos)
-        if spieler.rolle == "Seherin" and ergebnis.effekte and not getattr(ergebnis, "private_infos", None):
-             socketio.emit(
+        if (
+            spieler.rolle == "Seherin"
+            and ergebnis.effekte
+            and not getattr(ergebnis, "private_infos", None)
+        ):
+            socketio.emit(
                 "seherin_ergebnis",
                 {
                     "ziel_name": ziel.name if ziel else "Unbekannt",
@@ -1862,13 +1893,14 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                 },
                 room=request.sid,
             )
-        
+
         if ergebnis.nachricht or ergebnis.effekte:
             # Determine visual effect (from Role or Default)
             # Default fallback mapping
             from roles.enums import AktionsTyp
+
             visual_effect = "sparkle"
-            
+
             DEFAULT_EFFECTS = {
                 AktionsTyp.HEILEN.value: "heal",
                 AktionsTyp.SCHUETZEN.value: "protect",
@@ -1880,9 +1912,9 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                 AktionsTyp.MARKIEREN.value: "mark",
                 AktionsTyp.BLOCKIEREN.value: "block",
             }
-            
+
             # Check if result has visual_effect or map from action type
-            if hasattr(ergebnis, 'visual_effect') and ergebnis.visual_effect:
+            if hasattr(ergebnis, "visual_effect") and ergebnis.visual_effect:
                 visual_effect = ergebnis.visual_effect
             else:
                 visual_effect = DEFAULT_EFFECTS.get(aktion_typ, "sparkle")
@@ -1894,7 +1926,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                     "nachricht": ergebnis.nachricht,
                     "effekte": ergebnis.effekte,
                     "ziel_id": ziel_id,
-                    "effekt": visual_effect 
+                    "effekt": visual_effect,
                 },
             )
 
@@ -1912,14 +1944,12 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
     if alte_phase == "heiler_phase":
         pass  # Schutz bleibt bis Nacht-Ende
 
-    
-    
     # Generic Phase Start Info (Scheduler Based)
     # --------------------------------------------------------------------------
     import json
     from roles import RoleRegistry
     from roles.base import SpielKontext, Phase
-    
+
     # Load Scheduler Data
     phase_data = {}
     if raum.phase_data:
@@ -1927,68 +1957,88 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             phase_data = json.loads(raum.phase_data)
         except:
             pass
-            
-    active_role = phase_data.get('active_role')
-    display_info = phase_data.get('display_info')
-    
+
+    active_role = phase_data.get("active_role")
+    display_info = phase_data.get("display_info")
+
     # 1. Broadcast Generic Phase Update (Public)
-    socketio.emit("phase_update", {
-        "phase": neue_phase,       # e.g. "nacht"
-        "active_role": active_role, # e.g. "Seherin" (or None)
-        "display_info": display_info # UI Metadata
-    }, room=raum.code)
-    
+    socketio.emit(
+        "phase_update",
+        {
+            "phase": neue_phase,  # e.g. "nacht"
+            "active_role": active_role,  # e.g. "Seherin" (or None)
+            "display_info": display_info,  # UI Metadata
+        },
+        room=raum.code,
+    )
+
     # 2. Send Private Info to Active Player
     if active_role:
         role_obj = RoleRegistry.get(active_role)
         if role_obj:
             # Find active player(s)
             # Handle list for group roles? generic get_phase_start_info usually for specific player.
-            # But get_phase_start_info takes (spieler, kontext). 
+            # But get_phase_start_info takes (spieler, kontext).
             # We iterate all potential active players of this role.
-            active_players = Spieler.query.filter_by(raum_id=raum.id, rolle=active_role, ist_am_leben=True).all()
-            
+            active_players = Spieler.query.filter_by(
+                raum_id=raum.id, rolle=active_role, ist_am_leben=True
+            ).all()
+
             # Helper to get Werwolf Victim (generic)
             # TODO: Move this logic into Werwolf.get_phase_start_info or generic "Context Builder"
             werwolf_opfer_id = None
             if active_role == "Hexe":
-                 # Hexe needs victim info. 
-                 # We can rely on Hexe.get_phase_start_info fetching it via Context?
-                 # Need to populate context.
-                 # Optimization: game_logic.werwolf_abstimmung(raum) call?
-                 res = game_logic.werwolf_abstimmung(raum)
-                 if res:
-                     werwolf_opfer_id = res.get("opfer_id")
-                     
+                # Hexe needs victim info.
+                # We can rely on Hexe.get_phase_start_info fetching it via Context?
+                # Need to populate context.
+                # Optimization: game_logic.werwolf_abstimmung(raum) call?
+                res = game_logic.werwolf_abstimmung(raum)
+                if res:
+                    werwolf_opfer_id = res.get("opfer_id")
+
             # Build Context
-            lebende = [s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False).all()]
-            tote = [s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=False, ist_erzaehler=False).all()]
-            
+            lebende = [
+                s.id
+                for s in Spieler.query.filter_by(
+                    raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
+                ).all()
+            ]
+            tote = [
+                s.id
+                for s in Spieler.query.filter_by(
+                    raum_id=raum.id, ist_am_leben=False, ist_erzaehler=False
+                ).all()
+            ]
+
             kontext = SpielKontext(
                 raum_id=raum.id,
                 runde=raum.runde,
-                phase=Phase.NACHT, 
+                phase=Phase.NACHT,
                 aktiver_spieler_id=0,
                 lebende_spieler=lebende,
                 tote_spieler=tote,
                 werwolf_opfer_id=werwolf_opfer_id,
-                spieler_namen={s.id: s.name for s in Spieler.query.filter_by(raum_id=raum.id).all()}
+                spieler_namen={
+                    s.id: s.name for s in Spieler.query.filter_by(raum_id=raum.id).all()
+                },
             )
-            
+
             for player in active_players:
                 info = role_obj.get_phase_start_info(player, kontext)
                 if info:
                     # Emit private info
-                    socketio.emit("private_phase_info", {
-                        "recipient_id": player.id,
-                        "payload": info
-                    }, room=raum.code)
-                    
+                    socketio.emit(
+                        "private_phase_info",
+                        {"recipient_id": player.id, "payload": info},
+                        room=raum.code,
+                    )
+
                     # Legacy Compatibility (e.g. for Hexe JS handler if not updated yet)
                     if active_role == "Hexe":
-                        socketio.emit("hexe_info", info, room=raum.code) # TODO: Remove after frontend update
+                        socketio.emit(
+                            "hexe_info", info, room=raum.code
+                        )  # TODO: Remove after frontend update
 
-  
     elif neue_phase == "nacht_ende":
         log_ts(f"[Nacht] Verarbeite Nacht-Ende für Runde {raum.runde}")
 

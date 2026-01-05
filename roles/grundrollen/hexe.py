@@ -162,11 +162,15 @@ class Hexe(Role):
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
 
-    def get_phase_start_info(self, spieler: "Spieler", kontext: SpielKontext) -> Optional[dict]:
+    def get_phase_start_info(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[dict]:
         """Zeigt der Hexe das Opfer an."""
         if kontext.werwolf_opfer_id:
             # Hole Opfer Namen
-            opfer_name = kontext.spieler_namen.get(kontext.werwolf_opfer_id, "Unbekannt")
+            opfer_name = kontext.spieler_namen.get(
+                kontext.werwolf_opfer_id, "Unbekannt"
+            )
             return {
                 # Generic format - no hardcoded type needed
                 "nachricht": f"Das Werwolf-Opfer ist: {opfer_name}",

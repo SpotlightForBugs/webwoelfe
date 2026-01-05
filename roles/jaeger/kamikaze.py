@@ -43,7 +43,6 @@ class Kamikaze(Role):
                 "jemanden mit in den Tod reissen?"
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#f97316",
             avatar_gradient_to="#c2410c",
@@ -54,18 +53,19 @@ class Kamikaze(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.OPFERN
-    
+
     def is_active_on_first_night(self) -> bool:
         """Kamikaze can act on first night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Kamikaze can act every night until bomb is used."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Kamikaze's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Kamikaze - Opfern",
             instructions="Du kannst dich einmal opfern und einen anderen Spieler mit in den Tod reißen.",
@@ -75,12 +75,12 @@ class Kamikaze(Role):
                     action_type="opfern",
                     icon="fa-solid fa-bomb",
                     css_class="btn-danger",
-                    requires_confirmation=True
+                    requires_confirmation=True,
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def on_nacht_aktion(

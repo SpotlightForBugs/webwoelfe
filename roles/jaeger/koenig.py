@@ -50,7 +50,6 @@ class Koenig(Role):
                 "Seine Stimme wiegt schwerer als alle anderen."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#ca8a04",
             avatar_gradient_to="#a16207",
@@ -61,25 +60,26 @@ class Koenig(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
-    
+
     def is_active_on_first_night(self) -> bool:
         """König does not act at night."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """König is passive."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for König's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="König - Passive Rolle",
             instructions="Deine Stimme zählt doppelt bei Abstimmungen.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def get_stimm_gewicht(self, spieler: "Spieler", kontext: SpielKontext) -> int:

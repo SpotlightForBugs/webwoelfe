@@ -51,7 +51,6 @@ class Oma(Role):
                 "haben Mitleid mit der alten Frau."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#fda4af",
             avatar_gradient_to="#f43f5e",

@@ -100,7 +100,6 @@ class Hund(Role):
                 "Er wird ihm treu ergeben sein... bis in den Tod."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",

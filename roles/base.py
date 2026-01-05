@@ -9,6 +9,9 @@ from .enums import Team, Kategorie, Phase, TriggerTyp, AktionsTyp, SichtTyp, Erw
 if TYPE_CHECKING:
     from models import Spieler, Raum
 
+# Type alias for cleaner signatures
+ConditionCheck = Callable[["Spieler", "SpielKontext"], bool]
+
 
 # =============================================================================
 # DYNAMIC STATE MANAGEMENT SYSTEM
@@ -433,6 +436,47 @@ def get_player_visual_effects(spieler: "Spieler",
 
 
 @dataclass
+class DistributionConfig:
+    """Konfiguration für die dynamische Rollenverteilung."""
+    
+    min_players: int = 0
+    # Lambda function: (player_count) -> role_count
+    # Standard: 1 wenn min_players erreicht
+    count_func: Callable[[int], int] = field(default=lambda n: 1)
+    priority: int = 50  # Höher = wird zuerst verteilt
+    # Muss zusammen mit mind. einer dieser Rollen im Spiel sein
+    requires_roles: List[str] = field(default_factory=list)
+    # Darf NICHT mit diesen Rollen zusammen sein (z.B. Werwolf vs Weißer Wolf Varianten)
+    exclusive_with: List[str] = field(default_factory=list)
+    # True = füllt verbleibende Plätze auf (z.B. Dorfbewohner)
+    is_filler: bool = False
+
+
+@dataclass
+class WinCondition:
+    """Eine dynamische Gewinnbedingung (z.B. für Verliebte)."""
+    
+    id: str  # Eindeutige ID (z.B. "verliebte_win")
+    # (spieler, kontext) -> bool
+    check_func: Callable[["Spieler", "SpielKontext"], bool]
+    team_override: Optional[Team] = None
+    description: str = ""
+    priority: int = 0
+
+
+@dataclass
+class LoseCondition:
+    """Eine dynamische Niederlagen-/Todesbedingung (z.B. Partner stirbt)."""
+    
+    id: str
+    trigger: str  # Event trigger (z.B. "on_spieler_stirbt")
+    # (spieler, kontext, trigger_data) -> bool (True = condition met)
+    check_func: Callable[["Spieler", "SpielKontext", Any], bool]
+    effect: str = "death"  # "death", "convert", "custom"
+    description: str = ""
+
+
+@dataclass
 class RollenInfo:
     """Statische Informationen ueber eine Rolle (fuer UI/Dokumentation)."""
 
@@ -449,7 +493,7 @@ class RollenInfo:
     erzaehler_nacht: Optional[str] = None
     erzaehler_tag: Optional[str] = None
     hinweis_config: Optional[str] = None
-    erweiterung: Erweiterung = Erweiterung.BASISSPIEL
+    erweiterung: Erweiterung = Erweiterung.BASISSPIEL # TODO: MAKE REQUIRED
 
     # Phase ordering and dependencies
     requires_roles: List[str] = field(
@@ -458,6 +502,11 @@ class RollenInfo:
     requires_phases: List[str] = field(
         default_factory=list
     )  # Generic phases that must happen first
+    
+    css_class: str = "" # Frontend CSS class name override
+
+    # Dynamic Distribution Configuration
+    distribution: Optional[DistributionConfig] = None
 
     # Extension pack for UI filtering
     @property
@@ -467,11 +516,11 @@ class RollenInfo:
             Erweiterung.BASISSPIEL: "base",
             Erweiterung.NEUMOND: "neumond",
             Erweiterung.GEMEINDE: "gemeinde",
-            Erweiterung.CHARAKTERE: "charaktere",
-            Erweiterung.SONDEREDITION: "sonderedition",
+            Erweiterung.CHARAKTERE: "charaktere", 
+            Erweiterung.SONDEREDITION: "sonderedition", # TODO: RENAME TO "COMMUNITY"
         }
         if self.erweiterung is None:
-            raise ValueError("RollenInfo.erweiterung darf nicht None sein")
+            raise ValueError("RollenInfo.erweiterung darf nicht None sein") # TODO: LET IT ACTUALLY RAISE AN ERROR
         return pack_map.get(self.erweiterung, "unbekannt")
 
 
@@ -486,6 +535,8 @@ class AktionsErgebnis:
     log_sichtbar_fuer: str = "alle"  # alle, erzaehler, werwolf, spieler_id
     # State changes to apply after action (key -> value)
     state_updates: Dict[str, Any] = field(default_factory=dict)
+    # Private structured info for specific players (player_id -> data dict)
+    private_infos: Dict[int, Dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass
@@ -578,6 +629,21 @@ class Role(ABC):
     def info(self) -> RollenInfo:
         """Gibt die statischen Informationen der Rolle zurück."""
         pass
+
+    # === PHASEN-LOGIK ===
+
+    def get_phase_start_info(self, spieler: "Spieler", kontext: "SpielKontext") -> Optional[Dict[str, Any]]:
+        """
+        Gibt Informationen zurück, die dem Spieler zu Beginn seiner Phase angezeigt werden sollen.
+        
+        Zum Beispiel:
+        - Die Hexe sieht das Werwolf-Opfer
+        - Der Seher sieht wen er gewählt hat (falls Vorwahl-System)
+        
+        Returns:
+            Dict mit Informationen für das Frontend oder None
+        """
+        return None
 
     # === STATE MANAGEMENT ===
 
@@ -699,6 +765,37 @@ class Role(ABC):
                         on_click=self.handle_milch_trinken,
                     )
                 ]
+        """
+        return []
+
+    def get_win_conditions(self) -> List[WinCondition]:
+        """
+        Gibt die Gewinnbedingungen dieser Rolle zurück.
+
+        Diese werden in jeder Runde überprüft. Wenn eine Bedingung zutrifft,
+        endet das Spiel.
+
+        Returns:
+            Liste von WinCondition-Objekten
+        """
+        return []
+
+    def get_lose_conditions(self) -> List[LoseCondition]:
+        """
+        Gibt die Niederlagen-/Trigger-Bedingungen dieser Rolle zurück.
+
+        Diese definieren wann ein Spieler durch Events (z.B. Tod eines anderen)
+        stirbt oder seinen Status ändert.
+
+        Beispiel:
+            return [
+                LoseCondition(
+                    id="lover_dies",
+                    trigger="on_spieler_stirbt",
+                    check_func=self.check_lover_death,
+                    effect="death"
+                )
+            ]
         """
         return []
 

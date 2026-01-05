@@ -1442,20 +1442,61 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   ];
 
   let selectedSpielerId = null;
+  let selectedSpielerId = null;
   let selectedSpielerIds = [];  // Für Amor (2 Spieler)
   let aktuellePhase = "{{ raum.aktuelle_phase }}";
   let aktuelleRunde = {{ raum.runde }};
+  
+  // Parse Phase Data safely
+  let phaseData = {};
+  try {
+      phaseData = JSON.parse('{{ raum.phase_data if raum.phase_data else "{}" | safe }}');
+  } catch(e) { console.error('Error parsing phase data', e); }
+  
+  let activeRole = phaseData.active_role || '';
+  
   let nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'amor_phase']; // Default fallback
 
   // Expose for test automation
   window.aktuellePhase = aktuellePhase;
   window.aktuelleRunde = aktuelleRunde;
+  window.activeRole = activeRole;
   window.socket = socket;
 
   // Raum beitreten
   socket.emit('raum_beitreten', { code: raumCode });
 
   // Event Handler
+  
+  // GENERIC PHASE UPDATE (New System)
+  socket.on('phase_update', function(data) {
+      console.log('[Phase] Update:', data);
+      aktuellePhase = data.phase;
+      activeRole = data.active_role;
+      
+      window.aktuellePhase = aktuellePhase;
+      window.activeRole = activeRole;
+      
+      updatePhase(data.phase, data.runde || aktuelleRunde, data.display_info);
+      
+      // Clear legacy overlays if needed
+      closeAllErzaehlungOverlays();
+  });
+  
+  // PRIVATE PHASE INFO (New System)
+  socket.on('private_phase_info', function(data) {
+      if (data.recipient_id && data.recipient_id !== spielerId) return;
+      
+      const payload = data.payload;
+      console.log("[PRIVATE PHASE INFO]", payload);
+      
+      // Generic info display
+      if (payload.nachricht) {
+          showAlert(payload.nachricht, 'info');
+      }
+  });
+
+  // Legacy Handler (Backward Compatibility)
   socket.on('phase_geaendert', async function(data) {
       // Wenn eine neue Nacht beginnt oder die Phase im Mapping fehlt, laden wir das Mapping neu
       // Dies behebt das Problem, dass die UI nicht weiß, dass sie für eine bestimmte Rolle (die jetzt aktiv wurde)
@@ -1490,21 +1531,37 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       addLog(`${data.spieler_name} ist gestorben (${data.todesart})`);
   });
 
-  socket.on('seherin_ergebnis', function(data) {
-      if (data.rolle) {
-          const teamText = data.ist_werwolf ? 'Werwolf-Team' : 'Dorf-Team';
-          showAlert(`${data.ziel_name} ist ${data.rolle} (${teamText})`, data.ist_werwolf ? 'error' : 'success');
-      } else {
-          const typ = data.ist_werwolf ? 'Werwolf!' : 'kein Werwolf';
-          showAlert(`${data.ziel_name} ist ${typ}`, data.ist_werwolf ? 'error' : 'success');
+  socket.on('private_info', function(data) {
+      if (data.recipient_id && data.recipient_id !== spielerId) return;
+      
+      const payload = data.payload;
+      if (!payload) return;
+
+      console.log("[PRIVATE INFO]", payload);
+
+      if (payload.type === 'verliebte_reveal') {
+          showVerliebteReveal(payload.partner_name, payload.nachricht);
+      } else if (payload.type === 'seherin_reveal') {
+          const teamText = payload.ist_werwolf ? 'Werwolf-Team' : 'Dorf-Team';
+          // Use generic showAlert with success/error based on result (or just info)
+          showAlert(`${payload.ziel_name} ist ${payload.rolle} (${teamText})`, payload.ist_werwolf ? 'error' : 'success');
+      } else if (payload.nachricht) {
+          showAlert(payload.nachricht, 'info');
       }
   });
 
-  socket.on('hexe_info', function(data) {
-      if (spielerRolle === 'Hexe') {
-          showAlert(`Das Werwolf-Opfer ist: ${data.opfer_name}`, 'info');
+  socket.on('role_phase_info', function(data) {
+      if (data.recipient_id && data.recipient_id !== spielerId) return;
+      
+      const payload = data.payload;
+      if (payload.type === 'werwolf_opfer') {
+           showAlert(`Das Werwolf-Opfer ist: ${payload.opfer_name}`, 'info');
+      } else if (payload.nachricht) {
+           showAlert(payload.nachricht, 'info');
       }
   });
+
+
 
   socket.on('nacht_ergebnis', function(data) {
       if (data.tote && data.tote.length > 0) {
@@ -1519,16 +1576,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       }
   });
 
-  // Verliebte-Reveal: Zeige wer dein Partner ist
-  socket.on('verliebte_reveal', function(data) {
-      // Nur anzeigen wenn ich der Empfänger bin (spieler_id === meine ID)
-      if (data.spieler_id !== spielerId) {
-          return; // Diese Nachricht ist nicht für mich
-      }
 
-      // Zeige romantisches Overlay
-      showVerliebteReveal(data.partner_name, data.nachricht);
-  });
 
   function showVerliebteReveal(partnerName, nachricht) {
       const overlay = document.createElement('div');

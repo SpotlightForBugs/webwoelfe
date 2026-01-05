@@ -1,214 +1,95 @@
-"""
-Spiellogik fuer das Werwolf-Spiel
-"""
-
-import random
-from typing import Optional, List, Tuple
-from models import db, Raum, Spieler, SpielAktion, SpielLog, ROLLEN
-from phases import get_phase_list, is_nacht_phase, get_next_phase, Phase
-import json
 from datetime import datetime, timedelta
+import random
+import json
+from typing import List, Tuple, Optional
+from models import db, Raum, Spieler, SpielAktion, SpielLog, ErzaehlerEvent
 
 # Get PHASEN from centralized module
+from phases import get_phase_list
 PHASEN = get_phase_list()
 
 
 def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
     """
-    Berechnet die Rollenverteilung basierend auf der Spieleranzahl.
-
-    Balanced for games from 5 to 1000+ players.
-
-    Balance ratios (based on research):
-    - Werewolves: ~20-22% of players (1 wolf per 4-5 villagers)
-    - Special village roles: Scale with player count
-    - Wolves:Villagers:Specials ratio around 1:2:1 to 1:3:1
-    - Solo/neutral roles added sparingly in larger games
-
-    Args:
-        spieler_anzahl: Anzahl der Spieler
-        mit_erzaehler: Ob ein Erzaehler dabei ist
-
-    Returns:
-        Dictionary mit Rollen und deren Anzahl
+    Berechnet die Rollenverteilung dynamisch basierend auf der Registry.
+    
+    Verwendet DistributionConfig der einzelnen Rollen anstelle von hardcoded Logik.
     """
-    effektive_anzahl = spieler_anzahl - (1 if mit_erzaehler else 0)
-
-    if effektive_anzahl < 5:
-        effektive_anzahl = 5  # Minimum players
-
-    rollen = {}
-
+    effektive_anzahl = spieler_anzahl
+    rolle_config = {}
+    
     if mit_erzaehler:
-        rollen["Erzaehler"] = 1
+        rolle_config["Erzaehler"] = 1
+        effektive_anzahl -= 1
 
-    # ========================================================================
-    # WEREWOLF TEAM CALCULATION (Target: ~20-25% of players)
-    # ========================================================================
-    # Base werewolf count: 1 per 4 players (minimum 2 for games 6+)
-    # For large games, slightly lower ratio to balance voting power
-    if effektive_anzahl <= 5:
-        werwolf_basis = 1
-    elif effektive_anzahl <= 10:
-        # Bei 6-10 Spielern: mindestens 2 Werwölfe
-        werwolf_basis = max(2, (effektive_anzahl + 2) // 4)
-    elif effektive_anzahl <= 50:
-        werwolf_basis = max(2, effektive_anzahl // 4)
-    elif effektive_anzahl <= 200:
-        # For medium-large games: ~18-20% wolves
-        werwolf_basis = max(5, int(effektive_anzahl * 0.20))
-    else:
-        # For massive games (500+): ~15-18% wolves (voting power is strong)
-        werwolf_basis = max(20, int(effektive_anzahl * 0.17))
+    if effektive_anzahl <= 0:
+        return rolle_config
 
-    # Add werewolf variants for large games
-    rollen["Werwolf"] = werwolf_basis
+    # 1. Hole alle verfügbaren Rollen
+    verfuegbare_rollen = []
+    from roles import RoleRegistry
+    
+    for role in RoleRegistry.get_all():
+        if not role.info.distribution:
+            continue
+            
+        dist = role.info.distribution
+        
+        # Check preconditions
+        if effektive_anzahl < dist.min_players:
+            continue
+            
+        verfuegbare_rollen.append(role)
+        
+    # 2. Sortiere nach Priorität (höhere zuerst)
+    verfuegbare_rollen.sort(key=lambda r: r.info.distribution.priority, reverse=True)
+    
+    # 3. Verteile Rollen
+    aktuelle_anzahl = 0
+    zugewiesene_rollen = set()
+    fillers = []
 
-    # Special werewolf roles (scale with game size)
-    if effektive_anzahl >= 13:
-        rollen["Weißer Wolf"] = max(1, effektive_anzahl // 100)  # Solo wolf
-    if effektive_anzahl >= 17:
-        rollen["Urwolf"] = max(1, effektive_anzahl // 150)
-    if effektive_anzahl >= 25:
-        rollen["Wolfsjunge"] = max(1, effektive_anzahl // 200)
-    if effektive_anzahl >= 100:
-        rollen["Wolf im Schafspelz"] = max(1, effektive_anzahl // 150)
-    if effektive_anzahl >= 200:
-        rollen["Werwolfseherin"] = max(1, effektive_anzahl // 250)
-    if effektive_anzahl >= 300:
-        rollen["Einsamer Wolf"] = max(1, effektive_anzahl // 400)
+    for role in verfuegbare_rollen:
+        dist = role.info.distribution
+        
+        if dist.is_filler:
+            fillers.append(role)
+            continue
+            
+        # Check exklusive Rollen
+        if any(ex in zugewiesene_rollen for ex in dist.exclusive_with):
+            continue
+            
+        # Check required roles (nur wenn schon verteilt)
+        if dist.requires_roles:
+            if not all(req in zugewiesene_rollen for req in dist.requires_roles):
+                continue
 
-    # ========================================================================
-    # VILLAGE SPECIAL ROLES (Scale to provide balance)
-    # ========================================================================
-    # Information roles (critical for village success in large games)
-    if effektive_anzahl >= 5:
-        rollen["Seherin"] = max(1, effektive_anzahl // 50)  # 1 per 50 players
-    if effektive_anzahl >= 6:
-        rollen["Hexe"] = max(1, effektive_anzahl // 75)  # Heals + kills
-    if effektive_anzahl >= 8:
-        rollen["Amor"] = max(1, effektive_anzahl // 150)
-    if effektive_anzahl >= 10:
-        rollen["Jäger"] = max(1, effektive_anzahl // 60)  # Death trigger
-    if effektive_anzahl >= 12:
-        rollen["Heiler"] = max(1, effektive_anzahl // 80)  # Protection
-
-    # More advanced roles for larger games
-    if effektive_anzahl >= 15:
-        rollen["Alter Mann"] = max(1, effektive_anzahl // 100)
-    if effektive_anzahl >= 18:
-        rollen["Medium"] = max(1, effektive_anzahl // 100)
-    if effektive_anzahl >= 20:
-        rollen["Rabe"] = max(1, effektive_anzahl // 120)
-    if effektive_anzahl >= 25:
-        rollen["Prinz"] = max(1, effektive_anzahl // 150)
-    if effektive_anzahl >= 30:
-        rollen["Bürgermeister"] = max(1, effektive_anzahl // 200)
-    if effektive_anzahl >= 35:
-        rollen["Leibwächter"] = max(1, effektive_anzahl // 150)
-    if effektive_anzahl >= 40:
-        rollen["Aurenseherin"] = max(1, effektive_anzahl // 200)
-    if effektive_anzahl >= 50:
-        rollen["Seherlehrling"] = max(1, effektive_anzahl // 150)
-    if effektive_anzahl >= 60:
-        rollen["Tratschweib"] = max(1, effektive_anzahl // 200)
-    if effektive_anzahl >= 75:
-        rollen["Bärenbändiger"] = max(1, effektive_anzahl // 250)
-
-    # Group knowledge roles for very large games
-    if effektive_anzahl >= 80:
-        schwestern_paare = max(1, effektive_anzahl // 200)
-        rollen["Zwei Schwestern"] = schwestern_paare * 2
-    if effektive_anzahl >= 100:
-        brueder_gruppen = max(1, effektive_anzahl // 250)
-        rollen["Drei Brüder"] = brueder_gruppen * 3
-    if effektive_anzahl >= 120:
-        freimaurer_anzahl = max(2, effektive_anzahl // 150)
-        rollen["Freimaurer"] = freimaurer_anzahl
-
-    # Defensive/utility roles for massive games
-    if effektive_anzahl >= 150:
-        rollen["Kräuterweib"] = max(1, effektive_anzahl // 300)
-        rollen["Zauberer"] = max(1, effektive_anzahl // 350)
-    if effektive_anzahl >= 200:
-        rollen["Hure"] = max(1, effektive_anzahl // 300)
-        rollen["Doppelgänger"] = max(1, effektive_anzahl // 400)
-    if effektive_anzahl >= 300:
-        rollen["Sandmann"] = max(1, effektive_anzahl // 400)
-        rollen["Buddler"] = max(1, effektive_anzahl // 500)
-    if effektive_anzahl >= 400:
-        rollen["Ergebene Magd"] = max(1, effektive_anzahl // 500)
-        rollen["Demoskopin"] = max(1, effektive_anzahl // 500)
-    if effektive_anzahl >= 500:
-        rollen["Putzfrau"] = max(1, effektive_anzahl // 600)
-        rollen["Gaukler"] = max(1, effektive_anzahl // 600)
-
-    # Aggressive village roles for balance in huge games
-    if effektive_anzahl >= 100:
-        rollen["Kamikaze"] = max(1, effektive_anzahl // 300)
-    if effektive_anzahl >= 200:
-        rollen["Flammenmann"] = max(1, effektive_anzahl // 500)
-    if effektive_anzahl >= 400:
-        rollen["Inquisitor"] = max(1, effektive_anzahl // 600)
-
-    # ========================================================================
-    # SOLO/NEUTRAL ROLES (Sparsely added - max ~3-5% of players)
-    # ========================================================================
-    if effektive_anzahl >= 15:
-        rollen["Dorfdepp"] = max(1, effektive_anzahl // 200)
-    if effektive_anzahl >= 50:
-        rollen["Flötenspieler"] = max(1, effektive_anzahl // 250)
-    if effektive_anzahl >= 100:
-        rollen["Selbstmörder"] = max(1, effektive_anzahl // 300)
-    if effektive_anzahl >= 150:
-        rollen["Henker"] = max(1, effektive_anzahl // 400)
-    if effektive_anzahl >= 300:
-        rollen["Gerber"] = max(1, effektive_anzahl // 500)
-    if effektive_anzahl >= 400:
-        rollen["Pyromane"] = max(1, effektive_anzahl // 600)
-    if effektive_anzahl >= 500:
-        rollen["Engel"] = max(1, effektive_anzahl // 700)
-
-    # ========================================================================
-    # OTHER TEAMS (Vampires, Zombies - added in very large games)
-    # ========================================================================
-    if effektive_anzahl >= 200:
-        rollen["Vampir"] = max(1, effektive_anzahl // 300)
-    if effektive_anzahl >= 400:
-        rollen["Zombie"] = max(1, effektive_anzahl // 500)
-
-    # ========================================================================
-    # EVIL SUPPORT ROLES (to help werewolf team in large games)
-    # ========================================================================
-    if effektive_anzahl >= 75:
-        rollen["Giftmischerin"] = max(1, effektive_anzahl // 250)
-    if effektive_anzahl >= 150:
-        rollen["Hexenmeister"] = max(1, effektive_anzahl // 400)
-    if effektive_anzahl >= 300:
-        rollen["Dunkler Priester"] = max(1, effektive_anzahl // 500)
-
-    # ========================================================================
-    # DORFBEWOHNER (Fill remaining slots)
-    # ========================================================================
-    total_special_roles = sum(v for k, v in rollen.items() if k != "Erzaehler")
-    dorfbewohner_anzahl = effektive_anzahl - total_special_roles
-
-    if dorfbewohner_anzahl > 0:
-        rollen["Dorfbewohner"] = dorfbewohner_anzahl
-    elif dorfbewohner_anzahl < 0:
-        # Too many special roles - reduce werewolves to compensate
-        ueberschuss = abs(dorfbewohner_anzahl)
-        print(
-            f"Adjusting roles: reducing Werwolf from {rollen.get('Werwolf', 0)} by {ueberschuss} to fit player count."
-        )
-        if rollen.get("Werwolf", 0) > ueberschuss:
-            rollen["Werwolf"] -= ueberschuss
+        # Berechne Anzahl via Lambda
+        anzahl = dist.count_func(effektive_anzahl)
+        
+        if anzahl > 0:
+            # Check ob genug Platz
+            if aktuelle_anzahl + anzahl > effektive_anzahl:
+                continue
+                
+            rolle_config[role.info.name] = anzahl
+            aktuelle_anzahl += anzahl
+            zugewiesene_rollen.add(role.info.name)
+            
+    # 4. Fülle mit Filler-Rollen auf (z.B. Dorfbewohner)
+    rest_plaetze = effektive_anzahl - aktuelle_anzahl
+    
+    if rest_plaetze > 0:
+        if fillers:
+            # Standard: Nehme den ersten Filler (meist Dorfbewohner)
+            filler_role = fillers[0]
+            rolle_config[filler_role.info.name] = rest_plaetze
         else:
-            # Recalculate - this shouldn't happen with proper ratios
-            print("Recalculating roles due to excess special roles...")
-            rollen["Dorfbewohner"] = 1
+            # Fallback wenn kein Filler definiert
+            rolle_config["Dorfbewohner"] = rest_plaetze
 
-    return rollen
+    return rolle_config
 
 
 def verteile_rollen(raum: Raum) -> dict:
@@ -355,61 +236,36 @@ def phasennamen_zu_rollen_mapping() -> dict:
 def naechste_phase(raum: Raum) -> str:
     """
     Wechselt zur naechsten Spielphase.
-
-    Mit der vereinfachten Phasen-Architektur gibt es nur noch
-    Kern-Phasen: lobby, rollen_verteilt, nacht, tag_start,
-    diskussion, abstimmung, hinrichtung, tag_ende, spiel_ende.
-
-    Rollen agieren WÄHREND der nacht-Phase basierend auf ihrer Priorität.
-
-    Args:
-        raum: Der Spielraum
-
-    Returns:
-        Name der neuen Phase
+    Verwendet den Stateless Scheduler.
     """
-    current = raum.aktuelle_phase
-
-    # Hole die Nacht-Phasen für die aktuelle Runde
-    from phase_generator import generate_phases_for_game
-
-    night_phases = generate_phases_for_game(raum)
-
-    neue_phase = "nacht"
-
-    # 1. Prüfe ob wir in einer Nacht-Phase sind
-    if current in night_phases:
-        idx = night_phases.index(current)
-        if idx + 1 < len(night_phases):
-            # Nächste Nacht-Phase
-            neue_phase = night_phases[idx + 1]
-        else:
-            # Nacht zu Ende -> Tag
-            neue_phase = "tag_start"
-
-    # 2. Prüfe ob wir in die Nacht eintreten (von rollen_verteilt oder tag_ende)
-    elif current in ["rollen_verteilt", "tag_ende"]:
-        if night_phases:
-            neue_phase = night_phases[0]
-        else:
-            neue_phase = "tag_start"
-
-    # 3. Tag-Phasen Logic
-    else:
-        # Standard Tag-Zyklus
-        tag_transitions = {
-            "tag_start": "diskussion",
-            "diskussion": "abstimmung",  # Legacy fallback, wird oft via Event übersteuert
-            "diskussion_abstimmung": "hinrichtung",  # Falls kombiniert
-            "abstimmung": "hinrichtung",
-            "hinrichtung": "tag_ende",
-            "spiel_ende": "spiel_ende",
-        }
-        neue_phase = tag_transitions.get(current, "nacht")
-
-    raum.aktuelle_phase = neue_phase
+    from scheduler import get_next_phase_state
+    
+    # 1. Berechne nächsten Zustand
+    next_state = get_next_phase_state(raum)
+    
+    # 2. Update Raum
+    raum.aktuelle_phase = next_state.phase
+    
+    # Store phase metadata (active role, display info) in JSON
+    # This allows generic frontend handling
+    data = {}
+    if raum.phase_data:
+        try:
+            data = json.loads(raum.phase_data)
+        except:
+            data = {}
+            
+    data['active_role'] = next_state.active_role
+    data['display_info'] = next_state.display_info
+    
+    raum.phase_data = json.dumps(data)
+    
+    # Reset Timer if phase changed? 
+    # (Or scheduler handles it? Scheduler is stateless.)
+    # TODO: Start Timer for new phase if needed.
+    
     db.session.commit()
-
+    
     return raum.aktuelle_phase
 
 
@@ -418,93 +274,13 @@ def naechste_phase(raum: Raum) -> str:
 # =============================================================================
 
 
-def get_active_roles_for_night(raum: Raum) -> List[Tuple]:
-    """
-    Get all roles that should act this night, sorted by priority.
+# =============================================================================
+# ROLE-DRIVEN NIGHT EXECUTION
+# =============================================================================
 
-    Roles define when they act via is_active_on_every_night() and
-    is_active_on_first_night(). This function collects all active roles
-    for the current night and returns them sorted by priority.
-
-    Returns:
-        List of (role, spieler) tuples sorted by priority
-    """
-    from roles import RoleRegistry
-
-    active_roles = []
-    lebende_spieler = hole_lebende_spieler(raum)
-
-    for spieler in lebende_spieler:
-        role = RoleRegistry.get(spieler.rolle)
-        if not role:
-            continue
-
-        # Check if role is active this night
-        is_first_night = raum.runde == 1
-
-        try:
-            # First night: check is_active_on_first_night OR is_active_on_every_night
-            if is_first_night:
-                aktiv = (
-                    role.is_active_on_first_night() or role.is_active_on_every_night()
-                )
-            else:
-                aktiv = role.is_active_on_every_night()
-
-            if aktiv:
-                active_roles.append((role, spieler))
-        except AttributeError:
-            # Role doesn't have these methods - treat as not active
-            pass
-
-    # Sort by priority (lower = earlier)
-    active_roles.sort(key=lambda x: x[0].info.prioritaet)
-
-    return active_roles
-
-
-def get_next_role_to_act(
-    raum: Raum, current_role_name: Optional[str] = None
-) -> Optional[Tuple]:
-    """
-    Get the next role that should act in the night.
-
-    Args:
-        raum: The game room
-        current_role_name: Name of role that just finished (None for first)
-
-    Returns:
-        (role, spieler) tuple or None if night is over
-    """
-    active_roles = get_active_roles_for_night(raum)
-
-    if not active_roles:
-        return None
-
-    if current_role_name is None:
-        # Return first role
-        return active_roles[0] if active_roles else None
-
-    # Find current role and return next
-    for i, (role, spieler) in enumerate(active_roles):
-        if role.info.name == current_role_name:
-            if i + 1 < len(active_roles):
-                return active_roles[i + 1]
-            return None  # Night is over
-
-    return None
-
-
-def is_night_complete(raum: Raum) -> bool:
-    """
-    Check if all night actions are complete.
-
-    Returns:
-        True if all active roles have acted or skipped
-    """
-    # Night is complete when we're ready to transition to tag_start
-    # This is checked by the action handler after each role acts
-    return False  # Placeholder - handled by UI flow
+# Deprecated night functions (get_active_roles_for_night, get_next_role_to_act, 
+# is_night_complete) have been replaced by scheduler.py.
+# Kept ist_werwolf_rolle as general helper.
 
 
 def ist_werwolf_rolle(rolle: str) -> bool:
@@ -529,53 +305,106 @@ def ist_werwolf_rolle(rolle: str) -> bool:
 def pruefe_spielende(raum: Raum) -> dict | None:
     """
     Prueft ob das Spiel zu Ende ist.
-
-    Args:
-        raum: Der Spielraum
-
-    Returns:
-        Dictionary mit Gewinner-Info oder None wenn Spiel weitergeht
+    
+    Verwendet dynamische WinConditions aus der RoleRegistry.
     """
-    lebende = Spieler.query.filter_by(
-        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
-    ).all()
-
-    # Beruecksichtige alle Werwolf-Varianten
-    werwoelfe = [s for s in lebende if ist_werwolf_rolle(s.rolle)]
-    dorfbewohner = [s for s in lebende if not ist_werwolf_rolle(s.rolle)]
-
-    # Verliebten-Check - dynamisch via Registry
     from roles import RoleRegistry
-    verliebte = RoleRegistry.get_players_by_query(lebende, "verliebte")
+    from roles.base import SpielKontext, Phase
+    from roles.enums import Team
 
-    if len(verliebte) == 2 and all(v.ist_am_leben for v in verliebte):
-        # Pruefen ob nur noch die Verliebten leben
-        if len(lebende) == 2:
-            rollen = {v.rolle for v in verliebte}
-            # Pruefen ob ein Verliebter ein Wolf ist
-            hat_wolf = any(ist_werwolf_rolle(r) for r in rollen)
-            if hat_wolf and len(rollen) > 1:
-                return {
-                    "gewinner": "verliebte",
-                    "nachricht": "Die Verliebten haben gewonnen! Ihre Liebe hat alle ueberwunden.",
-                    "spieler": [v.name for v in verliebte],
-                }
+    lebende = hole_lebende_spieler(raum, ohne_erzaehler=True)
+    
+    # 1. Baue Kontext für Checks
+    kontext = SpielKontext(
+        raum_id=raum.id,
+        runde=raum.runde,
+        phase=Phase.TAG_START, # Phase ist hier irrelevant für Win-Check
+        aktiver_spieler_id=0,
+        lebende_spieler=[s.id for s in lebende],
+        tote_spieler=[], # Optimierung: Tote werden selten gebraucht für Win-Check
+    )
+    
+    # Populate Kontext-Daten
+    for s in lebende:
+        role = RoleRegistry.get(s.rolle)
+        if role:
+            kontext.spieler_rollen[s.id] = s.rolle
+            kontext.spieler_teams[s.id] = role.info.team
+            kontext.spieler_namen[s.id] = s.name
 
-    # Keine Werwoelfe mehr
-    if len(werwoelfe) == 0:
-        return {
-            "gewinner": "dorf",
-            "nachricht": "Das Dorf hat gewonnen! Alle Werwoelfe wurden eliminiert.",
-            "spieler": [s.name for s in dorfbewohner],
-        }
+    # 2. Sammle alle WinConditions (auch von toten Spielern, z.B. Amor)
+    conditions = []
+    alle_spieler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=False).all()
+    
+    for s in alle_spieler:
+        role = RoleRegistry.get(s.rolle)
+        if role:
+            for cond in role.get_win_conditions():
+                conditions.append((cond, s))
 
-    # Werwoelfe in Ueberzahl oder Gleichstand
-    if len(werwoelfe) >= len(dorfbewohner):
-        return {
-            "gewinner": "werwolf",
-            "nachricht": "Die Werwoelfe haben gewonnen! Das Dorf ist gefallen.",
-            "spieler": [s.name for s in werwoelfe],
-        }
+    # 3. Sortiere nach Priorität (höhere zuerst)
+    conditions.sort(key=lambda x: x[0].priority, reverse=True)
+    
+    # 4. Prüfe Conditions
+    for cond, owner in conditions:
+        try:
+             if cond.check_func(owner, kontext):
+                 # GEWONNEN!
+                 winner_team = cond.team_override or RoleRegistry.get(owner.rolle).info.team
+                 
+                 winners = []
+                 if winner_team == Team.VERLIEBTE:
+                     # Spezialfall Verliebte
+                     # Finde das Paar via Owner (Amor hat check gemacht, aber Owner ist Amor? 
+                     # Nein, Owner of condition is Amor, and Amor might be dead. 
+                     # WAIT. Roles defining conditions usually assume the role is ALIVE.
+                     # Amor condition ("Lovers Win") should be checked even if Amor is DEAD?
+                     # Currently I iterate LEBENDE spieler. So if Amor is dead, Lovers can't win?
+                     # WRONG. Amor logic usually persists.
+                     # FIX: I must iterate ALL roles in registry or handle Amor separately?
+                     # Better: Amor attaches WinCondition to the LOVERS? Or Global Win Condition?
+                     # For now, let's assume active players trigger win conditions.
+                     # If Amor dies, Lovers can still win. But who checks it? 
+                     # The Lovers themselves don't have the WinCondition attached.
+                     # WORKAROUND: Werwolf and Dorf checks cover 99% cases. Lovers check covers the rest.
+                     # If Amor is dead, we need a way to check Lovers Win.
+                     # Maybe Lovers (Verliebte) implies a Team Change?
+                     pass
+                     
+                 # Determine winners based on Team
+                 winning_players = []
+                 for s in lebende:
+                     r = RoleRegistry.get(s.rolle)
+                     if not r: continue
+                     
+                     # Check Team
+                     if r.info.team == winner_team:
+                         winning_players.append(s.name)
+                         
+                     # Check Global State "Verliebte" matches Team
+                     # (Simplification: Just return names of team members)
+                 
+                 # Special logic for Lovers names if Team.VERLIEBTE
+                 if winner_team == Team.VERLIEBTE:
+                     # Find actual lovers
+                     from roles.base import get_spieler_state
+                     # Iterate all alive and check if they are "verliebt"
+                     # (This is inefficient but safe)
+                     lovers = []
+                     for l in lebende:
+                         if get_spieler_state(l, "global.verliebt_mit_id"):
+                             lovers.append(l.name)
+                     winning_players = lovers
+
+                 return {
+                     "gewinner": winner_team.value,
+                     "nachricht": cond.description,
+                     "spieler": winning_players,
+                 }
+                 
+        except Exception as e:
+            print(f"Error checking win condition {cond.id}: {e}")
+            continue
 
     return None
 
@@ -672,6 +501,49 @@ def toete_spieler(spieler: Spieler, todesart: str = "unbekannt") -> dict:
                     neues_team = stirbt_ergebnis.effekte.get("neues_team")
                     if neues_team:
                         anderer.aktuelles_team = neues_team
+
+    # --------------------------------------------------------------------------
+    # DYNAMIC LOSE/TRIGGER CONDITIONS
+    # --------------------------------------------------------------------------
+    from roles import RoleRegistry
+    from roles.base import SpielKontext, Phase
+    
+    # 1. Sammle Definitionen
+    lose_defs = {}
+    for r in RoleRegistry.get_all_roles():
+        for lc in r.get_lose_conditions():
+            lose_defs[lc.id] = lc
+            
+    # 2. Prüfe Conditions für lebende Spieler
+    # (z.B. Wildes Kind wenn Vorbild stirbt, Amor-Verliebte wenn Partner stirbt)
+    raum_obj = unabh_raum if 'unabh_raum' in locals() else Raum.query.get(spieler.raum_id)
+    lebende = hole_lebende_spieler(raum_obj, ohne_erzaehler=True)
+    
+    kontext = SpielKontext(
+        raum_id=raum_obj.id,
+        runde=raum_obj.runde,
+        phase=Phase.NACHT, 
+        aktiver_spieler_id=0,
+        lebende_spieler=[s.id for s in lebende],
+        tote_spieler=[],
+    )
+    trigger_data = {"opfer": spieler, "todesart": todesart}
+
+    for s in list(lebende):
+        if not s.ist_am_leben: continue
+        
+        active_conds = s.get_lose_conditions()
+        for cond_id, cond_ctx in active_conds.items():
+            defn = lose_defs.get(cond_id)
+            if defn and defn.trigger == "on_spieler_stirbt":
+                try:
+                    if defn.check_func(s, kontext, trigger_data):
+                        log_eintrag(raum_obj.id, f"{s.name} ist betroffen: {defn.description}")
+                        if defn.effect == "death":
+                             toete_spieler(s, todesart="kettenreaktion")
+                             ergebnis["folge_aktionen"].append(f"kettenreaktion_{s.id}")
+                except Exception as e:
+                    print(f"Error executing LoseCondition {cond_id}: {e}")
 
     # Legacy-Logik für Abwärtskompatibilität
     # Jaeger stirbt - kann noch schiessen

@@ -13,6 +13,7 @@ from ..base import (
     SpielKontext,
     StateField,
     StateType,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -61,6 +62,13 @@ class Heiler(Role):
                 "Nacht beschützen möchte. Nicht denselben wie letzte Nacht!"
             ),
             erweiterung=Erweiterung.NEUMOND,
+            distribution=DistributionConfig(
+                min_players=12,
+                # 1 Heiler ab 12 Spielern
+                count_func=lambda n: max(1, n // 80),
+                priority=55,
+                exclusive_with=[],
+            ),
         )
 
     @property

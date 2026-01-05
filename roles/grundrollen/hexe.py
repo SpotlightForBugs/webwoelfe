@@ -13,6 +13,7 @@ from ..base import (
     SpielKontext,
     StateField,
     StateType,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -61,6 +62,13 @@ class Hexe(Role):
                 "Gifttrank einsetzen? (Zeige auf Spieler oder schuettle Kopf)"
             ),
             erweiterung=Erweiterung.BASISSPIEL,
+            distribution=DistributionConfig(
+                min_players=6,
+                # 1 Hexe ab 6 Spielern
+                count_func=lambda n: max(1, n // 75),
+                priority=60,
+                exclusive_with=[],
+            ),
         )
 
     @property
@@ -139,6 +147,18 @@ class Hexe(Role):
             effekte=effekte,
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
+
+    def get_phase_start_info(self, spieler: "Spieler", kontext: SpielKontext) -> Optional[dict]:
+        """Zeigt der Hexe das Opfer an."""
+        if kontext.werwolf_opfer_id:
+            # Hole Opfer Namen
+            opfer_name = kontext.spieler_namen.get(kontext.werwolf_opfer_id, "Unbekannt")
+            return {
+                "opfer_name": opfer_name,
+                "opfer_id": kontext.werwolf_opfer_id,
+                "type": "werwolf_opfer"
+            }
+        return None
 
     def heilen(self, spieler: "Spieler", kontext: SpielKontext) -> AktionsErgebnis:
         """Setzt den Heiltrank ein."""

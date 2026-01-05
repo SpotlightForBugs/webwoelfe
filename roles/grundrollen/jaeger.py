@@ -13,6 +13,7 @@ from ..base import (
     SpielKontext,
     StateField,
     StateType,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -62,6 +63,13 @@ class Jaeger(Role):
                 "Flinte. Auf wen feuert er seinen letzten Schuss?"
             ),
             erweiterung=Erweiterung.BASISSPIEL,
+            distribution=DistributionConfig(
+                min_players=10,
+                # 1 Jäger ab 10 Spielern
+                count_func=lambda n: max(1, n // 60),
+                priority=99,
+                exclusive_with=[],
+            ),
         )
 
     @property

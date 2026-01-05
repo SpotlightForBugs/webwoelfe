@@ -6,7 +6,7 @@ eines Spielers erfahren.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -46,6 +46,13 @@ class Seherin(Role):
                 "die Zugehörigkeit."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
+            distribution=DistributionConfig(
+                min_players=5,
+                # 1 Seherin ab 5 Spielern
+                count_func=lambda n: max(1, n // 50),
+                priority=20,
+                exclusive_with=[],
+            ),
         )
 
     @property
@@ -165,7 +172,16 @@ class Seherin(Role):
                 "ist_werwolf": ist_werwolf,
                 "sicht_typ": sicht.value,
                 "team": team.value,
-                "snapshot": True,  # Markiert dass dies ein Snapshot ist
+                "snapshot": True,
+            },
+            private_infos={
+                spieler.id: {
+                    "type": "seherin_reveal",
+                    "ziel_name": ziel.name,
+                    "rolle": rollen_name,
+                    "ist_werwolf": ist_werwolf,
+                    "nachricht": nachricht
+                }
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

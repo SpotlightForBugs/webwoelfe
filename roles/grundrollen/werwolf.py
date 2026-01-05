@@ -6,7 +6,7 @@ jede Nacht gemeinsam ein Opfer aus.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -45,6 +45,13 @@ class Werwolf(Role):
                 "gemeinsam ein Opfer aus."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
+            distribution=DistributionConfig(
+                min_players=5,
+                # ~20% Werwölfe, min 1
+                count_func=lambda n: max(1, int(n * 0.20)),
+                priority=50,
+                exclusive_with=[],
+            ),
         )
 
     @property
@@ -149,3 +156,30 @@ class Werwolf(Role):
             effekte={"erkennt_woelfe": True},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
+
+    def get_win_conditions(self) -> List["WinCondition"]:
+        """Werwölfe gewinnen wenn sie die Mehrheit stellen."""
+        from ..base import WinCondition
+
+        def check_werwolf_dominance(spieler: "Spieler", kontext: SpielKontext) -> bool:
+            wolves = [
+                uid
+                for uid in kontext.lebende_spieler
+                if kontext.spieler_teams.get(uid) == Team.WERWOLF
+            ]
+            villagers = [
+                uid
+                for uid in kontext.lebende_spieler
+                if kontext.spieler_teams.get(uid) != Team.WERWOLF
+            ]
+            return len(wolves) >= len(villagers) and len(wolves) > 0
+
+        return [
+            WinCondition(
+                id="werwolf_dominance",
+                check_func=check_werwolf_dominance,
+                team_override=Team.WERWOLF,
+                priority=10,  # Standard Check
+                description="Die Werwölfe sind in der Überzahl.",
+            )
+        ]

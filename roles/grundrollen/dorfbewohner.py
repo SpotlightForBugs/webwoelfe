@@ -6,7 +6,7 @@ aber seine Stimme in der Abstimmung ist entscheidend.
 """
 
 from typing import Optional
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -43,6 +43,13 @@ class Dorfbewohner(Role):
                 "Der Dorfbewohner erwacht und hofft, die Woelfe zu entlarven. "
                 "Seine Stimme ist seine einzige Waffe."
             ),
+            distribution=DistributionConfig(
+                min_players=0,
+                count_func=lambda n: 0,  # Wird als Filler berechnet
+                priority=100,
+                exclusive_with=[],
+                is_filler=True,
+            ),
         )
 
     @property
@@ -57,10 +64,6 @@ class Dorfbewohner(Role):
         """Dorfbewohner does not act every night."""
         return False
 
-    def get_ui_definition(self) -> "RollenUI":
-        """Returns the UI definition for Dorfbewohner's action panel."""
-        from ..base import RollenUI
-
         return RollenUI(
             title="Dorfbewohner - Schlafen",
             instructions="Du schläfst friedlich. Du hast keine nächtliche Aktion.",
@@ -69,3 +72,25 @@ class Dorfbewohner(Role):
             allow_multiple_targets=False,
             can_skip=True,
         )
+
+    def get_win_conditions(self) -> List["WinCondition"]:
+        """Dorf gewinnt wenn alle Werwölfe tot sind."""
+        from ..base import WinCondition
+
+        def check_dorf_win(spieler: "Spieler", kontext: SpielKontext) -> bool:
+            wolves = [
+                uid
+                for uid in kontext.lebende_spieler
+                if kontext.spieler_teams.get(uid) == Team.WERWOLF
+            ]
+            return len(wolves) == 0
+
+        return [
+            WinCondition(
+                id="dorf_win",
+                check_func=check_dorf_win,
+                team_override=Team.DORF,
+                priority=10,
+                description="Alle Werwölfe wurden eliminiert.",
+            )
+        ]

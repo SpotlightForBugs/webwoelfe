@@ -7,9 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import secrets
 
-# Import phases and constants from centralized modules
+# Import phases from centralized modules
 from phases import get_phase_list
-from constants import TEAMS, SPIEL_REGELN, ROLLEN_EMPFEHLUNG
 
 db = SQLAlchemy()
 
@@ -149,6 +148,49 @@ class Spieler(db.Model):
     def reset_state(self):
         """Setzt den Zustand zurück."""
         self.rolle_zustand = "{}"
+
+    # ==========================================================================
+    # WIN / LOSE CONDITION MANAGEMENT
+    # ==========================================================================
+
+    def add_win_condition(self, condition_id: str):
+        """Fügt eine Gewinnbedingung hinzu."""
+        state = self.get_all_state()
+        conditions = state.get("win_conditions", [])
+        if condition_id not in conditions:
+            conditions.append(condition_id)
+            self.set_state("win_conditions", conditions)
+
+    def remove_win_condition(self, condition_id: str):
+        """Entfernt eine Gewinnbedingung."""
+        state = self.get_all_state()
+        conditions = state.get("win_conditions", [])
+        if condition_id in conditions:
+            conditions.remove(condition_id)
+            self.set_state("win_conditions", conditions)
+            
+    def has_win_condition(self, condition_id: str) -> bool:
+        """Prüft ob eine Gewinnbedingung existiert."""
+        return condition_id in self.get_state("win_conditions", [])
+
+    def add_lose_condition(self, condition_id: str, context: dict = None):
+        """Fügt eine Niederlagenbedingung hinzu."""
+        state = self.get_all_state()
+        conditions = state.get("lose_conditions", {})
+        conditions[condition_id] = context or {}
+        self.set_state("lose_conditions", conditions)
+
+    def remove_lose_condition(self, condition_id: str):
+        """Entfernt eine Niederlagenbedingung."""
+        state = self.get_all_state()
+        conditions = state.get("lose_conditions", {})
+        if condition_id in conditions:
+            del conditions[condition_id]
+            self.set_state("lose_conditions", conditions)
+            
+    def get_lose_conditions(self) -> dict:
+        """Gibt alle aktiven Niederlagenbedingungen zurück."""
+        return self.get_state("lose_conditions", {})
 
     @staticmethod
     def generiere_session():
@@ -398,62 +440,12 @@ class SeherinEnthuellung(db.Model):
 
 
 # ============================================================================
-# ERZÄHLER-TEXTE FÜR GRUPPEN-MODUS
+# ERZÄHLER-TEXTE - DEPRECATED
+# All narrator texts are now defined in each Role's `erzaehler_nacht` field.
+# See roles/base.py RollenInfo for the schema.
 # ============================================================================
 
-# PHASE-BASIERTE TEXTE (werden jede Runde wiederholt)
-ERZAEHLER_PHASEN = {
-    "rollen_verteilt": {
-        "text": "Willkommen in Düsterwald! Die Rollen wurden verteilt. Schaut euch eure geheime Rolle an - verratet sie niemandem! Gleich bricht die erste Nacht herein.",
-        "anweisung": "Alle Spieler schauen sich ihre Rolle an. Dann beginnt die Nacht.",
-        "wiederholbar": False,
-    },
-    "nacht_start": {
-        "text": "Das Dorf schläft ein. Alle Spieler schließen die Augen.",
-        "anweisung": "Warte bis alle Spieler die Augen geschlossen haben.",
-        "wiederholbar": True,
-    },
-    "werwolf_phase": {
-        "text": "Die Werwölfe erwachen. Sie erkennen sich und wählen gemeinsam ein Opfer.",
-        "anweisung": "Die Werwölfe öffnen die Augen, schauen sich an und zeigen stumm auf ihr Opfer. Bestätige das Opfer mit einem Nicken.",
-        "wiederholbar": True,
-    },
-    "seherin_phase": {
-        "text": "Die Seherin erwacht und wählt einen Spieler, dessen Identität sie erfahren möchte.",
-        "anweisung": "Die Seherin öffnet die Augen und zeigt auf einen Spieler. Zeige ihr mit Daumen hoch (Dorf) oder runter (Wolf) die Zugehörigkeit.",
-        "wiederholbar": True,
-    },
-    "hexe_phase": {
-        "text": "Die Hexe erwacht. Sie erfährt das Opfer der Werwölfe.",
-        "anweisung": "Die Hexe öffnet die Augen. Zeige auf das Werwolf-Opfer. Frage mit Gesten: Heiltrank? Gifttrank?",
-        "wiederholbar": True,
-    },
-    "heiler_phase": {
-        "text": "Der Heiler erwacht und wählt einen Spieler, den er in dieser Nacht beschützen möchte.",
-        "anweisung": "Der Heiler öffnet die Augen und zeigt auf den zu schützenden Spieler. Bestätige mit einem Nicken.",
-        "wiederholbar": True,
-    },
-    "tag_start": {
-        "text": "Die Sonne geht auf. Das Dorf erwacht.",
-        "anweisung": "Alle öffnen die Augen. Verkünde die Opfer der Nacht.",
-        "wiederholbar": True,
-    },
-    "diskussion_abstimmung": {
-        "text": "Das Dorf hat Zeit zum Diskutieren und Abstimmen. Debattiert, wer verdächtig ist, und stimmt dann ab, wen ihr lynchen wollt!",
-        "anweisung": "Alle Spieler diskutieren offen. Nach einer bestimmten Zeit (oder wenn alle abgestimmt haben) wird die Abstimmung ausgewertet.",
-        "wiederholbar": True,
-    },
-    "diskussion": {
-        "text": "Die Dorfbewohner diskutieren. Wer könnte ein Werwolf sein?",
-        "anweisung": "Die Spieler diskutieren frei. Als Erzähler greifst du nur bei Regelfragen ein.",
-        "wiederholbar": True,
-    },
-    "abstimmung": {
-        "text": "Die Abstimmung beginnt. Jeder Spieler zeigt auf den Verdächtigen.",
-        "anweisung": "Bei 3 zeigen alle gleichzeitig. Zähle die Stimmen.",
-        "wiederholbar": True,
-    },
-}
+# Removed: ERZAEHLER_PHASEN (500+ lines of hardcoded phase texts)
 
 # EVENT-BASIERTE TEXTE (nur einmal pro Spiel!)
 ERZAEHLER_EVENTS = {

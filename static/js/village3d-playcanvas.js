@@ -86,7 +86,7 @@ export default class Village3DPlayCanvas {
         // Also store model definitions
         data.roles.forEach((role) => {
           const roleName = role.name;
-          
+
           // Load color
           const hexColor = role.farbe;
           if (hexColor && hexColor.startsWith("#")) {
@@ -96,7 +96,7 @@ export default class Village3DPlayCanvas {
             const b = parseInt(hexColor.slice(5, 7), 16) / 255;
             this.roleColors[roleName] = new pc.Color(r, g, b);
           }
-          
+
           // Load model definition
           if (role.model) {
             this.roleModels[roleName] = role.model;
@@ -1937,17 +1937,24 @@ export default class Village3DPlayCanvas {
     if (isAlive && rolle) {
       // Get model definition from API data
       const modelDef = this.roleModels[rolle];
-      const modelId = modelDef ? modelDef.modell_id : rolle.toLowerCase().replace(/\s+/g, '_');
-      
+      const modelId = modelDef
+        ? modelDef.modell_id
+        : rolle.toLowerCase().replace(/\s+/g, "_");
+
       // Try to call the specific feature method if it exists
-      const featureMethodName = `add${modelId.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('')}Features`;
-      
-      if (typeof this[featureMethodName] === 'function') {
+      const featureMethodName = `add${modelId
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join("")}Features`;
+
+      if (typeof this[featureMethodName] === "function") {
         // Call the specific feature method
         this[featureMethodName](entity, roleColor);
       } else {
         // Fallback to default role indicator if no specific method exists
-        console.log(`[Village3D] No specific feature method found for ${rolle} (tried ${featureMethodName}), using default`);
+        console.log(
+          `[Village3D] No specific feature method found for ${rolle} (tried ${featureMethodName}), using default`,
+        );
         this.addDefaultRoleIndicator(entity, roleColor);
       }
     }

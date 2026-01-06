@@ -371,7 +371,7 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
                 if result.state_updates:
                     for attr_name, attr_value in result.state_updates.items():
                         setattr(spieler, attr_name, attr_value)
-                
+
                 # Add any follow-up actions from effects
                 for effect_key, effect_value in result.effekte.items():
                     if effect_value is True:  # Boolean flags indicate actions

@@ -477,18 +477,56 @@ def spiel(code):
 
 
 @app.route("/api/role/<role_name>/ui", methods=["GET"])
+@app.route("/api/role/<role_name>/ui", methods=["GET"])
 def get_role_ui(role_name):
     """Get UI definition for a specific role."""
-    from roles import RoleRegistry
+    from roles import RoleRegistry, SpielKontext
+    from roles.enums import Phase
     
     rolle = RoleRegistry.get(role_name)
     if not rolle:
         return jsonify({"success": False, "error": "Role not found"}), 404
     
     ui = rolle.get_ui_definition()
+    ui_dict = ui.to_dict()
+
+    # DYNAMIC INJECTION: If player is active in this phase, add phase start info
+    spieler = hole_aktuellen_spieler()
+    if spieler and spieler.raum_id:
+        raum = db.session.get(Raum, spieler.raum_id)
+        if raum and raum.aktuelle_phase == rolle.get_phase_name():
+            # Build context to get dynamic info
+            werwolf_opfer_id = None
+            
+            # Use role property to decide if we need the victim info
+            if rolle.requires_victim_info:
+                ww_result = game_logic.werwolf_abstimmung(raum)
+                if ww_result and "opfer_id" in ww_result:
+                    werwolf_opfer_id = ww_result["opfer_id"]
+            
+            kontext = SpielKontext(
+                raum_id=raum.id,
+                runde=raum.runde,
+                phase=(Phase(raum.aktuelle_phase) if raum.aktuelle_phase in [p.value for p in Phase] else raum.aktuelle_phase),
+                aktiver_spieler_id=spieler.id,
+                lebende_spieler=[s.id for s in game_logic.hole_lebende_spieler(raum)],
+                tote_spieler=[s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=False).all()],
+                werwolf_opfer_id=werwolf_opfer_id
+            )
+            
+            # Get dynamic info
+            start_info = rolle.get_phase_start_info(spieler, kontext)
+            
+            # Inject victim info into instructions if present
+            if start_info and "werwolf_opfer_id" in start_info:
+                opfer = db.session.get(Spieler, start_info["werwolf_opfer_id"])
+                if opfer:
+                    # Append strictly to instructions
+                    ui_dict["instructions"] += f" <br><strong>Das Werwolf-Opfer ist: {opfer.name}</strong>"
+
     return jsonify({
         "success": True,
-        "ui": ui.to_dict(),
+        "ui": ui_dict,
         "phase_name": rolle.get_phase_name(),
     })
 
@@ -1752,6 +1790,15 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         for a in existing_actions
     ]
 
+    # Calculate execution context variables
+    werwolf_opfer_id = None
+    
+    # Check if the role requires werewolf victim info (e.g. Hexe, Heiler if modified)
+    if rolle_obj.requires_victim_info:
+         ww_result = game_logic.werwolf_abstimmung(raum)
+         if ww_result and "opfer_id" in ww_result:
+             werwolf_opfer_id = ww_result["opfer_id"]
+
     kontext = SpielKontext(
         raum_id=raum.id,
         runde=raum.runde,
@@ -1764,6 +1811,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         lebende_spieler=lebende,
         tote_spieler=tote,
         aktionen_diese_runde=aktionen_liste,
+        werwolf_opfer_id=werwolf_opfer_id  # Pass the victim to the context
     )
 
     # Check if the current phase matches the role's phase
@@ -1854,17 +1902,28 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         # Werwolf-Opfer ermitteln und an Hexe senden
         ergebnis = game_logic.werwolf_abstimmung(raum)
         if ergebnis and "opfer_id" in ergebnis:
-            hexe = Spieler.query.filter_by(
+            # Sende Info an alle Hexe-Spieler (mit richtiger Targeting)
+            hexe_spieler = Spieler.query.filter_by(
                 raum_id=raum.id, rolle="Hexe", ist_am_leben=True
-            ).first()
-            if hexe:
-                opfer = db.session.get(Spieler, ergebnis["opfer_id"])
-                if opfer:
-                    socketio.emit(
-                        "hexe_info",
-                        {"opfer_name": opfer.name, "opfer_id": opfer.id},
-                        room=request.sid if hasattr(request, "sid") else raum.code,
-                    )
+            ).all()
+            
+            opfer = db.session.get(Spieler, ergebnis["opfer_id"])
+            if opfer and hexe_spieler:
+                 for hexe in hexe_spieler:
+                     # Benutze 'role_phase_info' Event, das vom Frontend unterstützt wird
+                     socketio.emit(
+                         "role_phase_info",
+                         {
+                             "recipient_id": hexe.id,
+                             "payload": {
+                                 "nachricht": f"Die Werwölfe haben {opfer.name} als Opfer gewählt.",
+                                 "opfer_id": opfer.id,
+                                 "opfer_name": opfer.name,
+                                 "alert_type": "info"
+                             }
+                         },
+                         room=raum.code, 
+                     )
 
     # WICHTIG: Nacht-Tode bei nacht_ende verarbeiten!
     # Dies stellt sicher dass Tode immer verarbeitet werden, auch wenn

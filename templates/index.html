@@ -1170,7 +1170,7 @@
         badgeClass: "exp3",
       },
       sonderedition: {
-        name: "Sonderedition",
+        name: "Community-Rollen",
         icon: "fa-star",
         badge: "Spezial",
         badgeClass: "special",
@@ -1192,10 +1192,7 @@
 
       // Dynamically generate description if not manually provided or to override
       if (roles && roles.length > 0) {
-          // Get up to 3 role names, excluding generic ones if needed, or just pick the first few
-          // Randomize or pick fixed? Fixed is better for stability.
-          // Filter out potential duplicates or basic roles if we want purely "interesting" ones
-          // But 'roles' here is what's in the pack.
+            //TODO: pick Random!
           const previewRoles = roles.slice(0, 4).map(r => r.name);
           let desc = previewRoles.join(", ");
           if (roles.length > 4) {

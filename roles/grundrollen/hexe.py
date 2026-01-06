@@ -92,6 +92,10 @@ class Hexe(Role):
         """Hexe acts every night."""
         return True
 
+    @property
+    def requires_victim_info(self) -> bool:
+        return True
+
     def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Hexe's action panel."""
         from ..base import RollenUI, UIButton

@@ -367,9 +367,15 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
 
             result = role_obj.on_eigener_tod(spieler, todesursache, kontext)
             if result and result.erfolg:
-                if result.effekte.get("trigger_jaeger_phase"):
-                    spieler.jaeger_schuss = True  # Flag setzen
-                    folge_aktionen.append("jaeger_schuss")
+                # Apply state updates generically
+                if result.state_updates:
+                    for attr_name, attr_value in result.state_updates.items():
+                        setattr(spieler, attr_name, attr_value)
+                
+                # Add any follow-up actions from effects
+                for effect_key, effect_value in result.effekte.items():
+                    if effect_value is True:  # Boolean flags indicate actions
+                        folge_aktionen.append(effect_key)
 
                 if result.nachricht:
                     log_eintrag(

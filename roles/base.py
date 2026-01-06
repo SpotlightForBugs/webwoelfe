@@ -1198,8 +1198,34 @@ class Role(ABC):
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert role to dictionary for API/JSON."""
+        # Get model definition with a dummy player context
+        model_def = None
+        try:
+            # Create a minimal mock spieler object for model definition
+            class MockSpieler:
+                def __init__(self):
+                    self.id = 0
+                    self.rolle = self.info.name if hasattr(self, 'info') else "Unknown"
+            
+            mock_spieler = MockSpieler()
+            mock_spieler.info = self.info
+            model = self.get_modell_definition(mock_spieler)
+            model_def = {
+                "modell_id": model.modell_id,
+                "anzeige_name": model.anzeige_name,
+                "beschreibung": model.beschreibung,
+            }
+        except Exception as e:
+            # If get_modell_definition fails, provide a default
+            model_def = {
+                "modell_id": self.info.name.lower().replace(" ", "_"),
+                "anzeige_name": self.info.name,
+                "beschreibung": f"{self.info.name} appearance",
+            }
+        
         return {
             "id": self.info.id,
+            "name": self.info.name,
             "team": self.info.team.value,
             "kategorie": self.info.kategorie.value,
             "beschreibung": self.info.beschreibung,
@@ -1217,6 +1243,8 @@ class Role(ABC):
             "avatar_gradient_to": self.info.avatar_gradient_to,
             "avatar_border_color": self.info.avatar_border_color,
             "badge_emoji": self.info.badge_emoji,
+            # Village 3D Model Definition
+            "model": model_def,
             "state_fields": [
                 {
                     "name": sf.name,

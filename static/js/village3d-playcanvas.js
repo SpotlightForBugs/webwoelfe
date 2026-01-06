@@ -61,8 +61,11 @@ export default class Village3DPlayCanvas {
       default: new pc.Color(0.3, 0.5, 0.8), // Same as Dorfbewohner - default fallback
     };
 
-    // Load role colors from API
-    this.loadRoleColorsFromAPI();
+    // Role model definitions - Loaded dynamically from API
+    this.roleModels = {};
+
+    // Load role colors and models from API
+    this.loadRoleDataFromAPI();
 
     if (!this.container) {
       console.warn("Village3D container not found:", containerId);
@@ -72,34 +75,45 @@ export default class Village3DPlayCanvas {
     this.init();
   }
 
-  // Load role colors dynamically from API
-  async loadRoleColorsFromAPI() {
+  // Load role colors and model definitions dynamically from API
+  async loadRoleDataFromAPI() {
     try {
       const response = await fetch("/api/roles");
       const data = await response.json();
 
       if (data.success && data.roles) {
         // Convert hex colors from API to PlayCanvas Color objects
+        // Also store model definitions
         data.roles.forEach((role) => {
-          const hexColor = role.info.farbe;
+          const roleName = role.name;
+          
+          // Load color
+          const hexColor = role.farbe;
           if (hexColor && hexColor.startsWith("#")) {
             // Convert hex to RGB (0-1 range)
             const r = parseInt(hexColor.slice(1, 3), 16) / 255;
             const g = parseInt(hexColor.slice(3, 5), 16) / 255;
             const b = parseInt(hexColor.slice(5, 7), 16) / 255;
-            this.roleColors[role.info.name] = new pc.Color(r, g, b);
+            this.roleColors[roleName] = new pc.Color(r, g, b);
+          }
+          
+          // Load model definition
+          if (role.model) {
+            this.roleModels[roleName] = role.model;
           }
         });
 
         console.log(
           "[Village3D] Loaded",
           Object.keys(this.roleColors).length,
-          "role colors from API",
+          "role colors and",
+          Object.keys(this.roleModels).length,
+          "model definitions from API",
         );
       }
     } catch (error) {
       console.warn(
-        "[Village3D] Failed to load role colors from API, using defaults:",
+        "[Village3D] Failed to load role data from API, using defaults:",
         error,
       );
       // Fallback to some basic colors if API fails
@@ -1921,255 +1935,20 @@ export default class Village3DPlayCanvas {
 
     // Add role-specific accessories and features
     if (isAlive && rolle) {
-      switch (rolle) {
-        // === GRUNDROLLEN ===
-        case "Werwolf":
-          this.addWerwolfFeatures(entity, roleColor);
-          break;
-        case "Seherin":
-          this.addSeherinFeatures(entity, roleColor);
-          break;
-        case "Hexe":
-          this.addHexeFeatures(entity, roleColor);
-          break;
-        case "Jäger":
-          this.addJaegerFeatures(entity, roleColor);
-          break;
-        case "Amor":
-          this.addAmorFeatures(entity, roleColor);
-          break;
-        case "Heiler":
-          this.addHeilerFeatures(entity, roleColor);
-          break;
-        case "Dorfbewohner":
-          this.addDorfbewohnerFeatures(entity, roleColor);
-          break;
-
-        // === WERWOLF-VARIANTEN ===
-        case "Einsamer Wolf":
-          this.addEinsamerWolfFeatures(entity, roleColor);
-          break;
-        case "Lupin":
-          this.addLupinFeatures(entity, roleColor);
-          break;
-        case "Polarwolf":
-          this.addPolarwolfFeatures(entity, roleColor);
-          break;
-        case "Teenager-Werwolf":
-          this.addTeenagerWerwolfFeatures(entity, roleColor);
-          break;
-        case "Urwolf":
-          this.addUrwolfFeatures(entity, roleColor);
-          break;
-        case "Weißer Wolf":
-          this.addWeisserWolfFeatures(entity, roleColor);
-          break;
-        case "Werwolfseherin":
-          this.addWerwolfseherinFeatures(entity, roleColor);
-          break;
-        case "Wildes Kind":
-          this.addWildesKindFeatures(entity, roleColor);
-          break;
-        case "Wolf im Schafspelz":
-          this.addWolfImSchafspelzFeatures(entity, roleColor);
-          break;
-        case "Wolfsjunge":
-          this.addWolfsjungeFeatures(entity, roleColor);
-          break;
-
-        // === BÖSE ROLLEN ===
-        case "Flötenspieler":
-          this.addFlötenspielerFeatures(entity, roleColor);
-          break;
-        case "Hexenmeister":
-          this.addHexenmeisterFeatures(entity, roleColor);
-          break;
-        case "Vampir":
-          this.addVampirFeatures(entity, roleColor);
-          break;
-        case "Zombie":
-          this.addZombieFeatures(entity, roleColor);
-          break;
-
-        // === DORFBEWOHNER-VARIANTEN ===
-        case "Alter Mann":
-          this.addAlterMannFeatures(entity, roleColor);
-          break;
-        case "Dorfdepp":
-          this.addDorfdeppFeatures(entity, roleColor);
-          break;
-        case "Drei Brüder":
-          this.addDreiBruederFeatures(entity, roleColor);
-          break;
-        case "Freimaurer":
-          this.addFreimaurerFeatures(entity, roleColor);
-          break;
-        case "Griesgram":
-          this.addGriesgramFeatures(entity, roleColor);
-          break;
-        case "Hund":
-          this.addHundFeatures(entity, roleColor);
-          break;
-        case "Jesus":
-          this.addJesusFeatures(entity, roleColor);
-          break;
-        case "Tonks":
-          this.addTonksFeatures(entity, roleColor);
-          break;
-        case "Zwei Schwestern":
-          this.addZweiSchwesternFeatures(entity, roleColor);
-          break;
-
-        // === HEILER-VARIANTEN ===
-        case "Ergebene Magd":
-          this.addErgebeneMagdFeatures(entity, roleColor);
-          break;
-        case "Leibwächter":
-          this.addLeibwaechterFeatures(entity, roleColor);
-          break;
-        case "Oma":
-          this.addOmaFeatures(entity, roleColor);
-          break;
-        case "Prostituierte":
-          this.addProstituierteFeatures(entity, roleColor);
-          break;
-
-        // === HEXE-VARIANTEN ===
-        case "Giftmischerin":
-          this.addGiftmischerinFeatures(entity, roleColor);
-          break;
-        case "Hahn":
-          this.addHahnFeatures(entity, roleColor);
-          break;
-        case "Kräuterweib":
-          this.addKraeuterweibFeatures(entity, roleColor);
-          break;
-        case "Sandmann":
-          this.addSandmannFeatures(entity, roleColor);
-          break;
-        case "Zauberer":
-          this.addZaubererFeatures(entity, roleColor);
-          break;
-
-        // === JÄGER-VARIANTEN ===
-        case "Buddler":
-          this.addBuddlerFeatures(entity, roleColor);
-          break;
-        case "Drachenbändiger":
-          this.addDrachenbaendigerFeatures(entity, roleColor);
-          break;
-        case "Flammenmann":
-          this.addFlammenmannFeatures(entity, roleColor);
-          break;
-        case "Gaukler":
-          this.addGauklerFeatures(entity, roleColor);
-          break;
-        case "Inquisitor":
-          this.addInquisitorFeatures(entity, roleColor);
-          break;
-        case "Kamikaze":
-          this.addKamikazeFeatures(entity, roleColor);
-          break;
-        case "König":
-          this.addKoenigFeatures(entity, roleColor);
-          break;
-        case "Prinz":
-          this.addPrinzFeatures(entity, roleColor);
-          break;
-        case "Pyromane":
-          this.addPyromaneFeatures(entity, roleColor);
-          break;
-        case "Tanklastwagenfahrer":
-          this.addTanklastwagenfahrerFeatures(entity, roleColor);
-          break;
-
-        // === SEHER-VARIANTEN ===
-        case "Aurenseherin":
-          this.addAurenseherinFeatures(entity, roleColor);
-          break;
-        case "Bärenbändiger":
-          this.addBaerenbaendigerFeatures(entity, roleColor);
-          break;
-        case "Demoskopin":
-          this.addDemoskopinFeatures(entity, roleColor);
-          break;
-        case "Medium":
-          this.addMediumFeatures(entity, roleColor);
-          break;
-        case "Paranormaler Ermittler":
-          this.addParanormalerErmittlerFeatures(entity, roleColor);
-          break;
-        case "Seherlehrling":
-          this.addSeherlehrlingFeatures(entity, roleColor);
-          break;
-        case "Tratschweib":
-          this.addTratschweibFeatures(entity, roleColor);
-          break;
-
-        // === SOLO-ROLLEN ===
-        case "Henker":
-          this.addHenkerFeatures(entity, roleColor);
-          break;
-        case "Selbstmörder":
-          this.addSelbstmoerderFeatures(entity, roleColor);
-          break;
-
-        // === SONSTIGE ===
-        case "Bürgermeister":
-          this.addBuergermeisterFeatures(entity, roleColor);
-          break;
-        case "Dieb":
-          this.addDiebFeatures(entity, roleColor);
-          break;
-        case "Doppelgänger":
-          this.addDoppelgaengerFeatures(entity, roleColor);
-          break;
-        case "Engel":
-          this.addEngelFeatures(entity, roleColor);
-          break;
-        case "Gerber":
-          this.addGerberFeatures(entity, roleColor);
-          break;
-        case "Kleines Mädchen":
-          this.addKleinesMaedchenFeatures(entity, roleColor);
-          break;
-        case "Putzfrau":
-          this.addPutzfrauFeatures(entity, roleColor);
-          break;
-        case "Sündenbock":
-          this.addSuendenbockFeatures(entity, roleColor);
-          break;
-
-        // === SPEZIAL ===
-        case "Chemielaborant":
-          this.addChemielaborantFeatures(entity, roleColor);
-          break;
-        case "Dunkler Priester":
-          this.addDunklerPriesterFeatures(entity, roleColor);
-          break;
-        case "Flüchtlinge":
-          this.addFluechtlingeFeatures(entity, roleColor);
-          break;
-        case "Hure":
-          this.addHureFeatures(entity, roleColor);
-          break;
-        case "Mordlustiger":
-          this.addMordlustigerFeatures(entity, roleColor);
-          break;
-        case "Nutte":
-          this.addNutteFeatures(entity, roleColor);
-          break;
-        case "Rabe":
-          this.addRabeFeatures(entity, roleColor);
-          break;
-        case "Zahnarzt":
-          this.addZahnarztFeatures(entity, roleColor);
-          break;
-
-        default:
-          // Default role indicator
-          this.addDefaultRoleIndicator(entity, roleColor);
-          break;
+      // Get model definition from API data
+      const modelDef = this.roleModels[rolle];
+      const modelId = modelDef ? modelDef.modell_id : rolle.toLowerCase().replace(/\s+/g, '_');
+      
+      // Try to call the specific feature method if it exists
+      const featureMethodName = `add${modelId.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('')}Features`;
+      
+      if (typeof this[featureMethodName] === 'function') {
+        // Call the specific feature method
+        this[featureMethodName](entity, roleColor);
+      } else {
+        // Fallback to default role indicator if no specific method exists
+        console.log(`[Village3D] No specific feature method found for ${rolle} (tried ${featureMethodName}), using default`);
+        this.addDefaultRoleIndicator(entity, roleColor);
       }
     }
   }

@@ -114,7 +114,8 @@ class Jaeger(Role):
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht="Der Jäger greift zu seiner Waffe!",
-                effekte={"trigger_jaeger_phase": True},
+                effekte={"jaeger_schuss": True},  # Generic effect name
+                state_updates={"jaeger_schuss": True},  # Set attribute on player
                 log_sichtbar_fuer="alle",
             )
         return None

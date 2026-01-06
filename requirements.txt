@@ -10,3 +10,5 @@ edge-tts>=6.1.0
 pillow>=11.0.0
 requests>=2.32.0
 python-dotenv>=1.2.1
+Flask-Minify; sys_platform == "win32"
+Flask-Minify[go]; sys_platform == "linux"

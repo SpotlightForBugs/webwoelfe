@@ -8,6 +8,7 @@ Ein Echtzeit-Multiplayer Werwolf-Spiel mit WebSocket-Unterstützung.
 from gevent import monkey
 import gevent
 import inspect
+from flask_minify import Minify
 
 monkey.patch_all()
 
@@ -43,9 +44,10 @@ import inspect
 
 # App Konfiguration
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", secrets.token_hex(32))
+app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///webwoelfe.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+Minify(app=app, html=True, js=True, cssless=True)
 
 # Spielname als Konstante
 SPIEL_NAME = "Webwölfe"

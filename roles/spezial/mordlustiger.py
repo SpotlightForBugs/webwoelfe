@@ -6,7 +6,14 @@ Jede Nacht kann er einen Spieler ermorden.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -166,7 +173,7 @@ class Mordlustiger(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="mordlustiger",
             anzeige_name="Mordlustiger",

@@ -124,7 +124,7 @@ class Dorfbewohner(Role):
                 description="Role indicator orb",
             )
         ]
-        
+
         return RollenModell(
             modell_id="dorfbewohner",
             anzeige_name="Dorfbewohner",

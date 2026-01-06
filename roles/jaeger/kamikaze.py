@@ -3,7 +3,14 @@ Kamikaze - Opfert sich um einen Werwolf zu toeten.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -129,7 +136,7 @@ class Kamikaze(Role):
                 description="Role indicator orb",
             )
         ]
-        
+
         return RollenModell(
             modell_id="kamikaze",
             anzeige_name="Kamikaze",

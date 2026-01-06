@@ -6,7 +6,14 @@ in einen Vampir. Sie gewinnen bei Vampir-Mehrheit.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -193,7 +200,7 @@ class Vampir(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="vampir",
             anzeige_name="Vampir",

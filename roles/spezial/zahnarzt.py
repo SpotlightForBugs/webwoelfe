@@ -6,7 +6,14 @@ sodass dieser am nächsten Tag nicht abstimmen darf.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -136,7 +143,7 @@ class Zahnarzt(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="zahnarzt",
             anzeige_name="Zahnarzt",

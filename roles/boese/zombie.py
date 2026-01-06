@@ -6,7 +6,14 @@ Stirbt ein Infizierter, wird er zum Zombie.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -208,7 +215,7 @@ class Zombie(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="zombie",
             anzeige_name="Zombie",

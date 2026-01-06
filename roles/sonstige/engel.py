@@ -168,7 +168,7 @@ class Engel(Role):
                 description="Angel wings",
             )
         ]
-        
+
         return RollenModell(
             modell_id="engel",
             anzeige_name="Engel",

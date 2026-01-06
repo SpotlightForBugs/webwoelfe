@@ -7,7 +7,14 @@ aber 30% seiner Ergebnisse sind falsch!
 
 from typing import Optional, TYPE_CHECKING
 import random
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -201,7 +208,7 @@ class ParanormalerErmittlerbillig(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="paranormalerermittlerbillig",
             anzeige_name="ParanormalerErmittlerbillig",

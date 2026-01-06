@@ -6,7 +6,14 @@ wer die meisten Stimmen bekommen würde.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -141,7 +148,7 @@ class Demoskopin(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="demoskopin",
             anzeige_name="Demoskopin",

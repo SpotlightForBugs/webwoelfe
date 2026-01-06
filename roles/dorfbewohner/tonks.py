@@ -6,7 +6,14 @@ zufälligen toten Spieler tauschen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 import random
@@ -213,7 +220,7 @@ class Tonks(Role):
                 description="Mystical aura effect",
             )
         ]
-        
+
         return RollenModell(
             modell_id="tonks",
             anzeige_name="Tonks",

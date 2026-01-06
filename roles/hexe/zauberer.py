@@ -6,7 +6,14 @@ Schutz, Sicht und Schweigen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -258,9 +265,9 @@ class Zauberer(Role):
                 scale={"x": 0.1, "y": 0.15, "z": 0.08},
                 color_source="role",
                 description="Role-specific accessory",
-            )
+            ),
         ]
-        
+
         return RollenModell(
             modell_id="zauberer",
             anzeige_name="Zauberer",

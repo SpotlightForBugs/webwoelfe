@@ -183,7 +183,7 @@ class Floetenspieler(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="floetenspieler",
             anzeige_name="Floetenspieler",

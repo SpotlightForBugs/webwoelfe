@@ -6,7 +6,14 @@ bestimmte Effekte durch seine Kälteresistenz.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -135,9 +142,9 @@ class Polarwolf(Role):
                 scale={"x": 0.6, "y": 0.8, "z": 0.5},
                 color_source="role",
                 description="Mystical aura effect",
-            )
+            ),
         ]
-        
+
         return RollenModell(
             modell_id="polarwolf",
             anzeige_name="Polarwolf",

@@ -3,7 +3,14 @@ Aurenseherin - Sieht die Aura statt die konkrete Rolle.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -130,7 +137,7 @@ class Aurenseherin(Role):
                 description="Mystical aura effect",
             )
         ]
-        
+
         return RollenModell(
             modell_id="aurenseherin",
             anzeige_name="Aurenseherin",

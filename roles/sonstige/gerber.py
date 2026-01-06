@@ -140,7 +140,7 @@ class Gerber(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="gerber",
             anzeige_name="Gerber",

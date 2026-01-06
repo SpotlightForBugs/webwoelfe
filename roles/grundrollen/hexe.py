@@ -206,7 +206,7 @@ class Hexe(Role):
                 description="Role indicator orb",
             )
         ]
-        
+
         return RollenModell(
             modell_id="hexe",
             anzeige_name="Hexe",

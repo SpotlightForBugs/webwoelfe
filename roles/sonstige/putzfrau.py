@@ -151,7 +151,7 @@ class Putzfrau(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="putzfrau",
             anzeige_name="Putzfrau",

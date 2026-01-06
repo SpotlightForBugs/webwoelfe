@@ -219,7 +219,7 @@ class Doppelgaenger(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="doppelgaenger",
             anzeige_name="Doppelgaenger",

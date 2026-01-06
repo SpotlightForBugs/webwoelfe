@@ -6,7 +6,14 @@ und können sich jede Nacht kurz absprechen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -116,7 +123,7 @@ class DreiBrueder(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="dreibrueder",
             anzeige_name="DreiBrueder",

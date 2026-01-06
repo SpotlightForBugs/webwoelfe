@@ -128,9 +128,9 @@ class WolfimSchafspelz(Role):
                 scale={"x": 0.1, "y": 0.15, "z": 0.08},
                 color_source="role",
                 description="Role-specific accessory",
-            )
+            ),
         ]
-        
+
         return RollenModell(
             modell_id="wolfimschafspelz",
             anzeige_name="WolfimSchafspelz",

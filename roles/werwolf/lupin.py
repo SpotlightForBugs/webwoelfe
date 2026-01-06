@@ -6,7 +6,14 @@ erscheint er der Seherin als Mensch, in ungeraden als Wolf.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -131,9 +138,9 @@ class Lupin(Role):
                 scale={"x": 0.1, "y": 0.15, "z": 0.08},
                 color_source="role",
                 description="Role-specific accessory",
-            )
+            ),
         ]
-        
+
         return RollenModell(
             modell_id="lupin",
             anzeige_name="Lupin",

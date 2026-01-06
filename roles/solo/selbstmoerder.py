@@ -147,7 +147,7 @@ class Selbstmoerder(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="selbstmoerder",
             anzeige_name="Selbstmoerder",

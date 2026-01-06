@@ -166,7 +166,7 @@ class KleinesMaedchen(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="kleinesmaedchen",
             anzeige_name="KleinesMaedchen",

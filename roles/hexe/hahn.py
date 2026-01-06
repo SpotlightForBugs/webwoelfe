@@ -6,7 +6,14 @@ Der Hahn entlarvt seinen Mörder bei seinem Tod.
 
 from typing import Optional, TYPE_CHECKING
 import random
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -209,7 +216,7 @@ class Hahn(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="hahn",
             anzeige_name="Hahn",

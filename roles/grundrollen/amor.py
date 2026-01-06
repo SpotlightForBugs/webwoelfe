@@ -356,7 +356,7 @@ class Amor(Role):
                 description="Role indicator orb",
             )
         ]
-        
+
         return RollenModell(
             modell_id="amor",
             anzeige_name="Amor",

@@ -152,7 +152,7 @@ class AlterMann(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="altermann",
             anzeige_name="AlterMann",

@@ -111,7 +111,7 @@ class Buergermeister(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="buergermeister",
             anzeige_name="Buergermeister",

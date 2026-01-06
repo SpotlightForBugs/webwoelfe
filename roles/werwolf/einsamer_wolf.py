@@ -6,7 +6,14 @@ und jagt alleine. Er gewinnt nur als letzter Wolf.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -164,9 +171,9 @@ class EinsamerWolf(Role):
                 scale={"x": 0.1, "y": 0.15, "z": 0.08},
                 color_source="role",
                 description="Role-specific accessory",
-            )
+            ),
         ]
-        
+
         return RollenModell(
             modell_id="einsamerwolf",
             anzeige_name="EinsamerWolf",

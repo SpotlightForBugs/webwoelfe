@@ -181,7 +181,7 @@ class Rabe(Role):
                 description="Angel wings",
             )
         ]
-        
+
         return RollenModell(
             modell_id="rabe",
             anzeige_name="Rabe",

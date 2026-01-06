@@ -168,7 +168,7 @@ class Heiler(Role):
                 description="Role indicator orb",
             )
         ]
-        
+
         return RollenModell(
             modell_id="heiler",
             anzeige_name="Heiler",

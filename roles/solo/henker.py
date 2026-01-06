@@ -176,7 +176,7 @@ class Henker(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="henker",
             anzeige_name="Henker",

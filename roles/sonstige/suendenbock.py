@@ -164,7 +164,7 @@ class Suendenbock(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="suendenbock",
             anzeige_name="Suendenbock",

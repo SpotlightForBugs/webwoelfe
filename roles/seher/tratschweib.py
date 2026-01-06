@@ -7,7 +7,14 @@ zufällige Spieler im gleichen Team sind.
 
 from typing import Optional, TYPE_CHECKING
 import random
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -148,7 +155,7 @@ class Tratschweib(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="tratschweib",
             anzeige_name="Tratschweib",

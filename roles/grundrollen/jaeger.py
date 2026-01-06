@@ -152,7 +152,7 @@ class Jaeger(Role):
                 description="Role indicator orb",
             )
         ]
-        
+
         return RollenModell(
             modell_id="jaeger",
             anzeige_name="Jaeger",

@@ -3,7 +3,14 @@ Bürgermeister - Doppelte Stimme bei Abstimmungen, kann Nachfolger bestimmen
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -161,7 +168,7 @@ class Buergermeister(Role):
                 description="Role-specific accessory",
             )
         ]
-        
+
         return RollenModell(
             modell_id="buergermeister",
             anzeige_name="Buergermeister",

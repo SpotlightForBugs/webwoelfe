@@ -66,7 +66,7 @@ class Heiler(Role):
                 "Der Heiler erwacht. Wen möchtest du diese Nacht vor den "
                 "Werwölfen schützen?"
             ),
-            erweiterung=Erweiterung.BASISSPIEL,
+            erweiterung=Erweiterung.NEUMOND,
             # Visual Styling
             avatar_gradient_from="#10b981",
             avatar_gradient_to="#047857",

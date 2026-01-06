@@ -53,7 +53,7 @@ class WeisserWolf(Role):
                 "Der Weisse Wolf erwacht (jede zweite Nacht). "
                 "Möchte er einen Mitwerwolf töten?"
             ),
-            erweiterung=Erweiterung.GEMEINDE,
+            erweiterung=Erweiterung.CHARAKTERE,
             # Visual Styling
             avatar_gradient_from="#f5f5f4",
             avatar_gradient_to="#d6d3d1",

@@ -57,7 +57,7 @@ class Drachenbaendiger(Role):
             erzaehler_nacht=(
                 "Der Drachenbändiger schläft friedlich, " "bewacht von seinem Drachen."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.CHARAKTERE,
             # Visual Styling
             avatar_gradient_from="#7c3aed",
             avatar_gradient_to="#5b21b6",

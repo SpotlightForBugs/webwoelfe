@@ -80,7 +80,7 @@ class Urwolf(Role):
                 "Der Urwolf jagt mit dem Rudel. Er kann einmalig "
                 "ein Opfer infizieren statt zu töten."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.CHARAKTERE,
             # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",

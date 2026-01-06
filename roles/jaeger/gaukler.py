@@ -58,7 +58,7 @@ class Gaukler(Role):
                 "Der Gaukler probt seine Tricks im Schlaf. "
                 "Ein Meister der Verwirrung."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.CHARAKTERE,
             # Visual Styling
             avatar_gradient_from="#c026d3",
             avatar_gradient_to="#a21caf",

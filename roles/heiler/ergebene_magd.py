@@ -60,7 +60,7 @@ class ErgebeneMagd(Role):
             erzaehler_nacht=(
                 "Die Ergebene Magd schläft. Sie wartet auf ihre Bestimmung."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.CHARAKTERE,
             # Visual Styling
             avatar_gradient_from="#14b8a6",
             avatar_gradient_to="#0f766e",

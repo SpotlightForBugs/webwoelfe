@@ -61,7 +61,7 @@ class AlterMann(Role):
                 "Der Alte Mann schläft tief und fest. Seine Weisheit "
                 "schützt ihn vor dem ersten Angriff."
             ),
-            erweiterung=Erweiterung.CHARAKTERE,
+            erweiterung=Erweiterung.NEUMOND,
             # Visual Styling
             avatar_gradient_from="#9ca3af",
             avatar_gradient_to="#4b5563",

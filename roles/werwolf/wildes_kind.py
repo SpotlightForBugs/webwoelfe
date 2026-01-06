@@ -68,7 +68,7 @@ class WildesKind(Role):
                 "Das Wilde Kind erwacht und wählt sein Vorbild. "
                 "Stirbt dieses, wird das Kind zum Werwolf."
             ),
-            erweiterung=Erweiterung.NEUMOND,
+            erweiterung=Erweiterung.CHARAKTERE,
             # Visual Styling
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",

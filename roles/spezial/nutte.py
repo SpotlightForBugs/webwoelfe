@@ -56,7 +56,7 @@ class Nutte(Role):
             farbe="#ec4899",
             prioritaet=47,
             erzaehler_nacht=("Die Nutte erwacht und wählt bei wem sie übernachtet."),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.GEMEINDE,
             # Visual Styling
             avatar_gradient_from="#ec4899",
             avatar_gradient_to="#be185d",

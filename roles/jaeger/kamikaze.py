@@ -49,7 +49,7 @@ class Kamikaze(Role):
                 "Der Kamikaze erwacht. Möchte er sich opfern und "
                 "jemanden mit in den Tod reissen?"
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.CHARAKTERE,
             # Visual Styling
             avatar_gradient_from="#f97316",
             avatar_gradient_to="#c2410c",

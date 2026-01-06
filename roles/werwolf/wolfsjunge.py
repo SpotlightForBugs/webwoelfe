@@ -63,7 +63,7 @@ class Wolfsjunge(Role):
                 "Das Wolfsjunge erwacht und wählt sein Vorbild. "
                 "Stirbt dieses, wird das Junge zum Werwolf."
             ),
-            erweiterung=Erweiterung.NEUMOND,
+            erweiterung=Erweiterung.CHARAKTERE,
             # Visual Styling
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",

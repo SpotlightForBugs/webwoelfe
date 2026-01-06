@@ -57,7 +57,7 @@ class Werwolfseherin(Role):
                 "Die Werwolfseherin erwacht nach den Werwölfen und "
                 "erfährt die Rolle eines Spielers."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.CHARAKTERE,
             # Visual Styling
             avatar_gradient_from="#b91c1c",
             avatar_gradient_to="#7f1d1d",

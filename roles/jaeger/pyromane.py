@@ -64,7 +64,7 @@ class Pyromane(Role):
                 "verschlingen die Opfer und breiten sich auf die "
                 "Nachbarhäuser aus!"
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.GEMEINDE,
             # Visual Styling
             avatar_gradient_from="#f97316",
             avatar_gradient_to="#c2410c",

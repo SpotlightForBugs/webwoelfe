@@ -1,7 +1,7 @@
-
 import sys
 import os
 import warnings
+
 warnings.filterwarnings("ignore")
 sys.path.append(os.getcwd())
 
@@ -23,7 +23,7 @@ for role in sorted_roles:
     name = role.info.name
     ext = role.info.extension_pack
     print(f"{name:<30} | {ext:<20}")
-    
+
     counts[ext] = counts.get(ext, 0) + 1
 
 print("\nCounts:")

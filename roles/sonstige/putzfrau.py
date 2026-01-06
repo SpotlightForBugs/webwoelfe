@@ -3,7 +3,15 @@ Putzfrau - Erfährt die Rolle jedes Verstorbenen und teilt es dem Dorf mit
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import AppearanceFeature, Role, RollenInfo, RollenModell, AktionsErgebnis, SpielKontext, RollenModell
+from ..base import (
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    RollenModell,
+    AktionsErgebnis,
+    SpielKontext,
+    RollenModell,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 

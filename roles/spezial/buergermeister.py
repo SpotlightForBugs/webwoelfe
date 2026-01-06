@@ -3,7 +3,14 @@ Buergermeister - Hat doppeltes Stimmrecht.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenModell
+from ..base import (
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    RollenModell,
+)
 from ..enums import Team, Kategorie, Erweiterung
 from ..registry import RoleRegistry
 

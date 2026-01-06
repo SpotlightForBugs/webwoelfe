@@ -6,7 +6,15 @@ stirbt. Danach wird er zum normalen Dorfbewohner.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import AppearanceFeature, Role, RollenInfo, RollenModell, AktionsErgebnis, SpielKontext, RollenModell
+from ..base import (
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    RollenModell,
+    AktionsErgebnis,
+    SpielKontext,
+    RollenModell,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 

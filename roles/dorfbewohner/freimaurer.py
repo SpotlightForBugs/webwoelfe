@@ -43,7 +43,6 @@ class Freimaurer(Role):
             prioritaet=9,
             erzaehler_nacht=("Die Freimaurer erwachen und erkennen sich gegenseitig."),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#3b82f6",
             avatar_gradient_to="#1d4ed8",
@@ -88,7 +87,6 @@ class Freimaurer(Role):
             effekte={"erkennt_freimaurer": True},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Freimaurer."""

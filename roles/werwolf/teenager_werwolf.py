@@ -61,7 +61,6 @@ class TeenagerWerwolf(Role):
                 "den Angriff verweigern."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
@@ -123,7 +122,7 @@ class TeenagerWerwolf(Role):
         hat_verweigert = self.get_state(spieler, "hat_verweigert")
 
         if hat_verweigert:
-             return AktionsErgebnis(
+            return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du hast bereits einmal rebelliert!",
             )
@@ -138,9 +137,8 @@ class TeenagerWerwolf(Role):
                 "angriff_verweigert": True,
                 "teenager_rebelliert": True,
             },
-            log_sichtbar_fuer="werwolf", # Alle Wölfe sehen es
+            log_sichtbar_fuer="werwolf",  # Alle Wölfe sehen es
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Teenager Werwolf."""

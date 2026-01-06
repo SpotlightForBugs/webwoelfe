@@ -69,7 +69,6 @@ class Doppelgaenger(Role):
                 "Das Ziel des Doppelgängers ist tot! " "Er übernimmt dessen Rolle."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#6366f1",
             avatar_gradient_to="#4338ca",
@@ -205,7 +204,6 @@ class Doppelgaenger(Role):
             if neues_team:
                 return Team(neues_team) if isinstance(neues_team, str) else neues_team
         return Team.DORF
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Doppelgaenger."""

@@ -50,7 +50,6 @@ class Zombie(Role):
             erzaehler_nacht=("Die Zombies erwachen und infizieren einen Spieler."),
             erzaehler_tag=None,
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#4ade80",
             avatar_gradient_to="#166534",
@@ -196,7 +195,6 @@ class Zombie(Role):
             )
 
         return None
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Zombie."""

@@ -50,7 +50,6 @@ class Jesus(Role):
                 "Jesus erhebt sich und kehrt triumphierend ins Spiel zurück!"
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#fbbf24",
             avatar_gradient_to="#d97706",
@@ -123,7 +122,6 @@ class Jesus(Role):
             )
 
         return None
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Jesus."""

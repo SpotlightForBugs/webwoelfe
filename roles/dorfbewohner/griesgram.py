@@ -52,7 +52,6 @@ class Griesgram(Role):
                 "Er freut sich schon auf die nächste Hinrichtung."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#6b7280",
             avatar_gradient_to="#4b5563",
@@ -111,7 +110,6 @@ class Griesgram(Role):
         Der Griesgram kann seine Abstimmung NICHT ändern.
         """
         return False
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Griesgram."""

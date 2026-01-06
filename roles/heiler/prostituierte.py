@@ -48,11 +48,9 @@ class Prostituierte(Role):
             farbe="#f43f5e",
             prioritaet=46,  # Vor Werwölfen
             erzaehler_nacht=(
-                "Die Prostituierte erwacht und wählt einen Spieler für "
-                "die Nacht."
+                "Die Prostituierte erwacht und wählt einen Spieler für " "die Nacht."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#f43f5e",
             avatar_gradient_to="#be123c",
@@ -131,7 +129,6 @@ class Prostituierte(Role):
             },
             log_sichtbar_fuer="erzaehler",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Prostituierte."""

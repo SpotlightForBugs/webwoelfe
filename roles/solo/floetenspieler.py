@@ -80,7 +80,6 @@ class Floetenspieler(Role):
                 "Der Floetenspieler erwacht und waehlt 2 Spieler " "zum Verzaubern."
             ),
             erweiterung=Erweiterung.NEUMOND,
-
             # Visual Styling
             avatar_gradient_from="#8b5cf6",
             avatar_gradient_to="#5b21b6",
@@ -169,7 +168,6 @@ class Floetenspieler(Role):
 
         # Alle verzaubert!
         return Team.SOLO
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Floetenspieler."""

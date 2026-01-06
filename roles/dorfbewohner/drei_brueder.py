@@ -46,7 +46,6 @@ class DreiBrueder(Role):
                 "Sie dürfen sich kurz absprechen."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#4f46e5",
             avatar_gradient_to="#312e81",
@@ -104,7 +103,6 @@ class DreiBrueder(Role):
             effekte={"brueder_absprache": True},
             log_sichtbar_fuer="erzaehler",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Drei Brueder."""

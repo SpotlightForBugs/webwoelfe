@@ -50,7 +50,6 @@ class Mordlustiger(Role):
                 "Der Mordlustige erwacht und wählt sein nächtliches Opfer."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
@@ -154,7 +153,6 @@ class Mordlustiger(Role):
             )
 
         return None
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Mordlustiger."""

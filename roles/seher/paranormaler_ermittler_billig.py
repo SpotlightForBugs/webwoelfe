@@ -53,7 +53,6 @@ class ParanormalerErmittlerbillig(Role):
                 "ACHTUNG: 30% Chance dass du lügen musst! (Würfle heimlich)"
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#a3a3a3",
             avatar_gradient_to="#737373",
@@ -64,22 +63,23 @@ class ParanormalerErmittlerbillig(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
-    
+
     def is_active_on_first_night(self) -> bool:
         """Paranormaler Ermittler acts on first night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Paranormaler Ermittler acts every night."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Paranormaler Ermittler's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Paranormaler Ermittler (billig) - Sehen",
             instructions="Wähle einen Spieler. Achtung: 30% der Ergebnisse sind falsch!",
@@ -88,12 +88,12 @@ class ParanormalerErmittlerbillig(Role):
                     label="Vision",
                     action_type="sehen",
                     icon="fa-solid fa-eye-slash",
-                    css_class="btn-info"
+                    css_class="btn-info",
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=False
+            can_skip=False,
         )
 
     def get_phase_name(self) -> str:
@@ -188,7 +188,6 @@ class ParanormalerErmittlerbillig(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Paranormaler Ermittlerbillig."""

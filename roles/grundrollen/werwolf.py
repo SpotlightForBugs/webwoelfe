@@ -6,7 +6,14 @@ jede Nacht gemeinsam ein Opfer aus.
 """
 
 from typing import Optional, TYPE_CHECKING, List
-from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
+from ..base import (
+    RollenModell,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    DistributionConfig,
+)
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -45,13 +52,11 @@ class Werwolf(Role):
                 "gemeinsam ein Opfer aus."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#b91c1c",
             avatar_gradient_to="#7f1d1d",
             avatar_border_color="#ef4444",
             badge_emoji="🐺",
-
             distribution=DistributionConfig(
                 min_players=5,
                 # ~20% Werwölfe, min 1
@@ -190,7 +195,6 @@ class Werwolf(Role):
                 description="Die Werwölfe sind in der Überzahl.",
             )
         ]
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Werwolf."""

@@ -46,7 +46,6 @@ class ZweiSchwestern(Role):
                 "Sie dürfen sich kurz absprechen."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#f472b6",
             avatar_gradient_to="#db2777",
@@ -104,7 +103,6 @@ class ZweiSchwestern(Role):
             effekte={"schwestern_absprache": True},
             log_sichtbar_fuer="erzaehler",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Zwei Schwestern."""

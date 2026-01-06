@@ -52,7 +52,6 @@ class Hexenmeister(Role):
                 "oder den Fluch aufheben."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#4c1d95",
             avatar_gradient_to="#2e1065",
@@ -145,7 +144,6 @@ class Hexenmeister(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Hexenmeister."""

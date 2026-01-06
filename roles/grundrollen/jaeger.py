@@ -52,17 +52,13 @@ class Jaeger(Role):
             icon="fa-solid fa-crosshairs",
             farbe="#f97316",
             prioritaet=100,
-            erzaehler_nacht=(
-                "Der Jäger schläft. Er wird nur aktiv, wenn er stirbt."
-            ),
+            erzaehler_nacht=("Der Jäger schläft. Er wird nur aktiv, wenn er stirbt."),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#f97316",
             avatar_gradient_to="#c2410c",
             avatar_border_color="#fb923c",
             badge_emoji="🔫",
-
             distribution=DistributionConfig(
                 min_players=5,
                 count_func=lambda n: 1,
@@ -140,7 +136,6 @@ class Jaeger(Role):
                 log_sichtbar_fuer="alle",
             )
         return None
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Jaeger."""

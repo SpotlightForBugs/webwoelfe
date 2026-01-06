@@ -71,7 +71,6 @@ class Selbstmoerder(Role):
             farbe="#78716c",
             prioritaet=100,
             hinweis_config="Selbstmörder",
-
             # Visual Styling
             avatar_gradient_from="#78716c",
             avatar_gradient_to="#44403c",
@@ -133,7 +132,6 @@ class Selbstmoerder(Role):
         if wurde_gehaengt:
             return Team.SOLO
         return None
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Selbstmoerder."""

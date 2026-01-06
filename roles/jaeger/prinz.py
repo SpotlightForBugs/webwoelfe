@@ -1,6 +1,7 @@
 """
 Prinz - Immun gegen Hinrichtung.
 """
+
 from typing import Optional, TYPE_CHECKING
 from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
@@ -14,14 +15,14 @@ if TYPE_CHECKING:
 class Prinz(Role):
     """
     Der Prinz - Immunität gegen Hinrichtung.
-    
+
     Fähigkeiten:
     - Kann nicht vom Dorf gehängt werden (einmalig)
     - Bei Versuch wird Rolle enthüllt
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -38,44 +39,44 @@ class Prinz(Role):
             farbe="#eab308",
             prioritaet=98,
             erzaehler_tag=(
-                "Der Prinz kann nicht gehängt werden! Seine Identität "
-                "wird enthüllt."
+                "Der Prinz kann nicht gehängt werden! Seine Identität " "wird enthüllt."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#eab308",
             avatar_gradient_to="#a16207",
             avatar_border_color="#facc15",
             badge_emoji="🤴",
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
-    
+
     def is_active_on_first_night(self) -> bool:
         """Prinz does not act at night."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Prinz is passive."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Prinz's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Prinz - Passive Rolle",
             instructions="Du bist immun gegen die erste Hinrichtung.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-    
-    def on_hinrichtung(self, spieler: 'Spieler', opfer: 'Spieler',
-                       kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_hinrichtung(
+        self, spieler: "Spieler", opfer: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Prinz überlebt die erste Hinrichtung.
         """
@@ -94,9 +95,8 @@ class Prinz(Role):
                 },
                 log_sichtbar_fuer="alle",
             )
-        
-        return None
 
+        return None
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Prinz."""

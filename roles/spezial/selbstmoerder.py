@@ -35,7 +35,6 @@ class Selbstmoerder(Role):
             erzaehler_tag="Der Selbstmörder erwacht mit einem finsteren Plan. Sein Ziel: Vom Dorf gehängt werden! Aber nicht zu offensichtlich...",
             hinweis_config="Selbstmörder",
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#374151",
             avatar_gradient_to="#111827",
@@ -126,7 +125,6 @@ class Selbstmoerder(Role):
         # Prüfe ob er durch Hinrichtung gestorben ist
         wurde_gehaengt = getattr(spieler, "wurde_gehaengt", False)
         return wurde_gehaengt
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Selbstmoerder."""

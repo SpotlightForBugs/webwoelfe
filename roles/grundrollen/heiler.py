@@ -64,13 +64,11 @@ class Heiler(Role):
                 "Werwölfen schützen?"
             ),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#10b981",
             avatar_gradient_to="#047857",
             avatar_border_color="#34d399",
             badge_emoji="🛡️",
-
             distribution=DistributionConfig(
                 min_players=6,
                 count_func=lambda n: 1,
@@ -155,7 +153,6 @@ class Heiler(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Heiler."""

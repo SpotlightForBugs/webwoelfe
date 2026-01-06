@@ -41,7 +41,6 @@ class Hure(Role):
             prioritaet=45,
             erzaehler_nacht=("Die Hure erwacht und waehlt bei wem sie uebernachtet."),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#f43f5e",
             avatar_gradient_to="#be123c",
@@ -125,7 +124,6 @@ class Hure(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Hure."""

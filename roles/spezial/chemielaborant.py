@@ -51,7 +51,6 @@ class Chemielaborant(Role):
                 "Ein gefährlicher Nachbar..."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#10b981",
             avatar_gradient_to="#047857",
@@ -137,7 +136,6 @@ class Chemielaborant(Role):
             },
             log_sichtbar_fuer="alle",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Chemielaborant."""

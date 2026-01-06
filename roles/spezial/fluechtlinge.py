@@ -50,7 +50,6 @@ class Fluechtlinge(Role):
             erzaehler_tag=None,
             hinweis_config=None,
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#0ea5e9",
             avatar_gradient_to="#0369a1",
@@ -175,7 +174,6 @@ class Fluechtlinge(Role):
                 log_sichtbar_fuer="alle",
             )
         return None
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Fluechtlinge."""

@@ -59,7 +59,6 @@ class AlterMann(Role):
                 "schützt ihn vor dem ersten Angriff."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#9ca3af",
             avatar_gradient_to="#4b5563",
@@ -138,7 +137,6 @@ class AlterMann(Role):
             )
 
         return None
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Alter Mann."""

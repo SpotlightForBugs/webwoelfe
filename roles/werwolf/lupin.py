@@ -50,7 +50,6 @@ class Lupin(Role):
                 "Die Seherin sieht entsprechend die aktuelle Form."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#ca8a04",
             avatar_gradient_to="#a16207",
@@ -103,7 +102,6 @@ class Lupin(Role):
             allow_multiple_targets=False,
             can_skip=True,
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Lupin."""

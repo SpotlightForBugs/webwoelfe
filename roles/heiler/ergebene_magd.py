@@ -54,7 +54,6 @@ class ErgebeneMagd(Role):
                 "Die Ergebene Magd schläft. Sie wartet auf ihre Bestimmung."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#14b8a6",
             avatar_gradient_to="#0f766e",
@@ -121,7 +120,6 @@ class ErgebeneMagd(Role):
             },
             log_sichtbar_fuer="erzaehler",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Ergebene Magd."""

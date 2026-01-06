@@ -84,13 +84,11 @@ class Amor(Role):
                 "die sich ineinander verlieben."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#ec4899",
             avatar_gradient_to="#be185d",
             avatar_border_color="#f9a8d4",
             badge_emoji="💘",
-
             distribution=DistributionConfig(
                 min_players=5,
                 # 1 Amor ab 8 Spielern
@@ -150,7 +148,9 @@ class Amor(Role):
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
 
-    def get_phase_start_info(self, spieler: "Spieler", kontext: "SpielKontext") -> Optional[dict]:
+    def get_phase_start_info(
+        self, spieler: "Spieler", kontext: "SpielKontext"
+    ) -> Optional[dict]:
         """Zeigt Amor wen er verliebt hat."""
         logger.debug(f"Getting phase start info for Amor (Player: {spieler.name})")
         verliebt_mit_id = self.get_state(spieler, "verliebt_mit_id")
@@ -243,8 +243,8 @@ class Amor(Role):
                         "gradient": "linear-gradient(135deg, #ff69b4 0%, #ff1493 50%, #c71585 100%)",
                         "animation": "heartbeat",
                     }
-                }
-            }
+                },
+            },
         )
 
     def on_spieler_stirbt(
@@ -288,43 +288,48 @@ class Amor(Role):
         def check_lovers_win(spieler: "Spieler", kontext: SpielKontext) -> bool:
             # Hole alle Spieler-Objekte (langsam aber nötig für State-Check)
             from models import Spieler
-            
+
             # Optimierung: Prüfe nur wenn wenige Spieler leben
-            if len(kontext.lebende_spieler) > 3: # Bei 3 (z.b. Wolf+Dorf+Amor) kann es spannend sein
-                 # Wenn noch viele leben, können Verliebte kaum gewonnen haben (außer alle sind tot bis auf 2)
-                 # Wir checken nur wenn lebende <= 3 oder so? 
-                 # Nein, "Verliebte gewinnen wenn sie die letzten Überlebenden sind" -> max 2 lebende.
-                 pass
+            if (
+                len(kontext.lebende_spieler) > 3
+            ):  # Bei 3 (z.b. Wolf+Dorf+Amor) kann es spannend sein
+                # Wenn noch viele leben, können Verliebte kaum gewonnen haben (außer alle sind tot bis auf 2)
+                # Wir checken nur wenn lebende <= 3 oder so?
+                # Nein, "Verliebte gewinnen wenn sie die letzten Überlebenden sind" -> max 2 lebende.
+                pass
 
             if len(kontext.lebende_spieler) != 2:
                 return False
 
             # Check ob die beiden Lebenden verliebt sind
-            lebende_objs = Spieler.query.filter(Spieler.id.in_(kontext.lebende_spieler)).all()
+            lebende_objs = Spieler.query.filter(
+                Spieler.id.in_(kontext.lebende_spieler)
+            ).all()
             if len(lebende_objs) != 2:
                 return False
-            
+
             s1, s2 = lebende_objs[0], lebende_objs[1]
-            
+
             partner1 = get_spieler_state(s1, "global.verliebt_mit_id")
             partner2 = get_spieler_state(s2, "global.verliebt_mit_id")
-            
+
             if partner1 == s2.id and partner2 == s1.id:
                 # Prüfen ob ein Wolf dabei ist (damit es kein reiner Dorfsieg ist)
                 # (Wobei reine Dorf-Verliebte auch als Dorf gewinnen können, aber "Verliebte Win" ist cooler)
                 # Regel: Wenn Verliebte Good+Good sind, gewinnen sie mit Dorf.
                 # Wenn Good+Evil oder Evil+Evil, gewinnen sie als Paar.
-                
+
                 from roles import RoleRegistry
+
                 r1 = RoleRegistry.get(s1.rolle)
                 r2 = RoleRegistry.get(s2.rolle)
-                
+
                 team1 = r1.info.team if r1 else Team.DORF
                 team2 = r2.info.team if r2 else Team.DORF
-                
+
                 if team1 != team2 or team1 == Team.WERWOLF:
                     return True
-                    
+
             return False
 
         return [
@@ -336,7 +341,6 @@ class Amor(Role):
                 description="Die Verliebten haben gewonnen! Ihre Liebe hat alle überwunden.",
             )
         ]
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Amor."""

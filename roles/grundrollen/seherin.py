@@ -6,7 +6,14 @@ eines Spielers erfahren.
 """
 
 from typing import Optional, TYPE_CHECKING, List
-from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
+from ..base import (
+    RollenModell,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    DistributionConfig,
+)
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -46,13 +53,11 @@ class Seherin(Role):
                 "die Zugehörigkeit."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#7c3aed",
             avatar_gradient_to="#5b21b6",
             avatar_border_color="#a78bfa",
             badge_emoji="👁️",
-
             distribution=DistributionConfig(
                 min_players=5,
                 # 1 Seherin ab 5 Spielern
@@ -190,7 +195,6 @@ class Seherin(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Seherin."""

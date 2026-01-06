@@ -56,7 +56,6 @@ class Henker(Role):
                 "Der Henker erwacht (nur erste Nacht) und waehlt sein Ziel."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#525252",
             avatar_gradient_to="#262626",
@@ -162,7 +161,6 @@ class Henker(Role):
         if gewonnen:
             return Team.SOLO
         return None
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Henker."""

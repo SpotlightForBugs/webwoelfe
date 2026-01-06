@@ -51,7 +51,6 @@ class Dorfdepp(Role):
                 "Der Dorfdepp stolpert durch den Tag. Sein Ziel: "
                 "Sich so verdächtig wie möglich machen!"
             ),
-
             # Visual Styling
             avatar_gradient_from="#a78bfa",
             avatar_gradient_to="#7c3aed",
@@ -125,7 +124,6 @@ class Dorfdepp(Role):
         """
         wurde_gehaengt = getattr(spieler, "dorfdepp_gewonnen", False)
         return wurde_gehaengt  # Gewinnt mit dem normalen Gewinner
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Dorfdepp."""

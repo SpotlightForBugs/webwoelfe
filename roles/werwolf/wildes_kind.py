@@ -66,7 +66,6 @@ class WildesKind(Role):
                 "Stirbt dieses, wird das Kind zum Werwolf."
             ),
             erweiterung=Erweiterung.NEUMOND,
-
             # Visual Styling
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",
@@ -77,6 +76,7 @@ class WildesKind(Role):
     @property
     def aktions_typ(self) -> "AktionsTyp":
         from ..enums import AktionsTyp
+
         return AktionsTyp.WAEHLEN
 
     @property
@@ -101,7 +101,7 @@ class WildesKind(Role):
         # Wir müssen das Role-Objekt mit dem Spieler verknüpfen oder
         # die Methode muss den Spieler als Argument bekommen (was sie nicht tut in base.py)
         # TODO: Refactor base.py to pass target player to get_sichtbare_rolle_fuer
-        return "Dorfbewohner" # Fallback
+        return "Dorfbewohner"  # Fallback
 
     def is_active_on_first_night(self) -> bool:
         """Wildes Kind acts on first night (choosing role model)."""
@@ -194,7 +194,6 @@ class WildesKind(Role):
             )
 
         return None
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Wildes Kind."""

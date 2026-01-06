@@ -88,7 +88,6 @@ class Rabe(Role):
             ),
             erweiterung=Erweiterung.GEMEINDE,
             hinweis_config=None,
-
             # Visual Styling
             avatar_gradient_from="#1f2937",
             avatar_gradient_to="#030712",
@@ -166,7 +165,6 @@ class Rabe(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Rabe."""

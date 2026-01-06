@@ -50,7 +50,6 @@ class Zahnarzt(Role):
                 "der morgen nicht abstimmen darf."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#ffffff",
             avatar_gradient_to="#e5e7eb",
@@ -124,7 +123,6 @@ class Zahnarzt(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
-
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Zahnarzt."""

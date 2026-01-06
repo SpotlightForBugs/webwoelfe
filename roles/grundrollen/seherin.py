@@ -8,6 +8,7 @@ eines Spielers erfahren.
 from typing import Optional, TYPE_CHECKING, List
 from ..base import (
     RollenModell,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -198,8 +199,33 @@ class Seherin(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Seherin."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="third_eye",
+                geometry="sphere",
+                position={"x": 0, "y": 2.0, "z": 0.25},
+                scale={"x": 0.15, "y": 0.15, "z": 0.1},
+                color_source="custom",
+                custom_color="#9333ea",
+                description="Mystical third eye",
+            ),
+            AppearanceFeature(
+                feature_type="mystical_aura",
+                geometry="sphere",
+                position={"x": 0, "y": 1.5, "z": 0},
+                scale={"x": 0.7, "y": 0.9, "z": 0.5},
+                color_source="custom",
+                custom_color="#a78bfa",
+                description="Glowing mystical aura",
+            ),
+        ]
+        
         return RollenModell(
             modell_id="seherin",
             anzeige_name="Seherin",
-            beschreibung="Seherin appearance in Village 3D",
+            beschreibung="Seherin with third eye and mystical aura",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

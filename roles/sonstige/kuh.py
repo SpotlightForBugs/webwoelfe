@@ -14,6 +14,8 @@ DIESE ROLLE DEMONSTRIERT DAS DYNAMISCHE SYSTEM:
 
 import random
 from typing import Optional, List, TYPE_CHECKING
+
+from .. import RollenUI
 from ..base import (
     AppearanceFeature,
     RollenModell,
@@ -229,6 +231,7 @@ class Kuh(Role):
             seher_sicht="good",
         )
 
+    @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=200,  # Hohe ID für Custom-Rolle

@@ -511,15 +511,15 @@ def get_all_roles_api():
     - UI definition (buttons, prompts)
     """
     from roles import RoleRegistry
-    
+
     # Get query parameters
     extension_filter = request.args.get('extension_pack')
     kategorie_filter = request.args.get('kategorie')
     team_filter = request.args.get('team')
-    
+
     # Get all roles
     all_roles = RoleRegistry.get_all()
-    
+
     # Apply filters
     filtered_roles = all_roles
     if extension_filter:
@@ -530,18 +530,22 @@ def get_all_roles_api():
     if team_filter:
         from roles.enums import Team
         filtered_roles = [r for r in filtered_roles if r.info.team.value == team_filter]
-    
+
     # Convert to dict format
     roles_data = [role.to_dict() for role in filtered_roles]
-    
+
     # Group by extension pack for frontend convenience
     grouped_by_extension = {}
     for role in filtered_roles:
-        ext_pack = role.info.extension_pack
-        if ext_pack not in grouped_by_extension:
-            grouped_by_extension[ext_pack] = []
-        grouped_by_extension[ext_pack].append(role.to_dict())
-    
+        try:
+            ext_pack = role.info.extension_pack
+            if ext_pack not in grouped_by_extension:
+                grouped_by_extension[ext_pack] = []
+            grouped_by_extension[ext_pack].append(role.to_dict())
+        except Exception as e:
+            logger.error(f"Fehler beim Verarbeiten der Rolle {role}: {e}")
+            continue
+
     return jsonify({
         "success": True,
         "roles": roles_data,

@@ -92,7 +92,7 @@ class Hund(Role):
                 description="Floppy dog ear",
             ),
         ]
-        
+
         # Wolf ears (pointy) for when transformed
         wolf_ears = [
             AppearanceFeature(
@@ -116,7 +116,7 @@ class Hund(Role):
                 description="Wolf ear after transformation",
             ),
         ]
-        
+
         # Claws appear after transformation
         wolf_claws = [
             AppearanceFeature(
@@ -131,10 +131,10 @@ class Hund(Role):
                 description="Sharp claws after transformation",
             ),
         ]
-        
+
         # Check transformation state
         is_transformed = self.get_state(spieler, "verwandelt")
-        
+
         if is_transformed:
             # After transformation: looks like a werewolf to everyone
             appearance = wolf_ears + wolf_claws
@@ -180,7 +180,6 @@ class Hund(Role):
                 "Er wird ihm treu ergeben sein... bis in den Tod."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",

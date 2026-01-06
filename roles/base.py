@@ -270,18 +270,72 @@ class UIButtonDefinition:
 
 
 @dataclass
+class AppearanceFeature:
+    """
+    A single 3D appearance feature (ears, claws, accessories, etc.).
+    
+    This defines what gets rendered in Village3D.
+    """
+    feature_type: str  # "ears", "claws", "hat", "weapon", "wings", etc.
+    geometry: str  # "cone", "box", "sphere", "cylinder"
+    count: int = 1  # How many of this feature (e.g., 2 ears, 3 claws per hand)
+    position: Optional[Dict[str, float]] = None  # {x, y, z} relative position
+    scale: Optional[Dict[str, float]] = None  # {x, y, z} scale
+    rotation: Optional[Dict[str, float]] = None  # {x, y, z} euler angles
+    color_source: str = "role"  # "role", "custom", "skin"
+    custom_color: Optional[str] = None  # Hex color if color_source is "custom"
+    description: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "feature_type": self.feature_type,
+            "geometry": self.geometry,
+            "count": self.count,
+            "position": self.position or {},
+            "scale": self.scale or {},
+            "rotation": self.rotation or {},
+            "color_source": self.color_source,
+            "custom_color": self.custom_color,
+            "description": self.description,
+        }
+
+
+@dataclass
 class RollenModell:
     """
     Definition des 3D/2D Modells für eine Rolle.
 
     Ermöglicht dynamische Modell-Definitionen pro Rolle.
+    Definiert wie die Rolle in Village3D aussieht.
     """
 
     modell_id: str  # z.B. "hund", "werhund", "kuh"
     anzeige_name: str  # Was im UI angezeigt wird
+    beschreibung: str = ""
+    
+    # Appearance features for different viewing contexts
+    # What the role looks like to themselves when alive
+    appearance_self_alive: List["AppearanceFeature"] = field(default_factory=list)
+    # What the role looks like to other players when alive
+    appearance_others_alive: List["AppearanceFeature"] = field(default_factory=list)
+    # What the role looks like when dead (for everyone)
+    appearance_dead: List["AppearanceFeature"] = field(default_factory=list)
+    # What Seher roles see (can be "good", "bad", or specific role name)
+    seher_sicht: str = "good"  # "good", "bad", or role name
+    
     # Lambda: (spieler, kontext) -> str - Dynamische Modell-Auswahl
     modell_selector: Optional[Callable[["Spieler", "SpielKontext"], str]] = None
-    beschreibung: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "modell_id": self.modell_id,
+            "anzeige_name": self.anzeige_name,
+            "beschreibung": self.beschreibung,
+            "appearance_self_alive": [f.to_dict() for f in self.appearance_self_alive],
+            "appearance_others_alive": [f.to_dict() for f in self.appearance_others_alive],
+            "appearance_dead": [f.to_dict() for f in self.appearance_dead],
+            "seher_sicht": self.seher_sicht,
+        }
 
 
 @dataclass
@@ -1253,17 +1307,19 @@ class Role(ABC):
             mock_spieler = MockSpieler()
             mock_spieler.info = self.info
             model = self.get_modell_definition(mock_spieler)
-            model_def = {
-                "modell_id": model.modell_id,
-                "anzeige_name": model.anzeige_name,
-                "beschreibung": model.beschreibung,
-            }
+            # Use the model's to_dict method to get full appearance data
+            model_def = model.to_dict()
         except Exception as e:
             # If get_modell_definition fails, provide a default
+            logger.warning(f"Failed to get model definition for {self.info.name}: {e}")
             model_def = {
                 "modell_id": self.info.name.lower().replace(" ", "_"),
                 "anzeige_name": self.info.name,
                 "beschreibung": f"{self.info.name} appearance",
+                "appearance_self_alive": [],
+                "appearance_others_alive": [],
+                "appearance_dead": [],
+                "seher_sicht": "good" if self.info.team == Team.DORF else "bad",
             }
 
         return {
@@ -1286,7 +1342,7 @@ class Role(ABC):
             "avatar_gradient_to": self.info.avatar_gradient_to,
             "avatar_border_color": self.info.avatar_border_color,
             "badge_emoji": self.info.badge_emoji,
-            # Village 3D Model Definition
+            # Village 3D Model Definition with full appearance data
             "model": model_def,
             "state_fields": [
                 {

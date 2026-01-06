@@ -8,6 +8,7 @@ jede Nacht gemeinsam ein Opfer aus.
 from typing import Optional, TYPE_CHECKING, List
 from ..base import (
     RollenModell,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -198,8 +199,55 @@ class Werwolf(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Werwolf."""
+        # Define wolf ears as appearance features
+        wolf_ears = [
+            AppearanceFeature(
+                feature_type="wolf_ear_left",
+                geometry="cone",
+                count=1,
+                position={"x": -0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": -15},
+                color_source="role",
+                description="Left wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="wolf_ear_right",
+                geometry="cone",
+                count=1,
+                position={"x": 0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": 15},
+                color_source="role",
+                description="Right wolf ear",
+            ),
+        ]
+        
+        # Define claws
+        wolf_claws = [
+            AppearanceFeature(
+                feature_type="claws",
+                geometry="cone",
+                count=6,  # 3 per hand
+                position={"x": 0, "y": 0.52, "z": 0.08},  # Base position, will be offset per claw
+                scale={"x": 0.025, "y": 0.08, "z": 0.02},
+                rotation={"x": -10, "y": 0, "z": 0},
+                color_source="custom",
+                custom_color="#888888",
+                description="Sharp wolf claws",
+            ),
+        ]
+        
         return RollenModell(
             modell_id="werwolf",
             anzeige_name="Werwolf",
-            beschreibung="Werwolf appearance in Village 3D",
+            beschreibung="Werwolf with ears and claws",
+            # Werwolf sees themselves with full wolf features
+            appearance_self_alive=wolf_ears + wolf_claws,
+            # Others see the same (werwolves are obvious in this game)
+            appearance_others_alive=wolf_ears + wolf_claws,
+            # Dead appearance would be standard (no special features)
+            appearance_dead=[],
+            # Seher sees them as "bad"
+            seher_sicht="bad",
         )

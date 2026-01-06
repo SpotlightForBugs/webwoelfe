@@ -1937,27 +1937,120 @@ export default class Village3DPlayCanvas {
     if (isAlive && rolle) {
       // Get model definition from API data
       const modelDef = this.roleModels[rolle];
-      const modelId = modelDef
-        ? modelDef.modell_id
-        : rolle.toLowerCase().replace(/\s+/g, "_");
+      
+      if (modelDef) {
+        // Use the appearance features defined in the role's Python file
+        const appearanceFeatures = modelDef.appearance_others_alive || [];
+        
+        if (appearanceFeatures.length > 0) {
+          console.log(
+            `[Village3D] Rendering ${appearanceFeatures.length} features for ${rolle} from role definition`,
+          );
+          this.renderAppearanceFeatures(entity, appearanceFeatures, roleColor);
+        } else {
+          // No features defined, try legacy method or use default
+          const modelId = modelDef.modell_id;
+          const featureMethodName = `add${modelId
+            .split("_")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join("")}Features`;
 
-      // Try to call the specific feature method if it exists
-      const featureMethodName = `add${modelId
-        .split("_")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join("")}Features`;
-
-      if (typeof this[featureMethodName] === "function") {
-        // Call the specific feature method
-        this[featureMethodName](entity, roleColor);
+          if (typeof this[featureMethodName] === "function") {
+            // Call the legacy feature method
+            this[featureMethodName](entity, roleColor);
+          } else {
+            // Fallback to default role indicator
+            console.log(
+              `[Village3D] No features defined for ${rolle}, using default`,
+            );
+            this.addDefaultRoleIndicator(entity, roleColor);
+          }
+        }
       } else {
-        // Fallback to default role indicator if no specific method exists
-        console.log(
-          `[Village3D] No specific feature method found for ${rolle} (tried ${featureMethodName}), using default`,
+        // No model definition at all - use default
+        console.warn(
+          `[Village3D] No model definition found for ${rolle}, using default`,
         );
         this.addDefaultRoleIndicator(entity, roleColor);
       }
     }
+  }
+
+  /**
+   * Renders appearance features from role definition data.
+   * This replaces the hardcoded feature methods with dynamic rendering.
+   */
+  renderAppearanceFeatures(entity, features, roleColor) {
+    features.forEach((feature, idx) => {
+      try {
+        const {
+          feature_type,
+          geometry,
+          count,
+          position,
+          scale,
+          rotation,
+          color_source,
+          custom_color,
+        } = feature;
+
+        // Determine the color to use
+        let featureColor = roleColor;
+        if (color_source === "custom" && custom_color) {
+          // Convert hex to RGB
+          const hex = custom_color.replace("#", "");
+          const r = parseInt(hex.slice(0, 2), 16) / 255;
+          const g = parseInt(hex.slice(2, 4), 16) / 255;
+          const b = parseInt(hex.slice(4, 6), 16) / 255;
+          featureColor = new pc.Color(r, g, b);
+        } else if (color_source === "skin") {
+          featureColor = new pc.Color(0.87, 0.72, 0.58); // Default skin color
+        }
+
+        // Create the feature(s)
+        for (let i = 0; i < count; i++) {
+          const featureEntity = new pc.Entity(`${feature_type}-${idx}-${i}`);
+          featureEntity.addComponent("model", { type: geometry });
+
+          // Apply position (with offset for multiple instances)
+          const baseX = position.x || 0;
+          const baseY = position.y || 0;
+          const baseZ = position.z || 0;
+          featureEntity.setLocalPosition(baseX, baseY, baseZ);
+
+          // Apply scale
+          if (scale) {
+            featureEntity.setLocalScale(
+              scale.x || 1,
+              scale.y || 1,
+              scale.z || 1,
+            );
+          }
+
+          // Apply rotation
+          if (rotation) {
+            featureEntity.setLocalEulerAngles(
+              rotation.x || 0,
+              rotation.y || 0,
+              rotation.z || 0,
+            );
+          }
+
+          // Apply material
+          const material = new pc.StandardMaterial();
+          material.diffuse = featureColor;
+          material.update();
+          featureEntity.model.material = material;
+
+          entity.addChild(featureEntity);
+        }
+      } catch (e) {
+        console.error(
+          `[Village3D] Error rendering feature ${feature.feature_type}:`,
+          e,
+        );
+      }
+    });
   }
 
   addWerwolfFeatures(entity, roleColor) {

@@ -1231,25 +1231,29 @@
   function generateRoleChips(roles, extPack, isRequired) {
     return roles
       .map((role) => {
-        const team = role.info.team;
+        // API returns flattened object, so access properties directly
+        const team = role.team;
         const chipClass =
           team === "werwolf" ? "evil" : team === "dorf" ? "good" : "neutral";
         const isBasicRole =
-          role.info.name === "Werwolf" || role.info.name === "Dorfbewohner";
-        const isPreselected = role.info.name === "Seherin";
+          role.name === "Werwolf" || role.name === "Dorfbewohner";
+        const isPreselected = role.name === "Seherin";
+        
+        // Fallback for icon if missing (shouldn't happen with valid roles)
+        const iconClass = role.icon || "fa-solid fa-user";
 
         return `
         <label class="role-chip ${chipClass} ${isPreselected ? "selected" : ""}">
           <input
             type="checkbox"
             name="rollen"
-            value="${role.info.name}"
+            value="${role.name}"
             ${isBasicRole ? "checked disabled" : ""}
             ${isPreselected ? "checked" : ""}
             data-exp="${extPack}"
             onchange="updateRolesPreview()"
           />
-          <span><i class="${role.info.icon}"></i> ${role.info.name}</span>
+          <span><i class="${iconClass}"></i> ${role.name}</span>
         </label>
       `;
       })

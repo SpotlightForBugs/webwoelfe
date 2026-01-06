@@ -1937,11 +1937,11 @@ export default class Village3DPlayCanvas {
     if (isAlive && rolle) {
       // Get model definition from API data
       const modelDef = this.roleModels[rolle];
-      
+
       if (modelDef) {
         // Use the appearance features defined in the role's Python file
         const appearanceFeatures = modelDef.appearance_others_alive || [];
-        
+
         if (appearanceFeatures.length > 0) {
           console.log(
             `[Village3D] Rendering ${appearanceFeatures.length} features for ${rolle} from role definition`,

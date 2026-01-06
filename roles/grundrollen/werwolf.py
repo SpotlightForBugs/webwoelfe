@@ -222,14 +222,18 @@ class Werwolf(Role):
                 description="Right wolf ear",
             ),
         ]
-        
+
         # Define claws
         wolf_claws = [
             AppearanceFeature(
                 feature_type="claws",
                 geometry="cone",
                 count=6,  # 3 per hand
-                position={"x": 0, "y": 0.52, "z": 0.08},  # Base position, will be offset per claw
+                position={
+                    "x": 0,
+                    "y": 0.52,
+                    "z": 0.08,
+                },  # Base position, will be offset per claw
                 scale={"x": 0.025, "y": 0.08, "z": 0.02},
                 rotation={"x": -10, "y": 0, "z": 0},
                 color_source="custom",
@@ -237,7 +241,7 @@ class Werwolf(Role):
                 description="Sharp wolf claws",
             ),
         ]
-        
+
         return RollenModell(
             modell_id="werwolf",
             anzeige_name="Werwolf",

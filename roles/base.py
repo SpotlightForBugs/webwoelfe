@@ -273,9 +273,10 @@ class UIButtonDefinition:
 class AppearanceFeature:
     """
     A single 3D appearance feature (ears, claws, accessories, etc.).
-    
+
     This defines what gets rendered in Village3D.
     """
+
     feature_type: str  # "ears", "claws", "hat", "weapon", "wings", etc.
     geometry: str  # "cone", "box", "sphere", "cylinder"
     count: int = 1  # How many of this feature (e.g., 2 ears, 3 claws per hand)
@@ -312,7 +313,7 @@ class RollenModell:
     modell_id: str  # z.B. "hund", "werhund", "kuh"
     anzeige_name: str  # Was im UI angezeigt wird
     beschreibung: str = ""
-    
+
     # Appearance features for different viewing contexts
     # What the role looks like to themselves when alive
     appearance_self_alive: List["AppearanceFeature"] = field(default_factory=list)
@@ -322,7 +323,7 @@ class RollenModell:
     appearance_dead: List["AppearanceFeature"] = field(default_factory=list)
     # What Seher roles see (can be "good", "bad", or specific role name)
     seher_sicht: str = "good"  # "good", "bad", or role name
-    
+
     # Lambda: (spieler, kontext) -> str - Dynamische Modell-Auswahl
     modell_selector: Optional[Callable[["Spieler", "SpielKontext"], str]] = None
 
@@ -332,7 +333,9 @@ class RollenModell:
             "anzeige_name": self.anzeige_name,
             "beschreibung": self.beschreibung,
             "appearance_self_alive": [f.to_dict() for f in self.appearance_self_alive],
-            "appearance_others_alive": [f.to_dict() for f in self.appearance_others_alive],
+            "appearance_others_alive": [
+                f.to_dict() for f in self.appearance_others_alive
+            ],
             "appearance_dead": [f.to_dict() for f in self.appearance_dead],
             "seher_sicht": self.seher_sicht,
         }

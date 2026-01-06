@@ -219,7 +219,7 @@ class Seherin(Role):
                 description="Glowing mystical aura",
             ),
         ]
-        
+
         return RollenModell(
             modell_id="seherin",
             anzeige_name="Seherin",

@@ -235,8 +235,7 @@
             </div>
           </div>
 
-          <!-- Static roles - will be replaced by dynamic content above -- >
-         
+          <!-- Static roles - will be replaced by dynamic content above -->
 
           <!-- Aktive Rollen Übersicht -->
           <div class="roles-summary" id="roles-summary">
@@ -1120,8 +1119,15 @@
         data.grouped_by_extension,
       );
 
-      // Re-attach event listeners
-      updateRoleCount();
+      // Re-attach event listeners to dynamically loaded checkboxes
+      document
+        .querySelectorAll('.rollen-wizard input[name="rollen"]')
+        .forEach((cb) => {
+          cb.addEventListener("change", updateRolesPreview);
+        });
+
+      // Update the roles preview
+      updateRolesPreview();
     } catch (error) {
       console.error("Error loading roles:", error);
       container.innerHTML =
@@ -1235,7 +1241,7 @@
             ${isBasicRole ? "checked disabled" : ""}
             ${isPreselected ? "checked" : ""}
             data-exp="${extPack}"
-            onchange="updateRoleCount()"
+            onchange="updateRolesPreview()"
           />
           <span><i class="${role.info.icon}"></i> ${role.info.name}</span>
         </label>

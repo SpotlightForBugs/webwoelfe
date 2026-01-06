@@ -58,7 +58,6 @@ class Engel(Role):
             ),
             erweiterung=Erweiterung.CHARAKTERE,
             hinweis_config="Engel",
-
             # Visual Styling
             avatar_gradient_from="#fef3c7",
             avatar_gradient_to="#fde68a",

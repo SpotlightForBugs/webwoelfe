@@ -37,7 +37,6 @@ class KleinesMaedchen(Role):
             erzaehler_tag=None,
             hinweis_config=None,
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#fbbf24",
             avatar_gradient_to="#f59e0b",

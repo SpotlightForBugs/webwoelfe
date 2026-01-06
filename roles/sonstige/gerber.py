@@ -58,7 +58,6 @@ class Gerber(Role):
             ),
             erweiterung=Erweiterung.SONDEREDITION,
             hinweis_config="Gerber",
-
             # Visual Styling
             avatar_gradient_from="#78350f",
             avatar_gradient_to="#451a03",

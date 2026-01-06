@@ -40,7 +40,6 @@ class Buergermeister(Role):
             prioritaet=95,
             erzaehler_tag=("Der Buergermeister hat doppeltes Stimmrecht."),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#6366f1",
             avatar_gradient_to="#4f46e5",

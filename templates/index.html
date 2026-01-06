@@ -1148,7 +1148,6 @@
         icon: "fa-house",
         badge: "Pflicht",
         badgeClass: "required",
-        desc: "Die klassischen Rollen aus dem Grundspiel",
         required: true,
         open: true,
       },
@@ -1157,41 +1156,55 @@
         icon: "fa-moon",
         badge: "Erw. 1",
         badgeClass: "exp1",
-        desc: "Heiler, Alter, Sündenbock, Flötenspieler & mehr",
       },
       gemeinde: {
         name: "Die Gemeinde",
         icon: "fa-city",
         badge: "Erw. 2",
         badgeClass: "exp2",
-        desc: "Gebäude & Berufe: Brandstifter, Rabe & mehr",
       },
       charaktere: {
         name: "Charaktere",
         icon: "fa-users",
         badge: "Erw. 3",
         badgeClass: "exp3",
-        desc: "Neue Charaktere: Wolfsrudel, Gruppen & mehr!",
       },
       sonderedition: {
         name: "Sonderedition",
         icon: "fa-star",
         badge: "Spezial",
         badgeClass: "special",
-        desc: "Exklusive Sonderrollen",
       },
     };
 
     let html = "";
 
     for (const [extPack, roles] of Object.entries(grouped)) {
-      const info = extensionInfo[extPack] || {
+      let info = extensionInfo[extPack] || {
         name: extPack,
         icon: "fa-puzzle-piece",
         badge: extPack,
         badgeClass: "community",
-        desc: "Weitere Rollen",
       };
+      
+      // Make a shallow copy to avoid mutating the original info object if reused
+      info = { ...info };
+
+      // Dynamically generate description if not manually provided or to override
+      if (roles && roles.length > 0) {
+          // Get up to 3 role names, excluding generic ones if needed, or just pick the first few
+          // Randomize or pick fixed? Fixed is better for stability.
+          // Filter out potential duplicates or basic roles if we want purely "interesting" ones
+          // But 'roles' here is what's in the pack.
+          const previewRoles = roles.slice(0, 4).map(r => r.name);
+          let desc = previewRoles.join(", ");
+          if (roles.length > 4) {
+              desc += " & mehr";
+          }
+          info.desc = desc;
+      } else {
+          info.desc = "Keine Rollen verfügbar";
+      }
 
       const isRequired = info.required;
       const isOpen = info.open;

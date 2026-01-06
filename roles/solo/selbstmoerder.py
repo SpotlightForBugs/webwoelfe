@@ -15,7 +15,7 @@ from ..base import (
     StateType,
     HinweisConfig,
 )
-from ..enums import Team, Kategorie
+from ..enums import Team, Kategorie, Erweiterung
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:
@@ -65,6 +65,7 @@ class Selbstmoerder(Role):
             name="Selbstmoerder",
             team=Team.SOLO,
             kategorie=Kategorie.SOLO,
+            erweiterung=Erweiterung.SONDEREDITION,
             beschreibung=(
                 "Du bist der Selbstmörder. Dein Ziel: Vom Dorf gehängt "
                 "werden! Du gewinnst nur so - stirbst du durch Wölfe, "

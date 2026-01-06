@@ -7,6 +7,8 @@ Stirbt das Herrchen, wird der Hund zum Werwolf!
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    RollenModell,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -14,6 +16,7 @@ from ..base import (
     StateField,
     StateType,
     RollenModell,
+    AppearanceFeature,
 )
 from ..enums import Team, Kategorie, SichtTyp, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -68,17 +71,96 @@ class Hund(Role):
         - Vor Verwandlung: hund (normaler Hund)
         - Nach Verwandlung: werhund (Wolf-Hund Hybrid)
         """
-        if self.get_state(spieler, "verwandelt"):
+        # Dog ears (floppy, not pointy like wolf)
+        dog_ears = [
+            AppearanceFeature(
+                feature_type="dog_ear_left",
+                geometry="box",
+                position={"x": -0.2, "y": 2.0, "z": 0},
+                scale={"x": 0.15, "y": 0.25, "z": 0.08},
+                rotation={"x": 0, "y": 0, "z": -30},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Floppy dog ear",
+            ),
+            AppearanceFeature(
+                feature_type="dog_ear_right",
+                geometry="box",
+                position={"x": 0.2, "y": 2.0, "z": 0},
+                scale={"x": 0.15, "y": 0.25, "z": 0.08},
+                rotation={"x": 0, "y": 0, "z": 30},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Floppy dog ear",
+            ),
+        ]
+
+        # Wolf ears (pointy) for when transformed
+        wolf_ears = [
+            AppearanceFeature(
+                feature_type="wolf_ear_left",
+                geometry="cone",
+                position={"x": -0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": -15},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Wolf ear after transformation",
+            ),
+            AppearanceFeature(
+                feature_type="wolf_ear_right",
+                geometry="cone",
+                position={"x": 0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": 15},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Wolf ear after transformation",
+            ),
+        ]
+
+        # Claws appear after transformation
+        wolf_claws = [
+            AppearanceFeature(
+                feature_type="claws",
+                geometry="cone",
+                count=6,
+                position={"x": 0, "y": 0.52, "z": 0.08},
+                scale={"x": 0.025, "y": 0.08, "z": 0.02},
+                rotation={"x": -10, "y": 0, "z": 0},
+                color_source="custom",
+                custom_color="#888888",
+                description="Sharp claws after transformation",
+            ),
+        ]
+
+        # Check transformation state
+        is_transformed = self.get_state(spieler, "verwandelt")
+
+        if is_transformed:
+            # After transformation: looks like a werewolf to everyone
+            appearance = wolf_ears + wolf_claws
             return RollenModell(
                 modell_id="werhund",
                 anzeige_name="Werhund",
                 beschreibung="Ein Hund der zum Werwolf wurde",
+                appearance_self_alive=appearance,
+                appearance_others_alive=appearance,
+                appearance_dead=[],
+                seher_sicht="bad",  # Now seen as bad by Seher
             )
-        return RollenModell(
-            modell_id="hund",
-            anzeige_name="Hund",
-            beschreibung="Ein treuer Hund",
-        )
+        else:
+            # Before transformation: looks like a dog
+            appearance = dog_ears
+            return RollenModell(
+                modell_id="hund",
+                anzeige_name="Hund",
+                beschreibung="Ein treuer Hund",
+                appearance_self_alive=appearance,
+                appearance_others_alive=appearance,
+                appearance_dead=[],
+                seher_sicht="good",  # Seen as good by Seher
+            )
 
     @property
     def info(self) -> RollenInfo:
@@ -100,7 +182,6 @@ class Hund(Role):
                 "Er wird ihm treu ergeben sein... bis in den Tod."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",

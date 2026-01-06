@@ -6,7 +6,16 @@ aber seine Stimme in der Abstimmung ist entscheidend.
 """
 
 from typing import Optional, List
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
+from ..base import (
+    AppearanceFeature,
+    AppearanceFeature,
+    RollenModell,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    DistributionConfig,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -43,13 +52,11 @@ class Dorfbewohner(Role):
                 "Der Dorfbewohner erwacht und hofft, die Woelfe zu entlarven. "
                 "Seine Stimme ist seine einzige Waffe."
             ),
-
             # Visual Styling
             avatar_gradient_from="#0369a1",
             avatar_gradient_to="#075985",
             avatar_border_color="#0ea5e9",
             badge_emoji="🏠",
-
             distribution=DistributionConfig(
                 min_players=0,
                 count_func=lambda n: 0,  # Wird als Filler berechnet
@@ -73,6 +80,7 @@ class Dorfbewohner(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI
+
         return RollenUI(
             title="Dorfbewohner - Schlafen",
             instructions="Du schläfst friedlich. Du hast keine nächtliche Aktion.",
@@ -103,3 +111,26 @@ class Dorfbewohner(Role):
                 description="Alle Werwölfe wurden eliminiert.",
             )
         ]
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Dorfbewohner."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="role_indicator",
+                geometry="sphere",
+                position={"x": 0, "y": 2.2, "z": 0.2},
+                scale={"x": 0.12, "y": 0.12, "z": 0.12},
+                color_source="role",
+                description="Role indicator orb",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="dorfbewohner",
+            anzeige_name="Dorfbewohner",
+            beschreibung="Dorfbewohner appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
+        )

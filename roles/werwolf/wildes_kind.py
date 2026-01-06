@@ -7,6 +7,9 @@ Stirbt dieses, verwandelt es sich in einen Werwolf.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    RollenModell,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -66,7 +69,6 @@ class WildesKind(Role):
                 "Stirbt dieses, wird das Kind zum Werwolf."
             ),
             erweiterung=Erweiterung.NEUMOND,
-
             # Visual Styling
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",
@@ -77,6 +79,7 @@ class WildesKind(Role):
     @property
     def aktions_typ(self) -> "AktionsTyp":
         from ..enums import AktionsTyp
+
         return AktionsTyp.WAEHLEN
 
     @property
@@ -101,7 +104,7 @@ class WildesKind(Role):
         # Wir müssen das Role-Objekt mit dem Spieler verknüpfen oder
         # die Methode muss den Spieler als Argument bekommen (was sie nicht tut in base.py)
         # TODO: Refactor base.py to pass target player to get_sichtbare_rolle_fuer
-        return "Dorfbewohner" # Fallback
+        return "Dorfbewohner"  # Fallback
 
     def is_active_on_first_night(self) -> bool:
         """Wildes Kind acts on first night (choosing role model)."""
@@ -194,3 +197,44 @@ class WildesKind(Role):
             )
 
         return None
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for WildesKind."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="wolf_ear_left",
+                geometry="cone",
+                position={"x": -0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": -15},
+                color_source="role",
+                description="Left wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="wolf_ear_right",
+                geometry="cone",
+                position={"x": 0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": 15},
+                color_source="role",
+                description="Right wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            ),
+        ]
+
+        return RollenModell(
+            modell_id="wildeskind",
+            anzeige_name="WildesKind",
+            beschreibung="WildesKind appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="bad",
+        )

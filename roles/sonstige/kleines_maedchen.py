@@ -4,7 +4,15 @@ Kleines Mädchen - Kann nachts blinzeln um Werwölfe zu sehen, riskiert aber ent
 
 from typing import Optional, List, TYPE_CHECKING
 import random
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    RollenModell,
+    AktionsErgebnis,
+    SpielKontext,
+    RollenModell,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -36,8 +44,13 @@ class KleinesMaedchen(Role):
             erzaehler_nacht="Das Kleine Mädchen darf während der Werwolf-Phase blinzeln - auf eigene Gefahr!",
             erzaehler_tag=None,
             hinweis_config=None,
-        erweiterung=Erweiterung.BASISSPIEL,
-            )
+            erweiterung=Erweiterung.BASISSPIEL,
+            # Visual Styling
+            avatar_gradient_from="#fbbf24",
+            avatar_gradient_to="#f59e0b",
+            avatar_border_color="#fcd34d",
+            badge_emoji="👧",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
@@ -148,3 +161,26 @@ class KleinesMaedchen(Role):
         Das Kleine Mädchen hat keine besonderen Fähigkeiten bei Hinrichtungen.
         """
         return None  # Keine besonderen Effekte
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for KleinesMaedchen."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="kleinesmaedchen",
+            anzeige_name="KleinesMaedchen",
+            beschreibung="KleinesMaedchen appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
+        )

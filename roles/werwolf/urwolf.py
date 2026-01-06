@@ -7,6 +7,9 @@ einen Dorfbewohner infizieren, der zum Werwolf wird.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    RollenModell,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -78,7 +81,6 @@ class Urwolf(Role):
                 "ein Opfer infizieren statt zu töten."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
@@ -131,7 +133,7 @@ class Urwolf(Role):
         """
         # Check if infection is available
         if not self.get_state(spieler, "infektion"):
-             return AktionsErgebnis(
+            return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du hast deine Infektion bereits verbraucht!",
             )
@@ -147,4 +149,45 @@ class Urwolf(Role):
                 "todesursache_verhindert": True,
             },
             log_sichtbar_fuer="werwolf",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Urwolf."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="wolf_ear_left",
+                geometry="cone",
+                position={"x": -0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": -15},
+                color_source="role",
+                description="Left wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="wolf_ear_right",
+                geometry="cone",
+                position={"x": 0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": 15},
+                color_source="role",
+                description="Right wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            ),
+        ]
+
+        return RollenModell(
+            modell_id="urwolf",
+            anzeige_name="Urwolf",
+            beschreibung="Urwolf appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="bad",
         )

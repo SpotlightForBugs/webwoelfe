@@ -6,7 +6,14 @@ dass sie auf der gleichen Seite stehen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -43,7 +50,6 @@ class Freimaurer(Role):
             prioritaet=9,
             erzaehler_nacht=("Die Freimaurer erwachen und erkennen sich gegenseitig."),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#3b82f6",
             avatar_gradient_to="#1d4ed8",
@@ -87,4 +93,27 @@ class Freimaurer(Role):
             nachricht="Du erkennst deine Logen-Brüder.",
             effekte={"erkennt_freimaurer": True},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Freimaurer."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="freimaurer",
+            anzeige_name="Freimaurer",
+            beschreibung="Freimaurer appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

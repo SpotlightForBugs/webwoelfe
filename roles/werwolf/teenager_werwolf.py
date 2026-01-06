@@ -7,6 +7,9 @@ einmal pro Spiel weigern kann, beim Angriff mitzumachen.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    RollenModell,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -61,7 +64,6 @@ class TeenagerWerwolf(Role):
                 "den Angriff verweigern."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
@@ -123,7 +125,7 @@ class TeenagerWerwolf(Role):
         hat_verweigert = self.get_state(spieler, "hat_verweigert")
 
         if hat_verweigert:
-             return AktionsErgebnis(
+            return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du hast bereits einmal rebelliert!",
             )
@@ -138,5 +140,46 @@ class TeenagerWerwolf(Role):
                 "angriff_verweigert": True,
                 "teenager_rebelliert": True,
             },
-            log_sichtbar_fuer="werwolf", # Alle Wölfe sehen es
+            log_sichtbar_fuer="werwolf",  # Alle Wölfe sehen es
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for TeenagerWerwolf."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="wolf_ear_left",
+                geometry="cone",
+                position={"x": -0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": -15},
+                color_source="role",
+                description="Left wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="wolf_ear_right",
+                geometry="cone",
+                position={"x": 0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": 15},
+                color_source="role",
+                description="Right wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            ),
+        ]
+
+        return RollenModell(
+            modell_id="teenagerwerwolf",
+            anzeige_name="TeenagerWerwolf",
+            beschreibung="TeenagerWerwolf appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="bad",
         )

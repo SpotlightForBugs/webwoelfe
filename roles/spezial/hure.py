@@ -3,7 +3,14 @@ Hure - Besucht andere Spieler und entgeht Angriffen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -41,7 +48,6 @@ class Hure(Role):
             prioritaet=45,
             erzaehler_nacht=("Die Hure erwacht und waehlt bei wem sie uebernachtet."),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#f43f5e",
             avatar_gradient_to="#be123c",
@@ -124,4 +130,27 @@ class Hure(Role):
                 "nicht_zuhause": True,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Hure."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="hure",
+            anzeige_name="Hure",
+            beschreibung="Hure appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

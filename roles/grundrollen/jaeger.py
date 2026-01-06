@@ -7,6 +7,9 @@ und einen beliebigen Spieler mit in den Tod reißen.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    RollenModell,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -52,17 +55,13 @@ class Jaeger(Role):
             icon="fa-solid fa-crosshairs",
             farbe="#f97316",
             prioritaet=100,
-            erzaehler_nacht=(
-                "Der Jäger schläft. Er wird nur aktiv, wenn er stirbt."
-            ),
+            erzaehler_nacht=("Der Jäger schläft. Er wird nur aktiv, wenn er stirbt."),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#f97316",
             avatar_gradient_to="#c2410c",
             avatar_border_color="#fb923c",
             badge_emoji="🔫",
-
             distribution=DistributionConfig(
                 min_players=5,
                 count_func=lambda n: 1,
@@ -118,7 +117,8 @@ class Jaeger(Role):
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht="Der Jäger greift zu seiner Waffe!",
-                effekte={"trigger_jaeger_phase": True},
+                effekte={"jaeger_schuss": True},  # Generic effect name
+                state_updates={"jaeger_schuss": True},  # Set attribute on player
                 log_sichtbar_fuer="alle",
             )
         return None
@@ -140,3 +140,26 @@ class Jaeger(Role):
                 log_sichtbar_fuer="alle",
             )
         return None
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Jaeger."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="role_indicator",
+                geometry="sphere",
+                position={"x": 0, "y": 2.2, "z": 0.2},
+                scale={"x": 0.12, "y": 0.12, "z": 0.12},
+                color_source="role",
+                description="Role indicator orb",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="jaeger",
+            anzeige_name="Jaeger",
+            beschreibung="Jaeger appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
+        )

@@ -4,8 +4,16 @@ Inquisitor - Der Richter.
 Einmal pro Spiel kann der Inquisitor am Tag einen Spieler
 verhören - ist es ein Werwolf, stirbt er sofort.
 """
+
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -17,108 +25,109 @@ if TYPE_CHECKING:
 class Inquisitor(Role):
     """
     Inquisitor - Einmal-Tag-Fähigkeit.
-    
+
     Fähigkeiten:
     - Einmal pro Spiel am Tag aktivierbar
     - Verhört einen Spieler
     - Ist es ein Werwolf, stirbt er sofort
     - Ist es kein Werwolf, passiert nichts
-    
+
     Besonderheiten:
     - Sehr mächtig gegen Werwölfe
     - Risikofrei für den Verhörten wenn unschuldig
     - Einmalig
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=55,
-            name='Inquisitor',
+            name="Inquisitor",
             team=Team.DORF,
             kategorie=Kategorie.JAEGER,
             beschreibung=(
-                'Du bist der Inquisitor. Einmal pro Spiel kannst du während '
-                'des Tages einen Spieler verhören - gesteht er nicht '
-                '(Werwolf), stirbt er sofort!'
+                "Du bist der Inquisitor. Einmal pro Spiel kannst du während "
+                "des Tages einen Spieler verhören - gesteht er nicht "
+                "(Werwolf), stirbt er sofort!"
             ),
-            icon='fa-solid fa-scale-balanced',
-            farbe='#1e3a8a',
+            icon="fa-solid fa-scale-balanced",
+            farbe="#1e3a8a",
             prioritaet=91,
             erzaehler_nacht=(
-                'Der Inquisitor schärft sein Schwert der Gerechtigkeit im Schlaf.'
+                "Der Inquisitor schärft sein Schwert der Gerechtigkeit im Schlaf."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#1e3a8a",
             avatar_gradient_to="#172554",
             avatar_border_color="#2563eb",
             badge_emoji="⚖️",
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.TOETEN
-    
+
     def is_active_on_first_night(self) -> bool:
         """Inquisitor does not act at night."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Inquisitor does not act at night."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Inquisitor's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Inquisitor - Tagaktion",
             instructions="Du kannst einmal am Tag einen Spieler verhören. Werwölfe sterben sofort.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-    
+
     def ist_einmal_faehigkeit(self) -> bool:
         """Inquisitor kann nur einmal verhören."""
         return True
-    
-    def ist_tag_aktiv(self, spieler: 'Spieler', kontext: SpielKontext) -> bool:
+
+    def ist_tag_aktiv(self, spieler: "Spieler", kontext: SpielKontext) -> bool:
         """
         Nur aktiv wenn noch nicht verhört.
         """
-        return not getattr(spieler, 'inquisitor_verhoert', False)
-    
+        return not getattr(spieler, "inquisitor_verhoert", False)
+
     @property
     def erlaubte_ziele(self) -> str:
         return "lebende"
-    
-    def verhoeren(self, spieler: 'Spieler', ziel: 'Spieler',
-                  kontext: SpielKontext) -> AktionsErgebnis:
+
+    def verhoeren(
+        self, spieler: "Spieler", ziel: "Spieler", kontext: SpielKontext
+    ) -> AktionsErgebnis:
         """
         Verhört einen Spieler - Werwölfe sterben sofort.
         """
-        if getattr(spieler, 'inquisitor_verhoert', False):
+        if getattr(spieler, "inquisitor_verhoert", False):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du hast dein Verhör bereits durchgeführt!",
             )
-        
+
         if ziel.id in kontext.tote_spieler:
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du kannst nur lebende Spieler verhören!",
             )
-        
+
         spieler.inquisitor_verhoert = True
-        
+
         # Prüfen ob Ziel ein Werwolf ist
         ziel_team = kontext.spieler_teams.get(ziel.id, Team.DORF)
-        
+
         if ziel_team == Team.WERWOLF:
             return AktionsErgebnis(
                 erfolg=True,
@@ -141,3 +150,26 @@ class Inquisitor(Role):
                 },
                 log_sichtbar_fuer="alle",
             )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Inquisitor."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="inquisitor",
+            anzeige_name="Inquisitor",
+            beschreibung="Inquisitor appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
+        )

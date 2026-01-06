@@ -4,8 +4,16 @@ Sandmann - Der Schlafbringer.
 Der Sandmann kann jede Nacht einen Spieler
 einschläfern, sodass dieser seine Aktion verpasst.
 """
+
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -17,40 +25,39 @@ if TYPE_CHECKING:
 class Sandmann(Role):
     """
     Sandmann - Blockierungs-Rolle.
-    
+
     Fähigkeiten:
     - Kann jede Nacht einen Spieler einschläfern
     - Eingeschläferter Spieler kann keine Nacht-Aktion ausführen
-    
+
     Besonderheiten:
     - Sehr frühe Priorität (vor allen anderen)
     - Kann Werwölfe blockieren
     - Kann auch Verbündete versehentlich blockieren
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=44,
-            name='Sandmann',
+            name="Sandmann",
             team=Team.DORF,
             kategorie=Kategorie.HEXE,
             beschreibung=(
-                'Du bist der Sandmann. Jede Nacht kannst du einen Spieler '
-                'einschläfern - dieser kann seine Nachtaktion nicht ausführen '
-                'und verschläft die Phase!'
+                "Du bist der Sandmann. Jede Nacht kannst du einen Spieler "
+                "einschläfern - dieser kann seine Nachtaktion nicht ausführen "
+                "und verschläft die Phase!"
             ),
-            icon='fa-solid fa-bed',
-            farbe='#ddd6fe',
+            icon="fa-solid fa-bed",
+            farbe="#ddd6fe",
             prioritaet=15,  # Sehr früh, vor allen anderen!
             erzaehler_nacht=(
-                'Der Sandmann erwacht ZUERST und wählt einen Spieler, '
-                'der diese Nacht verschläft und seine Aktion nicht ausführen kann.'
+                "Der Sandmann erwacht ZUERST und wählt einen Spieler, "
+                "der diese Nacht verschläft und seine Aktion nicht ausführen kann."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#ddd6fe",
             avatar_gradient_to="#c4b5fd",
@@ -61,22 +68,23 @@ class Sandmann(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.AUFWECKEN  # Ironischerweise schläfert er ein
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
-    
+
     def is_active_on_first_night(self) -> bool:
         """Sandmann acts on first night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Sandmann acts every night."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Sandmann's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Sandmann - Einschläfern",
             instructions="Wähle einen Spieler, der diese Nacht einschläft und seine Aktion nicht ausführen kann.",
@@ -85,19 +93,20 @@ class Sandmann(Role):
                     label="Einschläfern",
                     action_type="einschlaefern",
                     icon="fa-solid fa-bed",
-                    css_class="btn-info"
+                    css_class="btn-info",
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Sandmann schläfert einen Spieler ein.
-        
+
         Der eingeschläferte Spieler:
         - Kann seine Nacht-Aktion nicht ausführen
         - Wird nicht von Werwölfen geweckt (wenn er Wolf ist)
@@ -110,13 +119,13 @@ class Sandmann(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         if not self.validate_ziel(spieler, ziel, kontext):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Ungültiges Ziel.",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{ziel.name} wird diese Nacht tief und fest schlafen...",
@@ -126,4 +135,27 @@ class Sandmann(Role):
                 "nacht_aktion_blockiert": True,
             },
             log_sichtbar_fuer="erzaehler",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Sandmann."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="sandmann",
+            anzeige_name="Sandmann",
+            beschreibung="Sandmann appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

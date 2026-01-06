@@ -4,6 +4,9 @@ Floetenspieler - verzaubert alle Spieler.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    RollenModell,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -80,7 +83,6 @@ class Floetenspieler(Role):
                 "Der Floetenspieler erwacht und waehlt 2 Spieler " "zum Verzaubern."
             ),
             erweiterung=Erweiterung.NEUMOND,
-
             # Visual Styling
             avatar_gradient_from="#8b5cf6",
             avatar_gradient_to="#5b21b6",
@@ -169,3 +171,26 @@ class Floetenspieler(Role):
 
         # Alle verzaubert!
         return Team.SOLO
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Floetenspieler."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="floetenspieler",
+            anzeige_name="Floetenspieler",
+            beschreibung="Floetenspieler appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="bad",
+        )

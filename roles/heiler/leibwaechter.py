@@ -3,7 +3,14 @@ Leibwächter - Kann sich für einen anderen opfern.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -40,7 +47,6 @@ class Leibwaechter(Role):
             prioritaet=54,
             erzaehler_nacht=("Der Leibwächter erwacht und wählt seinen Schützling."),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#0ea5e9",
             avatar_gradient_to="#0284c7",
@@ -105,4 +111,27 @@ class Leibwaechter(Role):
                 "opfert_sich_fuer": ziel.id,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Leibwaechter."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="leibwaechter",
+            anzeige_name="Leibwaechter",
+            beschreibung="Leibwaechter appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

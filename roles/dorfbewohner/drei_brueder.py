@@ -6,7 +6,14 @@ und können sich jede Nacht kurz absprechen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -46,7 +53,6 @@ class DreiBrueder(Role):
                 "Sie dürfen sich kurz absprechen."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#4f46e5",
             avatar_gradient_to="#312e81",
@@ -103,4 +109,27 @@ class DreiBrueder(Role):
             nachricht="Die Brüder haben sich kurz abgesprochen.",
             effekte={"brueder_absprache": True},
             log_sichtbar_fuer="erzaehler",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for DreiBrueder."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="dreibrueder",
+            anzeige_name="DreiBrueder",
+            beschreibung="DreiBrueder appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

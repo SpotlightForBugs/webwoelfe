@@ -15,6 +15,8 @@ DIESE ROLLE DEMONSTRIERT DAS DYNAMISCHE SYSTEM:
 import random
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    RollenModell,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -26,7 +28,6 @@ from ..base import (
     GlobalStateDefinition,
     NachtEvent,
     UIButtonDefinition,
-    RollenModell,
     set_spieler_state,
     get_spieler_state,
 )
@@ -85,7 +86,8 @@ class Kuh(Role):
                     icon="🥛",
                     tooltip="Hat Milch getrunken",
                     # Nur der Spieler selbst und Erzähler sehen es
-                    show_to=lambda viewer, target: viewer.id == target.id or viewer.ist_erzaehler,
+                    show_to=lambda viewer, target: viewer.id == target.id
+                    or viewer.ist_erzaehler,
                 ),
                 query_name="milchtrinker",
                 defined_by="Kuh",
@@ -140,16 +142,17 @@ class Kuh(Role):
                 requires_confirmation=True,
                 # Nur Dorfbewohner können Milch trinken
                 show_to=lambda spieler, kontext: (
-                    spieler.rolle in dorf_rollen and
-                    spieler.ist_am_leben and
-                    not get_spieler_state(spieler, "global.hat_milch_getrunken")
+                    spieler.rolle in dorf_rollen
+                    and spieler.ist_am_leben
+                    and not get_spieler_state(spieler, "global.hat_milch_getrunken")
                 ),
                 on_click=self._handle_milch_trinken,
             ),
         ]
 
-    def _handle_milch_trinken(self, spieler: "Spieler",
-                               kontext: SpielKontext) -> AktionsErgebnis:
+    def _handle_milch_trinken(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> AktionsErgebnis:
         """
         Handler wenn ein Spieler Milch trinkt.
 
@@ -194,14 +197,38 @@ class Kuh(Role):
         return "Kuh"
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Die Kuh hat ein Kuh-Modell."""
+        """Village 3D appearance for Kuh."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="cow_ear_left",
+                geometry="box",
+                position={"x": -0.2, "y": 1.9, "z": 0},
+                scale={"x": 0.2, "y": 0.3, "z": 0.05},
+                rotation={"x": 0, "y": 0, "z": -40},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Floppy cow ear",
+            ),
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            ),
+        ]
+
         return RollenModell(
             modell_id="kuh",
             anzeige_name="Kuh",
-            beschreibung="Eine friedliche Dorfkuh",
+            beschreibung="Kuh appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )
 
-    @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=200,  # Hohe ID für Custom-Rolle
@@ -219,6 +246,11 @@ class Kuh(Role):
             erzaehler_nacht="Die Kuh muht in der Nacht. Alle hören es.",
             erzaehler_tag="Die Kuh bietet ihre Milch an. Wer traut sich zu trinken?",
             erweiterung=Erweiterung.SONDEREDITION,
+            # Visual Styling
+            avatar_gradient_from="#8B4513",
+            avatar_gradient_to="#654321",
+            avatar_border_color="#A0522D",
+            badge_emoji="🐄",
         )
 
     @property
@@ -254,9 +286,9 @@ class Kuh(Role):
             can_skip=True,
         )
 
-    def on_tag_start(self, spieler: "Spieler",
-                      kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+    def on_tag_start(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """Reset Milch-Status für neuen Tag."""
         self.set_state(spieler, "milch_gegeben_heute", False)
         return None
-

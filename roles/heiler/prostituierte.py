@@ -6,7 +6,14 @@ und schützt beide, aber verrät ihre Identität.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -48,11 +55,9 @@ class Prostituierte(Role):
             farbe="#f43f5e",
             prioritaet=46,  # Vor Werwölfen
             erzaehler_nacht=(
-                "Die Prostituierte erwacht und wählt einen Spieler für "
-                "die Nacht."
+                "Die Prostituierte erwacht und wählt einen Spieler für " "die Nacht."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#f43f5e",
             avatar_gradient_to="#be123c",
@@ -130,4 +135,27 @@ class Prostituierte(Role):
                 "partner_weiss_rolle": ziel.id,
             },
             log_sichtbar_fuer="erzaehler",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Prostituierte."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="prostituierte",
+            anzeige_name="Prostituierte",
+            beschreibung="Prostituierte appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

@@ -6,7 +6,14 @@ Sie entgeht Angriffen zu Hause, stirbt aber, wenn ihr Gastgeber stirbt.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -48,11 +55,8 @@ class Nutte(Role):
             icon="fa-solid fa-house-user",
             farbe="#ec4899",
             prioritaet=47,
-            erzaehler_nacht=(
-                "Die Nutte erwacht und wählt bei wem sie übernachtet."
-            ),
+            erzaehler_nacht=("Die Nutte erwacht und wählt bei wem sie übernachtet."),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#ec4899",
             avatar_gradient_to="#be185d",
@@ -178,3 +182,26 @@ class Nutte(Role):
             )
 
         return None
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Nutte."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="nutte",
+            anzeige_name="Nutte",
+            beschreibung="Nutte appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
+        )

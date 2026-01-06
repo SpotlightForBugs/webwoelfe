@@ -3,7 +3,14 @@ Giftmischerin - Verzögerte Tötung.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -42,7 +49,6 @@ class Giftmischerin(Role):
                 "Die Giftmischerin erwacht. Möchte sie ihr Gift einsetzen?"
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#84cc16",
             avatar_gradient_to="#4d7c0f",
@@ -53,18 +59,19 @@ class Giftmischerin(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.VERGIFTEN
-    
+
     def is_active_on_first_night(self) -> bool:
         """Giftmischerin can act on first night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Giftmischerin acts every night until poison is used."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Giftmischerin's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Giftmischerin - Vergiften",
             instructions="Du kannst einmal pro Spiel einen Spieler vergiften. Dieser stirbt nach 2 Tagen.",
@@ -74,12 +81,12 @@ class Giftmischerin(Role):
                     action_type="vergiften",
                     icon="fa-solid fa-flask-vial",
                     css_class="btn-danger",
-                    requires_confirmation=True
+                    requires_confirmation=True,
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def on_nacht_aktion(
@@ -106,4 +113,36 @@ class Giftmischerin(Role):
                 "gift_tod_runde": kontext.runde + 2,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Giftmischerin."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="witch_hat",
+                geometry="cone",
+                position={"x": 0, "y": 2.4, "z": 0},
+                scale={"x": 0.3, "y": 0.5, "z": 0.3},
+                color_source="custom",
+                custom_color="#1a1a1a",
+                description="Pointed witch hat",
+            ),
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            ),
+        ]
+
+        return RollenModell(
+            modell_id="giftmischerin",
+            anzeige_name="Giftmischerin",
+            beschreibung="Giftmischerin appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

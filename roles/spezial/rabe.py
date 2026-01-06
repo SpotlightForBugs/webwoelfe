@@ -7,6 +7,9 @@ der am nächsten Tag 2 Extra-Stimmen gegen sich erhält.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    RollenModell,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -88,7 +91,6 @@ class Rabe(Role):
             ),
             erweiterung=Erweiterung.GEMEINDE,
             hinweis_config=None,
-
             # Visual Styling
             avatar_gradient_from="#1f2937",
             avatar_gradient_to="#030712",
@@ -165,4 +167,28 @@ class Rabe(Role):
                 "extra_stimmen_gegen": 2,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Rabe."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="wings",
+                geometry="box",
+                position={"x": 0, "y": 1.3, "z": -0.2},
+                scale={"x": 0.8, "y": 0.5, "z": 0.1},
+                color_source="custom",
+                custom_color="#FFFFFF",
+                description="Angel wings",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="rabe",
+            anzeige_name="Rabe",
+            beschreibung="Rabe appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

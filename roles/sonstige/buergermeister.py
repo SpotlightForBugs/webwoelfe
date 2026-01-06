@@ -3,7 +3,14 @@ Bürgermeister - Doppelte Stimme bei Abstimmungen, kann Nachfolger bestimmen
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -35,7 +42,6 @@ class Buergermeister(Role):
             erzaehler_nacht="Der Bürgermeister ruht in seinem Rathaus. Seine Stimme hat doppeltes Gewicht.",
             erzaehler_tag="Der Bürgermeister ist gefallen! Mit letzter Kraft zeigt er auf seinen Nachfolger, der das Amt und die doppelte Stimme erbt!",
             erweiterung=Erweiterung.CHARAKTERE,
-
             # Visual Styling
             avatar_gradient_from="#1e40af",
             avatar_gradient_to="#1e3a8a",
@@ -148,4 +154,27 @@ class Buergermeister(Role):
                 "amt_uebertragen": True,
                 "oeffentlich": True,  # Das Dorf erfährt wer der neue Bürgermeister ist
             },
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Buergermeister."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="buergermeister",
+            anzeige_name="Buergermeister",
+            beschreibung="Buergermeister appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

@@ -7,6 +7,9 @@ und einmal jemanden vergiften.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    RollenModell,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -60,13 +63,11 @@ class Hexe(Role):
                 "Möchtest du es retten? Möchtest du jemanden vergiften?"
             ),
             erweiterung=Erweiterung.BASISSPIEL,
-
             # Visual Styling
             avatar_gradient_from="#d946ef",
             avatar_gradient_to="#a21caf",
             avatar_border_color="#f0abfc",
             badge_emoji="🧪",
-
             distribution=DistributionConfig(
                 min_players=5,
                 count_func=lambda n: 1,
@@ -119,14 +120,20 @@ class Hexe(Role):
             can_skip=True,  # Can choose to do nothing
         )
 
-    def get_phase_start_info(self, spieler: "Spieler", kontext: "SpielKontext") -> Optional[dict]:
+    def get_phase_start_info(
+        self, spieler: "Spieler", kontext: "SpielKontext"
+    ) -> Optional[dict]:
         """Zeigt der Hexe das Werwolf-Opfer."""
         if kontext.werwolf_opfer_id:
             return {"werwolf_opfer_id": kontext.werwolf_opfer_id}
         return None
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
         """
         Hexe verwendet einen Trank.
@@ -134,7 +141,7 @@ class Hexe(Role):
         # Mapping legacy action names if necessary
         # UI uses "action_type": "heilen" or "vergiften"
         # app.py passes this as 'aktion'
-        
+
         if aktion == "heilen" or aktion == "hexe_heilen":
             if not self.get_state(spieler, "heiltrank"):
                 return AktionsErgebnis(False, "Du hast keinen Heiltrank mehr.")
@@ -146,18 +153,27 @@ class Hexe(Role):
 
             # Wenn Ziel übergeben wurde, muss es das Opfer sein
             if ziel and ziel.id != opfer_id:
-                 return AktionsErgebnis(False, "Du kannst nur das Werwolf-Opfer heilen.")
+                return AktionsErgebnis(False, "Du kannst nur das Werwolf-Opfer heilen.")
 
             self.set_state(spieler, "heiltrank", False)
             return AktionsErgebnis(
                 True,
                 "Du hast das Opfer geheilt.",
                 ziel_spieler_id=opfer_id,
-                effekte={"heilen": True, "hexe_heilen": True, "heiltrank_verbraucht": True},
-                log_sichtbar_fuer=f"spieler_{spieler.id}"
+                effekte={
+                    "heilen": True,
+                    "hexe_heilen": True,
+                    "heiltrank_verbraucht": True,
+                },
+                log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
 
-        elif aktion == "vergiften" or aktion == "hexe_vergiften" or aktion == "toeten" or aktion == "hexe_toeten":
+        elif (
+            aktion == "vergiften"
+            or aktion == "hexe_vergiften"
+            or aktion == "toeten"
+            or aktion == "hexe_toeten"
+        ):
             if not self.get_state(spieler, "gifttrank"):
                 return AktionsErgebnis(False, "Du hast keinen Gifttrank mehr.")
 
@@ -169,8 +185,35 @@ class Hexe(Role):
                 True,
                 f"Du hast {ziel.name} vergiftet.",
                 ziel_spieler_id=ziel.id,
-                effekte={"vergiften": True, "hexe_vergiften": True, "gifttrank_verbraucht": True},
-                log_sichtbar_fuer=f"spieler_{spieler.id}"
+                effekte={
+                    "vergiften": True,
+                    "hexe_vergiften": True,
+                    "gifttrank_verbraucht": True,
+                },
+                log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
 
         return None
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Hexe."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="role_indicator",
+                geometry="sphere",
+                position={"x": 0, "y": 2.2, "z": 0.2},
+                scale={"x": 0.12, "y": 0.12, "z": 0.12},
+                color_source="role",
+                description="Role indicator orb",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="hexe",
+            anzeige_name="Hexe",
+            beschreibung="Hexe appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
+        )

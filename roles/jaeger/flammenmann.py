@@ -6,7 +6,14 @@ sein Haus anzünden - die Nachbarn sterben.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -52,7 +59,6 @@ class Flammenmann(Role):
                 "Er kann nur am Tag aktiv werden."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#ea580c",
             avatar_gradient_to="#c2410c",
@@ -63,25 +69,26 @@ class Flammenmann(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.TOETEN
-    
+
     def is_active_on_first_night(self) -> bool:
         """Flammenmann does not act at night."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Flammenmann does not act at night."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Flammenmann's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Flammenmann - Tagaktion",
             instructions="Du kannst einmal am Tag dein Haus anzünden und deine Nachbarn töten.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def ist_einmal_faehigkeit(self) -> bool:
@@ -141,4 +148,27 @@ class Flammenmann(Role):
                 "todesursache": "verbrennung",
             },
             log_sichtbar_fuer="alle",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Flammenmann."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="mystical_aura",
+                geometry="sphere",
+                position={"x": 0, "y": 1.5, "z": 0},
+                scale={"x": 0.6, "y": 0.8, "z": 0.5},
+                color_source="role",
+                description="Mystical aura effect",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="flammenmann",
+            anzeige_name="Flammenmann",
+            beschreibung="Flammenmann appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

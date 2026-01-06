@@ -1,8 +1,16 @@
 """
 Medium - Kann mit Toten kommunizieren.
 """
+
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -14,13 +22,13 @@ if TYPE_CHECKING:
 class Medium(Role):
     """
     Das Medium - Kontakt zu den Toten.
-    
+
     Fähigkeiten:
     - Kann jede Nacht die Rolle eines Toten erfahren
-    
+
     Gewinnbedingung: Dorf gewinnt.
     """
-    
+
     @property
     def info(self) -> RollenInfo:
         return RollenInfo(
@@ -40,33 +48,33 @@ class Medium(Role):
                 "Flüster dem Medium die Rolle des Toten zu."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#c084fc",
             avatar_gradient_to="#9333ea",
             avatar_border_color="#d8b4fe",
             badge_emoji="👻",
         )
-    
+
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.SEHEN
-    
+
     @property
     def erlaubte_ziele(self) -> str:
         return "tote"
-    
+
     def is_active_on_first_night(self) -> bool:
         """Medium does not act on first night (no dead yet)."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Medium acts every night after first."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Medium's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Medium - Mit Toten sprechen",
             instructions="Wähle einen Toten, um seine Rolle zu erfahren.",
@@ -75,16 +83,17 @@ class Medium(Role):
                     label="Geist befragen",
                     action_type="sehen",
                     icon="fa-solid fa-ghost",
-                    css_class="btn-secondary"
+                    css_class="btn-secondary",
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
-    
-    def on_nacht_aktion(self, spieler: 'Spieler', ziel: Optional['Spieler'],
-                        kontext: SpielKontext) -> Optional[AktionsErgebnis]:
+
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
         """
         Medium erfährt die Rolle eines Toten.
         """
@@ -95,13 +104,13 @@ class Medium(Role):
                 effekte={},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        
+
         if ziel.id not in kontext.tote_spieler:
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du kannst nur mit Toten sprechen.",
             )
-        
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Der Geist von {ziel.name} flüstert: 'Ich war {ziel.rolle}'",
@@ -111,4 +120,27 @@ class Medium(Role):
                 "toter_befragt": ziel.id,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Medium."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="medium",
+            anzeige_name="Medium",
+            beschreibung="Medium appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

@@ -6,7 +6,15 @@ stirbt. Danach wird er zum normalen Dorfbewohner.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    RollenModell,
+    AktionsErgebnis,
+    SpielKontext,
+    RollenModell,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -58,6 +66,11 @@ class Engel(Role):
             ),
             erweiterung=Erweiterung.CHARAKTERE,
             hinweis_config="Engel",
+            # Visual Styling
+            avatar_gradient_from="#fef3c7",
+            avatar_gradient_to="#fde68a",
+            avatar_border_color="#fef08a",
+            badge_emoji="😇",
         )
 
     @property
@@ -149,3 +162,27 @@ class Engel(Role):
         if kontext.aktuelle_runde > 1:
             return Team.DORF
         return Team.SOLO
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Engel."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="wings",
+                geometry="box",
+                position={"x": 0, "y": 1.3, "z": -0.2},
+                scale={"x": 0.8, "y": 0.5, "z": 0.1},
+                color_source="custom",
+                custom_color="#FFFFFF",
+                description="Angel wings",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="engel",
+            anzeige_name="Engel",
+            beschreibung="Engel appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
+        )

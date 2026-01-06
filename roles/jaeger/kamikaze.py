@@ -3,7 +3,14 @@ Kamikaze - Opfert sich um einen Werwolf zu toeten.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -43,7 +50,6 @@ class Kamikaze(Role):
                 "jemanden mit in den Tod reissen?"
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#f97316",
             avatar_gradient_to="#c2410c",
@@ -54,18 +60,19 @@ class Kamikaze(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.OPFERN
-    
+
     def is_active_on_first_night(self) -> bool:
         """Kamikaze can act on first night."""
         return True
-    
+
     def is_active_on_every_night(self) -> bool:
         """Kamikaze can act every night until bomb is used."""
         return True
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Kamikaze's action panel."""
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Kamikaze - Opfern",
             instructions="Du kannst dich einmal opfern und einen anderen Spieler mit in den Tod reißen.",
@@ -75,12 +82,12 @@ class Kamikaze(Role):
                     action_type="opfern",
                     icon="fa-solid fa-bomb",
                     css_class="btn-danger",
-                    requires_confirmation=True
+                    requires_confirmation=True,
                 )
             ],
             requires_target=True,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def on_nacht_aktion(
@@ -115,4 +122,27 @@ class Kamikaze(Role):
                 "kamikaze_bombe_verbraucht": True,
             },
             log_sichtbar_fuer="alle",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Kamikaze."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="role_indicator",
+                geometry="sphere",
+                position={"x": 0, "y": 2.2, "z": 0.2},
+                scale={"x": 0.12, "y": 0.12, "z": 0.12},
+                color_source="role",
+                description="Role indicator orb",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="kamikaze",
+            anzeige_name="Kamikaze",
+            beschreibung="Kamikaze appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

@@ -6,7 +6,14 @@ tötet, der den Bändiger angreift. Funktioniert nur einmal.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import (
+    RollenModell,
+    AppearanceFeature,
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+)
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -48,11 +55,9 @@ class Drachenbaendiger(Role):
             farbe="#7c3aed",
             prioritaet=93,
             erzaehler_nacht=(
-                "Der Drachenbändiger schläft friedlich, "
-                "bewacht von seinem Drachen."
+                "Der Drachenbändiger schläft friedlich, " "bewacht von seinem Drachen."
             ),
             erweiterung=Erweiterung.SONDEREDITION,
-
             # Visual Styling
             avatar_gradient_from="#7c3aed",
             avatar_gradient_to="#5b21b6",
@@ -63,25 +68,26 @@ class Drachenbaendiger(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
-    
+
     def is_active_on_first_night(self) -> bool:
         """Drachenbändiger does not act on first night."""
         return False
-    
+
     def is_active_on_every_night(self) -> bool:
         """Drachenbändiger is passive."""
         return False
-    
-    def get_ui_definition(self) -> 'RollenUI':
+
+    def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Drachenbändiger's action panel."""
         from ..base import RollenUI
+
         return RollenUI(
             title="Drachenbändiger - Passive Rolle",
             instructions="Dein Drache beschützt dich. Wer dich angreift, wird verbrannt (einmalig).",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,
-            can_skip=True
+            can_skip=True,
         )
 
     def on_angegriffen(
@@ -110,4 +116,27 @@ class Drachenbaendiger(Role):
                 "kill_message": f"Der Drache von {spieler.name} hat seinen Angreifer verbrannt!",
             },
             log_sichtbar_fuer="alle",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Drachenbaendiger."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+
+        return RollenModell(
+            modell_id="drachenbaendiger",
+            anzeige_name="Drachenbaendiger",
+            beschreibung="Drachenbaendiger appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

@@ -6,7 +6,7 @@ Anders als Selbstmörder: Alle anderen verlieren!
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenModell
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -58,6 +58,12 @@ class Gerber(Role):
             ),
             erweiterung=Erweiterung.SONDEREDITION,
             hinweis_config="Gerber",
+
+            # Visual Styling
+            avatar_gradient_from="#78350f",
+            avatar_gradient_to="#451a03",
+            avatar_border_color="#92400e",
+            badge_emoji="😡",
         )
 
     @property
@@ -122,3 +128,11 @@ class Gerber(Role):
         if getattr(spieler, "gerber_gewonnen", False):
             return Team.SOLO
         return None
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Gerber."""
+        return RollenModell(
+            modell_id="gerber",
+            anzeige_name="Gerber",
+            beschreibung="Ein verbitterter Gerber mit stinkenden Fellen",
+        )

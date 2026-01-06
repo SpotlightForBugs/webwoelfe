@@ -3,7 +3,7 @@ Sündenbock - Stirbt bei Unentschieden in Abstimmungen, darf dann bestimmen wer 
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenModell
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -36,7 +36,13 @@ class Suendenbock(Role):
             erzaehler_tag="UNENTSCHIEDEN bei der Abstimmung! Das Dorf kann sich nicht einigen - also muss der Sündenbock sterben!",
             hinweis_config=None,
             erweiterung=Erweiterung.NEUMOND,
-            )
+
+            # Visual Styling
+            avatar_gradient_from="#a8a29e",
+            avatar_gradient_to="#78716c",
+            avatar_border_color="#d6d3d1",
+            badge_emoji="🐐",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
@@ -145,4 +151,12 @@ class Suendenbock(Role):
                 "abstimmung_blockiert": blockierte_ids,
                 "blockiert_fuer_runde": getattr(kontext, "aktuelle_runde", 1) + 1,
             },
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Sündenbock."""
+        return RollenModell(
+            modell_id="suendenbock",
+            anzeige_name="Sündenbock",
+            beschreibung="Ein unglücklicher Sündenbock, der für andere stirbt",
         )

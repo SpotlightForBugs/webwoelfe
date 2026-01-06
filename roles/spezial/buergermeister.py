@@ -3,7 +3,7 @@ Buergermeister - Hat doppeltes Stimmrecht.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenModell
 from ..enums import Team, Kategorie, Erweiterung
 from ..registry import RoleRegistry
 
@@ -39,8 +39,14 @@ class Buergermeister(Role):
             farbe="#6366f1",
             prioritaet=95,
             erzaehler_tag=("Der Buergermeister hat doppeltes Stimmrecht."),
-        erweiterung=Erweiterung.CHARAKTERE,
-            )
+            erweiterung=Erweiterung.CHARAKTERE,
+
+            # Visual Styling
+            avatar_gradient_from="#6366f1",
+            avatar_gradient_to="#4f46e5",
+            avatar_border_color="#818cf8",
+            badge_emoji="👑",
+        )
 
     def is_active_on_first_night(self) -> bool:
         """Bürgermeister is passive."""
@@ -92,4 +98,12 @@ class Buergermeister(Role):
                 "warte_auf_nachfolger": True,
             },
             log_sichtbar_fuer="alle",
+        )
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Bürgermeister."""
+        return RollenModell(
+            modell_id="buergermeister",
+            anzeige_name="Bürgermeister",
+            beschreibung="Ein angesehener Bürgermeister mit Amtskette",
         )

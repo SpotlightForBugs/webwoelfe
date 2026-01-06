@@ -3,7 +3,7 @@ Putzfrau - Erfährt die Rolle jedes Verstorbenen und teilt es dem Dorf mit
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenModell
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -35,8 +35,14 @@ class Putzfrau(Role):
             erzaehler_nacht="Die Putzfrau wischt durch die leeren Häuser und sammelt wertvolle Informationen.",
             erzaehler_tag="Die Putzfrau hat beim Aufräumen etwas gefunden! Sie enthüllt die wahre Rolle des Toten: {rolle}!",
             hinweis_config=None,
-        erweiterung=Erweiterung.SONDEREDITION,
-            )
+            erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#06b6d4",
+            avatar_gradient_to="#0891b2",
+            avatar_border_color="#22d3ee",
+            badge_emoji="🧹",
+        )
 
     @property
     def aktions_typ(self) -> Optional[AktionsTyp]:
@@ -133,3 +139,11 @@ class Putzfrau(Role):
             )
 
         return None
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Putzfrau."""
+        return RollenModell(
+            modell_id="putzfrau",
+            anzeige_name="Putzfrau",
+            beschreibung="Eine fleißige Putzfrau mit Putzmitteln",
+        )

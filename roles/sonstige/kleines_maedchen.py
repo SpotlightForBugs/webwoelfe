@@ -4,7 +4,7 @@ Kleines Mädchen - Kann nachts blinzeln um Werwölfe zu sehen, riskiert aber ent
 
 from typing import Optional, List, TYPE_CHECKING
 import random
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenModell
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -36,8 +36,14 @@ class KleinesMaedchen(Role):
             erzaehler_nacht="Das Kleine Mädchen darf während der Werwolf-Phase blinzeln - auf eigene Gefahr!",
             erzaehler_tag=None,
             hinweis_config=None,
-        erweiterung=Erweiterung.BASISSPIEL,
-            )
+            erweiterung=Erweiterung.BASISSPIEL,
+
+            # Visual Styling
+            avatar_gradient_from="#fbbf24",
+            avatar_gradient_to="#f59e0b",
+            avatar_border_color="#fcd34d",
+            badge_emoji="👧",
+        )
 
     @property
     def aktions_typ(self) -> AktionsTyp:
@@ -148,3 +154,11 @@ class KleinesMaedchen(Role):
         Das Kleine Mädchen hat keine besonderen Fähigkeiten bei Hinrichtungen.
         """
         return None  # Keine besonderen Effekte
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Kleines Mädchen."""
+        return RollenModell(
+            modell_id="kleines_maedchen",
+            anzeige_name="Kleines Mädchen",
+            beschreibung="Ein neugieriges kleines Mädchen",
+        )

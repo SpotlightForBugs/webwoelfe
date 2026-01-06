@@ -219,6 +219,12 @@ class Kuh(Role):
             erzaehler_nacht="Die Kuh muht in der Nacht. Alle hören es.",
             erzaehler_tag="Die Kuh bietet ihre Milch an. Wer traut sich zu trinken?",
             erweiterung=Erweiterung.SONDEREDITION,
+
+            # Visual Styling
+            avatar_gradient_from="#8B4513",
+            avatar_gradient_to="#654321",
+            avatar_border_color="#A0522D",
+            badge_emoji="🐄",
         )
 
     @property

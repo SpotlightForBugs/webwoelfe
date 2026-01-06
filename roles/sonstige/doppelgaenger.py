@@ -8,6 +8,7 @@ Der Doppelgänger wählt ein Ziel. Stirbt dieses,
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
+    RollenModell,
     AppearanceFeature,
     Role,
     RollenInfo,

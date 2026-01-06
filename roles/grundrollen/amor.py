@@ -8,6 +8,7 @@ stirbt einer, stirbt auch der andere.
 from typing import Optional, List, TYPE_CHECKING, Union
 from ..base import (
     AppearanceFeature,
+    RollenModell,
     AppearanceFeature,
     Role,
     RollenInfo,

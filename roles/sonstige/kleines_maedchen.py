@@ -4,7 +4,7 @@ Kleines Mädchen - Kann nachts blinzeln um Werwölfe zu sehen, riskiert aber ent
 
 from typing import Optional, List, TYPE_CHECKING
 import random
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenModell
+from ..base import AppearanceFeature, Role, RollenInfo, RollenModell, AktionsErgebnis, SpielKontext, RollenModell
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 

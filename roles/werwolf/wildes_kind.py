@@ -8,6 +8,7 @@ Stirbt dieses, verwandelt es sich in einen Werwolf.
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
+    RollenModell,
     AppearanceFeature,
     Role,
     RollenInfo,

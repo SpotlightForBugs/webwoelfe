@@ -16,7 +16,7 @@ import random
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
-    AppearanceFeature,
+    RollenModell,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -28,7 +28,6 @@ from ..base import (
     GlobalStateDefinition,
     NachtEvent,
     UIButtonDefinition,
-    RollenModell,
     set_spieler_state,
     get_spieler_state,
 )

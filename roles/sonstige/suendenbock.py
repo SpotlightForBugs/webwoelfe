@@ -3,7 +3,7 @@ Sündenbock - Stirbt bei Unentschieden in Abstimmungen, darf dann bestimmen wer 
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenModell
+from ..base import AppearanceFeature, Role, RollenInfo, RollenModell, AktionsErgebnis, SpielKontext, RollenModell
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 

@@ -8,6 +8,7 @@ einen Dorfbewohner infizieren, der zum Werwolf wird.
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
+    RollenModell,
     AppearanceFeature,
     Role,
     RollenInfo,

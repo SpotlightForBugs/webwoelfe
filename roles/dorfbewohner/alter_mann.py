@@ -8,6 +8,7 @@ aber wenn das Dorf ihn hängt, verlieren alle Spezialrollen ihre Kräfte.
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
+    RollenModell,
     AppearanceFeature,
     Role,
     RollenInfo,

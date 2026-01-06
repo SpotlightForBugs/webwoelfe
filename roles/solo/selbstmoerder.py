@@ -5,6 +5,7 @@ Selbstmörder - Will vom Dorf gehängt werden.
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
+    RollenModell,
     AppearanceFeature,
     Role,
     RollenInfo,

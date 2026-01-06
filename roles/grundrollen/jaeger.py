@@ -8,6 +8,7 @@ und einen beliebigen Spieler mit in den Tod reißen.
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
+    RollenModell,
     AppearanceFeature,
     Role,
     RollenInfo,

@@ -3,7 +3,7 @@ Hure - Besucht andere Spieler und entgeht Angriffen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -124,4 +124,13 @@ class Hure(Role):
                 "nicht_zuhause": True,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Hure."""
+        return RollenModell(
+            modell_id="hure",
+            anzeige_name="Hure",
+            beschreibung="Hure appearance in Village 3D",
         )

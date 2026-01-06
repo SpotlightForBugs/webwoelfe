@@ -106,3 +106,12 @@ class WolfimSchafspelz(Role):
             allow_multiple_targets=False,
             can_skip=True
         )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Wolfim Schafspelz."""
+        return RollenModell(
+            modell_id="wolfim_schafspelz",
+            anzeige_name="Wolfim Schafspelz",
+            beschreibung="Wolfim Schafspelz appearance in Village 3D",
+        )

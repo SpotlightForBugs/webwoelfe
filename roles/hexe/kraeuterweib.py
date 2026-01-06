@@ -2,7 +2,7 @@
 Kraeuterweib - Kann Spieler stumm machen.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -106,4 +106,13 @@ class Kraeuterweib(Role):
                 "stumm_gemacht": ziel.id,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Kraeuterweib."""
+        return RollenModell(
+            modell_id="kraeuterweib",
+            anzeige_name="Kraeuterweib",
+            beschreibung="Kraeuterweib appearance in Village 3D",
         )

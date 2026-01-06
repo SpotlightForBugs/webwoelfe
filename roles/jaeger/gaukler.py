@@ -5,7 +5,7 @@ Einmal pro Spiel kann der Gaukler am Tag
 zwei Spieler ihre Plätze tauschen lassen.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -135,4 +135,13 @@ class Gaukler(Role):
                 "gaukler_getauscht": True,
             },
             log_sichtbar_fuer="alle",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Gaukler."""
+        return RollenModell(
+            modell_id="gaukler",
+            anzeige_name="Gaukler",
+            beschreibung="Gaukler appearance in Village 3D",
         )

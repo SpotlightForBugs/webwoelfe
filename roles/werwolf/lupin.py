@@ -6,7 +6,7 @@ erscheint er der Seherin als Mensch, in ungeraden als Wolf.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -102,4 +102,13 @@ class Lupin(Role):
             requires_target=False,
             allow_multiple_targets=False,
             can_skip=True,
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Lupin."""
+        return RollenModell(
+            modell_id="lupin",
+            anzeige_name="Lupin",
+            beschreibung="Lupin appearance in Village 3D",
         )

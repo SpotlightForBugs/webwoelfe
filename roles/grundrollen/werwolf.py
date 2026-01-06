@@ -6,7 +6,7 @@ jede Nacht gemeinsam ein Opfer aus.
 """
 
 from typing import Optional, TYPE_CHECKING, List
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -190,3 +190,12 @@ class Werwolf(Role):
                 description="Die Werwölfe sind in der Überzahl.",
             )
         ]
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Werwolf."""
+        return RollenModell(
+            modell_id="werwolf",
+            anzeige_name="Werwolf",
+            beschreibung="Werwolf appearance in Village 3D",
+        )

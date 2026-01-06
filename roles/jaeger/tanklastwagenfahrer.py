@@ -5,7 +5,7 @@ Einmal pro Spiel kann der Tanklastwagenfahrer
 am Tag jemanden überfahren.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -126,4 +126,13 @@ class Tanklastwagenfahrer(Role):
                 "todesursache": "ueberfahren",
             },
             log_sichtbar_fuer="alle",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Tanklastwagenfahrer."""
+        return RollenModell(
+            modell_id="tanklastwagenfahrer",
+            anzeige_name="Tanklastwagenfahrer",
+            beschreibung="Tanklastwagenfahrer appearance in Village 3D",
         )

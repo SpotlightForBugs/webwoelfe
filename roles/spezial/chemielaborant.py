@@ -6,7 +6,7 @@ Chemikalien und töten die Nachbarn.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -136,4 +136,13 @@ class Chemielaborant(Role):
                 "unverhinderbar": True,
             },
             log_sichtbar_fuer="alle",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Chemielaborant."""
+        return RollenModell(
+            modell_id="chemielaborant",
+            anzeige_name="Chemielaborant",
+            beschreibung="Chemielaborant appearance in Village 3D",
         )

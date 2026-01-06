@@ -6,7 +6,7 @@ Stirbt ein Infizierter, wird er zum Zombie.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -196,3 +196,12 @@ class Zombie(Role):
             )
 
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Zombie."""
+        return RollenModell(
+            modell_id="zombie",
+            anzeige_name="Zombie",
+            beschreibung="Zombie appearance in Village 3D",
+        )

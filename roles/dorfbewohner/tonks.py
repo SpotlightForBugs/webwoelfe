@@ -6,7 +6,7 @@ zufälligen toten Spieler tauschen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 import random
@@ -201,3 +201,12 @@ class Tonks(Role):
 
         # Ohne Tausch: Dorf gewinnt
         return gewinner_team == Team.DORF
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Tonks."""
+        return RollenModell(
+            modell_id="tonks",
+            anzeige_name="Tonks",
+            beschreibung="Tonks appearance in Village 3D",
+        )

@@ -5,7 +5,7 @@ Die Werwolfseherin jagt mit den Wölfen und kann
 jede Nacht die Rolle eines Spielers sehen.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -127,4 +127,13 @@ class Werwolfseherin(Role):
                 "rolle": rollen_name,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Werwolfseherin."""
+        return RollenModell(
+            modell_id="werwolfseherin",
+            anzeige_name="Werwolfseherin",
+            beschreibung="Werwolfseherin appearance in Village 3D",
         )

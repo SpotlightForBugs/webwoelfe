@@ -5,7 +5,7 @@ Die Demoskopin erfährt am Anfang jeder Tagphase,
 wer die meisten Stimmen bekommen würde.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -125,3 +125,12 @@ class Demoskopin(Role):
         # Die Berechnung sollte in game_logic erfolgen,
         # da dort Zugriff auf SpielAktion etc. besteht
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Demoskopin."""
+        return RollenModell(
+            modell_id="demoskopin",
+            anzeige_name="Demoskopin",
+            beschreibung="Demoskopin appearance in Village 3D",
+        )

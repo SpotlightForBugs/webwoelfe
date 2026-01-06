@@ -6,7 +6,7 @@ wählt das Dorf einen neuen König.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -118,4 +118,13 @@ class Koenig(Role):
                 "thronfolge": True,
             },
             log_sichtbar_fuer="alle",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Koenig."""
+        return RollenModell(
+            modell_id="koenig",
+            anzeige_name="Koenig",
+            beschreibung="Koenig appearance in Village 3D",
         )

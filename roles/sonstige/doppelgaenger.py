@@ -205,3 +205,12 @@ class Doppelgaenger(Role):
             if neues_team:
                 return Team(neues_team) if isinstance(neues_team, str) else neues_team
         return Team.DORF
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Doppelgaenger."""
+        return RollenModell(
+            modell_id="doppelgaenger",
+            anzeige_name="Doppelgaenger",
+            beschreibung="Doppelgaenger appearance in Village 3D",
+        )

@@ -6,7 +6,7 @@ und können sich jede Nacht kurz absprechen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -103,4 +103,13 @@ class DreiBrueder(Role):
             nachricht="Die Brüder haben sich kurz abgesprochen.",
             effekte={"brueder_absprache": True},
             log_sichtbar_fuer="erzaehler",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Drei Brueder."""
+        return RollenModell(
+            modell_id="drei_brueder",
+            anzeige_name="Drei Brueder",
+            beschreibung="Drei Brueder appearance in Village 3D",
         )

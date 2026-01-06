@@ -6,7 +6,7 @@ jede zweite Nacht auch einen Mitwerwolf toeten.
 Er gewinnt nur alleine.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -141,3 +141,12 @@ class WeisserWolf(Role):
         if len(kontext.lebende_spieler) == 1 and spieler.id in kontext.lebende_spieler:
             return Team.SOLO
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Weisser Wolf."""
+        return RollenModell(
+            modell_id="weisser_wolf",
+            anzeige_name="Weisser Wolf",
+            beschreibung="Weisser Wolf appearance in Village 3D",
+        )

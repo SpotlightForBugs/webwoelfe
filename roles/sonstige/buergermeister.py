@@ -3,7 +3,7 @@ Bürgermeister - Doppelte Stimme bei Abstimmungen, kann Nachfolger bestimmen
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -148,4 +148,13 @@ class Buergermeister(Role):
                 "amt_uebertragen": True,
                 "oeffentlich": True,  # Das Dorf erfährt wer der neue Bürgermeister ist
             },
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Buergermeister."""
+        return RollenModell(
+            modell_id="buergermeister",
+            anzeige_name="Buergermeister",
+            beschreibung="Buergermeister appearance in Village 3D",
         )

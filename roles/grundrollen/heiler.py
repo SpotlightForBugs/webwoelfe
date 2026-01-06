@@ -155,3 +155,12 @@ class Heiler(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Heiler."""
+        return RollenModell(
+            modell_id="heiler",
+            anzeige_name="Heiler",
+            beschreibung="Heiler appearance in Village 3D",
+        )

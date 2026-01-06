@@ -189,3 +189,12 @@ class Wolfsjunge(Role):
             )
 
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Wolfsjunge."""
+        return RollenModell(
+            modell_id="wolfsjunge",
+            anzeige_name="Wolfsjunge",
+            beschreibung="Wolfsjunge appearance in Village 3D",
+        )

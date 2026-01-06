@@ -138,3 +138,12 @@ class AlterMann(Role):
             )
 
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Alter Mann."""
+        return RollenModell(
+            modell_id="alter_mann",
+            anzeige_name="Alter Mann",
+            beschreibung="Alter Mann appearance in Village 3D",
+        )

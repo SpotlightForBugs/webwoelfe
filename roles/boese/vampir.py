@@ -6,7 +6,7 @@ in einen Vampir. Sie gewinnen bei Vampir-Mehrheit.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -181,3 +181,12 @@ class Vampir(Role):
             )
 
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Vampir."""
+        return RollenModell(
+            modell_id="vampir",
+            anzeige_name="Vampir",
+            beschreibung="Vampir appearance in Village 3D",
+        )

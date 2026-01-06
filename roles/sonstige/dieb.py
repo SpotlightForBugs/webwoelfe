@@ -6,7 +6,7 @@ und muss eine davon wählen.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -159,4 +159,13 @@ class Dieb(Role):
                 "dieb_hat_gewaehlt": True,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Dieb."""
+        return RollenModell(
+            modell_id="dieb",
+            anzeige_name="Dieb",
+            beschreibung="Dieb appearance in Village 3D",
         )

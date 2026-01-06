@@ -5,7 +5,7 @@ Der Sandmann kann jede Nacht einen Spieler
 einschläfern, sodass dieser seine Aktion verpasst.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -126,4 +126,13 @@ class Sandmann(Role):
                 "nacht_aktion_blockiert": True,
             },
             log_sichtbar_fuer="erzaehler",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Sandmann."""
+        return RollenModell(
+            modell_id="sandmann",
+            anzeige_name="Sandmann",
+            beschreibung="Sandmann appearance in Village 3D",
         )

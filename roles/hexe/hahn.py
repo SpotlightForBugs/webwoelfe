@@ -5,7 +5,7 @@ Der Hahn entlarvt seinen Mörder bei seinem Tod.
 """
 from typing import Optional, TYPE_CHECKING
 import random
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -190,4 +190,13 @@ class Hahn(Role):
                 "hahn_kräht": True,
             },
             log_sichtbar_fuer="alle",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Hahn."""
+        return RollenModell(
+            modell_id="hahn",
+            anzeige_name="Hahn",
+            beschreibung="Hahn appearance in Village 3D",
         )

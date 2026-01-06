@@ -166,3 +166,12 @@ class Rabe(Role):
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Rabe."""
+        return RollenModell(
+            modell_id="rabe",
+            anzeige_name="Rabe",
+            beschreibung="Rabe appearance in Village 3D",
+        )

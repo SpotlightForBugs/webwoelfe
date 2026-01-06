@@ -5,7 +5,7 @@ Einmal pro Spiel kann der Inquisitor am Tag einen Spieler
 verhören - ist es ein Werwolf, stirbt er sofort.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -141,3 +141,12 @@ class Inquisitor(Role):
                 },
                 log_sichtbar_fuer="alle",
             )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Inquisitor."""
+        return RollenModell(
+            modell_id="inquisitor",
+            anzeige_name="Inquisitor",
+            beschreibung="Inquisitor appearance in Village 3D",
+        )

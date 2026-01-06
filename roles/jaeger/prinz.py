@@ -2,7 +2,7 @@
 Prinz - Immun gegen Hinrichtung.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -96,3 +96,12 @@ class Prinz(Role):
             )
         
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Prinz."""
+        return RollenModell(
+            modell_id="prinz",
+            anzeige_name="Prinz",
+            beschreibung="Prinz appearance in Village 3D",
+        )

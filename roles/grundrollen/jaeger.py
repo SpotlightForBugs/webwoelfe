@@ -140,3 +140,12 @@ class Jaeger(Role):
                 log_sichtbar_fuer="alle",
             )
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Jaeger."""
+        return RollenModell(
+            modell_id="jaeger",
+            anzeige_name="Jaeger",
+            beschreibung="Jaeger appearance in Village 3D",
+        )

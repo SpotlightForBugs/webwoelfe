@@ -5,7 +5,7 @@ Der Einsame Wolf kennt die anderen Wölfe nicht
 und jagt alleine. Er gewinnt nur als letzter Wolf.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -134,3 +134,12 @@ class EinsamerWolf(Role):
     def gewinnt_mit_woelfen(self) -> bool:
         """Einsamer Wolf gewinnt NICHT mit dem Rudel."""
         return False
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Einsamer Wolf."""
+        return RollenModell(
+            modell_id="einsamer_wolf",
+            anzeige_name="Einsamer Wolf",
+            beschreibung="Einsamer Wolf appearance in Village 3D",
+        )

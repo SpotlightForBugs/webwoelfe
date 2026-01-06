@@ -6,7 +6,7 @@ tötet, der den Bändiger angreift. Funktioniert nur einmal.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -110,4 +110,13 @@ class Drachenbaendiger(Role):
                 "kill_message": f"Der Drache von {spieler.name} hat seinen Angreifer verbrannt!",
             },
             log_sichtbar_fuer="alle",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Drachenbaendiger."""
+        return RollenModell(
+            modell_id="drachenbaendiger",
+            anzeige_name="Drachenbaendiger",
+            beschreibung="Drachenbaendiger appearance in Village 3D",
         )

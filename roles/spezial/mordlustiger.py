@@ -6,7 +6,7 @@ Jede Nacht kann er einen Spieler ermorden.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -154,3 +154,12 @@ class Mordlustiger(Role):
             )
 
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Mordlustiger."""
+        return RollenModell(
+            modell_id="mordlustiger",
+            anzeige_name="Mordlustiger",
+            beschreibung="Mordlustiger appearance in Village 3D",
+        )

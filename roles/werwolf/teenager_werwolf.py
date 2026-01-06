@@ -140,3 +140,12 @@ class TeenagerWerwolf(Role):
             },
             log_sichtbar_fuer="werwolf", # Alle Wölfe sehen es
         )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Teenager Werwolf."""
+        return RollenModell(
+            modell_id="teenager_werwolf",
+            anzeige_name="Teenager Werwolf",
+            beschreibung="Teenager Werwolf appearance in Village 3D",
+        )

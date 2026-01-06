@@ -5,7 +5,7 @@ Der Zauberer hat drei einmalige Zauber:
 Schutz, Sicht und Schweigen.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -232,4 +232,13 @@ class Zauberer(Role):
                 "zauberer_schweigen_verbraucht": True,
             },
             log_sichtbar_fuer="erzaehler",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Zauberer."""
+        return RollenModell(
+            modell_id="zauberer",
+            anzeige_name="Zauberer",
+            beschreibung="Zauberer appearance in Village 3D",
         )

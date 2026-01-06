@@ -174,3 +174,12 @@ class Hexe(Role):
             )
 
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Hexe."""
+        return RollenModell(
+            modell_id="hexe",
+            anzeige_name="Hexe",
+            beschreibung="Hexe appearance in Village 3D",
+        )

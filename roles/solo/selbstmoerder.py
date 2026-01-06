@@ -133,3 +133,12 @@ class Selbstmoerder(Role):
         if wurde_gehaengt:
             return Team.SOLO
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Selbstmoerder."""
+        return RollenModell(
+            modell_id="selbstmoerder",
+            anzeige_name="Selbstmoerder",
+            beschreibung="Selbstmoerder appearance in Village 3D",
+        )

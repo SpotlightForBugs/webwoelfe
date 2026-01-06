@@ -7,7 +7,7 @@ aber 30% seiner Ergebnisse sind falsch!
 
 from typing import Optional, TYPE_CHECKING
 import random
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -187,4 +187,13 @@ class ParanormalerErmittlerbillig(Role):
                 "war_falsch": ist_falsch,  # Ob es gelogen war (für Erzähler)
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Paranormaler Ermittlerbillig."""
+        return RollenModell(
+            modell_id="paranormaler_ermittlerbillig",
+            anzeige_name="Paranormaler Ermittlerbillig",
+            beschreibung="Paranormaler Ermittlerbillig appearance in Village 3D",
         )

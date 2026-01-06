@@ -6,7 +6,7 @@ zufällige Spieler im gleichen Team sind.
 """
 from typing import Optional, TYPE_CHECKING
 import random
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -135,3 +135,12 @@ class Tratschweib(Role):
         
         # Vergleiche die Teams
         return rolle1.info.team == rolle2.info.team
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Tratschweib."""
+        return RollenModell(
+            modell_id="tratschweib",
+            anzeige_name="Tratschweib",
+            beschreibung="Tratschweib appearance in Village 3D",
+        )

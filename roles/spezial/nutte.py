@@ -6,7 +6,7 @@ Sie entgeht Angriffen zu Hause, stirbt aber, wenn ihr Gastgeber stirbt.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -178,3 +178,12 @@ class Nutte(Role):
             )
 
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Nutte."""
+        return RollenModell(
+            modell_id="nutte",
+            anzeige_name="Nutte",
+            beschreibung="Nutte appearance in Village 3D",
+        )

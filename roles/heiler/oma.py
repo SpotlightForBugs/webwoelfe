@@ -6,7 +6,7 @@ sie ist zu alt und schwach.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -110,3 +110,12 @@ class Oma(Role):
 
         # Andere Angriffe (Hexe, Jäger) funktionieren normal
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Oma."""
+        return RollenModell(
+            modell_id="oma",
+            anzeige_name="Oma",
+            beschreibung="Oma appearance in Village 3D",
+        )

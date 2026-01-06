@@ -6,7 +6,7 @@ und schützt beide, aber verrät ihre Identität.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -130,4 +130,13 @@ class Prostituierte(Role):
                 "partner_weiss_rolle": ziel.id,
             },
             log_sichtbar_fuer="erzaehler",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Prostituierte."""
+        return RollenModell(
+            modell_id="prostituierte",
+            anzeige_name="Prostituierte",
+            beschreibung="Prostituierte appearance in Village 3D",
         )

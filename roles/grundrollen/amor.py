@@ -336,3 +336,12 @@ class Amor(Role):
                 description="Die Verliebten haben gewonnen! Ihre Liebe hat alle überwunden.",
             )
         ]
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Amor."""
+        return RollenModell(
+            modell_id="amor",
+            anzeige_name="Amor",
+            beschreibung="Amor appearance in Village 3D",
+        )

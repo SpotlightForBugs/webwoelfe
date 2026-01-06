@@ -5,7 +5,7 @@ Der Pyromane kann Häuser mit Benzin übergießen
 und dann alle anzünden. Die Nachbarn sterben mit.
 """
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -208,4 +208,13 @@ class Pyromane(Role):
                 "todesursache": "verbrennung",
             },
             log_sichtbar_fuer="alle",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Pyromane."""
+        return RollenModell(
+            modell_id="pyromane",
+            anzeige_name="Pyromane",
+            beschreibung="Pyromane appearance in Village 3D",
         )

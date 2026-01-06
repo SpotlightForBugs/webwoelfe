@@ -5,7 +5,7 @@ Der Bär des Bärenbändigers brummt morgens,
 wenn ein Werwolf neben ihm sitzt.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -136,3 +136,12 @@ class Baerenbaendiger(Role):
                 },
                 log_sichtbar_fuer="erzaehler",  # Nur Erzähler weiß es
             )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Baerenbaendiger."""
+        return RollenModell(
+            modell_id="baerenbaendiger",
+            anzeige_name="Baerenbaendiger",
+            beschreibung="Baerenbaendiger appearance in Village 3D",
+        )

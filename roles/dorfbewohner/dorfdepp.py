@@ -6,7 +6,7 @@ Er kann sich aktiv verdächtig machen.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -125,3 +125,12 @@ class Dorfdepp(Role):
         """
         wurde_gehaengt = getattr(spieler, "dorfdepp_gewonnen", False)
         return wurde_gehaengt  # Gewinnt mit dem normalen Gewinner
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Dorfdepp."""
+        return RollenModell(
+            modell_id="dorfdepp",
+            anzeige_name="Dorfdepp",
+            beschreibung="Dorfdepp appearance in Village 3D",
+        )

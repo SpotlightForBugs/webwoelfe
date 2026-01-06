@@ -3,7 +3,7 @@ Kamikaze - Opfert sich um einen Werwolf zu toeten.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -115,4 +115,13 @@ class Kamikaze(Role):
                 "kamikaze_bombe_verbraucht": True,
             },
             log_sichtbar_fuer="alle",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Kamikaze."""
+        return RollenModell(
+            modell_id="kamikaze",
+            anzeige_name="Kamikaze",
+            beschreibung="Kamikaze appearance in Village 3D",
         )

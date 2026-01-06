@@ -5,7 +5,7 @@ Der Polarwolf ist ein Werwolf mit Immunität gegen
 bestimmte Effekte durch seine Kälteresistenz.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -105,3 +105,12 @@ class Polarwolf(Role):
         if effekt in ["sandmann_schlaf", "jaeger_schuss"]:
             return True
         return False
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Polarwolf."""
+        return RollenModell(
+            modell_id="polarwolf",
+            anzeige_name="Polarwolf",
+            beschreibung="Polarwolf appearance in Village 3D",
+        )

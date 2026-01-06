@@ -6,7 +6,7 @@ aber seine Stimme in der Abstimmung ist entscheidend.
 """
 
 from typing import Optional, List
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext, DistributionConfig
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -103,3 +103,12 @@ class Dorfbewohner(Role):
                 description="Alle Werwölfe wurden eliminiert.",
             )
         ]
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Dorfbewohner."""
+        return RollenModell(
+            modell_id="dorfbewohner",
+            anzeige_name="Dorfbewohner",
+            beschreibung="Dorfbewohner appearance in Village 3D",
+        )

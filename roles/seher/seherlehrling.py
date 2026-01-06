@@ -2,7 +2,7 @@
 Seherlehrling - Wird zur Seherin wenn die Original-Seherin stirbt.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -93,3 +93,12 @@ class Seherlehrling(Role):
             )
         
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Seherlehrling."""
+        return RollenModell(
+            modell_id="seherlehrling",
+            anzeige_name="Seherlehrling",
+            beschreibung="Seherlehrling appearance in Village 3D",
+        )

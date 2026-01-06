@@ -6,7 +6,7 @@ und weiterspielen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -123,3 +123,12 @@ class Jesus(Role):
             )
 
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Jesus."""
+        return RollenModell(
+            modell_id="jesus",
+            anzeige_name="Jesus",
+            beschreibung="Jesus appearance in Village 3D",
+        )

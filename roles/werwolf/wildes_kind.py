@@ -194,3 +194,12 @@ class WildesKind(Role):
             )
 
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Wildes Kind."""
+        return RollenModell(
+            modell_id="wildes_kind",
+            anzeige_name="Wildes Kind",
+            beschreibung="Wildes Kind appearance in Village 3D",
+        )

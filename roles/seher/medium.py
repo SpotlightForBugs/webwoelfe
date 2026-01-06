@@ -2,7 +2,7 @@
 Medium - Kann mit Toten kommunizieren.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -111,4 +111,13 @@ class Medium(Role):
                 "toter_befragt": ziel.id,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Medium."""
+        return RollenModell(
+            modell_id="medium",
+            anzeige_name="Medium",
+            beschreibung="Medium appearance in Village 3D",
         )

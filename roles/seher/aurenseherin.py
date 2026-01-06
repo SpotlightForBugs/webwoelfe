@@ -2,7 +2,7 @@
 Aurenseherin - Sieht die Aura statt die konkrete Rolle.
 """
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -113,4 +113,13 @@ class Aurenseherin(Role):
                 "ist_boese": ist_boese,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Aurenseherin."""
+        return RollenModell(
+            modell_id="aurenseherin",
+            anzeige_name="Aurenseherin",
+            beschreibung="Aurenseherin appearance in Village 3D",
         )

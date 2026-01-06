@@ -6,7 +6,7 @@ bis zum Ende überleben um zu gewinnen.
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -175,3 +175,12 @@ class Fluechtlinge(Role):
                 log_sichtbar_fuer="alle",
             )
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Fluechtlinge."""
+        return RollenModell(
+            modell_id="fluechtlinge",
+            anzeige_name="Fluechtlinge",
+            beschreibung="Fluechtlinge appearance in Village 3D",
+        )

@@ -169,3 +169,12 @@ class Floetenspieler(Role):
 
         # Alle verzaubert!
         return Team.SOLO
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Floetenspieler."""
+        return RollenModell(
+            modell_id="floetenspieler",
+            anzeige_name="Floetenspieler",
+            beschreibung="Floetenspieler appearance in Village 3D",
+        )

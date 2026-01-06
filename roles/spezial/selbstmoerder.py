@@ -3,7 +3,7 @@ Selbstmörder - Gewinnt nur wenn er vom Dorf gehängt wird
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -126,3 +126,12 @@ class Selbstmoerder(Role):
         # Prüfe ob er durch Hinrichtung gestorben ist
         wurde_gehaengt = getattr(spieler, "wurde_gehaengt", False)
         return wurde_gehaengt
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Selbstmoerder."""
+        return RollenModell(
+            modell_id="selbstmoerder",
+            anzeige_name="Selbstmoerder",
+            beschreibung="Selbstmoerder appearance in Village 3D",
+        )

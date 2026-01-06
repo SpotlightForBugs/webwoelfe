@@ -162,3 +162,12 @@ class Henker(Role):
         if gewonnen:
             return Team.SOLO
         return None
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Henker."""
+        return RollenModell(
+            modell_id="henker",
+            anzeige_name="Henker",
+            beschreibung="Henker appearance in Village 3D",
+        )

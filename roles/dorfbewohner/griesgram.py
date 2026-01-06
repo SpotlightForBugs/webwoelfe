@@ -6,7 +6,7 @@ bei jeder Hinrichtung automatisch mit JA.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -111,3 +111,12 @@ class Griesgram(Role):
         Der Griesgram kann seine Abstimmung NICHT ändern.
         """
         return False
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Griesgram."""
+        return RollenModell(
+            modell_id="griesgram",
+            anzeige_name="Griesgram",
+            beschreibung="Griesgram appearance in Village 3D",
+        )

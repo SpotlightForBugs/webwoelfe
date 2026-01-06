@@ -148,3 +148,12 @@ class Urwolf(Role):
             },
             log_sichtbar_fuer="werwolf",
         )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Urwolf."""
+        return RollenModell(
+            modell_id="urwolf",
+            anzeige_name="Urwolf",
+            beschreibung="Urwolf appearance in Village 3D",
+        )

@@ -6,7 +6,7 @@ und können sich jede Nacht kurz absprechen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -103,4 +103,13 @@ class ZweiSchwestern(Role):
             nachricht="Die Schwestern haben sich kurz abgesprochen.",
             effekte={"schwestern_absprache": True},
             log_sichtbar_fuer="erzaehler",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Zwei Schwestern."""
+        return RollenModell(
+            modell_id="zwei_schwestern",
+            anzeige_name="Zwei Schwestern",
+            beschreibung="Zwei Schwestern appearance in Village 3D",
         )

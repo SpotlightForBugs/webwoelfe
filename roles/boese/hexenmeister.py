@@ -6,7 +6,7 @@ verfluchen - werden diese angegriffen, werden sie zu Werwölfen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -144,4 +144,13 @@ class Hexenmeister(Role):
                 "verflucht": ziel.id,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+
+    def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
+        """Village 3D appearance for Hexenmeister."""
+        return RollenModell(
+            modell_id="hexenmeister",
+            anzeige_name="Hexenmeister",
+            beschreibung="Hexenmeister appearance in Village 3D",
         )

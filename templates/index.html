@@ -1106,17 +1106,18 @@
 
     try {
       const response = await fetch("/api/roles");
-      
+
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(`Server returned ${response.status}: ${text.substring(0, 100)}`);
+        throw new Error(
+          `Server returned ${response.status}: ${text.substring(0, 100)}`,
+        );
       }
 
       const data = await response.json();
 
       if (!data.success) {
-        container.innerHTML =
-          `<div class="error">Fehler beim Laden der Rollen: ${data.error || 'Unbekannter Fehler'}</div>`;
+        container.innerHTML = `<div class="error">Fehler beim Laden der Rollen: ${data.error || "Unbekannter Fehler"}</div>`;
         return;
       }
 
@@ -1136,8 +1137,7 @@
       updateRolesPreview();
     } catch (error) {
       console.error("Error loading roles:", error);
-      container.innerHTML =
-        `<div class="error">Fehler: Rollen konnten nicht geladen werden.<br><small>${error.message}</small></div>`;
+      container.innerHTML = `<div class="error">Fehler: Rollen konnten nicht geladen werden.<br><small>${error.message}</small></div>`;
     }
   }
 

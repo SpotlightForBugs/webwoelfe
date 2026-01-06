@@ -1,4 +1,3 @@
-
 import requests
 import json
 
@@ -10,14 +9,14 @@ for port in ports:
         print(f"Testing {url}...")
         response = requests.get(url, timeout=1)
         print(f"Status Code: {response.status_code}")
-        
+
         try:
             data = response.json()
             print("JSON Decode Success")
             print(f"Success: {data.get('success')}")
         except json.JSONDecodeError:
             print("JSON Decode Failed")
-            
-        break # Stop if we found a server
+
+        break  # Stop if we found a server
     except Exception as e:
         print(f"Port {port} failed: {e}")

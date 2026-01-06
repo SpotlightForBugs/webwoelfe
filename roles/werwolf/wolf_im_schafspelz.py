@@ -6,7 +6,14 @@ Seherin als Dorfbewohner, nur die Aurenseherin erkennt ihn.
 """
 
 from typing import Optional, TYPE_CHECKING
-from roles.base import Role, RollenInfo, AktionsErgebnis, SpielKontext, RollenModell, AppearanceFeature
+from roles.base import (
+    Role,
+    RollenInfo,
+    AktionsErgebnis,
+    SpielKontext,
+    RollenModell,
+    AppearanceFeature,
+)
 from roles.enums import Team, Kategorie, SichtTyp, Erweiterung
 from roles.registry import RoleRegistry
 

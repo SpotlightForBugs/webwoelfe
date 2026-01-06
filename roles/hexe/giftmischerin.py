@@ -3,7 +3,7 @@ Giftmischerin - Verzögerte Tötung.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -110,8 +110,32 @@ class Giftmischerin(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Giftmischerin."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="witch_hat",
+                geometry="cone",
+                position={"x": 0, "y": 2.4, "z": 0},
+                scale={"x": 0.3, "y": 0.5, "z": 0.3},
+                color_source="custom",
+                custom_color="#1a1a1a",
+                description="Pointed witch hat",
+            ),
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+        
         return RollenModell(
             modell_id="giftmischerin",
             anzeige_name="Giftmischerin",
-            beschreibung="Giftmischerin appearance in Village 3D",
+            beschreibung="Giftmischerin appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

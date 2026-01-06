@@ -110,9 +110,33 @@ class WolfimSchafspelz(Role):
         )
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Village 3D appearance for Wolfim Schafspelz."""
+        """Village 3D appearance for WolfimSchafspelz."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="sheep_wool",
+                geometry="sphere",
+                position={"x": 0, "y": 2.0, "z": 0},
+                scale={"x": 0.35, "y": 0.3, "z": 0.3},
+                color_source="custom",
+                custom_color="#FFFACD",
+                description="Fluffy sheep wool disguise",
+            ),
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+        
         return RollenModell(
-            modell_id="wolfim_schafspelz",
-            anzeige_name="Wolfim Schafspelz",
-            beschreibung="Wolfim Schafspelz appearance in Village 3D",
+            modell_id="wolfimschafspelz",
+            anzeige_name="WolfimSchafspelz",
+            beschreibung="WolfimSchafspelz appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

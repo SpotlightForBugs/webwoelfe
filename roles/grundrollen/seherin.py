@@ -7,6 +7,7 @@ eines Spielers erfahren.
 
 from typing import Optional, TYPE_CHECKING, List
 from ..base import (
+    AppearanceFeature,
     RollenModell,
     AppearanceFeature,
     Role,

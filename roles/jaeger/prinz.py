@@ -3,7 +3,7 @@ Prinz - Immun gegen Hinrichtung.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -100,8 +100,34 @@ class Prinz(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Prinz."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="sword",
+                geometry="box",
+                position={"x": 0.3, "y": 1.0, "z": -0.1},
+                scale={"x": 0.05, "y": 0.6, "z": 0.05},
+                rotation={"x": 45, "y": 0, "z": 0},
+                color_source="custom",
+                custom_color="#C0C0C0",
+                description="Royal sword",
+            ),
+            AppearanceFeature(
+                feature_type="crown",
+                geometry="cylinder",
+                position={"x": 0, "y": 2.3, "z": 0},
+                scale={"x": 0.25, "y": 0.15, "z": 0.25},
+                color_source="custom",
+                custom_color="#FFD700",
+                description="Royal crown or halo",
+            )
+        ]
+        
         return RollenModell(
             modell_id="prinz",
             anzeige_name="Prinz",
-            beschreibung="Prinz appearance in Village 3D",
+            beschreibung="Prinz appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

@@ -6,7 +6,7 @@ bestimmte Effekte durch seine Kälteresistenz.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -109,8 +109,41 @@ class Polarwolf(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Polarwolf."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="wolf_ear_left",
+                geometry="cone",
+                position={"x": -0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": -15},
+                color_source="role",
+                description="Left wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="wolf_ear_right",
+                geometry="cone",
+                position={"x": 0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": 15},
+                color_source="role",
+                description="Right wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="mystical_aura",
+                geometry="sphere",
+                position={"x": 0, "y": 1.5, "z": 0},
+                scale={"x": 0.6, "y": 0.8, "z": 0.5},
+                color_source="role",
+                description="Mystical aura effect",
+            )
+        ]
+        
         return RollenModell(
             modell_id="polarwolf",
             anzeige_name="Polarwolf",
-            beschreibung="Polarwolf appearance in Village 3D",
+            beschreibung="Polarwolf appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="bad",
         )

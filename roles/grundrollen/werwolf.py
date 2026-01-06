@@ -7,6 +7,7 @@ jede Nacht gemeinsam ein Opfer aus.
 
 from typing import Optional, TYPE_CHECKING, List
 from ..base import (
+    AppearanceFeature,
     RollenModell,
     AppearanceFeature,
     Role,

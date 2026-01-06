@@ -6,7 +6,7 @@ zufälligen toten Spieler tauschen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 import random
@@ -203,8 +203,23 @@ class Tonks(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Tonks."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="mystical_aura",
+                geometry="sphere",
+                position={"x": 0, "y": 1.5, "z": 0},
+                scale={"x": 0.6, "y": 0.8, "z": 0.5},
+                color_source="role",
+                description="Mystical aura effect",
+            )
+        ]
+        
         return RollenModell(
             modell_id="tonks",
             anzeige_name="Tonks",
-            beschreibung="Tonks appearance in Village 3D",
+            beschreibung="Tonks appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

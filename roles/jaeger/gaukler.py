@@ -6,7 +6,7 @@ zwei Spieler ihre Plätze tauschen lassen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -144,8 +144,23 @@ class Gaukler(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Gaukler."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="role_indicator",
+                geometry="sphere",
+                position={"x": 0, "y": 2.2, "z": 0.2},
+                scale={"x": 0.12, "y": 0.12, "z": 0.12},
+                color_source="role",
+                description="Role indicator orb",
+            )
+        ]
+        
         return RollenModell(
             modell_id="gaukler",
             anzeige_name="Gaukler",
-            beschreibung="Gaukler appearance in Village 3D",
+            beschreibung="Gaukler appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

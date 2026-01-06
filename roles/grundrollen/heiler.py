@@ -7,6 +7,8 @@ aber nicht zweimal hintereinander denselben.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -156,8 +158,23 @@ class Heiler(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Heiler."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="role_indicator",
+                geometry="sphere",
+                position={"x": 0, "y": 2.2, "z": 0.2},
+                scale={"x": 0.12, "y": 0.12, "z": 0.12},
+                color_source="role",
+                description="Role indicator orb",
+            )
+        ]
+        
         return RollenModell(
             modell_id="heiler",
             anzeige_name="Heiler",
-            beschreibung="Heiler appearance in Village 3D",
+            beschreibung="Heiler appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

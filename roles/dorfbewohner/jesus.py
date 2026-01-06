@@ -6,7 +6,7 @@ und weiterspielen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
@@ -125,8 +125,24 @@ class Jesus(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Jesus."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="crown",
+                geometry="cylinder",
+                position={"x": 0, "y": 2.3, "z": 0},
+                scale={"x": 0.25, "y": 0.15, "z": 0.25},
+                color_source="custom",
+                custom_color="#FFD700",
+                description="Royal crown or halo",
+            )
+        ]
+        
         return RollenModell(
             modell_id="jesus",
             anzeige_name="Jesus",
-            beschreibung="Jesus appearance in Village 3D",
+            beschreibung="Jesus appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

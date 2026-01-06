@@ -7,6 +7,7 @@ Stirbt das Herrchen, wird der Hund zum Werwolf!
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,

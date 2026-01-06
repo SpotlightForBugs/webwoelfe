@@ -7,6 +7,8 @@ Stirbt dieses, verwandelt er sich in einen Werwolf.
 
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -192,8 +194,41 @@ class Wolfsjunge(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Wolfsjunge."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="wolf_ear_left",
+                geometry="cone",
+                position={"x": -0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": -15},
+                color_source="role",
+                description="Left wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="wolf_ear_right",
+                geometry="cone",
+                position={"x": 0.18, "y": 2.25, "z": -0.05},
+                scale={"x": 0.12, "y": 0.2, "z": 0.1},
+                rotation={"x": 0, "y": 0, "z": 15},
+                color_source="role",
+                description="Right wolf ear",
+            ),
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+        
         return RollenModell(
             modell_id="wolfsjunge",
             anzeige_name="Wolfsjunge",
-            beschreibung="Wolfsjunge appearance in Village 3D",
+            beschreibung="Wolfsjunge appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="bad",
         )

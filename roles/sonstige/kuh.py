@@ -15,6 +15,8 @@ DIESE ROLLE DEMONSTRIERT DAS DYNAMISCHE SYSTEM:
 import random
 from typing import Optional, List, TYPE_CHECKING
 from ..base import (
+    AppearanceFeature,
+    AppearanceFeature,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -196,14 +198,38 @@ class Kuh(Role):
         return "Kuh"
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Die Kuh hat ein Kuh-Modell."""
+        """Village 3D appearance for Kuh."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="cow_ear_left",
+                geometry="box",
+                position={"x": -0.2, "y": 1.9, "z": 0},
+                scale={"x": 0.2, "y": 0.3, "z": 0.05},
+                rotation={"x": 0, "y": 0, "z": -40},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Floppy cow ear",
+            ),
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+        
         return RollenModell(
             modell_id="kuh",
             anzeige_name="Kuh",
-            beschreibung="Eine friedliche Dorfkuh",
+            beschreibung="Kuh appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )
 
-    @property
     def info(self) -> RollenInfo:
         return RollenInfo(
             id=200,  # Hohe ID für Custom-Rolle

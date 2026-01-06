@@ -6,7 +6,7 @@ verfluchen - werden diese angegriffen, werden sie zu Werwölfen.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -147,8 +147,23 @@ class Hexenmeister(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Hexenmeister."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="accessory",
+                geometry="box",
+                position={"x": 0.25, "y": 1.0, "z": 0.15},
+                scale={"x": 0.1, "y": 0.15, "z": 0.08},
+                color_source="role",
+                description="Role-specific accessory",
+            )
+        ]
+        
         return RollenModell(
             modell_id="hexenmeister",
             anzeige_name="Hexenmeister",
-            beschreibung="Hexenmeister appearance in Village 3D",
+            beschreibung="Hexenmeister appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="bad",
         )

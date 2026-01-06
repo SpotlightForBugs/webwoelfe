@@ -6,7 +6,7 @@ wählt das Dorf einen neuen König.
 """
 
 from typing import Optional, TYPE_CHECKING
-from ..base import RollenModell, Role, RollenInfo, AktionsErgebnis, SpielKontext
+from ..base import RollenModell, AppearanceFeature, Role, RollenInfo, AktionsErgebnis, SpielKontext
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
 
@@ -122,8 +122,24 @@ class Koenig(Role):
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """Village 3D appearance for Koenig."""
+        appearance_features = [
+            AppearanceFeature(
+                feature_type="crown",
+                geometry="cylinder",
+                position={"x": 0, "y": 2.3, "z": 0},
+                scale={"x": 0.25, "y": 0.15, "z": 0.25},
+                color_source="custom",
+                custom_color="#FFD700",
+                description="Royal crown or halo",
+            )
+        ]
+        
         return RollenModell(
             modell_id="koenig",
             anzeige_name="Koenig",
-            beschreibung="Koenig appearance in Village 3D",
+            beschreibung="Koenig appearance with custom features",
+            appearance_self_alive=appearance_features,
+            appearance_others_alive=appearance_features,
+            appearance_dead=[],
+            seher_sicht="good",
         )

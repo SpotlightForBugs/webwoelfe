@@ -4,6 +4,8 @@ import json
 from typing import List, Tuple, Optional
 from models import db, Raum, Spieler, SpielAktion, SpielLog, ErzaehlerEvent
 from logger import logger
+from roles.base import SpielKontext
+from roles.enums import Phase
 
 # Get PHASEN from centralized module
 from phases import get_phase_list
@@ -337,27 +339,38 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
             tote.extend(res["tote"])
             folge_aktionen.extend(res["folge_aktionen"])
 
-    # 2. Prüfe Jäger
-    if spieler.rolle == "Jäger":
-        logger.info("Hunter died - triggering shot")
-        spieler.jaeger_schuss = True  # Flag setzen
-        folge_aktionen.append("jaeger_schuss")
-        log_eintrag(
-            spieler.raum_id,
-            "Der Jäger holt zu seinem letzten Schuss aus!",
-            sichtbar_fuer="alle",
-        )
-
-    # 3. Prüfe andere "On Death" Effekte via Registry
+    # 2. Prüfe "On Death" Effekte via Registry
     from roles import RoleRegistry
 
-    # Check effects for the dying player
+    # Check effects for the dying player (e.g., Jäger)
     role_obj = RoleRegistry.get(spieler.rolle)
-    if role_obj:
-        # TODO: Implement on_death hook in Role class
-        pass
+    if role_obj and hasattr(role_obj, 'on_eigener_tod'):
+        try:
+            kontext = SpielKontext(
+                raum_id=spieler.raum_id,
+                runde=raum.runde,
+                phase=Phase.TAG if raum.phase == "tag" else Phase.NACHT,
+                aktiver_spieler_id=spieler.id,
+                lebende_spieler=[s.id for s in raum.spieler if s.ist_am_leben],
+                tote_spieler=[s.id for s in raum.spieler if not s.ist_am_leben],
+            )
+            
+            result = role_obj.on_eigener_tod(spieler, todesursache, kontext)
+            if result and result.erfolg:
+                if result.effekte.get("trigger_jaeger_phase"):
+                    spieler.jaeger_schuss = True  # Flag setzen
+                    folge_aktionen.append("jaeger_schuss")
+                
+                if result.nachricht:
+                    log_eintrag(
+                        spieler.raum_id,
+                        result.nachricht,
+                        sichtbar_fuer=result.log_sichtbar_fuer or "alle",
+                    )
+        except Exception as e:
+            logger.error(f"Error calling on_eigener_tod for {spieler.rolle}: {e}")
 
-    # Check effects for others (e.g. Wildes Kind, Hund)
+    # 3. Check effects for others (e.g. Wildes Kind, Hund)
     # This requires scanning all players or having a listener system
     # For now, we hardcode the known ones or migrate them to a listener system later
 
@@ -391,9 +404,6 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
     dorfbewohner = 0
     andere = 0
 
-    # Spezielle Rollen
-    weisser_wolf_lebt = False
-
     from roles import RoleRegistry
 
     for s in lebende:
@@ -406,8 +416,6 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
 
         if team.value == "werwolf":
             werwoelfe += 1
-            if s.rolle == "Weißer Wolf":
-                weisser_wolf_lebt = True
         elif team.value == "dorf":
             dorfbewohner += 1
         else:
@@ -415,24 +423,36 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
 
     logger.debug(f"Stats: WW={werwoelfe}, Dorf={dorfbewohner}, Andere={andere}")
 
-    # 1. Weißer Wolf gewinnt (als einziger Überlebender)
-    if weisser_wolf_lebt and len(lebende) == 1:
-        logger.info("Game over: White Wolf wins")
-        return {
-            "gewinner": "weisser_wolf",
-            "nachricht": "Der Weiße Wolf hat alle anderen vernichtet und gewinnt allein!",
-            "team": "solo"
-        }
+    # Build context for win condition checks
+    kontext = SpielKontext(
+        raum_id=raum.id,
+        runde=raum.runde,
+        phase=Phase.TAG if raum.phase == "tag" else Phase.NACHT,
+        aktiver_spieler_id=0,  # Not relevant for win checks
+        lebende_spieler=[s.id for s in lebende],
+        tote_spieler=[s.id for s in raum.spieler if not s.ist_am_leben],
+    )
+
+    # 1. Check role-specific solo win conditions (highest priority)
+    # Examples: Weißer Wolf, Flötenspieler, etc.
+    for s in lebende:
+        role = RoleRegistry.get(s.rolle)
+        if role:
+            # Check role's berechne_gewinn method
+            gewonnen_team = role.berechne_gewinn(s, kontext)
+            if gewonnen_team and gewonnen_team.value == "solo":
+                logger.info(f"Game over: {s.rolle} wins solo")
+                return {
+                    "gewinner": s.rolle.lower().replace(" ", "_"),
+                    "nachricht": f"{s.rolle} hat alle anderen vernichtet und gewinnt allein!",
+                    "team": "solo",
+                    "spieler_id": s.id,
+                }
 
     # 2. Werwölfe gewinnen
     # Wenn Werwölfe >= Dorfbewohner (und keine Solo-Rollen mehr da sind, die das verhindern)
-    # Vereinfacht: Wenn WW >= (Dorf + Andere)
+    # Note: Solo roles with special win conditions are checked first
     if werwoelfe >= (dorfbewohner + andere):
-        # Ausnahme: Wenn nur noch WW übrig sind und Weißer Wolf lebt -> Spiel geht weiter bis WW tot oder Weißer Wolf allein
-        if dorfbewohner == 0 and andere == 0 and weisser_wolf_lebt and werwoelfe > 1:
-             # Spiel geht weiter (Weißer Wolf vs andere Wölfe)
-             return None
-
         logger.info("Game over: Werewolves win")
         return {
             "gewinner": "werwolf",

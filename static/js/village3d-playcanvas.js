@@ -201,6 +201,9 @@ export default class Village3DPlayCanvas {
       }
     };
     this.app.on("update", this.updateBound);
+
+    // Initialize fullscreen UI overlay system
+    this.initFullscreenUI();
   }
 
   createScene() {
@@ -1741,2834 +1744,462 @@ export default class Village3DPlayCanvas {
     }
   }
 
-  createSimpleCampfire() {
-    // Simple center marker for lobby - just a small fire light
-    this.fireLight = new pc.Entity("FireLight");
-    this.fireLight.addComponent("light", {
-      type: "point",
-      color: new pc.Color(1, 0.6, 0.2),
-      intensity: 1.5,
-      range: 12,
-      castShadows: false,
-    });
-    this.fireLight.setPosition(0, 1, 0);
-    this.app.root.addChild(this.fireLight);
+  /**
+   * ============================================================
+   * FULLSCREEN UI OVERLAY SYSTEM
+   * Renders all game UI elements as overlays within the 3D scene
+   * ============================================================
+   */
 
-    // Small center marker sphere
-    const marker = new pc.Entity("CenterMarker");
-    marker.addComponent("model", { type: "sphere" });
-    marker.setLocalScale(0.5, 0.5, 0.5);
-    marker.setPosition(0, 0.5, 0);
+  /**
+   * Initialize fullscreen UI overlay system
+   */
+  initFullscreenUI() {
+    // Create container for UI overlays
+    this.uiOverlayContainer = document.createElement('div');
+    this.uiOverlayContainer.id = 'village3d-ui-overlay';
+    this.uiOverlayContainer.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 100;
+      font-family: inherit;
+    `;
+    this.container.appendChild(this.uiOverlayContainer);
 
-    const mat = new pc.StandardMaterial();
-    mat.emissive = new pc.Color(1, 0.6, 0.2);
-    mat.opacity = 0.8;
-    mat.blendType = pc.BLEND_ADDITIVE;
-    mat.update();
-    marker.model.material = mat;
+    // Create top bar for phase info and role
+    this.createTopBar();
 
-    this.app.root.addChild(marker);
-  }
+    // Create bottom action panel
+    this.createActionPanel();
 
-  createEnvironment() {
-    // Trees with more variety
-    const treeCount = this.isLobbyMode ? 40 : 30;
-    for (let i = 0; i < treeCount; i++) {
-      const angle = (i / treeCount) * Math.PI * 2 + (Math.random() - 0.5);
-      const radius = this.isLobbyMode
-        ? 15 + Math.random() * 5
-        : 25 + Math.random() * 10;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
+    // Create left sidebar for player info/effects
+    this.createLeftSidebar();
 
-      const treeHeight = 3 + Math.random() * 2;
-      this.createTree(x, z, treeHeight);
-    }
+    // Create right sidebar for chat/log (collapsed by default in fullscreen)
+    this.createRightSidebar();
 
-    // Bushes
-    const bushCount = this.isLobbyMode ? 20 : 15;
-    for (let i = 0; i < bushCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = this.isLobbyMode
-        ? 12 + Math.random() * 6
-        : 18 + Math.random() * 8;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
+    // Create player selection overlay
+    this.createPlayerSelectionOverlay();
 
-      this.createBush(x, z);
-    }
-
-    // Rocks/Stones scattered around
-    const rockCount = this.isLobbyMode ? 25 : 20;
-    for (let i = 0; i < rockCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = this.isLobbyMode
-        ? 8 + Math.random() * 15
-        : 10 + Math.random() * 25;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-
-      this.createRock(x, z);
-    }
-  }
-
-  createTree(x, z, height) {
-    const tree = new pc.Entity("Tree");
-
-    // Trunk
-    const trunk = new pc.Entity("Trunk");
-    trunk.addComponent("model", { type: "cylinder" });
-    trunk.setLocalScale(0.4, height, 0.4);
-    trunk.setLocalPosition(0, height / 2, 0);
-
-    const trunkMat = this.getMaterial({
-      name: "TrunkMaterial",
-      diffuse: new pc.Color(0.2, 0.15, 0.1),
-    });
-    trunk.model.material = trunkMat;
-    tree.addChild(trunk);
-
-    // Leaves (multiple layers)
-    const leavesMat = this.getMaterial({
-      name: "LeavesMaterial",
-      diffuse: new pc.Color(0.08, 0.2, 0.08),
-    });
-
-    for (let i = 0; i < 3; i++) {
-      const leaves = new pc.Entity(`Leaves-${i}`);
-      leaves.addComponent("model", { type: "cone" });
-      const scale = 3 - i * 0.5;
-      leaves.setLocalScale(scale, height * 0.8, scale);
-      leaves.setLocalPosition(0, height + i * 0.8, 0);
-      leaves.model.material = leavesMat;
-      tree.addChild(leaves);
-    }
-
-    tree.setPosition(x, 0, z);
-    tree.setEulerAngles(0, Math.random() * 360, 0);
-    this.app.root.addChild(tree);
-  }
-
-  createBush(x, z) {
-    const bush = new pc.Entity("Bush");
-    bush.addComponent("model", { type: "sphere" });
-    const scale = 0.8 + Math.random() * 0.6;
-    bush.setLocalScale(scale, scale * 0.7, scale);
-    bush.setPosition(x, scale * 0.35, z);
-
-    const bushMat = this.getMaterial({
-      name: "BushMaterial",
-      diffuse: new pc.Color(0.08, 0.2, 0.08),
-    });
-    bush.model.material = bushMat;
-
-    this.app.root.addChild(bush);
-  }
-
-  createRock(x, z) {
-    const rock = new pc.Entity("Rock");
-    rock.addComponent("model", { type: "box" });
-    const scale = 0.3 + Math.random() * 0.5;
-    rock.setLocalScale(scale, scale * 0.6, scale * 1.2);
-    rock.setPosition(x, scale * 0.3, z);
-    rock.setEulerAngles(
-      Math.random() * 20 - 10,
-      Math.random() * 360,
-      Math.random() * 20 - 10,
-    );
-
-    const rockMat = this.getMaterial({
-      name: "RockMaterial",
-      diffuse: new pc.Color(0.35, 0.35, 0.4),
-      shininess: 5,
-    });
-    rock.model.material = rockMat;
-
-    this.app.root.addChild(rock);
-  }
-
-  createAtmosphericEffects() {
-    // Fireflies for night atmosphere
-    this.fireflies = [];
-    for (let i = 0; i < 15; i++) {
-      const firefly = new pc.Entity("Firefly");
-      firefly.addComponent("light", {
-        type: "point",
-        color: new pc.Color(0.8, 1.0, 0.6),
-        intensity: 0.5,
-        range: 3,
-        castShadows: false,
-      });
-
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 10 + Math.random() * 15;
-      firefly.setPosition(
-        Math.cos(angle) * radius,
-        1 + Math.random() * 3,
-        Math.sin(angle) * radius,
-      );
-
-      this.app.root.addChild(firefly);
-      this.fireflies.push({
-        entity: firefly,
-        angle: angle,
-        radius: radius,
-        height: 1 + Math.random() * 3,
-        speed: 0.3 + Math.random() * 0.5,
-        phase: Math.random() * Math.PI * 2,
-      });
-    }
-  }
-
-  setPlayers(players) {
-    if (!players) return;
-    this.players = players;
-    console.log(
-      "[Village3D] setPlayers called with",
-      players.length,
-      "players",
-    );
-
-    const count = players.length;
-
-    // Adaptive layout based on player count
-    if (count <= 12) {
-      this.layoutMode = "circle";
-    } else if (count <= 30) {
-      this.layoutMode = "double_circle";
-    } else if (count <= 60) {
-      this.layoutMode = "clusters";
-    } else {
-      this.layoutMode = "grid";
-    }
-
-    console.log(
-      `[Village3D] Using ${this.layoutMode} layout for ${count} players`,
-    );
-
-    const currentIds = new Set(players.map((p) => p.id));
-
-    // Remove players that are no longer in the list
-    this.playerEntities.forEach((entity, id) => {
-      if (!currentIds.has(id)) {
-        entity.destroy();
-        this.playerEntities.delete(id);
-        const label = this.playerLabels.get(id);
-        if (label) {
-          label.destroy();
-          this.playerLabels.delete(id);
-        }
-      }
-    });
-
-    players.forEach((player, index) => {
-      const position = this.getPlayerPosition(index, count);
-      const x = position.x;
-      const z = position.z;
-
-      let entity = this.playerEntities.get(player.id);
-      if (entity) {
-        // Update existing entity position
-        entity.setPosition(x, 0, z);
-        entity.lookAt(0, 0, 0);
-        entity.playerData = player;
-
-        // Update status if needed
-        this.updatePlayerStatus(player.id, player.ist_am_leben);
-      } else {
-        // Create new
-        console.log(
-          `[Village3D] Creating player ${player.name} at position (${x.toFixed(2)}, 0, ${z.toFixed(2)})`,
-        );
-        const angle = Math.atan2(x, z);
-        entity = this.createDetailedPlayer(player, x, z, angle);
-        this.app.root.addChild(entity);
-        this.playerEntities.set(player.id, entity);
-      }
-    });
-
-    console.log(
-      "[Village3D] All players processed. Total:",
-      this.playerEntities.size,
-    );
+    console.log('[Village3D] Fullscreen UI overlay system initialized');
   }
 
   /**
-   * Calculate player position based on layout mode
-   * @param {number} index - Player index
-   * @param {number} total - Total number of players
-   * @returns {{x: number, z: number}} Position coordinates
+   * Create top information bar
    */
-  getPlayerPosition(index, total) {
-    switch (this.layoutMode) {
-      case "circle":
-        return this.getCirclePosition(index, total, 8);
+  createTopBar() {
+    const topBar = document.createElement('div');
+    topBar.id = 'village3d-top-bar';
+    topBar.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+      padding: 1.5rem;
+      color: white;
+      z-index: 101;
+      pointer-events: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    `;
 
-      case "double_circle":
-        // Split into two concentric circles
-        const innerCount = Math.ceil(total / 2);
-        if (index < innerCount) {
-          return this.getCirclePosition(index, innerCount, 6);
-        } else {
-          return this.getCirclePosition(
-            index - innerCount,
-            total - innerCount,
-            11,
-          );
-        }
+    topBar.innerHTML = `
+      <div style="flex: 1;">
+        <div id="village3d-phase-name" style="font-size: 1.8rem; font-weight: bold; color: #d4a574; margin-bottom: 0.25rem;">
+          Loading...
+        </div>
+        <div id="village3d-round-info" style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
+          Runde 1
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <div id="village3d-role-badge" style="display: inline-block; background: rgba(100,100,100,0.8); padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; pointer-events: auto;">
+          Loading...
+        </div>
+      </div>
+    `;
 
-      case "clusters":
-        // Arrange in clusters of ~10 players
-        const clusterSize = 10;
-        const clusterIndex = Math.floor(index / clusterSize);
-        const posInCluster = index % clusterSize;
-        const totalClusters = Math.ceil(total / clusterSize);
+    this.uiOverlayContainer.appendChild(topBar);
+    this.topBar = topBar;
+  }
 
-        // Position clusters in a circle
-        const clusterAngle = (clusterIndex / totalClusters) * Math.PI * 2;
-        const clusterRadius = 12;
-        const clusterCenterX = Math.cos(clusterAngle) * clusterRadius;
-        const clusterCenterZ = Math.sin(clusterAngle) * clusterRadius;
+  /**
+   * Create bottom action panel for role actions
+   */
+  createActionPanel() {
+    const actionPanel = document.createElement('div');
+    actionPanel.id = 'village3d-action-panel';
+    actionPanel.style.cssText = `
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+      padding: 2rem 1.5rem 1.5rem;
+      z-index: 101;
+      pointer-events: none;
+      max-height: 30vh;
+      overflow-y: auto;
+    `;
 
-        // Position within cluster (small circle)
-        const inClusterAngle = (posInCluster / clusterSize) * Math.PI * 2;
-        const inClusterRadius = 3;
+    actionPanel.innerHTML = `
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+        <div id="village3d-action-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; width: 100%; pointer-events: auto;">
+          <!-- Actions will be injected here -->
+        </div>
+      </div>
+    `;
 
-        return {
-          x: clusterCenterX + Math.cos(inClusterAngle) * inClusterRadius,
-          z: clusterCenterZ + Math.sin(inClusterAngle) * inClusterRadius,
-        };
+    this.uiOverlayContainer.appendChild(actionPanel);
+    this.actionPanel = actionPanel;
+  }
 
-      case "grid":
-        // Arrange in a grid pattern
-        const cols = Math.ceil(Math.sqrt(total * 1.5)); // Wider than tall
-        const row = Math.floor(index / cols);
-        const col = index % cols;
+  /**
+   * Create left sidebar for player status info
+   */
+  createLeftSidebar() {
+    const leftSidebar = document.createElement('div');
+    leftSidebar.id = 'village3d-left-sidebar';
+    leftSidebar.style.cssText = `
+      position: absolute;
+      top: 2rem;
+      left: 1rem;
+      width: 280px;
+      max-height: 70vh;
+      background: rgba(0, 0, 0, 0.85);
+      border: 1px solid rgba(212, 165, 116, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      color: white;
+      z-index: 102;
+      pointer-events: auto;
+      overflow-y: auto;
+      display: none;
+      font-size: 0.9rem;
+    `;
 
-        const spacing = 2.5;
-        const gridWidth = (cols - 1) * spacing;
-        const gridHeight = (Math.ceil(total / cols) - 1) * spacing;
+    leftSidebar.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h4 style="margin: 0; color: #d4a574; font-size: 1rem;">
+          <i class="fa-solid fa-user"></i> Dein Status
+        </h4>
+        <button onclick="window.toggleLeftSidebar?.()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; pointer-events: auto; padding: 0;">×</button>
+      </div>
+      <div id="village3d-player-status" style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem;">
+        <!-- Player status will be injected here -->
+      </div>
+      <div id="village3d-role-effects" style="font-size: 0.85rem;">
+        <!-- Role-specific effects will be injected here -->
+      </div>
+    `;
 
-        return {
-          x: col * spacing - gridWidth / 2,
-          z: row * spacing - gridHeight / 2,
-        };
+    this.uiOverlayContainer.appendChild(leftSidebar);
+    this.leftSidebar = leftSidebar;
+  }
 
-      default:
-        return this.getCirclePosition(index, total, 8);
+  /**
+   * Create right sidebar for chat and log
+   */
+  createRightSidebar() {
+    const rightSidebar = document.createElement('div');
+    rightSidebar.id = 'village3d-right-sidebar';
+    rightSidebar.style.cssText = `
+      position: absolute;
+      top: 2rem;
+      right: 1rem;
+      width: 300px;
+      max-height: 70vh;
+      background: rgba(0, 0, 0, 0.85);
+      border: 1px solid rgba(212, 165, 116, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      color: white;
+      z-index: 102;
+      pointer-events: auto;
+      overflow: hidden;
+      display: none;
+      font-size: 0.9rem;
+      flex-direction: column;
+    `;
+
+    rightSidebar.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h4 style="margin: 0; color: #d4a574; font-size: 1rem;">
+          <i class="fa-solid fa-comments"></i> Chat
+        </h4>
+        <button onclick="window.toggleRightSidebar?.()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; pointer-events: auto; padding: 0;">×</button>
+      </div>
+      <div id="village3d-chat-messages" style="flex: 1; overflow-y: auto; margin-bottom: 1rem; max-height: 40vh; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+        <!-- Chat messages will be injected here -->
+      </div>
+      <div style="display: flex; gap: 0.5rem; pointer-events: auto;">
+        <input type="text" id="village3d-chat-input" placeholder="Nachricht..." style="flex: 1; padding: 0.5rem; border-radius: 6px; border: none; background: rgba(255,255,255,0.1); color: white; font-size: 0.9rem;" />
+        <button onclick="window.sendChatMessage?.()" style="padding: 0.5rem 1rem; background: #d4a574; border: none; border-radius: 6px; color: #000; cursor: pointer; font-weight: 600;">Send</button>
+      </div>
+    `;
+
+    this.uiOverlayContainer.appendChild(rightSidebar);
+    this.rightSidebar = rightSidebar;
+  }
+
+  /**
+   * Create player selection overlay showing all players for selection
+   */
+  createPlayerSelectionOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'village3d-player-selection';
+    overlay.style.cssText = `
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.95);
+      border: 2px solid #d4a574;
+      border-bottom: none;
+      border-radius: 12px 12px 0 0;
+      padding: 1.5rem;
+      color: white;
+      z-index: 103;
+      pointer-events: auto;
+      max-width: 90vw;
+      max-height: 35vh;
+      display: none;
+    `;
+
+    overlay.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0; color: #d4a574;">Spieler auswählen</h3>
+        <button onclick="window.closePlayerSelection?.()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem; padding: 0;">×</button>
+      </div>
+      <div id="village3d-player-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; max-height: 25vh; overflow-y: auto;">
+        <!-- Players will be injected here -->
+      </div>
+    `;
+
+    this.uiOverlayContainer.appendChild(overlay);
+    this.playerSelectionOverlay = overlay;
+  }
+
+  /**
+   * Update top bar with phase and round information
+   */
+  updateTopBar(phase, round) {
+    const phaseEl = this.topBar?.querySelector('#village3d-phase-name');
+    const roundEl = this.topBar?.querySelector('#village3d-round-info');
+
+    if (phaseEl) {
+      phaseEl.textContent = phase.replace(/_/g, ' ').toUpperCase();
+    }
+    if (roundEl) {
+      roundEl.textContent = `Runde ${round}`;
     }
   }
 
   /**
-   * Get position on a circle
-   * @param {number} index
-   * @param {number} total
-   * @param {number} radius
-   * @returns {{x: number, z: number}}
+   * Update role badge in top bar
    */
-  getCirclePosition(index, total, radius) {
-    const angle = (index / total) * Math.PI * 2;
-    return {
-      x: Math.cos(angle) * radius,
-      z: Math.sin(angle) * radius,
+  updateRoleBadge(role, color) {
+    const badge = this.topBar?.querySelector('#village3d-role-badge');
+    if (badge) {
+      badge.textContent = role || 'Warte...';
+      if (color) {
+        badge.style.background = `linear-gradient(135deg, ${color}80 0%, ${color}40 100%)`;
+      }
+    }
+  }
+
+  /**
+   * Update action buttons in the action panel
+   */
+  updateActionButtons(buttons) {
+    const container = this.actionPanel?.querySelector('#village3d-action-buttons');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!buttons || buttons.length === 0) {
+      container.innerHTML = '<p style="color: #999; pointer-events: auto;">Warte auf deine Aktion...</p>';
+      return;
+    }
+
+    buttons.forEach((btn) => {
+      const button = document.createElement('button');
+      button.style.cssText = `
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, #d4a574 0%, #b8885a 100%);
+        border: none;
+        border-radius: 8px;
+        color: #000;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        pointer-events: auto;
+      `;
+      button.textContent = btn.label || btn.text;
+      button.onmouseover = () => {
+        button.style.transform = 'translateY(-2px)';
+        button.style.boxShadow = '0 4px 12px rgba(212,165,116,0.4)';
+      };
+      button.onmouseout = () => {
+        button.style.transform = '';
+        button.style.boxShadow = '';
+      };
+      button.onclick = () => {
+        if (btn.onclick) {
+          btn.onclick();
+        }
+      };
+      container.appendChild(button);
+    });
+  }
+
+  /**
+   * Show player selection overlay
+   */
+  showPlayerSelection(onSelect, allowMultiple = false) {
+    if (!this.playerSelectionOverlay) return;
+
+    this.playerSelectionOverlay.style.display = 'block';
+    const grid = this.playerSelectionOverlay.querySelector('#village3d-player-grid');
+    grid.innerHTML = '';
+
+    this.players.forEach((player) => {
+      if (!player.ist_am_leben && !allowMultiple) return;
+
+      const card = document.createElement('div');
+      card.style.cssText = `
+        padding: 1rem;
+        background: rgba(100, 100, 100, 0.5);
+        border: 2px solid rgba(212, 165, 116, 0.3);
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        pointer-events: auto;
+      `;
+      card.innerHTML = `
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">👤</div>
+        <div style="font-weight: 600; font-size: 0.9rem;">${player.name}</div>
+        ${!player.ist_am_leben ? '<div style="font-size: 0.75rem; color: #ff6b6b;">💀 Tot</div>' : ''}
+      `;
+
+      card.onmouseover = () => {
+        card.style.borderColor = '#d4a574';
+        card.style.background = 'rgba(212, 165, 116, 0.2)';
+      };
+      card.onmouseout = () => {
+        card.style.borderColor = 'rgba(212, 165, 116, 0.3)';
+        card.style.background = 'rgba(100, 100, 100, 0.5)';
+      };
+      card.onclick = () => {
+        onSelect(player.id);
+        this.closePlayerSelection();
+      };
+
+      grid.appendChild(card);
+    });
+
+    window.closePlayerSelection = () => {
+      this.playerSelectionOverlay.style.display = 'none';
     };
   }
 
-  createDetailedPlayer(player, x, z, angle) {
-    try {
-      const entity = new pc.Entity(`Player-${player.id}`);
-      console.log(`[Village3D] Created entity for player ${player.name}`);
+  /**
+   * Close player selection overlay
+   */
+  closePlayerSelection() {
+    if (this.playerSelectionOverlay) {
+      this.playerSelectionOverlay.style.display = 'none';
+    }
+  }
 
-      // Get role color - in lobby mode use a visible color scheme
-      let roleColor;
-      if (this.isLobbyMode || !player.rolle) {
-        // Lobby mode: use blue for all players so they're visible
-        roleColor = new pc.Color(0.3, 0.5, 0.8);
-      } else {
-        roleColor = this.roleColors[player.rolle] || this.roleColors["default"];
-      }
-      console.log(
-        `[Village3D] Role color for ${player.name} (${player.rolle}):`,
-        roleColor,
-      );
+  /**
+   * Toggle left sidebar visibility
+   */
+  toggleLeftSidebar() {
+    if (this.leftSidebar) {
+      const isVisible = this.leftSidebar.style.display !== 'none';
+      this.leftSidebar.style.display = isVisible ? 'none' : 'block';
+    }
+  }
 
-      // Create role-specific appearance
-      this.addRoleSpecificAppearance(entity, player, roleColor);
-      console.log(`[Village3D] Added appearance for ${player.name}`);
+  /**
+   * Toggle right sidebar visibility
+   */
+  toggleRightSidebar() {
+    if (this.rightSidebar) {
+      const isVisible = this.rightSidebar.style.display !== 'none';
+      this.rightSidebar.style.display = isVisible ? 'none' : 'block';
+    }
+  }
 
-      // Name Label (3D text using plane with canvas texture)
-      const nameLabel = this.createNameLabel(player.name, player.ist_am_leben);
-      nameLabel.setLocalPosition(0, 2.8, 0);
-      // Billboard orientation will be set in update() - no initial rotation needed
-      entity.addChild(nameLabel);
-      this.playerLabels.set(player.id, nameLabel);
+  /**
+   * Add message to chat overlay
+   */
+  addChatMessage(name, message, isDead = false) {
+    const container = this.rightSidebar?.querySelector('#village3d-chat-messages');
+    if (!container) return;
 
-      // Add collision for picking
-      entity.addComponent("collision", {
-        type: "box",
-        halfExtents: new pc.Vec3(0.4, 1.2, 0.3),
+    const msg = document.createElement('div');
+    msg.style.cssText = `
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      ${isDead ? 'opacity: 0.6; font-style: italic;' : ''}
+    `;
+    msg.innerHTML = `<strong style="color: #d4a574;">${name}:</strong> ${message}`;
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  /**
+   * Update player status in left sidebar
+   */
+  updatePlayerStatus(playerName, role, isAlive, effects = []) {
+    const statusDiv = this.leftSidebar?.querySelector('#village3d-player-status');
+    if (!statusDiv) return;
+
+    let html = `
+      <div style="font-weight: 600; margin-bottom: 0.5rem;">${playerName}</div>
+      <div style="color: ${isAlive ? '#2d8659' : '#ff6b6b'}; margin-bottom: 0.5rem;">
+        ${isAlive ? '✓ Lebendig' : '✗ Tot'}
+      </div>
+      <div style="color: #d4a574; font-size: 0.95rem; margin-bottom: 0.5rem;">${role}</div>
+    `;
+
+    if (effects.length > 0) {
+      html += '<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem;">';
+      effects.forEach((effect) => {
+        html += `<div style="margin-bottom: 0.25rem;">🔧 ${effect}</div>`;
       });
-
-      entity.setPosition(x, 0, z);
-      entity.lookAt(0, 0, 0);
-
-      // Store data
-      entity.playerData = player;
-
-      console.log(
-        `[Village3D] Player ${player.name} fully configured at (${x.toFixed(2)}, 0, ${z.toFixed(2)})`,
-      );
-      return entity;
-    } catch (e) {
-      console.error("[Village3D] Error creating player:", player.name, e);
-      throw e;
+      html += '</div>';
     }
+
+    statusDiv.innerHTML = html;
   }
 
-  addRoleSpecificAppearance(entity, player, roleColor) {
-    // Early exit if entity or player is missing
-    if (!entity || !player) return;
-
-    const rolle = player.rolle;
-    const isAlive = player.ist_am_leben;
-
-    // Animation state
-    entity.animState = {
-      time: Math.random() * 10,
-      idleSpeed: 0.5 + Math.random() * 0.5,
-      breathingPhase: Math.random() * Math.PI * 2,
-      headTurnPhase: Math.random() * Math.PI * 2,
-      isMoving: false,
-    };
-
-    entity.parts = {};
-
-    try {
-      console.log(
-        `[Village3D] addRoleSpecificAppearance for ${player.name}, rolle=${rolle}, alive=${isAlive}`,
-      );
-
-      // Skin tone for living players
-      const skinColor = isAlive
-        ? new pc.Color(0.87, 0.72, 0.58)
-        : new pc.Color(0.35, 0.35, 0.35);
-      const skinMat = new pc.StandardMaterial();
-      skinMat.diffuse = skinColor;
-      skinMat.specular = new pc.Color(0.15, 0.12, 0.1);
-      skinMat.shininess = 25;
-      if (!isAlive) {
-        skinMat.opacity = 0.5;
-        skinMat.blendType = pc.BLEND_NORMAL;
-      }
-      skinMat.update();
-
-      // === TORSO (main body) ===
-      const torso = new pc.Entity("Torso");
-      torso.addComponent("model", { type: "box" });
-      torso.setLocalPosition(0, 1.0, 0);
-      torso.setLocalScale(0.6, 0.8, 0.35);
-
-      const torsoMat = new pc.StandardMaterial();
-      if (isAlive) {
-        torsoMat.diffuse = roleColor;
-        torsoMat.specular = new pc.Color(0.15, 0.15, 0.15);
-        torsoMat.shininess = 15;
-      } else {
-        torsoMat.diffuse = new pc.Color(0.25, 0.25, 0.25);
-        torsoMat.opacity = 0.5;
-        torsoMat.blendType = pc.BLEND_NORMAL;
-      }
-      torsoMat.update();
-      torso.model.material = torsoMat;
-      entity.addChild(torso);
-      entity.parts.torso = torso;
-      console.log("[Village3D] Torso created");
-
-      // === LEGS ===
-      entity.parts.legs = [];
-      for (let i = 0; i < 2; i++) {
-        const leg = new pc.Entity(`Leg-${i}`);
-        leg.addComponent("model", { type: "box" });
-        leg.setLocalPosition(i === 0 ? -0.15 : 0.15, 0.3, 0);
-        leg.setLocalScale(0.2, 0.6, 0.25);
-
-        const legMat = new pc.StandardMaterial();
-        if (isAlive) {
-          legMat.diffuse = roleColor;
-          legMat.specular = new pc.Color(0.15, 0.15, 0.15);
-          legMat.shininess = 15;
-        } else {
-          legMat.diffuse = new pc.Color(0.25, 0.25, 0.25);
-          legMat.opacity = 0.5;
-          legMat.blendType = pc.BLEND_NORMAL;
-        }
-        legMat.update();
-        leg.model.material = legMat;
-        entity.addChild(leg);
-        entity.parts.legs.push(leg);
-      }
-      console.log("[Village3D] Legs created");
-
-      // === ARMS ===
-      entity.parts.arms = [];
-      for (let i = 0; i < 2; i++) {
-        const armPivot = new pc.Entity(`ArmPivot-${i}`);
-        armPivot.setLocalPosition(i === 0 ? -0.3 : 0.3, 1.3, 0);
-        entity.addChild(armPivot);
-        entity.parts.arms.push(armPivot);
-
-        const arm = new pc.Entity(`Arm-${i}`);
-        arm.addComponent("model", { type: "box" });
-        arm.setLocalPosition(i === 0 ? -0.1 : 0.1, -0.25, 0);
-        arm.setLocalScale(0.15, 0.55, 0.2);
-        arm.setLocalEulerAngles(0, 0, i === 0 ? 8 : -8);
-
-        const armMat = new pc.StandardMaterial();
-        armMat.diffuse = skinColor;
-        armMat.specular = new pc.Color(0.15, 0.12, 0.1);
-        armMat.shininess = 25;
-        if (!isAlive) {
-          armMat.opacity = 0.5;
-          armMat.blendType = pc.BLEND_NORMAL;
-        }
-        armMat.update();
-        arm.model.material = armMat;
-        armPivot.addChild(arm);
-
-        // Hands
-        const hand = new pc.Entity(`Hand-${i}`);
-        hand.addComponent("model", { type: "sphere" });
-        hand.setLocalPosition(0, -0.3, 0);
-        hand.setLocalScale(0.12, 0.12, 0.1);
-
-        const handMat = new pc.StandardMaterial();
-        handMat.diffuse = skinColor;
-        handMat.specular = new pc.Color(0.15, 0.12, 0.1);
-        handMat.shininess = 25;
-        if (!isAlive) {
-          handMat.opacity = 0.5;
-          handMat.blendType = pc.BLEND_NORMAL;
-        }
-        handMat.update();
-        hand.model.material = handMat;
-        arm.addChild(hand);
-      }
-      console.log("[Village3D] Arms created");
-
-      // === NECK ===
-      const neck = new pc.Entity("Neck");
-      neck.addComponent("model", { type: "cylinder" });
-      neck.setLocalPosition(0, 1.5, 0);
-      neck.setLocalScale(0.15, 0.12, 0.15);
-
-      const neckMat = new pc.StandardMaterial();
-      neckMat.diffuse = skinColor;
-      neckMat.specular = new pc.Color(0.15, 0.12, 0.1);
-      neckMat.shininess = 25;
-      if (!isAlive) {
-        neckMat.opacity = 0.5;
-        neckMat.blendType = pc.BLEND_NORMAL;
-      }
-      neckMat.update();
-      neck.model.material = neckMat;
-      entity.addChild(neck);
-      entity.parts.neck = neck;
-
-      // === HEAD PIVOT (for animation) ===
-      const headPivot = new pc.Entity("HeadPivot");
-      headPivot.setLocalPosition(0, 1.85, 0);
-      entity.addChild(headPivot);
-      entity.parts.head = headPivot; // Store pivot for animation
-
-      // === HEAD (slightly oval) ===
-      const head = new pc.Entity("Head");
-      head.addComponent("model", { type: "sphere" });
-      head.setLocalPosition(0, 0, 0); // Position relative to pivot
-      head.setLocalScale(0.5, 0.55, 0.45);
-
-      const headMat = new pc.StandardMaterial();
-      headMat.diffuse = skinColor;
-      headMat.specular = new pc.Color(0.15, 0.12, 0.1);
-      headMat.shininess = 25;
-      if (!isAlive) {
-        headMat.opacity = 0.5;
-        headMat.blendType = pc.BLEND_NORMAL;
-      }
-      headMat.update();
-      head.model.material = headMat;
-      headPivot.addChild(head);
-
-      // === HAIR ===
-      const hair = new pc.Entity("Hair");
-      hair.addComponent("model", { type: "sphere" });
-      hair.setLocalPosition(0, 0.15, -0.05); // Position relative to head pivot
-      hair.setLocalScale(0.52, 0.35, 0.48);
-
-      const hairMat = new pc.StandardMaterial();
-      // Random hair color based on player id hash
-      const hairColors = [
-        new pc.Color(0.15, 0.1, 0.05), // Dark brown
-        new pc.Color(0.35, 0.2, 0.1), // Brown
-        new pc.Color(0.8, 0.6, 0.3), // Blonde
-        new pc.Color(0.1, 0.08, 0.05), // Black
-        new pc.Color(0.5, 0.25, 0.15), // Auburn
-      ];
-      const playerIdStr = String(player.id);
-      const hairIndex =
-        Math.abs(
-          playerIdStr.split("").reduce((a, c) => a + c.charCodeAt(0), 0),
-        ) % hairColors.length;
-      hairMat.diffuse = isAlive
-        ? hairColors[hairIndex]
-        : new pc.Color(0.3, 0.3, 0.3);
-      hairMat.shininess = 40;
-      if (!isAlive) {
-        hairMat.opacity = 0.5;
-        hairMat.blendType = pc.BLEND_NORMAL;
-      }
-      hairMat.update();
-      hair.model.material = hairMat;
-      headPivot.addChild(hair);
-
-      // === FACIAL FEATURES (only for living players) ===
-      if (isAlive) {
-        // --- EYES with white, iris, and pupil ---
-        for (let i = 0; i < 2; i++) {
-          const eyeX = i === 0 ? -0.12 : 0.12;
-
-          // Eye white (sclera)
-          const eyeWhite = new pc.Entity(`EyeWhite-${i}`);
-          eyeWhite.addComponent("model", { type: "sphere" });
-          eyeWhite.setLocalPosition(eyeX, 0.05, 0.2);
-          eyeWhite.setLocalScale(0.1, 0.08, 0.06);
-
-          const eyeWhiteMat = new pc.StandardMaterial();
-          eyeWhiteMat.diffuse = new pc.Color(0.95, 0.95, 0.95);
-          eyeWhiteMat.shininess = 60;
-          eyeWhiteMat.update();
-          eyeWhite.model.material = eyeWhiteMat;
-          head.addChild(eyeWhite);
-
-          // Iris (colored part)
-          const iris = new pc.Entity(`Iris-${i}`);
-          iris.addComponent("model", { type: "sphere" });
-          iris.setLocalPosition(eyeX, 0.05, 0.24);
-          iris.setLocalScale(0.055, 0.055, 0.03);
-
-          const irisMat = new pc.StandardMaterial();
-          // Random eye color
-          const eyeColors = [
-            new pc.Color(0.25, 0.45, 0.7), // Blue
-            new pc.Color(0.35, 0.55, 0.3), // Green
-            new pc.Color(0.45, 0.3, 0.2), // Brown
-            new pc.Color(0.3, 0.35, 0.35), // Gray
-          ];
-          const eyeIdStr = String(player.id);
-          const eyeIndex =
-            Math.abs(
-              eyeIdStr.split("").reduce((a, c) => a + c.charCodeAt(0) * 2, 0),
-            ) % eyeColors.length;
-          irisMat.diffuse = eyeColors[eyeIndex];
-          irisMat.shininess = 80;
-          irisMat.update();
-          iris.model.material = irisMat;
-          head.addChild(iris);
-
-          // Pupil (black center)
-          const pupil = new pc.Entity(`Pupil-${i}`);
-          pupil.addComponent("model", { type: "sphere" });
-          pupil.setLocalPosition(eyeX, 0.05, 0.26);
-          pupil.setLocalScale(0.03, 0.03, 0.02);
-
-          const pupilMat = new pc.StandardMaterial();
-          pupilMat.diffuse = new pc.Color(0.05, 0.05, 0.05);
-          pupilMat.update();
-          pupil.model.material = pupilMat;
-          head.addChild(pupil);
-
-          // Eye highlight/reflection
-          const eyeHighlight = new pc.Entity(`EyeHighlight-${i}`);
-          eyeHighlight.addComponent("model", { type: "sphere" });
-          eyeHighlight.setLocalPosition(eyeX + 0.015, 0.06, 0.265);
-          eyeHighlight.setLocalScale(0.012, 0.012, 0.008);
-
-          const highlightMat = new pc.StandardMaterial();
-          highlightMat.diffuse = new pc.Color(1, 1, 1);
-          highlightMat.emissive = new pc.Color(0.5, 0.5, 0.5);
-          highlightMat.update();
-          eyeHighlight.model.material = highlightMat;
-          head.addChild(eyeHighlight);
-        }
-
-        // --- EYEBROWS ---
-        for (let i = 0; i < 2; i++) {
-          const eyebrow = new pc.Entity(`Eyebrow-${i}`);
-          eyebrow.addComponent("model", { type: "box" });
-          eyebrow.setLocalPosition(i === 0 ? -0.12 : 0.12, 0.13, 0.2);
-          eyebrow.setLocalScale(0.1, 0.02, 0.04);
-          eyebrow.setLocalEulerAngles(0, 0, i === 0 ? 5 : -5);
-
-          const eyebrowMat = new pc.StandardMaterial();
-          eyebrowMat.diffuse = hairMat.diffuse;
-          eyebrowMat.shininess = 40;
-          eyebrowMat.update();
-          eyebrow.model.material = eyebrowMat;
-          head.addChild(eyebrow);
-        }
-
-        // --- NOSE ---
-        const nose = new pc.Entity("Nose");
-        nose.addComponent("model", { type: "box" });
-        nose.setLocalPosition(0, -0.03, 0.23);
-        nose.setLocalScale(0.05, 0.08, 0.06);
-        nose.setLocalEulerAngles(15, 0, 0);
-
-        const noseMat = new pc.StandardMaterial();
-        noseMat.diffuse = skinColor;
-        noseMat.specular = new pc.Color(0.15, 0.12, 0.1);
-        noseMat.shininess = 25;
-        noseMat.update();
-        nose.model.material = noseMat;
-        head.addChild(nose);
-
-        // --- MOUTH ---
-        const mouth = new pc.Entity("Mouth");
-        mouth.addComponent("model", { type: "box" });
-        mouth.setLocalPosition(0, -0.13, 0.2);
-        mouth.setLocalScale(0.12, 0.025, 0.03);
-
-        const mouthMat = new pc.StandardMaterial();
-        mouthMat.diffuse = new pc.Color(0.65, 0.35, 0.35);
-        mouthMat.shininess = 50;
-        mouthMat.update();
-        mouth.model.material = mouthMat;
-        head.addChild(mouth);
-
-        // --- EARS ---
-        for (let i = 0; i < 2; i++) {
-          const ear = new pc.Entity(`Ear-Human-${i}`);
-          ear.addComponent("model", { type: "sphere" });
-          ear.setLocalPosition(i === 0 ? -0.26 : 0.26, 0, 0);
-          ear.setLocalScale(0.06, 0.1, 0.04);
-
-          const earMat = new pc.StandardMaterial();
-          earMat.diffuse = skinColor;
-          earMat.specular = new pc.Color(0.15, 0.12, 0.1);
-          earMat.shininess = 25;
-          earMat.update();
-          ear.model.material = earMat;
-          head.addChild(ear);
-        }
-      } else {
-        // Dead players get X eyes
-        for (let i = 0; i < 2; i++) {
-          const eyeX = i === 0 ? -0.12 : 0.12;
-
-          // X mark for dead eyes
-          const xLine1 = new pc.Entity(`DeadEyeX1-${i}`);
-          xLine1.addComponent("model", { type: "box" });
-          xLine1.setLocalPosition(eyeX, 0.05, 0.23);
-          xLine1.setLocalScale(0.08, 0.015, 0.015);
-          xLine1.setLocalEulerAngles(0, 0, 45);
-
-          const deadEyeMat = new pc.StandardMaterial();
-          deadEyeMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
-          deadEyeMat.opacity = 0.6;
-          deadEyeMat.blendType = pc.BLEND_NORMAL;
-          deadEyeMat.update();
-          xLine1.model.material = deadEyeMat;
-          head.addChild(xLine1);
-
-          const xLine2 = new pc.Entity(`DeadEyeX2-${i}`);
-          xLine2.addComponent("model", { type: "box" });
-          xLine2.setLocalPosition(eyeX, 0.05, 0.23);
-          xLine2.setLocalScale(0.08, 0.015, 0.015);
-          xLine2.setLocalEulerAngles(0, 0, -45);
-          xLine2.model.material = deadEyeMat;
-          head.addChild(xLine2);
-        }
-      }
-    } catch (e) {
-      console.error("[Village3D] Error in addRoleSpecificAppearance:", e);
-      throw e;
-    }
-
-    // Add role-specific accessories and features
-    if (isAlive && rolle) {
-      // Get model definition from API data
-      const modelDef = this.roleModels[rolle];
-
-      if (modelDef) {
-        // Use the appearance features defined in the role's Python file
-        const appearanceFeatures = modelDef.appearance_others_alive || [];
-
-        if (appearanceFeatures.length > 0) {
-          console.log(
-            `[Village3D] Rendering ${appearanceFeatures.length} features for ${rolle} from role definition`,
-          );
-          this.renderAppearanceFeatures(entity, appearanceFeatures, roleColor);
-        } else {
-          // No features defined, try legacy method or use default
-          const modelId = modelDef.modell_id;
-          const featureMethodName = `add${modelId
-            .split("_")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join("")}Features`;
-
-          if (typeof this[featureMethodName] === "function") {
-            // Call the legacy feature method
-            this[featureMethodName](entity, roleColor);
-          } else {
-            // Fallback to default role indicator
-            console.log(
-              `[Village3D] No features defined for ${rolle}, using default`,
-            );
-            this.addDefaultRoleIndicator(entity, roleColor);
-          }
-        }
-      } else {
-        // No model definition at all - use default
-        console.warn(
-          `[Village3D] No model definition found for ${rolle}, using default`,
-        );
-        this.addDefaultRoleIndicator(entity, roleColor);
-      }
+  /**
+   * Show/hide fullscreen UI overlays
+   */
+  showFullscreenUI(show = true) {
+    if (this.uiOverlayContainer) {
+      this.uiOverlayContainer.style.display = show ? 'block' : 'none';
     }
   }
 
   /**
-   * Renders appearance features from role definition data.
-   * This replaces the hardcoded feature methods with dynamic rendering.
-   *
-   * Supports all properties from the enhanced AppearanceFeature dataclass:
-   * - position, scale, rotation
-   * - color_source, custom_color, secondary_color, opacity
-   * - emissive, emissive_intensity, metallic, roughness
-   * - animation, animation_speed, animation_amplitude
-   * - particle_effect, particle_color, particle_rate
-   * - light_source, light_color, light_intensity, light_range
-   * - mirror_x, count, count_arrangement, count_spacing
+   * Reset the camera to default values
    */
-  renderAppearanceFeatures(entity, features, roleColor) {
-    features.forEach((feature, idx) => {
-      try {
-        const {
-          feature_type,
-          geometry,
-          position = {},
-          scale = {},
-          rotation = {},
-          mirror_x = false,
-          mirror_offset = 0,
-          color_source = "role",
-          custom_color,
-          secondary_color,
-          opacity = 1.0,
-          emissive = false,
-          emissive_intensity = 0.5,
-          metallic = false,
-          roughness = 0.5,
-          animation,
-          animation_speed = 1.0,
-          animation_amplitude = 1.0,
-          particle_effect,
-          particle_color,
-          particle_rate = 10.0,
-          light_source = false,
-          light_color,
-          light_intensity = 0.5,
-          light_range = 2.0,
-          count = 1,
-          count_arrangement = "linear",
-          count_spacing = 0.1,
-          visible_to_self = true,
-          visible_to_others = true,
-          visible_when_dead = false,
-        } = feature;
-
-        // Determine the color to use
-        let featureColor = roleColor.clone ? roleColor.clone() : new pc.Color(roleColor.r, roleColor.g, roleColor.b);
-        if (color_source === "custom" && custom_color) {
-          featureColor = this.hexToColor(custom_color);
-        } else if (color_source === "skin") {
-          featureColor = new pc.Color(0.87, 0.72, 0.58);
-        } else if (color_source === "emissive" && custom_color) {
-          featureColor = this.hexToColor(custom_color);
-        }
-
-        // Map geometry types (handle new types)
-        const geometryMap = {
-          'cone': 'cone',
-          'box': 'box',
-          'sphere': 'sphere',
-          'cylinder': 'cylinder',
-          'torus': 'torus',
-          'capsule': 'capsule',
-          'plane': 'plane',
-        };
-        const pcGeometry = geometryMap[geometry] || 'sphere';
-
-        // Create instances
-        const instances = this.calculateInstances(count, count_arrangement, count_spacing, position);
-
-        instances.forEach((instancePos, i) => {
-          // Create main feature
-          this.createFeatureInstance(
-            entity, feature_type, idx, i, pcGeometry,
-            instancePos, scale, rotation,
-            featureColor, opacity, emissive, emissive_intensity,
-            metallic, roughness, animation, animation_speed, animation_amplitude,
-            light_source, light_color, light_intensity, light_range,
-            particle_effect, particle_color, particle_rate
-          );
-
-          // Create mirrored version if needed
-          if (mirror_x) {
-            const mirroredPos = {
-              x: -(instancePos.x || 0) + mirror_offset,
-              y: instancePos.y || 0,
-              z: instancePos.z || 0
-            };
-            const mirroredRotation = {
-              x: rotation.x || 0,
-              y: rotation.y || 0,
-              z: -(rotation.z || 0)  // Mirror Z rotation
-            };
-            this.createFeatureInstance(
-              entity, `${feature_type}_mirror`, idx, i, pcGeometry,
-              mirroredPos, scale, mirroredRotation,
-              featureColor, opacity, emissive, emissive_intensity,
-              metallic, roughness, animation, animation_speed, animation_amplitude,
-              light_source, light_color, light_intensity, light_range,
-              particle_effect, particle_color, particle_rate
-            );
-          }
-        });
-      } catch (e) {
-        console.error(
-          `[Village3D] Error rendering feature ${feature.feature_type}:`,
-          e,
-        );
-      }
-    });
-  }
-
-  /**
-   * Create a single feature instance with all material and effect properties.
-   */
-  createFeatureInstance(
-    parent, featureType, featureIdx, instanceIdx, geometry,
-    position, scale, rotation,
-    color, opacity, emissive, emissiveIntensity,
-    metallic, roughness, animation, animSpeed, animAmplitude,
-    lightSource, lightColor, lightIntensity, lightRange,
-    particleEffect, particleColor, particleRate
-  ) {
-    const featureEntity = new pc.Entity(`${featureType}-${featureIdx}-${instanceIdx}`);
-
-    // Add model component (handle special geometry types)
-    if (geometry === 'torus' || geometry === 'capsule' || geometry === 'plane') {
-      // Approximate with available primitives
-      if (geometry === 'torus') {
-        // Approximate torus with a thin cylinder ring
-        featureEntity.addComponent("model", { type: "cylinder" });
-      } else if (geometry === 'capsule') {
-        featureEntity.addComponent("model", { type: "cylinder" });
-      } else if (geometry === 'plane') {
-        featureEntity.addComponent("model", { type: "box" });
-      }
-    } else {
-      featureEntity.addComponent("model", { type: geometry });
-    }
-
-    // Apply position
-    featureEntity.setLocalPosition(
-      position.x || 0,
-      position.y || 0,
-      position.z || 0
-    );
-
-    // Apply scale
-    featureEntity.setLocalScale(
-      scale.x || 1,
-      scale.y || 1,
-      scale.z || 1
-    );
-
-    // Apply rotation
-    featureEntity.setLocalEulerAngles(
-      rotation.x || 0,
-      rotation.y || 0,
-      rotation.z || 0
-    );
-
-    // Create and apply material
-    const material = new pc.StandardMaterial();
-    material.diffuse = color;
-
-    // Handle opacity
-    if (opacity < 1.0) {
-      material.opacity = opacity;
-      material.blendType = pc.BLEND_NORMAL;
-    }
-
-    // Handle emissive
-    if (emissive) {
-      material.emissive = color;
-      material.emissiveIntensity = emissiveIntensity;
-    }
-
-    // Handle metallic/roughness
-    if (metallic) {
-      material.metalness = 0.8;
-      material.shininess = 80;
-    }
-    material.shininess = (1 - roughness) * 100;
-
-    material.update();
-
-    if (featureEntity.model) {
-      featureEntity.model.material = material;
-    }
-
-    // Add to parent
-    parent.addChild(featureEntity);
-
-    // Add light source if specified
-    if (lightSource) {
-      const light = new pc.Entity(`${featureType}-light-${instanceIdx}`);
-      const lColor = lightColor ? this.hexToColor(lightColor) : color;
-      light.addComponent("light", {
-        type: "point",
-        color: lColor,
-        intensity: lightIntensity,
-        range: lightRange,
-        castShadows: false,
-      });
-      light.setLocalPosition(0, 0, 0);
-      featureEntity.addChild(light);
-    }
-
-    // Add animation if specified
-    if (animation) {
-      this.addFeatureAnimation(featureEntity, animation, animSpeed, animAmplitude);
-    }
-
-    // Add particle effect if specified
-    if (particleEffect) {
-      this.addParticleEffect(featureEntity, particleEffect, particleColor, particleRate);
-    }
-
-    return featureEntity;
-  }
-
-  /**
-   * Calculate instance positions based on arrangement type.
-   */
-  calculateInstances(count, arrangement, spacing, basePosition) {
-    const instances = [];
-    const baseX = basePosition.x || 0;
-    const baseY = basePosition.y || 0;
-    const baseZ = basePosition.z || 0;
-
-    for (let i = 0; i < count; i++) {
-      let pos = { x: baseX, y: baseY, z: baseZ };
-
-      if (count > 1) {
-        switch (arrangement) {
-          case "linear":
-            pos.x = baseX + (i - (count - 1) / 2) * spacing;
-            break;
-          case "radial":
-            const angle = (i / count) * Math.PI * 2;
-            pos.x = baseX + Math.cos(angle) * spacing;
-            pos.z = baseZ + Math.sin(angle) * spacing;
-            break;
-          case "random":
-            pos.x = baseX + (Math.random() - 0.5) * spacing * 2;
-            pos.y = baseY + (Math.random() - 0.5) * spacing;
-            pos.z = baseZ + (Math.random() - 0.5) * spacing * 2;
-            break;
-        }
-      }
-      instances.push(pos);
-    }
-    return instances;
-  }
-
-  /**
-   * Add animation to a feature entity.
-   */
-  addFeatureAnimation(entity, animationType, speed, amplitude) {
-    // Store animation data for update loop
-    if (!this.animatedFeatures) {
-      this.animatedFeatures = [];
-    }
-
-    this.animatedFeatures.push({
-      entity: entity,
-      type: animationType,
-      speed: speed,
-      amplitude: amplitude,
-      phase: Math.random() * Math.PI * 2,
-      originalPos: entity.getLocalPosition().clone(),
-      originalRot: entity.getLocalEulerAngles().clone(),
-      originalScale: entity.getLocalScale().clone(),
-    });
-  }
-
-  /**
-   * Add particle effect to a feature entity.
-   */
-  addParticleEffect(entity, effectType, color, rate) {
-    // Create particle system entity
-    const particles = new pc.Entity(`particles-${effectType}`);
-
-    const particleColor = color ? this.hexToColor(color) : new pc.Color(1, 1, 1);
-
-    // Configure based on effect type
-    const configs = {
-      "sparks": {
-        numParticles: 20,
-        lifetime: 0.5,
-        rate: rate,
-        emitterShape: pc.EMITTERSHAPE_SPHERE,
-        emitterRadius: 0.1,
-        startAngle: 0,
-        endAngle: 360,
-        velocityX: [-0.5, 0.5],
-        velocityY: [0.5, 1.5],
-        velocityZ: [-0.5, 0.5],
-        scaleGraph: new pc.Curve([0, 0.02, 1, 0]),
-        colorGraph: new pc.CurveSet([[0, particleColor.r], [1, particleColor.r]], [[0, particleColor.g], [1, particleColor.g]], [[0, particleColor.b], [1, particleColor.b]]),
-      },
-      "magic": {
-        numParticles: 15,
-        lifetime: 1.0,
-        rate: rate * 0.5,
-        emitterShape: pc.EMITTERSHAPE_SPHERE,
-        emitterRadius: 0.2,
-        velocityY: [0.1, 0.3],
-        scaleGraph: new pc.Curve([0, 0.03, 0.5, 0.05, 1, 0]),
-      },
-      "fire": {
-        numParticles: 30,
-        lifetime: 0.4,
-        rate: rate * 2,
-        emitterShape: pc.EMITTERSHAPE_SPHERE,
-        emitterRadius: 0.05,
-        velocityY: [0.5, 1.0],
-        scaleGraph: new pc.Curve([0, 0.04, 0.5, 0.06, 1, 0]),
-      },
-      "hearts": {
-        numParticles: 5,
-        lifetime: 2.0,
-        rate: rate * 0.3,
-        velocityY: [0.1, 0.3],
-        scaleGraph: new pc.Curve([0, 0.05, 0.5, 0.08, 1, 0.05]),
-      },
-      "smoke": {
-        numParticles: 10,
-        lifetime: 1.5,
-        rate: rate * 0.5,
-        velocityY: [0.1, 0.2],
-        scaleGraph: new pc.Curve([0, 0.05, 1, 0.15]),
-      },
-      "shadow": {
-        numParticles: 10,
-        lifetime: 0.5,
-        rate: rate,
-        velocityY: [-0.1, 0.1],
-        scaleGraph: new pc.Curve([0, 0.1, 1, 0]),
-      },
-    };
-
-    // Note: Full particle system requires texture asset
-    // For now, add a simple visual indicator
-    const indicator = new pc.Entity("particle-indicator");
-    indicator.addComponent("model", { type: "sphere" });
-    indicator.setLocalScale(0.05, 0.05, 0.05);
-    const mat = new pc.StandardMaterial();
-    mat.diffuse = particleColor;
-    mat.emissive = particleColor;
-    mat.emissiveIntensity = 0.5;
-    mat.opacity = 0.5;
-    mat.blendType = pc.BLEND_ADDITIVE;
-    mat.update();
-    indicator.model.material = mat;
-
-    entity.addChild(indicator);
-  }
-
-  /**
-   * Convert hex color string to PlayCanvas Color.
-   */
-  hexToColor(hex) {
-    if (!hex) return new pc.Color(1, 1, 1);
-    const cleanHex = hex.replace("#", "");
-    const r = parseInt(cleanHex.slice(0, 2), 16) / 255;
-    const g = parseInt(cleanHex.slice(2, 4), 16) / 255;
-    const b = parseInt(cleanHex.slice(4, 6), 16) / 255;
-    return new pc.Color(r, g, b);
-  }
-
-  /**
-   * Update animated features (call from main update loop).
-   */
-  updateAnimatedFeatures(dt) {
-    if (!this.animatedFeatures) return;
-
-    const time = Date.now() / 1000;
-
-    this.animatedFeatures.forEach((anim) => {
-      if (!anim.entity || !anim.entity.parent) return;
-
-      const t = time * anim.speed + anim.phase;
-      const amp = anim.amplitude;
-
-      switch (anim.type) {
-        case "rotate":
-          anim.entity.setLocalEulerAngles(
-            anim.originalRot.x,
-            anim.originalRot.y + t * 60,
-            anim.originalRot.z
-          );
-          break;
-        case "pulse":
-          const pulseScale = 1 + Math.sin(t * 2) * 0.1 * amp;
-          anim.entity.setLocalScale(
-            anim.originalScale.x * pulseScale,
-            anim.originalScale.y * pulseScale,
-            anim.originalScale.z * pulseScale
-          );
-          break;
-        case "float":
-          anim.entity.setLocalPosition(
-            anim.originalPos.x,
-            anim.originalPos.y + Math.sin(t) * 0.1 * amp,
-            anim.originalPos.z
-          );
-          break;
-        case "sway":
-          anim.entity.setLocalEulerAngles(
-            anim.originalRot.x,
-            anim.originalRot.y,
-            anim.originalRot.z + Math.sin(t) * 10 * amp
-          );
-          break;
-        case "flutter":
-          const flutterAngle = Math.sin(t * 4) * 15 * amp;
-          anim.entity.setLocalEulerAngles(
-            anim.originalRot.x,
-            anim.originalRot.y + flutterAngle,
-            anim.originalRot.z
-          );
-          break;
-        case "flicker":
-          // Random intensity flicker for fire/lights
-          if (anim.entity.light) {
-            anim.entity.light.intensity = 0.8 + Math.random() * 0.4;
-          }
-          break;
-      }
-    });
-  }
-
-  addWerwolfFeatures(entity, roleColor) {
-    // Wolf ears (pointy, on top of head)
-    for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`WolfEar-${i}`);
-      ear.addComponent("model", { type: "cone" });
-      ear.setLocalPosition(i === 0 ? -0.18 : 0.18, 2.25, -0.05);
-      ear.setLocalScale(0.12, 0.2, 0.1);
-      ear.setLocalEulerAngles(0, 0, i === 0 ? -15 : 15);
-
-      const earMat = new pc.StandardMaterial();
-      earMat.diffuse = roleColor;
-      earMat.update();
-      ear.model.material = earMat;
-      entity.addChild(ear);
-    }
-
-    // Claws on hands
-    for (let i = 0; i < 2; i++) {
-      for (let c = 0; c < 3; c++) {
-        const claw = new pc.Entity(`Claw-${i}-${c}`);
-        claw.addComponent("model", { type: "cone" });
-        const baseX = i === 0 ? -0.4 : 0.4;
-        const offsetX = (c - 1) * 0.03;
-        claw.setLocalPosition(baseX + offsetX, 0.52, 0.08);
-        claw.setLocalScale(0.025, 0.08, 0.025);
-        claw.setLocalEulerAngles(60, 0, 0);
-
-        const clawMat = new pc.StandardMaterial();
-        clawMat.diffuse = new pc.Color(0.2, 0.2, 0.2);
-        clawMat.shininess = 70;
-        clawMat.update();
-        claw.model.material = clawMat;
-        entity.addChild(claw);
-      }
-    }
-
-    // Fangs
-    for (let i = 0; i < 2; i++) {
-      const fang = new pc.Entity(`Fang-${i}`);
-      fang.addComponent("model", { type: "cone" });
-      fang.setLocalPosition(i === 0 ? -0.04 : 0.04, 1.68, 0.2);
-      fang.setLocalScale(0.02, 0.06, 0.02);
-      fang.setLocalEulerAngles(180, 0, 0);
-
-      const fangMat = new pc.StandardMaterial();
-      fangMat.diffuse = new pc.Color(0.95, 0.95, 0.9);
-      fangMat.shininess = 80;
-      fangMat.update();
-      fang.model.material = fangMat;
-      entity.addChild(fang);
-    }
-
-    // Glowing red eyes effect
-    const eyeGlow = new pc.Entity("EyeGlow");
-    eyeGlow.addComponent("light", {
-      type: "point",
-      color: new pc.Color(1, 0.2, 0.1),
-      intensity: 0.6,
-      range: 1.5,
-    });
-    eyeGlow.setLocalPosition(0, 1.9, 0.35);
-    entity.addChild(eyeGlow);
-  }
-
-  addSeherinFeatures(entity, roleColor) {
-    // Crystal ball (held in hand)
-    const crystal = new pc.Entity("CrystalBall");
-    crystal.addComponent("model", { type: "sphere" });
-    crystal.setLocalPosition(0.42, 0.7, 0.15);
-    crystal.setLocalScale(0.18, 0.18, 0.18);
-
-    const crystalMat = new pc.StandardMaterial();
-    crystalMat.diffuse = new pc.Color(0.5, 0.3, 0.9);
-    crystalMat.emissive = new pc.Color(0.6, 0.4, 1.0);
-    crystalMat.opacity = 0.7;
-    crystalMat.blendType = pc.BLEND_ADDITIVE;
-    crystalMat.shininess = 100;
-    crystalMat.update();
-    crystal.model.material = crystalMat;
-    entity.addChild(crystal);
-
-    // Mystical aura
-    const aura = new pc.Entity("Aura");
-    aura.addComponent("light", {
-      type: "point",
-      color: new pc.Color(0.6, 0.4, 1.0),
-      intensity: 0.8,
-      range: 2.5,
-    });
-    aura.setLocalPosition(0, 1.5, 0);
-    entity.addChild(aura);
-
-    // Pointed hat (on head)
-    const hat = new pc.Entity("Hat");
-    hat.addComponent("model", { type: "cone" });
-    hat.setLocalPosition(0, 2.35, -0.02);
-    hat.setLocalScale(0.35, 0.55, 0.35);
-
-    const hatMat = new pc.StandardMaterial();
-    hatMat.diffuse = roleColor;
-    hatMat.update();
-    hat.model.material = hatMat;
-    entity.addChild(hat);
-  }
-
-  addHexeFeatures(entity, roleColor) {
-    // Witch hat (wider brim)
-    const hat = new pc.Entity("WitchHat");
-    hat.addComponent("model", { type: "cone" });
-    hat.setLocalPosition(0, 2.5, -0.02);
-    hat.setLocalScale(0.3, 0.7, 0.3);
-
-    const hatMat = new pc.StandardMaterial();
-    hatMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
-    hatMat.update();
-    hat.model.material = hatMat;
-    entity.addChild(hat);
-
-    // Hat brim
-    const brim = new pc.Entity("HatBrim");
-    brim.addComponent("model", { type: "cylinder" });
-    brim.setLocalPosition(0, 2.15, 0);
-    brim.setLocalScale(0.55, 0.04, 0.55);
-    brim.model.material = hatMat;
-    entity.addChild(brim);
-
-    // Potion bottles (on belt)
-    for (let i = 0; i < 2; i++) {
-      const potion = new pc.Entity(`Potion-${i}`);
-      potion.addComponent("model", { type: "cylinder" });
-      potion.setLocalPosition(i === 0 ? -0.35 : 0.35, 0.7, 0.2);
-      potion.setLocalScale(0.06, 0.15, 0.06);
-
-      const potionMat = new pc.StandardMaterial();
-      potionMat.diffuse =
-        i === 0 ? new pc.Color(0, 1, 0) : new pc.Color(0.8, 0, 0.8);
-      potionMat.emissive =
-        i === 0 ? new pc.Color(0, 0.5, 0) : new pc.Color(0.4, 0, 0.4);
-      potionMat.opacity = 0.8;
-      potionMat.blendType = pc.BLEND_ADDITIVE;
-      potionMat.update();
-      potion.model.material = potionMat;
-      entity.addChild(potion);
-    }
-  }
-
-  addJaegerFeatures(entity, roleColor) {
-    // Crossbow (carried in hand)
-    const crossbow = new pc.Entity("Crossbow");
-    crossbow.addComponent("model", { type: "box" });
-    crossbow.setLocalPosition(0.5, 0.8, 0.2);
-    crossbow.setLocalScale(0.5, 0.1, 0.1);
-    crossbow.setLocalEulerAngles(0, 0, -30);
-
-    const crossbowMat = new pc.StandardMaterial();
-    crossbowMat.diffuse = new pc.Color(0.3, 0.2, 0.1);
-    crossbowMat.update();
-    crossbow.model.material = crossbowMat;
-    entity.addChild(crossbow);
-
-    // Quiver (on back)
-    const quiver = new pc.Entity("Quiver");
-    quiver.addComponent("model", { type: "cylinder" });
-    quiver.setLocalPosition(0.2, 1.2, -0.25);
-    quiver.setLocalScale(0.12, 0.35, 0.12);
-    quiver.setLocalEulerAngles(15, 0, 0);
-
-    const quiverMat = new pc.StandardMaterial();
-    quiverMat.diffuse = new pc.Color(0.4, 0.3, 0.2);
-    quiverMat.update();
-    quiver.model.material = quiverMat;
-    entity.addChild(quiver);
-
-    // Arrows in quiver
-    for (let i = 0; i < 3; i++) {
-      const arrow = new pc.Entity(`Arrow-${i}`);
-      arrow.addComponent("model", { type: "cylinder" });
-      arrow.setLocalPosition(0.15 + i * 0.05, 1.55, -0.25);
-      arrow.setLocalScale(0.025, 0.25, 0.025);
-
-      const arrowMat = new pc.StandardMaterial();
-      arrowMat.diffuse = new pc.Color(0.6, 0.5, 0.3);
-      arrowMat.update();
-      arrow.model.material = arrowMat;
-      entity.addChild(arrow);
-    }
-  }
-
-  addAmorFeatures(entity, roleColor) {
-    // Cupid wings (on back)
-    entity.parts.wings = [];
-    for (let i = 0; i < 2; i++) {
-      const wing = new pc.Entity(`Wing-${i}`);
-      wing.addComponent("model", { type: "box" });
-      wing.setLocalPosition(i === 0 ? -0.35 : 0.35, 1.15, -0.25);
-      wing.setLocalScale(0.5, 0.35, 0.06);
-      wing.setLocalEulerAngles(0, i === 0 ? 35 : -35, i === 0 ? -25 : 25);
-
-      const wingMat = new pc.StandardMaterial();
-      wingMat.diffuse = new pc.Color(1, 0.8, 0.9);
-      wingMat.opacity = 0.7;
-      wingMat.blendType = pc.BLEND_NORMAL;
-      wingMat.update();
-      wing.model.material = wingMat;
-      entity.addChild(wing);
-      entity.parts.wings.push(wing);
-    }
-
-    // Bow (weapon held in hand)
-    const bow = new pc.Entity("Bow");
-    bow.addComponent("model", { type: "torus" });
-    bow.setLocalPosition(-0.45, 0.75, 0.1);
-    bow.setLocalScale(0.3, 0.3, 0.08);
-    bow.setLocalEulerAngles(0, 90, 0);
-
-    const bowMat = new pc.StandardMaterial();
-    bowMat.diffuse = roleColor;
-    bowMat.update();
-    bow.model.material = bowMat;
-    entity.addChild(bow);
-
-    // Hearts floating around
-    const heart = new pc.Entity("HeartGlow");
-    heart.addComponent("light", {
-      type: "point",
-      color: new pc.Color(1, 0.4, 0.7),
-      intensity: 0.7,
-      range: 2.5,
-    });
-    heart.setLocalPosition(0, 2.2, 0);
-    entity.addChild(heart);
-  }
-
-  addHeilerFeatures(entity, roleColor) {
-    // Medical cross (on chest)
-    const cross1 = new pc.Entity("Cross1");
-    cross1.addComponent("model", { type: "box" });
-    cross1.setLocalPosition(0, 1.05, 0.19);
-    cross1.setLocalScale(0.06, 0.22, 0.03);
-
-    const crossMat = new pc.StandardMaterial();
-    crossMat.diffuse = new pc.Color(1, 1, 1);
-    crossMat.emissive = new pc.Color(0.8, 0.2, 0.2);
-    crossMat.update();
-    cross1.model.material = crossMat;
-    entity.addChild(cross1);
-
-    const cross2 = new pc.Entity("Cross2");
-    cross2.addComponent("model", { type: "box" });
-    cross2.setLocalPosition(0, 1.05, 0.19);
-    cross2.setLocalScale(0.18, 0.06, 0.03);
-    cross2.model.material = crossMat;
-    entity.addChild(cross2);
-
-    // Healing aura
-    const healingAura = new pc.Entity("HealingAura");
-    healingAura.addComponent("light", {
-      type: "point",
-      color: new pc.Color(0.9, 0.9, 0.2),
-      intensity: 0.8,
-      range: 2.5,
-    });
-    healingAura.setLocalPosition(0, 1.2, 0);
-    entity.addChild(healingAura);
-
-    // Staff (held in hand)
-    const staff = new pc.Entity("Staff");
-    staff.addComponent("model", { type: "cylinder" });
-    staff.setLocalPosition(-0.5, 1.0, 0.1);
-    staff.setLocalScale(0.05, 1.2, 0.05);
-    staff.setLocalEulerAngles(0, 0, -10);
-
-    const staffMat = new pc.StandardMaterial();
-    staffMat.diffuse = new pc.Color(0.5, 0.4, 0.2);
-    staffMat.update();
-    staff.model.material = staffMat;
-    entity.addChild(staff);
-  }
-
-  addDefaultRoleIndicator(entity, roleColor) {
-    // Default glowing sphere above head
-    const indicator = new pc.Entity("RoleIndicator");
-    indicator.addComponent("model", { type: "sphere" });
-    indicator.setLocalPosition(0, 2.4, 0);
-    indicator.setLocalScale(0.15, 0.15, 0.15);
-
-    const indicatorMat = new pc.StandardMaterial();
-    indicatorMat.emissive = roleColor;
-    indicatorMat.opacity = 0.8;
-    indicatorMat.blendType = pc.BLEND_ADDITIVE;
-    indicatorMat.update();
-    indicator.model.material = indicatorMat;
-    entity.addChild(indicator);
-  }
-
-  // === DORFBEWOHNER ===
-  addDorfbewohnerFeatures(entity, roleColor) {
-    // Simple hat
-    const hat = new pc.Entity("Hat");
-    hat.addComponent("model", { type: "cone" });
-    hat.setLocalPosition(0, 2.35, 0);
-    hat.setLocalScale(0.3, 0.25, 0.3);
-    const hatMat = new pc.StandardMaterial();
-    hatMat.diffuse = roleColor;
-    hatMat.update();
-    hat.model.material = hatMat;
-    entity.addChild(hat);
-  }
-
-  // === WERWOLF VARIANTEN ===
-  addEinsamerWolfFeatures(entity, roleColor) {
-    // Lone wolf ears + scars
-    for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`LoneWolfEar-${i}`);
-      ear.addComponent("model", { type: "cone" });
-      ear.setLocalPosition(i === 0 ? -0.18 : 0.18, 2.25, -0.05);
-      ear.setLocalScale(0.14, 0.22, 0.11);
-      ear.model.material = new pc.StandardMaterial();
-      ear.model.material.diffuse = roleColor;
-      ear.model.material.update();
-      entity.addChild(ear);
-    }
-    // Scars on face
-    const scar = new pc.Entity("Scar");
-    scar.addComponent("model", { type: "box" });
-    scar.setLocalPosition(0.15, 1.85, 0.2);
-    scar.setLocalScale(0.08, 0.15, 0.02);
-    const scarMat = new pc.StandardMaterial();
-    scarMat.diffuse = new pc.Color(0.3, 0.1, 0.1);
-    scarMat.update();
-    scar.model.material = scarMat;
-    entity.addChild(scar);
-  }
-
-  addLupinFeatures(entity, roleColor) {
-    // Distinguished wolf ears + monocle glow
-    for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`LupinEar-${i}`);
-      ear.addComponent("model", { type: "cone" });
-      ear.setLocalPosition(i === 0 ? -0.16 : 0.16, 2.27, -0.03);
-      ear.setLocalScale(0.12, 0.21, 0.1);
-      ear.model.material = new pc.StandardMaterial();
-      ear.model.material.diffuse = roleColor;
-      ear.model.material.update();
-      entity.addChild(ear);
-    }
-    // Monocle
-    const monocle = new pc.Entity("Monocle");
-    monocle.addComponent("model", { type: "torus" });
-    monocle.setLocalPosition(0.12, 1.9, 0.22);
-    monocle.setLocalScale(0.08, 0.08, 0.02);
-    const monocMat = new pc.StandardMaterial();
-    monocMat.diffuse = new pc.Color(0.8, 0.7, 0.3);
-    monocMat.shininess = 80;
-    monocMat.update();
-    monocle.model.material = monocMat;
-    entity.addChild(monocle);
-  }
-
-  addPolarwolfFeatures(entity, roleColor) {
-    // Ice crystal ears + frosted aura
-    for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`PolarEar-${i}`);
-      ear.addComponent("model", { type: "cone" });
-      ear.setLocalPosition(i === 0 ? -0.18 : 0.18, 2.25, -0.05);
-      ear.setLocalScale(0.13, 0.21, 0.1);
-      ear.model.material = new pc.StandardMaterial();
-      ear.model.material.diffuse = new pc.Color(0.95, 0.98, 1.0);
-      ear.model.material.shininess = 90;
-      ear.model.material.update();
-      entity.addChild(ear);
-    }
-    // Ice aura
-    const iceAura = new pc.Entity("IceAura");
-    iceAura.addComponent("light", {
-      type: "point",
-      color: new pc.Color(0.7, 0.9, 1.0),
-      intensity: 0.5,
-      range: 2.0,
-    });
-    iceAura.setLocalPosition(0, 1.5, 0);
-    entity.addChild(iceAura);
-  }
-
-  addTeenagerWerwolfFeatures(entity, roleColor) {
-    // Smaller ears + hoodie
-    for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`TeenEar-${i}`);
-      ear.addComponent("model", { type: "cone" });
-      ear.setLocalPosition(i === 0 ? -0.15 : 0.15, 2.22, 0);
-      ear.setLocalScale(0.1, 0.18, 0.08);
-      ear.model.material = new pc.StandardMaterial();
-      ear.model.material.diffuse = roleColor;
-      ear.model.material.update();
-      entity.addChild(ear);
-    }
-  }
-
-  addUrwolfFeatures(entity, roleColor) {
-    // Large ancient ears + scars
-    for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`AncientEar-${i}`);
-      ear.addComponent("model", { type: "cone" });
-      ear.setLocalPosition(i === 0 ? -0.2 : 0.2, 2.28, -0.06);
-      ear.setLocalScale(0.15, 0.24, 0.12);
-      ear.model.material = new pc.StandardMaterial();
-      ear.model.material.diffuse = roleColor;
-      ear.model.material.update();
-      entity.addChild(ear);
-    }
-  }
-
-  addWeisserWolfFeatures(entity, roleColor) {
-    // Pure white ears + ethereal glow
-    for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`WhiteEar-${i}`);
-      ear.addComponent("model", { type: "cone" });
-      ear.setLocalPosition(i === 0 ? -0.18 : 0.18, 2.25, -0.05);
-      ear.setLocalScale(0.12, 0.21, 0.1);
-      ear.model.material = new pc.StandardMaterial();
-      ear.model.material.diffuse = new pc.Color(1.0, 1.0, 0.98);
-      ear.model.material.emissive = new pc.Color(0.3, 0.3, 0.2);
-      ear.model.material.update();
-      entity.addChild(ear);
-    }
-  }
-
-  addWerwolfseherinFeatures(entity, roleColor) {
-    // Wolf ears + crystal ball
-    for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`SeherWolfEar-${i}`);
-      ear.addComponent("model", { type: "cone" });
-      ear.setLocalPosition(i === 0 ? -0.18 : 0.18, 2.25, -0.05);
-      ear.setLocalScale(0.12, 0.21, 0.1);
-      ear.model.material = new pc.StandardMaterial();
-      ear.model.material.diffuse = roleColor;
-      ear.model.material.update();
-      entity.addChild(ear);
-    }
-    // Crystal ball
-    const crystal = new pc.Entity("WolfCrystal");
-    crystal.addComponent("model", { type: "sphere" });
-    crystal.setLocalPosition(0.4, 0.7, 0.1);
-    crystal.setLocalScale(0.15, 0.15, 0.15);
-    const crystalMat = new pc.StandardMaterial();
-    crystalMat.diffuse = new pc.Color(0.5, 0.3, 0.9);
-    crystalMat.emissive = new pc.Color(0.6, 0.4, 1.0);
-    crystalMat.opacity = 0.7;
-    crystalMat.blendType = pc.BLEND_ADDITIVE;
-    crystalMat.update();
-    crystal.model.material = crystalMat;
-    entity.addChild(crystal);
-  }
-
-  addWildesKindFeatures(entity, roleColor) {
-    // Wild ragged appearance - torn clothes effect
-    const tear = new pc.Entity("Tear");
-    tear.addComponent("model", { type: "box" });
-    tear.setLocalPosition(0.25, 1.0, 0.18);
-    tear.setLocalScale(0.15, 0.25, 0.02);
-    const tearMat = new pc.StandardMaterial();
-    tearMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
-    tearMat.update();
-    tear.model.material = tearMat;
-    entity.addChild(tear);
-  }
-
-  addWolfImSchafspelzFeatures(entity, roleColor) {
-    // Sheep wool appearance on shoulders
-    for (let i = 0; i < 2; i++) {
-      const wool = new pc.Entity(`Wool-${i}`);
-      wool.addComponent("model", { type: "sphere" });
-      wool.setLocalPosition(i === 0 ? -0.4 : 0.4, 1.35, -0.1);
-      wool.setLocalScale(0.25, 0.2, 0.15);
-      const woolMat = new pc.StandardMaterial();
-      woolMat.diffuse = new pc.Color(0.95, 0.93, 0.9);
-      woolMat.shininess = 20;
-      woolMat.update();
-      wool.model.material = woolMat;
-      entity.addChild(wool);
-    }
-  }
-
-  addWolfsjungeFeatures(entity, roleColor) {
-    // Young small ears
-    for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`YoungEar-${i}`);
-      ear.addComponent("model", { type: "cone" });
-      ear.setLocalPosition(i === 0 ? -0.15 : 0.15, 2.2, 0);
-      ear.setLocalScale(0.08, 0.15, 0.07);
-      ear.model.material = new pc.StandardMaterial();
-      ear.model.material.diffuse = roleColor;
-      ear.model.material.update();
-      entity.addChild(ear);
-    }
-  }
-
-  // === BÖSE ROLLEN ===
-  addFlötenspielerFeatures(entity, roleColor) {
-    // Flute in hand
-    const flute = new pc.Entity("Flute");
-    flute.addComponent("model", { type: "cylinder" });
-    flute.setLocalPosition(0.35, 1.0, 0.1);
-    flute.setLocalScale(0.08, 0.35, 0.08);
-    flute.setLocalEulerAngles(0, 0, 45);
-    const fluteMat = new pc.StandardMaterial();
-    fluteMat.diffuse = new pc.Color(0.7, 0.6, 0.3);
-    fluteMat.shininess = 60;
-    fluteMat.update();
-    flute.model.material = fluteMat;
-    entity.addChild(flute);
-  }
-
-  addHexenmeisterFeatures(entity, roleColor) {
-    // Dark staff + pointed hat
-    const hat = new pc.Entity("HexenmeisterHat");
-    hat.addComponent("model", { type: "cone" });
-    hat.setLocalPosition(0, 2.35, -0.02);
-    hat.setLocalScale(0.32, 0.5, 0.32);
-    const hatMat = new pc.StandardMaterial();
-    hatMat.diffuse = new pc.Color(0.05, 0.02, 0.08);
-    hatMat.update();
-    hat.model.material = hatMat;
-    entity.addChild(hat);
-
-    const staff = new pc.Entity("MasterStaff");
-    staff.addComponent("model", { type: "cylinder" });
-    staff.setLocalPosition(-0.45, 1.0, 0.1);
-    staff.setLocalScale(0.06, 1.3, 0.06);
-    const staffMat = new pc.StandardMaterial();
-    staffMat.diffuse = new pc.Color(0.1, 0.05, 0.02);
-    staffMat.update();
-    staff.model.material = staffMat;
-    entity.addChild(staff);
-  }
-
-  addVampirFeatures(entity, roleColor) {
-    // Fangs + cape suggestion
-    for (let i = 0; i < 2; i++) {
-      const fang = new pc.Entity(`VampireFang-${i}`);
-      fang.addComponent("model", { type: "cone" });
-      fang.setLocalPosition(i === 0 ? -0.04 : 0.04, 1.68, 0.2);
-      fang.setLocalScale(0.025, 0.08, 0.025);
-      fang.setLocalEulerAngles(180, 0, 0);
-      const fangMat = new pc.StandardMaterial();
-      fangMat.diffuse = new pc.Color(0.95, 0.95, 0.9);
-      fangMat.update();
-      fang.model.material = fangMat;
-      entity.addChild(fang);
-    }
-    // Glowing red eyes
-    const eyeGlow = new pc.Entity("VampireGlow");
-    eyeGlow.addComponent("light", {
-      type: "point",
-      color: new pc.Color(0.8, 0.1, 0.1),
-      intensity: 0.5,
-      range: 1.5,
-    });
-    eyeGlow.setLocalPosition(0, 1.9, 0.35);
-    entity.addChild(eyeGlow);
-  }
-
-  addZombieFeatures(entity, roleColor) {
-    // Rotting flesh effects + missing parts
-    const rotMark = new pc.Entity("RotMark");
-    rotMark.addComponent("model", { type: "sphere" });
-    rotMark.setLocalPosition(-0.15, 1.15, 0.18);
-    rotMark.setLocalScale(0.12, 0.12, 0.05);
-    const rotMat = new pc.StandardMaterial();
-    rotMat.diffuse = new pc.Color(0.2, 0.25, 0.15);
-    rotMat.update();
-    rotMark.model.material = rotMat;
-    entity.addChild(rotMark);
-  }
-
-  // === DORFBEWOHNER VARIANTEN ===
-  addAlterMannFeatures(entity, roleColor) {
-    // Cane + old man hair
-    const cane = new pc.Entity("Cane");
-    cane.addComponent("model", { type: "cylinder" });
-    cane.setLocalPosition(-0.4, 0.7, 0.1);
-    cane.setLocalScale(0.04, 0.9, 0.04);
-    const caneMat = new pc.StandardMaterial();
-    caneMat.diffuse = new pc.Color(0.3, 0.2, 0.1);
-    caneMat.update();
-    cane.model.material = caneMat;
-    entity.addChild(cane);
-  }
-
-  addDorfdeppFeatures(entity, roleColor) {
-    // Silly expression marker
-    const jesterHat = new pc.Entity("JesterHat");
-    jesterHat.addComponent("model", { type: "cone" });
-    jesterHat.setLocalPosition(0, 2.35, 0);
-    jesterHat.setLocalScale(0.28, 0.3, 0.28);
-    const hatMat = new pc.StandardMaterial();
-    hatMat.diffuse = new pc.Color(0.7, 0.3, 0.3);
-    hatMat.update();
-    jesterHat.model.material = hatMat;
-    entity.addChild(jesterHat);
-  }
-
-  addDreiBruederFeatures(entity, roleColor) {
-    // Band of three - unity mark
-    const band = new pc.Entity("UnityBand");
-    band.addComponent("model", { type: "torus" });
-    band.setLocalPosition(0, 0.5, 0);
-    band.setLocalScale(0.4, 0.08, 0.4);
-    const bandMat = new pc.StandardMaterial();
-    bandMat.diffuse = roleColor;
-    bandMat.update();
-    band.model.material = bandMat;
-    entity.addChild(band);
-  }
-
-  addFreimaurerFeatures(entity, roleColor) {
-    // Square and compass symbol on chest
-    const symbol = new pc.Entity("MasonSymbol");
-    symbol.addComponent("model", { type: "box" });
-    symbol.setLocalPosition(0, 1.05, 0.19);
-    symbol.setLocalScale(0.12, 0.12, 0.02);
-    const symMat = new pc.StandardMaterial();
-    symMat.diffuse = new pc.Color(0.6, 0.55, 0.3);
-    symMat.emissive = new pc.Color(0.3, 0.25, 0.1);
-    symMat.update();
-    symbol.model.material = symMat;
-    entity.addChild(symbol);
-  }
-
-  addGriesgramFeatures(entity, roleColor) {
-    // Grumpy frown mark
-    const grumpMarker = new pc.Entity("GrumpMark");
-    grumpMarker.addComponent("model", { type: "box" });
-    grumpMarker.setLocalPosition(0, 1.75, 0.22);
-    grumpMarker.setLocalScale(0.16, 0.03, 0.02);
-    const grumpMat = new pc.StandardMaterial();
-    grumpMat.diffuse = new pc.Color(0.2, 0.2, 0.2);
-    grumpMat.update();
-    grumpMarker.model.material = grumpMat;
-    entity.addChild(grumpMarker);
-  }
-
-  addHundFeatures(entity, roleColor) {
-    // Dog ears + snout
-    for (let i = 0; i < 2; i++) {
-      const ear = new pc.Entity(`DogEar-${i}`);
-      ear.addComponent("model", { type: "sphere" });
-      ear.setLocalPosition(i === 0 ? -0.2 : 0.2, 2.15, 0.05);
-      ear.setLocalScale(0.12, 0.18, 0.1);
-      ear.model.material = new pc.StandardMaterial();
-      ear.model.material.diffuse = roleColor;
-      ear.model.material.update();
-      entity.addChild(ear);
-    }
-  }
-
-  addJesusFeatures(entity, roleColor) {
-    // Holy halo + cross
-    const halo = new pc.Entity("Halo");
-    halo.addComponent("model", { type: "torus" });
-    halo.setLocalPosition(0, 2.4, 0);
-    halo.setLocalScale(0.4, 0.35, 0.4);
-    halo.setLocalEulerAngles(90, 0, 0);
-    const haloMat = new pc.StandardMaterial();
-    haloMat.emissive = new pc.Color(1, 1, 0.7);
-    haloMat.opacity = 0.7;
-    haloMat.blendType = pc.BLEND_ADDITIVE;
-    haloMat.update();
-    halo.model.material = haloMat;
-    entity.addChild(halo);
-  }
-
-  addTonksFeatures(entity, roleColor) {
-    // Color-shifting appearance indicator
-    const colorShift = new pc.Entity("ColorShift");
-    colorShift.addComponent("model", { type: "sphere" });
-    colorShift.setLocalPosition(0.3, 1.5, 0);
-    colorShift.setLocalScale(0.2, 0.2, 0.2);
-    const shiftMat = new pc.StandardMaterial();
-    shiftMat.diffuse = new pc.Color(0.9, 0.4, 0.9);
-    shiftMat.emissive = new pc.Color(0.5, 0.2, 0.5);
-    shiftMat.opacity = 0.6;
-    shiftMat.blendType = pc.BLEND_ADDITIVE;
-    shiftMat.update();
-    colorShift.model.material = shiftMat;
-    entity.addChild(colorShift);
-  }
-
-  addZweiSchwesternFeatures(entity, roleColor) {
-    // Sister bond mark
-    const sisterhood = new pc.Entity("SisterhoodMark");
-    sisterhood.addComponent("model", { type: "box" });
-    sisterhood.setLocalPosition(0, 0.8, 0.18);
-    sisterhood.setLocalScale(0.18, 0.08, 0.03);
-    const sMat = new pc.StandardMaterial();
-    sMat.diffuse = new pc.Color(0.8, 0.6, 0.8);
-    sMat.update();
-    sisterhood.model.material = sMat;
-    entity.addChild(sisterhood);
-  }
-
-  // === HEILER VARIANTEN ===
-  addErgebeneMagdFeatures(entity, roleColor) {
-    // Servant outfit indicator
-    const ribbon = new pc.Entity("Ribbon");
-    ribbon.addComponent("model", { type: "box" });
-    ribbon.setLocalPosition(0.3, 1.2, -0.18);
-    ribbon.setLocalScale(0.08, 0.3, 0.03);
-    const ribbonMat = new pc.StandardMaterial();
-    ribbonMat.diffuse = new pc.Color(1, 0.8, 0.9);
-    ribbonMat.update();
-    ribbon.model.material = ribbonMat;
-    entity.addChild(ribbon);
-  }
-
-  addLeibwaechterFeatures(entity, roleColor) {
-    // Armor plating on shoulders
-    for (let i = 0; i < 2; i++) {
-      const armor = new pc.Entity(`Armor-${i}`);
-      armor.addComponent("model", { type: "box" });
-      armor.setLocalPosition(i === 0 ? -0.38 : 0.38, 1.3, -0.05);
-      armor.setLocalScale(0.15, 0.18, 0.08);
-      const armorMat = new pc.StandardMaterial();
-      armorMat.diffuse = new pc.Color(0.5, 0.55, 0.6);
-      armorMat.shininess = 70;
-      armorMat.update();
-      armor.model.material = armorMat;
-      entity.addChild(armor);
-    }
-  }
-
-  addOmaFeatures(entity, roleColor) {
-    // Grandma shawl
-    const shawl = new pc.Entity("Shawl");
-    shawl.addComponent("model", { type: "box" });
-    shawl.setLocalPosition(0, 1.15, -0.15);
-    shawl.setLocalScale(0.65, 0.4, 0.08);
-    const shawlMat = new pc.StandardMaterial();
-    shawlMat.diffuse = new pc.Color(0.6, 0.4, 0.5);
-    shawlMat.update();
-    shawl.model.material = shawlMat;
-    entity.addChild(shawl);
-  }
-
-  addProstituierteFeatures(entity, roleColor) {
-    // Red dress accent
-    const dress = new pc.Entity("DressAccent");
-    dress.addComponent("model", { type: "box" });
-    dress.setLocalPosition(0, 0.95, 0.18);
-    dress.setLocalScale(0.5, 0.35, 0.05);
-    const dressMat = new pc.StandardMaterial();
-    dressMat.diffuse = new pc.Color(0.9, 0.3, 0.4);
-    dressMat.shininess = 40;
-    dressMat.update();
-    dress.model.material = dressMat;
-    entity.addChild(dress);
-  }
-
-  // === HEXE VARIANTEN ===
-  addGiftmischerinFeatures(entity, roleColor) {
-    // Poison bottles
-    for (let i = 0; i < 2; i++) {
-      const poison = new pc.Entity(`PoisonBottle-${i}`);
-      poison.addComponent("model", { type: "cylinder" });
-      poison.setLocalPosition(i === 0 ? -0.3 : 0.3, 0.75, 0.2);
-      poison.setLocalScale(0.05, 0.12, 0.05);
-      const poisonMat = new pc.StandardMaterial();
-      poisonMat.diffuse = new pc.Color(0.4, 0.8, 0.2);
-      poisonMat.emissive = new pc.Color(0.2, 0.4, 0.1);
-      poisonMat.opacity = 0.8;
-      poisonMat.blendType = pc.BLEND_ADDITIVE;
-      poisonMat.update();
-      poison.model.material = poisonMat;
-      entity.addChild(poison);
-    }
-  }
-
-  addHahnFeatures(entity, roleColor) {
-    // Rooster comb
-    const comb = new pc.Entity("RoosterComb");
-    comb.addComponent("model", { type: "sphere" });
-    comb.setLocalPosition(0, 2.35, 0.1);
-    comb.setLocalScale(0.15, 0.2, 0.12);
-    const combMat = new pc.StandardMaterial();
-    combMat.diffuse = new pc.Color(1.0, 0.3, 0.2);
-    combMat.shininess = 30;
-    combMat.update();
-    comb.model.material = combMat;
-    entity.addChild(comb);
-  }
-
-  addKraeuterweibFeatures(entity, roleColor) {
-    // Herb pouch
-    const pouch = new pc.Entity("HerbPouch");
-    pouch.addComponent("model", { type: "sphere" });
-    pouch.setLocalPosition(-0.3, 0.8, 0.15);
-    pouch.setLocalScale(0.15, 0.15, 0.1);
-    const pouchMat = new pc.StandardMaterial();
-    pouchMat.diffuse = new pc.Color(0.4, 0.5, 0.3);
-    pouchMat.update();
-    pouch.model.material = pouchMat;
-    entity.addChild(pouch);
-  }
-
-  addSandmannFeatures(entity, roleColor) {
-    // Sleepy aura
-    const sleepAura = new pc.Entity("SleepAura");
-    sleepAura.addComponent("light", {
-      type: "point",
-      color: new pc.Color(0.8, 0.8, 0.9),
-      intensity: 0.4,
-      range: 2.0,
-    });
-    sleepAura.setLocalPosition(0, 1.5, 0);
-    entity.addChild(sleepAura);
-  }
-
-  addZaubererFeatures(entity, roleColor) {
-    // Wizard hat + staff
-    const hat = new pc.Entity("WizardHat");
-    hat.addComponent("model", { type: "cone" });
-    hat.setLocalPosition(0, 2.35, -0.02);
-    hat.setLocalScale(0.32, 0.55, 0.32);
-    const hatMat = new pc.StandardMaterial();
-    hatMat.diffuse = new pc.Color(0.15, 0.15, 0.4);
-    hatMat.emissive = new pc.Color(0.08, 0.08, 0.2);
-    hatMat.update();
-    hat.model.material = hatMat;
-    entity.addChild(hat);
-  }
-
-  // === JÄGER VARIANTEN ===
-  addBuddlerFeatures(entity, roleColor) {
-    // Pickaxe
-    const pick = new pc.Entity("Pickaxe");
-    pick.addComponent("model", { type: "box" });
-    pick.setLocalPosition(0.48, 0.9, 0.15);
-    pick.setLocalScale(0.2, 0.08, 0.08);
-    pick.setLocalEulerAngles(0, 0, 30);
-    const pickMat = new pc.StandardMaterial();
-    pickMat.diffuse = new pc.Color(0.4, 0.3, 0.2);
-    pickMat.update();
-    pick.model.material = pickMat;
-    entity.addChild(pick);
-  }
-
-  addDrachenbaendigerFeatures(entity, roleColor) {
-    // Dragon scale decoration
-    const scale = new pc.Entity("DragonScale");
-    scale.addComponent("model", { type: "sphere" });
-    scale.setLocalPosition(0.35, 1.2, 0.15);
-    scale.setLocalScale(0.12, 0.12, 0.08);
-    const scaleMat = new pc.StandardMaterial();
-    scaleMat.diffuse = new pc.Color(0.8, 0.4, 0.1);
-    scaleMat.emissive = new pc.Color(0.4, 0.2, 0.05);
-    scaleMat.shininess = 85;
-    scaleMat.update();
-    scale.model.material = scaleMat;
-    entity.addChild(scale);
-  }
-
-  addFlammenmannFeatures(entity, roleColor) {
-    // Fire aura
-    const fireAura = new pc.Entity("PersonalFireAura");
-    fireAura.addComponent("light", {
-      type: "point",
-      color: new pc.Color(1, 0.6, 0.2),
-      intensity: 0.7,
-      range: 2.5,
-    });
-    fireAura.setLocalPosition(0, 1.5, 0);
-    entity.addChild(fireAura);
-  }
-
-  addGauklerFeatures(entity, roleColor) {
-    // Juggling balls
-    for (let i = 0; i < 2; i++) {
-      const ball = new pc.Entity(`JugglingBall-${i}`);
-      ball.addComponent("model", { type: "sphere" });
-      ball.setLocalPosition(i === 0 ? -0.25 : 0.25, 1.35, 0.1);
-      ball.setLocalScale(0.08, 0.08, 0.08);
-      const ballMat = new pc.StandardMaterial();
-      ballMat.diffuse = new pc.Color(0.9, 0.7, 0.2);
-      ballMat.emissive = new pc.Color(0.45, 0.35, 0.1);
-      ballMat.shininess = 60;
-      ballMat.update();
-      ball.model.material = ballMat;
-      entity.addChild(ball);
-    }
-  }
-
-  addInquisitorFeatures(entity, roleColor) {
-    // Burning symbol
-    const symbol = new pc.Entity("InquisitorSymbol");
-    symbol.addComponent("model", { type: "box" });
-    symbol.setLocalPosition(0, 1.05, 0.19);
-    symbol.setLocalScale(0.1, 0.1, 0.02);
-    const symMat = new pc.StandardMaterial();
-    symMat.diffuse = new pc.Color(0.9, 0.4, 0.1);
-    symMat.emissive = new pc.Color(0.5, 0.2, 0.05);
-    symMat.update();
-    symbol.model.material = symMat;
-    entity.addChild(symbol);
-  }
-
-  addKamikazeFeatures(entity, roleColor) {
-    // Explosive aura - red glow
-    const boom = new pc.Entity("BoomAura");
-    boom.addComponent("light", {
-      type: "point",
-      color: new pc.Color(1, 0.1, 0.1),
-      intensity: 0.6,
-      range: 2.0,
-    });
-    boom.setLocalPosition(0, 1.5, 0);
-    entity.addChild(boom);
-  }
-
-  addKoenigFeatures(entity, roleColor) {
-    // Crown
-    const crown = new pc.Entity("Crown");
-    crown.addComponent("model", { type: "torus" });
-    crown.setLocalPosition(0, 2.35, 0);
-    crown.setLocalScale(0.32, 0.15, 0.32);
-    const crownMat = new pc.StandardMaterial();
-    crownMat.diffuse = new pc.Color(1, 0.84, 0.0);
-    crownMat.emissive = new pc.Color(0.5, 0.42, 0.0);
-    crownMat.shininess = 90;
-    crownMat.update();
-    crown.model.material = crownMat;
-    entity.addChild(crown);
-  }
-
-  addPrinzFeatures(entity, roleColor) {
-    // Prince circlet (smaller crown)
-    const circlet = new pc.Entity("Circlet");
-    circlet.addComponent("model", { type: "torus" });
-    circlet.setLocalPosition(0, 2.3, 0);
-    circlet.setLocalScale(0.28, 0.1, 0.28);
-    const circletMat = new pc.StandardMaterial();
-    circletMat.diffuse = new pc.Color(0.8, 0.7, 0.2);
-    circletMat.shininess = 80;
-    circletMat.update();
-    circlet.model.material = circletMat;
-    entity.addChild(circlet);
-  }
-
-  addPyromaneFeatures(entity, roleColor) {
-    // Flame aura - intense
-    const flame = new pc.Entity("PyroFlameAura");
-    flame.addComponent("light", {
-      type: "point",
-      color: new pc.Color(1, 0.5, 0.0),
-      intensity: 0.8,
-      range: 2.5,
-    });
-    flame.setLocalPosition(0, 1.5, 0);
-    entity.addChild(flame);
-  }
-
-  addTanklastwagenfahrerFeatures(entity, roleColor) {
-    // Truck driver badge
-    const badge = new pc.Entity("TruckBadge");
-    badge.addComponent("model", { type: "box" });
-    badge.setLocalPosition(0.2, 1.05, 0.19);
-    badge.setLocalScale(0.08, 0.1, 0.02);
-    const badgeMat = new pc.StandardMaterial();
-    badgeMat.diffuse = new pc.Color(0.3, 0.6, 0.3);
-    badgeMat.update();
-    badge.model.material = badgeMat;
-    entity.addChild(badge);
-  }
-
-  // === SEHER VARIANTEN ===
-  addAurenseherinFeatures(entity, roleColor) {
-    // Aura glow
-    const auraGlow = new pc.Entity("AuraGlow");
-    auraGlow.addComponent("light", {
-      type: "point",
-      color: new pc.Color(0.9, 0.5, 0.9),
-      intensity: 0.6,
-      range: 2.5,
-    });
-    auraGlow.setLocalPosition(0, 1.5, 0);
-    entity.addChild(auraGlow);
-  }
-
-  addBaerenbaendigerFeatures(entity, roleColor) {
-    // Bear strength mark
-    const strength = new pc.Entity("StrengthMark");
-    strength.addComponent("model", { type: "box" });
-    strength.setLocalPosition(0.25, 0.95, 0.18);
-    strength.setLocalScale(0.15, 0.2, 0.03);
-    const strengthMat = new pc.StandardMaterial();
-    strengthMat.diffuse = new pc.Color(0.5, 0.35, 0.2);
-    strengthMat.update();
-    strength.model.material = strengthMat;
-    entity.addChild(strength);
-  }
-
-  addDemoskopinFeatures(entity, roleColor) {
-    // Poll clipboard
-    const clipboard = new pc.Entity("Clipboard");
-    clipboard.addComponent("model", { type: "box" });
-    clipboard.setLocalPosition(0.35, 1.1, 0.08);
-    clipboard.setLocalScale(0.15, 0.25, 0.05);
-    clipboard.setLocalEulerAngles(0, 0, 20);
-    const clipMat = new pc.StandardMaterial();
-    clipMat.diffuse = new pc.Color(0.8, 0.7, 0.5);
-    clipMat.update();
-    clipboard.model.material = clipMat;
-    entity.addChild(clipboard);
-  }
-
-  addMediumFeatures(entity, roleColor) {
-    // Spirit aura
-    const spiritAura = new pc.Entity("SpiritAura");
-    spiritAura.addComponent("light", {
-      type: "point",
-      color: new pc.Color(0.8, 0.6, 1.0),
-      intensity: 0.5,
-      range: 2.2,
-    });
-    spiritAura.setLocalPosition(0, 1.5, 0);
-    entity.addChild(spiritAura);
-  }
-
-  addParanormalerErmittlerFeatures(entity, roleColor) {
-    // Investigation tool - magnifier
-    const magnifier = new pc.Entity("Magnifier");
-    magnifier.addComponent("model", { type: "torus" });
-    magnifier.setLocalPosition(0.4, 1.15, 0.05);
-    magnifier.setLocalScale(0.1, 0.1, 0.05);
-    const magMat = new pc.StandardMaterial();
-    magMat.diffuse = new pc.Color(0.7, 0.65, 0.5);
-    magMat.shininess = 60;
-    magMat.update();
-    magnifier.model.material = magMat;
-    entity.addChild(magnifier);
-  }
-
-  addSeherlehrlingFeatures(entity, roleColor) {
-    // Apprentice scroll
-    const scroll = new pc.Entity("Scroll");
-    scroll.addComponent("model", { type: "cylinder" });
-    scroll.setLocalPosition(0.35, 1.0, 0.1);
-    scroll.setLocalScale(0.06, 0.25, 0.06);
-    const scrollMat = new pc.StandardMaterial();
-    scrollMat.diffuse = new pc.Color(0.9, 0.88, 0.8);
-    scrollMat.update();
-    scroll.model.material = scrollMat;
-    entity.addChild(scroll);
-  }
-
-  addTratschweibFeatures(entity, roleColor) {
-    // Gossip tongue mark
-    const gossip = new pc.Entity("GossipMark");
-    gossip.addComponent("model", { type: "box" });
-    gossip.setLocalPosition(0, 1.72, 0.22);
-    gossip.setLocalScale(0.14, 0.04, 0.02);
-    const gossipMat = new pc.StandardMaterial();
-    gossipMat.diffuse = new pc.Color(0.8, 0.4, 0.4);
-    gossipMat.update();
-    gossip.model.material = gossipMat;
-    entity.addChild(gossip);
-  }
-
-  // === SOLO ROLLEN ===
-  addHenkerFeatures(entity, roleColor) {
-    // Executioner hood
-    const hood = new pc.Entity("ExecutionerHood");
-    hood.addComponent("model", { type: "sphere" });
-    hood.setLocalPosition(0, 1.95, 0.05);
-    hood.setLocalScale(0.55, 0.6, 0.5);
-    const hoodMat = new pc.StandardMaterial();
-    hoodMat.diffuse = new pc.Color(0.05, 0.05, 0.05);
-    hoodMat.update();
-    hood.model.material = hoodMat;
-    entity.addChild(hood);
-  }
-
-  addSelbstmoerderFeatures(entity, roleColor) {
-    // Sad aura
-    const sadAura = new pc.Entity("SadAura");
-    sadAura.addComponent("light", {
-      type: "point",
-      color: new pc.Color(0.4, 0.4, 0.5),
-      intensity: 0.3,
-      range: 1.5,
-    });
-    sadAura.setLocalPosition(0, 1.5, 0);
-    entity.addChild(sadAura);
-  }
-
-  // === SONSTIGE ===
-  addBuergermeisterFeatures(entity, roleColor) {
-    // Mayor sash
-    const sash = new pc.Entity("MayorSash");
-    sash.addComponent("model", { type: "box" });
-    sash.setLocalPosition(0, 1.0, 0.18);
-    sash.setLocalScale(0.55, 0.15, 0.03);
-    const sashMat = new pc.StandardMaterial();
-    sashMat.diffuse = new pc.Color(0.8, 0.2, 0.2);
-    sashMat.emissive = new pc.Color(0.4, 0.1, 0.1);
-    sashMat.shininess = 50;
-    sashMat.update();
-    sash.model.material = sashMat;
-    entity.addChild(sash);
-  }
-
-  addDiebFeatures(entity, roleColor) {
-    // Mask
-    const mask = new pc.Entity("Mask");
-    mask.addComponent("model", { type: "box" });
-    mask.setLocalPosition(0, 1.9, 0.2);
-    mask.setLocalScale(0.3, 0.15, 0.04);
-    const maskMat = new pc.StandardMaterial();
-    maskMat.diffuse = new pc.Color(0.1, 0.1, 0.1);
-    maskMat.update();
-    mask.model.material = maskMat;
-    entity.addChild(mask);
-  }
-
-  addDoppelgaengerFeatures(entity, roleColor) {
-    // Mirror shimmer
-    const shimmer = new pc.Entity("Shimmer");
-    shimmer.addComponent("light", {
-      type: "point",
-      color: new pc.Color(0.7, 0.7, 0.8),
-      intensity: 0.4,
-      range: 2.0,
-    });
-    shimmer.setLocalPosition(0, 1.5, 0);
-    entity.addChild(shimmer);
-  }
-
-  addEngelFeatures(entity, roleColor) {
-    // Angel halo
-    const halo = new pc.Entity("AngelHalo");
-    halo.addComponent("model", { type: "torus" });
-    halo.setLocalPosition(0, 2.4, 0);
-    halo.setLocalScale(0.35, 0.3, 0.35);
-    halo.setLocalEulerAngles(90, 0, 0);
-    const haloMat = new pc.StandardMaterial();
-    haloMat.emissive = new pc.Color(1, 0.95, 0.7);
-    haloMat.opacity = 0.8;
-    haloMat.blendType = pc.BLEND_ADDITIVE;
-    haloMat.update();
-    halo.model.material = haloMat;
-    entity.addChild(halo);
-  }
-
-  addGerberFeatures(entity, roleColor) {
-    // Leather working tools
-    const tool = new pc.Entity("LeatherTool");
-    tool.addComponent("model", { type: "box" });
-    tool.setLocalPosition(0.35, 0.85, 0.15);
-    tool.setLocalScale(0.1, 0.08, 0.06);
-    const toolMat = new pc.StandardMaterial();
-    toolMat.diffuse = new pc.Color(0.6, 0.45, 0.3);
-    toolMat.update();
-    tool.model.material = toolMat;
-    entity.addChild(tool);
-  }
-
-  addKleinesMaedchenFeatures(entity, roleColor) {
-    // Innocence ribbon
-    const ribbon = new pc.Entity("InnocenceRibbon");
-    ribbon.addComponent("model", { type: "box" });
-    ribbon.setLocalPosition(0.2, 2.0, -0.1);
-    ribbon.setLocalScale(0.1, 0.15, 0.03);
-    const ribbonMat = new pc.StandardMaterial();
-    ribbonMat.diffuse = new pc.Color(1, 0.7, 0.85);
-    ribbonMat.update();
-    ribbon.model.material = ribbonMat;
-    entity.addChild(ribbon);
-  }
-
-  addPutzfrauFeatures(entity, roleColor) {
-    // Cleaning bucket
-    const bucket = new pc.Entity("Bucket");
-    bucket.addComponent("model", { type: "cylinder" });
-    bucket.setLocalPosition(-0.4, 0.5, 0.1);
-    bucket.setLocalScale(0.1, 0.12, 0.1);
-    const bucketMat = new pc.StandardMaterial();
-    bucketMat.diffuse = new pc.Color(0.6, 0.5, 0.4);
-    bucketMat.update();
-    bucket.model.material = bucketMat;
-    entity.addChild(bucket);
-  }
-
-  addSuendenbockFeatures(entity, roleColor) {
-    // Scapegoat mark
-    const mark = new pc.Entity("ScapegoatMark");
-    mark.addComponent("model", { type: "sphere" });
-    mark.setLocalPosition(-0.2, 1.5, 0.15);
-    mark.setLocalScale(0.15, 0.15, 0.08);
-    const markMat = new pc.StandardMaterial();
-    markMat.diffuse = new pc.Color(0.6, 0.4, 0.3);
-    markMat.update();
-    mark.model.material = markMat;
-    entity.addChild(mark);
-  }
-
-  // === SPEZIAL ===
-  addChemielaborantFeatures(entity, roleColor) {
-    // Chemical vials
-    for (let i = 0; i < 2; i++) {
-      const vial = new pc.Entity(`ChemicalVial-${i}`);
-      vial.addComponent("model", { type: "cylinder" });
-      vial.setLocalPosition(i === 0 ? -0.35 : 0.35, 0.8, 0.2);
-      vial.setLocalScale(0.05, 0.15, 0.05);
-      const vialMat = new pc.StandardMaterial();
-      vialMat.diffuse = new pc.Color(0.3, 0.8, 0.5);
-      vialMat.emissive = new pc.Color(0.15, 0.4, 0.25);
-      vialMat.opacity = 0.9;
-      vialMat.blendType = pc.BLEND_ADDITIVE;
-      vialMat.update();
-      vial.model.material = vialMat;
-      entity.addChild(vial);
-    }
-  }
-
-  addDunklerPriesterFeatures(entity, roleColor) {
-    // Priest robes + dark aura
-    const robes = new pc.Entity("PriestRobes");
-    robes.addComponent("model", { type: "box" });
-    robes.setLocalPosition(0, 0.95, -0.15);
-    robes.setLocalScale(0.6, 0.5, 0.12);
-    const robesMat = new pc.StandardMaterial();
-    robesMat.diffuse = new pc.Color(0.1, 0.05, 0.1);
-    robesMat.update();
-    robes.model.material = robesMat;
-    entity.addChild(robes);
-  }
-
-  addFluechtlingeFeatures(entity, roleColor) {
-    // Refugee pack
-    const pack = new pc.Entity("RefugeePack");
-    pack.addComponent("model", { type: "box" });
-    pack.setLocalPosition(-0.35, 1.2, -0.2);
-    pack.setLocalScale(0.15, 0.25, 0.1);
-    const packMat = new pc.StandardMaterial();
-    packMat.diffuse = new pc.Color(0.5, 0.4, 0.3);
-    packMat.update();
-    pack.model.material = packMat;
-    entity.addChild(pack);
-  }
-
-  addHureFeatures(entity, roleColor) {
-    // Red dress accent
-    const dress = new pc.Entity("HureDress");
-    dress.addComponent("model", { type: "box" });
-    dress.setLocalPosition(0, 0.95, 0.18);
-    dress.setLocalScale(0.55, 0.4, 0.05);
-    const dressMat = new pc.StandardMaterial();
-    dressMat.diffuse = new pc.Color(0.95, 0.2, 0.3);
-    dressMat.shininess = 50;
-    dressMat.update();
-    dress.model.material = dressMat;
-    entity.addChild(dress);
-  }
-
-  addMordlustigerFeatures(entity, roleColor) {
-    // Blood lust aura
-    const lust = new pc.Entity("BloodLustAura");
-    lust.addComponent("light", {
-      type: "point",
-      color: new pc.Color(1, 0.2, 0.2),
-      intensity: 0.7,
-      range: 2.3,
-    });
-    lust.setLocalPosition(0, 1.5, 0);
-    entity.addChild(lust);
-  }
-
-  addNutteFeatures(entity, roleColor) {
-    // Pink dress accent
-    const dress = new pc.Entity("NutteDress");
-    dress.addComponent("model", { type: "box" });
-    dress.setLocalPosition(0, 0.95, 0.18);
-    dress.setLocalScale(0.5, 0.35, 0.05);
-    const dressMat = new pc.StandardMaterial();
-    dressMat.diffuse = new pc.Color(0.9, 0.4, 0.6);
-    dressMat.shininess = 40;
-    dressMat.update();
-    dress.model.material = dressMat;
-    entity.addChild(dress);
-  }
-
-  addRabeFeatures(entity, roleColor) {
-    // Raven feathers
-    const feather = new pc.Entity("RavenFeather");
-    feather.addComponent("model", { type: "box" });
-    feather.setLocalPosition(-0.25, 2.1, -0.15);
-    feather.setLocalScale(0.12, 0.35, 0.04);
-    feather.setLocalEulerAngles(0, 0, -30);
-    const featherMat = new pc.StandardMaterial();
-    featherMat.diffuse = new pc.Color(0.05, 0.05, 0.08);
-    featherMat.update();
-    feather.model.material = featherMat;
-    entity.addChild(feather);
-  }
-
-  addZahnarztFeatures(entity, roleColor) {
-    // Dentist mirror
-    const mirror = new pc.Entity("DentistMirror");
-    mirror.addComponent("model", { type: "sphere" });
-    mirror.setLocalPosition(0.35, 1.1, 0.15);
-    mirror.setLocalScale(0.08, 0.08, 0.04);
-    const mirrorMat = new pc.StandardMaterial();
-    mirrorMat.diffuse = new pc.Color(0.8, 0.8, 0.9);
-    mirrorMat.shininess = 95;
-    mirrorMat.update();
-    mirror.model.material = mirrorMat;
-    entity.addChild(mirror);
-  }
-
-  createNameLabel(name, isAlive) {
-    const label = new pc.Entity("NameLabel");
-    label.addComponent("model", { type: "plane" });
-    // Negative X scale flips the texture horizontally to un-mirror it
-    label.setLocalScale(-2, 0.5, 1);
-
-    // Create canvas for text - higher resolution for sharper text
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 128;
-    const ctx = canvas.getContext("2d");
-
-    // Background with rounded corners effect
-    ctx.fillStyle = isAlive ? "rgba(0, 0, 0, 0.8)" : "rgba(0, 0, 0, 0.5)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Text - larger font for higher res canvas
-    ctx.fillStyle = isAlive ? "#FFFFFF" : "#999999";
-    ctx.font = "bold 64px Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    // Add subtle text shadow for better readability
-    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
-    ctx.fillText(name, canvas.width / 2, canvas.height / 2);
-
-    // Create texture from canvas
-    const texture = new pc.Texture(this.app.graphicsDevice, {
-      width: canvas.width,
-      height: canvas.height,
-      format: pc.PIXELFORMAT_R8_G8_B8_A8,
-      mipmaps: true,
-      minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
-      magFilter: pc.FILTER_LINEAR,
-    });
-
-    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    texture.lock().set(new Uint8Array(pixels.data));
-    texture.unlock();
-
-    // Apply to material
-    const mat = new pc.StandardMaterial();
-    mat.diffuseMap = texture;
-    mat.emissive = new pc.Color(1, 1, 1);
-    mat.emissiveMap = texture;
-    mat.opacity = isAlive ? 1.0 : 0.6;
-    mat.blendType = pc.BLEND_NORMAL;
-    mat.cull = pc.CULLFACE_NONE; // Double-sided so visible from both directions
-    mat.depthWrite = false; // Helps with transparency sorting
-    mat.update();
-
-    label.model.material = mat;
-
-    return label;
-  }
-
-  setTimeOfDay(isNight) {
-    this.isNight = isNight;
-
-    // Toggle Celestial Bodies & Sky
-    if (this.moon) this.moon.enabled = isNight;
-    if (this.moonGlow) this.moonGlow.enabled = isNight;
-    if (this.sun) this.sun.enabled = !isNight;
-    if (this.sunGlow) this.sunGlow.enabled = !isNight;
-    if (this.skyDome) this.skyDome.enabled = isNight;
-    if (this.stars) this.stars.forEach(s => s.entity.enabled = isNight);
-
-    // Toggle Ground Fog (mostly visible at night)
-    if (this.fogPlanes) {
-      this.fogPlanes.forEach(fp => fp.entity.enabled = isNight);
-    }
-
-    // Update Camera Background
-    if (this.camera) {
-      if (isNight) {
-        this.camera.camera.clearColor = new pc.Color(0.02, 0.02, 0.06);
-      } else {
-        this.camera.camera.clearColor = new pc.Color(0.45, 0.65, 0.85); // Nice day blue
-      }
-    }
-
-    if (isNight) {
-      // Night settings
-      this.light.light.color = new pc.Color(0.4, 0.5, 0.8); // Moonlight
-      this.light.light.intensity = 0.5;
-
-      if (this.fillLight) {
-        this.fillLight.light.color = new pc.Color(0.1, 0.1, 0.2);
-        this.fillLight.light.intensity = 0.2;
-      }
-
-      // Update scene properties using the correct API
-      this.setSceneSettings({
-        ambientLight: new pc.Color(0.05, 0.05, 0.1),
-        fogColor: new pc.Color(0.02, 0.03, 0.08),
-        fogDensity: 0.008,
-      });
-
-      if (this.fireLight) this.fireLight.enabled = true;
-
-      // Show fireflies
-      this.fireflies?.forEach((f) => (f.entity.enabled = true));
-
-      // Dim building windows (lights on)
-      this.buildings.forEach((building) => {
-        building.children.forEach((child) => {
-          if (child.name === "Window" && child.model) {
-            child.model.material.emissive = new pc.Color(0.8, 0.6, 0.3);
-            child.model.material.update();
-          }
-        });
-      });
-
-      // Make sleeping/inactive players appear to sleep at night
-      this.playerEntities.forEach((entity, playerId) => {
-        if (this.sleepingPlayers.has(playerId)) {
-          this.applySleepingState(entity, true);
-        }
-      });
-    } else {
-      // Day settings
-      this.light.light.color = new pc.Color(1, 0.95, 0.9); // Sunlight
-      this.light.light.intensity = 1.0;
-
-      if (this.fillLight) {
-        this.fillLight.light.color = new pc.Color(0.4, 0.4, 0.5);
-        this.fillLight.light.intensity = 0.5;
-      }
-
-      // Update scene properties using the correct API
-      this.setSceneSettings({
-        ambientLight: new pc.Color(0.5, 0.5, 0.55),
-        fogColor: new pc.Color(0.45, 0.65, 0.85), // Match sky
-        fogDensity: 0.003,
-      });
-
-      if (this.fireLight) this.fireLight.enabled = false; // Fire less visible
-
-      // Hide fireflies
-      this.fireflies?.forEach((f) => (f.entity.enabled = false));
-
-      // No window glow during day
-      this.buildings.forEach((building) => {
-        building.children.forEach((child) => {
-          if (child.name === "Window" && child.model) {
-            child.model.material.emissive = new pc.Color(0, 0, 0);
-            child.model.material.update();
-          }
-        });
-      });
-
-      // Wake up all players during day
-      this.playerEntities.forEach((entity) => {
-        this.applySleepingState(entity, false);
-      });
-    }
-  }
-
-  /**
-   * Apply or remove sleeping visual state to a player
-   * @param {pc.Entity} entity - Player entity
-   * @param {boolean} isSleeping - Whether player is sleeping
-   */
-  applySleepingState(entity, isSleeping) {
-    if (!entity || !entity.parts) return;
-
-    if (isSleeping) {
-      // Tilt head down as if sleeping
-      if (entity.parts.head) {
-        entity.parts.head.setLocalEulerAngles(20, 0, 0); // Head tilted down
-      }
-
-      // Lower arms
-      if (entity.parts.arms && entity.parts.arms.length > 0) {
-        entity.parts.arms.forEach((armPivot) => {
-          armPivot.setLocalEulerAngles(0, 0, 0); // Arms at rest
-        });
-      }
-
-      // Add Z's floating above head
-      if (!entity.findByName("SleepingZ")) {
-        const zMarker = new pc.Entity("SleepingZ");
-        zMarker.addComponent("model", { type: "plane" });
-        zMarker.setLocalPosition(0, 3.2, 0);
-        zMarker.setLocalScale(0.5, 0.5, 0.5);
-
-        // Use cached Z texture if available - prevents creating many textures
-        if (!this.sleepZTexture) {
-          // Create canvas with "Z" text
-          const canvas = document.createElement("canvas");
-          canvas.width = 128;
-          canvas.height = 128;
-          const ctx = canvas.getContext("2d");
-          ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-          ctx.font = "bold 80px Arial";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("Z", 64, 64);
-
-          this.sleepZTexture = new pc.Texture(this.app.graphicsDevice, {
-            width: canvas.width,
-            height: canvas.height,
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-          });
-          const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          this.sleepZTexture.lock().set(new Uint8Array(pixels.data));
-          this.sleepZTexture.unlock();
-        }
-
-        const mat = new pc.StandardMaterial();
-        mat.diffuseMap = this.sleepZTexture;
-        mat.emissive = new pc.Color(1, 1, 1);
-        mat.opacity = 0.8;
-        mat.blendType = pc.BLEND_NORMAL;
-        mat.cull = pc.CULLFACE_NONE;
-        mat.update();
-        zMarker.model.material = mat;
-
-        entity.addChild(zMarker);
-      }
-    } else {
-      // Reset to normal posture
-      if (entity.parts.head) {
-        entity.parts.head.setLocalEulerAngles(0, 0, 0);
-      }
-
-      // Remove Z marker
-      const zMarker = entity.findByName("SleepingZ");
-      if (zMarker) {
-        zMarker.destroy();
-      }
-    }
-  }
-
-  /**
-   * Mark a player as sleeping/inactive
-   * @param {string} playerId
-   */
-  setPlayerSleeping(playerId, isSleeping) {
-    if (isSleeping) {
-      this.sleepingPlayers.add(playerId);
-    } else {
-      this.sleepingPlayers.delete(playerId);
-    }
-
-    const entity = this.playerEntities.get(playerId);
-    if (entity && this.isNight) {
-      this.applySleepingState(entity, isSleeping);
-    }
-  }
-
-  // Helper to set scene rendering settings with proper API support
-  setSceneSettings(settings) {
-    try {
-      // Try newer API first (PlayCanvas 1.60+)
-      if (this.app.scene.rendering) {
-        if (settings.ambientLight)
-          this.app.scene.rendering.ambientLight = settings.ambientLight;
-        if (settings.fogColor)
-          this.app.scene.rendering.fogColor = settings.fogColor;
-        if (settings.fogDensity !== undefined)
-          this.app.scene.rendering.fogDensity = settings.fogDensity;
-      } else {
-        // Fallback for older API - direct property access with assignments
-        const scene = this.app.scene;
-        if (settings.ambientLight && scene.ambientLight) {
-          scene.ambientLight.copy(settings.ambientLight);
-        }
-      }
-    } catch (e) {
-      console.debug("Scene settings update skipped:", e.message);
-    }
-  }
-
   resetCamera() {
     this.targetCameraAngle = this.defaultCameraAngle;
     this.targetCameraHeight = this.defaultCameraHeight;
@@ -4745,6 +2376,329 @@ export default class Village3DPlayCanvas {
     });
   }
 
+  /**
+   * Update animated features (call from main update loop).
+   */
+  updateAnimatedFeatures(dt) {
+    if (!this.animatedFeatures) return;
+
+    const time = Date.now() / 1000;
+
+    this.animatedFeatures.forEach((anim) => {
+      if (!anim.entity || !anim.entity.parent) return;
+
+      const t = time * anim.speed + anim.phase;
+      const amp = anim.amplitude;
+
+      switch (anim.type) {
+        case "rotate":
+          anim.entity.setLocalEulerAngles(
+            anim.originalRot.x,
+            anim.originalRot.y + t * 60,
+            anim.originalRot.z
+          );
+          break;
+        case "pulse":
+          const pulseScale = 1 + Math.sin(t * 2) * 0.1 * amp;
+          anim.entity.setLocalScale(
+            anim.originalScale.x * pulseScale,
+            anim.originalScale.y * pulseScale,
+            anim.originalScale.z * pulseScale
+          );
+          break;
+        case "float":
+          anim.entity.setLocalPosition(
+            anim.originalPos.x,
+            anim.originalPos.y + Math.sin(t) * 0.1 * amp,
+            anim.originalPos.z
+          );
+          break;
+        case "sway":
+          anim.entity.setLocalEulerAngles(
+            anim.originalRot.x,
+            anim.originalRot.y,
+            anim.originalRot.z + Math.sin(t) * 10 * amp
+          );
+          break;
+        case "flutter":
+          const flutterAngle = Math.sin(t * 4) * 15 * amp;
+          anim.entity.setLocalEulerAngles(
+            anim.originalRot.x,
+            anim.originalRot.y + flutterAngle,
+            anim.originalRot.z
+          );
+          break;
+        case "flicker":
+          // Random intensity flicker for fire/lights
+          if (anim.entity.light) {
+            anim.entity.light.intensity = 0.8 + Math.random() * 0.4;
+          }
+          break;
+      }
+    });
+  }
+
+  // Keyboard Controls
+  // Only move if we are not in an input field
+  const activeElement = document.activeElement;
+  if (
+    activeElement &&
+    (activeElement.tagName === "INPUT" ||
+      activeElement.tagName === "TEXTAREA" ||
+      (activeElement.isContentEditable && activeElement.tagName !== "CANVAS"))
+  ) {
+    return;
+  }
+
+  if (
+    this.app.keyboard.isPressed(pc.KEY_LEFT) ||
+    this.app.keyboard.isPressed(pc.KEY_A)
+  ) {
+    this.targetCameraAngle += 2 * dt;
+  }
+  if (
+    this.app.keyboard.isPressed(pc.KEY_RIGHT) ||
+    this.app.keyboard.isPressed(pc.KEY_D)
+  ) {
+    this.targetCameraAngle -= 2 * dt;
+  }
+  if (
+    this.app.keyboard.isPressed(pc.KEY_UP) ||
+    this.app.keyboard.isPressed(pc.KEY_W)
+  ) {
+    this.targetCameraRadius -= 10 * dt;
+  }
+  if (
+    this.app.keyboard.isPressed(pc.KEY_DOWN) ||
+    this.app.keyboard.isPressed(pc.KEY_S)
+  ) {
+    this.targetCameraRadius += 10 * dt;
+  }
+
+  this.targetCameraRadius = pc.math.clamp(this.targetCameraRadius, 5, 50);
+
+  // Smooth camera rotation and zoom
+  this.cameraAngle = pc.math.lerp(
+    this.cameraAngle,
+    this.targetCameraAngle,
+    dt * 8,
+  );
+  this.cameraHeight = pc.math.lerp(
+    this.cameraHeight,
+    this.targetCameraHeight,
+    dt * 8,
+  );
+  this.cameraRadius = pc.math.lerp(
+    this.cameraRadius,
+    this.targetCameraRadius,
+    dt * 8,
+  );
+
+  // Update Camera Position
+  const x = Math.sin(this.cameraAngle) * this.cameraRadius;
+  const z = Math.cos(this.cameraAngle) * this.cameraRadius;
+
+  // Smooth camera movement (positional lerp)
+  const currentPos = this.camera.getPosition();
+  const targetPos = new pc.Vec3(x, this.cameraHeight, z);
+  const newPos = new pc.Vec3().lerp(currentPos, targetPos, dt * 10);
+
+  this.camera.setPosition(newPos);
+  this.camera.lookAt(0, 2, 0);
+
+  // Animate Enhanced Fire and Particles
+  if (this.fireLight && this.fireLight.enabled) {
+    // Flicker main light
+    this.fireLight.light.intensity = 3.5 + Math.random() * 1.5;
+
+    // Spawn new particles
+    if (this.particleSpawner) {
+      this.particleSpawner.spawn(dt);
+    }
+  }
+
+  // Update all active particles (Fire, Smoke, Embers)
+  if (this.particles) {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.life += dt;
+
+      if (p.life >= p.maxLife) {
+        p.entity.destroy();
+        this.particles.splice(i, 1);
+        continue;
+      }
+
+      // Move
+      const pos = p.entity.getPosition();
+      pos.add(p.velocity.clone().scale(dt));
+      p.entity.setPosition(pos);
+
+      // Scale
+      const t = p.life / p.maxLife; // 0 to 1
+      const currentScale = pc.math.lerp(p.startScale, p.endScale, t);
+      p.entity.setLocalScale(currentScale, currentScale, currentScale);
+
+      // Rotate
+      p.entity.rotateLocal(100 * dt, 50 * dt, 0);
+
+      // Fade / Color
+      if (p.type === "smoke") {
+        p.entity.model.material.opacity = 0.3 * (1 - t);
+        p.entity.model.material.update();
+      } else if (p.type === "flame") {
+        p.entity.model.material.opacity = 0.8 * (1 - t);
+        p.entity.model.material.update();
+      }
+    }
+  }
+
+  // Update Stars Twinkle
+  if (this.stars && this.isNight) {
+    this.stars.forEach(star => {
+      star.twinklePhase += dt * star.twinkleSpeed;
+      const brightness = star.baseBrightness + Math.sin(star.twinklePhase) * 0.3;
+      const c = star.material.emissive;
+      // mod brightness without changing color hue too much
+      star.material.emissive = new pc.Color(
+        c.r * (1 + Math.sin(star.twinklePhase) * 0.1),
+        c.g * (1 + Math.sin(star.twinklePhase) * 0.1),
+        c.b * (1 + Math.sin(star.twinklePhase) * 0.1)
+      );
+      star.material.update();
+    });
+  }
+
+  // Update Ground Fog Drift
+  if (this.fogPlanes) {
+    this.fogPlanes.forEach(fp => {
+      fp.entity.rotateLocal(0, fp.rotSpeed * dt, 0);
+      const pos = fp.entity.getPosition();
+      // Gentle drift
+      pos.x += fp.driftSpeed.x * dt;
+      pos.z += fp.driftSpeed.y * dt;
+
+      // Loop around if too far
+      if (Math.abs(pos.x) > 60) pos.x *= -0.9;
+      if (Math.abs(pos.z) > 60) pos.z *= -0.9;
+
+      fp.entity.setPosition(pos);
+    });
+  }
+
+  // Update animated features from role definitions
+  this.updateAnimatedFeatures(dt);
+
+  // Animate fireflies (enhanced)
+  if (this.isNight && this.fireflies && this.fireflies.length > 0) {
+    this.fireflies.forEach((f) => {
+      if (!f.entity) return;
+      f.phase += dt * f.speed;
+
+      // Complex flight path
+      const newAngle = f.angle + Math.sin(f.phase) * 0.5;
+      const newRadius = f.radius + Math.cos(f.phase * 0.7) * 2;
+      const newHeight = f.height + Math.sin(f.phase * 1.3) * 1.5;
+
+      f.entity.setPosition(
+        Math.cos(newAngle) * newRadius,
+        Math.max(0.5, newHeight), // Don't go below ground
+        Math.sin(newAngle) * newRadius,
+      );
+
+      // Pulse intensity
+      if (f.entity.light) {
+        f.entity.light.intensity = 0.8 + Math.sin(f.phase * 5) * 0.4;
+      }
+    });
+  }
+
+  // Make name labels always face camera (billboard effect)
+  this.playerLabels.forEach((label) => {
+    if (!label || !label.parent) return;
+
+    // Get world position of label
+    const labelPos = label.getPosition();
+    const cameraPos = this.camera.getPosition();
+
+    // Calculate world angle from label to camera
+    const dx = cameraPos.x - labelPos.x;
+    const dz = cameraPos.z - labelPos.z;
+    const worldAngle = Math.atan2(dx, dz) * (180 / Math.PI);
+
+    // Get parent's world rotation Y component
+    const parentRotation = label.parent.getEulerAngles();
+    const parentYRotation = parentRotation.y;
+
+    // Calculate local Y rotation needed (world angle minus parent's world Y rotation)
+    // Add 180 to flip the plane so the texture shows correctly (not mirrored)
+    const localYAngle = worldAngle - parentYRotation + 180;
+
+    // Set rotation: 90 on X to make plane vertical (facing forward), then local Y rotation to face camera
+    label.setLocalEulerAngles(90, localYAngle, 0);
+  });
+
+  // Animate Players
+  this.playerEntities.forEach((entity) => {
+    if (!entity.animState) return;
+
+    const anim = entity.animState;
+    anim.time += dt * anim.idleSpeed;
+
+    const isAlive = entity.playerData ? entity.playerData.ist_am_leben : true;
+
+    if (isAlive && entity.parts) {
+      // 1. Breathing (subtle scaling of torso)
+      if (entity.parts.torso) {
+        const breathing = Math.sin(anim.time * 2) * 0.03 + 1;
+        entity.parts.torso.setLocalScale(
+          0.6 * breathing,
+          0.8,
+          0.35 * breathing,
+        );
+      }
+
+      // 2. Head Movement (idle looking around) - more noticeable
+      if (entity.parts.head) {
+        const headYaw = Math.sin(anim.time * 0.5) * 25; // Increased from 15
+        const headPitch = Math.cos(anim.time * 0.8) * 8; // Increased from 5
+        entity.parts.head.setLocalEulerAngles(headPitch, headYaw, 0);
+      }
+
+      // 3. Arm Swaying - more noticeable
+      if (entity.parts.arms && entity.parts.arms.length > 0) {
+        entity.parts.arms.forEach((armPivot, i) => {
+          const side = i === 0 ? 1 : -1;
+          const sway = Math.sin(anim.time * 1.5 + i * Math.PI) * 12; // Increased from 5
+          armPivot.setLocalEulerAngles(sway, 0, side * 8);
+        });
+      }
+
+      // 4. Subtle body swaying - more noticeable
+      const bodyLean = Math.cos(anim.time * 0.4) * 2; // Increased from 1
+      const currentY = entity.getLocalEulerAngles().y;
+      entity.setLocalEulerAngles(0, currentY, bodyLean);
+
+      // 5. Special Accessory Animations
+      if (entity.parts.wings) {
+        entity.parts.wings.forEach((wing, i) => {
+          const side = i === 0 ? 1 : -1;
+          const flap = Math.sin(anim.time * 3) * 10;
+          wing.setLocalEulerAngles(0, side * (35 + flap), side * -25);
+        });
+      }
+    } else if (!isAlive && entity.parts) {
+      // Dead players have subtle "ghostly" floating if alive is false
+      const float = Math.sin(anim.time * 0.5) * 0.1;
+      entity.setLocalPosition(
+        entity.getLocalPosition().x,
+        float,
+        entity.getLocalPosition().z,
+      );
+    }
+  });
+  }
+
   pick(x, y) {
     const from = this.camera.camera.screenToWorld(
       x,
@@ -4850,681 +2804,6 @@ export default class Village3DPlayCanvas {
     setTimeout(() => {
       if (highlight) highlight.destroy();
     }, 2000);
-  }
-
-  showHint(playerId, type) {
-    const entity = this.playerEntities.get(playerId);
-    if (!entity) return;
-
-    // Hint color mapping for different effects
-    const hintColors = {
-      eyes_glow_red: new pc.Color(1, 0.2, 0.1), // Red eyes
-      shadow_pass: new pc.Color(0.2, 0.2, 0.3), // Dark shadow
-      moonbeam: new pc.Color(0.8, 0.9, 1.0), // Moonlight white
-      character_shake: new pc.Color(0.8, 0.6, 0.2), // Nervous yellow
-      look_away: new pc.Color(0.6, 0.6, 0.6), // Gray
-      aura_glow: new pc.Color(0.5, 0.3, 0.9), // Purple glow
-      suspicious_behavior: new pc.Color(1.0, 0.5, 0), // Orange suspicious
-      character_stumble: new pc.Color(0.6, 0.4, 0.2), // Brown stumble
-      danger: new pc.Color(1, 0, 0),
-      default: new pc.Color(1, 1, 0),
-    };
-
-    const hintColor = hintColors[type] || hintColors["default"];
-
-    // Create hint icon above player - Enhanced
-    const hint = new pc.Entity("Hint");
-    hint.addComponent("model", { type: "sphere" });
-    hint.setLocalPosition(0, 3.5, 0);
-    hint.setLocalScale(0.4, 0.4, 0.4);
-
-    // Add Light for visibility and emphasis
-    hint.addComponent("light", {
-      type: "point",
-      color: hintColor,
-      intensity: 2,
-      range: 4,
-      castShadows: false,
-    });
-
-    const mat = new pc.StandardMaterial();
-    mat.emissive = hintColor;
-    mat.opacity = 0.9;
-    mat.blendType = pc.BLEND_ADDITIVE;
-    mat.update();
-    hint.model.material = mat;
-
-    entity.addChild(hint);
-
-    // Special effect: shake the character for 'character_shake' or 'character_stumble'
-    if (type === "character_shake" || type === "character_stumble") {
-      const originalPos = entity.getLocalPosition().clone();
-      let shakeTime = 0;
-      const shakeUpdate = (dt) => {
-        shakeTime += dt;
-        const intensity = type === "character_shake" ? 0.05 : 0.1;
-        entity.setLocalPosition(
-          originalPos.x + Math.sin(shakeTime * 30) * intensity,
-          originalPos.y,
-          originalPos.z + Math.cos(shakeTime * 25) * intensity,
-        );
-        if (shakeTime > 0.8) {
-          this.app.off("update", shakeUpdate);
-          entity.setLocalPosition(originalPos.x, originalPos.y, originalPos.z);
-        }
-      };
-      this.app.on("update", shakeUpdate);
-    }
-
-    // Special effect: eye glow for 'eyes_glow_red'
-    if (type === "eyes_glow_red" && entity.parts && entity.parts.head) {
-      const eyes = entity.parts.head.findByName
-        ? [
-          entity.parts.head.findByName("EyeWhite-0"),
-          entity.parts.head.findByName("EyeWhite-1"),
-        ]
-        : [];
-      const originalMats = [];
-      eyes.forEach((eye, i) => {
-        if (eye && eye.model) {
-          originalMats[i] = eye.model.material;
-          const glowMat = new pc.StandardMaterial();
-          glowMat.emissive = new pc.Color(1, 0.1, 0);
-          glowMat.diffuse = new pc.Color(1, 0.2, 0.1);
-          glowMat.update();
-          eye.model.material = glowMat;
-        }
-      });
-      // Restore after delay
-      setTimeout(() => {
-        eyes.forEach((eye, i) => {
-          if (eye && eye.model && originalMats[i]) {
-            eye.model.material = originalMats[i];
-          }
-        });
-      }, 1500);
-    }
-
-    // Animate and remove hint orb - Enhanced
-    let time = 0;
-    const updateHint = (dt) => {
-      time += dt;
-      // Float
-      hint.setLocalPosition(0, 3.5 + Math.sin(time * 3) * 0.3, 0);
-
-      // Pulse scale
-      const scale = 0.4 + Math.sin(time * 5) * 0.1;
-      hint.setLocalScale(scale, scale, scale);
-
-      // Pulse light intensity
-      if (hint.light) {
-        hint.light.intensity = 2 + Math.sin(time * 10) * 1.0;
-      }
-
-      // Fade out
-      if (time > 2.5) {
-        const alpha = 1 - (time - 2.5);
-        mat.opacity = 0.9 * alpha;
-        mat.update();
-        if (hint.light) hint.light.intensity = alpha * 2;
-      }
-
-      if (time > 3.5) {
-        this.app.off("update", updateHint);
-        hint.destroy();
-      }
-    };
-    this.app.on("update", updateHint);
-  }
-
-  update(dt) {
-    // Keyboard Controls
-    // Only move if we are not in an input field
-    const activeElement = document.activeElement;
-    if (
-      activeElement &&
-      (activeElement.tagName === "INPUT" ||
-        activeElement.tagName === "TEXTAREA" ||
-        (activeElement.isContentEditable && activeElement.tagName !== "CANVAS"))
-    ) {
-      return;
-    }
-
-    if (
-      this.app.keyboard.isPressed(pc.KEY_LEFT) ||
-      this.app.keyboard.isPressed(pc.KEY_A)
-    ) {
-      this.targetCameraAngle += 2 * dt;
-    }
-    if (
-      this.app.keyboard.isPressed(pc.KEY_RIGHT) ||
-      this.app.keyboard.isPressed(pc.KEY_D)
-    ) {
-      this.targetCameraAngle -= 2 * dt;
-    }
-    if (
-      this.app.keyboard.isPressed(pc.KEY_UP) ||
-      this.app.keyboard.isPressed(pc.KEY_W)
-    ) {
-      this.targetCameraRadius -= 10 * dt;
-    }
-    if (
-      this.app.keyboard.isPressed(pc.KEY_DOWN) ||
-      this.app.keyboard.isPressed(pc.KEY_S)
-    ) {
-      this.targetCameraRadius += 10 * dt;
-    }
-
-    this.targetCameraRadius = pc.math.clamp(this.targetCameraRadius, 5, 50);
-
-    // Smooth camera rotation and zoom
-    this.cameraAngle = pc.math.lerp(
-      this.cameraAngle,
-      this.targetCameraAngle,
-      dt * 8,
-    );
-    this.cameraHeight = pc.math.lerp(
-      this.cameraHeight,
-      this.targetCameraHeight,
-      dt * 8,
-    );
-    this.cameraRadius = pc.math.lerp(
-      this.cameraRadius,
-      this.targetCameraRadius,
-      dt * 8,
-    );
-
-    // Update Camera Position
-    const x = Math.sin(this.cameraAngle) * this.cameraRadius;
-    const z = Math.cos(this.cameraAngle) * this.cameraRadius;
-
-    // Smooth camera movement (positional lerp)
-    const currentPos = this.camera.getPosition();
-    const targetPos = new pc.Vec3(x, this.cameraHeight, z);
-    const newPos = new pc.Vec3().lerp(currentPos, targetPos, dt * 10);
-
-    this.camera.setPosition(newPos);
-    this.camera.lookAt(0, 2, 0);
-
-    // Animate Enhanced Fire and Particles
-    if (this.fireLight && this.fireLight.enabled) {
-      // Flicker main light
-      this.fireLight.light.intensity = 3.5 + Math.random() * 1.5;
-
-      // Spawn new particles
-      if (this.particleSpawner) {
-        this.particleSpawner.spawn(dt);
-      }
-    }
-
-    // Update all active particles (Fire, Smoke, Embers)
-    if (this.particles) {
-      for (let i = this.particles.length - 1; i >= 0; i--) {
-        const p = this.particles[i];
-        p.life += dt;
-
-        if (p.life >= p.maxLife) {
-          p.entity.destroy();
-          this.particles.splice(i, 1);
-          continue;
-        }
-
-        // Move
-        const pos = p.entity.getPosition();
-        pos.add(p.velocity.clone().scale(dt));
-        p.entity.setPosition(pos);
-
-        // Scale
-        const t = p.life / p.maxLife; // 0 to 1
-        const currentScale = pc.math.lerp(p.startScale, p.endScale, t);
-        p.entity.setLocalScale(currentScale, currentScale, currentScale);
-
-        // Rotate
-        p.entity.rotateLocal(100 * dt, 50 * dt, 0);
-
-        // Fade / Color
-        if (p.type === "smoke") {
-          p.entity.model.material.opacity = 0.3 * (1 - t);
-          p.entity.model.material.update();
-        } else if (p.type === "flame") {
-          p.entity.model.material.opacity = 0.8 * (1 - t);
-          p.entity.model.material.update();
-        }
-      }
-    }
-
-    // Update Stars Twinkle
-    if (this.stars && this.isNight) {
-      this.stars.forEach(star => {
-        star.twinklePhase += dt * star.twinkleSpeed;
-        const brightness = star.baseBrightness + Math.sin(star.twinklePhase) * 0.3;
-        const c = star.material.emissive;
-        // mod brightness without changing color hue too much
-        star.material.emissive = new pc.Color(
-          c.r * (1 + Math.sin(star.twinklePhase) * 0.1),
-          c.g * (1 + Math.sin(star.twinklePhase) * 0.1),
-          c.b * (1 + Math.sin(star.twinklePhase) * 0.1)
-        );
-        star.material.update();
-      });
-    }
-
-    // Update Ground Fog Drift
-    if (this.fogPlanes) {
-      this.fogPlanes.forEach(fp => {
-        fp.entity.rotateLocal(0, fp.rotSpeed * dt, 0);
-        const pos = fp.entity.getPosition();
-        // Gentle drift
-        pos.x += fp.driftSpeed.x * dt;
-        pos.z += fp.driftSpeed.y * dt;
-
-        // Loop around if too far
-        if (Math.abs(pos.x) > 60) pos.x *= -0.9;
-        if (Math.abs(pos.z) > 60) pos.z *= -0.9;
-
-        fp.entity.setPosition(pos);
-      });
-    }
-
-    // Update animated features from role definitions
-    this.updateAnimatedFeatures(dt);
-
-    // Animate fireflies (enhanced)
-    if (this.isNight && this.fireflies && this.fireflies.length > 0) {
-      this.fireflies.forEach((f) => {
-        if (!f.entity) return;
-        f.phase += dt * f.speed;
-
-        // Complex flight path
-        const newAngle = f.angle + Math.sin(f.phase) * 0.5;
-        const newRadius = f.radius + Math.cos(f.phase * 0.7) * 2;
-        const newHeight = f.height + Math.sin(f.phase * 1.3) * 1.5;
-
-        f.entity.setPosition(
-          Math.cos(newAngle) * newRadius,
-          Math.max(0.5, newHeight), // Don't go below ground
-          Math.sin(newAngle) * newRadius,
-        );
-
-        // Pulse intensity
-        if (f.entity.light) {
-          f.entity.light.intensity = 0.8 + Math.sin(f.phase * 5) * 0.4;
-        }
-      });
-    }
-
-    // Make name labels always face camera (billboard effect)
-    this.playerLabels.forEach((label) => {
-      if (!label || !label.parent) return;
-
-      // Get world position of label
-      const labelPos = label.getPosition();
-      const cameraPos = this.camera.getPosition();
-
-      // Calculate world angle from label to camera
-      const dx = cameraPos.x - labelPos.x;
-      const dz = cameraPos.z - labelPos.z;
-      const worldAngle = Math.atan2(dx, dz) * (180 / Math.PI);
-
-      // Get parent's world rotation Y component
-      const parentRotation = label.parent.getEulerAngles();
-      const parentYRotation = parentRotation.y;
-
-      // Calculate local Y rotation needed (world angle minus parent's world Y rotation)
-      // Add 180 to flip the plane so the texture shows correctly (not mirrored)
-      const localYAngle = worldAngle - parentYRotation + 180;
-
-      // Set rotation: 90 on X to make plane vertical (facing forward), then local Y rotation to face camera
-      label.setLocalEulerAngles(90, localYAngle, 0);
-    });
-
-    // Animate Players
-    this.playerEntities.forEach((entity) => {
-      if (!entity.animState) return;
-
-      const anim = entity.animState;
-      anim.time += dt * anim.idleSpeed;
-
-      const isAlive = entity.playerData ? entity.playerData.ist_am_leben : true;
-
-      if (isAlive && entity.parts) {
-        // 1. Breathing (subtle scaling of torso)
-        if (entity.parts.torso) {
-          const breathing = Math.sin(anim.time * 2) * 0.03 + 1;
-          entity.parts.torso.setLocalScale(
-            0.6 * breathing,
-            0.8,
-            0.35 * breathing,
-          );
-        }
-
-        // 2. Head Movement (idle looking around) - more noticeable
-        if (entity.parts.head) {
-          const headYaw = Math.sin(anim.time * 0.5) * 25; // Increased from 15
-          const headPitch = Math.cos(anim.time * 0.8) * 8; // Increased from 5
-          entity.parts.head.setLocalEulerAngles(headPitch, headYaw, 0);
-        }
-
-        // 3. Arm Swaying - more noticeable
-        if (entity.parts.arms && entity.parts.arms.length > 0) {
-          entity.parts.arms.forEach((armPivot, i) => {
-            const side = i === 0 ? 1 : -1;
-            const sway = Math.sin(anim.time * 1.5 + i * Math.PI) * 12; // Increased from 5
-            armPivot.setLocalEulerAngles(sway, 0, side * 8);
-          });
-        }
-
-        // 4. Subtle body swaying - more noticeable
-        const bodyLean = Math.cos(anim.time * 0.4) * 2; // Increased from 1
-        const currentY = entity.getLocalEulerAngles().y;
-        entity.setLocalEulerAngles(0, currentY, bodyLean);
-
-        // 5. Special Accessory Animations
-        if (entity.parts.wings) {
-          entity.parts.wings.forEach((wing, i) => {
-            const side = i === 0 ? 1 : -1;
-            const flap = Math.sin(anim.time * 3) * 10;
-            wing.setLocalEulerAngles(0, side * (35 + flap), side * -25);
-          });
-        }
-      } else if (!isAlive && entity.parts) {
-        // Dead players have subtle "ghostly" floating if alive is false
-        const float = Math.sin(anim.time * 0.5) * 0.1;
-        entity.setLocalPosition(
-          entity.getLocalPosition().x,
-          float,
-          entity.getLocalPosition().z,
-        );
-      }
-    });
-  }
-
-  // 3D Vote Visualization - Show vote indicator above player
-  showVoteIndicator(playerId, voterName) {
-    const entity = this.playerEntities.get(playerId);
-    if (!entity) return;
-
-    // Create vote badge
-    const voteBadge = new pc.Entity(`VoteBadge-${Date.now()}`);
-    voteBadge.addComponent("model", { type: "sphere" });
-    voteBadge.setLocalPosition(
-      Math.random() * 0.6 - 0.3,
-      3.8 + Math.random() * 0.4,
-      0,
-    );
-    voteBadge.setLocalScale(0.2, 0.2, 0.2);
-
-    const mat = new pc.StandardMaterial();
-    mat.diffuse = new pc.Color(1, 0, 0);
-    mat.emissive = new pc.Color(1, 0.2, 0.2);
-    mat.opacity = 0.9;
-    mat.blendType = pc.BLEND_ADDITIVE;
-    mat.update();
-    voteBadge.model.material = mat;
-
-    entity.addChild(voteBadge);
-
-    // Animate vote badge
-    let time = 0;
-    const animateVote = (dt) => {
-      time += dt;
-      voteBadge.setLocalPosition(
-        voteBadge.getLocalPosition().x,
-        3.8 + Math.sin(time * 3) * 0.2,
-        voteBadge.getLocalPosition().z,
-      );
-
-      if (time > 5) {
-        this.app.off("update", animateVote);
-        voteBadge.destroy();
-      }
-    };
-    this.app.on("update", animateVote);
-  }
-
-  // 3D Chat Bubble - Display chat message above player
-  showChatBubble(playerId, message, duration = 5000) {
-    const entity = this.playerEntities.get(playerId);
-    if (!entity) return;
-
-    // Create chat bubble
-    const bubble = new pc.Entity("ChatBubble");
-    bubble.addComponent("model", { type: "plane" });
-    bubble.setLocalPosition(0, 4.0, 0);
-
-    // Calculate size based on message length
-    const width = Math.min(Math.max(message.length * 0.15, 2), 5);
-    bubble.setLocalScale(width, 0.8, 1);
-
-    // Create canvas for text
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 128;
-    const ctx = canvas.getContext("2d");
-
-    // Background
-    ctx.fillStyle = "rgba(40, 40, 50, 0.9)";
-    ctx.beginPath();
-    ctx.moveTo(10 + 15, 10);
-    ctx.lineTo(canvas.width - 10 - 15, 10);
-    ctx.arcTo(canvas.width - 10, 10, canvas.width - 10, 10 + 15, 15);
-    ctx.lineTo(canvas.width - 10, canvas.height - 10 - 15);
-    ctx.arcTo(
-      canvas.width - 10,
-      canvas.height - 10,
-      canvas.width - 10 - 15,
-      canvas.height - 10,
-      15,
-    );
-    ctx.lineTo(10 + 15, canvas.height - 10);
-    ctx.arcTo(10, canvas.height - 10, 10, canvas.height - 10 - 15, 15);
-    ctx.lineTo(10, 10 + 15);
-    ctx.arcTo(10, 10, 10 + 15, 10, 15);
-    ctx.closePath();
-    ctx.fill();
-
-    // Border
-    ctx.strokeStyle = "rgba(212, 175, 55, 0.8)";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    // Text
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 32px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    // Word wrap
-    const maxWidth = canvas.width - 40;
-    const words = message.split(" ");
-    let line = "";
-    let y = canvas.height / 2;
-
-    words.forEach((word) => {
-      const testLine = line + word + " ";
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxWidth && line !== "") {
-        ctx.fillText(line, canvas.width / 2, y - 10);
-        line = word + " ";
-        y += 20;
-      } else {
-        line = testLine;
-      }
-    });
-    ctx.fillText(line, canvas.width / 2, y);
-
-    // Create texture
-    const texture = new pc.Texture(this.app.graphicsDevice, {
-      width: canvas.width,
-      height: canvas.height,
-      format: pc.PIXELFORMAT_R8_G8_B8_A8,
-    });
-    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    texture.lock().set(new Uint8Array(pixels.data));
-    texture.unlock();
-
-    // Apply material
-    const mat = new pc.StandardMaterial();
-    mat.diffuseMap = texture;
-    mat.emissive = new pc.Color(0.2, 0.2, 0.2);
-    mat.opacity = 1.0;
-    mat.blendType = pc.BLEND_NORMAL;
-    mat.update();
-    bubble.model.material = mat;
-
-    entity.addChild(bubble);
-
-    // Animate bubble
-    let time = 0;
-    const animateBubble = (dt) => {
-      time += dt;
-      bubble.setLocalPosition(0, 4.0 + Math.sin(time * 2) * 0.1, 0);
-      bubble.lookAt(this.camera.getPosition());
-
-      if (time > duration / 1000) {
-        this.app.off("update", animateBubble);
-        bubble.destroy();
-      }
-    };
-    this.app.on("update", animateBubble);
-  }
-
-  // Show action effect (healing, attack, etc.)
-  showActionEffect(playerId, effectType) {
-    const entity = this.playerEntities.get(playerId);
-    if (!entity) return;
-
-    let color, particleCount, particleSpeed;
-
-    switch (effectType) {
-      case "heal":
-        color = new pc.Color(0, 1, 0);
-        particleCount = 20;
-        particleSpeed = 2;
-        break;
-      case "attack":
-        color = new pc.Color(1, 0, 0);
-        particleCount = 30;
-        particleSpeed = 3;
-        break;
-      case "protect":
-        color = new pc.Color(0, 0.5, 1);
-        particleCount = 25;
-        particleSpeed = 1.5;
-        break;
-      case "poison":
-        color = new pc.Color(0.5, 0, 0.8);
-        particleCount = 25;
-        particleSpeed = 2.5;
-        break;
-      case "love":
-        color = new pc.Color(1, 0.4, 0.7);
-        particleCount = 30;
-        particleSpeed = 1.8;
-        break;
-      default:
-        color = new pc.Color(1, 1, 0);
-        particleCount = 20;
-        particleSpeed = 2;
-    }
-
-    // Create particle system
-    const particles = [];
-    for (let i = 0; i < particleCount; i++) {
-      const particle = new pc.Entity(`Particle-${i}`);
-      particle.addComponent("model", { type: "sphere" });
-      particle.setLocalScale(0.15, 0.15, 0.15);
-
-      const mat = new pc.StandardMaterial();
-      mat.emissive = color;
-      mat.opacity = 0.8;
-      mat.blendType = pc.BLEND_ADDITIVE;
-      mat.update();
-      particle.model.material = mat;
-
-      entity.addChild(particle);
-      particles.push({
-        entity: particle,
-        velocity: new pc.Vec3(
-          (Math.random() - 0.5) * 2,
-          Math.random() * 3 + 1,
-          (Math.random() - 0.5) * 2,
-        ),
-        life: 0,
-        maxLife: 1 + Math.random() * 0.5,
-      });
-    }
-
-    // Animate particles
-    const animateEffect = (dt) => {
-      let allDead = true;
-      particles.forEach((p) => {
-        p.life += dt * particleSpeed;
-        if (p.life < p.maxLife) {
-          allDead = false;
-          const pos = p.entity.getLocalPosition();
-          pos.add(p.velocity.clone().scale(dt));
-          p.velocity.y -= dt * 5; // Gravity
-          p.entity.setLocalPosition(pos);
-
-          // Fade out
-          const alpha = 1 - p.life / p.maxLife;
-          p.entity.setLocalScale(0.15 * alpha, 0.15 * alpha, 0.15 * alpha);
-        } else {
-          p.entity.enabled = false;
-        }
-      });
-
-      if (allDead) {
-        this.app.off("update", animateEffect);
-        particles.forEach((p) => p.entity.destroy());
-      }
-    };
-    this.app.on("update", animateEffect);
-  }
-
-  // Update player status (e.g., when killed)
-  updatePlayerStatus(playerId, isAlive) {
-    const entity = this.playerEntities.get(playerId);
-    if (!entity) return;
-
-    if (!isAlive) {
-      // Create cached dead material if not exists
-      if (!this.deadMaterial) {
-        this.deadMaterial = new pc.StandardMaterial();
-        this.deadMaterial.diffuse = new pc.Color(0.3, 0.3, 0.3);
-        this.deadMaterial.opacity = 0.4;
-        this.deadMaterial.blendType = pc.BLEND_NORMAL;
-        this.deadMaterial.update();
-      }
-
-      // Make player gray and semi-transparent
-      entity.children.forEach((child) => {
-        if (child.model && child.model.material) {
-          // Use cached material
-          child.model.material = this.deadMaterial;
-        }
-        if (child.light) {
-          child.enabled = false;
-        }
-      });
-
-      // Show death effect
-      this.showActionEffect(playerId, "attack");
-
-      // Add tombstone
-      const tombstone = new pc.Entity("Tombstone");
-      tombstone.addComponent("model", { type: "box" });
-      tombstone.setLocalScale(0.6, 1.2, 0.2);
-      tombstone.setLocalPosition(0, 0.6, 1);
-      tombstone.setLocalEulerAngles(-10, 0, 0);
-
-      const mat = new pc.StandardMaterial();
-      mat.diffuse = new pc.Color(0.3, 0.3, 0.35);
-      mat.update();
-      tombstone.model.material = mat;
-      entity.addChild(tombstone);
-    }
   }
 
   /**

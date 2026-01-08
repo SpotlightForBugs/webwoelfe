@@ -15,6 +15,99 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     }
   }
 
+  /* Fullscreen 3D mode */
+  .game-container.fullscreen-3d {
+    display: block;
+    max-width: none;
+    margin: 0;
+  }
+
+  .game-container.fullscreen-3d .main-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    z-index: 1000;
+  }
+
+  .game-container.fullscreen-3d .sidebar {
+    display: none;
+  }
+
+  .game-container.fullscreen-3d #village-3d-container {
+    height: 100vh !important;
+    width: 100vw !important;
+  }
+
+  /* Hide player grid and other UI elements in fullscreen */
+  .game-container.fullscreen-3d .spieler-grid {
+    display: none;
+  }
+
+  .game-container.fullscreen-3d .phase-banner {
+    display: none;
+  }
+
+  .game-container.fullscreen-3d .spieler-card {
+    display: none;
+  }
+
+  .game-container.fullscreen-3d .action-panel {
+    display: none;
+  }
+
+  .game-container.fullscreen-3d .erzaehler-panel {
+    display: none;
+  }
+
+  .game-container.fullscreen-3d #village-3d-hint {
+    display: none;
+  }
+
+  .game-container.fullscreen-3d #village-3d-controls {
+    display: flex !important;
+    bottom: auto !important;
+    top: 10px !important;
+    left: auto !important;
+    right: 10px !important;
+    gap: 10px;
+  }
+
+  /* Fullscreen button styling */
+  .fullscreen-toggle-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #d4a574 0%, #b8885a 100%);
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .fullscreen-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 165, 116, 0.4);
+  }
+
+  .fullscreen-toggle-btn:active {
+    transform: translateY(0);
+  }
+
   .phase-banner {
     background: linear-gradient(
       135deg,
@@ -1224,6 +1317,15 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           >
             <i class="fa-solid fa-home"></i>
           </button>
+          <button
+            class="btn btn-sm"
+            id="fullscreen-toggle-btn"
+            style="background: rgba(0, 0, 0, 0.6); color: white; border: none"
+            onclick="window.toggleFullscreenMode?.()"
+            title="Fullscreen 3D Modus"
+          >
+            <i class="fa-solid fa-expand"></i>
+          </button>
         </div>
         <div
           id="village-3d-hint"
@@ -1863,7 +1965,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       }
   });
 
-  socket.on('phase_bereit', function(data) {
+  socket.on('phase_bereit', function() {
       if (istErzaehler) {
           showAlert('Alle Spieler haben gewählt. Bereit für nächste Phase.', 'info');
       }
@@ -2295,7 +2397,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   function toggleNarratorAudio(playerId) {
       const audio = document.getElementById(playerId);
-      const icon = document.getElementById(playerId + '-icon');
       if (audio.paused) {
           audio.play();
       } else {
@@ -2937,7 +3038,156 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   updateActionButtons();
   updatePhase(aktuellePhase, {{ raum.runde }});
 
-  // PlayCanvas 3D Village initialisieren
+  // ============================================================
+  // FULLSCREEN 3D MODE INTEGRATION
+  // ============================================================
+
+  let isFullscreen3D = false;
+
+  window.toggleFullscreenMode = () => {
+    const container = document.querySelector('.game-container');
+    const fullscreenBtn = document.getElementById('fullscreen-toggle-btn');
+
+    isFullscreen3D = !isFullscreen3D;
+
+    if (isFullscreen3D) {
+      container?.classList.add('fullscreen-3d');
+      if (fullscreenBtn) {
+        fullscreenBtn.innerHTML = '<i class="fa-solid fa-compress"></i>';
+        fullscreenBtn.title = 'Normalansicht';
+      }
+
+      // Try to request fullscreen API if available
+      try {
+        const elem = document.querySelector('#village-3d-container');
+        if (elem && elem.requestFullscreen) {
+          elem.requestFullscreen().catch(err => {
+            console.warn('Fullscreen API nicht verfügbar:', err);
+          });
+        }
+      } catch (e) {
+        console.debug('Fullscreen API error:', e);
+      }
+
+      // Update 3D overlays
+      if (window.village3d) {
+        window.village3d.showFullscreenUI(true);
+        window.village3d.updateTopBar(aktuellePhase, aktuelleRunde);
+        window.village3d.updateRoleBadge(spielerRolle);
+      }
+    } else {
+      container?.classList.remove('fullscreen-3d');
+      if (fullscreenBtn) {
+        fullscreenBtn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+        fullscreenBtn.title = 'Fullscreen 3D Modus';
+      }
+
+      // Exit fullscreen if browser is in fullscreen
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(err => {
+          console.warn('Exit fullscreen error:', err);
+        });
+      }
+
+      // Hide 3D overlays
+      if (window.village3d) {
+        window.village3d.showFullscreenUI(false);
+      }
+    }
+  };
+
+  // Expose sidebar toggles to window
+  window.toggleLeftSidebar = () => {
+    if (window.village3d) {
+      window.village3d.toggleLeftSidebar();
+    }
+  };
+
+  window.toggleRightSidebar = () => {
+    if (window.village3d) {
+      window.village3d.toggleRightSidebar();
+    }
+  };
+
+  // Chat message integration with 3D overlay
+  const originalAddChatMessage = window.addChatMessage || (() => {});
+  window.addChatMessage = function(von, text, istTot) {
+    // Add to 2D UI
+    originalAddChatMessage(von, text, istTot);
+    // Add to 3D overlay
+    if (window.village3d) {
+      window.village3d.addChatMessage(von, text, istTot);
+    }
+  };
+
+  // Send chat message from 3D overlay
+  window.sendChatMessage = () => {
+    const input = document.getElementById('village3d-chat-input');
+    if (input && input.value.trim()) {
+      socket.emit('chat_nachricht', { nachricht: input.value });
+      input.value = '';
+    }
+  };
+
+  // Update 3D overlays when phase changes
+  const originalUpdatePhase = window.updatePhase || (() => {});
+  window.updatePhase = function(phase, runde, displayInfo) {
+    originalUpdatePhase(phase, runde, displayInfo);
+    if (window.village3d) {
+      window.village3d.updateTopBar(phase, runde);
+    }
+  };
+
+  // Handle player selection from 3D scene
+  const originalSelectSpieler = window.selectSpieler || (() => {});
+  window.selectSpieler = function(spielerId) {
+    originalSelectSpieler(spielerId);
+    // Highlight in 3D scene
+    if (window.village3d) {
+      window.village3d.highlightPlayer(spielerId, 'yellow');
+      window.village3d.focusOnPlayer(spielerId);
+    }
+  };
+
+  // Hook into role UI loading
+  const originalLoadRoleUI = window.loadRoleUI || (() => {});
+  window.loadRoleUI = async function(rolle) {
+    const ui = await originalLoadRoleUI(rolle);
+
+    // Update 3D role badge when role UI is loaded
+    if (window.village3d && rollen_styles && rollen_styles[rolle|css_class]) {
+      const roleStyle = rollen_styles[rolle|css_class];
+      window.village3d.updateRoleBadge(rolle, roleStyle.avatar_gradient_from);
+    }
+
+    return ui;
+  };
+
+  // Update 3D overlays on player death
+  const originalSocket_spieler_gestorben = socket.on('spieler_gestorben', () => {});
+  socket.on('spieler_gestorben', function(data) {
+    // Update 3D scene
+    if (window.village3d) {
+      window.village3d.updatePlayerStatus(data.spieler_name, '', false);
+    }
+  });
+
+  // Initial setup for 3D overlays
+  if (window.village3d) {
+    window.village3d.updateRoleBadge(spielerRolle);
+    window.village3d.updateTopBar(aktuellePhase, aktuelleRunde);
+  }
+
+  // Exit fullscreen when game ends
+  socket.on('gehe_zu_startseite', function() {
+    if (isFullscreen3D && document.fullscreenElement) {
+      document.exitFullscreen().then(() => {
+        window.location.href = '/';
+      });
+    } else {
+      window.location.href = '/';
+    }
+  });
   const loadPlayCanvas = () => {
       return new Promise((resolve, reject) => {
           if (typeof pc !== 'undefined') {

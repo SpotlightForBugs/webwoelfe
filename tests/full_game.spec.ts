@@ -260,9 +260,9 @@ test.describe("Full Game Simulation", () => {
 
     const headlessBrowser = HEADLESS_OTHERS
       ? await chromium.launch({
-        headless: true,
-        args: ["--disable-web-security", "--no-sandbox"],
-      })
+          headless: true,
+          args: ["--disable-web-security", "--no-sandbox"],
+        })
       : null;
 
     try {
@@ -336,9 +336,11 @@ test.describe("Full Game Simulation", () => {
           if (msg.type() === "error") {
             const text = msg.text();
             // Ignore some common noise and handled warnings
-            if (!text.includes("favicon") &&
-                !text.includes("ERR_BLOCKED_BY_CLIENT") &&
-                !text.includes("Viewport height is too small")) {
+            if (
+              !text.includes("favicon") &&
+              !text.includes("ERR_BLOCKED_BY_CLIENT") &&
+              !text.includes("Viewport height is too small")
+            ) {
               console.error(`🚨 CONSOLE ERROR [${playerName}]: ${text}`);
               throw new Error(`Console Error in ${playerName}: ${text}`);
             }
@@ -405,19 +407,20 @@ test.describe("Full Game Simulation", () => {
         // VERIFY VILLAGE 3D - Wait for async initialization (optional feature)
         try {
           await player.page.waitForFunction(
-            () => typeof (window as any).village3d !== 'undefined',
-            { timeout: 15000 }
+            () => typeof (window as any).village3d !== "undefined",
+            { timeout: 15000 },
           );
           // log(`✓ Village3D initialized for ${player.name}`);
         } catch (e) {
-          log(`⚠️  Village3D not initialized for ${player.name} (non-critical, continuing...)`);
+          log(
+            `⚠️  Village3D not initialized for ${player.name} (non-critical, continuing...)`,
+          );
         }
       }
 
       log("✓ Spiel gestartet!\n");
 
       // ... (Role extraction omitted for brevity, keeping existing logic) ...
-
 
       // ========================================================================
       // PHASE 4: Extract Roles
@@ -559,8 +562,12 @@ test.describe("Full Game Simulation", () => {
           // We cannot and should not try to skip phases manually.
           // The server has a 30 second fallback timeout for stuck phases.
           if (samePhaseCount > MAX_SAME_PHASE) {
-            log(`  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`);
-            throw new Error(`Game stuck in phase: ${currentPhase} - Auto-advance failed.`);
+            log(
+              `  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`,
+            );
+            throw new Error(
+              `Game stuck in phase: ${currentPhase} - Auto-advance failed.`,
+            );
           }
           // Warte auf Phasenwechsel
           await sleep(2000);
@@ -641,7 +648,7 @@ test.describe("Full Game Simulation", () => {
       log("==========================================\n");
 
       // Wait indefinitely
-      await new Promise(() => { });
+      await new Promise(() => {});
     } catch (error) {
       log(`❌ Fehler: ${error}`);
       throw error;
@@ -1016,22 +1023,22 @@ async function handleWerwolfPhase(
       target = randomChoice(validTargets);
     }
 
-    let success = await selectTargetAndConfirm(
-      wolf.page,
-      target.name,
-      ["Töten", "Wählen", "Angreifen"],
-    );
+    let success = await selectTargetAndConfirm(wolf.page, target.name, [
+      "Töten",
+      "Wählen",
+      "Angreifen",
+    ]);
 
     // If the action failed (invalid target), retry with a valid target
     if (!success && isInvalidTarget && validTargets.length > 0) {
       log(`    🔄 ${wolf.name} Server hat abgelehnt, wähle gültiges Ziel...`);
       await sleep(500);
       const validTarget = randomChoice(validTargets);
-      success = await selectTargetAndConfirm(
-        wolf.page,
-        validTarget.name,
-        ["Töten", "Wählen", "Angreifen"],
-      );
+      success = await selectTargetAndConfirm(wolf.page, validTarget.name, [
+        "Töten",
+        "Wählen",
+        "Angreifen",
+      ]);
       if (success) {
         log(`    ✓ ${wolf.name} stimmt für ${validTarget.name}`);
       }
@@ -1046,11 +1053,10 @@ async function handleWerwolfPhase(
       log(
         `    ⚠️ [RANDOM] ${wolf.name} versucht erneut zu wählen (wird abgelehnt)`,
       );
-      await selectTargetAndConfirm(
-        wolf.page,
-        randomChoice(validTargets).name,
-        ["Töten", "Wählen"],
-      );
+      await selectTargetAndConfirm(wolf.page, randomChoice(validTargets).name, [
+        "Töten",
+        "Wählen",
+      ]);
     }
 
     await sleep(300 + Math.floor(seededRandom() * 400)); // Random delay
@@ -1951,7 +1957,7 @@ async function handleDiskussionPhase(players: PlayerWindow[]): Promise<void> {
             await chatInput.fill(randomChoice(chatMessages));
             await chatInput.press("Enter");
           }
-        } catch (e) { }
+        } catch (e) {}
         await sleep(50);
       }
     }
@@ -2369,7 +2375,9 @@ async function selectTargetAndConfirm(
   }
 
   if (!buttonClicked) {
-    throw new Error(`No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`);
+    throw new Error(
+      `No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`,
+    );
   }
 
   // Poll for server response (max 5 seconds)

@@ -113,7 +113,9 @@ export default class Village3DPlayCanvas {
 
         // Refresh players with new role data if they exist
         if (this.players && this.players.length > 0) {
-          console.log("[Village3D] Refreshing players with loaded role data...");
+          console.log(
+            "[Village3D] Refreshing players with loaded role data...",
+          );
 
           // Destroy existing entities so they get recreated with role features
           this.playerEntities.forEach((entity) => entity.destroy());
@@ -144,7 +146,9 @@ export default class Village3DPlayCanvas {
     // Check minimum container size to prevent PlayCanvas errors
     const minHeight = 300;
     if (this.container.clientHeight < minHeight) {
-      console.error(`Viewport height is too small: ${this.container.clientHeight}`);
+      console.error(
+        `Viewport height is too small: ${this.container.clientHeight}`,
+      );
       // Set container to minimum height
       this.container.style.minHeight = `${minHeight}px`;
     }
@@ -236,7 +240,11 @@ export default class Village3DPlayCanvas {
         this.app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
       } else if (this.app.scene.settings) {
         this.app.scene.settings.render.fog = pc.FOG_EXP2;
-        this.app.scene.settings.render.fogColor = new pc.Color(0.02, 0.03, 0.08);
+        this.app.scene.settings.render.fogColor = new pc.Color(
+          0.02,
+          0.03,
+          0.08,
+        );
         this.app.scene.settings.render.fogDensity = 0.008;
       }
     } catch (e) {
@@ -254,7 +262,11 @@ export default class Village3DPlayCanvas {
       console.debug("Could not set ambientLight:", e.message);
     }
 
-    this.camera.setPosition(0, this.defaultCameraHeight, this.defaultCameraRadius);
+    this.camera.setPosition(
+      0,
+      this.defaultCameraHeight,
+      this.defaultCameraRadius,
+    );
     this.camera.lookAt(0, 0, 0);
     this.app.root.addChild(this.camera);
 
@@ -381,9 +393,17 @@ export default class Village3DPlayCanvas {
       const warmth = Math.random();
       // Mix between white, blue, and yellow stars
       if (warmth < 0.3) {
-        starMat.emissive = new pc.Color(brightness, brightness * 0.9, brightness * 0.7); // Warm
+        starMat.emissive = new pc.Color(
+          brightness,
+          brightness * 0.9,
+          brightness * 0.7,
+        ); // Warm
       } else if (warmth < 0.6) {
-        starMat.emissive = new pc.Color(brightness * 0.8, brightness * 0.85, brightness); // Blue
+        starMat.emissive = new pc.Color(
+          brightness * 0.8,
+          brightness * 0.85,
+          brightness,
+        ); // Blue
       } else {
         starMat.emissive = new pc.Color(brightness, brightness, brightness); // White
       }
@@ -643,7 +663,11 @@ export default class Village3DPlayCanvas {
       rock.setLocalScale(scale, scale * 0.6, scale);
       const radius = 8 + Math.random() * 6;
       const angle = Math.random() * Math.PI * 2;
-      rock.setPosition(Math.cos(angle) * radius, 0.05, Math.sin(angle) * radius);
+      rock.setPosition(
+        Math.cos(angle) * radius,
+        0.05,
+        Math.sin(angle) * radius,
+      );
 
       const rockMat = this.getMaterial({
         name: "Pebble",
@@ -1023,7 +1047,11 @@ export default class Village3DPlayCanvas {
 
     const rockMat = this.getMaterial({
       name: "Rock",
-      diffuse: new pc.Color(0.3 + Math.random() * 0.1, 0.3 + Math.random() * 0.1, 0.35 + Math.random() * 0.1),
+      diffuse: new pc.Color(
+        0.3 + Math.random() * 0.1,
+        0.3 + Math.random() * 0.1,
+        0.35 + Math.random() * 0.1,
+      ),
       specular: new pc.Color(0.1, 0.1, 0.1),
     });
     rock.model.material = rockMat;
@@ -1829,8 +1857,8 @@ export default class Village3DPlayCanvas {
    */
   initFullscreenUI() {
     // Create container for UI overlays
-    this.uiOverlayContainer = document.createElement('div');
-    this.uiOverlayContainer.id = 'village3d-ui-overlay';
+    this.uiOverlayContainer = document.createElement("div");
+    this.uiOverlayContainer.id = "village3d-ui-overlay";
     this.uiOverlayContainer.style.cssText = `
       position: absolute;
       top: 0;
@@ -1858,14 +1886,14 @@ export default class Village3DPlayCanvas {
     // Create player selection overlay
     this.createPlayerSelectionOverlay();
 
-    console.log('[Village3D] Fullscreen UI overlay system initialized');
+    console.log("[Village3D] Fullscreen UI overlay system initialized");
   }
 
   /**
    * Set players and create their 3D avatars
    */
   setPlayers(players) {
-    console.log('[Village3D] Setting players:', players);
+    console.log("[Village3D] Setting players:", players);
 
     // Store player data
     this.players = players || [];
@@ -1877,7 +1905,7 @@ export default class Village3DPlayCanvas {
     this.playerLabels.clear();
 
     if (this.players.length === 0) {
-      console.warn('[Village3D] No players to display');
+      console.warn("[Village3D] No players to display");
       return;
     }
 
@@ -1893,7 +1921,11 @@ export default class Village3DPlayCanvas {
       this.createPlayerAvatar(player, x, z, angle);
     });
 
-    console.log('[Village3D] Created', this.playerEntities.size, 'player avatars');
+    console.log(
+      "[Village3D] Created",
+      this.playerEntities.size,
+      "player avatars",
+    );
   }
 
   /**
@@ -1904,22 +1936,27 @@ export default class Village3DPlayCanvas {
     playerEntity.playerData = player;
 
     // Determine player color based on role
-    const roleName = player.rolle || 'default';
-    const roleColor = this.roleColors[roleName] || this.roleColors['default'] || new pc.Color(0.3, 0.5, 0.8);
+    const roleName = player.rolle || "default";
+    const roleColor =
+      this.roleColors[roleName] ||
+      this.roleColors["default"] ||
+      new pc.Color(0.3, 0.5, 0.8);
 
     // Dorfbewohner should have distinctive peasant/farmer appearance
-    const isDorfbewohner = roleName === 'Dorfbewohner';
+    const isDorfbewohner = roleName === "Dorfbewohner";
 
     // Create body parts
     playerEntity.parts = {};
 
     // Torso - Dorfbewohner gets brown/tan vest over white shirt
-    const torso = new pc.Entity('Torso');
-    torso.addComponent('model', { type: 'box' });
+    const torso = new pc.Entity("Torso");
+    torso.addComponent("model", { type: "box" });
     torso.setLocalScale(0.6, 0.8, 0.35);
     torso.setLocalPosition(0, 1.3, 0);
 
-    const torsoColor = isDorfbewohner ? new pc.Color(0.55, 0.4, 0.25) : roleColor; // Brown vest for Dorfbewohner
+    const torsoColor = isDorfbewohner
+      ? new pc.Color(0.55, 0.4, 0.25)
+      : roleColor; // Brown vest for Dorfbewohner
     const torsoMat = this.getMaterial({
       name: `PlayerTorso-${player.id}`,
       diffuse: torsoColor,
@@ -1931,8 +1968,8 @@ export default class Village3DPlayCanvas {
 
     // Add white shirt layer under vest for Dorfbewohner
     if (isDorfbewohner) {
-      const shirt = new pc.Entity('Shirt');
-      shirt.addComponent('model', { type: 'box' });
+      const shirt = new pc.Entity("Shirt");
+      shirt.addComponent("model", { type: "box" });
       shirt.setLocalScale(0.58, 0.5, 0.33);
       shirt.setLocalPosition(0, -0.15, 0);
 
@@ -1946,8 +1983,8 @@ export default class Village3DPlayCanvas {
     }
 
     // Head
-    const head = new pc.Entity('Head');
-    head.addComponent('model', { type: 'sphere' });
+    const head = new pc.Entity("Head");
+    head.addComponent("model", { type: "sphere" });
     head.setLocalScale(0.45, 0.45, 0.45);
     head.setLocalPosition(0, 2.0, 0);
 
@@ -1962,8 +1999,8 @@ export default class Village3DPlayCanvas {
 
     // Add straw hat for Dorfbewohner
     if (isDorfbewohner) {
-      const hat = new pc.Entity('StrawHat');
-      hat.addComponent('model', { type: 'cylinder' });
+      const hat = new pc.Entity("StrawHat");
+      hat.addComponent("model", { type: "cylinder" });
       hat.setLocalScale(0.6, 0.08, 0.6);
       hat.setLocalPosition(0, 0.4, 0);
 
@@ -1976,8 +2013,8 @@ export default class Village3DPlayCanvas {
       head.addChild(hat);
 
       // Hat top
-      const hatTop = new pc.Entity('HatTop');
-      hatTop.addComponent('model', { type: 'cone' });
+      const hatTop = new pc.Entity("HatTop");
+      hatTop.addComponent("model", { type: "cone" });
       hatTop.setLocalScale(0.5, 0.25, 0.5);
       hatTop.setLocalPosition(0, 0.55, 0);
       hatTop.model.material = hatMat;
@@ -1991,8 +2028,8 @@ export default class Village3DPlayCanvas {
       const armPivot = new pc.Entity(`Arm-${i}`);
       armPivot.setLocalPosition(side * 0.4, 1.6, 0);
 
-      const arm = new pc.Entity('ArmPart');
-      arm.addComponent('model', { type: 'box' });
+      const arm = new pc.Entity("ArmPart");
+      arm.addComponent("model", { type: "box" });
       arm.setLocalScale(0.15, 0.6, 0.15);
       arm.setLocalPosition(0, -0.3, 0);
 
@@ -2018,11 +2055,13 @@ export default class Village3DPlayCanvas {
     for (let i = 0; i < 2; i++) {
       const side = i === 0 ? -0.15 : 0.15;
       const leg = new pc.Entity(`Leg-${i}`);
-      leg.addComponent('model', { type: 'box' });
+      leg.addComponent("model", { type: "box" });
       leg.setLocalScale(0.2, 0.7, 0.2);
       leg.setLocalPosition(side, 0.55, 0);
 
-      const legColor = isDorfbewohner ? new pc.Color(0.4, 0.3, 0.2) : new pc.Color(0.2, 0.2, 0.3);
+      const legColor = isDorfbewohner
+        ? new pc.Color(0.4, 0.3, 0.2)
+        : new pc.Color(0.2, 0.2, 0.3);
       const legMat = this.getMaterial({
         name: `PlayerLeg-${player.id}-${i}`,
         diffuse: legColor,
@@ -2035,11 +2074,11 @@ export default class Village3DPlayCanvas {
 
     // Add farming tool accessory for Dorfbewohner (pitchfork/hoe)
     if (isDorfbewohner) {
-      const tool = new pc.Entity('FarmTool');
+      const tool = new pc.Entity("FarmTool");
 
       // Tool handle
-      const handle = new pc.Entity('ToolHandle');
-      handle.addComponent('model', { type: 'cylinder' });
+      const handle = new pc.Entity("ToolHandle");
+      handle.addComponent("model", { type: "cylinder" });
       handle.setLocalScale(0.05, 1.2, 0.05);
       handle.setLocalPosition(0.5, 1.2, 0);
       handle.setLocalEulerAngles(0, 0, -20);
@@ -2053,8 +2092,8 @@ export default class Village3DPlayCanvas {
       playerEntity.addChild(handle);
 
       // Tool head (hoe blade)
-      const blade = new pc.Entity('ToolBlade');
-      blade.addComponent('model', { type: 'box' });
+      const blade = new pc.Entity("ToolBlade");
+      blade.addComponent("model", { type: "box" });
       blade.setLocalScale(0.3, 0.08, 0.08);
       blade.setLocalPosition(0.2, 0.5, 0);
       blade.setLocalEulerAngles(0, 0, 70);
@@ -2081,7 +2120,7 @@ export default class Village3DPlayCanvas {
 
     // Position and rotation
     playerEntity.setPosition(x, 0, z);
-    playerEntity.setLocalEulerAngles(0, -(angle * 180 / Math.PI) + 180, 0);
+    playerEntity.setLocalEulerAngles(0, -((angle * 180) / Math.PI) + 180, 0);
 
     // Animation state
     playerEntity.animState = {
@@ -2098,27 +2137,29 @@ export default class Village3DPlayCanvas {
    * Create a name label for a player
    */
   createPlayerLabel(name, isAlive) {
-    const label = new pc.Entity('NameLabel');
-    label.addComponent('model', { type: 'plane' });
+    const label = new pc.Entity("NameLabel");
+    label.addComponent("model", { type: "plane" });
     label.setLocalScale(2, 0.5, 1);
 
     // Create canvas for text rendering
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = 512;
     canvas.height = 128;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
 
     // Draw text
-    ctx.fillStyle = isAlive ? 'rgba(255, 255, 255, 0.95)' : 'rgba(150, 150, 150, 0.7)';
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.fillStyle = isAlive
+      ? "rgba(255, 255, 255, 0.95)"
+      : "rgba(150, 150, 150, 0.7)";
+    ctx.font = "bold 48px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     ctx.fillText(name, 256, 64);
 
     if (!isAlive) {
-      ctx.fillStyle = 'rgba(200, 50, 50, 0.9)';
-      ctx.font = '36px Arial';
-      ctx.fillText('💀', 256, 90);
+      ctx.fillStyle = "rgba(200, 50, 50, 0.9)";
+      ctx.font = "36px Arial";
+      ctx.fillText("💀", 256, 90);
     }
 
     // Create texture from canvas
@@ -2154,9 +2195,9 @@ export default class Village3DPlayCanvas {
     if (!entity || !entity.parts) return;
 
     // Make all parts semi-transparent and darker
-    Object.values(entity.parts).forEach(part => {
+    Object.values(entity.parts).forEach((part) => {
       if (Array.isArray(part)) {
-        part.forEach(p => {
+        part.forEach((p) => {
           if (p.model && p.model.material) {
             p.model.material.opacity = 0.4;
             p.model.material.blendType = pc.BLEND_NORMAL;
@@ -2178,7 +2219,7 @@ export default class Village3DPlayCanvas {
    * Set time of day (day/night cycle)
    */
   setTimeOfDay(isNight) {
-    console.log('[Village3D] Setting time of day:', isNight ? 'Night' : 'Day');
+    console.log("[Village3D] Setting time of day:", isNight ? "Night" : "Day");
 
     this.isNight = isNight;
 
@@ -2227,8 +2268,8 @@ export default class Village3DPlayCanvas {
    * Create top information bar
    */
   createTopBar() {
-    const topBar = document.createElement('div');
-    topBar.id = 'village3d-top-bar';
+    const topBar = document.createElement("div");
+    topBar.id = "village3d-top-bar";
     topBar.style.cssText = `
       position: absolute;
       top: 0;
@@ -2270,8 +2311,8 @@ export default class Village3DPlayCanvas {
    * Create bottom action panel for role actions
    */
   createActionPanel() {
-    const actionPanel = document.createElement('div');
-    actionPanel.id = 'village3d-action-panel';
+    const actionPanel = document.createElement("div");
+    actionPanel.id = "village3d-action-panel";
     actionPanel.style.cssText = `
       position: absolute;
       bottom: 0;
@@ -2301,8 +2342,8 @@ export default class Village3DPlayCanvas {
    * Create left sidebar for player status info
    */
   createLeftSidebar() {
-    const leftSidebar = document.createElement('div');
-    leftSidebar.id = 'village3d-left-sidebar';
+    const leftSidebar = document.createElement("div");
+    leftSidebar.id = "village3d-left-sidebar";
     leftSidebar.style.cssText = `
       position: absolute;
       top: 2rem;
@@ -2344,8 +2385,8 @@ export default class Village3DPlayCanvas {
    * Create right sidebar for chat and log
    */
   createRightSidebar() {
-    const rightSidebar = document.createElement('div');
-    rightSidebar.id = 'village3d-right-sidebar';
+    const rightSidebar = document.createElement("div");
+    rightSidebar.id = "village3d-right-sidebar";
     rightSidebar.style.cssText = `
       position: absolute;
       top: 2rem;
@@ -2389,8 +2430,8 @@ export default class Village3DPlayCanvas {
    * Create player selection overlay showing all players for selection
    */
   createPlayerSelectionOverlay() {
-    const overlay = document.createElement('div');
-    overlay.id = 'village3d-player-selection';
+    const overlay = document.createElement("div");
+    overlay.id = "village3d-player-selection";
     overlay.style.cssText = `
       position: absolute;
       bottom: 0;
@@ -2427,11 +2468,11 @@ export default class Village3DPlayCanvas {
    * Update top bar with phase and round information
    */
   updateTopBar(phase, round) {
-    const phaseEl = this.topBar?.querySelector('#village3d-phase-name');
-    const roundEl = this.topBar?.querySelector('#village3d-round-info');
+    const phaseEl = this.topBar?.querySelector("#village3d-phase-name");
+    const roundEl = this.topBar?.querySelector("#village3d-round-info");
 
     if (phaseEl) {
-      phaseEl.textContent = phase.replace(/_/g, ' ').toUpperCase();
+      phaseEl.textContent = phase.replace(/_/g, " ").toUpperCase();
     }
     if (roundEl) {
       roundEl.textContent = `Runde ${round}`;
@@ -2442,9 +2483,9 @@ export default class Village3DPlayCanvas {
    * Update role badge in top bar
    */
   updateRoleBadge(role, color) {
-    const badge = this.topBar?.querySelector('#village3d-role-badge');
+    const badge = this.topBar?.querySelector("#village3d-role-badge");
     if (badge) {
-      badge.textContent = role || 'Warte...';
+      badge.textContent = role || "Warte...";
       if (color) {
         badge.style.background = `linear-gradient(135deg, ${color}80 0%, ${color}40 100%)`;
       }
@@ -2455,18 +2496,21 @@ export default class Village3DPlayCanvas {
    * Update action buttons in the action panel
    */
   updateActionButtons(buttons) {
-    const container = this.actionPanel?.querySelector('#village3d-action-buttons');
+    const container = this.actionPanel?.querySelector(
+      "#village3d-action-buttons",
+    );
     if (!container) return;
 
-    container.innerHTML = '';
+    container.innerHTML = "";
 
     if (!buttons || buttons.length === 0) {
-      container.innerHTML = '<p style="color: #999; pointer-events: auto;">Warte auf deine Aktion...</p>';
+      container.innerHTML =
+        '<p style="color: #999; pointer-events: auto;">Warte auf deine Aktion...</p>';
       return;
     }
 
     buttons.forEach((btn) => {
-      const button = document.createElement('button');
+      const button = document.createElement("button");
       button.style.cssText = `
         padding: 0.75rem 1.5rem;
         background: linear-gradient(135deg, #d4a574 0%, #b8885a 100%);
@@ -2481,12 +2525,12 @@ export default class Village3DPlayCanvas {
       `;
       button.textContent = btn.label || btn.text;
       button.onmouseover = () => {
-        button.style.transform = 'translateY(-2px)';
-        button.style.boxShadow = '0 4px 12px rgba(212,165,116,0.4)';
+        button.style.transform = "translateY(-2px)";
+        button.style.boxShadow = "0 4px 12px rgba(212,165,116,0.4)";
       };
       button.onmouseout = () => {
-        button.style.transform = '';
-        button.style.boxShadow = '';
+        button.style.transform = "";
+        button.style.boxShadow = "";
       };
       button.onclick = () => {
         if (btn.onclick) {
@@ -2503,14 +2547,16 @@ export default class Village3DPlayCanvas {
   showPlayerSelection(onSelect, allowMultiple = false) {
     if (!this.playerSelectionOverlay) return;
 
-    this.playerSelectionOverlay.style.display = 'block';
-    const grid = this.playerSelectionOverlay.querySelector('#village3d-player-grid');
-    grid.innerHTML = '';
+    this.playerSelectionOverlay.style.display = "block";
+    const grid = this.playerSelectionOverlay.querySelector(
+      "#village3d-player-grid",
+    );
+    grid.innerHTML = "";
 
     this.players.forEach((player) => {
       if (!player.ist_am_leben && !allowMultiple) return;
 
-      const card = document.createElement('div');
+      const card = document.createElement("div");
       card.style.cssText = `
         padding: 1rem;
         background: rgba(100, 100, 100, 0.5);
@@ -2524,16 +2570,16 @@ export default class Village3DPlayCanvas {
       card.innerHTML = `
         <div style="font-size: 2rem; margin-bottom: 0.5rem;">👤</div>
         <div style="font-weight: 600; font-size: 0.9rem;">${player.name}</div>
-        ${!player.ist_am_leben ? '<div style="font-size: 0.75rem; color: #ff6b6b;">💀 Tot</div>' : ''}
+        ${!player.ist_am_leben ? '<div style="font-size: 0.75rem; color: #ff6b6b;">💀 Tot</div>' : ""}
       `;
 
       card.onmouseover = () => {
-        card.style.borderColor = '#d4a574';
-        card.style.background = 'rgba(212, 165, 116, 0.2)';
+        card.style.borderColor = "#d4a574";
+        card.style.background = "rgba(212, 165, 116, 0.2)";
       };
       card.onmouseout = () => {
-        card.style.borderColor = 'rgba(212, 165, 116, 0.3)';
-        card.style.background = 'rgba(100, 100, 100, 0.5)';
+        card.style.borderColor = "rgba(212, 165, 116, 0.3)";
+        card.style.background = "rgba(100, 100, 100, 0.5)";
       };
       card.onclick = () => {
         onSelect(player.id);
@@ -2544,7 +2590,7 @@ export default class Village3DPlayCanvas {
     });
 
     window.closePlayerSelection = () => {
-      this.playerSelectionOverlay.style.display = 'none';
+      this.playerSelectionOverlay.style.display = "none";
     };
   }
 
@@ -2553,7 +2599,7 @@ export default class Village3DPlayCanvas {
    */
   closePlayerSelection() {
     if (this.playerSelectionOverlay) {
-      this.playerSelectionOverlay.style.display = 'none';
+      this.playerSelectionOverlay.style.display = "none";
     }
   }
 
@@ -2562,8 +2608,8 @@ export default class Village3DPlayCanvas {
    */
   toggleLeftSidebar() {
     if (this.leftSidebar) {
-      const isVisible = this.leftSidebar.style.display !== 'none';
-      this.leftSidebar.style.display = isVisible ? 'none' : 'block';
+      const isVisible = this.leftSidebar.style.display !== "none";
+      this.leftSidebar.style.display = isVisible ? "none" : "block";
     }
   }
 
@@ -2572,8 +2618,8 @@ export default class Village3DPlayCanvas {
    */
   toggleRightSidebar() {
     if (this.rightSidebar) {
-      const isVisible = this.rightSidebar.style.display !== 'none';
-      this.rightSidebar.style.display = isVisible ? 'none' : 'block';
+      const isVisible = this.rightSidebar.style.display !== "none";
+      this.rightSidebar.style.display = isVisible ? "none" : "block";
     }
   }
 
@@ -2581,16 +2627,18 @@ export default class Village3DPlayCanvas {
    * Add message to chat overlay
    */
   addChatMessage(name, message, isDead = false) {
-    const container = this.rightSidebar?.querySelector('#village3d-chat-messages');
+    const container = this.rightSidebar?.querySelector(
+      "#village3d-chat-messages",
+    );
     if (!container) return;
 
-    const msg = document.createElement('div');
+    const msg = document.createElement("div");
     msg.style.cssText = `
       padding: 0.5rem;
       margin-bottom: 0.5rem;
       background: rgba(255, 255, 255, 0.05);
       border-radius: 6px;
-      ${isDead ? 'opacity: 0.6; font-style: italic;' : ''}
+      ${isDead ? "opacity: 0.6; font-style: italic;" : ""}
     `;
     msg.innerHTML = `<strong style="color: #d4a574;">${name}:</strong> ${message}`;
     container.appendChild(msg);
@@ -2601,23 +2649,26 @@ export default class Village3DPlayCanvas {
    * Update player status in left sidebar
    */
   updatePlayerStatus(playerName, role, isAlive, effects = []) {
-    const statusDiv = this.leftSidebar?.querySelector('#village3d-player-status');
+    const statusDiv = this.leftSidebar?.querySelector(
+      "#village3d-player-status",
+    );
     if (!statusDiv) return;
 
     let html = `
       <div style="font-weight: 600; margin-bottom: 0.5rem;">${playerName}</div>
-      <div style="color: ${isAlive ? '#2d8659' : '#ff6b6b'}; margin-bottom: 0.5rem;">
-        ${isAlive ? '✓ Lebendig' : '✗ Tot'}
+      <div style="color: ${isAlive ? "#2d8659" : "#ff6b6b"}; margin-bottom: 0.5rem;">
+        ${isAlive ? "✓ Lebendig" : "✗ Tot"}
       </div>
       <div style="color: #d4a574; font-size: 0.95rem; margin-bottom: 0.5rem;">${role}</div>
     `;
 
     if (effects.length > 0) {
-      html += '<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem;">';
+      html +=
+        '<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem;">';
       effects.forEach((effect) => {
         html += `<div style="margin-bottom: 0.25rem;">🔧 ${effect}</div>`;
       });
-      html += '</div>';
+      html += "</div>";
     }
 
     statusDiv.innerHTML = html;
@@ -2628,7 +2679,7 @@ export default class Village3DPlayCanvas {
    */
   showFullscreenUI(show = true) {
     if (this.uiOverlayContainer) {
-      this.uiOverlayContainer.style.display = show ? 'block' : 'none';
+      this.uiOverlayContainer.style.display = show ? "block" : "none";
     }
   }
 
@@ -2830,7 +2881,7 @@ export default class Village3DPlayCanvas {
           anim.entity.setLocalEulerAngles(
             anim.originalRot.x,
             anim.originalRot.y + t * 60,
-            anim.originalRot.z
+            anim.originalRot.z,
           );
           break;
         case "pulse":
@@ -2838,21 +2889,21 @@ export default class Village3DPlayCanvas {
           anim.entity.setLocalScale(
             anim.originalScale.x * pulseScale,
             anim.originalScale.y * pulseScale,
-            anim.originalScale.z * pulseScale
+            anim.originalScale.z * pulseScale,
           );
           break;
         case "float":
           anim.entity.setLocalPosition(
             anim.originalPos.x,
             anim.originalPos.y + Math.sin(t) * 0.1 * amp,
-            anim.originalPos.z
+            anim.originalPos.z,
           );
           break;
         case "sway":
           anim.entity.setLocalEulerAngles(
             anim.originalRot.x,
             anim.originalRot.y,
-            anim.originalRot.z + Math.sin(t) * 10 * amp
+            anim.originalRot.z + Math.sin(t) * 10 * amp,
           );
           break;
         case "flutter":
@@ -2860,7 +2911,7 @@ export default class Village3DPlayCanvas {
           anim.entity.setLocalEulerAngles(
             anim.originalRot.x,
             anim.originalRot.y + flutterAngle,
-            anim.originalRot.z
+            anim.originalRot.z,
           );
           break;
         case "flicker":
@@ -2994,15 +3045,16 @@ export default class Village3DPlayCanvas {
 
     // Update Stars Twinkle
     if (this.stars && this.isNight) {
-      this.stars.forEach(star => {
+      this.stars.forEach((star) => {
         star.twinklePhase += dt * star.twinkleSpeed;
-        const brightness = star.baseBrightness + Math.sin(star.twinklePhase) * 0.3;
+        const brightness =
+          star.baseBrightness + Math.sin(star.twinklePhase) * 0.3;
         const c = star.material.emissive;
         // mod brightness without changing color hue too much
         star.material.emissive = new pc.Color(
           c.r * (1 + Math.sin(star.twinklePhase) * 0.1),
           c.g * (1 + Math.sin(star.twinklePhase) * 0.1),
-          c.b * (1 + Math.sin(star.twinklePhase) * 0.1)
+          c.b * (1 + Math.sin(star.twinklePhase) * 0.1),
         );
         star.material.update();
       });
@@ -3010,7 +3062,7 @@ export default class Village3DPlayCanvas {
 
     // Update Ground Fog Drift
     if (this.fogPlanes) {
-      this.fogPlanes.forEach(fp => {
+      this.fogPlanes.forEach((fp) => {
         fp.entity.rotateLocal(0, fp.rotSpeed * dt, 0);
         const pos = fp.entity.getPosition();
         // Gentle drift
@@ -3255,18 +3307,21 @@ export default class Village3DPlayCanvas {
 
     const entity = this.playerEntities.get(playerId);
     if (!entity) {
-      console.warn('[Village3D] Cannot highlight victim, player not found:', playerId);
+      console.warn(
+        "[Village3D] Cannot highlight victim, player not found:",
+        playerId,
+      );
       return;
     }
 
-    console.log('[Village3D] Highlighting victim:', playerId);
+    console.log("[Village3D] Highlighting victim:", playerId);
 
     // Create a pulsing red glow effect
-    const victimMarker = new pc.Entity('VictimMarker');
+    const victimMarker = new pc.Entity("VictimMarker");
 
     // Create a glowing ring around the player
-    const ring = new pc.Entity('VictimRing');
-    ring.addComponent('model', { type: 'cylinder' });
+    const ring = new pc.Entity("VictimRing");
+    ring.addComponent("model", { type: "cylinder" });
     ring.setLocalScale(1.5, 0.05, 1.5);
     ring.setLocalPosition(0, 0.1, 0);
 
@@ -3281,9 +3336,9 @@ export default class Village3DPlayCanvas {
     victimMarker.addChild(ring);
 
     // Add a red light
-    const victimLight = new pc.Entity('VictimLight');
-    victimLight.addComponent('light', {
-      type: 'point',
+    const victimLight = new pc.Entity("VictimLight");
+    victimLight.addComponent("light", {
+      type: "point",
       color: new pc.Color(1.0, 0.0, 0.0),
       intensity: 1.5,
       range: 3,
@@ -3293,8 +3348,8 @@ export default class Village3DPlayCanvas {
     victimMarker.addChild(victimLight);
 
     // Add skull icon above head
-    const skullMarker = new pc.Entity('SkullMarker');
-    skullMarker.addComponent('model', { type: 'sphere' });
+    const skullMarker = new pc.Entity("SkullMarker");
+    skullMarker.addComponent("model", { type: "sphere" });
     skullMarker.setLocalScale(0.4, 0.4, 0.4);
     skullMarker.setLocalPosition(0, 3.2, 0);
 
@@ -3321,11 +3376,10 @@ export default class Village3DPlayCanvas {
    */
   clearVictimHighlight() {
     if (this.currentVictimMarker) {
-      console.log('[Village3D] Clearing victim highlight');
+      console.log("[Village3D] Clearing victim highlight");
       this.currentVictimMarker.destroy();
       this.currentVictimMarker = null;
       this.currentVictimPlayerId = null;
     }
   }
 }
-

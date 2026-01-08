@@ -269,23 +269,25 @@ class Hexe(Role):
 
         # Add bubbling particles if any potion available
         if has_heal or has_poison:
-            hexe_features.append(AppearanceFeature(
-                feature_type="potion_bubbles",
-                geometry="sphere",
-                position={"x": 0.35 if has_poison else -0.35, "y": 0.85, "z": 0.2},
-                scale={"x": 0.03, "y": 0.03, "z": 0.03},
-                color_source="custom",
-                custom_color="#CC00FF" if has_poison else "#00FF88",
-                emissive=True,
-                emissive_intensity=0.8,
-                opacity=0.7,
-                animation="float",
-                animation_speed=2.0,
-                particle_effect="magic",
-                particle_color="#CC00FF" if has_poison else "#00FF88",
-                particle_rate=5.0,
-                description="Bubbling potion effect",
-            ))
+            hexe_features.append(
+                AppearanceFeature(
+                    feature_type="potion_bubbles",
+                    geometry="sphere",
+                    position={"x": 0.35 if has_poison else -0.35, "y": 0.85, "z": 0.2},
+                    scale={"x": 0.03, "y": 0.03, "z": 0.03},
+                    color_source="custom",
+                    custom_color="#CC00FF" if has_poison else "#00FF88",
+                    emissive=True,
+                    emissive_intensity=0.8,
+                    opacity=0.7,
+                    animation="float",
+                    animation_speed=2.0,
+                    particle_effect="magic",
+                    particle_color="#CC00FF" if has_poison else "#00FF88",
+                    particle_rate=5.0,
+                    description="Bubbling potion effect",
+                )
+            )
 
         return RollenModell(
             modell_id="hexe",

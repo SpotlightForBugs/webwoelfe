@@ -2815,16 +2815,58 @@ class Role(ABC):
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert role to dictionary for API/JSON."""
-        # Get model definition - use default model since we don't have player context
-        model_def = {
-            "modell_id": self.info.name.lower().replace(" ", "_"),
-            "anzeige_name": self.info.name,
-            "beschreibung": f"{self.info.name} appearance",
-            "appearance_self_alive": [],
-            "appearance_others_alive": [],
-            "appearance_dead": [],
-            "seher_sicht": "good" if self.info.team == Team.DORF else "bad",
-        }
+        # Get model definition - try to get actual model, use default if not available
+        try:
+            # Call get_modell_definition with None - roles should handle this gracefully
+            raw_model = self.get_modell_definition(None)
+
+            # Convert to dict format for JSON serialization
+            model_def = {
+                "modell_id": raw_model.modell_id,
+                "anzeige_name": raw_model.anzeige_name,
+                "beschreibung": raw_model.beschreibung,
+                "seher_sicht": raw_model.seher_sicht,
+                "appearance_self_alive": [f.to_dict() if hasattr(f, 'to_dict') else f.__dict__ for f in raw_model.appearance_self_alive] if raw_model.appearance_self_alive else [],
+                "appearance_others_alive": [f.to_dict() if hasattr(f, 'to_dict') else f.__dict__ for f in raw_model.appearance_others_alive] if raw_model.appearance_others_alive else [],
+                "appearance_dead": [f.to_dict() if hasattr(f, 'to_dict') else f.__dict__ for f in raw_model.appearance_dead] if raw_model.appearance_dead else [],
+            }
+
+            # Include body modifications if present
+            if raw_model.body:
+                model_def["body"] = raw_model.body.to_dict() if hasattr(raw_model.body, 'to_dict') else raw_model.body.__dict__
+
+            # Include animations if present
+            if raw_model.animations:
+                model_def["animations"] = {
+                    k: (v.to_dict() if hasattr(v, 'to_dict') else v.__dict__)
+                    for k, v in raw_model.animations.items()
+                }
+
+            # Include hint effects if present
+            if raw_model.hint_effects:
+                model_def["hint_effects"] = [
+                    (e.to_dict() if hasattr(e, 'to_dict') else e.__dict__)
+                    for e in raw_model.hint_effects
+                ]
+
+            # Include sounds
+            if raw_model.sound_on_action:
+                model_def["sound_on_action"] = raw_model.sound_on_action
+            if raw_model.sound_ambient:
+                model_def["sound_ambient"] = raw_model.sound_ambient
+
+        except Exception as e:
+            # Fallback to basic model definition if get_modell_definition fails
+            logger.debug(f"Could not get model definition for {self.info.name}: {e}")
+            model_def = {
+                "modell_id": self.info.name.lower().replace(" ", "_").replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss"),
+                "anzeige_name": self.info.name,
+                "beschreibung": f"{self.info.name} appearance",
+                "appearance_self_alive": [],
+                "appearance_others_alive": [],
+                "appearance_dead": [],
+                "seher_sicht": "good" if self.info.team == Team.DORF else "bad",
+            }
 
         return {
             "id": self.info.id,

@@ -110,6 +110,12 @@ export default class Village3DPlayCanvas {
           Object.keys(this.roleModels).length,
           "model definitions from API",
         );
+
+        // Refresh players with new role data if they exist
+        if (this.players && this.players.length > 0) {
+          console.log("[Village3D] Refreshing players with loaded role data...");
+          this.setPlayers(this.players);
+        }
       }
     } catch (error) {
       console.warn(
@@ -4321,9 +4327,9 @@ export default class Village3DPlayCanvas {
     if (type === "eyes_glow_red" && entity.parts && entity.parts.head) {
       const eyes = entity.parts.head.findByName
         ? [
-            entity.parts.head.findByName("EyeWhite-0"),
-            entity.parts.head.findByName("EyeWhite-1"),
-          ]
+          entity.parts.head.findByName("EyeWhite-0"),
+          entity.parts.head.findByName("EyeWhite-1"),
+        ]
         : [];
       const originalMats = [];
       eyes.forEach((eye, i) => {

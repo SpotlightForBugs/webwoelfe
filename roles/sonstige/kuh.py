@@ -199,36 +199,320 @@ class Kuh(Role):
         return "Kuh"
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Village 3D appearance for Kuh."""
-        appearance_features = [
+        """
+        Comprehensive 3D appearance for Kuh.
+
+        IMPORTANT: The cow looks like an ACTUAL COW - a quadruped animal!
+        NOT a humanoid with cow ears!
+
+        Brown and white spotted cow with udder, horns, bell.
+        """
+        from ..base import BodyModification, AnimationState, HintEffect3D, create_death_marker
+
+        cow_features = [
+            # Cow body (horizontal, large, quadruped)
             AppearanceFeature(
-                feature_type="cow_ear_left",
-                geometry="box",
-                position={"x": -0.2, "y": 1.9, "z": 0},
-                scale={"x": 0.2, "y": 0.3, "z": 0.05},
-                rotation={"x": 0, "y": 0, "z": -40},
+                feature_type="body",
+                geometry="capsule",
+                position={"x": 0, "y": 0.9, "z": 0},
+                scale={"x": 0.6, "y": 0.55, "z": 1.0},
+                rotation={"x": 0, "y": 0, "z": 90},
+                color_source="custom",
+                custom_color="#8B4513",  # Brown
+                roughness=0.85,
+                description="Cow body",
+            ),
+            # White spots on body
+            AppearanceFeature(
+                feature_type="spot_1",
+                geometry="sphere",
+                position={"x": 0.2, "y": 1.0, "z": 0.2},
+                scale={"x": 0.15, "y": 0.12, "z": 0.15},
+                color_source="custom",
+                custom_color="#FFFEF5",
+                description="White spot",
+            ),
+            AppearanceFeature(
+                feature_type="spot_2",
+                geometry="sphere",
+                position={"x": -0.15, "y": 0.85, "z": -0.1},
+                scale={"x": 0.12, "y": 0.1, "z": 0.12},
+                color_source="custom",
+                custom_color="#FFFEF5",
+                description="White spot",
+            ),
+            # Cow head
+            AppearanceFeature(
+                feature_type="head",
+                geometry="sphere",
+                position={"x": 0, "y": 1.15, "z": 0.65},
+                scale={"x": 0.3, "y": 0.28, "z": 0.35},
                 color_source="custom",
                 custom_color="#8B4513",
+                roughness=0.85,
+                description="Cow head",
+            ),
+            # Cow snout/muzzle (wide, flat)
+            AppearanceFeature(
+                feature_type="muzzle",
+                geometry="box",
+                position={"x": 0, "y": 1.0, "z": 0.9},
+                scale={"x": 0.18, "y": 0.12, "z": 0.15},
+                color_source="custom",
+                custom_color="#FFC0CB",  # Pink muzzle
+                description="Cow muzzle",
+            ),
+            # Nostrils
+            AppearanceFeature(
+                feature_type="nostril_left",
+                geometry="sphere",
+                position={"x": -0.05, "y": 1.02, "z": 0.97},
+                scale={"x": 0.03, "y": 0.02, "z": 0.02},
+                color_source="custom",
+                custom_color="#5C4033",
+                description="Nostril",
+            ),
+            AppearanceFeature(
+                feature_type="nostril_right",
+                geometry="sphere",
+                position={"x": 0.05, "y": 1.02, "z": 0.97},
+                scale={"x": 0.03, "y": 0.02, "z": 0.02},
+                color_source="custom",
+                custom_color="#5C4033",
+                description="Nostril",
+            ),
+            # Floppy ears
+            AppearanceFeature(
+                feature_type="ear_left",
+                geometry="box",
+                position={"x": -0.2, "y": 1.2, "z": 0.55},
+                scale={"x": 0.12, "y": 0.08, "z": 0.06},
+                rotation={"x": 0, "y": 15, "z": -40},
+                color_source="custom",
+                custom_color="#8B4513",
+                animation="sway",
+                animation_speed=0.2,
+                animation_amplitude=0.2,
                 description="Floppy cow ear",
             ),
             AppearanceFeature(
-                feature_type="accessory",
+                feature_type="ear_right",
                 geometry="box",
-                position={"x": 0.25, "y": 1.0, "z": 0.15},
-                scale={"x": 0.1, "y": 0.15, "z": 0.08},
-                color_source="role",
-                description="Role-specific accessory",
+                position={"x": 0.2, "y": 1.2, "z": 0.55},
+                scale={"x": 0.12, "y": 0.08, "z": 0.06},
+                rotation={"x": 0, "y": -15, "z": 40},
+                color_source="custom",
+                custom_color="#8B4513",
+                animation="sway",
+                animation_speed=0.2,
+                animation_amplitude=0.2,
+                description="Floppy cow ear",
+            ),
+            # Small horns
+            AppearanceFeature(
+                feature_type="horn_left",
+                geometry="cone",
+                position={"x": -0.12, "y": 1.35, "z": 0.58},
+                scale={"x": 0.04, "y": 0.12, "z": 0.04},
+                rotation={"x": 15, "y": 0, "z": -25},
+                color_source="custom",
+                custom_color="#FFFEF0",  # Off-white
+                description="Horn",
+            ),
+            AppearanceFeature(
+                feature_type="horn_right",
+                geometry="cone",
+                position={"x": 0.12, "y": 1.35, "z": 0.58},
+                scale={"x": 0.04, "y": 0.12, "z": 0.04},
+                rotation={"x": 15, "y": 0, "z": 25},
+                color_source="custom",
+                custom_color="#FFFEF0",
+                description="Horn",
+            ),
+            # Eyes (big, friendly)
+            AppearanceFeature(
+                feature_type="eye_left",
+                geometry="sphere",
+                position={"x": -0.1, "y": 1.18, "z": 0.85},
+                scale={"x": 0.05, "y": 0.05, "z": 0.03},
+                color_source="custom",
+                custom_color="#3D2314",
+                description="Cow eye",
+            ),
+            AppearanceFeature(
+                feature_type="eye_right",
+                geometry="sphere",
+                position={"x": 0.1, "y": 1.18, "z": 0.85},
+                scale={"x": 0.05, "y": 0.05, "z": 0.03},
+                color_source="custom",
+                custom_color="#3D2314",
+                description="Cow eye",
+            ),
+            # Four legs
+            AppearanceFeature(
+                feature_type="leg_front_left",
+                geometry="cylinder",
+                position={"x": -0.22, "y": 0.4, "z": 0.4},
+                scale={"x": 0.08, "y": 0.45, "z": 0.08},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Front left leg",
+            ),
+            AppearanceFeature(
+                feature_type="leg_front_right",
+                geometry="cylinder",
+                position={"x": 0.22, "y": 0.4, "z": 0.4},
+                scale={"x": 0.08, "y": 0.45, "z": 0.08},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Front right leg",
+            ),
+            AppearanceFeature(
+                feature_type="leg_back_left",
+                geometry="cylinder",
+                position={"x": -0.22, "y": 0.4, "z": -0.4},
+                scale={"x": 0.08, "y": 0.45, "z": 0.08},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Back left leg",
+            ),
+            AppearanceFeature(
+                feature_type="leg_back_right",
+                geometry="cylinder",
+                position={"x": 0.22, "y": 0.4, "z": -0.4},
+                scale={"x": 0.08, "y": 0.45, "z": 0.08},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Back right leg",
+            ),
+            # Hooves
+            AppearanceFeature(
+                feature_type="hoof_fl",
+                geometry="cylinder",
+                position={"x": -0.22, "y": 0.08, "z": 0.4},
+                scale={"x": 0.09, "y": 0.08, "z": 0.09},
+                color_source="custom",
+                custom_color="#2a2a2a",
+                description="Hoof",
+            ),
+            AppearanceFeature(
+                feature_type="hoof_fr",
+                geometry="cylinder",
+                position={"x": 0.22, "y": 0.08, "z": 0.4},
+                scale={"x": 0.09, "y": 0.08, "z": 0.09},
+                color_source="custom",
+                custom_color="#2a2a2a",
+                description="Hoof",
+            ),
+            AppearanceFeature(
+                feature_type="hoof_bl",
+                geometry="cylinder",
+                position={"x": -0.22, "y": 0.08, "z": -0.4},
+                scale={"x": 0.09, "y": 0.08, "z": 0.09},
+                color_source="custom",
+                custom_color="#2a2a2a",
+                description="Hoof",
+            ),
+            AppearanceFeature(
+                feature_type="hoof_br",
+                geometry="cylinder",
+                position={"x": 0.22, "y": 0.08, "z": -0.4},
+                scale={"x": 0.09, "y": 0.08, "z": 0.09},
+                color_source="custom",
+                custom_color="#2a2a2a",
+                description="Hoof",
+            ),
+            # Udder
+            AppearanceFeature(
+                feature_type="udder",
+                geometry="sphere",
+                position={"x": 0, "y": 0.55, "z": -0.25},
+                scale={"x": 0.15, "y": 0.12, "z": 0.12},
+                color_source="custom",
+                custom_color="#FFC0CB",  # Pink
+                description="Udder",
+            ),
+            # Tail
+            AppearanceFeature(
+                feature_type="tail",
+                geometry="cylinder",
+                position={"x": 0, "y": 0.85, "z": -0.7},
+                scale={"x": 0.04, "y": 0.35, "z": 0.04},
+                rotation={"x": -50, "y": 0, "z": 0},
+                color_source="custom",
+                custom_color="#8B4513",
+                animation="sway",
+                animation_speed=0.5,
+                description="Cow tail",
+            ),
+            # Tail tuft
+            AppearanceFeature(
+                feature_type="tail_tuft",
+                geometry="sphere",
+                position={"x": 0, "y": 0.6, "z": -0.95},
+                scale={"x": 0.06, "y": 0.08, "z": 0.06},
+                color_source="custom",
+                custom_color="#5C4033",  # Darker brown
+                animation="sway",
+                animation_speed=0.5,
+                description="Tail tuft",
+            ),
+            # Cowbell
+            AppearanceFeature(
+                feature_type="cowbell",
+                geometry="sphere",
+                position={"x": 0, "y": 0.95, "z": 0.55},
+                scale={"x": 0.06, "y": 0.08, "z": 0.06},
+                color_source="custom",
+                custom_color="#CD7F32",  # Bronze
+                metallic=True,
+                description="Cowbell",
+            ),
+            # Bell strap
+            AppearanceFeature(
+                feature_type="bell_strap",
+                geometry="torus",
+                position={"x": 0, "y": 1.0, "z": 0.55},
+                scale={"x": 0.12, "y": 0.02, "z": 0.12},
+                rotation={"x": 90, "y": 0, "z": 0},
+                color_source="custom",
+                custom_color="#8B0000",  # Dark red
+                description="Bell strap",
             ),
         ]
 
         return RollenModell(
             modell_id="kuh",
             anzeige_name="Kuh",
-            beschreibung="Kuh appearance with custom features",
-            appearance_self_alive=appearance_features,
-            appearance_others_alive=appearance_features,
-            appearance_dead=[],
+            beschreibung="Eine freundliche Dorfkuh mit Glocke",
+            body=BodyModification(
+                height_multiplier=0.7,  # Low to ground - quadruped
+                width_multiplier=1.5,
+                skin_texture="smooth",
+            ),
+            appearance_self_alive=cow_features,
+            appearance_others_alive=cow_features,
+            appearance_dead=create_death_marker(),
             seher_sicht="good",
+            animations={
+                "idle": AnimationState(
+                    state_name="idle",
+                    sway_amplitude=0.01,
+                    sway_speed=0.3,
+                    breathing_visible=True,
+                    tail_wag=True,
+                ),
+            },
+            hint_effects=[
+                HintEffect3D(
+                    effect_id="moo",
+                    effect_type="shake",
+                    shake_intensity=0.02,
+                    shake_duration=0.5,
+                ),
+            ],
+            sound_on_action="moo.mp3",
+            sound_ambient="cow_chewing.mp3",
         )
 
     @property

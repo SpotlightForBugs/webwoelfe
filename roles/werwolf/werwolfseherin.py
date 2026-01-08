@@ -14,7 +14,7 @@ from ..base import (
     AktionsErgebnis,
     SpielKontext,
 )
-from ..enums import Team, Kategorie, SichtTyp, Erweiterung
+from ..enums import Team, Kategorie, SichtTyp, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
 
 if TYPE_CHECKING:

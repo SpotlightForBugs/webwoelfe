@@ -508,12 +508,17 @@ def spiel(code):
     seherin_enthuellung = {}
     try:
         from models import SeherinEnthuellung
+        from roles import RoleRegistry
+        from roles.enums import AktionsTyp
 
-        if spieler.rolle and "Seher" in spieler.rolle:
+        role_obj = RoleRegistry.get(spieler.rolle)
+        # Check if role has SEHEN action type (Seherin mechanism)
+        if role_obj and role_obj.aktions_typ == AktionsTyp.SEHEN:
             seherin_enthuellung = SeherinEnthuellung.hole_enthuellung(
                 spieler.id, raum.id
             )
     except Exception:
+        log_ts("[Spiel] Seherin-Enthüllungen konnten nicht geladen werden. Tabelle existiert vielleicht noch nicht.")
         pass  # Tabelle existiert vielleicht noch nicht
 
     # SICHER: Spieler-Daten werden OHNE Rollen (ausser eigene) gesendet
@@ -1891,7 +1896,8 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         _apply_action_effects(ergebnis, spieler, targets, raum, kontext)
 
         # Send role-specific results
-        if spieler.rolle == "Seherin" and ergebnis.effekte:
+        # DYNAMIC: Check if action was a SEHEN action (Seherin style)
+        if aktion_typ == AktionsTyp.SEHEN.value and ergebnis.effekte:
             # Seherin gets a special result event
             socketio.emit(
                 "seherin_ergebnis",

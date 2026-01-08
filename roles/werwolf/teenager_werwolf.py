@@ -9,13 +9,21 @@ from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
     RollenModell,
-    AppearanceFeature,
+    BodyModification,
+    AnimationState,
+    HintEffect3D,
     Role,
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
     StateField,
     StateType,
+    create_wolf_ears,
+    create_claws,
+    create_fangs,
+    create_glowing_eyes,
+    create_tail,
+    create_death_marker,
 )
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
@@ -37,11 +45,8 @@ class TeenagerWerwolf(Role):
     """
 
     def state_fields(self) -> List[StateField]:
-        """Definiert die Zustandsfelder des Teenager-Werwolfs."""
         return [
-            StateField(
-                "hat_verweigert", StateType.BOOL, False, "Hat bereits verweigert"
-            ),
+            StateField("hat_verweigert", StateType.BOOL, False, "Hat bereits verweigert", icon="✋"),
         ]
 
     @property
@@ -52,19 +57,14 @@ class TeenagerWerwolf(Role):
             team=Team.WERWOLF,
             kategorie=Kategorie.WERWOLF,
             beschreibung=(
-                "Du bist der Teenager-Werwolf. Du bist ein rebellischer junger Wolf! "
-                "Einmal pro Spiel kannst du dich weigern, beim nächtlichen Angriff "
-                "mitzumachen. Das Opfer stirbt dann nicht!"
+                "Du bist der Teenager-Werwolf. Einmal pro Spiel kannst du dich weigern, "
+                "beim nächtlichen Angriff mitzumachen. Das Opfer stirbt dann nicht!"
             ),
             icon="fa-solid fa-user-slash",
             farbe="#7f1d1d",
             prioritaet=50,
-            erzaehler_nacht=(
-                "Der Teenager-Werwolf jagt mit dem Rudel. Er kann einmal "
-                "den Angriff verweigern."
-            ),
+            erzaehler_nacht="Der Teenager-Werwolf kann einmal den Angriff verweigern.",
             erweiterung=Erweiterung.COMMUNITY,
-            # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
             avatar_border_color="#b91c1c",
@@ -73,113 +73,216 @@ class TeenagerWerwolf(Role):
 
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.KEINE  # Jagt mit dem Rudel, hat aber Sonderaktion
+        return AktionsTyp.KEINE
 
     @property
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.WERWOLF
 
     def is_active_on_first_night(self) -> bool:
-        """Teenager-Werwolf acts with the pack."""
         return True
 
     def is_active_on_every_night(self) -> bool:
-        """Teenager-Werwolf acts with the pack."""
         return True
 
     def get_ui_definition(self) -> "RollenUI":
-        """Returns the UI definition for Teenager-Werwolf's action panel."""
         from ..base import RollenUI, UIButton
-
         return RollenUI(
             title="Teenager-Werwolf - Rebellieren",
             instructions="Du kannst einmal pro Spiel den Angriff des Rudels stoppen.",
             buttons=[
                 UIButton(
                     label="Angriff verweigern",
-                    action_type="verweigern",
+                    action_type="teenager_verweigern",
                     icon="fa-solid fa-hand",
                     css_class="btn-warning",
                     requires_confirmation=True,
                 )
             ],
             requires_target=False,
-            allow_multiple_targets=False,
             can_skip=True,
         )
 
-    def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    def execute_action(
+        self,
+        action_type: str,
+        spieler: "Spieler",
+        targets: List["Spieler"],
+        kontext: "SpielKontext",
     ) -> Optional[AktionsErgebnis]:
-        """
-        Teenager-Werwolf kann Angriff verweigern.
-        """
-        # Dies ist eine Zusatzaktion parallel zum Rudel-Angriff
-        # Wir prüfen hier nur auf die Verweigerung
+        if action_type == "teenager_verweigern":
+            if self.get_state(spieler, "hat_verweigert"):
+                return AktionsErgebnis(erfolg=False, nachricht="Du hast bereits einmal rebelliert!")
 
-        # Check if action is "verweigern" (needs to be passed somehow, maybe via ziel=None but specific intent?)
-        # Actually, the UI button sends action_type="verweigern".
-        # The game logic needs to route this correctly.
-
-        # Assuming this method is called when he clicks the button
-        hat_verweigert = self.get_state(spieler, "hat_verweigert")
-
-        if hat_verweigert:
+            self.set_state(spieler, "hat_verweigert", True)
             return AktionsErgebnis(
-                erfolg=False,
-                nachricht="Du hast bereits einmal rebelliert!",
+                erfolg=True,
+                nachricht="Du verweigerst den Angriff! Das Opfer wird verschont.",
+                effekte={"angriff_verweigert": True},
+                state_updates={"teenager_werwolf.hat_verweigert": True},
+                log_sichtbar_fuer="werwolf",
             )
+        return None
 
-        # Mark as used
-        self.set_state(spieler, "hat_verweigert", True)
-
-        return AktionsErgebnis(
-            erfolg=True,
-            nachricht="Du verweigerst den Angriff! Das Rudel ist verwirrt und tötet niemanden.",
-            effekte={
-                "angriff_verweigert": True,
-                "teenager_rebelliert": True,
-            },
-            log_sichtbar_fuer="werwolf",  # Alle Wölfe sehen es
-        )
+    def on_nacht_aktion(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+    ) -> Optional[AktionsErgebnis]:
+        return self.execute_action("teenager_verweigern", spieler, [], kontext)
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Village 3D appearance for TeenagerWerwolf."""
-        appearance_features = [
+        """
+        Comprehensive 3D appearance for Teenager-Werwolf.
+
+        Young, rebellious werewolf with punk/emo styling.
+        Hoodie, messy hair, earrings, attitude.
+        """
+        teen_wolf_features = [
+            # Smaller wolf ears (younger)
+            *create_wolf_ears(color="#4a2020", scale=0.9),
+            # Shorter claws
+            *create_claws(color="#2a2a2a", count_per_hand=2),
+            # Smaller fangs (still growing)
             AppearanceFeature(
-                feature_type="wolf_ear_left",
+                feature_type="small_fang_left",
                 geometry="cone",
-                position={"x": -0.18, "y": 2.25, "z": -0.05},
-                scale={"x": 0.12, "y": 0.2, "z": 0.1},
-                rotation={"x": 0, "y": 0, "z": -15},
-                color_source="role",
-                description="Left wolf ear",
+                position={"x": -0.03, "y": 1.7, "z": 0.22},
+                scale={"x": 0.015, "y": 0.03, "z": 0.015},
+                rotation={"x": 170, "y": 0, "z": 0},
+                color_source="custom",
+                custom_color="#FFFEF0",
+                description="Small fang",
             ),
             AppearanceFeature(
-                feature_type="wolf_ear_right",
+                feature_type="small_fang_right",
                 geometry="cone",
-                position={"x": 0.18, "y": 2.25, "z": -0.05},
-                scale={"x": 0.12, "y": 0.2, "z": 0.1},
-                rotation={"x": 0, "y": 0, "z": 15},
-                color_source="role",
-                description="Right wolf ear",
+                position={"x": 0.03, "y": 1.7, "z": 0.22},
+                scale={"x": 0.015, "y": 0.03, "z": 0.015},
+                rotation={"x": 170, "y": 0, "z": 0},
+                color_source="custom",
+                custom_color="#FFFEF0",
+                description="Small fang",
             ),
+            # Orange glowing eyes (rebellious)
+            create_glowing_eyes(color="#FF6600", intensity=0.7),
+            # Smaller tail
+            create_tail("wolf", color="#4a2020"),
+            # Messy emo/punk hair
             AppearanceFeature(
-                feature_type="accessory",
+                feature_type="emo_hair",
+                geometry="sphere",
+                position={"x": 0, "y": 2.0, "z": 0.05},
+                scale={"x": 0.3, "y": 0.18, "z": 0.28},
+                color_source="custom",
+                custom_color="#1a1a1a",  # Black hair
+                roughness=0.9,
+                description="Emo hair",
+            ),
+            # Hair bangs covering one eye
+            AppearanceFeature(
+                feature_type="hair_bang",
                 geometry="box",
-                position={"x": 0.25, "y": 1.0, "z": 0.15},
-                scale={"x": 0.1, "y": 0.15, "z": 0.08},
-                color_source="role",
-                description="Role-specific accessory",
+                position={"x": 0.1, "y": 1.9, "z": 0.2},
+                scale={"x": 0.12, "y": 0.15, "z": 0.05},
+                rotation={"x": 20, "y": 0, "z": -15},
+                color_source="custom",
+                custom_color="#1a1a1a",
+                description="Hair bang",
+            ),
+            # Hoodie
+            AppearanceFeature(
+                feature_type="hoodie",
+                geometry="box",
+                position={"x": 0, "y": 1.15, "z": 0},
+                scale={"x": 0.42, "y": 0.5, "z": 0.35},
+                color_source="custom",
+                custom_color="#2D2D2D",  # Dark gray
+                description="Hoodie",
+            ),
+            # Hood part
+            AppearanceFeature(
+                feature_type="hood",
+                geometry="sphere",
+                position={"x": 0, "y": 1.65, "z": -0.15},
+                scale={"x": 0.35, "y": 0.25, "z": 0.25},
+                color_source="custom",
+                custom_color="#2D2D2D",
+                description="Hood (down)",
+            ),
+            # Ripped jeans
+            AppearanceFeature(
+                feature_type="jeans",
+                geometry="box",
+                position={"x": 0, "y": 0.55, "z": 0},
+                scale={"x": 0.28, "y": 0.5, "z": 0.22},
+                color_source="custom",
+                custom_color="#2F4F4F",  # Dark slate gray
+                description="Ripped jeans",
+            ),
+            # Ear piercing
+            AppearanceFeature(
+                feature_type="earring",
+                geometry="sphere",
+                position={"x": -0.22, "y": 1.85, "z": 0.05},
+                scale={"x": 0.02, "y": 0.02, "z": 0.02},
+                color_source="custom",
+                custom_color="#C0C0C0",
+                metallic=True,
+                description="Ear piercing",
+            ),
+            # Sneakers
+            AppearanceFeature(
+                feature_type="sneaker_left",
+                geometry="box",
+                position={"x": -0.1, "y": 0.08, "z": 0.05},
+                scale={"x": 0.1, "y": 0.08, "z": 0.18},
+                color_source="custom",
+                custom_color="#FF0000",  # Red sneakers
+                description="Sneaker",
+            ),
+            AppearanceFeature(
+                feature_type="sneaker_right",
+                geometry="box",
+                position={"x": 0.1, "y": 0.08, "z": 0.05},
+                scale={"x": 0.1, "y": 0.08, "z": 0.18},
+                color_source="custom",
+                custom_color="#FF0000",
+                description="Sneaker",
             ),
         ]
 
         return RollenModell(
-            modell_id="teenagerwerwolf",
-            anzeige_name="TeenagerWerwolf",
-            beschreibung="TeenagerWerwolf appearance with custom features",
-            appearance_self_alive=appearance_features,
-            appearance_others_alive=appearance_features,
-            appearance_dead=[],
+            modell_id="teenager_werwolf",
+            anzeige_name="Teenager-Werwolf",
+            beschreibung="Ein rebellischer junger Werwolf mit Punk-Styling",
+            body=BodyModification(
+                height_multiplier=0.92,  # Shorter - teenager
+                slouch_angle=10,
+                snout_length=0.2,  # Smaller snout
+                claw_hands=True,
+                skin_texture="fur",
+            ),
+            appearance_self_alive=teen_wolf_features,
+            appearance_others_alive=teen_wolf_features,
+            appearance_dead=create_death_marker(),
             seher_sicht="bad",
+            animations={
+                "idle": AnimationState(
+                    state_name="idle",
+                    sway_amplitude=0.02,
+                    sway_speed=0.6,
+                    head_tilt_range=25,
+                    breathing_visible=True,
+                    gesture_chance=0.15,  # Fidgeting
+                ),
+            },
+            hint_effects=[
+                HintEffect3D(
+                    effect_id="rebel_flash",
+                    effect_type="glow",
+                    glow_color="#FF6600",
+                    glow_intensity=0.6,
+                    glow_pulse=True,
+                ),
+            ],
+            sound_on_action="teen_growl.mp3",
         )

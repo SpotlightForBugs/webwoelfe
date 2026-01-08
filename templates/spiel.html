@@ -1450,6 +1450,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   let selectedSpielerId = null;
   let selectedSpielerIds = [];  // Für Amor (2 Spieler)
+  let phaseUiConfig = null;     // Stores current role UI config for actions
+  let activeRole = null;        // Currently active role from server
   let aktuellePhase = "{{ raum.aktuelle_phase }}";
   let aktuelleRunde = {{ raum.runde }};
   
@@ -1464,7 +1466,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   let nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'amor_phase']; // Default fallback
   
   // Dynamic role UI configuration (loaded from backend API)
-  let phaseUiConfig = null;
   
   // Load role UI config when we have an active role
   async function loadRoleUiConfig(roleName) {
@@ -2223,10 +2224,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   // ===========================================================================
 
   // Cache for phase→role mappings (loaded dynamically)
+
   let phaseRoleMapping = {};
   let roleUICache = {};
-
+  
   // Load phase→role mapping from game API on init
+
+
   async function loadPhaseRoleMapping() {
       try {
           const response = await fetch(`/api/game/${raumCode}/phases`);
@@ -2327,6 +2331,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Try to load UI definition from API
           // =================================================================
           const roleUI = await loadRoleUI(spielerRolle);
+          phaseUiConfig = roleUI; // Update global config for interaction handling
 
           if (roleUI && roleUI.buttons && roleUI.buttons.length > 0) {
               // Generate buttons from role UI definition

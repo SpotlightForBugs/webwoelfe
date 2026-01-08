@@ -113,7 +113,9 @@ export default class Village3DPlayCanvas {
 
         // Refresh players with new role data if they exist
         if (this.players && this.players.length > 0) {
-          console.log("[Village3D] Refreshing players with loaded role data...");
+          console.log(
+            "[Village3D] Refreshing players with loaded role data...",
+          );
 
           // Destroy existing entities so they get recreated with role features
           this.playerEntities.forEach((entity) => entity.destroy());
@@ -225,7 +227,11 @@ export default class Village3DPlayCanvas {
         this.app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
       } else if (this.app.scene.settings) {
         this.app.scene.settings.render.fog = pc.FOG_EXP2;
-        this.app.scene.settings.render.fogColor = new pc.Color(0.02, 0.03, 0.08);
+        this.app.scene.settings.render.fogColor = new pc.Color(
+          0.02,
+          0.03,
+          0.08,
+        );
         this.app.scene.settings.render.fogDensity = 0.008;
       }
     } catch (e) {
@@ -243,7 +249,11 @@ export default class Village3DPlayCanvas {
       console.debug("Could not set ambientLight:", e.message);
     }
 
-    this.camera.setPosition(0, this.defaultCameraHeight, this.defaultCameraRadius);
+    this.camera.setPosition(
+      0,
+      this.defaultCameraHeight,
+      this.defaultCameraRadius,
+    );
     this.camera.lookAt(0, 0, 0);
     this.app.root.addChild(this.camera);
 
@@ -370,9 +380,17 @@ export default class Village3DPlayCanvas {
       const warmth = Math.random();
       // Mix between white, blue, and yellow stars
       if (warmth < 0.3) {
-        starMat.emissive = new pc.Color(brightness, brightness * 0.9, brightness * 0.7); // Warm
+        starMat.emissive = new pc.Color(
+          brightness,
+          brightness * 0.9,
+          brightness * 0.7,
+        ); // Warm
       } else if (warmth < 0.6) {
-        starMat.emissive = new pc.Color(brightness * 0.8, brightness * 0.85, brightness); // Blue
+        starMat.emissive = new pc.Color(
+          brightness * 0.8,
+          brightness * 0.85,
+          brightness,
+        ); // Blue
       } else {
         starMat.emissive = new pc.Color(brightness, brightness, brightness); // White
       }
@@ -632,7 +650,11 @@ export default class Village3DPlayCanvas {
       rock.setLocalScale(scale, scale * 0.6, scale);
       const radius = 8 + Math.random() * 6;
       const angle = Math.random() * Math.PI * 2;
-      rock.setPosition(Math.cos(angle) * radius, 0.05, Math.sin(angle) * radius);
+      rock.setPosition(
+        Math.cos(angle) * radius,
+        0.05,
+        Math.sin(angle) * radius,
+      );
 
       const rockMat = this.getMaterial({
         name: "Pebble",
@@ -2587,7 +2609,9 @@ export default class Village3DPlayCanvas {
         } = feature;
 
         // Determine the color to use
-        let featureColor = roleColor.clone ? roleColor.clone() : new pc.Color(roleColor.r, roleColor.g, roleColor.b);
+        let featureColor = roleColor.clone
+          ? roleColor.clone()
+          : new pc.Color(roleColor.r, roleColor.g, roleColor.b);
         if (color_source === "custom" && custom_color) {
           featureColor = this.hexToColor(custom_color);
         } else if (color_source === "skin") {
@@ -2598,28 +2622,51 @@ export default class Village3DPlayCanvas {
 
         // Map geometry types (handle new types)
         const geometryMap = {
-          'cone': 'cone',
-          'box': 'box',
-          'sphere': 'sphere',
-          'cylinder': 'cylinder',
-          'torus': 'torus',
-          'capsule': 'capsule',
-          'plane': 'plane',
+          cone: "cone",
+          box: "box",
+          sphere: "sphere",
+          cylinder: "cylinder",
+          torus: "torus",
+          capsule: "capsule",
+          plane: "plane",
         };
-        const pcGeometry = geometryMap[geometry] || 'sphere';
+        const pcGeometry = geometryMap[geometry] || "sphere";
 
         // Create instances
-        const instances = this.calculateInstances(count, count_arrangement, count_spacing, position);
+        const instances = this.calculateInstances(
+          count,
+          count_arrangement,
+          count_spacing,
+          position,
+        );
 
         instances.forEach((instancePos, i) => {
           // Create main feature
           this.createFeatureInstance(
-            entity, feature_type, idx, i, pcGeometry,
-            instancePos, scale, rotation,
-            featureColor, opacity, emissive, emissive_intensity,
-            metallic, roughness, animation, animation_speed, animation_amplitude,
-            light_source, light_color, light_intensity, light_range,
-            particle_effect, particle_color, particle_rate
+            entity,
+            feature_type,
+            idx,
+            i,
+            pcGeometry,
+            instancePos,
+            scale,
+            rotation,
+            featureColor,
+            opacity,
+            emissive,
+            emissive_intensity,
+            metallic,
+            roughness,
+            animation,
+            animation_speed,
+            animation_amplitude,
+            light_source,
+            light_color,
+            light_intensity,
+            light_range,
+            particle_effect,
+            particle_color,
+            particle_rate,
           );
 
           // Create mirrored version if needed
@@ -2627,20 +2674,38 @@ export default class Village3DPlayCanvas {
             const mirroredPos = {
               x: -(instancePos.x || 0) + mirror_offset,
               y: instancePos.y || 0,
-              z: instancePos.z || 0
+              z: instancePos.z || 0,
             };
             const mirroredRotation = {
               x: rotation.x || 0,
               y: rotation.y || 0,
-              z: -(rotation.z || 0)  // Mirror Z rotation
+              z: -(rotation.z || 0), // Mirror Z rotation
             };
             this.createFeatureInstance(
-              entity, `${feature_type}_mirror`, idx, i, pcGeometry,
-              mirroredPos, scale, mirroredRotation,
-              featureColor, opacity, emissive, emissive_intensity,
-              metallic, roughness, animation, animation_speed, animation_amplitude,
-              light_source, light_color, light_intensity, light_range,
-              particle_effect, particle_color, particle_rate
+              entity,
+              `${feature_type}_mirror`,
+              idx,
+              i,
+              pcGeometry,
+              mirroredPos,
+              scale,
+              mirroredRotation,
+              featureColor,
+              opacity,
+              emissive,
+              emissive_intensity,
+              metallic,
+              roughness,
+              animation,
+              animation_speed,
+              animation_amplitude,
+              light_source,
+              light_color,
+              light_intensity,
+              light_range,
+              particle_effect,
+              particle_color,
+              particle_rate,
             );
           }
         });
@@ -2657,24 +2722,48 @@ export default class Village3DPlayCanvas {
    * Create a single feature instance with all material and effect properties.
    */
   createFeatureInstance(
-    parent, featureType, featureIdx, instanceIdx, geometry,
-    position, scale, rotation,
-    color, opacity, emissive, emissiveIntensity,
-    metallic, roughness, animation, animSpeed, animAmplitude,
-    lightSource, lightColor, lightIntensity, lightRange,
-    particleEffect, particleColor, particleRate
+    parent,
+    featureType,
+    featureIdx,
+    instanceIdx,
+    geometry,
+    position,
+    scale,
+    rotation,
+    color,
+    opacity,
+    emissive,
+    emissiveIntensity,
+    metallic,
+    roughness,
+    animation,
+    animSpeed,
+    animAmplitude,
+    lightSource,
+    lightColor,
+    lightIntensity,
+    lightRange,
+    particleEffect,
+    particleColor,
+    particleRate,
   ) {
-    const featureEntity = new pc.Entity(`${featureType}-${featureIdx}-${instanceIdx}`);
+    const featureEntity = new pc.Entity(
+      `${featureType}-${featureIdx}-${instanceIdx}`,
+    );
 
     // Add model component (handle special geometry types)
-    if (geometry === 'torus' || geometry === 'capsule' || geometry === 'plane') {
+    if (
+      geometry === "torus" ||
+      geometry === "capsule" ||
+      geometry === "plane"
+    ) {
       // Approximate with available primitives
-      if (geometry === 'torus') {
+      if (geometry === "torus") {
         // Approximate torus with a thin cylinder ring
         featureEntity.addComponent("model", { type: "cylinder" });
-      } else if (geometry === 'capsule') {
+      } else if (geometry === "capsule") {
         featureEntity.addComponent("model", { type: "cylinder" });
-      } else if (geometry === 'plane') {
+      } else if (geometry === "plane") {
         featureEntity.addComponent("model", { type: "box" });
       }
     } else {
@@ -2685,21 +2774,17 @@ export default class Village3DPlayCanvas {
     featureEntity.setLocalPosition(
       position.x || 0,
       position.y || 0,
-      position.z || 0
+      position.z || 0,
     );
 
     // Apply scale
-    featureEntity.setLocalScale(
-      scale.x || 1,
-      scale.y || 1,
-      scale.z || 1
-    );
+    featureEntity.setLocalScale(scale.x || 1, scale.y || 1, scale.z || 1);
 
     // Apply rotation
     featureEntity.setLocalEulerAngles(
       rotation.x || 0,
       rotation.y || 0,
-      rotation.z || 0
+      rotation.z || 0,
     );
 
     // Create and apply material
@@ -2751,12 +2836,22 @@ export default class Village3DPlayCanvas {
 
     // Add animation if specified
     if (animation) {
-      this.addFeatureAnimation(featureEntity, animation, animSpeed, animAmplitude);
+      this.addFeatureAnimation(
+        featureEntity,
+        animation,
+        animSpeed,
+        animAmplitude,
+      );
     }
 
     // Add particle effect if specified
     if (particleEffect) {
-      this.addParticleEffect(featureEntity, particleEffect, particleColor, particleRate);
+      this.addParticleEffect(
+        featureEntity,
+        particleEffect,
+        particleColor,
+        particleRate,
+      );
     }
 
     return featureEntity;
@@ -2824,11 +2919,13 @@ export default class Village3DPlayCanvas {
     // Create particle system entity
     const particles = new pc.Entity(`particles-${effectType}`);
 
-    const particleColor = color ? this.hexToColor(color) : new pc.Color(1, 1, 1);
+    const particleColor = color
+      ? this.hexToColor(color)
+      : new pc.Color(1, 1, 1);
 
     // Configure based on effect type
     const configs = {
-      "sparks": {
+      sparks: {
         numParticles: 20,
         lifetime: 0.5,
         rate: rate,
@@ -2840,9 +2937,22 @@ export default class Village3DPlayCanvas {
         velocityY: [0.5, 1.5],
         velocityZ: [-0.5, 0.5],
         scaleGraph: new pc.Curve([0, 0.02, 1, 0]),
-        colorGraph: new pc.CurveSet([[0, particleColor.r], [1, particleColor.r]], [[0, particleColor.g], [1, particleColor.g]], [[0, particleColor.b], [1, particleColor.b]]),
+        colorGraph: new pc.CurveSet(
+          [
+            [0, particleColor.r],
+            [1, particleColor.r],
+          ],
+          [
+            [0, particleColor.g],
+            [1, particleColor.g],
+          ],
+          [
+            [0, particleColor.b],
+            [1, particleColor.b],
+          ],
+        ),
       },
-      "magic": {
+      magic: {
         numParticles: 15,
         lifetime: 1.0,
         rate: rate * 0.5,
@@ -2851,7 +2961,7 @@ export default class Village3DPlayCanvas {
         velocityY: [0.1, 0.3],
         scaleGraph: new pc.Curve([0, 0.03, 0.5, 0.05, 1, 0]),
       },
-      "fire": {
+      fire: {
         numParticles: 30,
         lifetime: 0.4,
         rate: rate * 2,
@@ -2860,21 +2970,21 @@ export default class Village3DPlayCanvas {
         velocityY: [0.5, 1.0],
         scaleGraph: new pc.Curve([0, 0.04, 0.5, 0.06, 1, 0]),
       },
-      "hearts": {
+      hearts: {
         numParticles: 5,
         lifetime: 2.0,
         rate: rate * 0.3,
         velocityY: [0.1, 0.3],
         scaleGraph: new pc.Curve([0, 0.05, 0.5, 0.08, 1, 0.05]),
       },
-      "smoke": {
+      smoke: {
         numParticles: 10,
         lifetime: 1.5,
         rate: rate * 0.5,
         velocityY: [0.1, 0.2],
         scaleGraph: new pc.Curve([0, 0.05, 1, 0.15]),
       },
-      "shadow": {
+      shadow: {
         numParticles: 10,
         lifetime: 0.5,
         rate: rate,
@@ -2931,7 +3041,7 @@ export default class Village3DPlayCanvas {
           anim.entity.setLocalEulerAngles(
             anim.originalRot.x,
             anim.originalRot.y + t * 60,
-            anim.originalRot.z
+            anim.originalRot.z,
           );
           break;
         case "pulse":
@@ -2939,21 +3049,21 @@ export default class Village3DPlayCanvas {
           anim.entity.setLocalScale(
             anim.originalScale.x * pulseScale,
             anim.originalScale.y * pulseScale,
-            anim.originalScale.z * pulseScale
+            anim.originalScale.z * pulseScale,
           );
           break;
         case "float":
           anim.entity.setLocalPosition(
             anim.originalPos.x,
             anim.originalPos.y + Math.sin(t) * 0.1 * amp,
-            anim.originalPos.z
+            anim.originalPos.z,
           );
           break;
         case "sway":
           anim.entity.setLocalEulerAngles(
             anim.originalRot.x,
             anim.originalRot.y,
-            anim.originalRot.z + Math.sin(t) * 10 * amp
+            anim.originalRot.z + Math.sin(t) * 10 * amp,
           );
           break;
         case "flutter":
@@ -2961,7 +3071,7 @@ export default class Village3DPlayCanvas {
           anim.entity.setLocalEulerAngles(
             anim.originalRot.x,
             anim.originalRot.y + flutterAngle,
-            anim.originalRot.z
+            anim.originalRot.z,
           );
           break;
         case "flicker":
@@ -4360,11 +4470,11 @@ export default class Village3DPlayCanvas {
     if (this.sun) this.sun.enabled = !isNight;
     if (this.sunGlow) this.sunGlow.enabled = !isNight;
     if (this.skyDome) this.skyDome.enabled = isNight;
-    if (this.stars) this.stars.forEach(s => s.entity.enabled = isNight);
+    if (this.stars) this.stars.forEach((s) => (s.entity.enabled = isNight));
 
     // Toggle Ground Fog (mostly visible at night)
     if (this.fogPlanes) {
-      this.fogPlanes.forEach(fp => fp.entity.enabled = isNight);
+      this.fogPlanes.forEach((fp) => (fp.entity.enabled = isNight));
     }
 
     // Update Camera Background
@@ -4920,9 +5030,9 @@ export default class Village3DPlayCanvas {
     if (type === "eyes_glow_red" && entity.parts && entity.parts.head) {
       const eyes = entity.parts.head.findByName
         ? [
-          entity.parts.head.findByName("EyeWhite-0"),
-          entity.parts.head.findByName("EyeWhite-1"),
-        ]
+            entity.parts.head.findByName("EyeWhite-0"),
+            entity.parts.head.findByName("EyeWhite-1"),
+          ]
         : [];
       const originalMats = [];
       eyes.forEach((eye, i) => {
@@ -5095,15 +5205,16 @@ export default class Village3DPlayCanvas {
 
     // Update Stars Twinkle
     if (this.stars && this.isNight) {
-      this.stars.forEach(star => {
+      this.stars.forEach((star) => {
         star.twinklePhase += dt * star.twinkleSpeed;
-        const brightness = star.baseBrightness + Math.sin(star.twinklePhase) * 0.3;
+        const brightness =
+          star.baseBrightness + Math.sin(star.twinklePhase) * 0.3;
         const c = star.material.emissive;
         // mod brightness without changing color hue too much
         star.material.emissive = new pc.Color(
           c.r * (1 + Math.sin(star.twinklePhase) * 0.1),
           c.g * (1 + Math.sin(star.twinklePhase) * 0.1),
-          c.b * (1 + Math.sin(star.twinklePhase) * 0.1)
+          c.b * (1 + Math.sin(star.twinklePhase) * 0.1),
         );
         star.material.update();
       });
@@ -5111,7 +5222,7 @@ export default class Village3DPlayCanvas {
 
     // Update Ground Fog Drift
     if (this.fogPlanes) {
-      this.fogPlanes.forEach(fp => {
+      this.fogPlanes.forEach((fp) => {
         fp.entity.rotateLocal(0, fp.rotSpeed * dt, 0);
         const pos = fp.entity.getPosition();
         // Gentle drift
@@ -5537,18 +5648,21 @@ export default class Village3DPlayCanvas {
 
     const entity = this.playerEntities.get(playerId);
     if (!entity) {
-      console.warn('[Village3D] Cannot highlight victim, player not found:', playerId);
+      console.warn(
+        "[Village3D] Cannot highlight victim, player not found:",
+        playerId,
+      );
       return;
     }
 
-    console.log('[Village3D] Highlighting victim:', playerId);
+    console.log("[Village3D] Highlighting victim:", playerId);
 
     // Create a pulsing red glow effect
-    const victimMarker = new pc.Entity('VictimMarker');
+    const victimMarker = new pc.Entity("VictimMarker");
 
     // Create a glowing ring around the player
-    const ring = new pc.Entity('VictimRing');
-    ring.addComponent('model', { type: 'cylinder' });
+    const ring = new pc.Entity("VictimRing");
+    ring.addComponent("model", { type: "cylinder" });
     ring.setLocalScale(1.5, 0.05, 1.5);
     ring.setLocalPosition(0, 0.1, 0);
 
@@ -5563,9 +5677,9 @@ export default class Village3DPlayCanvas {
     victimMarker.addChild(ring);
 
     // Add a red light
-    const victimLight = new pc.Entity('VictimLight');
-    victimLight.addComponent('light', {
-      type: 'point',
+    const victimLight = new pc.Entity("VictimLight");
+    victimLight.addComponent("light", {
+      type: "point",
       color: new pc.Color(1.0, 0.0, 0.0),
       intensity: 1.5,
       range: 3,
@@ -5575,8 +5689,8 @@ export default class Village3DPlayCanvas {
     victimMarker.addChild(victimLight);
 
     // Add skull icon above head
-    const skullMarker = new pc.Entity('SkullMarker');
-    skullMarker.addComponent('model', { type: 'sphere' });
+    const skullMarker = new pc.Entity("SkullMarker");
+    skullMarker.addComponent("model", { type: "sphere" });
     skullMarker.setLocalScale(0.4, 0.4, 0.4);
     skullMarker.setLocalPosition(0, 3.2, 0);
 
@@ -5603,11 +5717,10 @@ export default class Village3DPlayCanvas {
    */
   clearVictimHighlight() {
     if (this.currentVictimMarker) {
-      console.log('[Village3D] Clearing victim highlight');
+      console.log("[Village3D] Clearing victim highlight");
       this.currentVictimMarker.destroy();
       this.currentVictimMarker = null;
       this.currentVictimPlayerId = null;
     }
   }
 }
-

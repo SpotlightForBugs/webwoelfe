@@ -1266,21 +1266,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       <div class="card fade-in delay-2">
         <h3 class="mb-2"><i class="fa-solid fa-users"></i> Spieler</h3>
         <div class="spieler-grid" id="spieler-grid">
-          {% for s in alle_spieler %}
-         
-          {% set spieler_effekte = player_effects.get(s.id, []) if player_effects else [] %}
-
-          {# Build dynamic CSS classes from ALL effects (including visibility) #}
-          {% set dynamic_css = [] %}
-          {% for effect in spieler_effekte %}
-            {% if effect.css_class %}
-              {% set _ = dynamic_css.append(effect.css_class) %}
-            {% endif %}
-          {% endfor %}
-
-          {# Check if player knows this player's role (for data-rolle attribute) #}
-          {% set kennt_rolle = spieler.ist_erzaehler or s.id == spieler.id or not s.ist_am_leben %}
-          {% set ist_werwolf_sichtbar = spieler_effekte|selectattr('key', 'equalto', 'visibility.werwolf_team')|list|length > 0 %}
+          {% for s in alle_spieler %} {% set spieler_effekte =
+          player_effects.get(s.id, []) if player_effects else [] %} {# Build
+          dynamic CSS classes from ALL effects (including visibility) #} {% set
+          dynamic_css = [] %} {% for effect in spieler_effekte %} {% if
+          effect.css_class %} {% set _ = dynamic_css.append(effect.css_class) %}
+          {% endif %} {% endfor %} {# Check if player knows this player's role
+          (for data-rolle attribute) #} {% set kennt_rolle =
+          spieler.ist_erzaehler or s.id == spieler.id or not s.ist_am_leben %}
+          {% set ist_werwolf_sichtbar = spieler_effekte|selectattr('key',
+          'equalto', 'visibility.werwolf_team')|list|length > 0 %}
 
           <div
             class="spieler-card
@@ -1295,28 +1290,34 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
             data-ist-erzaehler="{{ s.ist_erzaehler|lower }}"
             onclick="selectSpieler({{ s.id }})"
           >
-            <div class="spieler-avatar"
-                 {% if kennt_rolle and s.rolle %}
-                 data-role="{{ s.rolle|css_class }}"
-                 data-team="{{ rollen_styles[s.rolle|css_class].team if rollen_styles[s.rolle|css_class] else '' }}"
-                 {% endif %}
+            <div
+              class="spieler-avatar"
+              {%
+              if
+              kennt_rolle
+              and
+              s.rolle
+              %}
+              data-role="{{ s.rolle|css_class }}"
+              data-team="{{ rollen_styles[s.rolle|css_class].team if rollen_styles[s.rolle|css_class] else '' }}"
+              {%
+              endif
+              %}
             >
               <span class="avatar-initial">{{ s.name[0]|upper }}</span>
-              {# Dynamic icons from effects - replaces hardcoded werwolf/seherin icons #}
-              {% for effect in spieler_effekte %}
-                {% if effect.icon %}
-                <span class="rolle-icon effect-icon" title="{{ effect.name }}">{{ effect.icon }}</span>
-                {% endif %}
-              {% endfor %}
+              {# Dynamic icons from effects - replaces hardcoded werwolf/seherin
+              icons #} {% for effect in spieler_effekte %} {% if effect.icon %}
+              <span class="rolle-icon effect-icon" title="{{ effect.name }}"
+                >{{ effect.icon }}</span
+              >
+              {% endif %} {% endfor %}
             </div>
             <div class="spieler-name">{{ s.name }}</div>
             {% if s.id == spieler.id %}
             <div class="spieler-label selbst">(Du)</div>
-            {% endif %}
-            {% if s.ist_erzaehler %}
+            {% endif %} {% if s.ist_erzaehler %}
             <div class="spieler-label erzaehler">(Erzähler)</div>
-            {% endif %}
-            {% if spieler.ist_erzaehler and s.rolle %}
+            {% endif %} {% if spieler.ist_erzaehler and s.rolle %}
             <div class="spieler-rolle-tag">{{ s.rolle }}</div>
             {% endif %}
           </div>
@@ -1391,7 +1392,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
         <div class="mt-2" style="font-size: 0.875rem">
           {% for item in role_state_display %}
           <div>
-            <i class="{{ item.icon }}"></i> {{ item.label }}: {{ item.display_value }}
+            <i class="{{ item.icon }}"></i> {{ item.label }}: {{
+            item.display_value }}
           </div>
           {% endfor %}
         </div>
@@ -1464,19 +1466,19 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   let activeRole = null;        // Currently active role from server
   let aktuellePhase = "{{ raum.aktuelle_phase }}";
   let aktuelleRunde = {{ raum.runde }};
-  
+
   // Parse Phase Data safely
   let phaseData = {};
   try {
       phaseData = JSON.parse('{{ raum.phase_data if raum.phase_data else "{}" | safe }}');
   } catch(e) { console.error('Error parsing phase data', e); }
-  
+
   activeRole = phaseData.active_role || '';
-  
+
   let nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'amor_phase']; // Default fallback
-  
+
   // Dynamic role UI configuration (loaded from backend API)
-  
+
   // Load role UI config when we have an active role
   // Load initial UI config if we're the active role
   if (spielerRolle && activeRole === spielerRolle) {
@@ -1493,36 +1495,36 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   socket.emit('raum_beitreten', { code: raumCode });
 
   // Event Handler
-  
+
   // GENERIC PHASE UPDATE (New System)
   socket.on('phase_update', function(data) {
       console.log('[Phase] Update:', data);
       aktuellePhase = data.phase;
       activeRole = data.active_role;
-      
+
       window.aktuellePhase = aktuellePhase;
       window.activeRole = activeRole;
-      
+
       // Load role UI config if it's our turn
       if (activeRole === spielerRolle) {
           loadRoleUI(spielerRolle).then(ui => phaseUiConfig = ui);
       } else {
           phaseUiConfig = null;  // Clear when not our turn
       }
-      
+
       updatePhase(data.phase, data.runde || aktuelleRunde, data.display_info);
-      
+
       // Clear legacy overlays if needed
       closeAllErzaehlungOverlays();
   });
-  
+
   // PRIVATE PHASE INFO (New System)
   socket.on('private_phase_info', function(data) {
       if (data.recipient_id && data.recipient_id !== spielerId) return;
-      
+
       const payload = data.payload;
       console.log("[PRIVATE PHASE INFO]", payload);
-      
+
       // Generic info display
       if (payload.nachricht) {
           showAlert(payload.nachricht, 'info');
@@ -1547,20 +1549,20 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       if (data.erzaehler_text) {
           updateErzaehlerText(data.erzaehler_text);
       }
-      
+
       // Handle Hexe phase: Show werewolf victim info
       if (data.phase === 'hexe_phase' && data.werwolf_opfer_id) {
           console.log('[Hexe Phase] Werwolf-Opfer:', data.werwolf_opfer_name, '(ID:', data.werwolf_opfer_id, ')');
-          
+
           // Store victim info globally for UI access
           window.werwolfOpferId = data.werwolf_opfer_id;
           window.werwolfOpferName = data.werwolf_opfer_name;
-          
+
           // Show victim alert if player is Hexe
           if (meineRolle === 'Hexe') {
               showAlert(`<i class="fa-solid fa-paw"></i> Das Werwolf-Opfer ist: <strong>${data.werwolf_opfer_name}</strong>`, 'danger', 10000);
           }
-          
+
           // Highlight victim in Village3D
           if (window.village3d && typeof window.village3d.highlightVictim === 'function') {
               window.village3d.highlightVictim(data.werwolf_opfer_id);
@@ -1569,7 +1571,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Clear victim info for other phases
           window.werwolfOpferId = null;
           window.werwolfOpferName = null;
-          
+
           // Clear Village3D highlight
           if (window.village3d && typeof window.village3d.clearVictimHighlight === 'function') {
               window.village3d.clearVictimHighlight();
@@ -1594,7 +1596,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   socket.on('private_info', function(data) {
       if (data.recipient_id && data.recipient_id !== spielerId) return;
-      
+
       const payload = data.payload;
       if (!payload) return;
 
@@ -1613,10 +1615,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   socket.on('role_phase_info', function(data) {
       if (data.recipient_id && data.recipient_id !== spielerId) return;
-      
+
       const payload = data.payload;
       console.log("[ROLE PHASE INFO]", payload);
-      
+
       // Generic handler - all role info uses nachricht field
       if (payload.overlay) {
           showRoleOverlay(payload.overlay);
@@ -1649,16 +1651,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   socket.on('spiel_log', function(data) {
       // Check visibility - only show if visible to this player
       const sichtbarFuer = data.sichtbar_fuer;
-      if (sichtbarFuer !== 'alle' && 
-          sichtbarFuer !== String(spielerId) && 
+      if (sichtbarFuer !== 'alle' &&
+          sichtbarFuer !== String(spielerId) &&
           sichtbarFuer !== spielerRolle) {
           return; // Not visible to this player
       }
-      
+
       // Add to log with timestamp from server
       const container = document.getElementById('log-list');
       if (!container) return;
-      
+
       const entry = document.createElement('div');
       entry.className = 'log-entry';
       entry.innerHTML = `
@@ -1671,7 +1673,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   /**
    * Generic role overlay display - replaces role-specific overlays like showVerliebteReveal
-   * 
+   *
    * @param {Object} config - Overlay configuration from backend
    * @param {string} config.title - Main title text
    * @param {string} config.subtitle - Subtitle text (optional)
@@ -1698,9 +1700,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           animation: fadeIn 0.5s ease;
       `;
 
-      const bgStyle = config.gradient || 
+      const bgStyle = config.gradient ||
           `linear-gradient(135deg, ${config.color || '#4a90d9'} 0%, ${adjustColor(config.color || '#4a90d9', -30)} 100%)`;
-      
+
       overlay.innerHTML = `
           <div style="
               background: ${bgStyle};
@@ -1983,13 +1985,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   // Track which phase we've sent audio_fertig for to prevent duplicates
   let lastAudioFertigPhase = null;
-  
+
   // Schließt alle Erzähler-Overlays - properly cleans up to prevent event handlers from firing
   function closeAllErzaehlungOverlays() {
       document.querySelectorAll('.erzaehlung-overlay').forEach(overlay => {
           // Mark overlay as being closed to prevent event handlers
           overlay.dataset.closing = 'true';
-          
+
           // Stoppe Audio falls vorhanden - clear event handlers FIRST
           const audio = overlay.querySelector('audio');
           if (audio) {
@@ -2002,12 +2004,12 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               audio.currentTime = 0;
               audio.src = ''; // Clear source to fully stop
           }
-          
+
           // Clear any auto-advance timeouts stored on overlay
           if (overlay.autoAdvanceTimeout) {
               clearTimeout(overlay.autoAdvanceTimeout);
           }
-          
+
           // Entferne Overlay
           overlay.remove();
   });
@@ -2029,7 +2031,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       // Reset the lastAudioFertigPhase when starting a new erzaehlung
       // This allows the new audio to send its own audio_fertig
       lastAudioFertigPhase = null;
-      
+
       // Schließe bestehende Overlays bevor ein neues gezeigt wird
       closeAllErzaehlungOverlays();
 
@@ -2134,7 +2136,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           const playBtn = document.getElementById(playerId + '-btn');
           const playIcon = document.getElementById(playerId + '-icon');
           const waveform = document.getElementById(playerId + '-waveform');
-          
+
           // Track when audio actually starts playing and its duration
           let audioStartTime = null;
           let audioDuration = 0;
@@ -2177,7 +2179,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   console.log('[Audio] Ignoring ended event - overlay is being closed');
                   return;
               }
-              
+
               playIcon.className = 'fa-solid fa-redo';
               playBtn.classList.remove('playing');
               waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
@@ -2251,7 +2253,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                       }, 400);
                   }
               }, autoAdvanceDuration);
-              
+
               // Store timeout on notification for cleanup
               notification.autoAdvanceTimeout = audioAutoAdvanceTimeout;
 
@@ -2326,7 +2328,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   let phaseRoleMapping = {};
   let roleUICache = {};
-  
+
   // Load phase→role mapping from game API on init
 
 
@@ -2387,11 +2389,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       }
 
       const allowSelf = phaseUiConfig.allow_self_target !== false; // Default true if undefined (safest for legacy)
-      
+
       document.querySelectorAll('.spieler-card').forEach(card => {
           const id = parseInt(card.getAttribute('data-id'));
           const isSelf = id === spielerId;
-          
+
           if (isSelf && !allowSelf) {
              card.classList.add('disabled-target');
           } else {

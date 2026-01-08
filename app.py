@@ -1364,6 +1364,12 @@ def _wechsel_phase_intern(raum):
 
     socketio.emit("phase_geaendert", phase_data, room=raum.code)
 
+    # Zufällige Hinweise generieren
+    try:
+        generiere_zufalls_hinweis(raum.id)
+    except Exception as e:
+        log_ts(f"Fehler bei Hinweis-Generierung: {e}")
+
     # Automatische Phasen: Nur reine Übergangs-Phasen die keine Aktion erfordern
     # WICHTIG: Night-Phase ist NIEMALS automatisch - dort agieren Rollen!
     # Diese Liste ist absichtlich minimal:

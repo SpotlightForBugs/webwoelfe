@@ -38,11 +38,11 @@ const AUDIO_WAIT_MS = 5000; // 5 Sekunden extra Wartezeit nach Aktionen
 const RANDOM_SEED = process.env.SEED
   ? parseInt(process.env.SEED, 10)
   : Date.now();
-const SKIP_ACTION_CHANCE = 0.0; // 0% chance to skip any action (find timeout bugs)
-const WRONG_TARGET_CHANCE = 0.1; // 10% chance to target a dead/invalid player
-const SELF_TARGET_CHANCE = 0.05; // 5% chance to try targeting self
-const DOUBLE_ACTION_CHANCE = 0.1; // 10% chance to try same action twice
-const RANDOM_VOTE_CHANCE = 0.4; // 40% chance for completely random voting
+const SKIP_ACTION_CHANCE = 0.0; // Strict mode: never skip
+const WRONG_TARGET_CHANCE = 0.0; // Strict mode: always valid target
+const SELF_TARGET_CHANCE = 0.0; // Strict mode: never self
+const DOUBLE_ACTION_CHANCE = 0.0; // Strict mode: no double actions
+const RANDOM_VOTE_CHANCE = 0.0; // Strict mode: smart voting
 
 // Seeded random for reproducibility
 let randomState = RANDOM_SEED;
@@ -260,9 +260,9 @@ test.describe("Full Game Simulation", () => {
 
     const headlessBrowser = HEADLESS_OTHERS
       ? await chromium.launch({
-          headless: true,
-          args: ["--disable-web-security", "--no-sandbox"],
-        })
+        headless: true,
+        args: ["--disable-web-security", "--no-sandbox"],
+      })
       : null;
 
     try {
@@ -331,6 +331,18 @@ test.describe("Full Game Simulation", () => {
         const context = await targetBrowser.newContext({ viewport: null });
         const page = await context.newPage();
 
+        // FAIL ON CONSOLE ERRORS
+        page.on("console", (msg) => {
+          if (msg.type() === "error") {
+            const text = msg.text();
+            // Ignore some common noise if necessary, but keep it strict
+            if (!text.includes("favicon") && !text.includes("ERR_BLOCKED_BY_CLIENT")) {
+              console.error(`🚨 CONSOLE ERROR [${playerName}]: ${text}`);
+              throw new Error(`Console Error in ${playerName}: ${text}`);
+            }
+          }
+        });
+
         // Tile windows for non-headless mode
         if (!HEADLESS_OTHERS) {
           await tileWindow(page, i, PLAYER_COUNT);
@@ -387,9 +399,18 @@ test.describe("Full Game Simulation", () => {
       await sleep(2000);
       for (const player of players) {
         await player.page.waitForURL(/\/spiel\//, { timeout: 10000 });
+
+        // VERIFY VILLAGE 3D
+        const hasVillage = await player.page.evaluate(() => typeof (window as any).village3d !== 'undefined');
+        if (!hasVillage) {
+          throw new Error(`❌ Village3D not initialized for ${player.name}`);
+        }
       }
 
       log("✓ Spiel gestartet!\n");
+
+      // ... (Role extraction omitted for brevity, keeping existing logic) ...
+
 
       // ========================================================================
       // PHASE 4: Extract Roles
@@ -531,14 +552,12 @@ test.describe("Full Game Simulation", () => {
           // We cannot and should not try to skip phases manually.
           // The server has a 30 second fallback timeout for stuck phases.
           if (samePhaseCount > MAX_SAME_PHASE) {
-            log(
-              `  ⏳ Phase ${currentPhase} dauert an - warte auf Server (Fallback-Timeout: 30s)...`,
-            );
-            // Just wait - the server will handle phase transitions automatically
-            await sleep(5000);
-            samePhaseCount = Math.max(0, samePhaseCount - 2); // Slowly reset counter
-            continue;
+            log(`  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`);
+            throw new Error(`Game stuck in phase: ${currentPhase} - Auto-advance failed.`);
           }
+          // Warte auf Phasenwechsel
+          await sleep(2000);
+          continue;
           // Warte auf Phasenwechsel
           await sleep(2000);
           continue;
@@ -615,7 +634,7 @@ test.describe("Full Game Simulation", () => {
       log("==========================================\n");
 
       // Wait indefinitely
-      await new Promise(() => {});
+      await new Promise(() => { });
     } catch (error) {
       log(`❌ Fehler: ${error}`);
       throw error;
@@ -990,7 +1009,7 @@ async function handleWerwolfPhase(
       target = randomChoice(validTargets);
     }
 
-    let success = await selectTargetAndConfirmWithRetry(
+    let success = await selectTargetAndConfirm(
       wolf.page,
       target.name,
       ["Töten", "Wählen", "Angreifen"],
@@ -1001,7 +1020,7 @@ async function handleWerwolfPhase(
       log(`    🔄 ${wolf.name} Server hat abgelehnt, wähle gültiges Ziel...`);
       await sleep(500);
       const validTarget = randomChoice(validTargets);
-      success = await selectTargetAndConfirmWithRetry(
+      success = await selectTargetAndConfirm(
         wolf.page,
         validTarget.name,
         ["Töten", "Wählen", "Angreifen"],
@@ -1020,7 +1039,7 @@ async function handleWerwolfPhase(
       log(
         `    ⚠️ [RANDOM] ${wolf.name} versucht erneut zu wählen (wird abgelehnt)`,
       );
-      await selectTargetAndConfirmWithRetry(
+      await selectTargetAndConfirm(
         wolf.page,
         randomChoice(validTargets).name,
         ["Töten", "Wählen"],
@@ -1925,7 +1944,7 @@ async function handleDiskussionPhase(players: PlayerWindow[]): Promise<void> {
             await chatInput.fill(randomChoice(chatMessages));
             await chatInput.press("Enter");
           }
-        } catch (e) {}
+        } catch (e) { }
         await sleep(50);
       }
     }
@@ -2251,176 +2270,125 @@ async function selectTargetAndConfirm(
   targetName: string,
   buttonTexts: string[],
 ): Promise<boolean> {
-  try {
-    // Versuche zuerst mit data-name Attribut (genauer)
-    let targetCard = page.locator(`.spieler-card[data-name="${targetName}"]`);
+  // First, check if target card is visible
+  let targetCard = page.locator(`.spieler-card[data-name="${targetName}"]`);
 
-    if (!(await targetCard.isVisible({ timeout: 1000 }).catch(() => false))) {
-      // Fallback: Suche nach Text (weniger genau)
-      targetCard = page
-        .locator(`.spieler-card:has-text("${targetName}")`)
-        .first();
-    }
-
-    if (await targetCard.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await targetCard.click();
-      await sleep(500);
-
-      // Finde und klicke Aktions-Button
-      for (const text of buttonTexts) {
-        const btn = page.locator(`button:has-text("${text}")`).first();
-        if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
-          await btn.click();
-          return true;
-        }
-      }
-
-      // Kein Button gefunden - versuche generischen "Bestätigen" oder "OK" Button
-      const genericBtn = page
-        .locator(
-          'button:has-text("Bestätigen"), button:has-text("OK"), button.btn-primary',
-        )
-        .first();
-      if (await genericBtn.isVisible({ timeout: 500 }).catch(() => false)) {
-        await genericBtn.click();
-        return true;
-      }
-    }
-    return false;
-  } catch (e) {
-    return false;
+  if (!(await targetCard.isVisible({ timeout: 1000 }).catch(() => false))) {
+    targetCard = page
+      .locator(`.spieler-card:has-text("${targetName}")`)
+      .first();
   }
-}
 
-/**
- * Like selectTargetAndConfirm but waits for server confirmation.
- * Returns true if server confirmed the action, false if rejected or timeout.
- */
-async function selectTargetAndConfirmWithRetry(
-  page: Page,
-  targetName: string,
-  buttonTexts: string[],
-): Promise<boolean> {
-  try {
-    // First, check if target card is visible
-    let targetCard = page.locator(`.spieler-card[data-name="${targetName}"]`);
+  if (!(await targetCard.isVisible({ timeout: 2000 }).catch(() => false))) {
+    throw new Error(`Target card not found: ${targetName}`);
+  }
 
-    if (!(await targetCard.isVisible({ timeout: 1000 }).catch(() => false))) {
-      targetCard = page
-        .locator(`.spieler-card:has-text("${targetName}")`)
-        .first();
+  // Setup the server response listener BEFORE clicking
+  await page.evaluate(() => {
+    // Clear any previous pending response
+    (window as any).__lastActionResult = null;
+    (window as any).__actionPending = true;
+
+    const socket = (window as any).socket;
+    if (!socket) {
+      (window as any).__actionPending = false;
+      (window as any).__lastActionResult = {
+        success: false,
+        error: "No socket",
+      };
+      return;
     }
 
-    if (!(await targetCard.isVisible({ timeout: 2000 }).catch(() => false))) {
-      return false;
-    }
+    // One-time listeners for this action
+    const onSuccess = () => {
+      (window as any).__actionPending = false;
+      (window as any).__lastActionResult = { success: true };
+      socket.off("aktion_bestaetigt", onSuccess);
+      socket.off("fehler", onError);
+    };
 
-    // Setup the server response listener BEFORE clicking
-    await page.evaluate(() => {
-      // Clear any previous pending response
-      (window as any).__lastActionResult = null;
-      (window as any).__actionPending = true;
+    const onError = (data: any) => {
+      (window as any).__actionPending = false;
+      (window as any).__lastActionResult = {
+        success: false,
+        error: data?.nachricht || "Error",
+      };
+      socket.off("aktion_bestaetigt", onSuccess);
+      socket.off("fehler", onError);
+    };
 
-      const socket = (window as any).socket;
-      if (!socket) {
+    socket.on("aktion_bestaetigt", onSuccess);
+    socket.on("fehler", onError);
+
+    // Timeout fallback (client side)
+    setTimeout(() => {
+      if ((window as any).__actionPending) {
         (window as any).__actionPending = false;
         (window as any).__lastActionResult = {
           success: false,
-          error: "No socket",
+          error: "Timeout (Client)",
         };
-        return;
+        socket.off("aktion_bestaetigt", onSuccess);
+        socket.off("fehler", onError);
       }
+    }, 5000);
+  });
 
-      // One-time listeners for this action
-      const onSuccess = () => {
-        (window as any).__actionPending = false;
-        (window as any).__lastActionResult = { success: true };
-        socket.off("aktion_bestaetigt", onSuccess);
-        socket.off("fehler", onError);
-      };
+  // Now click on the target card
+  await targetCard.click();
+  await sleep(500);
 
-      const onError = (data: any) => {
-        (window as any).__actionPending = false;
-        (window as any).__lastActionResult = {
-          success: false,
-          error: data?.nachricht || "Error",
-        };
-        socket.off("aktion_bestaetigt", onSuccess);
-        socket.off("fehler", onError);
-      };
+  // Find and click action button
+  let buttonClicked = false;
+  for (const text of buttonTexts) {
+    const btn = page.locator(`button:has-text("${text}")`).first();
+    if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await btn.click();
+      buttonClicked = true;
+      break;
+    }
+  }
 
-      socket.on("aktion_bestaetigt", onSuccess);
-      socket.on("fehler", onError);
+  if (!buttonClicked) {
+    const genericBtn = page
+      .locator(
+        'button:has-text("Bestätigen"), button:has-text("OK"), button.btn-primary',
+      )
+      .first();
+    if (await genericBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+      await genericBtn.click();
+      buttonClicked = true;
+    }
+  }
 
-      // Timeout fallback
-      setTimeout(() => {
-        if ((window as any).__actionPending) {
-          (window as any).__actionPending = false;
-          (window as any).__lastActionResult = {
-            success: false,
-            error: "Timeout",
-          };
-          socket.off("aktion_bestaetigt", onSuccess);
-          socket.off("fehler", onError);
-        }
-      }, 5000);
+  if (!buttonClicked) {
+    throw new Error(`No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`);
+  }
+
+  // Poll for server response (max 5 seconds)
+  for (let i = 0; i < 50; i++) {
+    const result = await page.evaluate(() => {
+      if (
+        !(window as any).__actionPending &&
+        (window as any).__lastActionResult
+      ) {
+        return (window as any).__lastActionResult;
+      }
+      return null;
     });
 
-    // Now click on the target card
-    await targetCard.click();
-    await sleep(500);
-
-    // Find and click action button
-    let buttonClicked = false;
-    for (const text of buttonTexts) {
-      const btn = page.locator(`button:has-text("${text}")`).first();
-      if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
-        await btn.click();
-        buttonClicked = true;
-        break;
+    if (result !== null) {
+      if (!result.success) {
+        throw new Error(`Server rejected action: ${result.error}`);
       }
+      return true;
     }
 
-    if (!buttonClicked) {
-      const genericBtn = page
-        .locator(
-          'button:has-text("Bestätigen"), button:has-text("OK"), button.btn-primary',
-        )
-        .first();
-      if (await genericBtn.isVisible({ timeout: 500 }).catch(() => false)) {
-        await genericBtn.click();
-        buttonClicked = true;
-      }
-    }
-
-    if (!buttonClicked) {
-      return false;
-    }
-
-    // Poll for server response (max 5 seconds)
-    for (let i = 0; i < 50; i++) {
-      const result = await page.evaluate(() => {
-        if (
-          !(window as any).__actionPending &&
-          (window as any).__lastActionResult
-        ) {
-          return (window as any).__lastActionResult;
-        }
-        return null;
-      });
-
-      if (result !== null) {
-        return result.success;
-      }
-
-      await sleep(100);
-    }
-
-    // Timeout - assume failure
-    return false;
-  } catch (e) {
-    return false;
+    await sleep(100);
   }
+
+  // Timeout - assume failure
+  throw new Error("Action timed out waiting for server confirmation");
 }
 
 async function checkGameEnd(hostPage: Page): Promise<boolean> {

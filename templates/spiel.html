@@ -558,11 +558,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 20, 0.8);
+    /* Reduced opacity layout to show the 3D scene */
+    background: radial-gradient(circle, transparent 30%, rgba(0, 0, 20, 0.7) 100%);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    pointer-events: none; /* Allow interaction with 3D scene */
   }
 
   .nacht-overlay.aktiv {
@@ -570,18 +572,26 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   .nacht-content {
+    position: absolute;
+    top: 5%;
+    width: 100%;
     text-align: center;
-    color: white;
+    color: rgba(255, 255, 255, 0.9);
+    pointer-events: none;
   }
 
   .nacht-content h2 {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8);
+    font-weight: 300;
+    letter-spacing: 2px;
   }
 
   .mond-icon {
-    font-size: 5rem;
-    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    margin-bottom: 0.2rem;
+    text-shadow: 0 0 15px rgba(255, 255, 200, 0.5);
   }
 
   /* Erzähler-Panel */
@@ -2984,18 +2994,21 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           window.village3d = village3d;
 
           // Update bei Phasenwechsel
-          socket.on('phase_update', function(data) {
+          // Update bei Phasenwechsel
+          socket.on('phase_geaendert', function(data) {
               const newIsNight = data.phase.includes('nacht') ||
                                 (data.phase.includes('phase') &&
                                  !data.phase.includes('tag') &&
                                  !data.phase.includes('abstimmung'));
-              village3d.setTimeOfDay(newIsNight ? 'night' : 'day');
+              village3d.setTimeOfDay(newIsNight);
           });
 
           // Hint-Anzeige in 3D
-          socket.on('hint_anzeigen', function(data) {
-              if (data.spieler_id && data.typ) {
-                  village3d.showHint(data.spieler_id, data.typ);
+          socket.on('hinweis_zeigen', function(data) {
+              const pId = data.spielerId || data.spieler_id;
+              const type = data.hintTyp || data.type || data.typ;
+              if (pId && type) {
+                  village3d.showHint(pId, type);
               }
           });
 

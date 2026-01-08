@@ -204,53 +204,46 @@ export default class Village3DPlayCanvas {
   }
 
   createScene() {
-    // Camera
+    // Camera with enhanced settings
     this.camera = new pc.Entity("Camera");
     this.camera.addComponent("camera", {
-      clearColor: new pc.Color(0.01, 0.01, 0.02),
-      farClip: 200,
-      fov: 45,
+      clearColor: new pc.Color(0.02, 0.02, 0.06), // Deeper night blue
+      farClip: 300,
+      fov: 50, // Slightly wider for more immersive view
+      nearClip: 0.1,
     });
 
-    // Add Fog for better atmosphere
-    // In newer PlayCanvas versions, fog is set via rendering settings
+    // Enhanced Fog for atmospheric depth
     try {
-      // Try the newer API first (PlayCanvas 1.60+)
       if (this.app.scene.rendering) {
         this.app.scene.rendering.fog = pc.FOG_EXP2;
-        this.app.scene.rendering.fogColor = new pc.Color(0.01, 0.01, 0.02);
-        this.app.scene.rendering.fogDensity = 0.01;
+        this.app.scene.rendering.fogColor = new pc.Color(0.02, 0.03, 0.08);
+        this.app.scene.rendering.fogDensity = 0.008;
+        // Enhanced exposure for better dynamic range
+        this.app.scene.rendering.exposure = 1.2;
+        this.app.scene.rendering.gammaCorrection = pc.GAMMA_SRGB;
+        this.app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
       } else if (this.app.scene.settings) {
-        // Alternative settings path
         this.app.scene.settings.render.fog = pc.FOG_EXP2;
-        this.app.scene.settings.render.fogColor = new pc.Color(
-          0.01,
-          0.01,
-          0.02,
-        );
-        this.app.scene.settings.render.fogDensity = 0.01;
+        this.app.scene.settings.render.fogColor = new pc.Color(0.02, 0.03, 0.08);
+        this.app.scene.settings.render.fogDensity = 0.008;
       }
     } catch (e) {
-      // Fog is not essential, just log quietly
-      console.debug("Fog not available:", e.message);
+      console.debug("Fog settings not fully available:", e.message);
     }
 
-    // Set Ambient Light
+    // Enhanced Ambient Light with color
     try {
       if (this.app.scene.rendering) {
-        this.app.scene.rendering.ambientLight = new pc.Color(0.15, 0.15, 0.2);
+        this.app.scene.rendering.ambientLight = new pc.Color(0.08, 0.1, 0.18);
       } else {
-        this.app.scene.ambientLight = new pc.Color(0.15, 0.15, 0.2);
+        this.app.scene.ambientLight = new pc.Color(0.08, 0.1, 0.18);
       }
     } catch (e) {
       console.debug("Could not set ambientLight:", e.message);
     }
 
-    this.camera.setPosition(
-      0,
-      this.defaultCameraHeight,
-      this.defaultCameraRadius,
-    );
+    this.camera.setPosition(0, this.defaultCameraHeight, this.defaultCameraRadius);
     this.camera.lookAt(0, 0, 0);
     this.app.root.addChild(this.camera);
 
@@ -258,78 +251,266 @@ export default class Village3DPlayCanvas {
     this.cameraAngle = this.defaultCameraAngle;
     this.cameraHeight = this.defaultCameraHeight;
     this.cameraRadius = this.defaultCameraRadius;
-
     this.targetCameraAngle = this.cameraAngle;
     this.targetCameraHeight = this.cameraHeight;
     this.targetCameraRadius = this.cameraRadius;
-
     this.targetPosition = new pc.Vec3(0, 0, 0);
 
-    // Directional Light (Moon/Sun)
+    // === SKY DOME - Gradient night sky ===
+    this.createSkyDome();
+
+    // === CELESTIAL BODIES ===
+    this.createCelestialBodies();
+
+    // Directional Light (Moon/Sun) - Enhanced with warmer undertones
     this.light = new pc.Entity("DirectionalLight");
     this.light.addComponent("light", {
       type: "directional",
-      color: new pc.Color(0.7, 0.8, 1.0),
-      intensity: 1.0,
+      color: new pc.Color(0.6, 0.7, 0.95), // Slightly bluer moonlight
+      intensity: 0.8,
       castShadows: true,
-      shadowBias: 0.2,
-      normalOffsetBias: 0.05,
-      shadowDistance: 80,
+      shadowBias: 0.15,
+      normalOffsetBias: 0.04,
+      shadowDistance: 100,
+      shadowResolution: 2048,
     });
-    this.light.setLocalEulerAngles(45, 30, 0);
+    this.light.setLocalEulerAngles(50, 25, 0);
     this.app.root.addChild(this.light);
 
-    // Additional fill light for better player visibility
+    // Fill light - subtle warm bounce from ground
     this.fillLight = new pc.Entity("FillLight");
     this.fillLight.addComponent("light", {
       type: "directional",
-      color: new pc.Color(0.3, 0.3, 0.4),
-      intensity: 0.3,
+      color: new pc.Color(0.25, 0.22, 0.35), // Subtle purple-blue fill
+      intensity: 0.25,
       castShadows: false,
     });
-    this.fillLight.setLocalEulerAngles(-30, 180, 0);
+    this.fillLight.setLocalEulerAngles(-35, 190, 0);
     this.app.root.addChild(this.fillLight);
 
-    // Ground
+    // Rim light - creates silhouette highlights
+    this.rimLight = new pc.Entity("RimLight");
+    this.rimLight.addComponent("light", {
+      type: "directional",
+      color: new pc.Color(0.4, 0.5, 0.7),
+      intensity: 0.15,
+      castShadows: false,
+    });
+    this.rimLight.setLocalEulerAngles(10, -90, 0);
+    this.app.root.addChild(this.rimLight);
+
+    // Ground with enhanced detail
     this.createDetailedGround();
 
-    // Create full medieval village (in both lobby and game)
-    // Village Buildings - show in both modes for a complete scene
+    // Village Buildings
     this.createVillageBuildings();
 
-    // Campfire (center)
+    // Campfire (center) - enhanced version
     if (this.isLobbyMode) {
       this.createSimpleCampfire();
     } else {
-      this.createCampfire();
+      this.createEnhancedCampfire();
     }
 
     // Environment (Trees, Stones, Fence)
-    this.createEnvironment();
+    this.createEnhancedEnvironment();
 
-    // Atmospheric effects
-    this.createAtmosphericEffects();
+    // Atmospheric effects (fog, fireflies, etc.)
+    this.createEnhancedAtmosphericEffects();
+
+    // Ground fog particles
+    this.createGroundFog();
+  }
+
+  /**
+   * Creates a gradient sky dome for atmospheric background
+   */
+  createSkyDome() {
+    // Large inverted sphere for sky
+    this.skyDome = new pc.Entity("SkyDome");
+    this.skyDome.addComponent("model", { type: "sphere" });
+    this.skyDome.setLocalScale(-150, -150, -150); // Inverted (inside-out)
+    this.skyDome.setPosition(0, 0, 0);
+
+    // Night sky gradient material
+    const skyMat = new pc.StandardMaterial();
+    skyMat.diffuse = new pc.Color(0.02, 0.03, 0.08); // Deep night blue
+    skyMat.emissive = new pc.Color(0.015, 0.025, 0.06); // Subtle glow
+    skyMat.useLighting = false;
+    skyMat.cull = pc.CULLFACE_FRONT; // Render inside
+    skyMat.update();
+    this.skyDome.model.material = skyMat;
+    this.skyMaterial = skyMat;
+
+    this.app.root.addChild(this.skyDome);
+
+    // Stars (small glowing spheres scattered on sky dome)
+    this.stars = [];
+    const starCount = this.isLobbyMode ? 100 : 180;
+    for (let i = 0; i < starCount; i++) {
+      const star = new pc.Entity(`Star-${i}`);
+      star.addComponent("model", { type: "sphere" });
+
+      // Random position on sphere surface
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const radius = 140;
+      const x = radius * Math.sin(phi) * Math.cos(theta);
+      const y = Math.abs(radius * Math.cos(phi)) + 10; // Only upper hemisphere
+      const z = radius * Math.sin(phi) * Math.sin(theta);
+
+      // Variable star sizes for depth
+      const size = 0.15 + Math.random() * 0.35;
+      star.setLocalScale(size, size, size);
+      star.setPosition(x, y, z);
+
+      // Star material with twinkle potential
+      const starMat = new pc.StandardMaterial();
+      const brightness = 0.6 + Math.random() * 0.4;
+      const warmth = Math.random();
+      // Mix between white, blue, and yellow stars
+      if (warmth < 0.3) {
+        starMat.emissive = new pc.Color(brightness, brightness * 0.9, brightness * 0.7); // Warm
+      } else if (warmth < 0.6) {
+        starMat.emissive = new pc.Color(brightness * 0.8, brightness * 0.85, brightness); // Blue
+      } else {
+        starMat.emissive = new pc.Color(brightness, brightness, brightness); // White
+      }
+      starMat.opacity = 0.9;
+      starMat.blendType = pc.BLEND_ADDITIVE;
+      starMat.useLighting = false;
+      starMat.update();
+      star.model.material = starMat;
+
+      this.app.root.addChild(star);
+      this.stars.push({
+        entity: star,
+        material: starMat,
+        baseBrightness: brightness,
+        twinkleSpeed: 2 + Math.random() * 4,
+        twinklePhase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  /**
+   * Creates moon and optional sun for day/night
+   */
+  createCelestialBodies() {
+    // Moon
+    this.moon = new pc.Entity("Moon");
+    this.moon.addComponent("model", { type: "sphere" });
+    this.moon.setLocalScale(8, 8, 8);
+    this.moon.setPosition(60, 80, -50);
+
+    const moonMat = new pc.StandardMaterial();
+    moonMat.diffuse = new pc.Color(0.95, 0.95, 0.9);
+    moonMat.emissive = new pc.Color(0.7, 0.75, 0.85);
+    moonMat.useLighting = false;
+    moonMat.update();
+    this.moon.model.material = moonMat;
+    this.moonMaterial = moonMat;
+
+    this.app.root.addChild(this.moon);
+
+    // Moon glow (larger, softer sphere behind)
+    const moonGlow = new pc.Entity("MoonGlow");
+    moonGlow.addComponent("model", { type: "sphere" });
+    moonGlow.setLocalScale(14, 14, 14);
+    moonGlow.setPosition(60, 80, -50);
+
+    const glowMat = new pc.StandardMaterial();
+    glowMat.emissive = new pc.Color(0.3, 0.35, 0.5);
+    glowMat.opacity = 0.25;
+    glowMat.blendType = pc.BLEND_ADDITIVE;
+    glowMat.useLighting = false;
+    glowMat.update();
+    moonGlow.model.material = glowMat;
+
+    this.app.root.addChild(moonGlow);
+    this.moonGlow = moonGlow;
+
+    // Sun (hidden by default, shown during day)
+    this.sun = new pc.Entity("Sun");
+    this.sun.addComponent("model", { type: "sphere" });
+    this.sun.setLocalScale(12, 12, 12);
+    this.sun.setPosition(80, 100, 60);
+    this.sun.enabled = false;
+
+    const sunMat = new pc.StandardMaterial();
+    sunMat.emissive = new pc.Color(1, 0.95, 0.7);
+    sunMat.useLighting = false;
+    sunMat.update();
+    this.sun.model.material = sunMat;
+
+    this.app.root.addChild(this.sun);
+
+    // Sun rays/glow
+    this.sunGlow = new pc.Entity("SunGlow");
+    this.sunGlow.addComponent("model", { type: "sphere" });
+    this.sunGlow.setLocalScale(25, 25, 25);
+    this.sunGlow.setPosition(80, 100, 60);
+    this.sunGlow.enabled = false;
+
+    const sunGlowMat = new pc.StandardMaterial();
+    sunGlowMat.emissive = new pc.Color(1, 0.8, 0.4);
+    sunGlowMat.opacity = 0.2;
+    sunGlowMat.blendType = pc.BLEND_ADDITIVE;
+    sunGlowMat.useLighting = false;
+    sunGlowMat.update();
+    this.sunGlow.model.material = sunGlowMat;
+
+    this.app.root.addChild(this.sunGlow);
   }
 
   createDetailedGround() {
-    // Main ground - varied grass terrain
+    // Main ground - varied grass terrain with vertex coloring simulation
     const ground = new pc.Entity("Ground");
-    ground.addComponent("model", {
-      type: "plane",
-    });
+    ground.addComponent("model", { type: "plane" });
 
-    // Smaller ground in lobby mode
-    const groundSize = this.isLobbyMode ? 40 : 80;
+    // Larger ground for better horizon
+    const groundSize = this.isLobbyMode ? 120 : 180;
     ground.setLocalScale(groundSize, 1, groundSize);
 
     const material = new pc.StandardMaterial();
-    material.diffuse = new pc.Color(0.15, 0.22, 0.12); // Richer, more natural grass
-    material.specular = new pc.Color(0.01, 0.01, 0.01);
-    material.shininess = 3;
+    material.diffuse = new pc.Color(0.1, 0.15, 0.08); // Darker, richer base
+    material.specular = new pc.Color(0.02, 0.02, 0.02);
+    material.shininess = 2;
     material.update();
 
     ground.model.material = material;
     this.app.root.addChild(ground);
+
+    // Random grass patches for variation (simple planes slightly above ground)
+    const patchCount = this.isLobbyMode ? 20 : 50;
+    for (let i = 0; i < patchCount; i++) {
+      const patch = new pc.Entity("GrassPatch");
+      patch.addComponent("model", { type: "plane" });
+      const scale = 5 + Math.random() * 10;
+      patch.setLocalScale(scale, 1, scale);
+
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * (groundSize * 0.4);
+      patch.setPosition(
+        Math.cos(angle) * dist,
+        0.01 + Math.random() * 0.01,
+        Math.sin(angle) * dist,
+      );
+      patch.setEulerAngles(0, Math.random() * 360, 0);
+
+      const patchMat = new pc.StandardMaterial();
+      const colorVar = Math.random() * 0.05;
+      patchMat.diffuse = new pc.Color(
+        0.12 + colorVar,
+        0.18 + colorVar,
+        0.1 + colorVar,
+      );
+      patchMat.opacity = 0.8;
+      patchMat.blendType = pc.BLEND_NORMAL;
+      patchMat.update();
+      patch.model.material = patchMat;
+      this.app.root.addChild(patch);
+    }
 
     // Create dirt paths/roads for village authenticity
     if (!this.isLobbyMode) {
@@ -338,21 +519,18 @@ export default class Village3DPlayCanvas {
 
     // Center village square (cobblestone)
     const centerSquare = new pc.Entity("CenterSquare");
-    centerSquare.addComponent("model", {
-      type: "cylinder",
-    });
-    const squareSize = this.isLobbyMode ? 10 : 14;
+    centerSquare.addComponent("model", { type: "cylinder" });
+    const squareSize = this.isLobbyMode ? 10 : 15;
     centerSquare.setLocalScale(squareSize, 0.05, squareSize);
-    centerSquare.setPosition(0, 0.02, 0); // Offset to avoid Z-fighting
+    centerSquare.setPosition(0, 0.03, 0);
 
     const squareMat = this.getMaterial({
       name: "VillageSquare",
-      diffuse: new pc.Color(0.35, 0.32, 0.28), // Cobblestone/stone color
+      diffuse: new pc.Color(0.25, 0.22, 0.2), // Darker stone
       specular: new pc.Color(0.05, 0.05, 0.05),
-      shininess: 8,
+      shininess: 5,
     });
     centerSquare.model.material = squareMat;
-
     this.app.root.addChild(centerSquare);
 
     // Add some decorative stones around the square
@@ -361,102 +539,471 @@ export default class Village3DPlayCanvas {
     }
   }
 
-  /**
-   * Create dirt paths connecting the village
-   */
   createVillagePaths() {
-    // Main cross paths through center
+    // Main cross paths - made more irregular
     const pathPositions = [
-      { x: 0, z: 0, scaleX: 1.5, scaleZ: 35, rotation: 0 }, // North-South path
-      { x: 0, z: 0, scaleX: 35, scaleZ: 1.5, rotation: 0 }, // East-West path
-      { x: -15, z: -12, scaleX: 12, scaleZ: 1.2, rotation: 25 }, // Path to houses
-      { x: 15, z: 10, scaleX: 10, scaleZ: 1.2, rotation: -35 }, // Path to houses
-      { x: -8, z: 15, scaleX: 8, scaleZ: 1.2, rotation: 15 }, // Path to houses
-      { x: 12, z: -10, scaleX: 9, scaleZ: 1.2, rotation: -20 }, // Path to church
+      { x: 0, z: 0, scaleX: 2.5, scaleZ: 40, rotation: 0 },
+      { x: 0, z: 0, scaleX: 40, scaleZ: 2.5, rotation: 0 },
+      { x: -15, z: -12, scaleX: 12, scaleZ: 2, rotation: 25 },
+      { x: 15, z: 10, scaleX: 10, scaleZ: 2, rotation: -35 },
+      { x: -8, z: 15, scaleX: 8, scaleZ: 2, rotation: 15 },
+      { x: 12, z: -10, scaleX: 9, scaleZ: 2, rotation: -20 },
+      // Ring path
+      { x: 18, z: 18, scaleX: 15, scaleZ: 2, rotation: 45 },
+      { x: -18, z: 18, scaleX: 15, scaleZ: 2, rotation: -45 },
+      { x: 18, z: -18, scaleX: 15, scaleZ: 2, rotation: -45 },
     ];
 
     pathPositions.forEach((pos, idx) => {
       const path = new pc.Entity(`Path-${idx}`);
       path.addComponent("model", { type: "box" });
       path.setLocalScale(pos.scaleX, 0.02, pos.scaleZ);
-      path.setPosition(pos.x, 0.01, pos.z);
+      path.setPosition(pos.x, 0.02, pos.z);
       path.setEulerAngles(0, pos.rotation, 0);
 
       const pathMat = this.getMaterial({
-        name: `DirtPath-${idx % 3}`, // Use 3 variants
-        diffuse: new pc.Color(
-          0.28 + (idx % 3) * 0.02,
-          0.22 + (idx % 3) * 0.02,
-          0.16,
-        ),
-        specular: new pc.Color(0.01, 0.01, 0.01),
-        shininess: 1,
+        name: `DirtPath-${idx % 3}`,
+        diffuse: new pc.Color(0.24, 0.18, 0.12),
+        specular: new pc.Color(0.02, 0.02, 0.02),
+        shininess: 2,
       });
       path.model.material = pathMat;
-
       this.app.root.addChild(path);
     });
   }
 
-  /**
-   * Create decorative elements around the village square
-   */
   createSquareDecorations() {
-    // Market stalls/benches around the square
+    // Market stalls/benches - enhanced with details
     const stallPositions = [
-      { x: -8, z: 0, rotation: 90 },
-      { x: 8, z: 0, rotation: -90 },
-      { x: 0, z: -8, rotation: 0 },
-      { x: 0, z: 8, rotation: 180 },
+      { x: -9, z: 0, rotation: 90 },
+      { x: 9, z: 0, rotation: -90 },
+      { x: 0, z: -9, rotation: 0 },
+      { x: 0, z: 9, rotation: 180 },
     ];
 
     stallPositions.forEach((pos, idx) => {
-      // Simple bench/stall
-      const stall = new pc.Entity(`Bench-${idx}`);
-      stall.addComponent("model", { type: "box" });
-      stall.setLocalScale(2, 0.4, 0.6);
-      stall.setPosition(pos.x, 0.2, pos.z);
-      stall.setEulerAngles(0, pos.rotation, 0);
+      const group = new pc.Entity(`StallGroup-${idx}`);
+      group.setPosition(pos.x, 0, pos.z);
+      group.setEulerAngles(0, pos.rotation, 0);
+      this.app.root.addChild(group);
 
-      const stallMat = this.getMaterial({
-        name: "Bench",
-        diffuse: new pc.Color(0.3, 0.2, 0.1), // Wood
-        shininess: 10,
+      // Bench
+      const bench = new pc.Entity("Bench");
+      bench.addComponent("model", { type: "box" });
+      bench.setLocalScale(2.5, 0.4, 0.8);
+      bench.setLocalPosition(0, 0.2, 0);
+      const woodMat = this.getMaterial({
+        name: "OldWood",
+        diffuse: new pc.Color(0.2, 0.15, 0.1),
       });
-      stall.model.material = stallMat;
+      bench.model.material = woodMat;
+      group.addChild(bench);
 
-      this.app.root.addChild(stall);
+      // Random props on/around bench
+      if (Math.random() > 0.3) {
+        const prop = new pc.Entity("Prop");
+        const type = Math.random();
+        if (type < 0.33) {
+          // Crate
+          prop.addComponent("model", { type: "box" });
+          prop.setLocalScale(0.6, 0.6, 0.6);
+          prop.setLocalPosition(1.5, 0.3, 0);
+        } else if (type < 0.66) {
+          // Barrel
+          prop.addComponent("model", { type: "cylinder" });
+          prop.setLocalScale(0.5, 0.7, 0.5);
+          prop.setLocalPosition(-1.5, 0.35, 0.2);
+        } else {
+          // Sack
+          prop.addComponent("model", { type: "sphere" });
+          prop.setLocalScale(0.5, 0.4, 0.5);
+          prop.setLocalPosition(1.2, 0.2, -0.2);
+        }
+        prop.model.material = woodMat;
+        group.addChild(prop);
+      }
     });
 
-    // Add some barrels/crates near the square
-    const cratePositions = [
-      { x: -9, z: -2 },
-      { x: 9, z: 2 },
-      { x: 2, z: 9 },
-      { x: -2, z: -9 },
-    ];
+    // Scattered debris/rocks
+    for (let i = 0; i < 15; i++) {
+      const rock = new pc.Entity("Pebble");
+      rock.addComponent("model", { type: "sphere" });
+      const scale = 0.1 + Math.random() * 0.15;
+      rock.setLocalScale(scale, scale * 0.6, scale);
+      const radius = 8 + Math.random() * 6;
+      const angle = Math.random() * Math.PI * 2;
+      rock.setPosition(Math.cos(angle) * radius, 0.05, Math.sin(angle) * radius);
 
-    cratePositions.forEach((pos, idx) => {
-      const crate = new pc.Entity(`Crate-${idx}`);
-      crate.addComponent("model", { type: "box" });
-      const size = 0.5 + Math.random() * 0.3;
-      crate.setLocalScale(size, size, size);
-      crate.setPosition(pos.x, size / 2, pos.z);
-      crate.setEulerAngles(
-        Math.random() * 10 - 5,
-        Math.random() * 360,
-        Math.random() * 10 - 5,
+      const rockMat = this.getMaterial({
+        name: "Pebble",
+        diffuse: new pc.Color(0.3, 0.3, 0.35),
+      });
+      rock.model.material = rockMat;
+      this.app.root.addChild(rock);
+    }
+  }
+
+  createEnhancedCampfire() {
+    // Main fire light with warmer, flickering color
+    this.fireLight = new pc.Entity("FireLight");
+    this.fireLight.addComponent("light", {
+      type: "point",
+      color: new pc.Color(1, 0.4, 0.1),
+      intensity: 4,
+      range: 25,
+      castShadows: true,
+      shadowNormalOffset: 0.02,
+      shadowBias: 0.1,
+    });
+    this.fireLight.setPosition(0, 1.2, 0);
+    this.app.root.addChild(this.fireLight);
+
+    // Add a second, smaller light for the core heat (intense yellow)
+    const coreLight = new pc.Entity("FireCoreLight");
+    coreLight.addComponent("light", {
+      type: "point",
+      color: new pc.Color(1, 0.8, 0.2),
+      intensity: 1.5,
+      range: 5,
+      castShadows: false,
+    });
+    coreLight.setPosition(0, 0.5, 0);
+    this.app.root.addChild(coreLight);
+
+    // Stone ring - more irregular
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.2;
+      const stone = new pc.Entity("Stone");
+      stone.addComponent("model", { type: "sphere" }); // Use spheres for rounder stones
+      stone.setLocalScale(
+        0.3 + Math.random() * 0.2,
+        0.25 + Math.random() * 0.15,
+        0.3 + Math.random() * 0.2,
+      );
+      const dist = 1.4 + Math.random() * 0.2;
+      stone.setLocalPosition(
+        Math.cos(angle) * dist,
+        0.1,
+        Math.sin(angle) * dist,
       );
 
-      const crateMat = this.getMaterial({
-        name: `Crate-${idx % 2}`,
-        diffuse: new pc.Color(0.35, 0.25, 0.15),
-        shininess: 5,
+      const stoneMat = this.getMaterial({
+        name: "CampfireStone",
+        diffuse: new pc.Color(0.25, 0.25, 0.3),
       });
-      crate.model.material = crateMat;
+      stone.model.material = stoneMat;
+      this.app.root.addChild(stone);
+    }
 
-      this.app.root.addChild(crate);
+    // Crossed Logs
+    const logMat = this.getMaterial({
+      name: "BurntLog",
+      diffuse: new pc.Color(0.15, 0.1, 0.05),
+      emissive: new pc.Color(0.2, 0.05, 0), // Glowing embers
     });
+
+    for (let i = 0; i < 4; i++) {
+      const log = new pc.Entity("Log");
+      log.addComponent("model", { type: "cylinder" });
+      log.setLocalScale(0.25, 1.6, 0.25);
+
+      // Stacked teepee style
+      const angle = (i / 4) * Math.PI * 2;
+      log.setLocalPosition(Math.sin(angle) * 0.6, 0.6, Math.cos(angle) * 0.6);
+      // Tilt inward
+      log.lookAt(0, 1.2, 0);
+      log.rotateLocal(90, 0, 0);
+
+      log.model.material = logMat;
+      this.app.root.addChild(log);
+    }
+
+    // Particle System for Fire (Manual plane particles)
+    this.fireParticles = [];
+    // 1. Core flames (yellow/white)
+    // 2. Mid flames (orange/red)
+    // 3. Smoke (dark gray)
+    // 4. Embers (tiny bright sparks)
+
+    // Initialize particles array
+    this.particles = [];
+
+    // Create a particle spawner
+    this.particleSpawner = {
+      timer: 0,
+      spawn: (dt) => {
+        this.spawnFireParticles(dt);
+      },
+    };
+    // We'll hook this up in update()
+  }
+
+  spawnFireParticles(dt) {
+    // Spawn limits
+    const maxParticles = 60;
+    if (this.particles.length >= maxParticles) return;
+
+    // Spawn Rate
+    const spawnRate = 0.05; // Seconds per particle
+    this.particleSpawner.timer += dt;
+
+    while (this.particleSpawner.timer > spawnRate) {
+      this.particleSpawner.timer -= spawnRate;
+
+      const type = Math.random();
+      let p;
+
+      if (type < 0.6) {
+        // Flame
+        p = this.createParticle("flame");
+      } else if (type < 0.9) {
+        // Smoke
+        p = this.createParticle("smoke");
+      } else {
+        // Ember
+        p = this.createParticle("ember");
+      }
+
+      this.particles.push(p);
+      this.app.root.addChild(p.entity);
+    }
+  }
+
+  createParticle(type) {
+    const entity = new pc.Entity("Particle");
+    entity.addComponent("model", { type: "plane" });
+
+    const p = {
+      entity: entity,
+      type: type,
+      life: 0,
+      maxLife: 0,
+      velocity: new pc.Vec3(),
+      startScale: 1,
+      endScale: 0,
+      startColor: new pc.Color(),
+      endColor: new pc.Color(),
+    };
+
+    if (type === "flame") {
+      p.maxLife = 0.8 + Math.random() * 0.6;
+      p.startScale = 0.5 + Math.random() * 0.3;
+      p.endScale = 0.1;
+      p.velocity.set(
+        (Math.random() - 0.5) * 0.5,
+        1.5 + Math.random(),
+        (Math.random() - 0.5) * 0.5,
+      );
+      entity.setPosition(
+        (Math.random() - 0.5) * 0.5,
+        0.2,
+        (Math.random() - 0.5) * 0.5,
+      );
+
+      // Flame material (additive)
+      const mat = this.getMaterial({
+        name: "FlameMat",
+        emissive: new pc.Color(1, 0.8, 0.2),
+        opacity: 0.8,
+        blendType: pc.BLEND_ADDITIVE,
+      });
+      entity.model.material = mat;
+    } else if (type === "smoke") {
+      p.maxLife = 2.0 + Math.random();
+      p.startScale = 0.3;
+      p.endScale = 1.5;
+      p.velocity.set(
+        (Math.random() - 0.5) * 0.8,
+        1.0 + Math.random() * 0.5,
+        (Math.random() - 0.5) * 0.8,
+      );
+      entity.setPosition(
+        (Math.random() - 0.5) * 0.5,
+        1.5,
+        (Math.random() - 0.5) * 0.5,
+      );
+
+      const mat = this.getMaterial({
+        name: "SmokeMat",
+        diffuse: new pc.Color(0.2, 0.2, 0.2),
+        opacity: 0.3,
+        blendType: pc.BLEND_NORMAL,
+      });
+      entity.model.material = mat;
+    } else if (type === "ember") {
+      p.maxLife = 1.5 + Math.random();
+      p.startScale = 0.05;
+      p.endScale = 0.0;
+      p.velocity.set(
+        (Math.random() - 0.5) * 2,
+        2 + Math.random() * 2,
+        (Math.random() - 0.5) * 2,
+      );
+      entity.setPosition(0, 0.5, 0);
+
+      const mat = this.getMaterial({
+        name: "EmberMat",
+        emissive: new pc.Color(1, 0.6, 0.1),
+        opacity: 1,
+        blendType: pc.BLEND_ADDITIVE,
+      });
+      entity.model.material = mat;
+    }
+
+    entity.setLocalEulerAngles(
+      Math.random() * 360,
+      Math.random() * 360,
+      Math.random() * 360,
+    );
+    return p;
+  }
+
+  createEnhancedEnvironment() {
+    // Trees with more variety and foliage
+    const treeCount = this.isLobbyMode ? 30 : 60;
+    for (let i = 0; i < treeCount; i++) {
+      // Leave clearing in center
+      const angle = Math.random() * Math.PI * 2;
+      const radius = this.isLobbyMode
+        ? 20 + Math.random() * 20
+        : 35 + Math.random() * 45;
+
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+
+      const treeHeight = 4 + Math.random() * 4;
+      this.createDetailedTree(x, z, treeHeight);
+    }
+
+    // Create dense bushes around the perimeter
+    const bushCount = 40;
+    for (let i = 0; i < bushCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 30 + Math.random() * 50;
+      this.createBush(Math.cos(angle) * radius, Math.sin(angle) * radius);
+    }
+
+    // Rocks
+    const rockCount = 30;
+    for (let i = 0; i < rockCount; i++) {
+      const radius = 10 + Math.random() * 60;
+      const angle = Math.random() * Math.PI * 2;
+      this.createRock(Math.cos(angle) * radius, Math.sin(angle) * radius);
+    }
+  }
+
+  createDetailedTree(x, z, height) {
+    const tree = new pc.Entity("Tree");
+
+    // Twisted Trunk
+    const trunk = new pc.Entity("Trunk");
+    trunk.addComponent("model", { type: "cylinder" });
+    trunk.setLocalScale(
+      0.5 + Math.random() * 0.3,
+      height,
+      0.5 + Math.random() * 0.3,
+    );
+    trunk.setLocalPosition(0, height / 2, 0);
+    // Slight lean
+    trunk.setLocalEulerAngles(
+      Math.random() * 10 - 5,
+      0,
+      Math.random() * 10 - 5,
+    );
+
+    const trunkMat = this.getMaterial({
+      name: "Bark",
+      diffuse: new pc.Color(0.25, 0.2, 0.15),
+      specular: new pc.Color(0.05, 0.05, 0.05),
+    });
+    trunk.model.material = trunkMat;
+    tree.addChild(trunk);
+
+    // Irregular Foliage Clumps
+    const foliageMat = this.getMaterial({
+      name: "DeepFoliage",
+      diffuse: new pc.Color(0.05, 0.15 + Math.random() * 0.1, 0.05),
+      specular: new pc.Color(0.01, 0.05, 0.01),
+    });
+
+    const layers = 3;
+    for (let i = 0; i < layers; i++) {
+      const layerY = height * (0.6 + i * 0.2);
+      const layerW = (3 - i) * 1.2;
+
+      const clumps = 2 + i + Math.floor(Math.random() * 2);
+      for (let j = 0; j < clumps; j++) {
+        const clump = new pc.Entity("FoliageClump");
+        clump.addComponent("model", { type: "sphere" }); // Sphere is smoother
+        const size = 1 + Math.random() * 1.5;
+        clump.setLocalScale(size, size * 0.7, size);
+
+        const angle = (j / clumps) * Math.PI * 2 + Math.random();
+        const dist = layerW * 0.5 + Math.random() * 0.5;
+
+        clump.setLocalPosition(
+          Math.cos(angle) * dist,
+          layerY + Math.random(),
+          Math.sin(angle) * dist,
+        );
+        clump.model.material = foliageMat;
+        tree.addChild(clump);
+      }
+    }
+
+    tree.setPosition(x, 0, z);
+    tree.setLocalEulerAngles(0, Math.random() * 360, 0);
+    this.app.root.addChild(tree);
+  }
+
+  createEnhancedAtmosphericEffects() {
+    // Fireflies - smaller, more numerous, pulsing
+    this.fireflies = [];
+    const count = 40;
+    for (let i = 0; i < count; i++) {
+      const firefly = new pc.Entity("Firefly");
+      firefly.addComponent("light", {
+        type: "point",
+        color: new pc.Color(0.6, 1.0, 0.4),
+        intensity: 0.8,
+        range: 2,
+        castShadows: false,
+      });
+      // Add visible speck
+      const speck = new pc.Entity("Speck");
+      speck.addComponent("model", { type: "sphere" });
+      speck.setLocalScale(0.05, 0.05, 0.05);
+      const mat = new pc.StandardMaterial();
+      mat.emissive = new pc.Color(0.8, 1, 0.5);
+      mat.useLighting = false;
+      mat.update();
+      speck.model.material = mat;
+      firefly.addChild(speck);
+
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 5 + Math.random() * 30;
+      firefly.setPosition(
+        Math.cos(angle) * radius,
+        0.5 + Math.random() * 2.5,
+        Math.sin(angle) * radius,
+      );
+
+      this.app.root.addChild(firefly);
+      this.fireflies.push({
+        entity: firefly,
+        angle: angle,
+        radius: radius,
+        height: firefly.getPosition().y,
+        speed: 0.2 + Math.random() * 0.4,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  createGroundFog() {
+    // Disabled manual fog planes due to visual artifacts (Z-fighting/geometry clipping).
+    // Relying on global scene fog instead found in setTimeOfDay().
+    this.fogPlanes = [];
   }
 
   // Material caching helper
@@ -3807,17 +4354,43 @@ export default class Village3DPlayCanvas {
   setTimeOfDay(isNight) {
     this.isNight = isNight;
 
+    // Toggle Celestial Bodies & Sky
+    if (this.moon) this.moon.enabled = isNight;
+    if (this.moonGlow) this.moonGlow.enabled = isNight;
+    if (this.sun) this.sun.enabled = !isNight;
+    if (this.sunGlow) this.sunGlow.enabled = !isNight;
+    if (this.skyDome) this.skyDome.enabled = isNight;
+    if (this.stars) this.stars.forEach(s => s.entity.enabled = isNight);
+
+    // Toggle Ground Fog (mostly visible at night)
+    if (this.fogPlanes) {
+      this.fogPlanes.forEach(fp => fp.entity.enabled = isNight);
+    }
+
+    // Update Camera Background
+    if (this.camera) {
+      if (isNight) {
+        this.camera.camera.clearColor = new pc.Color(0.02, 0.02, 0.06);
+      } else {
+        this.camera.camera.clearColor = new pc.Color(0.45, 0.65, 0.85); // Nice day blue
+      }
+    }
+
     if (isNight) {
       // Night settings
-      this.light.light.color = new pc.Color(0.15, 0.2, 0.4); // Deep moonlight
-      this.light.light.intensity = 0.3;
-      this.fillLight.light.intensity = 0.1;
+      this.light.light.color = new pc.Color(0.4, 0.5, 0.8); // Moonlight
+      this.light.light.intensity = 0.5;
+
+      if (this.fillLight) {
+        this.fillLight.light.color = new pc.Color(0.1, 0.1, 0.2);
+        this.fillLight.light.intensity = 0.2;
+      }
 
       // Update scene properties using the correct API
       this.setSceneSettings({
-        ambientLight: new pc.Color(0.03, 0.03, 0.08),
-        fogColor: new pc.Color(0.02, 0.02, 0.05),
-        fogDensity: 0.03,
+        ambientLight: new pc.Color(0.05, 0.05, 0.1),
+        fogColor: new pc.Color(0.02, 0.03, 0.08),
+        fogDensity: 0.008,
       });
 
       if (this.fireLight) this.fireLight.enabled = true;
@@ -3825,11 +4398,11 @@ export default class Village3DPlayCanvas {
       // Show fireflies
       this.fireflies?.forEach((f) => (f.entity.enabled = true));
 
-      // Dim building windows
+      // Dim building windows (lights on)
       this.buildings.forEach((building) => {
         building.children.forEach((child) => {
           if (child.name === "Window" && child.model) {
-            child.model.material.emissive = new pc.Color(0.8, 0.7, 0.4);
+            child.model.material.emissive = new pc.Color(0.8, 0.6, 0.3);
             child.model.material.update();
           }
         });
@@ -3843,18 +4416,22 @@ export default class Village3DPlayCanvas {
       });
     } else {
       // Day settings
-      this.light.light.color = new pc.Color(1, 0.95, 0.85); // Warm sunlight
-      this.light.light.intensity = 1.2;
-      this.fillLight.light.intensity = 0.4;
+      this.light.light.color = new pc.Color(1, 0.95, 0.9); // Sunlight
+      this.light.light.intensity = 1.0;
+
+      if (this.fillLight) {
+        this.fillLight.light.color = new pc.Color(0.4, 0.4, 0.5);
+        this.fillLight.light.intensity = 0.5;
+      }
 
       // Update scene properties using the correct API
       this.setSceneSettings({
         ambientLight: new pc.Color(0.5, 0.5, 0.55),
-        fogColor: new pc.Color(0.7, 0.8, 0.9),
-        fogDensity: 0.005,
+        fogColor: new pc.Color(0.45, 0.65, 0.85), // Match sky
+        fogDensity: 0.003,
       });
 
-      if (this.fireLight) this.fireLight.enabled = false; // Fire less visible during day
+      if (this.fireLight) this.fireLight.enabled = false; // Fire less visible
 
       // Hide fireflies
       this.fireflies?.forEach((f) => (f.entity.enabled = false));
@@ -4295,15 +4872,24 @@ export default class Village3DPlayCanvas {
 
     const hintColor = hintColors[type] || hintColors["default"];
 
-    // Create hint icon above player
+    // Create hint icon above player - Enhanced
     const hint = new pc.Entity("Hint");
     hint.addComponent("model", { type: "sphere" });
     hint.setLocalPosition(0, 3.5, 0);
     hint.setLocalScale(0.4, 0.4, 0.4);
 
+    // Add Light for visibility and emphasis
+    hint.addComponent("light", {
+      type: "point",
+      color: hintColor,
+      intensity: 2,
+      range: 4,
+      castShadows: false,
+    });
+
     const mat = new pc.StandardMaterial();
     mat.emissive = hintColor;
-    mat.opacity = 0.8;
+    mat.opacity = 0.9;
     mat.blendType = pc.BLEND_ADDITIVE;
     mat.update();
     hint.model.material = mat;
@@ -4359,23 +4945,31 @@ export default class Village3DPlayCanvas {
       }, 1500);
     }
 
-    // Animate and remove hint orb
+    // Animate and remove hint orb - Enhanced
     let time = 0;
     const updateHint = (dt) => {
       time += dt;
+      // Float
       hint.setLocalPosition(0, 3.5 + Math.sin(time * 3) * 0.3, 0);
-      hint.setLocalScale(
-        0.4 + Math.sin(time * 5) * 0.1,
-        0.4 + Math.sin(time * 5) * 0.1,
-        0.4 + Math.sin(time * 5) * 0.1,
-      );
-      // Fade out
-      if (time > 2) {
-        mat.opacity = 0.8 * (1 - (time - 2));
-        mat.update();
+
+      // Pulse scale
+      const scale = 0.4 + Math.sin(time * 5) * 0.1;
+      hint.setLocalScale(scale, scale, scale);
+
+      // Pulse light intensity
+      if (hint.light) {
+        hint.light.intensity = 2 + Math.sin(time * 10) * 1.0;
       }
 
-      if (time > 3) {
+      // Fade out
+      if (time > 2.5) {
+        const alpha = 1 - (time - 2.5);
+        mat.opacity = 0.9 * alpha;
+        mat.update();
+        if (hint.light) hint.light.intensity = alpha * 2;
+      }
+
+      if (time > 3.5) {
         this.app.off("update", updateHint);
         hint.destroy();
       }
@@ -4452,50 +5046,110 @@ export default class Village3DPlayCanvas {
     this.camera.setPosition(newPos);
     this.camera.lookAt(0, 2, 0);
 
-    // Animate Fire
-    if (this.fireLight.enabled) {
-      // Flicker light
-      this.fireLight.light.intensity = 3 + Math.random() * 0.8;
+    // Animate Enhanced Fire and Particles
+    if (this.fireLight && this.fireLight.enabled) {
+      // Flicker main light
+      this.fireLight.light.intensity = 3.5 + Math.random() * 1.5;
 
-      // Animate particles
-      this.fireParticles.forEach((p) => {
-        p.life += dt * p.speed;
-        if (p.life > 1) p.life = 0;
+      // Spawn new particles
+      if (this.particleSpawner) {
+        this.particleSpawner.spawn(dt);
+      }
+    }
 
-        const y = p.life * 3.5;
-        const scale = (1 - p.life) * 0.5;
+    // Update all active particles (Fire, Smoke, Embers)
+    if (this.particles) {
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        const p = this.particles[i];
+        p.life += dt;
 
-        p.entity.setLocalPosition(
-          Math.sin(p.life * 12 + p.offset) * 0.3,
-          y,
-          Math.cos(p.life * 12 + p.offset) * 0.3,
+        if (p.life >= p.maxLife) {
+          p.entity.destroy();
+          this.particles.splice(i, 1);
+          continue;
+        }
+
+        // Move
+        const pos = p.entity.getPosition();
+        pos.add(p.velocity.clone().scale(dt));
+        p.entity.setPosition(pos);
+
+        // Scale
+        const t = p.life / p.maxLife; // 0 to 1
+        const currentScale = pc.math.lerp(p.startScale, p.endScale, t);
+        p.entity.setLocalScale(currentScale, currentScale, currentScale);
+
+        // Rotate
+        p.entity.rotateLocal(100 * dt, 50 * dt, 0);
+
+        // Fade / Color
+        if (p.type === "smoke") {
+          p.entity.model.material.opacity = 0.3 * (1 - t);
+          p.entity.model.material.update();
+        } else if (p.type === "flame") {
+          p.entity.model.material.opacity = 0.8 * (1 - t);
+          p.entity.model.material.update();
+        }
+      }
+    }
+
+    // Update Stars Twinkle
+    if (this.stars && this.isNight) {
+      this.stars.forEach(star => {
+        star.twinklePhase += dt * star.twinkleSpeed;
+        const brightness = star.baseBrightness + Math.sin(star.twinklePhase) * 0.3;
+        const c = star.material.emissive;
+        // mod brightness without changing color hue too much
+        star.material.emissive = new pc.Color(
+          c.r * (1 + Math.sin(star.twinklePhase) * 0.1),
+          c.g * (1 + Math.sin(star.twinklePhase) * 0.1),
+          c.b * (1 + Math.sin(star.twinklePhase) * 0.1)
         );
-        p.entity.setLocalScale(scale, scale, scale);
-        p.entity.lookAt(this.camera.getPosition());
-        p.entity.rotateLocal(90, 0, 0);
+        star.material.update();
+      });
+    }
+
+    // Update Ground Fog Drift
+    if (this.fogPlanes) {
+      this.fogPlanes.forEach(fp => {
+        fp.entity.rotateLocal(0, fp.rotSpeed * dt, 0);
+        const pos = fp.entity.getPosition();
+        // Gentle drift
+        pos.x += fp.driftSpeed.x * dt;
+        pos.z += fp.driftSpeed.y * dt;
+
+        // Loop around if too far
+        if (Math.abs(pos.x) > 60) pos.x *= -0.9;
+        if (Math.abs(pos.z) > 60) pos.z *= -0.9;
+
+        fp.entity.setPosition(pos);
       });
     }
 
     // Update animated features from role definitions
     this.updateAnimatedFeatures(dt);
 
-    // Animate fireflies (night only)
+    // Animate fireflies (enhanced)
     if (this.isNight && this.fireflies && this.fireflies.length > 0) {
       this.fireflies.forEach((f) => {
-        if (!f.entity || !f.entity.light) return;
+        if (!f.entity) return;
         f.phase += dt * f.speed;
+
+        // Complex flight path
         const newAngle = f.angle + Math.sin(f.phase) * 0.5;
         const newRadius = f.radius + Math.cos(f.phase * 0.7) * 2;
-        const newHeight = f.height + Math.sin(f.phase * 1.3) * 1;
+        const newHeight = f.height + Math.sin(f.phase * 1.3) * 1.5;
 
         f.entity.setPosition(
           Math.cos(newAngle) * newRadius,
-          newHeight,
+          Math.max(0.5, newHeight), // Don't go below ground
           Math.sin(newAngle) * newRadius,
         );
 
-        // Flicker intensity
-        f.entity.light.intensity = 0.3 + Math.sin(f.phase * 5) * 0.2;
+        // Pulse intensity
+        if (f.entity.light) {
+          f.entity.light.intensity = 0.8 + Math.sin(f.phase * 5) * 0.4;
+        }
       });
     }
 

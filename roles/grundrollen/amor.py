@@ -182,8 +182,7 @@ class Amor(Role):
 
         # Single target not supported - needs execute_action with list
         return AktionsErgebnis(
-            erfolg=False,
-            nachricht="Amor muss zwei Spieler gleichzeitig wählen."
+            erfolg=False, nachricht="Amor muss zwei Spieler gleichzeitig wählen."
         )
 
     def execute_action(

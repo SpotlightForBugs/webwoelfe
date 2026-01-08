@@ -47,8 +47,12 @@ class Wolfsjunge(Role):
 
     def state_fields(self) -> List[StateField]:
         return [
-            StateField("vorbild_id", StateType.PLAYER_ID, None, "ID des Vorbilds", icon="👤"),
-            StateField("verwandelt", StateType.BOOL, False, "Zum Werwolf verwandelt", icon="🐺"),
+            StateField(
+                "vorbild_id", StateType.PLAYER_ID, None, "ID des Vorbilds", icon="👤"
+            ),
+            StateField(
+                "verwandelt", StateType.BOOL, False, "Zum Werwolf verwandelt", icon="🐺"
+            ),
         ]
 
     @property
@@ -93,6 +97,7 @@ class Wolfsjunge(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Wolfsjunge - Vorbild wählen",
             instructions="Wähle dein Vorbild. Wenn es stirbt, wirst du zum Werwolf.",
@@ -117,14 +122,20 @@ class Wolfsjunge(Role):
     ) -> Optional[AktionsErgebnis]:
         if action_type == "wolfsjunge_waehlen":
             if kontext.runde != 1:
-                return AktionsErgebnis(erfolg=False, nachricht="Du hast dein Vorbild bereits gewählt.")
+                return AktionsErgebnis(
+                    erfolg=False, nachricht="Du hast dein Vorbild bereits gewählt."
+                )
 
             if not targets:
-                return AktionsErgebnis(erfolg=False, nachricht="Du musst ein Vorbild wählen!")
+                return AktionsErgebnis(
+                    erfolg=False, nachricht="Du musst ein Vorbild wählen!"
+                )
 
             ziel = targets[0]
             if ziel.id == spieler.id:
-                return AktionsErgebnis(erfolg=False, nachricht="Du kannst dich nicht selbst wählen.")
+                return AktionsErgebnis(
+                    erfolg=False, nachricht="Du kannst dich nicht selbst wählen."
+                )
 
             self.set_state(spieler, "vorbild_id", ziel.id)
             return AktionsErgebnis(
@@ -138,9 +149,15 @@ class Wolfsjunge(Role):
         return None
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("wolfsjunge_waehlen", spieler, [ziel] if ziel else [], kontext)
+        return self.execute_action(
+            "wolfsjunge_waehlen", spieler, [ziel] if ziel else [], kontext
+        )
 
     def on_spieler_stirbt(
         self,

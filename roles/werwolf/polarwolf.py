@@ -74,6 +74,7 @@ class Polarwolf(Role):
     @property
     def aktions_typ(self) -> "AktionsTyp":
         from ..enums import AktionsTyp
+
         return AktionsTyp.KEINE
 
     @property
@@ -88,6 +89,7 @@ class Polarwolf(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI
+
         return RollenUI(
             title="Polarwolf - Passive Rolle",
             instructions="Du jagst mit den Wölfen. Du bist immun gegen Kälte (Sandmann/Jäger).",
@@ -97,7 +99,11 @@ class Polarwolf(Role):
         )
 
     def on_angriff(
-        self, spieler: "Spieler", angreifer: "Spieler", angriffstyp: str, kontext: SpielKontext
+        self,
+        spieler: "Spieler",
+        angreifer: "Spieler",
+        angriffstyp: str,
+        kontext: SpielKontext,
     ) -> Optional[AktionsErgebnis]:
         """Polarwolf is immune to hunter and sandman."""
         if angriffstyp in ["jaeger_schuss", "sandmann_schlaf"]:

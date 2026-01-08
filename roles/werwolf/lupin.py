@@ -87,6 +87,7 @@ class Lupin(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI
+
         return RollenUI(
             title="Lupin - Passive Rolle",
             instructions="Du jagst mit den Wölfen. Deine Aura wechselt jede Nacht.",

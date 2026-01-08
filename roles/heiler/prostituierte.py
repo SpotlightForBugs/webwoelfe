@@ -57,7 +57,7 @@ class Prostituierte(Role):
             erzaehler_nacht=(
                 "Die Prostituierte erwacht und wählt einen Spieler für " "die Nacht."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#f43f5e",
             avatar_gradient_to="#be123c",

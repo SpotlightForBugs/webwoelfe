@@ -9,12 +9,21 @@ from typing import Optional, TYPE_CHECKING, List
 from ..base import (
     AppearanceFeature,
     RollenModell,
-    AppearanceFeature,
+    BodyModification,
+    AnimationState,
+    HintEffect3D,
     Role,
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
     DistributionConfig,
+    # Factory functions
+    create_wolf_ears,
+    create_claws,
+    create_fangs,
+    create_glowing_eyes,
+    create_tail,
+    create_death_marker,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -199,60 +208,112 @@ class Werwolf(Role):
         ]
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Village 3D appearance for Werwolf."""
-        # Define wolf ears as appearance features
-        wolf_ears = [
-            AppearanceFeature(
-                feature_type="wolf_ear_left",
-                geometry="cone",
-                count=1,
-                position={"x": -0.18, "y": 2.25, "z": -0.05},
-                scale={"x": 0.12, "y": 0.2, "z": 0.1},
-                rotation={"x": 0, "y": 0, "z": -15},
-                color_source="role",
-                description="Left wolf ear",
-            ),
-            AppearanceFeature(
-                feature_type="wolf_ear_right",
-                geometry="cone",
-                count=1,
-                position={"x": 0.18, "y": 2.25, "z": -0.05},
-                scale={"x": 0.12, "y": 0.2, "z": 0.1},
-                rotation={"x": 0, "y": 0, "z": 15},
-                color_source="role",
-                description="Right wolf ear",
-            ),
+        """
+        Comprehensive 3D appearance for Werwolf.
+
+        Features:
+        - Wolf ears (pointed, on head)
+        - Sharp claws on hands
+        - Fangs
+        - Glowing red eyes
+        - Wolf tail
+        - Hunched posture
+        - Fur texture
+        """
+        # Build complete wolf appearance
+        wolf_features = [
+            # Ears
+            *create_wolf_ears(color="#8B0000", scale=1.0),
+            # Claws on both hands
+            *create_claws(color="#333333", count_per_hand=3),
+            # Fangs
+            *create_fangs(color="#FFFEF0"),
+            # Glowing red eyes
+            create_glowing_eyes(color="#FF2222", intensity=0.8),
+            # Wolf tail
+            create_tail("wolf", color="#8B0000"),
         ]
 
-        # Define claws
-        wolf_claws = [
+        # What Seher sees - subtle evil glow
+        seher_features = [
+            create_glowing_eyes(color="#FF0000", intensity=1.0),
             AppearanceFeature(
-                feature_type="claws",
-                geometry="cone",
-                count=6,  # 3 per hand
-                position={
-                    "x": 0,
-                    "y": 0.52,
-                    "z": 0.08,
-                },  # Base position, will be offset per claw
-                scale={"x": 0.025, "y": 0.08, "z": 0.02},
-                rotation={"x": -10, "y": 0, "z": 0},
+                feature_type="evil_aura",
+                geometry="sphere",
+                position={"x": 0, "y": 1.2, "z": 0},
+                scale={"x": 0.7, "y": 1.4, "z": 0.7},
                 color_source="custom",
-                custom_color="#888888",
-                description="Sharp wolf claws",
+                custom_color="#FF0000",
+                opacity=0.1,
+                emissive=True,
+                emissive_intensity=0.3,
+                visible_to_seher=True,
+                visible_to_others=False,
+                description="Evil aura visible to Seher",
             ),
         ]
 
         return RollenModell(
             modell_id="werwolf",
             anzeige_name="Werwolf",
-            beschreibung="Werwolf with ears and claws",
-            # Werwolf sees themselves with full wolf features
-            appearance_self_alive=wolf_ears + wolf_claws,
-            # Others see the same (werwolves are obvious in this game)
-            appearance_others_alive=wolf_ears + wolf_claws,
-            # Dead appearance would be standard (no special features)
-            appearance_dead=[],
-            # Seher sees them as "bad"
+            beschreibung="Ein blutrünstiger Werwolf mit glühenden Augen und scharfen Klauen",
+            # Body modifications for wolf posture
+            body=BodyModification(
+                slouch_angle=15,
+                snout_length=0.3,
+                claw_hands=True,
+                skin_texture="fur",
+                brow_ridge=0.4,
+            ),
+            # What the werewolf sees when looking at themselves
+            appearance_self_alive=wolf_features,
+            # What others see - same features (werewolves are identifiable in 3D)
+            appearance_others_alive=wolf_features,
+            # What the Seher sees
+            appearance_seher_view=seher_features,
+            # Death appearance
+            appearance_dead=create_death_marker(),
+            # Animations
+            animations={
+                "idle": AnimationState(
+                    state_name="idle",
+                    sway_amplitude=0.02,
+                    sway_speed=0.8,
+                    head_tilt_range=15,
+                    look_around=True,
+                    blink_rate=2.0,
+                    breathing_visible=True,
+                    tail_wag=True,
+                ),
+                "hunt": AnimationState(
+                    state_name="hunt",
+                    sway_amplitude=0.05,
+                    sway_speed=1.5,
+                    bob_amplitude=0.03,
+                    bob_speed=2.0,
+                    head_tilt_range=25,
+                    gesture_chance=0.3,
+                ),
+            },
+            # Hint effects for the hint system
+            hint_effects=[
+                HintEffect3D(
+                    effect_id="eyes_glow_red",
+                    effect_type="glow",
+                    glow_color="#FF0000",
+                    glow_intensity=1.5,
+                    glow_pulse=True,
+                ),
+                HintEffect3D(
+                    effect_id="shadow_pass",
+                    effect_type="particle",
+                    particle_type="shadow",
+                    particle_count=15,
+                    particle_color="#1a1a1a",
+                    particle_duration=0.5,
+                ),
+            ],
             seher_sicht="bad",
+            sound_on_action="growl.mp3",
+            sound_on_death="wolf_death.mp3",
         )

@@ -58,7 +58,7 @@ class Tanklastwagenfahrer(Role):
                 "Der Tanklastwagenfahrer parkt seinen Laster. "
                 "Er wartet auf den richtigen Moment."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#64748b",
             avatar_gradient_to="#475569",

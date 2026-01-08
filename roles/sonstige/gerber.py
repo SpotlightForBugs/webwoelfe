@@ -64,7 +64,7 @@ class Gerber(Role):
                 "triumphierend! Sein Fluch verflucht das gesamte Dorf - "
                 "ALLE verlieren außer ihm!"
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             hinweis_config="Gerber",
             # Visual Styling
             avatar_gradient_from="#78350f",

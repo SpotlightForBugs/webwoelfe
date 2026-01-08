@@ -56,7 +56,7 @@ class Zahnarzt(Role):
                 "Der Zahnarzt erwacht und wählt einen Spieler, "
                 "der morgen nicht abstimmen darf."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#ffffff",
             avatar_gradient_to="#e5e7eb",

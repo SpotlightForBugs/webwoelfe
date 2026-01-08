@@ -56,7 +56,7 @@ class Jesus(Role):
                 "Falls Jesus vor 3 Tagen gestorben ist: Ein Wunder geschieht! "
                 "Jesus erhebt sich und kehrt triumphierend ins Spiel zurück!"
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#fbbf24",
             avatar_gradient_to="#d97706",

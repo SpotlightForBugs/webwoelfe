@@ -56,7 +56,7 @@ class Koenig(Role):
                 "Der König ruht auf seinem Thron. "
                 "Seine Stimme wiegt schwerer als alle anderen."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#ca8a04",
             avatar_gradient_to="#a16207",

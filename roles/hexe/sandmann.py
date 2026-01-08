@@ -57,7 +57,7 @@ class Sandmann(Role):
                 "Der Sandmann erwacht ZUERST und wählt einen Spieler, "
                 "der diese Nacht verschläft und seine Aktion nicht ausführen kann."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#ddd6fe",
             avatar_gradient_to="#c4b5fd",

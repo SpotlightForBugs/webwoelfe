@@ -9,7 +9,9 @@ from typing import Optional, List, TYPE_CHECKING, Union
 from ..base import (
     AppearanceFeature,
     RollenModell,
-    AppearanceFeature,
+    BodyModification,
+    AnimationState,
+    HintEffect3D,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -22,6 +24,13 @@ from ..base import (
     get_spieler_state,
     set_spieler_state,
     DistributionConfig,
+    # Factory functions
+    create_wings,
+    create_weapon,
+    create_aura,
+    create_heart_effect,
+    create_halo,
+    create_death_marker,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -165,19 +174,40 @@ class Amor(Role):
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: "SpielKontext"
     ) -> Optional[AktionsErgebnis]:
         """
-        Amor wählt zwei Spieler aus, die sich verlieben.
+        Legacy single-target handler. Use execute_action for multi-target.
         """
         logger.debug(f"Executing night action for Amor (Player: {spieler.name})")
-        # Amor hat bereits gewählt?
-        if self.get_state(spieler, "hat_gewaehlt"):
+        if self.get_state(spieler, "hat_verkuppelt"):
             return AktionsErgebnis(erfolg=False, nachricht="Du hast bereits gewählt.")
 
-        # Ziel muss eine Liste von 2 Spielern sein (wird vom Frontend so gesendet)
-        # Hier kommt aber nur EIN Ziel an, weil die Basis-Logik auf Einzelzielen basiert.
-        # Wir müssen das Handling für Multi-Target anpassen oder Amor speziell behandeln.
+        # Single target not supported - needs execute_action with list
+        return AktionsErgebnis(
+            erfolg=False,
+            nachricht="Amor muss zwei Spieler gleichzeitig wählen."
+        )
 
-        # HACK: Amor wird in app.py speziell behandelt ("armor_verlieben").
-        # Diese Methode wird nur aufgerufen, wenn es über den generischen Weg läuft.
+    def execute_action(
+        self,
+        action_type: str,
+        spieler: "Spieler",
+        targets: List["Spieler"],
+        kontext: "SpielKontext",
+    ) -> Optional[AktionsErgebnis]:
+        """
+        Execute Amor actions dynamically with multi-target support.
+
+        This replaces the hardcoded 'armor_verlieben' handler in app.py.
+
+        Handles:
+        - armor_verlieben: Connect two players as lovers
+        """
+        if action_type == "armor_verlieben":
+            if len(targets) != 2:
+                return AktionsErgebnis(
+                    erfolg=False,
+                    nachricht=f"Amor muss genau 2 Spieler wählen, nicht {len(targets)}.",
+                )
+            return self.verlieben(spieler, targets[0], targets[1], kontext)
 
         return None
 
@@ -346,24 +376,125 @@ class Amor(Role):
         ]
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Village 3D appearance for Amor."""
-        appearance_features = [
+        """
+        Comprehensive 3D appearance for Amor.
+
+        Features:
+        - Angel wings
+        - Bow and arrow weapon
+        - Heart particles
+        - Pink glowing aura
+        - Cherub appearance
+        """
+        amor_features = [
+            # Angel wings
+            *create_wings("angel", color="#FFB6C1"),
+            # Bow weapon
+            *create_weapon("bow"),
+            # Heart particle effect
+            create_heart_effect(),
+            # Pink romantic aura
+            create_aura(color="#FF69B4", intensity=0.4, pulsing=True),
+            # Cupid's quiver with arrows
             AppearanceFeature(
-                feature_type="role_indicator",
+                feature_type="heart_quiver",
+                geometry="cylinder",
+                position={"x": 0.18, "y": 1.15, "z": -0.18},
+                scale={"x": 0.06, "y": 0.35, "z": 0.06},
+                rotation={"x": -10, "y": 0, "z": 8},
+                color_source="custom",
+                custom_color="#FF69B4",
+                description="Heart arrow quiver",
+            ),
+            # Cupid's diaper/toga
+            AppearanceFeature(
+                feature_type="toga",
+                geometry="box",
+                position={"x": 0, "y": 0.9, "z": 0},
+                scale={"x": 0.32, "y": 0.25, "z": 0.28},
+                color_source="custom",
+                custom_color="#FFFFFF",
+                opacity=0.95,
+                description="Cupid's toga",
+            ),
+            # Rosy cheeks effect
+            AppearanceFeature(
+                feature_type="blush_left",
                 geometry="sphere",
-                position={"x": 0, "y": 2.2, "z": 0.2},
-                scale={"x": 0.12, "y": 0.12, "z": 0.12},
-                color_source="role",
-                description="Role indicator orb",
-            )
+                position={"x": -0.12, "y": 1.82, "z": 0.18},
+                scale={"x": 0.05, "y": 0.03, "z": 0.02},
+                color_source="custom",
+                custom_color="#FFB6C1",
+                opacity=0.5,
+                description="Left cheek blush",
+            ),
+            AppearanceFeature(
+                feature_type="blush_right",
+                geometry="sphere",
+                position={"x": 0.12, "y": 1.82, "z": 0.18},
+                scale={"x": 0.05, "y": 0.03, "z": 0.02},
+                color_source="custom",
+                custom_color="#FFB6C1",
+                opacity=0.5,
+                description="Right cheek blush",
+            ),
+            # Curly hair indicator
+            AppearanceFeature(
+                feature_type="curly_hair",
+                geometry="sphere",
+                position={"x": 0, "y": 2.1, "z": -0.05},
+                scale={"x": 0.28, "y": 0.15, "z": 0.25},
+                color_source="custom",
+                custom_color="#FFD700",
+                roughness=0.8,
+                description="Golden curly hair",
+            ),
         ]
 
         return RollenModell(
             modell_id="amor",
             anzeige_name="Amor",
-            beschreibung="Amor appearance with custom features",
-            appearance_self_alive=appearance_features,
-            appearance_others_alive=appearance_features,
-            appearance_dead=[],
+            beschreibung="Der Gott der Liebe mit Flügeln und Liebespfeilen",
+            body=BodyModification(
+                height_multiplier=0.9,  # Cherub - slightly smaller
+                width_multiplier=0.95,
+                skin_texture="smooth",
+            ),
+            appearance_self_alive=amor_features,
+            appearance_others_alive=amor_features,
+            appearance_dead=create_death_marker(),
             seher_sicht="good",
+            animations={
+                "idle": AnimationState(
+                    state_name="idle",
+                    sway_amplitude=0.02,
+                    sway_speed=0.4,
+                    bob_amplitude=0.02,  # Floating effect
+                    bob_speed=0.5,
+                    head_tilt_range=15,
+                    look_around=True,
+                    blink_rate=3.0,
+                    breathing_visible=True,
+                    wing_flutter=True,
+                ),
+                "aim": AnimationState(
+                    state_name="aim",
+                    sway_amplitude=0.0,
+                    bob_amplitude=0.01,
+                    wing_flutter=True,
+                    gesture_chance=0.0,
+                ),
+            },
+            hint_effects=[
+                HintEffect3D(
+                    effect_id="hearts",
+                    effect_type="particle",
+                    particle_type="hearts",
+                    particle_count=10,
+                    particle_color="#FF69B4",
+                    particle_duration=2.0,
+                ),
+            ],
+            sound_on_action="bow_draw.mp3",
+            sound_ambient="romantic_harp.mp3",
         )

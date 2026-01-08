@@ -58,7 +58,7 @@ class Griesgram(Role):
                 "Der Griesgram wälzt sich mürrisch im Bett. "
                 "Er freut sich schon auf die nächste Hinrichtung."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#6b7280",
             avatar_gradient_to="#4b5563",

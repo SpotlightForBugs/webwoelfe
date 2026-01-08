@@ -59,7 +59,7 @@ class ParanormalerErmittlerbillig(Role):
                 "Der Paranormale Ermittler erwacht. Zeige ihm ein Ergebnis. "
                 "ACHTUNG: 30% Chance dass du lügen musst! (Würfle heimlich)"
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#a3a3a3",
             avatar_gradient_to="#737373",

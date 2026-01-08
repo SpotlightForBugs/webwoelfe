@@ -63,7 +63,7 @@ class TeenagerWerwolf(Role):
                 "Der Teenager-Werwolf jagt mit dem Rudel. Er kann einmal "
                 "den Angriff verweigern."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",

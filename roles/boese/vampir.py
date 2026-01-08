@@ -58,7 +58,7 @@ class Vampir(Role):
                 "Die Vampire erwachen (jede zweite Nacht) und wählen "
                 "ein Opfer zur Verwandlung."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#7c2d12",
             avatar_gradient_to="#451a03",

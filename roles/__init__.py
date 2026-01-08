@@ -227,7 +227,7 @@ def get_rollen_nach_erweiterung():
     return erweiterungen
 
 
-# Metadaten fuer Erweiterungspakete (fuer UI) #TODO: Dynamic!
+# Metadaten fuer Erweiterungspakete (fuer UI)
 ERWEITERUNG_INFO = {
     "basisspiel": {
         "name": "Basisspiel",
@@ -257,12 +257,12 @@ ERWEITERUNG_INFO = {
         "badge": "Erw. 3",
         "badge_class": "exp3",
     },
-    "sonderedition": {
-        "name": "Sonderedition",
+    "community": {
+        "name": "Community",
         "icon": "fa-solid fa-star",
-        "beschreibung": "Exklusive Sonderrollen",
-        "badge": "Spezial",
-        "badge_class": "special",
+        "beschreibung": "Community-erstellte Rollen",
+        "badge": "Community",
+        "badge_class": "community",
     },
 }
 
@@ -328,57 +328,54 @@ KATEGORIE_INFO = {
 
 
 # ============================================================================
-# LEGACY-KOMPATIBILITAET
-# ROLLEN-Dict fuer bestehenden Code (wird dynamisch generiert)
+# ROLLEN DICT
+# Simple wrapper around RoleRegistry.to_legacy_dict() for backwards compat
 # ============================================================================
 
 
-class _DynamicRollenDict(dict):
-    """
-    Ein Dict das sich bei jedem Zugriff aus der Registry aktualisiert.
-    Ermoeglicht Lazy-Loading falls Rollen spaeter hinzugefuegt werden.
-    """
+def _get_rollen_dict():
+    """Get all roles as a dict. Called lazily to avoid circular imports."""
+    return RoleRegistry.to_legacy_dict()
 
-    def __init__(self):
-        super().__init__()
-        self._update_from_registry()
 
-    def _update_from_registry(self):
-        self.clear()
-        self.update(RoleRegistry.to_legacy_dict())
+# For backwards compatibility - this is a function call, not a class
+class _LazyRollenDict(dict):
+    """Lazily loads roles on first access."""
 
-    def get(self, key, default=None):
-        # Aktualisiere bei jedem get() fuer maximale Dynamik
-        if key not in self:
-            self._update_from_registry()
-        return super().get(key, default)
+    _loaded = False
+
+    def _ensure_loaded(self):
+        if not self._loaded:
+            self.update(RoleRegistry.to_legacy_dict())
+            self._loaded = True
 
     def __getitem__(self, key):
-        if key not in self:
-            self._update_from_registry()
+        self._ensure_loaded()
         return super().__getitem__(key)
 
+    def get(self, key, default=None):
+        self._ensure_loaded()
+        return super().get(key, default)
+
     def __contains__(self, key):
-        if not super().__contains__(key):
-            self._update_from_registry()
+        self._ensure_loaded()
         return super().__contains__(key)
 
-    def __len__(self):
-        self._update_from_registry()
-        return super().__len__()
-
     def items(self):
-        self._update_from_registry()
+        self._ensure_loaded()
         return super().items()
 
     def keys(self):
-        self._update_from_registry()
+        self._ensure_loaded()
         return super().keys()
 
     def values(self):
-        self._update_from_registry()
+        self._ensure_loaded()
         return super().values()
 
+    def __len__(self):
+        self._ensure_loaded()
+        return super().__len__()
 
-# Dynamisches ROLLEN-Dict fuer Legacy-Kompatibilitaet
-ROLLEN = _DynamicRollenDict()
+
+ROLLEN = _LazyRollenDict()

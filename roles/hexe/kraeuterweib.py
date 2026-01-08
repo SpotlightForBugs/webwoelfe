@@ -49,7 +49,7 @@ class Kraeuterweib(Role):
                 "Das Kräuterweib erwacht und wählt einen Spieler, "
                 "der morgen stumm sein wird."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#22c55e",
             avatar_gradient_to="#15803d",

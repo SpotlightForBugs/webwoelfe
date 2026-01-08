@@ -71,7 +71,7 @@ class Doppelgaenger(Role):
             erzaehler_tag=(
                 "Das Ziel des Doppelgängers ist tot! " "Er übernimmt dessen Rolle."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#6366f1",
             avatar_gradient_to="#4338ca",

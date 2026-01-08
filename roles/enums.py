@@ -46,29 +46,39 @@ class Erweiterung(Enum):
     NEUMOND = "neumond"
     GEMEINDE = "gemeinde"
     CHARAKTERE = "charaktere"
-    SONDEREDITION = "sonderedition" # THIS MEANS COMMUNITY EDITION
+    COMMUNITY = "community"  # Community-created roles
 
     def __str__(self) -> str:
         return self.value
 
 
 class Phase(Enum):
-    """Spielphasen."""
+    """
+    Spielphasen.
 
+    Note: Role-specific phases (like amor_phase, seherin_phase) are
+    dynamically generated from role names, not listed here.
+    """
+
+    # Setup
     LOBBY = "lobby"
+    ROLLEN_VERTEILT = "rollen_verteilt"
+
+    # Night
     NACHT_START = "nacht_start"
-    AMOR_PHASE = "amor_phase"
-    VERLIEBTE_PHASE = "verliebte_phase"
-    WERWOLF_PHASE = "werwolf_phase"
-    SEHERIN_PHASE = "seherin_phase"
-    HEXE_PHASE = "hexe_phase"
-    HEILER_PHASE = "heiler_phase"
-    WEISSER_WOLF_PHASE = "weisser_wolf_phase"
+    NACHT = "nacht"
+    NACHT_ENDE = "nacht_ende"
+
+    # Day
     TAG_START = "tag_start"
-    DISKUSSION = "diskussion"
-    ABSTIMMUNG = "abstimmung"
+    TAG_ABSTIMMUNG = "tag_abstimmung"
     HINRICHTUNG = "hinrichtung"
+    TAG_ENDE = "tag_ende"
+
+    # Special (triggered by role effects)
     JAEGER_PHASE = "jaeger_phase"
+
+    # End
     SPIEL_ENDE = "spiel_ende"
 
     def __str__(self) -> str:

@@ -58,7 +58,7 @@ class Zauberer(Role):
                 "Der Zauberer erwacht. Welchen Zauber möchte er einsetzen? "
                 "(Schutz/Sicht/Schweigen) und auf wen?"
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#3b0764",
             avatar_gradient_to="#2e1065",

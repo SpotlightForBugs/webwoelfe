@@ -43,7 +43,7 @@ class Putzfrau(Role):
             erzaehler_nacht="Die Putzfrau wischt durch die leeren Häuser und sammelt wertvolle Informationen.",
             erzaehler_tag="Die Putzfrau hat beim Aufräumen etwas gefunden! Sie enthüllt die wahre Rolle des Toten: {rolle}!",
             hinweis_config=None,
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#06b6d4",
             avatar_gradient_to="#0891b2",

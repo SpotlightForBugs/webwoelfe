@@ -57,7 +57,7 @@ class DunklerPriester(Role):
                 "Der Dunkle Priester erwacht (erste Nacht) und wählt "
                 "zwei Spieler zum Verlieben."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#18181b",
             avatar_gradient_to="#09090b",

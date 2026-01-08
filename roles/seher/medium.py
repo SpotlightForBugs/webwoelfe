@@ -47,7 +47,7 @@ class Medium(Role):
                 "Das Medium erwacht und wählt einen Toten. "
                 "Flüster dem Medium die Rolle des Toten zu."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#c084fc",
             avatar_gradient_to="#9333ea",

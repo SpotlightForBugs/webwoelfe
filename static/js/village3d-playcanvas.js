@@ -1979,6 +1979,15 @@ export default class Village3DPlayCanvas {
   /**
    * Renders appearance features from role definition data.
    * This replaces the hardcoded feature methods with dynamic rendering.
+   *
+   * Supports all properties from the enhanced AppearanceFeature dataclass:
+   * - position, scale, rotation
+   * - color_source, custom_color, secondary_color, opacity
+   * - emissive, emissive_intensity, metallic, roughness
+   * - animation, animation_speed, animation_amplitude
+   * - particle_effect, particle_color, particle_rate
+   * - light_source, light_color, light_intensity, light_range
+   * - mirror_x, count, count_arrangement, count_spacing
    */
   renderAppearanceFeatures(entity, features, roleColor) {
     features.forEach((feature, idx) => {
@@ -1986,69 +1995,421 @@ export default class Village3DPlayCanvas {
         const {
           feature_type,
           geometry,
-          count,
-          position,
-          scale,
-          rotation,
-          color_source,
+          position = {},
+          scale = {},
+          rotation = {},
+          mirror_x = false,
+          mirror_offset = 0,
+          color_source = "role",
           custom_color,
+          secondary_color,
+          opacity = 1.0,
+          emissive = false,
+          emissive_intensity = 0.5,
+          metallic = false,
+          roughness = 0.5,
+          animation,
+          animation_speed = 1.0,
+          animation_amplitude = 1.0,
+          particle_effect,
+          particle_color,
+          particle_rate = 10.0,
+          light_source = false,
+          light_color,
+          light_intensity = 0.5,
+          light_range = 2.0,
+          count = 1,
+          count_arrangement = "linear",
+          count_spacing = 0.1,
+          visible_to_self = true,
+          visible_to_others = true,
+          visible_when_dead = false,
         } = feature;
 
         // Determine the color to use
-        let featureColor = roleColor;
+        let featureColor = roleColor.clone ? roleColor.clone() : new pc.Color(roleColor.r, roleColor.g, roleColor.b);
         if (color_source === "custom" && custom_color) {
-          // Convert hex to RGB
-          const hex = custom_color.replace("#", "");
-          const r = parseInt(hex.slice(0, 2), 16) / 255;
-          const g = parseInt(hex.slice(2, 4), 16) / 255;
-          const b = parseInt(hex.slice(4, 6), 16) / 255;
-          featureColor = new pc.Color(r, g, b);
+          featureColor = this.hexToColor(custom_color);
         } else if (color_source === "skin") {
-          featureColor = new pc.Color(0.87, 0.72, 0.58); // Default skin color
+          featureColor = new pc.Color(0.87, 0.72, 0.58);
+        } else if (color_source === "emissive" && custom_color) {
+          featureColor = this.hexToColor(custom_color);
         }
 
-        // Create the feature(s)
-        for (let i = 0; i < count; i++) {
-          const featureEntity = new pc.Entity(`${feature_type}-${idx}-${i}`);
-          featureEntity.addComponent("model", { type: geometry });
+        // Map geometry types (handle new types)
+        const geometryMap = {
+          'cone': 'cone',
+          'box': 'box',
+          'sphere': 'sphere',
+          'cylinder': 'cylinder',
+          'torus': 'torus',
+          'capsule': 'capsule',
+          'plane': 'plane',
+        };
+        const pcGeometry = geometryMap[geometry] || 'sphere';
 
-          // Apply position (with offset for multiple instances)
-          const baseX = position.x || 0;
-          const baseY = position.y || 0;
-          const baseZ = position.z || 0;
-          featureEntity.setLocalPosition(baseX, baseY, baseZ);
+        // Create instances
+        const instances = this.calculateInstances(count, count_arrangement, count_spacing, position);
 
-          // Apply scale
-          if (scale) {
-            featureEntity.setLocalScale(
-              scale.x || 1,
-              scale.y || 1,
-              scale.z || 1,
+        instances.forEach((instancePos, i) => {
+          // Create main feature
+          this.createFeatureInstance(
+            entity, feature_type, idx, i, pcGeometry,
+            instancePos, scale, rotation,
+            featureColor, opacity, emissive, emissive_intensity,
+            metallic, roughness, animation, animation_speed, animation_amplitude,
+            light_source, light_color, light_intensity, light_range,
+            particle_effect, particle_color, particle_rate
+          );
+
+          // Create mirrored version if needed
+          if (mirror_x) {
+            const mirroredPos = {
+              x: -(instancePos.x || 0) + mirror_offset,
+              y: instancePos.y || 0,
+              z: instancePos.z || 0
+            };
+            const mirroredRotation = {
+              x: rotation.x || 0,
+              y: rotation.y || 0,
+              z: -(rotation.z || 0)  // Mirror Z rotation
+            };
+            this.createFeatureInstance(
+              entity, `${feature_type}_mirror`, idx, i, pcGeometry,
+              mirroredPos, scale, mirroredRotation,
+              featureColor, opacity, emissive, emissive_intensity,
+              metallic, roughness, animation, animation_speed, animation_amplitude,
+              light_source, light_color, light_intensity, light_range,
+              particle_effect, particle_color, particle_rate
             );
           }
-
-          // Apply rotation
-          if (rotation) {
-            featureEntity.setLocalEulerAngles(
-              rotation.x || 0,
-              rotation.y || 0,
-              rotation.z || 0,
-            );
-          }
-
-          // Apply material
-          const material = new pc.StandardMaterial();
-          material.diffuse = featureColor;
-          material.update();
-          featureEntity.model.material = material;
-
-          entity.addChild(featureEntity);
-        }
+        });
       } catch (e) {
         console.error(
           `[Village3D] Error rendering feature ${feature.feature_type}:`,
           e,
         );
+      }
+    });
+  }
+
+  /**
+   * Create a single feature instance with all material and effect properties.
+   */
+  createFeatureInstance(
+    parent, featureType, featureIdx, instanceIdx, geometry,
+    position, scale, rotation,
+    color, opacity, emissive, emissiveIntensity,
+    metallic, roughness, animation, animSpeed, animAmplitude,
+    lightSource, lightColor, lightIntensity, lightRange,
+    particleEffect, particleColor, particleRate
+  ) {
+    const featureEntity = new pc.Entity(`${featureType}-${featureIdx}-${instanceIdx}`);
+
+    // Add model component (handle special geometry types)
+    if (geometry === 'torus' || geometry === 'capsule' || geometry === 'plane') {
+      // Approximate with available primitives
+      if (geometry === 'torus') {
+        // Approximate torus with a thin cylinder ring
+        featureEntity.addComponent("model", { type: "cylinder" });
+      } else if (geometry === 'capsule') {
+        featureEntity.addComponent("model", { type: "cylinder" });
+      } else if (geometry === 'plane') {
+        featureEntity.addComponent("model", { type: "box" });
+      }
+    } else {
+      featureEntity.addComponent("model", { type: geometry });
+    }
+
+    // Apply position
+    featureEntity.setLocalPosition(
+      position.x || 0,
+      position.y || 0,
+      position.z || 0
+    );
+
+    // Apply scale
+    featureEntity.setLocalScale(
+      scale.x || 1,
+      scale.y || 1,
+      scale.z || 1
+    );
+
+    // Apply rotation
+    featureEntity.setLocalEulerAngles(
+      rotation.x || 0,
+      rotation.y || 0,
+      rotation.z || 0
+    );
+
+    // Create and apply material
+    const material = new pc.StandardMaterial();
+    material.diffuse = color;
+
+    // Handle opacity
+    if (opacity < 1.0) {
+      material.opacity = opacity;
+      material.blendType = pc.BLEND_NORMAL;
+    }
+
+    // Handle emissive
+    if (emissive) {
+      material.emissive = color;
+      material.emissiveIntensity = emissiveIntensity;
+    }
+
+    // Handle metallic/roughness
+    if (metallic) {
+      material.metalness = 0.8;
+      material.shininess = 80;
+    }
+    material.shininess = (1 - roughness) * 100;
+
+    material.update();
+
+    if (featureEntity.model) {
+      featureEntity.model.material = material;
+    }
+
+    // Add to parent
+    parent.addChild(featureEntity);
+
+    // Add light source if specified
+    if (lightSource) {
+      const light = new pc.Entity(`${featureType}-light-${instanceIdx}`);
+      const lColor = lightColor ? this.hexToColor(lightColor) : color;
+      light.addComponent("light", {
+        type: "point",
+        color: lColor,
+        intensity: lightIntensity,
+        range: lightRange,
+        castShadows: false,
+      });
+      light.setLocalPosition(0, 0, 0);
+      featureEntity.addChild(light);
+    }
+
+    // Add animation if specified
+    if (animation) {
+      this.addFeatureAnimation(featureEntity, animation, animSpeed, animAmplitude);
+    }
+
+    // Add particle effect if specified
+    if (particleEffect) {
+      this.addParticleEffect(featureEntity, particleEffect, particleColor, particleRate);
+    }
+
+    return featureEntity;
+  }
+
+  /**
+   * Calculate instance positions based on arrangement type.
+   */
+  calculateInstances(count, arrangement, spacing, basePosition) {
+    const instances = [];
+    const baseX = basePosition.x || 0;
+    const baseY = basePosition.y || 0;
+    const baseZ = basePosition.z || 0;
+
+    for (let i = 0; i < count; i++) {
+      let pos = { x: baseX, y: baseY, z: baseZ };
+
+      if (count > 1) {
+        switch (arrangement) {
+          case "linear":
+            pos.x = baseX + (i - (count - 1) / 2) * spacing;
+            break;
+          case "radial":
+            const angle = (i / count) * Math.PI * 2;
+            pos.x = baseX + Math.cos(angle) * spacing;
+            pos.z = baseZ + Math.sin(angle) * spacing;
+            break;
+          case "random":
+            pos.x = baseX + (Math.random() - 0.5) * spacing * 2;
+            pos.y = baseY + (Math.random() - 0.5) * spacing;
+            pos.z = baseZ + (Math.random() - 0.5) * spacing * 2;
+            break;
+        }
+      }
+      instances.push(pos);
+    }
+    return instances;
+  }
+
+  /**
+   * Add animation to a feature entity.
+   */
+  addFeatureAnimation(entity, animationType, speed, amplitude) {
+    // Store animation data for update loop
+    if (!this.animatedFeatures) {
+      this.animatedFeatures = [];
+    }
+
+    this.animatedFeatures.push({
+      entity: entity,
+      type: animationType,
+      speed: speed,
+      amplitude: amplitude,
+      phase: Math.random() * Math.PI * 2,
+      originalPos: entity.getLocalPosition().clone(),
+      originalRot: entity.getLocalEulerAngles().clone(),
+      originalScale: entity.getLocalScale().clone(),
+    });
+  }
+
+  /**
+   * Add particle effect to a feature entity.
+   */
+  addParticleEffect(entity, effectType, color, rate) {
+    // Create particle system entity
+    const particles = new pc.Entity(`particles-${effectType}`);
+
+    const particleColor = color ? this.hexToColor(color) : new pc.Color(1, 1, 1);
+
+    // Configure based on effect type
+    const configs = {
+      "sparks": {
+        numParticles: 20,
+        lifetime: 0.5,
+        rate: rate,
+        emitterShape: pc.EMITTERSHAPE_SPHERE,
+        emitterRadius: 0.1,
+        startAngle: 0,
+        endAngle: 360,
+        velocityX: [-0.5, 0.5],
+        velocityY: [0.5, 1.5],
+        velocityZ: [-0.5, 0.5],
+        scaleGraph: new pc.Curve([0, 0.02, 1, 0]),
+        colorGraph: new pc.CurveSet([[0, particleColor.r], [1, particleColor.r]], [[0, particleColor.g], [1, particleColor.g]], [[0, particleColor.b], [1, particleColor.b]]),
+      },
+      "magic": {
+        numParticles: 15,
+        lifetime: 1.0,
+        rate: rate * 0.5,
+        emitterShape: pc.EMITTERSHAPE_SPHERE,
+        emitterRadius: 0.2,
+        velocityY: [0.1, 0.3],
+        scaleGraph: new pc.Curve([0, 0.03, 0.5, 0.05, 1, 0]),
+      },
+      "fire": {
+        numParticles: 30,
+        lifetime: 0.4,
+        rate: rate * 2,
+        emitterShape: pc.EMITTERSHAPE_SPHERE,
+        emitterRadius: 0.05,
+        velocityY: [0.5, 1.0],
+        scaleGraph: new pc.Curve([0, 0.04, 0.5, 0.06, 1, 0]),
+      },
+      "hearts": {
+        numParticles: 5,
+        lifetime: 2.0,
+        rate: rate * 0.3,
+        velocityY: [0.1, 0.3],
+        scaleGraph: new pc.Curve([0, 0.05, 0.5, 0.08, 1, 0.05]),
+      },
+      "smoke": {
+        numParticles: 10,
+        lifetime: 1.5,
+        rate: rate * 0.5,
+        velocityY: [0.1, 0.2],
+        scaleGraph: new pc.Curve([0, 0.05, 1, 0.15]),
+      },
+      "shadow": {
+        numParticles: 10,
+        lifetime: 0.5,
+        rate: rate,
+        velocityY: [-0.1, 0.1],
+        scaleGraph: new pc.Curve([0, 0.1, 1, 0]),
+      },
+    };
+
+    // Note: Full particle system requires texture asset
+    // For now, add a simple visual indicator
+    const indicator = new pc.Entity("particle-indicator");
+    indicator.addComponent("model", { type: "sphere" });
+    indicator.setLocalScale(0.05, 0.05, 0.05);
+    const mat = new pc.StandardMaterial();
+    mat.diffuse = particleColor;
+    mat.emissive = particleColor;
+    mat.emissiveIntensity = 0.5;
+    mat.opacity = 0.5;
+    mat.blendType = pc.BLEND_ADDITIVE;
+    mat.update();
+    indicator.model.material = mat;
+
+    entity.addChild(indicator);
+  }
+
+  /**
+   * Convert hex color string to PlayCanvas Color.
+   */
+  hexToColor(hex) {
+    if (!hex) return new pc.Color(1, 1, 1);
+    const cleanHex = hex.replace("#", "");
+    const r = parseInt(cleanHex.slice(0, 2), 16) / 255;
+    const g = parseInt(cleanHex.slice(2, 4), 16) / 255;
+    const b = parseInt(cleanHex.slice(4, 6), 16) / 255;
+    return new pc.Color(r, g, b);
+  }
+
+  /**
+   * Update animated features (call from main update loop).
+   */
+  updateAnimatedFeatures(dt) {
+    if (!this.animatedFeatures) return;
+
+    const time = Date.now() / 1000;
+
+    this.animatedFeatures.forEach((anim) => {
+      if (!anim.entity || !anim.entity.parent) return;
+
+      const t = time * anim.speed + anim.phase;
+      const amp = anim.amplitude;
+
+      switch (anim.type) {
+        case "rotate":
+          anim.entity.setLocalEulerAngles(
+            anim.originalRot.x,
+            anim.originalRot.y + t * 60,
+            anim.originalRot.z
+          );
+          break;
+        case "pulse":
+          const pulseScale = 1 + Math.sin(t * 2) * 0.1 * amp;
+          anim.entity.setLocalScale(
+            anim.originalScale.x * pulseScale,
+            anim.originalScale.y * pulseScale,
+            anim.originalScale.z * pulseScale
+          );
+          break;
+        case "float":
+          anim.entity.setLocalPosition(
+            anim.originalPos.x,
+            anim.originalPos.y + Math.sin(t) * 0.1 * amp,
+            anim.originalPos.z
+          );
+          break;
+        case "sway":
+          anim.entity.setLocalEulerAngles(
+            anim.originalRot.x,
+            anim.originalRot.y,
+            anim.originalRot.z + Math.sin(t) * 10 * amp
+          );
+          break;
+        case "flutter":
+          const flutterAngle = Math.sin(t * 4) * 15 * amp;
+          anim.entity.setLocalEulerAngles(
+            anim.originalRot.x,
+            anim.originalRot.y + flutterAngle,
+            anim.originalRot.z
+          );
+          break;
+        case "flicker":
+          // Random intensity flicker for fire/lights
+          if (anim.entity.light) {
+            anim.entity.light.intensity = 0.8 + Math.random() * 0.4;
+          }
+          break;
       }
     });
   }
@@ -4101,6 +4462,9 @@ export default class Village3DPlayCanvas {
         p.entity.rotateLocal(90, 0, 0);
       });
     }
+
+    // Update animated features from role definitions
+    this.updateAnimatedFeatures(dt);
 
     // Animate fireflies (night only)
     if (this.isNight && this.fireflies && this.fireflies.length > 0) {

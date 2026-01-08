@@ -47,7 +47,7 @@ class Hure(Role):
             farbe="#f43f5e",
             prioritaet=45,
             erzaehler_nacht=("Die Hure erwacht und waehlt bei wem sie uebernachtet."),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#f43f5e",
             avatar_gradient_to="#be123c",

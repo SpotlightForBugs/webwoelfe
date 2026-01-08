@@ -48,7 +48,7 @@ class Prinz(Role):
             erzaehler_tag=(
                 "Der Prinz kann nicht gehängt werden! Seine Identität " "wird enthüllt."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#eab308",
             avatar_gradient_to="#a16207",

@@ -9,7 +9,9 @@ from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
     RollenModell,
-    AppearanceFeature,
+    BodyModification,
+    AnimationState,
+    HintEffect3D,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -17,6 +19,11 @@ from ..base import (
     StateField,
     StateType,
     DistributionConfig,
+    # Factory functions
+    create_weapon,
+    create_aura,
+    create_robe,
+    create_death_marker,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -158,24 +165,114 @@ class Heiler(Role):
         )
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Village 3D appearance for Heiler."""
-        appearance_features = [
+        """
+        Comprehensive 3D appearance for Heiler.
+
+        Features:
+        - Healing staff with glowing green orb
+        - Green healing aura
+        - Healer robes
+        - Medical bag
+        """
+        heiler_features = [
+            # Healing staff
+            *create_weapon("healing_staff"),
+            # Green healing aura
+            create_aura(color="#00FF88", intensity=0.4, pulsing=True),
+            # Healer robes
             AppearanceFeature(
-                feature_type="role_indicator",
-                geometry="sphere",
-                position={"x": 0, "y": 2.2, "z": 0.2},
-                scale={"x": 0.12, "y": 0.12, "z": 0.12},
-                color_source="role",
-                description="Role indicator orb",
-            )
+                feature_type="healer_robe",
+                geometry="cone",
+                position={"x": 0, "y": 0.7, "z": 0},
+                scale={"x": 0.4, "y": 1.1, "z": 0.35},
+                color_source="custom",
+                custom_color="#F0FFF0",  # Honeydew white
+                roughness=0.7,
+                description="White healer robes",
+            ),
+            # Green cross on chest
+            AppearanceFeature(
+                feature_type="cross_vertical",
+                geometry="box",
+                position={"x": 0, "y": 1.1, "z": 0.18},
+                scale={"x": 0.04, "y": 0.15, "z": 0.02},
+                color_source="custom",
+                custom_color="#10B981",
+                emissive=True,
+                emissive_intensity=0.3,
+                description="Healer cross (vertical)",
+            ),
+            AppearanceFeature(
+                feature_type="cross_horizontal",
+                geometry="box",
+                position={"x": 0, "y": 1.1, "z": 0.18},
+                scale={"x": 0.1, "y": 0.04, "z": 0.02},
+                color_source="custom",
+                custom_color="#10B981",
+                emissive=True,
+                emissive_intensity=0.3,
+                description="Healer cross (horizontal)",
+            ),
+            # Medical pouch on belt
+            AppearanceFeature(
+                feature_type="medical_pouch",
+                geometry="box",
+                position={"x": -0.25, "y": 0.75, "z": 0.15},
+                scale={"x": 0.1, "y": 0.12, "z": 0.08},
+                color_source="custom",
+                custom_color="#8B4513",
+                roughness=0.7,
+                description="Medical supply pouch",
+            ),
+            # Herbs poking out of pouch
+            AppearanceFeature(
+                feature_type="herbs",
+                geometry="cone",
+                position={"x": -0.25, "y": 0.85, "z": 0.15},
+                scale={"x": 0.04, "y": 0.08, "z": 0.04},
+                color_source="custom",
+                custom_color="#228B22",
+                description="Healing herbs",
+            ),
         ]
 
         return RollenModell(
             modell_id="heiler",
             anzeige_name="Heiler",
-            beschreibung="Heiler appearance with custom features",
-            appearance_self_alive=appearance_features,
-            appearance_others_alive=appearance_features,
-            appearance_dead=[],
+            beschreibung="Ein weiser Heiler mit heilenden Kräutern und grüner Aura",
+            body=BodyModification(
+                height_multiplier=0.98,
+                skin_texture="smooth",
+            ),
+            appearance_self_alive=heiler_features,
+            appearance_others_alive=heiler_features,
+            appearance_dead=create_death_marker(),
             seher_sicht="good",
+            animations={
+                "idle": AnimationState(
+                    state_name="idle",
+                    sway_amplitude=0.01,
+                    sway_speed=0.5,
+                    head_tilt_range=15,
+                    look_around=True,
+                    blink_rate=2.5,
+                    breathing_visible=True,
+                ),
+                "healing": AnimationState(
+                    state_name="healing",
+                    sway_amplitude=0.02,
+                    gesture_chance=0.4,
+                    breathing_visible=True,
+                ),
+            },
+            hint_effects=[
+                HintEffect3D(
+                    effect_id="aura_glow",
+                    effect_type="glow",
+                    glow_color="#00FF88",
+                    glow_intensity=0.6,
+                    glow_pulse=True,
+                ),
+            ],
+            sound_on_action="healing_chime.mp3",
         )

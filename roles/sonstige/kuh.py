@@ -248,7 +248,7 @@ class Kuh(Role):
             prioritaet=200,  # Niedrige Priorität (passiv)
             erzaehler_nacht="Die Kuh muht in der Nacht. Alle hören es.",
             erzaehler_tag="Die Kuh bietet ihre Milch an. Wer traut sich zu trinken?",
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#8B4513",
             avatar_gradient_to="#654321",

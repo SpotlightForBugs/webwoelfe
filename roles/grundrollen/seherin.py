@@ -9,12 +9,19 @@ from typing import Optional, TYPE_CHECKING, List
 from ..base import (
     AppearanceFeature,
     RollenModell,
-    AppearanceFeature,
+    BodyModification,
+    AnimationState,
+    HintEffect3D,
     Role,
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
     DistributionConfig,
+    # Factory functions
+    create_crystal_ball,
+    create_pointed_hat,
+    create_aura,
+    create_death_marker,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -199,34 +206,116 @@ class Seherin(Role):
         )
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Village 3D appearance for Seherin."""
-        appearance_features = [
+        """
+        Comprehensive 3D appearance for Seherin.
+
+        Features:
+        - Mystical third eye on forehead
+        - Crystal ball held in hand
+        - Pointed mystic hat
+        - Purple glowing aura
+        - Flowing robes effect
+        """
+        seherin_features = [
+            # Third eye on forehead
             AppearanceFeature(
                 feature_type="third_eye",
                 geometry="sphere",
-                position={"x": 0, "y": 2.0, "z": 0.25},
-                scale={"x": 0.15, "y": 0.15, "z": 0.1},
+                position={"x": 0, "y": 2.05, "z": 0.22},
+                scale={"x": 0.08, "y": 0.08, "z": 0.04},
                 color_source="custom",
-                custom_color="#9333ea",
+                custom_color="#9933FF",
+                emissive=True,
+                emissive_intensity=0.8,
+                light_source=True,
+                light_color="#9933FF",
+                light_intensity=0.4,
+                light_range=1.5,
+                animation="pulse",
+                animation_speed=0.5,
                 description="Mystical third eye",
             ),
+            # Crystal ball
+            create_crystal_ball(color="#9966ff"),
+            # Pointed mystic hat
+            create_pointed_hat(color="#4B0082"),
+            # Mystical aura
+            create_aura(color="#9966ff", intensity=0.4, pulsing=True),
+            # Flowing robe indicator
             AppearanceFeature(
-                feature_type="mystical_aura",
-                geometry="sphere",
-                position={"x": 0, "y": 1.5, "z": 0},
-                scale={"x": 0.7, "y": 0.9, "z": 0.5},
+                feature_type="robe",
+                geometry="cone",
+                position={"x": 0, "y": 0.7, "z": 0},
+                scale={"x": 0.4, "y": 1.1, "z": 0.35},
                 color_source="custom",
-                custom_color="#a78bfa",
-                description="Glowing mystical aura",
+                custom_color="#2E1A47",
+                roughness=0.8,
+                description="Mystic robes",
+            ),
+            # Star patterns on robe
+            AppearanceFeature(
+                feature_type="star_pattern_1",
+                geometry="sphere",
+                position={"x": 0.15, "y": 0.6, "z": 0.2},
+                scale={"x": 0.03, "y": 0.03, "z": 0.01},
+                color_source="custom",
+                custom_color="#FFD700",
+                emissive=True,
+                emissive_intensity=0.5,
+                description="Star decoration",
+            ),
+            AppearanceFeature(
+                feature_type="star_pattern_2",
+                geometry="sphere",
+                position={"x": -0.12, "y": 0.75, "z": 0.18},
+                scale={"x": 0.025, "y": 0.025, "z": 0.01},
+                color_source="custom",
+                custom_color="#FFD700",
+                emissive=True,
+                emissive_intensity=0.5,
+                description="Star decoration",
             ),
         ]
 
         return RollenModell(
             modell_id="seherin",
             anzeige_name="Seherin",
-            beschreibung="Seherin with third eye and mystical aura",
-            appearance_self_alive=appearance_features,
-            appearance_others_alive=appearance_features,
-            appearance_dead=[],
+            beschreibung="Eine mystische Seherin mit drittem Auge und Kristallkugel",
+            body=BodyModification(
+                height_multiplier=0.95,
+                skin_texture="smooth",
+            ),
+            appearance_self_alive=seherin_features,
+            appearance_others_alive=seherin_features,
+            appearance_dead=create_death_marker(),
             seher_sicht="good",
+            animations={
+                "idle": AnimationState(
+                    state_name="idle",
+                    sway_amplitude=0.01,
+                    sway_speed=0.5,
+                    head_tilt_range=20,
+                    look_around=True,
+                    blink_rate=2.5,
+                    breathing_visible=True,
+                ),
+                "seeing": AnimationState(
+                    state_name="seeing",
+                    sway_amplitude=0.0,
+                    head_tilt_range=5,
+                    look_around=False,
+                    blink_rate=0.5,  # Rarely blinks while seeing
+                    gesture_chance=0.0,
+                ),
+            },
+            hint_effects=[
+                HintEffect3D(
+                    effect_id="moonbeam",
+                    effect_type="glow",
+                    glow_color="#9966FF",
+                    glow_intensity=1.0,
+                    glow_pulse=True,
+                ),
+            ],
+            sound_on_action="crystal_chime.mp3",
         )

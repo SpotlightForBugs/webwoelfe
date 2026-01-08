@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import random
 import json
 from typing import List, Tuple, Optional
@@ -252,24 +252,22 @@ def naechste_phase(raum: Raum) -> str:
     )
     from phase_generator import get_next_phase
 
+    old_phase = raum.aktuelle_phase
     next_p = get_next_phase(raum)
 
     # Update Raum
     raum.aktuelle_phase = next_p
 
-    # Check for round increment (if phase is 'nacht_start' or similar start marker)
-    # The phase generator handles round logic internally usually, but we might need to sync DB
-    # Actually phase generator returns the phase name.
-    # If we loop back to start, round increases.
-    # We can detect round change by checking if next phase is first in sequence?
-    # Or just let phase generator handle it?
-    # For now, we trust phase generator to return correct phase.
-    # But we need to know if round changed to update raum.runde?
-    # The phase generator logic in `get_next_phase` should probably update the room object directly or return round too.
-    # Let's check phase_generator.py... it seems it just returns string.
-    # We might need to detect "nacht_start" to increment round.
+    # Check for round increment:
+    # A new round starts when we transition TO any night-starting phase
+    # This includes: "nacht_start", "nacht", or dynamic role phases after tag_ende
+    is_entering_night = (
+        next_p in ("nacht_start", "nacht") or
+        (old_phase in ("tag_ende", "hinrichtung") and "nacht" in next_p)
+    )
 
-    if next_p == "nacht_start":
+    # Only increment if we're entering night from a day phase (not on first transition)
+    if is_entering_night and old_phase not in ("lobby", "rollen_verteilt", "nacht_start", "nacht"):
         raum.runde += 1
         logger.info(f"Round incremented to {raum.runde}")
 
@@ -352,25 +350,33 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
     # 2. Prüfe "On Death" Effekte via Registry
     from roles import RoleRegistry
 
+    # Get the raum for context
+    raum = db.session.get(Raum, spieler.raum_id)
+    if not raum:
+        logger.error(f"Room not found for player {spieler.name}")
+        db.session.commit()
+        return {"tote": tote, "folge_aktionen": folge_aktionen}
+
     # Check effects for the dying player (e.g., Jäger)
     role_obj = RoleRegistry.get(spieler.rolle)
     if role_obj and hasattr(role_obj, "on_eigener_tod"):
         try:
+            alle_spieler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=False).all()
             kontext = SpielKontext(
                 raum_id=spieler.raum_id,
                 runde=raum.runde,
-                phase=Phase.TAG if raum.phase == "tag" else Phase.NACHT,
+                phase=Phase.TAG if "tag" in raum.aktuelle_phase else Phase.NACHT,
                 aktiver_spieler_id=spieler.id,
-                lebende_spieler=[s.id for s in raum.spieler if s.ist_am_leben],
-                tote_spieler=[s.id for s in raum.spieler if not s.ist_am_leben],
+                lebende_spieler=[s.id for s in alle_spieler if s.ist_am_leben],
+                tote_spieler=[s.id for s in alle_spieler if not s.ist_am_leben],
             )
 
-            result = role_obj.on_eigener_tod(spieler, todesursache, kontext)
+            result = role_obj.on_eigener_tod(spieler, todesart, kontext)
             if result and result.erfolg:
                 # Apply state updates generically
                 if result.state_updates:
-                    for attr_name, attr_value in result.state_updates.items():
-                        setattr(spieler, attr_name, attr_value)
+                    for state_key, state_value in result.state_updates.items():
+                        spieler.set_state(state_key, state_value)
 
                 # Add any follow-up actions from effects
                 for effect_key, effect_value in result.effekte.items():
@@ -439,14 +445,18 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
 
     logger.debug(f"Stats: WW={werwoelfe}, Dorf={dorfbewohner}, Andere={andere}")
 
+    # Get all players for context
+    alle_spieler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=False).all()
+    tote_spieler_ids = [s.id for s in alle_spieler if not s.ist_am_leben]
+
     # Build context for win condition checks
     kontext = SpielKontext(
         raum_id=raum.id,
         runde=raum.runde,
-        phase=Phase.TAG if raum.phase == "tag" else Phase.NACHT,
+        phase=Phase.TAG if "tag" in raum.aktuelle_phase else Phase.NACHT,
         aktiver_spieler_id=0,  # Not relevant for win checks
         lebende_spieler=[s.id for s in lebende],
-        tote_spieler=[s.id for s in raum.spieler if not s.ist_am_leben],
+        tote_spieler=tote_spieler_ids,
     )
 
     # 1. Check role-specific solo win conditions (highest priority)
@@ -512,15 +522,15 @@ def log_eintrag(raum_id: int, nachricht: str, sichtbar_fuer: str = "alle") -> Sp
 
 
 # ============================================================================
-# DISKUSSION & ABSTIMMUNG LOGIK
+# TAG-ABSTIMMUNG LOGIK
 # ============================================================================
 
 
-def starte_diskussion_abstimmung(raum: Raum, dauer_sekunden: int = 120):
-    """Startet die kombinierte Diskussions- und Abstimmungsphase"""
-    logger.info(f"Starting discussion/voting in room {raum.code} for {dauer_sekunden}s")
-    raum.aktuelle_phase = "diskussion_abstimmung"
-    raum.timer_start = datetime.utcnow()
+def starte_tag_abstimmung(raum: Raum, dauer_sekunden: int = 120):
+    """Startet die Tag-Abstimmungsphase (Diskussion + Voting)"""
+    logger.info(f"Starting day voting in room {raum.code} for {dauer_sekunden}s")
+    raum.aktuelle_phase = "tag_abstimmung"
+    raum.timer_start = datetime.now(timezone.utc)
     raum.timer_duration = dauer_sekunden
     raum.phase_votes = "{}"  # Reset votes
     db.session.commit()
@@ -533,7 +543,14 @@ def get_verbleibende_zeit(raum: Raum) -> int:
     if not raum.timer_start or not raum.timer_duration:
         return 0
 
-    vergangen = (datetime.utcnow() - raum.timer_start).total_seconds()
+    # Handle both timezone-aware and naive datetimes for backwards compatibility
+    now = datetime.now(timezone.utc)
+    timer_start = raum.timer_start
+    if timer_start.tzinfo is None:
+        # Naive datetime - assume UTC
+        timer_start = timer_start.replace(tzinfo=timezone.utc)
+
+    vergangen = (now - timer_start).total_seconds()
     rest = max(0, int(raum.timer_duration - vergangen))
     return rest
 
@@ -548,7 +565,7 @@ def speichere_abstimmungs_vote(raum: Raum, voter_id: int, target_id: int):
     logger.debug(f"Saving vote: {voter_id} -> {target_id}")
     try:
         votes = json.loads(raum.phase_votes or "{}")
-    except:
+    except (json.JSONDecodeError, TypeError):
         votes = {}
 
     votes[str(voter_id)] = target_id
@@ -560,7 +577,7 @@ def berechne_abstimmungs_statistik(raum: Raum) -> dict:
     """Berechnet aktuelle Statistik der Abstimmung"""
     try:
         votes = json.loads(raum.phase_votes or "{}")
-    except:
+    except (json.JSONDecodeError, TypeError):
         votes = {}
 
     lebende = hole_lebende_spieler(raum)
@@ -599,7 +616,7 @@ def pruefen_abstimmung_komplett(raum: Raum) -> bool:
     """Prüft ob alle lebenden Spieler abgestimmt haben"""
     try:
         votes = json.loads(raum.phase_votes or "{}")
-    except:
+    except (json.JSONDecodeError, TypeError):
         votes = {}
 
     lebende = hole_lebende_spieler(raum)
@@ -706,12 +723,6 @@ def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: str = None) -> bool:
 
     return True
 
-
-# Legacy Support
-def tag_abstimmung(raum: Raum) -> Optional[dict]:
-    """Legacy Wrapper für alte Abstimmungs-Logik"""
-    logger.info("Executing legacy tag_abstimmung")
-    return werte_abstimmung_aus(raum)
 
 
 def werwolf_abstimmung(raum: Raum) -> Optional[dict]:

@@ -57,7 +57,7 @@ class Chemielaborant(Role):
                 "Der Chemielaborant experimentiert selbst im Schlaf. "
                 "Ein gefährlicher Nachbar..."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#10b981",
             avatar_gradient_to="#047857",

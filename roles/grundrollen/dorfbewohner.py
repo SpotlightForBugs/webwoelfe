@@ -8,13 +8,16 @@ aber seine Stimme in der Abstimmung ist entscheidend.
 from typing import Optional, List
 from ..base import (
     AppearanceFeature,
-    AppearanceFeature,
     RollenModell,
+    BodyModification,
+    AnimationState,
+    HintEffect3D,
     Role,
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
     DistributionConfig,
+    create_death_marker,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -113,24 +116,115 @@ class Dorfbewohner(Role):
         ]
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Village 3D appearance for Dorfbewohner."""
-        appearance_features = [
+        """
+        Comprehensive 3D appearance for Dorfbewohner (Villager).
+
+        The baseline villager appearance that other roles build upon.
+        Simple, humble appearance of a medieval villager.
+        """
+        villager_features = [
+            # Simple peasant hat
             AppearanceFeature(
-                feature_type="role_indicator",
-                geometry="sphere",
-                position={"x": 0, "y": 2.2, "z": 0.2},
-                scale={"x": 0.12, "y": 0.12, "z": 0.12},
-                color_source="role",
-                description="Role indicator orb",
-            )
+                feature_type="peasant_hat",
+                geometry="cylinder",
+                position={"x": 0, "y": 2.12, "z": 0},
+                scale={"x": 0.22, "y": 0.08, "z": 0.22},
+                color_source="custom",
+                custom_color="#8B7355",
+                roughness=0.8,
+                description="Simple peasant cap",
+            ),
+            # Simple tunic/shirt
+            AppearanceFeature(
+                feature_type="tunic",
+                geometry="box",
+                position={"x": 0, "y": 1.1, "z": 0},
+                scale={"x": 0.35, "y": 0.5, "z": 0.25},
+                color_source="custom",
+                custom_color="#D2B48C",  # Tan color
+                roughness=0.8,
+                description="Simple tunic",
+            ),
+            # Pants/lower body
+            AppearanceFeature(
+                feature_type="pants",
+                geometry="box",
+                position={"x": 0, "y": 0.5, "z": 0},
+                scale={"x": 0.3, "y": 0.5, "z": 0.22},
+                color_source="custom",
+                custom_color="#5D4E37",  # Brown
+                roughness=0.7,
+                description="Simple pants",
+            ),
+            # Belt
+            AppearanceFeature(
+                feature_type="belt",
+                geometry="box",
+                position={"x": 0, "y": 0.82, "z": 0},
+                scale={"x": 0.36, "y": 0.04, "z": 0.26},
+                color_source="custom",
+                custom_color="#3D2817",
+                roughness=0.6,
+                description="Leather belt",
+            ),
+            # Simple boots
+            AppearanceFeature(
+                feature_type="boot_left",
+                geometry="box",
+                position={"x": -0.1, "y": 0.1, "z": 0},
+                scale={"x": 0.1, "y": 0.2, "z": 0.15},
+                color_source="custom",
+                custom_color="#3D2817",
+                roughness=0.7,
+                description="Left boot",
+            ),
+            AppearanceFeature(
+                feature_type="boot_right",
+                geometry="box",
+                position={"x": 0.1, "y": 0.1, "z": 0},
+                scale={"x": 0.1, "y": 0.2, "z": 0.15},
+                color_source="custom",
+                custom_color="#3D2817",
+                roughness=0.7,
+                description="Right boot",
+            ),
         ]
 
         return RollenModell(
             modell_id="dorfbewohner",
             anzeige_name="Dorfbewohner",
-            beschreibung="Dorfbewohner appearance with custom features",
-            appearance_self_alive=appearance_features,
-            appearance_others_alive=appearance_features,
-            appearance_dead=[],
+            beschreibung="Ein einfacher Dorfbewohner in bescheidener Kleidung",
+            body=BodyModification(
+                height_multiplier=1.0,
+                skin_texture="smooth",
+            ),
+            appearance_self_alive=villager_features,
+            appearance_others_alive=villager_features,
+            appearance_dead=create_death_marker(),
             seher_sicht="good",
+            animations={
+                "idle": AnimationState(
+                    state_name="idle",
+                    sway_amplitude=0.015,
+                    sway_speed=0.6,
+                    head_tilt_range=20,
+                    look_around=True,
+                    blink_rate=3.0,
+                    breathing_visible=True,
+                    gesture_chance=0.1,
+                ),
+            },
+            hint_effects=[
+                HintEffect3D(
+                    effect_id="nervous",
+                    effect_type="shake",
+                    shake_intensity=0.03,
+                    shake_duration=0.5,
+                ),
+                HintEffect3D(
+                    effect_id="stumble",
+                    effect_type="transform",
+                    rotate_to={"x": 5, "y": 0, "z": 3},
+                ),
+            ],
         )

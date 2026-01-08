@@ -57,7 +57,7 @@ class Oma(Role):
                 "Die Oma schnarcht leise in ihrem Bett. Die Werwölfe "
                 "haben Mitleid mit der alten Frau."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#fda4af",
             avatar_gradient_to="#f43f5e",

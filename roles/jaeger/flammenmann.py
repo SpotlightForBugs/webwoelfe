@@ -58,7 +58,7 @@ class Flammenmann(Role):
                 "Der Flammenmann träumt von lodernden Flammen. "
                 "Er kann nur am Tag aktiv werden."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#ea580c",
             avatar_gradient_to="#c2410c",

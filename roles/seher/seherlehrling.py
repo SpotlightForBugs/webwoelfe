@@ -46,7 +46,7 @@ class Seherlehrling(Role):
             farbe="#8b5cf6",  # Wird aktiv wenn Seherin stirbt
             prioritaet=21,
             erzaehler_nacht=("Der Seherlehrling schläft. Noch lernt er..."),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#8b5cf6",
             avatar_gradient_to="#6d28d9",

@@ -61,7 +61,7 @@ class Demoskopin(Role):
                 "Die Demoskopin erfährt die aktuellen Umfragewerte. "
                 "(Zeige ihr heimlich den beliebtesten Kandidaten)"
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#06b6d4",
             avatar_gradient_to="#0891b2",

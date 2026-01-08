@@ -9,7 +9,10 @@ from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
     RollenModell,
-    AppearanceFeature,
+    BodyModification,
+    AnimationState,
+    HintEffect3D,
+    SpecialPhaseConfig,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -17,6 +20,10 @@ from ..base import (
     StateField,
     StateType,
     DistributionConfig,
+    # Factory functions
+    create_weapon,
+    create_cape,
+    create_death_marker,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -38,7 +45,7 @@ class Jaeger(Role):
 
     def state_fields(self) -> List[StateField]:
         return [
-            StateField("schuss", StateType.BOOL, True, "Schuss bereit"),
+            StateField("schuss_verfuegbar", StateType.BOOL, True, "Schuss bereit", icon="🔫"),
         ]
 
     @property
@@ -72,7 +79,7 @@ class Jaeger(Role):
 
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.TOETEN
+        return AktionsTyp.SCHIESSEN
 
     @property
     def erlaubte_ziele(self) -> str:
@@ -107,59 +114,230 @@ class Jaeger(Role):
             can_skip=False,
         )
 
+    def get_triggered_phases(self) -> List[SpecialPhaseConfig]:
+        """
+        Jäger triggers a special phase when he dies.
+        This replaces the hardcoded 'jaeger_phase' in phase_generator.py.
+        """
+        return [
+            SpecialPhaseConfig(
+                phase_name="jaeger_phase",
+                trigger_event="on_death",
+                trigger_condition=lambda spieler, kontext: spieler.get_state("jaeger.schuss_verfuegbar", True),
+                next_phase_override=None,  # Return to normal flow after
+                priority=100,  # High priority - happens immediately
+                interruptible=False,  # Cannot be interrupted
+            )
+        ]
+
+    def execute_action(
+        self,
+        action_type: str,
+        spieler: "Spieler",
+        targets: List["Spieler"],
+        kontext: "SpielKontext",
+    ) -> Optional[AktionsErgebnis]:
+        """
+        Execute Jäger actions dynamically.
+
+        Handles:
+        - jaeger_schuss: The last shot when dying
+        """
+        if action_type == "jaeger_schuss":
+            return self._execute_schuss(spieler, targets[0] if targets else None, kontext)
+
+        return None
+
+    def _execute_schuss(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: "SpielKontext"
+    ) -> AktionsErgebnis:
+        """Execute the hunter's last shot."""
+        # Check if shot is available
+        if not self.get_state(spieler, "schuss_verfuegbar", True):
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Du hast deinen Schuss bereits abgefeuert.",
+            )
+
+        if not ziel:
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Du musst ein Ziel für deinen Schuss wählen.",
+            )
+
+        # Mark shot as used
+        self.set_state(spieler, "schuss_verfuegbar", False)
+
+        return AktionsErgebnis(
+            erfolg=True,
+            nachricht=f"Der Jäger schießt auf {ziel.name}!",
+            ziel_spieler_id=ziel.id,
+            effekte={
+                "jaeger_schuss": True,
+                "toeten": ziel.id,
+                "todesursache": "jaeger",
+            },
+            state_updates={"jaeger.schuss_verfuegbar": False},
+            log_sichtbar_fuer="alle",
+        )
+
     def on_eigener_tod(
         self, spieler: "Spieler", todesursache: str, kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
         """
         Wenn der Jäger stirbt, darf er noch schießen.
+        Returns effect that triggers the jaeger_phase.
         """
-        if self.get_state(spieler, "schuss"):
+        if self.get_state(spieler, "schuss_verfuegbar", True):
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht="Der Jäger greift zu seiner Waffe!",
-                effekte={"jaeger_schuss": True},  # Generic effect name
-                state_updates={"jaeger_schuss": True},  # Set attribute on player
-                log_sichtbar_fuer="alle",
-            )
-        return None
-
-    def on_spieler_stirbt(
-        self, spieler: "Spieler", opfer: "Spieler", kontext: SpielKontext
-    ) -> Optional[AktionsErgebnis]:
-        """
-        Wenn der Jäger stirbt, wird seine Phase aktiviert.
-        """
-        if opfer.id == spieler.id and self.get_state(spieler, "schuss"):
-            # Jäger stirbt -> Trigger Jäger-Phase
-            # Das wird aktuell in app.py gehandhabt ("jaeger_phase")
-            # Aber wir können hier Effekte zurückgeben
-            return AktionsErgebnis(
-                erfolg=True,
-                nachricht="Der Jäger greift zu seiner Waffe!",
-                effekte={"trigger_jaeger_phase": True},
+                effekte={
+                    "trigger_phase": "jaeger_phase",
+                    "jaeger_schuss_bereit": True,
+                },
                 log_sichtbar_fuer="alle",
             )
         return None
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Village 3D appearance for Jaeger."""
-        appearance_features = [
+        """
+        Comprehensive 3D appearance for Jäger.
+
+        Features:
+        - Crossbow weapon
+        - Hunting cape
+        - Quiver with bolts
+        - Rugged outdoorsman appearance
+        - Hat
+        """
+        jaeger_features = [
+            # Crossbow in hand
+            *create_weapon("crossbow"),
+            # Hunting cape
+            create_cape(color="#4a3020", length="medium"),
+            # Hunter's hat
             AppearanceFeature(
-                feature_type="role_indicator",
-                geometry="sphere",
-                position={"x": 0, "y": 2.2, "z": 0.2},
-                scale={"x": 0.12, "y": 0.12, "z": 0.12},
-                color_source="role",
-                description="Role indicator orb",
-            )
+                feature_type="hunter_hat",
+                geometry="cylinder",
+                position={"x": 0, "y": 2.15, "z": 0},
+                scale={"x": 0.25, "y": 0.1, "z": 0.25},
+                color_source="custom",
+                custom_color="#3d2817",
+                roughness=0.7,
+                description="Hunter's hat brim",
+            ),
+            AppearanceFeature(
+                feature_type="hunter_hat_top",
+                geometry="cylinder",
+                position={"x": 0, "y": 2.22, "z": 0},
+                scale={"x": 0.18, "y": 0.12, "z": 0.18},
+                color_source="custom",
+                custom_color="#4a3520",
+                roughness=0.7,
+                description="Hunter's hat top",
+            ),
+            # Feather on hat
+            AppearanceFeature(
+                feature_type="hat_feather",
+                geometry="cone",
+                position={"x": 0.12, "y": 2.35, "z": 0},
+                scale={"x": 0.02, "y": 0.2, "z": 0.05},
+                rotation={"x": 0, "y": 0, "z": 15},
+                color_source="custom",
+                custom_color="#8B4513",
+                description="Feather on hat",
+            ),
+            # Quiver on back
+            AppearanceFeature(
+                feature_type="quiver",
+                geometry="cylinder",
+                position={"x": 0.15, "y": 1.2, "z": -0.2},
+                scale={"x": 0.08, "y": 0.4, "z": 0.08},
+                rotation={"x": -15, "y": 0, "z": 10},
+                color_source="custom",
+                custom_color="#5a4030",
+                roughness=0.8,
+                description="Bolt quiver",
+            ),
+            # Bolts in quiver
+            AppearanceFeature(
+                feature_type="bolts",
+                geometry="cylinder",
+                position={"x": 0.15, "y": 1.5, "z": -0.2},
+                scale={"x": 0.02, "y": 0.25, "z": 0.02},
+                rotation={"x": -15, "y": 0, "z": 10},
+                color_source="custom",
+                custom_color="#8B7355",
+                count=4,
+                count_arrangement="radial",
+                count_spacing=0.03,
+                description="Crossbow bolts",
+            ),
+            # Belt
+            AppearanceFeature(
+                feature_type="belt",
+                geometry="box",
+                position={"x": 0, "y": 0.85, "z": 0},
+                scale={"x": 0.35, "y": 0.05, "z": 0.32},
+                color_source="custom",
+                custom_color="#3d2817",
+                roughness=0.6,
+                description="Leather belt",
+            ),
+            # Belt buckle
+            AppearanceFeature(
+                feature_type="belt_buckle",
+                geometry="box",
+                position={"x": 0, "y": 0.85, "z": 0.16},
+                scale={"x": 0.06, "y": 0.06, "z": 0.02},
+                color_source="custom",
+                custom_color="#B8860B",
+                metallic=True,
+                roughness=0.3,
+                description="Belt buckle",
+            ),
         ]
 
         return RollenModell(
             modell_id="jaeger",
-            anzeige_name="Jaeger",
-            beschreibung="Jaeger appearance with custom features",
-            appearance_self_alive=appearance_features,
-            appearance_others_alive=appearance_features,
-            appearance_dead=[],
+            anzeige_name="Jäger",
+            beschreibung="Ein erfahrener Jäger mit Armbrust und scharfem Blick",
+            body=BodyModification(
+                height_multiplier=1.02,
+                width_multiplier=1.05,
+                skin_texture="smooth",
+            ),
+            appearance_self_alive=jaeger_features,
+            appearance_others_alive=jaeger_features,
+            appearance_dead=create_death_marker(),
             seher_sicht="good",
+            animations={
+                "idle": AnimationState(
+                    state_name="idle",
+                    sway_amplitude=0.01,
+                    sway_speed=0.6,
+                    head_tilt_range=25,
+                    look_around=True,
+                    blink_rate=2.5,
+                    breathing_visible=True,
+                ),
+                "aim": AnimationState(
+                    state_name="aim",
+                    sway_amplitude=0.0,
+                    head_tilt_range=5,
+                    look_around=False,
+                    blink_rate=1.0,
+                    gesture_chance=0.0,
+                ),
+            },
+            hint_effects=[
+                HintEffect3D(
+                    effect_id="look_away",
+                    effect_type="transform",
+                    rotate_to={"x": 0, "y": 45, "z": 0},
+                ),
+            ],
+            sound_on_action="crossbow_shot.mp3",
+            sound_on_death="hunter_death.mp3",
         )

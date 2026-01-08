@@ -58,7 +58,7 @@ class Hexenmeister(Role):
                 "Der Hexenmeister kann einen Spieler verfluchen "
                 "oder den Fluch aufheben."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#4c1d95",
             avatar_gradient_to="#2e1065",

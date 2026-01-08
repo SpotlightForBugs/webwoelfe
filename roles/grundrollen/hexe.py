@@ -9,7 +9,9 @@ from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
     RollenModell,
-    AppearanceFeature,
+    BodyModification,
+    AnimationState,
+    HintEffect3D,
     Role,
     RollenInfo,
     AktionsErgebnis,
@@ -17,6 +19,12 @@ from ..base import (
     StateField,
     StateType,
     DistributionConfig,
+    # Factory functions
+    create_witch_hat,
+    create_potion_bottles,
+    create_aura,
+    create_book,
+    create_death_marker,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -200,24 +208,132 @@ class Hexe(Role):
         return None
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
-        """Village 3D appearance for Hexe."""
-        appearance_features = [
+        """
+        Comprehensive 3D appearance for Hexe.
+
+        Features:
+        - Classic witch hat with brim
+        - Two potion bottles on belt (green heal, purple poison)
+        - Spell book
+        - Dark mystical aura
+        - Bubbling cauldron effect
+        """
+        # Check potion states for dynamic appearance
+        has_heal = self.get_state(spieler, "heiltrank", True)
+        has_poison = self.get_state(spieler, "gifttrank", True)
+
+        # Dynamic potion colors based on availability
+        potion_colors = []
+        potion_positions = []
+        if has_heal:
+            potion_colors.append("#00FF88")  # Green heal
+            potion_positions.append("left")
+        if has_poison:
+            potion_colors.append("#CC00FF")  # Purple poison
+            potion_positions.append("right")
+
+        hexe_features = [
+            # Classic witch hat with brim
+            *create_witch_hat(color="#1a1a1a", brim=True),
+            # Spell book in left hand
+            *create_book(color="#2a1a3a", glowing=True),
+            # Dark mystical aura
+            create_aura(color="#9900FF", intensity=0.3, pulsing=True),
+            # Long dark robes
             AppearanceFeature(
-                feature_type="role_indicator",
-                geometry="sphere",
-                position={"x": 0, "y": 2.2, "z": 0.2},
-                scale={"x": 0.12, "y": 0.12, "z": 0.12},
-                color_source="role",
-                description="Role indicator orb",
-            )
+                feature_type="robe",
+                geometry="cone",
+                position={"x": 0, "y": 0.7, "z": 0},
+                scale={"x": 0.42, "y": 1.15, "z": 0.38},
+                color_source="custom",
+                custom_color="#1a0a1a",
+                roughness=0.9,
+                description="Dark witch robes",
+            ),
+            # Gnarled nose (subtle)
+            AppearanceFeature(
+                feature_type="witch_nose",
+                geometry="cone",
+                position={"x": 0, "y": 1.82, "z": 0.25},
+                scale={"x": 0.03, "y": 0.06, "z": 0.04},
+                rotation={"x": -30, "y": 0, "z": 0},
+                color_source="skin",
+                description="Witch nose",
+            ),
         ]
+
+        # Add potions based on what's available
+        if potion_positions:
+            hexe_features.extend(create_potion_bottles(potion_positions, potion_colors))
+
+        # Add bubbling particles if any potion available
+        if has_heal or has_poison:
+            hexe_features.append(AppearanceFeature(
+                feature_type="potion_bubbles",
+                geometry="sphere",
+                position={"x": 0.35 if has_poison else -0.35, "y": 0.85, "z": 0.2},
+                scale={"x": 0.03, "y": 0.03, "z": 0.03},
+                color_source="custom",
+                custom_color="#CC00FF" if has_poison else "#00FF88",
+                emissive=True,
+                emissive_intensity=0.8,
+                opacity=0.7,
+                animation="float",
+                animation_speed=2.0,
+                particle_effect="magic",
+                particle_color="#CC00FF" if has_poison else "#00FF88",
+                particle_rate=5.0,
+                description="Bubbling potion effect",
+            ))
 
         return RollenModell(
             modell_id="hexe",
             anzeige_name="Hexe",
-            beschreibung="Hexe appearance with custom features",
-            appearance_self_alive=appearance_features,
-            appearance_others_alive=appearance_features,
-            appearance_dead=[],
+            beschreibung="Eine mächtige Hexe mit Zaubertränken und Grimoire",
+            body=BodyModification(
+                height_multiplier=0.92,
+                hunch_back=True,
+                slouch_angle=8,
+                skin_texture="smooth",
+            ),
+            appearance_self_alive=hexe_features,
+            appearance_others_alive=hexe_features,
+            appearance_dead=create_death_marker(),
             seher_sicht="good",
+            animations={
+                "idle": AnimationState(
+                    state_name="idle",
+                    sway_amplitude=0.015,
+                    sway_speed=0.4,
+                    head_tilt_range=12,
+                    look_around=True,
+                    blink_rate=2.0,
+                    breathing_visible=True,
+                    gesture_chance=0.1,
+                ),
+                "brewing": AnimationState(
+                    state_name="brewing",
+                    sway_amplitude=0.02,
+                    bob_amplitude=0.01,
+                    bob_speed=0.5,
+                    gesture_chance=0.3,
+                ),
+            },
+            hint_effects=[
+                HintEffect3D(
+                    effect_id="aura_glow",
+                    effect_type="glow",
+                    glow_color="#9900FF",
+                    glow_intensity=0.8,
+                    glow_pulse=True,
+                ),
+                HintEffect3D(
+                    effect_id="suspicious_behavior",
+                    effect_type="shake",
+                    shake_intensity=0.05,
+                    shake_duration=0.3,
+                ),
+            ],
+            sound_on_action="potion_bubble.mp3",
+            sound_ambient="cauldron_simmer.mp3",
         )

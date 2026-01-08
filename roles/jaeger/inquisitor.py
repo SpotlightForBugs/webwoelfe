@@ -58,7 +58,7 @@ class Inquisitor(Role):
             erzaehler_nacht=(
                 "Der Inquisitor schärft sein Schwert der Gerechtigkeit im Schlaf."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#1e3a8a",
             avatar_gradient_to="#172554",

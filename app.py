@@ -38,9 +38,7 @@ import game_logic
 import secrets
 import os
 import random
-import inspect
-from datetime import datetime
-import inspect
+from datetime import datetime, timezone
 
 # App Konfiguration
 app = Flask(__name__)
@@ -62,6 +60,101 @@ def log_ts(msg: str):
     """Log mit Timestamp für Debugging"""
     ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
     print(f"[{ts}] {msg}")
+
+
+def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
+    """
+    Apply effects from an AktionsErgebnis to the game state.
+
+    This centralizes effect handling that was previously hardcoded for each role.
+    Effects are defined dynamically by each role's execute_action method.
+    """
+    if not ergebnis or not ergebnis.effekte:
+        return
+
+    effekte = ergebnis.effekte
+
+    # Handle kill effects
+    if "toeten" in effekte:
+        ziel_id = effekte["toeten"]
+        todesursache = effekte.get("todesursache", "unbekannt")
+        ziel = db.session.get(Spieler, ziel_id)
+        if ziel:
+            game_logic.toete_spieler(ziel, todesursache)
+            socketio.emit(
+                "spieler_gestorben",
+                {
+                    "spieler_id": ziel.id,
+                    "spieler_name": ziel.name,
+                    "todesart": todesursache,
+                    "rolle": ziel.rolle,
+                },
+                room=raum.code,
+            )
+
+    # Handle heal effects
+    if "heilen" in effekte or "geschuetzt" in effekte:
+        geschuetzt_id = effekte.get("heilen") or effekte.get("geschuetzt")
+        geschuetzt_spieler = db.session.get(Spieler, geschuetzt_id)
+        if geschuetzt_spieler:
+            geschuetzt_spieler.set_state("global.ist_beschuetzt", True)
+
+    # Handle phase trigger effects
+    if "trigger_phase" in effekte:
+        phase_name = effekte["trigger_phase"]
+        log_ts(f"[Effekt] Triggering special phase: {phase_name}")
+        raum.aktuelle_phase = phase_name
+
+    # Handle love connection effects (from Amor)
+    if "verliebte" in effekte:
+        verliebte_ids = effekte["verliebte"]
+        if len(verliebte_ids) == 2:
+            s1 = db.session.get(Spieler, verliebte_ids[0])
+            s2 = db.session.get(Spieler, verliebte_ids[1])
+            if s1 and s2:
+                s1.set_state("global.verliebt_mit_id", s2.id)
+                s2.set_state("global.verliebt_mit_id", s1.id)
+                game_logic.log_eintrag(
+                    raum.id,
+                    f"Du bist verliebt in {s2.name}!",
+                    sichtbar_fuer=str(s1.id),
+                )
+                game_logic.log_eintrag(
+                    raum.id,
+                    f"Du bist verliebt in {s1.name}!",
+                    sichtbar_fuer=str(s2.id),
+                )
+
+    # Handle state updates from the result
+    if ergebnis.state_updates:
+        for key, value in ergebnis.state_updates.items():
+            spieler.set_state(key, value)
+
+    # Handle private info notifications
+    if ergebnis.private_infos:
+        for player_id, info in ergebnis.private_infos.items():
+            if "overlay" in info:
+                socketio.emit(
+                    "zeige_overlay",
+                    info["overlay"],
+                    room=f"player_{player_id}",
+                )
+            if "nachricht" in info:
+                socketio.emit(
+                    "private_nachricht",
+                    {"nachricht": info["nachricht"], "typ": info.get("alert_type", "info")},
+                    room=f"player_{player_id}",
+                )
+
+    # Handle hexe-specific potion effects (for backward compatibility)
+    if "heiltrank_verbraucht" in effekte:
+        spieler.set_state("hexe.heiltrank", False)
+    if "gifttrank_verbraucht" in effekte:
+        spieler.set_state("hexe.gifttrank", False)
+
+    # Handle heiler target memory
+    if "heiler_ziel_merken" in effekte:
+        spieler.set_state("heiler.letztes_ziel", effekte["heiler_ziel_merken"])
 
 
 # Initialisierung
@@ -477,7 +570,6 @@ def spiel(code):
 
 
 @app.route("/api/role/<role_name>/ui", methods=["GET"])
-@app.route("/api/role/<role_name>/ui", methods=["GET"])
 def get_role_ui(role_name):
     """Get UI definition for a specific role."""
     from roles import RoleRegistry, SpielKontext
@@ -766,7 +858,9 @@ def get_phase_role_mapping():
 
     # Mapping für Nacht-Phasen
     for role in RoleRegistry.get_all():
-        if role.info.nacht_aktiv:
+        # Check if role is active at night using the Role methods, not RollenInfo
+        is_nacht_aktiv = role.is_active_on_first_night() or role.is_active_on_every_night()
+        if is_nacht_aktiv:
             phase_name = role.get_phase_name()
             mapping[phase_name] = {
                 "role_name": role.info.name,
@@ -803,7 +897,6 @@ def get_role_info(role_name):
             "role": role.to_dict(),
         }
     )
-    return jsonify({"success": True})
 
 
 @app.route("/api/raum/<code>/erzaehler/random", methods=["POST"])
@@ -862,8 +955,9 @@ def waehle_zufaelligen_erzaehler(code):
 # HILFSFUNKTIONEN
 # ============================================================================
 
+from typing import Optional
 
-def hole_aktuellen_spieler():
+def hole_aktuellen_spieler() -> Optional[Spieler]:
     """Holt den aktuellen Spieler basierend auf der Session"""
     session_id = session.get("spieler_session")
     if not session_id:
@@ -1370,18 +1464,24 @@ def handle_aktion(data):
     aktion_typ = data.get("aktion")
     ziel_id = data.get("ziel_id")
 
-    # Validierung
-    if not spieler.ist_am_leben and aktion_typ != "jaeger_schuss":
-        emit("fehler", {"nachricht": "Du bist tot und kannst nicht handeln"})
-        return
+    # Validate player can act - dead players can only act if their role allows it (e.g., Jäger)
+    if not spieler.ist_am_leben:
+        from roles import RoleRegistry
+        rolle_obj = RoleRegistry.get(spieler.rolle)
+        # Check if role has on_eigener_tod that enables post-death action
+        can_act_when_dead = rolle_obj and hasattr(rolle_obj, 'on_eigener_tod')
+        if not can_act_when_dead:
+            emit("fehler", {"nachricht": "Du bist tot und kannst nicht handeln"})
+            return
 
     # Aktion basierend auf Phase und Rolle verarbeiten
     erfolg = verarbeite_aktion(spieler, raum, aktion_typ, ziel_id)
 
     if erfolg:
-        # Map action types to 3D effect types
-        # Base mapping for common action types
         from roles.enums import AktionsTyp
+        from roles import RoleRegistry
+
+        # Map action types to 3D effect types dynamically
         AKTION_TYP_EFFEKT = {
             AktionsTyp.HEILEN.value: "heal",
             AktionsTyp.SCHUETZEN.value: "protect",
@@ -1393,30 +1493,17 @@ def handle_aktion(data):
             AktionsTyp.MARKIEREN.value: "mark",
             AktionsTyp.BLOCKIEREN.value: "block",
         }
-        
-        # Legacy mapping for specific action strings (backwards compatibility)
-        legacy_effect_map = {
-            "hexe_heilen": "heal",
-            "heiler_schuetzen": "protect",
-            "hexe_toeten": "poison",
-            "hexe_vergiften": "poison",
-            "werwolf_wahl": "attack",
-            "armor_verlieben": "love",
-            "seherin_sehen": "reveal",
-        }
 
         effect_data = {"aktion": aktion_typ}
         
-        # Try to determine effect from action type
-        effekt = legacy_effect_map.get(aktion_typ)
-        if not effekt:
-            # Try to extract base action type (e.g., "sandmann_einschlaefern" -> check role)
-            from roles import RoleRegistry
-            rolle_obj = RoleRegistry.get(spieler.rolle)
-            if rolle_obj:
-                aktions_typ_enum = rolle_obj.aktions_typ
-                effekt = AKTION_TYP_EFFEKT.get(aktions_typ_enum.value if hasattr(aktions_typ_enum, 'value') else str(aktions_typ_enum))
-        
+        # Determine effect from role's action type
+        rolle_obj = RoleRegistry.get(spieler.rolle)
+        effekt = None
+        if rolle_obj:
+            aktions_typ_enum = rolle_obj.aktions_typ
+            if hasattr(aktions_typ_enum, 'value'):
+                effekt = AKTION_TYP_EFFEKT.get(aktions_typ_enum.value)
+
         if ziel_id and effekt:
             effect_data["effekt"] = effekt
             effect_data["ziel_id"] = ziel_id
@@ -1532,7 +1619,7 @@ def handle_hinweis_senden(data):
             "spielerId": spieler.id,
             "spielerName": spieler.name,
             "hintTyp": hinweis_typ,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         },
         room=raum.code,
     )
@@ -1603,7 +1690,7 @@ def generiere_zufalls_hinweis(raum_id: int):
                 "spielerId": spieler.id,
                 "spielerName": spieler.name,
                 "hintTyp": hinweis_typ,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             },
             room=raum.code,
         )
@@ -1627,17 +1714,14 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     # Special case: Day voting (not role-specific)
     if aktion_typ == "tag_wahl":
-        # Unterstütze beide alte "abstimmung" und neue "diskussion_abstimmung" Phase
-        if raum.aktuelle_phase not in ["abstimmung", "diskussion_abstimmung"]:
+        if raum.aktuelle_phase != "tag_abstimmung":
             return False
         if game_logic.hat_spieler_gewaehlt(spieler, raum, raum.aktuelle_phase):
             return False
         game_logic.registriere_aktion(
             raum.id, raum.runde, raum.aktuelle_phase, "tag_wahl", spieler.id, ziel_id
         )
-        # Speichere Vote in phase_votes JSON für live Updates
-        if raum.aktuelle_phase == "diskussion_abstimmung":
-            game_logic.speichere_abstimmungs_vote(raum, spieler.id, ziel_id)
+        game_logic.speichere_abstimmungs_vote(raum, spieler.id, ziel_id)
 
         # Broadcast: Zeige allen Spielern, wer für wen gestimmt hat
         ziel = db.session.get(Spieler, ziel_id)
@@ -1652,104 +1736,26 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                 },
                 room=raum.code,
             )
-            # Sende aktuelle Abstimmungs-Statistik für diskussion_abstimmung Phase
-            if raum.aktuelle_phase == "diskussion_abstimmung":
-                stats = game_logic.berechne_abstimmungs_statistik(raum)
-                socketio.emit(
-                    "abstimmung_status",
-                    {
-                        "gesamt_spieler": stats["gesamt_spieler"],
-                        "gesamt_votes": stats["gesamt_votes"],
-                        "noch_zu_waehlen": stats["noch_zu_waehlen"],
-                        "ziel_stimmen": stats["ziel_stimmen"],
-                        "fuehrender_id": stats["fuehrender_id"],
-                        "fuehrende_stimmen": stats["fuehrende_stimmen"],
-                    },
-                    room=raum.code,
-                )
-        return True
-
-    # Special case: Jäger's last shot (happens after death, not in a phase)
-    elif aktion_typ == "jaeger_schuss":
-        if spieler.rolle != "Jäger" or not spieler.jaeger_schuss:
-            return False
-        spieler.jaeger_schuss = False
-        ziel = db.session.get(Spieler, ziel_id)
-        if ziel:
-            game_logic.toete_spieler(ziel, "jaeger")
-            # SICHER: Nur Name wird geteilt, Rolle erst nach Tod
-            emit(
-                "spieler_gestorben",
+            stats = game_logic.berechne_abstimmungs_statistik(raum)
+            socketio.emit(
+                "abstimmung_status",
                 {
-                    "spieler_id": ziel.id,
-                    "spieler_name": ziel.name,
-                    "todesart": "jaeger",
-                    "rolle": ziel.rolle,  # Rolle wird nach Tod enthuellt
+                    "gesamt_spieler": stats["gesamt_spieler"],
+                    "gesamt_votes": stats["gesamt_votes"],
+                    "noch_zu_waehlen": stats["noch_zu_waehlen"],
+                    "ziel_stimmen": stats["ziel_stimmen"],
+                    "fuehrender_id": stats["fuehrender_id"],
+                    "fuehrende_stimmen": stats["fuehrende_stimmen"],
                 },
                 room=raum.code,
             )
-            db.session.commit()
-            return True
-        return False
-
-    # Special case: Amor's love connection (requires 2 targets)
-    elif aktion_typ == "armor_verlieben":
-        log_ts(f"[Aktion] armor_verlieben von {spieler.name} (Rolle: {spieler.rolle})")
-        if spieler.rolle != "Amor" or raum.aktuelle_phase != "amor_phase":
-            log_ts(
-                f"[Aktion] ABGELEHNT: Rolle={spieler.rolle}, Phase={raum.aktuelle_phase}"
-            )
-            return False
-        if not spieler.armor_verliebt:
-            log_ts(f"[Aktion] ABGELEHNT: armor_verliebt bereits False")
-            return False
-
-        ziel_ids = ziel_id if isinstance(ziel_id, list) else [ziel_id]
-        if len(ziel_ids) != 2:
-            log_ts(f"[Aktion] ABGELEHNT: Nicht genau 2 Ziele ({len(ziel_ids)})")
-            return False
-
-        spieler1 = db.session.get(Spieler, ziel_ids[0])
-        spieler2 = db.session.get(Spieler, ziel_ids[1])
-
-        if spieler1 and spieler2:
-            spieler1.verliebt_mit_id = spieler2.id
-            spieler2.verliebt_mit_id = spieler1.id
-            spieler.armor_verliebt = False
-            db.session.commit()
-            log_ts(f"[Aktion] ERFOLG: {spieler1.name} ❤️ {spieler2.name}")
-
-            # SICHER: Verliebte werden privat informiert
-            game_logic.log_eintrag(
-                raum.id,
-                f"Du bist verliebt in {spieler2.name}!",
-                sichtbar_fuer=str(spieler1.id),
-            )
-            game_logic.log_eintrag(
-                raum.id,
-                f"Du bist verliebt in {spieler1.name}!",
-                sichtbar_fuer=str(spieler2.id),
-            )
-
-            # WICHTIG: Aktion registrieren, damit Phasenwechsel ausgelöst wird
-            game_logic.registriere_aktion(
-                raum.id,
-                raum.runde,
-                raum.aktuelle_phase,
-                "armor_verlieben",
-                spieler.id,
-                ziel_ids[0],  # Erstes Ziel als Referenz
-            )
-
-            return True
-        return False
+        return True
 
     # ==========================================================================
-    # GENERIC ACTION HANDLER for all roles
-    # Uses the Role classes to process actions dynamically
+    # DYNAMIC ACTION HANDLER - Replaces all hardcoded role-specific handlers
+    # Actions like jaeger_schuss, armor_verlieben are now handled by role classes
     # ==========================================================================
 
-    # Try generic handler first
     from roles import RoleRegistry
     from roles.base import SpielKontext
     from roles.enums import Phase
@@ -1760,7 +1766,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         log_ts(f"[Aktion] FEHLER: Rolle {spieler.rolle} nicht gefunden")
         return False
 
-    # Build a SpielKontext for the role
+    # Build SpielKontext
     lebende = [
         s.id
         for s in Spieler.query.filter_by(
@@ -1811,25 +1817,61 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         lebende_spieler=lebende,
         tote_spieler=tote,
         aktionen_diese_runde=aktionen_liste,
-        werwolf_opfer_id=werwolf_opfer_id  # Pass the victim to the context
+        werwolf_opfer_id=werwolf_opfer_id
     )
 
-    # Check if the current phase matches the role's phase
+    # Build target list (handle both single and multi-target)
+    if isinstance(ziel_id, list):
+        targets = [db.session.get(Spieler, tid) for tid in ziel_id if tid]
+        targets = [t for t in targets if t]  # Filter None
+    elif ziel_id:
+        target = db.session.get(Spieler, ziel_id)
+        targets = [target] if target else []
+    else:
+        targets = []
+
+    # Try role's execute_action method first (handles special cases like multi-target)
+    log_ts(f"[Aktion] Trying execute_action for {spieler.rolle}: {aktion_typ}")
+    try:
+        ergebnis = rolle_obj.execute_action(aktion_typ, spieler, targets, kontext)
+        if ergebnis and ergebnis.erfolg:
+            log_ts(f"[Aktion] execute_action SUCCESS: {ergebnis.nachricht}")
+
+            # Register the action
+            first_target_id = targets[0].id if targets else None
+            game_logic.registriere_aktion(
+                raum.id, raum.runde, raum.aktuelle_phase, aktion_typ, spieler.id, first_target_id
+            )
+
+            # Apply effects from the role action
+            _apply_action_effects(ergebnis, spieler, targets, raum, kontext)
+
+            db.session.commit()
+            return True
+        elif ergebnis and not ergebnis.erfolg:
+            log_ts(f"[Aktion] execute_action FAILED: {ergebnis.nachricht}")
+            # Don't fall through - this was a valid action type that just failed validation
+            return False
+    except Exception as e:
+        log_ts(f"[Aktion] execute_action error: {e}")
+        # Fall through to legacy handler
+
+    # Check if the current phase matches the role's phase (for night actions)
     rolle_phase = rolle_obj.get_phase_name()
     if raum.aktuelle_phase != rolle_phase:
+        # Not the right phase for this role's normal action
         log_ts(
-            f"[Aktion] ABGELEHNT: Falsche Phase. Erwartet={rolle_phase}, Aktuell={raum.aktuelle_phase}"
+            f"[Aktion] Phase mismatch: expected={rolle_phase}, current={raum.aktuelle_phase}"
         )
-        return False
+        # Still allow special actions that aren't phase-dependent
+        pass
 
-    # Get the target player if specified
-    ziel = db.session.get(Spieler, ziel_id) if ziel_id else None
+    # Legacy fallback: use on_nacht_aktion for single-target actions
+    ziel = targets[0] if len(targets) == 1 else None
 
-    # Execute the role's night action
-    log_ts(f"[Aktion] Ausfuehren: {spieler.rolle} -> {ziel.name if ziel else 'None'}")
-    
+    log_ts(f"[Aktion] Fallback to on_nacht_aktion: {spieler.rolle} -> {ziel.name if ziel else 'None'}")
+
     # Pass 'aktion' only if accepted by the method signature
-    # (Fixes compatibility with legacy roles like Heiler that don't accept 'aktion')
     sig = inspect.signature(rolle_obj.on_nacht_aktion)
     call_kwargs = {}
     if "aktion" in sig.parameters:
@@ -1839,28 +1881,14 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     if ergebnis and ergebnis.erfolg:
         # Register the action
+        rolle_phase = rolle_obj.get_phase_name()
+        first_target_id = targets[0].id if targets else None
         game_logic.registriere_aktion(
-            raum.id, raum.runde, rolle_phase, aktion_typ, spieler.id, ziel_id
+            raum.id, raum.runde, rolle_phase, aktion_typ, spieler.id, first_target_id
         )
 
-        # Apply effects from the role action
-        if ergebnis.effekte:
-            # Heiler protection
-            if "geschuetzt" in ergebnis.effekte:
-                geschuetzt_id = ergebnis.effekte["geschuetzt"]
-                geschuetzt_spieler = db.session.get(Spieler, geschuetzt_id)
-                if geschuetzt_spieler:
-                    geschuetzt_spieler.ist_beschuetzt = True
-
-            # Remember Heiler's target for next round
-            if "heiler_ziel_merken" in ergebnis.effekte:
-                spieler.heiler_geschuetzt = ergebnis.effekte["heiler_ziel_merken"]
-
-            # Hexe potion usage
-            if "heiltrank_verbraucht" in ergebnis.effekte:
-                spieler.hexe_heiltrank = False
-            if "gifttrank_verbraucht" in ergebnis.effekte:
-                spieler.hexe_gifttrank = False
+        # Apply effects using centralized handler
+        _apply_action_effects(ergebnis, spieler, targets, raum, kontext)
 
         # Send role-specific results
         if spieler.rolle == "Seherin" and ergebnis.effekte:
@@ -1967,7 +1995,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
                 if geheilt and geheilt.ziel_spieler_id == opfer.id:
                     log_ts(f"[Nacht] {opfer.name} wurde von Hexe geheilt!")
                 # Pruefen ob vom Heiler geschuetzt
-                elif opfer.ist_beschuetzt:
+                elif opfer.get_state("global.ist_beschuetzt", False):
                     log_ts(f"[Nacht] {opfer.name} wurde vom Heiler geschützt!")
                 else:
                     log_ts(f"[Nacht] {opfer.name} STIRBT durch Werwolf!")
@@ -1992,7 +2020,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
 
         # Heiler-Schutz zuruecksetzen
         for s in Spieler.query.filter_by(raum_id=raum.id).all():
-            s.ist_beschuetzt = False
+            s.set_state("global.ist_beschuetzt", False)
         db.session.commit()
 
         log_ts(f"[Nacht] Tote in dieser Nacht: {len(tote)}")
@@ -2013,52 +2041,21 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             db.session.commit()
             socketio.emit("spiel_ende", ende, room=raum.code)
 
-    elif alte_phase == "abstimmung":
-        # Tag-Abstimmung auswerten
-        ergebnis = game_logic.tag_abstimmung(raum)
-
-        if ergebnis:
-            if ergebnis.get("kein_opfer"):
-                socketio.emit(
-                    "abstimmung_ergebnis",
-                    {"kein_opfer": True, "nachricht": ergebnis.get("nachricht")},
-                    room=raum.code,
-                )
-            else:
-                opfer = db.session.get(Spieler, ergebnis["opfer_id"])
-                if opfer:
-                    tod_ergebnis = game_logic.toete_spieler(opfer, "abstimmung")
-                    socketio.emit(
-                        "abstimmung_ergebnis",
-                        {
-                            "opfer_name": ergebnis["opfer_name"],
-                            "opfer_rolle": ergebnis["opfer_rolle"],
-                            "stimmen": ergebnis["stimmen"],
-                            "jaeger_aktiv": "jaeger_schuss"
-                            in tod_ergebnis.get("folge_aktionen", []),
-                        },
-                        room=raum.code,
-                    )
-
-                    # Jaeger-Phase einschalten wenn noetig
-                    if "jaeger_schuss" in tod_ergebnis.get("folge_aktionen", []):
-                        raum.aktuelle_phase = "jaeger_phase"
-                        db.session.commit()
-
-        # Initialisierung für Diskussions-Phase (Timer setzen)
-        if neue_phase == "diskussion_abstimmung":
-            game_logic.starte_diskussion_abstimmung(raum)
-
-        # Spielende pruefen
+    elif alte_phase == "hinrichtung":
+        # Hinrichtung abgeschlossen - prüfe Spielende
         ende = game_logic.pruefe_spielende(raum)
         if ende:
             raum.aktuelle_phase = "spiel_ende"
             db.session.commit()
             socketio.emit("spiel_ende", ende, room=raum.code)
 
+    # Initialisierung für Tag-Abstimmung (Timer setzen)
+    if neue_phase == "tag_abstimmung":
+        game_logic.starte_tag_abstimmung(raum)
+
 
 # ============================================================================
-# DISKUSSION & ABSTIMMUNG PHASE - Timer & Voting Display
+# TAG-ABSTIMMUNG PHASE - Timer & Voting Display
 # ============================================================================
 
 
@@ -2070,7 +2067,7 @@ def handle_timer_tick():
         return
 
     raum = db.session.get(Raum, spieler.raum_id)
-    if not raum or raum.aktuelle_phase != "diskussion_abstimmung":
+    if not raum or raum.aktuelle_phase != "tag_abstimmung":
         return
 
     verbleibend = game_logic.get_verbleibende_zeit(raum)
@@ -2086,7 +2083,7 @@ def handle_timer_tick():
     )
 
     # Wenn Timer abgelaufen und Phase noch nicht gewechselt, wechsle jetzt
-    if abgelaufen and raum.aktuelle_phase == "diskussion_abstimmung":
+    if abgelaufen and raum.aktuelle_phase == "tag_abstimmung":
         # Werte Abstimmung aus
         ergebnis = game_logic.werte_abstimmung_aus(raum)
         if ergebnis:
@@ -2096,14 +2093,14 @@ def handle_timer_tick():
             if not ergebnis.get("kein_opfer"):
                 opfer = db.session.get(Spieler, ergebnis["opfer_id"])
                 if opfer:
-                    tod_ergebnis = game_logic.toete_spieler(opfer, "abstimmung")
+                    tod_ergebnis = game_logic.toete_spieler(opfer, "hinrichtung")
                     socketio.emit(
                         "spieler_gestorben",
                         {
                             "spieler_id": opfer.id,
                             "spieler_name": opfer.name,
                             "rolle": opfer.rolle,
-                            "todesart": "abstimmung",
+                            "todesart": "hinrichtung",
                         },
                         room=raum.code,
                     )
@@ -2114,14 +2111,14 @@ def handle_timer_tick():
 
 @socketio.on("spieler_abstimmen")
 def handle_spieler_abstimmen(data):
-    """Registriert die Abstimmung eines Spielers in der diskussion_abstimmung Phase"""
+    """Registriert die Abstimmung eines Spielers"""
     spieler = hole_aktuellen_spieler()
     if not spieler:
         emit("fehler", {"nachricht": "Nicht angemeldet"})
         return
 
     raum = db.session.get(Raum, spieler.raum_id)
-    if not raum or raum.aktuelle_phase != "diskussion_abstimmung":
+    if not raum or raum.aktuelle_phase != "tag_abstimmung":
         emit("fehler", {"nachricht": "Nicht in der richtigen Phase"})
         return
 
@@ -2142,14 +2139,14 @@ def handle_spieler_abstimmen(data):
                 if not ergebnis.get("kein_opfer"):
                     opfer = db.session.get(Spieler, ergebnis["opfer_id"])
                     if opfer:
-                        tod_ergebnis = game_logic.toete_spieler(opfer, "abstimmung")
+                        tod_ergebnis = game_logic.toete_spieler(opfer, "hinrichtung")
                         socketio.emit(
                             "spieler_gestorben",
                             {
                                 "spieler_id": opfer.id,
                                 "spieler_name": opfer.name,
                                 "rolle": opfer.rolle,
-                                "todesart": "abstimmung",
+                                "todesart": "hinrichtung",
                             },
                             room=raum.code,
                         )
@@ -2164,13 +2161,13 @@ def handle_spieler_abstimmen(data):
 
 @socketio.on("hole_abstimmung_status")
 def handle_hole_abstimmung_status():
-    """Sends current voting status for diskussion_abstimmung phase"""
+    """Sends current voting status for tag_abstimmung phase"""
     spieler = hole_aktuellen_spieler()
     if not spieler:
         return
 
     raum = db.session.get(Raum, spieler.raum_id)
-    if not raum or raum.aktuelle_phase != "diskussion_abstimmung":
+    if not raum or raum.aktuelle_phase != "tag_abstimmung":
         return
 
     stats = game_logic.berechne_abstimmungs_statistik(raum)
@@ -2198,9 +2195,9 @@ def handle_hole_abstimmung_status():
     )
 
 
-@socketio.on("starte_diskussion_abstimmung")
-def handle_starte_diskussion_abstimmung(data):
-    """Startet die diskussion_abstimmung Phase (nur für Erzähler)"""
+@socketio.on("starte_tag_abstimmung")
+def handle_starte_tag_abstimmung(data):
+    """Startet die tag_abstimmung Phase (nur für Erzähler)"""
     spieler = hole_aktuellen_spieler()
     if not spieler or not spieler.ist_erzaehler:
         emit("fehler", {"nachricht": "Nur der Erzähler kann diese Phase starten"})
@@ -2211,7 +2208,7 @@ def handle_starte_diskussion_abstimmung(data):
         return
 
     dauer = data.get("dauer_sekunden", 120)
-    game_logic.starte_diskussion_abstimmung(raum, dauer)
+    game_logic.starte_tag_abstimmung(raum, dauer)
 
     socketio.emit(
         "phase_gestartet",

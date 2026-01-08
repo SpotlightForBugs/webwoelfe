@@ -56,7 +56,7 @@ class Buddler(Role):
                 "Der Buddler erwacht und wählt ein Grab. "
                 "Flüstere ihm die Todesursache zu."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#78716c",
             avatar_gradient_to="#57534e",

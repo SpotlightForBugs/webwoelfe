@@ -65,7 +65,7 @@ class Selbstmoerder(Role):
             name="Selbstmoerder",
             team=Team.SOLO,
             kategorie=Kategorie.SOLO,
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             beschreibung=(
                 "Du bist der Selbstmörder. Dein Ziel: Vom Dorf gehängt "
                 "werden! Du gewinnst nur so - stirbst du durch Wölfe, "

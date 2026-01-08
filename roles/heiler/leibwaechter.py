@@ -46,7 +46,7 @@ class Leibwaechter(Role):
             farbe="#0ea5e9",
             prioritaet=54,
             erzaehler_nacht=("Der Leibwächter erwacht und wählt seinen Schützling."),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#0ea5e9",
             avatar_gradient_to="#0284c7",

@@ -60,7 +60,7 @@ class Tonks(Role):
                 "Tonks erwacht. Möchte sie ihre Gestalt wandeln und "
                 "die Rolle eines Toten annehmen?"
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#a855f7",
             avatar_gradient_to="#7e22ce",

@@ -9,14 +9,21 @@ from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
     RollenModell,
+    BodyModification,
+    AnimationState,
+    HintEffect3D,
     Role,
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
     StateField,
     StateType,
-    RollenModell,
-    AppearanceFeature,
+    create_wolf_ears,
+    create_claws,
+    create_fangs,
+    create_glowing_eyes,
+    create_tail,
+    create_death_marker,
 )
 from ..enums import Team, Kategorie, SichtTyp, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -46,7 +53,6 @@ class Hund(Role):
     """
 
     def state_fields(self) -> List[StateField]:
-        """Definiert die Zustandsfelder des Hundes."""
         return [
             StateField("herrchen_id", StateType.PLAYER_ID, None, "ID des Herrchens"),
             StateField("gewaehlt", StateType.BOOL, False, "Herrchen bereits gewählt"),
@@ -54,112 +60,434 @@ class Hund(Role):
         ]
 
     def get_sichtbare_rolle(self, spieler: "Spieler") -> str:
-        """
-        Der Hund sieht sich als "Hund" oder "Werhund" je nach Verwandlung.
-
-        - Vor Verwandlung: "Hund"
-        - Nach Verwandlung: "Werhund" (behält Hund-Identität, aber mit Wolf-Aspekt)
-        """
         if self.get_state(spieler, "verwandelt"):
             return "Werhund"
         return "Hund"
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """
-        Dynamische Modell-Auswahl basierend auf Verwandlungsstatus.
+        Comprehensive 3D appearance for Hund.
 
-        - Vor Verwandlung: hund (normaler Hund)
-        - Nach Verwandlung: werhund (Wolf-Hund Hybrid)
+        IMPORTANT: The dog looks like an ACTUAL DOG - a quadruped animal!
+        NOT a humanoid with dog ears!
+
+        - Body is horizontal (quadruped stance)
+        - Four legs
+        - Dog head with snout, floppy ears
+        - Wagging tail
         """
-        # Dog ears (floppy, not pointy like wolf)
-        dog_ears = [
-            AppearanceFeature(
-                feature_type="dog_ear_left",
-                geometry="box",
-                position={"x": -0.2, "y": 2.0, "z": 0},
-                scale={"x": 0.15, "y": 0.25, "z": 0.08},
-                rotation={"x": 0, "y": 0, "z": -30},
-                color_source="custom",
-                custom_color="#8B4513",
-                description="Floppy dog ear",
-            ),
-            AppearanceFeature(
-                feature_type="dog_ear_right",
-                geometry="box",
-                position={"x": 0.2, "y": 2.0, "z": 0},
-                scale={"x": 0.15, "y": 0.25, "z": 0.08},
-                rotation={"x": 0, "y": 0, "z": 30},
-                color_source="custom",
-                custom_color="#8B4513",
-                description="Floppy dog ear",
-            ),
-        ]
-
-        # Wolf ears (pointy) for when transformed
-        wolf_ears = [
-            AppearanceFeature(
-                feature_type="wolf_ear_left",
-                geometry="cone",
-                position={"x": -0.18, "y": 2.25, "z": -0.05},
-                scale={"x": 0.12, "y": 0.2, "z": 0.1},
-                rotation={"x": 0, "y": 0, "z": -15},
-                color_source="custom",
-                custom_color="#8B4513",
-                description="Wolf ear after transformation",
-            ),
-            AppearanceFeature(
-                feature_type="wolf_ear_right",
-                geometry="cone",
-                position={"x": 0.18, "y": 2.25, "z": -0.05},
-                scale={"x": 0.12, "y": 0.2, "z": 0.1},
-                rotation={"x": 0, "y": 0, "z": 15},
-                color_source="custom",
-                custom_color="#8B4513",
-                description="Wolf ear after transformation",
-            ),
-        ]
-
-        # Claws appear after transformation
-        wolf_claws = [
-            AppearanceFeature(
-                feature_type="claws",
-                geometry="cone",
-                count=6,
-                position={"x": 0, "y": 0.52, "z": 0.08},
-                scale={"x": 0.025, "y": 0.08, "z": 0.02},
-                rotation={"x": -10, "y": 0, "z": 0},
-                color_source="custom",
-                custom_color="#888888",
-                description="Sharp claws after transformation",
-            ),
-        ]
-
-        # Check transformation state
         is_transformed = self.get_state(spieler, "verwandelt")
 
         if is_transformed:
-            # After transformation: looks like a werewolf to everyone
-            appearance = wolf_ears + wolf_claws
+            # WERHUND - Werewolf-dog hybrid (more menacing, larger)
+            werhund_features = [
+                # Werewolf body (still quadruped but larger, more menacing)
+                AppearanceFeature(
+                    feature_type="body",
+                    geometry="capsule",
+                    position={"x": 0, "y": 0.8, "z": 0},
+                    scale={"x": 0.5, "y": 0.4, "z": 0.9},
+                    rotation={"x": 0, "y": 0, "z": 90},
+                    color_source="custom",
+                    custom_color="#2a1a0a",
+                    roughness=0.9,
+                    description="Wolf-dog body",
+                ),
+                # Head (wolf-like, larger)
+                AppearanceFeature(
+                    feature_type="head",
+                    geometry="sphere",
+                    position={"x": 0, "y": 1.1, "z": 0.6},
+                    scale={"x": 0.3, "y": 0.28, "z": 0.35},
+                    color_source="custom",
+                    custom_color="#2a1a0a",
+                    roughness=0.9,
+                    description="Wolf-dog head",
+                ),
+                # Snout (longer, more wolf-like)
+                AppearanceFeature(
+                    feature_type="snout",
+                    geometry="box",
+                    position={"x": 0, "y": 1.0, "z": 0.85},
+                    scale={"x": 0.12, "y": 0.1, "z": 0.25},
+                    color_source="custom",
+                    custom_color="#2a1a0a",
+                    description="Wolf snout",
+                ),
+                # Pointed wolf ears (after transformation)
+                AppearanceFeature(
+                    feature_type="ear_left",
+                    geometry="cone",
+                    position={"x": -0.12, "y": 1.35, "z": 0.55},
+                    scale={"x": 0.08, "y": 0.18, "z": 0.06},
+                    rotation={"x": 15, "y": 0, "z": -15},
+                    color_source="custom",
+                    custom_color="#2a1a0a",
+                    description="Pointed wolf ear",
+                ),
+                AppearanceFeature(
+                    feature_type="ear_right",
+                    geometry="cone",
+                    position={"x": 0.12, "y": 1.35, "z": 0.55},
+                    scale={"x": 0.08, "y": 0.18, "z": 0.06},
+                    rotation={"x": 15, "y": 0, "z": 15},
+                    color_source="custom",
+                    custom_color="#2a1a0a",
+                    description="Pointed wolf ear",
+                ),
+                # Glowing red eyes
+                create_glowing_eyes(color="#FF2222", intensity=0.8),
+                # Front left leg
+                AppearanceFeature(
+                    feature_type="front_leg_left",
+                    geometry="cylinder",
+                    position={"x": -0.18, "y": 0.35, "z": 0.35},
+                    scale={"x": 0.08, "y": 0.4, "z": 0.08},
+                    color_source="custom",
+                    custom_color="#2a1a0a",
+                    description="Front left leg",
+                ),
+                # Front right leg
+                AppearanceFeature(
+                    feature_type="front_leg_right",
+                    geometry="cylinder",
+                    position={"x": 0.18, "y": 0.35, "z": 0.35},
+                    scale={"x": 0.08, "y": 0.4, "z": 0.08},
+                    color_source="custom",
+                    custom_color="#2a1a0a",
+                    description="Front right leg",
+                ),
+                # Back left leg
+                AppearanceFeature(
+                    feature_type="back_leg_left",
+                    geometry="cylinder",
+                    position={"x": -0.18, "y": 0.35, "z": -0.35},
+                    scale={"x": 0.08, "y": 0.4, "z": 0.08},
+                    color_source="custom",
+                    custom_color="#2a1a0a",
+                    description="Back left leg",
+                ),
+                # Back right leg
+                AppearanceFeature(
+                    feature_type="back_leg_right",
+                    geometry="cylinder",
+                    position={"x": 0.18, "y": 0.35, "z": -0.35},
+                    scale={"x": 0.08, "y": 0.4, "z": 0.08},
+                    color_source="custom",
+                    custom_color="#2a1a0a",
+                    description="Back right leg",
+                ),
+                # Wolf tail (bushy, raised)
+                AppearanceFeature(
+                    feature_type="tail",
+                    geometry="capsule",
+                    position={"x": 0, "y": 1.0, "z": -0.7},
+                    scale={"x": 0.1, "y": 0.35, "z": 0.1},
+                    rotation={"x": -45, "y": 0, "z": 0},
+                    color_source="custom",
+                    custom_color="#2a1a0a",
+                    animation="sway",
+                    animation_speed=0.3,
+                    description="Bushy wolf tail",
+                ),
+                # Fangs
+                *create_fangs(color="#FFFEF0"),
+                # Claws on paws
+                AppearanceFeature(
+                    feature_type="claw_front",
+                    geometry="cone",
+                    position={"x": 0, "y": 0.08, "z": 0.45},
+                    scale={"x": 0.02, "y": 0.06, "z": 0.02},
+                    rotation={"x": 15, "y": 0, "z": 0},
+                    color_source="custom",
+                    custom_color="#1a1a1a",
+                    count=4,
+                    count_arrangement="linear",
+                    count_spacing=0.04,
+                    description="Front claws",
+                ),
+            ]
+
             return RollenModell(
                 modell_id="werhund",
                 anzeige_name="Werhund",
-                beschreibung="Ein Hund der zum Werwolf wurde",
-                appearance_self_alive=appearance,
-                appearance_others_alive=appearance,
-                appearance_dead=[],
-                seher_sicht="bad",  # Now seen as bad by Seher
+                beschreibung="Ein verwandelter Hund - jetzt ein gefährlicher Werwolf",
+                body=BodyModification(
+                    height_multiplier=0.7,  # Lower to ground (quadruped)
+                    width_multiplier=1.5,
+                    skin_texture="fur",
+                    claw_hands=True,
+                ),
+                appearance_self_alive=werhund_features,
+                appearance_others_alive=werhund_features,
+                appearance_dead=create_death_marker(),
+                seher_sicht="bad",
+                animations={
+                    "idle": AnimationState(
+                        state_name="idle",
+                        sway_amplitude=0.02,
+                        sway_speed=0.4,
+                        breathing_visible=True,
+                        tail_wag=True,
+                    ),
+                },
+                hint_effects=[
+                    HintEffect3D(
+                        effect_id="growl",
+                        effect_type="shake",
+                        shake_intensity=0.05,
+                        shake_duration=0.3,
+                    ),
+                ],
+                sound_on_action="wolf_growl.mp3",
             )
         else:
-            # Before transformation: looks like a dog
-            appearance = dog_ears
+            # NORMAL DOG - Friendly, floppy ears, wagging tail
+            dog_features = [
+                # Dog body (horizontal, quadruped)
+                AppearanceFeature(
+                    feature_type="body",
+                    geometry="capsule",
+                    position={"x": 0, "y": 0.7, "z": 0},
+                    scale={"x": 0.4, "y": 0.35, "z": 0.7},
+                    rotation={"x": 0, "y": 0, "z": 90},
+                    color_source="custom",
+                    custom_color="#8B4513",  # Brown
+                    roughness=0.85,
+                    description="Dog body",
+                ),
+                # Dog head
+                AppearanceFeature(
+                    feature_type="head",
+                    geometry="sphere",
+                    position={"x": 0, "y": 0.95, "z": 0.5},
+                    scale={"x": 0.25, "y": 0.22, "z": 0.28},
+                    color_source="custom",
+                    custom_color="#8B4513",
+                    roughness=0.85,
+                    description="Dog head",
+                ),
+                # Dog snout
+                AppearanceFeature(
+                    feature_type="snout",
+                    geometry="box",
+                    position={"x": 0, "y": 0.88, "z": 0.72},
+                    scale={"x": 0.1, "y": 0.08, "z": 0.18},
+                    color_source="custom",
+                    custom_color="#8B4513",
+                    description="Dog snout",
+                ),
+                # Nose
+                AppearanceFeature(
+                    feature_type="nose",
+                    geometry="sphere",
+                    position={"x": 0, "y": 0.9, "z": 0.82},
+                    scale={"x": 0.04, "y": 0.03, "z": 0.03},
+                    color_source="custom",
+                    custom_color="#1a1a1a",
+                    description="Dog nose",
+                ),
+                # Floppy left ear
+                AppearanceFeature(
+                    feature_type="ear_left",
+                    geometry="box",
+                    position={"x": -0.15, "y": 1.05, "z": 0.45},
+                    scale={"x": 0.12, "y": 0.2, "z": 0.06},
+                    rotation={"x": 0, "y": 10, "z": -50},
+                    color_source="custom",
+                    custom_color="#6B3A0F",  # Darker brown
+                    animation="sway",
+                    animation_speed=0.3,
+                    animation_amplitude=0.3,
+                    description="Floppy ear left",
+                ),
+                # Floppy right ear
+                AppearanceFeature(
+                    feature_type="ear_right",
+                    geometry="box",
+                    position={"x": 0.15, "y": 1.05, "z": 0.45},
+                    scale={"x": 0.12, "y": 0.2, "z": 0.06},
+                    rotation={"x": 0, "y": -10, "z": 50},
+                    color_source="custom",
+                    custom_color="#6B3A0F",
+                    animation="sway",
+                    animation_speed=0.3,
+                    animation_amplitude=0.3,
+                    description="Floppy ear right",
+                ),
+                # Eyes (friendly, brown)
+                AppearanceFeature(
+                    feature_type="eye_left",
+                    geometry="sphere",
+                    position={"x": -0.08, "y": 1.0, "z": 0.68},
+                    scale={"x": 0.04, "y": 0.04, "z": 0.02},
+                    color_source="custom",
+                    custom_color="#3D2314",
+                    description="Left eye",
+                ),
+                AppearanceFeature(
+                    feature_type="eye_right",
+                    geometry="sphere",
+                    position={"x": 0.08, "y": 1.0, "z": 0.68},
+                    scale={"x": 0.04, "y": 0.04, "z": 0.02},
+                    color_source="custom",
+                    custom_color="#3D2314",
+                    description="Right eye",
+                ),
+                # Front left leg
+                AppearanceFeature(
+                    feature_type="front_leg_left",
+                    geometry="cylinder",
+                    position={"x": -0.15, "y": 0.3, "z": 0.28},
+                    scale={"x": 0.06, "y": 0.35, "z": 0.06},
+                    color_source="custom",
+                    custom_color="#8B4513",
+                    description="Front left leg",
+                ),
+                # Front right leg
+                AppearanceFeature(
+                    feature_type="front_leg_right",
+                    geometry="cylinder",
+                    position={"x": 0.15, "y": 0.3, "z": 0.28},
+                    scale={"x": 0.06, "y": 0.35, "z": 0.06},
+                    color_source="custom",
+                    custom_color="#8B4513",
+                    description="Front right leg",
+                ),
+                # Back left leg
+                AppearanceFeature(
+                    feature_type="back_leg_left",
+                    geometry="cylinder",
+                    position={"x": -0.15, "y": 0.3, "z": -0.28},
+                    scale={"x": 0.06, "y": 0.35, "z": 0.06},
+                    color_source="custom",
+                    custom_color="#8B4513",
+                    description="Back left leg",
+                ),
+                # Back right leg
+                AppearanceFeature(
+                    feature_type="back_leg_right",
+                    geometry="cylinder",
+                    position={"x": 0.15, "y": 0.3, "z": -0.28},
+                    scale={"x": 0.06, "y": 0.35, "z": 0.06},
+                    color_source="custom",
+                    custom_color="#8B4513",
+                    description="Back right leg",
+                ),
+                # Wagging tail (curled up, happy)
+                AppearanceFeature(
+                    feature_type="tail",
+                    geometry="cylinder",
+                    position={"x": 0, "y": 0.85, "z": -0.55},
+                    scale={"x": 0.05, "y": 0.25, "z": 0.05},
+                    rotation={"x": -60, "y": 0, "z": 0},
+                    color_source="custom",
+                    custom_color="#8B4513",
+                    animation="sway",
+                    animation_speed=2.0,  # Fast wagging!
+                    animation_amplitude=1.5,
+                    description="Wagging tail",
+                ),
+                # Collar
+                AppearanceFeature(
+                    feature_type="collar",
+                    geometry="torus",
+                    position={"x": 0, "y": 0.9, "z": 0.4},
+                    scale={"x": 0.15, "y": 0.02, "z": 0.15},
+                    rotation={"x": 90, "y": 0, "z": 0},
+                    color_source="custom",
+                    custom_color="#CC0000",  # Red collar
+                    description="Dog collar",
+                ),
+                # Collar tag
+                AppearanceFeature(
+                    feature_type="collar_tag",
+                    geometry="sphere",
+                    position={"x": 0, "y": 0.82, "z": 0.52},
+                    scale={"x": 0.03, "y": 0.04, "z": 0.01},
+                    color_source="custom",
+                    custom_color="#FFD700",  # Gold tag
+                    metallic=True,
+                    description="Collar tag",
+                ),
+                # Paws (white/lighter)
+                AppearanceFeature(
+                    feature_type="paw_front_left",
+                    geometry="sphere",
+                    position={"x": -0.15, "y": 0.08, "z": 0.28},
+                    scale={"x": 0.07, "y": 0.05, "z": 0.08},
+                    color_source="custom",
+                    custom_color="#D2B48C",  # Tan paws
+                    description="Front left paw",
+                ),
+                AppearanceFeature(
+                    feature_type="paw_front_right",
+                    geometry="sphere",
+                    position={"x": 0.15, "y": 0.08, "z": 0.28},
+                    scale={"x": 0.07, "y": 0.05, "z": 0.08},
+                    color_source="custom",
+                    custom_color="#D2B48C",
+                    description="Front right paw",
+                ),
+                AppearanceFeature(
+                    feature_type="paw_back_left",
+                    geometry="sphere",
+                    position={"x": -0.15, "y": 0.08, "z": -0.28},
+                    scale={"x": 0.07, "y": 0.05, "z": 0.08},
+                    color_source="custom",
+                    custom_color="#D2B48C",
+                    description="Back left paw",
+                ),
+                AppearanceFeature(
+                    feature_type="paw_back_right",
+                    geometry="sphere",
+                    position={"x": 0.15, "y": 0.08, "z": -0.28},
+                    scale={"x": 0.07, "y": 0.05, "z": 0.08},
+                    color_source="custom",
+                    custom_color="#D2B48C",
+                    description="Back right paw",
+                ),
+            ]
+
             return RollenModell(
                 modell_id="hund",
                 anzeige_name="Hund",
-                beschreibung="Ein treuer Hund",
-                appearance_self_alive=appearance,
-                appearance_others_alive=appearance,
-                appearance_dead=[],
-                seher_sicht="good",  # Seen as good by Seher
+                beschreibung="Ein treuer, freundlicher Hund mit wedelndem Schwanz",
+                body=BodyModification(
+                    height_multiplier=0.6,  # Low to ground - it's a dog!
+                    width_multiplier=1.3,
+                    skin_texture="fur",
+                ),
+                appearance_self_alive=dog_features,
+                appearance_others_alive=dog_features,
+                appearance_dead=create_death_marker(),
+                seher_sicht="good",
+                animations={
+                    "idle": AnimationState(
+                        state_name="idle",
+                        sway_amplitude=0.01,
+                        sway_speed=0.5,
+                        breathing_visible=True,
+                        tail_wag=True,
+                    ),
+                    "excited": AnimationState(
+                        state_name="excited",
+                        sway_amplitude=0.03,
+                        bob_amplitude=0.02,
+                        bob_speed=3.0,
+                        tail_wag=True,
+                    ),
+                },
+                hint_effects=[
+                    HintEffect3D(
+                        effect_id="bark",
+                        effect_type="shake",
+                        shake_intensity=0.03,
+                        shake_duration=0.2,
+                    ),
+                ],
+                sound_on_action="dog_bark.mp3",
+                sound_ambient="dog_panting.mp3",
             )
 
     @property

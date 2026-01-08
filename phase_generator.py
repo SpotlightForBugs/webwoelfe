@@ -318,58 +318,94 @@ def initialize_game_phases(raum: Raum):
 def get_next_phase(raum: Raum) -> str:
     """
     Determines the next phase for the given room.
+    Uses dynamic role-based night phases and fixed day phases.
+
+    Special phases (like jaeger_phase) are now handled dynamically
+    based on role's get_triggered_phases() method.
     """
     logger.info(f"Getting next phase for room {raum.code} (Current: {raum.aktuelle_phase})")
 
     current_phase = raum.aktuelle_phase
 
-    # 1. Handle Standard Day Cycle (Fixed Order)
-    # tag_start -> diskussion_abstimmung -> tag_ende -> nacht_start
-
+    # 1. Setup -> Night
     if current_phase == "rollen_verteilt":
         return "nacht_start"
 
+    # 2. Day Cycle (Fixed Order)
     if current_phase == "tag_start":
-        return "diskussion_abstimmung"
+        return "tag_abstimmung"
 
-    if current_phase == "diskussion_abstimmung":
-        # Check if voting resulted in death (handled in game_logic)
-        # Usually goes to tag_ende or jaeger_phase
-        # If jaeger_phase is active, it will be set by game_logic
+    if current_phase == "tag_abstimmung":
+        return "hinrichtung"
+
+    if current_phase == "hinrichtung":
         return "tag_ende"
-
-    if current_phase == "jaeger_phase":
-        return "tag_ende" # Back to normal flow
 
     if current_phase == "tag_ende":
         return "nacht_start"
 
-    # 2. Handle Night Cycle (Dynamic)
-    # nacht_start -> [role phases] -> nacht_ende -> tag_start
+    # 3. Special phases triggered by role effects (DYNAMIC - no more hardcoding!)
+    # Check if current phase is a role-triggered special phase
+    special_phase_next = _get_special_phase_next_phase(raum, current_phase)
+    if special_phase_next:
+        return special_phase_next
 
-    if current_phase == "nacht_start" or "nacht" in current_phase or "phase" in current_phase:
-        # Generate dynamic night phases
+    # 4. Night Cycle (Dynamic based on active roles)
+    if current_phase == "nacht_start" or "nacht" in current_phase or "_phase" in current_phase:
         night_phases = generate_phases_for_game(raum)
 
         if not night_phases:
             logger.warning("No night phases generated! Skipping to day.")
-            return "tag_start"
+            return "nacht_ende"
 
-        # Find current index
         try:
             idx = night_phases.index(current_phase)
             if idx + 1 < len(night_phases):
                 return night_phases[idx + 1]
             else:
-                # End of night phases
-                return "tag_start"
+                return "nacht_ende"
         except ValueError:
-            # Current phase not in night list (maybe we just started night?)
             if current_phase == "nacht_start":
-                return night_phases[0] if night_phases else "tag_start"
+                return night_phases[0] if night_phases else "nacht_ende"
+            logger.warning(f"Phase {current_phase} not in night phases, going to nacht_ende")
+            return "nacht_ende"
 
-            # Fallback: Start of night or Day if lost
-            logger.warning(f"Current phase {current_phase} not found in night phases {night_phases}")
-            return "tag_start"
+    if current_phase == "nacht_ende":
+        return "tag_start"
 
-    return "tag_start" # Fallback
+    # Fallback
+    logger.warning(f"Unknown phase {current_phase}, defaulting to tag_start")
+    return "tag_start"
+
+
+def _get_special_phase_next_phase(raum: Raum, current_phase: str) -> Optional[str]:
+    """
+    Check if the current phase is a role-triggered special phase and return
+    the next phase based on the role's configuration.
+
+    This replaces hardcoded logic like 'if current_phase == "jaeger_phase": return "tag_ende"'
+    """
+    from roles import RoleRegistry
+
+    # Check all roles for special phase configurations
+    for role in RoleRegistry.get_all():
+        try:
+            triggered_phases = role.get_triggered_phases()
+            for phase_config in triggered_phases:
+                if phase_config.phase_name == current_phase:
+                    # Found the role that owns this special phase
+                    if phase_config.next_phase_override:
+                        logger.info(f"Special phase {current_phase} -> {phase_config.next_phase_override}")
+                        return phase_config.next_phase_override
+                    else:
+                        # Default: return to normal day/night flow
+                        # If it was triggered during day, go back to day_end
+                        # If during night, continue to nacht_ende
+                        logger.info(f"Special phase {current_phase} -> returning to normal flow (tag_ende)")
+                        return "tag_ende"
+        except Exception as e:
+            logger.debug(f"Error checking triggered phases for {role.info.name}: {e}")
+            continue
+
+    return None
+

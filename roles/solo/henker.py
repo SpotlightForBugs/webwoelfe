@@ -58,7 +58,7 @@ class Henker(Role):
             erzaehler_nacht=(
                 "Der Henker erwacht (nur erste Nacht) und waehlt sein Ziel."
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#525252",
             avatar_gradient_to="#262626",

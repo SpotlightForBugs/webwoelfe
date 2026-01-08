@@ -48,7 +48,7 @@ class Giftmischerin(Role):
             erzaehler_nacht=(
                 "Die Giftmischerin erwacht. Möchte sie ihr Gift einsetzen?"
             ),
-            erweiterung=Erweiterung.SONDEREDITION,
+            erweiterung=Erweiterung.COMMUNITY,
             # Visual Styling
             avatar_gradient_from="#84cc16",
             avatar_gradient_to="#4d7c0f",

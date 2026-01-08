@@ -58,7 +58,7 @@ export default class Village3DPlayCanvas {
 
     // Role colors for player appearance - Loaded dynamically from API
     this.roleColors = {
-      default: new pc.Color(0.3, 0.5, 0.8), // Same as Dorfbewohner - default fallback
+      default: new pc.Color(0.3, 0.5, 0.8), // Blue default fallback (Dorfbewohner has custom appearance)
     };
 
     // Role model definitions - Loaded dynamically from API
@@ -141,6 +141,14 @@ export default class Village3DPlayCanvas {
   }
 
   init() {
+    // Check minimum container size to prevent PlayCanvas errors
+    const minHeight = 300;
+    if (this.container.clientHeight < minHeight) {
+      console.error(`Viewport height is too small: ${this.container.clientHeight}`);
+      // Set container to minimum height
+      this.container.style.minHeight = `${minHeight}px`;
+    }
+
     // Create canvas
     this.canvas = document.createElement("canvas");
     this.canvas.style.width = "100%";
@@ -957,6 +965,71 @@ export default class Village3DPlayCanvas {
     tree.setPosition(x, 0, z);
     tree.setLocalEulerAngles(0, Math.random() * 360, 0);
     this.app.root.addChild(tree);
+  }
+
+  createBush(x, z) {
+    const bush = new pc.Entity("Bush");
+
+    // Create a cluster of spheres for a bushy appearance
+    const clusterCount = 3 + Math.floor(Math.random() * 3);
+    const bushMat = this.getMaterial({
+      name: "BushFoliage",
+      diffuse: new pc.Color(0.1, 0.2 + Math.random() * 0.1, 0.08),
+      specular: new pc.Color(0.02, 0.05, 0.02),
+    });
+
+    for (let i = 0; i < clusterCount; i++) {
+      const clump = new pc.Entity("BushClump");
+      clump.addComponent("model", { type: "sphere" });
+
+      const size = 0.5 + Math.random() * 0.8;
+      clump.setLocalScale(size, size * 0.8, size);
+
+      const angle = (i / clusterCount) * Math.PI * 2 + Math.random();
+      const dist = Math.random() * 0.5;
+
+      clump.setLocalPosition(
+        Math.cos(angle) * dist,
+        0.3 + Math.random() * 0.3,
+        Math.sin(angle) * dist,
+      );
+      clump.model.material = bushMat;
+      bush.addChild(clump);
+    }
+
+    bush.setPosition(x, 0, z);
+    bush.setLocalEulerAngles(0, Math.random() * 360, 0);
+    this.app.root.addChild(bush);
+  }
+
+  createRock(x, z) {
+    const rock = new pc.Entity("Rock");
+    rock.addComponent("model", { type: "box" });
+
+    // Irregular rock size
+    const size = 0.5 + Math.random() * 1.5;
+    rock.setLocalScale(
+      size * (0.8 + Math.random() * 0.4),
+      size * (0.3 + Math.random() * 0.4),
+      size * (0.8 + Math.random() * 0.4),
+    );
+
+    // Random rotation for natural look
+    rock.setLocalEulerAngles(
+      Math.random() * 20 - 10,
+      Math.random() * 360,
+      Math.random() * 20 - 10,
+    );
+
+    const rockMat = this.getMaterial({
+      name: "Rock",
+      diffuse: new pc.Color(0.3 + Math.random() * 0.1, 0.3 + Math.random() * 0.1, 0.35 + Math.random() * 0.1),
+      specular: new pc.Color(0.1, 0.1, 0.1),
+    });
+    rock.model.material = rockMat;
+
+    rock.setPosition(x, size * 0.15, z);
+    this.app.root.addChild(rock);
   }
 
   createEnhancedAtmosphericEffects() {
@@ -1789,6 +1862,368 @@ export default class Village3DPlayCanvas {
   }
 
   /**
+   * Set players and create their 3D avatars
+   */
+  setPlayers(players) {
+    console.log('[Village3D] Setting players:', players);
+
+    // Store player data
+    this.players = players || [];
+
+    // Clear existing player entities
+    this.playerEntities.forEach((entity) => entity.destroy());
+    this.playerEntities.clear();
+    this.playerLabels.forEach((label) => label.destroy());
+    this.playerLabels.clear();
+
+    if (this.players.length === 0) {
+      console.warn('[Village3D] No players to display');
+      return;
+    }
+
+    // Calculate player positions in a circle
+    const numPlayers = this.players.length;
+    const radius = 10; // Distance from center
+
+    this.players.forEach((player, index) => {
+      const angle = (index / numPlayers) * Math.PI * 2;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+
+      this.createPlayerAvatar(player, x, z, angle);
+    });
+
+    console.log('[Village3D] Created', this.playerEntities.size, 'player avatars');
+  }
+
+  /**
+   * Create a 3D avatar for a player
+   */
+  createPlayerAvatar(player, x, z, angle) {
+    const playerEntity = new pc.Entity(`Player-${player.id}`);
+    playerEntity.playerData = player;
+
+    // Determine player color based on role
+    const roleName = player.rolle || 'default';
+    const roleColor = this.roleColors[roleName] || this.roleColors['default'] || new pc.Color(0.3, 0.5, 0.8);
+
+    // Dorfbewohner should have distinctive peasant/farmer appearance
+    const isDorfbewohner = roleName === 'Dorfbewohner';
+
+    // Create body parts
+    playerEntity.parts = {};
+
+    // Torso - Dorfbewohner gets brown/tan vest over white shirt
+    const torso = new pc.Entity('Torso');
+    torso.addComponent('model', { type: 'box' });
+    torso.setLocalScale(0.6, 0.8, 0.35);
+    torso.setLocalPosition(0, 1.3, 0);
+
+    const torsoColor = isDorfbewohner ? new pc.Color(0.55, 0.4, 0.25) : roleColor; // Brown vest for Dorfbewohner
+    const torsoMat = this.getMaterial({
+      name: `PlayerTorso-${player.id}`,
+      diffuse: torsoColor,
+      specular: new pc.Color(0.1, 0.1, 0.1),
+    });
+    torso.model.material = torsoMat;
+    playerEntity.addChild(torso);
+    playerEntity.parts.torso = torso;
+
+    // Add white shirt layer under vest for Dorfbewohner
+    if (isDorfbewohner) {
+      const shirt = new pc.Entity('Shirt');
+      shirt.addComponent('model', { type: 'box' });
+      shirt.setLocalScale(0.58, 0.5, 0.33);
+      shirt.setLocalPosition(0, -0.15, 0);
+
+      const shirtMat = this.getMaterial({
+        name: `PlayerShirt-${player.id}`,
+        diffuse: new pc.Color(0.9, 0.88, 0.82), // Off-white linen
+        specular: new pc.Color(0.05, 0.05, 0.05),
+      });
+      shirt.model.material = shirtMat;
+      torso.addChild(shirt);
+    }
+
+    // Head
+    const head = new pc.Entity('Head');
+    head.addComponent('model', { type: 'sphere' });
+    head.setLocalScale(0.45, 0.45, 0.45);
+    head.setLocalPosition(0, 2.0, 0);
+
+    const headMat = this.getMaterial({
+      name: `PlayerHead-${player.id}`,
+      diffuse: new pc.Color(0.95, 0.8, 0.7),
+      specular: new pc.Color(0.05, 0.05, 0.05),
+    });
+    head.model.material = headMat;
+    playerEntity.addChild(head);
+    playerEntity.parts.head = head;
+
+    // Add straw hat for Dorfbewohner
+    if (isDorfbewohner) {
+      const hat = new pc.Entity('StrawHat');
+      hat.addComponent('model', { type: 'cylinder' });
+      hat.setLocalScale(0.6, 0.08, 0.6);
+      hat.setLocalPosition(0, 0.4, 0);
+
+      const hatMat = this.getMaterial({
+        name: `PlayerHat-${player.id}`,
+        diffuse: new pc.Color(0.8, 0.7, 0.4), // Straw color
+        specular: new pc.Color(0.05, 0.05, 0.05),
+      });
+      hat.model.material = hatMat;
+      head.addChild(hat);
+
+      // Hat top
+      const hatTop = new pc.Entity('HatTop');
+      hatTop.addComponent('model', { type: 'cone' });
+      hatTop.setLocalScale(0.5, 0.25, 0.5);
+      hatTop.setLocalPosition(0, 0.55, 0);
+      hatTop.model.material = hatMat;
+      head.addChild(hatTop);
+    }
+
+    // Arms - Dorfbewohner has rolled-up sleeves (white shirt showing)
+    playerEntity.parts.arms = [];
+    for (let i = 0; i < 2; i++) {
+      const side = i === 0 ? -1 : 1;
+      const armPivot = new pc.Entity(`Arm-${i}`);
+      armPivot.setLocalPosition(side * 0.4, 1.6, 0);
+
+      const arm = new pc.Entity('ArmPart');
+      arm.addComponent('model', { type: 'box' });
+      arm.setLocalScale(0.15, 0.6, 0.15);
+      arm.setLocalPosition(0, -0.3, 0);
+
+      if (isDorfbewohner) {
+        // White shirt sleeves for Dorfbewohner
+        const sleeveMat = this.getMaterial({
+          name: `PlayerSleeve-${player.id}-${i}`,
+          diffuse: new pc.Color(0.9, 0.88, 0.82),
+          specular: new pc.Color(0.05, 0.05, 0.05),
+        });
+        arm.model.material = sleeveMat;
+      } else {
+        arm.model.material = torsoMat;
+      }
+
+      armPivot.addChild(arm);
+      playerEntity.addChild(armPivot);
+      playerEntity.parts.arms.push(armPivot);
+    }
+
+    // Legs - Dorfbewohner has brown trousers
+    playerEntity.parts.legs = [];
+    for (let i = 0; i < 2; i++) {
+      const side = i === 0 ? -0.15 : 0.15;
+      const leg = new pc.Entity(`Leg-${i}`);
+      leg.addComponent('model', { type: 'box' });
+      leg.setLocalScale(0.2, 0.7, 0.2);
+      leg.setLocalPosition(side, 0.55, 0);
+
+      const legColor = isDorfbewohner ? new pc.Color(0.4, 0.3, 0.2) : new pc.Color(0.2, 0.2, 0.3);
+      const legMat = this.getMaterial({
+        name: `PlayerLeg-${player.id}-${i}`,
+        diffuse: legColor,
+        specular: new pc.Color(0.05, 0.05, 0.05),
+      });
+      leg.model.material = legMat;
+      playerEntity.addChild(leg);
+      playerEntity.parts.legs.push(leg);
+    }
+
+    // Add farming tool accessory for Dorfbewohner (pitchfork/hoe)
+    if (isDorfbewohner) {
+      const tool = new pc.Entity('FarmTool');
+
+      // Tool handle
+      const handle = new pc.Entity('ToolHandle');
+      handle.addComponent('model', { type: 'cylinder' });
+      handle.setLocalScale(0.05, 1.2, 0.05);
+      handle.setLocalPosition(0.5, 1.2, 0);
+      handle.setLocalEulerAngles(0, 0, -20);
+
+      const handleMat = this.getMaterial({
+        name: `ToolHandle-${player.id}`,
+        diffuse: new pc.Color(0.4, 0.3, 0.2),
+        specular: new pc.Color(0.05, 0.05, 0.05),
+      });
+      handle.model.material = handleMat;
+      playerEntity.addChild(handle);
+
+      // Tool head (hoe blade)
+      const blade = new pc.Entity('ToolBlade');
+      blade.addComponent('model', { type: 'box' });
+      blade.setLocalScale(0.3, 0.08, 0.08);
+      blade.setLocalPosition(0.2, 0.5, 0);
+      blade.setLocalEulerAngles(0, 0, 70);
+
+      const bladeMat = this.getMaterial({
+        name: `ToolBlade-${player.id}`,
+        diffuse: new pc.Color(0.5, 0.5, 0.55), // Metal gray
+        specular: new pc.Color(0.3, 0.3, 0.3),
+      });
+      blade.model.material = bladeMat;
+      handle.addChild(blade);
+    }
+
+    // Apply death effect if player is dead
+    if (!player.ist_am_leben) {
+      this.applyDeadEffect(playerEntity);
+    }
+
+    // Create name label
+    const label = this.createPlayerLabel(player.name, player.ist_am_leben);
+    label.setLocalPosition(0, 3.2, 0);
+    playerEntity.addChild(label);
+    this.playerLabels.set(player.id, label);
+
+    // Position and rotation
+    playerEntity.setPosition(x, 0, z);
+    playerEntity.setLocalEulerAngles(0, -(angle * 180 / Math.PI) + 180, 0);
+
+    // Animation state
+    playerEntity.animState = {
+      time: Math.random() * 10,
+      idleSpeed: 0.8 + Math.random() * 0.4,
+    };
+
+    // Add to scene
+    this.app.root.addChild(playerEntity);
+    this.playerEntities.set(player.id, playerEntity);
+  }
+
+  /**
+   * Create a name label for a player
+   */
+  createPlayerLabel(name, isAlive) {
+    const label = new pc.Entity('NameLabel');
+    label.addComponent('model', { type: 'plane' });
+    label.setLocalScale(2, 0.5, 1);
+
+    // Create canvas for text rendering
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+
+    // Draw text
+    ctx.fillStyle = isAlive ? 'rgba(255, 255, 255, 0.95)' : 'rgba(150, 150, 150, 0.7)';
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name, 256, 64);
+
+    if (!isAlive) {
+      ctx.fillStyle = 'rgba(200, 50, 50, 0.9)';
+      ctx.font = '36px Arial';
+      ctx.fillText('💀', 256, 90);
+    }
+
+    // Create texture from canvas
+    const texture = new pc.Texture(this.app.graphicsDevice, {
+      width: canvas.width,
+      height: canvas.height,
+      format: pc.PIXELFORMAT_RGBA8,
+    });
+    texture.setSource(canvas);
+    texture.minFilter = pc.FILTER_LINEAR;
+    texture.magFilter = pc.FILTER_LINEAR;
+    texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+    texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
+    // Create material
+    const labelMat = new pc.StandardMaterial();
+    labelMat.emissiveMap = texture;
+    labelMat.emissive = new pc.Color(1, 1, 1);
+    labelMat.opacity = 0.95;
+    labelMat.blendType = pc.BLEND_NORMAL;
+    labelMat.depthWrite = false;
+    labelMat.update();
+
+    label.model.material = labelMat;
+
+    return label;
+  }
+
+  /**
+   * Apply death effect to player entity
+   */
+  applyDeadEffect(entity) {
+    if (!entity || !entity.parts) return;
+
+    // Make all parts semi-transparent and darker
+    Object.values(entity.parts).forEach(part => {
+      if (Array.isArray(part)) {
+        part.forEach(p => {
+          if (p.model && p.model.material) {
+            p.model.material.opacity = 0.4;
+            p.model.material.blendType = pc.BLEND_NORMAL;
+            p.model.material.update();
+          }
+        });
+      } else if (part.model && part.model.material) {
+        part.model.material.opacity = 0.4;
+        part.model.material.blendType = pc.BLEND_NORMAL;
+        part.model.material.update();
+      }
+    });
+
+    // Tilt the entity
+    entity.setLocalEulerAngles(0, entity.getLocalEulerAngles().y, 30);
+  }
+
+  /**
+   * Set time of day (day/night cycle)
+   */
+  setTimeOfDay(isNight) {
+    console.log('[Village3D] Setting time of day:', isNight ? 'Night' : 'Day');
+
+    this.isNight = isNight;
+
+    if (isNight) {
+      // Night mode
+      if (this.app.scene.rendering) {
+        this.app.scene.rendering.ambientLight = new pc.Color(0.08, 0.1, 0.18);
+      } else {
+        this.app.scene.ambientLight = new pc.Color(0.08, 0.1, 0.18);
+      }
+
+      if (this.light) {
+        this.light.light.color = new pc.Color(0.6, 0.7, 0.95);
+        this.light.light.intensity = 0.8;
+      }
+
+      if (this.moon) this.moon.enabled = true;
+      if (this.sun) this.sun.enabled = false;
+      if (this.sunGlow) this.sunGlow.enabled = false;
+
+      // Enable fire light
+      if (this.fireLight) this.fireLight.enabled = true;
+    } else {
+      // Day mode
+      if (this.app.scene.rendering) {
+        this.app.scene.rendering.ambientLight = new pc.Color(0.4, 0.45, 0.5);
+      } else {
+        this.app.scene.ambientLight = new pc.Color(0.4, 0.45, 0.5);
+      }
+
+      if (this.light) {
+        this.light.light.color = new pc.Color(1, 0.95, 0.8);
+        this.light.light.intensity = 1.5;
+      }
+
+      if (this.moon) this.moon.enabled = false;
+      if (this.sun) this.sun.enabled = true;
+      if (this.sunGlow) this.sunGlow.enabled = true;
+
+      // Disable fire light during day
+      if (this.fireLight) this.fireLight.enabled = false;
+    }
+  }
+
+  /**
    * Create top information bar
    */
   createTopBar() {
@@ -2438,265 +2873,269 @@ export default class Village3DPlayCanvas {
     });
   }
 
-  // Keyboard Controls
-  // Only move if we are not in an input field
-  const activeElement = document.activeElement;
-  if (
-    activeElement &&
-    (activeElement.tagName === "INPUT" ||
-      activeElement.tagName === "TEXTAREA" ||
-      (activeElement.isContentEditable && activeElement.tagName !== "CANVAS"))
-  ) {
-    return;
-  }
-
-  if (
-    this.app.keyboard.isPressed(pc.KEY_LEFT) ||
-    this.app.keyboard.isPressed(pc.KEY_A)
-  ) {
-    this.targetCameraAngle += 2 * dt;
-  }
-  if (
-    this.app.keyboard.isPressed(pc.KEY_RIGHT) ||
-    this.app.keyboard.isPressed(pc.KEY_D)
-  ) {
-    this.targetCameraAngle -= 2 * dt;
-  }
-  if (
-    this.app.keyboard.isPressed(pc.KEY_UP) ||
-    this.app.keyboard.isPressed(pc.KEY_W)
-  ) {
-    this.targetCameraRadius -= 10 * dt;
-  }
-  if (
-    this.app.keyboard.isPressed(pc.KEY_DOWN) ||
-    this.app.keyboard.isPressed(pc.KEY_S)
-  ) {
-    this.targetCameraRadius += 10 * dt;
-  }
-
-  this.targetCameraRadius = pc.math.clamp(this.targetCameraRadius, 5, 50);
-
-  // Smooth camera rotation and zoom
-  this.cameraAngle = pc.math.lerp(
-    this.cameraAngle,
-    this.targetCameraAngle,
-    dt * 8,
-  );
-  this.cameraHeight = pc.math.lerp(
-    this.cameraHeight,
-    this.targetCameraHeight,
-    dt * 8,
-  );
-  this.cameraRadius = pc.math.lerp(
-    this.cameraRadius,
-    this.targetCameraRadius,
-    dt * 8,
-  );
-
-  // Update Camera Position
-  const x = Math.sin(this.cameraAngle) * this.cameraRadius;
-  const z = Math.cos(this.cameraAngle) * this.cameraRadius;
-
-  // Smooth camera movement (positional lerp)
-  const currentPos = this.camera.getPosition();
-  const targetPos = new pc.Vec3(x, this.cameraHeight, z);
-  const newPos = new pc.Vec3().lerp(currentPos, targetPos, dt * 10);
-
-  this.camera.setPosition(newPos);
-  this.camera.lookAt(0, 2, 0);
-
-  // Animate Enhanced Fire and Particles
-  if (this.fireLight && this.fireLight.enabled) {
-    // Flicker main light
-    this.fireLight.light.intensity = 3.5 + Math.random() * 1.5;
-
-    // Spawn new particles
-    if (this.particleSpawner) {
-      this.particleSpawner.spawn(dt);
+  /**
+   * Main update loop - handles camera controls, animations, and rendering
+   */
+  update(dt) {
+    // Keyboard Controls
+    // Only move if we are not in an input field
+    const activeElement = document.activeElement;
+    if (
+      activeElement &&
+      (activeElement.tagName === "INPUT" ||
+        activeElement.tagName === "TEXTAREA" ||
+        (activeElement.isContentEditable && activeElement.tagName !== "CANVAS"))
+    ) {
+      return;
     }
-  }
 
-  // Update all active particles (Fire, Smoke, Embers)
-  if (this.particles) {
-    for (let i = this.particles.length - 1; i >= 0; i--) {
-      const p = this.particles[i];
-      p.life += dt;
+    if (
+      this.app.keyboard.isPressed(pc.KEY_LEFT) ||
+      this.app.keyboard.isPressed(pc.KEY_A)
+    ) {
+      this.targetCameraAngle += 2 * dt;
+    }
+    if (
+      this.app.keyboard.isPressed(pc.KEY_RIGHT) ||
+      this.app.keyboard.isPressed(pc.KEY_D)
+    ) {
+      this.targetCameraAngle -= 2 * dt;
+    }
+    if (
+      this.app.keyboard.isPressed(pc.KEY_UP) ||
+      this.app.keyboard.isPressed(pc.KEY_W)
+    ) {
+      this.targetCameraRadius -= 10 * dt;
+    }
+    if (
+      this.app.keyboard.isPressed(pc.KEY_DOWN) ||
+      this.app.keyboard.isPressed(pc.KEY_S)
+    ) {
+      this.targetCameraRadius += 10 * dt;
+    }
 
-      if (p.life >= p.maxLife) {
-        p.entity.destroy();
-        this.particles.splice(i, 1);
-        continue;
-      }
+    this.targetCameraRadius = pc.math.clamp(this.targetCameraRadius, 5, 50);
 
-      // Move
-      const pos = p.entity.getPosition();
-      pos.add(p.velocity.clone().scale(dt));
-      p.entity.setPosition(pos);
+    // Smooth camera rotation and zoom
+    this.cameraAngle = pc.math.lerp(
+      this.cameraAngle,
+      this.targetCameraAngle,
+      dt * 8,
+    );
+    this.cameraHeight = pc.math.lerp(
+      this.cameraHeight,
+      this.targetCameraHeight,
+      dt * 8,
+    );
+    this.cameraRadius = pc.math.lerp(
+      this.cameraRadius,
+      this.targetCameraRadius,
+      dt * 8,
+    );
 
-      // Scale
-      const t = p.life / p.maxLife; // 0 to 1
-      const currentScale = pc.math.lerp(p.startScale, p.endScale, t);
-      p.entity.setLocalScale(currentScale, currentScale, currentScale);
+    // Update Camera Position
+    const x = Math.sin(this.cameraAngle) * this.cameraRadius;
+    const z = Math.cos(this.cameraAngle) * this.cameraRadius;
 
-      // Rotate
-      p.entity.rotateLocal(100 * dt, 50 * dt, 0);
+    // Smooth camera movement (positional lerp)
+    const currentPos = this.camera.getPosition();
+    const targetPos = new pc.Vec3(x, this.cameraHeight, z);
+    const newPos = new pc.Vec3().lerp(currentPos, targetPos, dt * 10);
 
-      // Fade / Color
-      if (p.type === "smoke") {
-        p.entity.model.material.opacity = 0.3 * (1 - t);
-        p.entity.model.material.update();
-      } else if (p.type === "flame") {
-        p.entity.model.material.opacity = 0.8 * (1 - t);
-        p.entity.model.material.update();
+    this.camera.setPosition(newPos);
+    this.camera.lookAt(0, 2, 0);
+
+    // Animate Enhanced Fire and Particles
+    if (this.fireLight && this.fireLight.enabled) {
+      // Flicker main light
+      this.fireLight.light.intensity = 3.5 + Math.random() * 1.5;
+
+      // Spawn new particles
+      if (this.particleSpawner) {
+        this.particleSpawner.spawn(dt);
       }
     }
-  }
 
-  // Update Stars Twinkle
-  if (this.stars && this.isNight) {
-    this.stars.forEach(star => {
-      star.twinklePhase += dt * star.twinkleSpeed;
-      const brightness = star.baseBrightness + Math.sin(star.twinklePhase) * 0.3;
-      const c = star.material.emissive;
-      // mod brightness without changing color hue too much
-      star.material.emissive = new pc.Color(
-        c.r * (1 + Math.sin(star.twinklePhase) * 0.1),
-        c.g * (1 + Math.sin(star.twinklePhase) * 0.1),
-        c.b * (1 + Math.sin(star.twinklePhase) * 0.1)
-      );
-      star.material.update();
-    });
-  }
+    // Update all active particles (Fire, Smoke, Embers)
+    if (this.particles) {
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        const p = this.particles[i];
+        p.life += dt;
 
-  // Update Ground Fog Drift
-  if (this.fogPlanes) {
-    this.fogPlanes.forEach(fp => {
-      fp.entity.rotateLocal(0, fp.rotSpeed * dt, 0);
-      const pos = fp.entity.getPosition();
-      // Gentle drift
-      pos.x += fp.driftSpeed.x * dt;
-      pos.z += fp.driftSpeed.y * dt;
+        if (p.life >= p.maxLife) {
+          p.entity.destroy();
+          this.particles.splice(i, 1);
+          continue;
+        }
 
-      // Loop around if too far
-      if (Math.abs(pos.x) > 60) pos.x *= -0.9;
-      if (Math.abs(pos.z) > 60) pos.z *= -0.9;
+        // Move
+        const pos = p.entity.getPosition();
+        pos.add(p.velocity.clone().scale(dt));
+        p.entity.setPosition(pos);
 
-      fp.entity.setPosition(pos);
-    });
-  }
+        // Scale
+        const t = p.life / p.maxLife; // 0 to 1
+        const currentScale = pc.math.lerp(p.startScale, p.endScale, t);
+        p.entity.setLocalScale(currentScale, currentScale, currentScale);
 
-  // Update animated features from role definitions
-  this.updateAnimatedFeatures(dt);
+        // Rotate
+        p.entity.rotateLocal(100 * dt, 50 * dt, 0);
 
-  // Animate fireflies (enhanced)
-  if (this.isNight && this.fireflies && this.fireflies.length > 0) {
-    this.fireflies.forEach((f) => {
-      if (!f.entity) return;
-      f.phase += dt * f.speed;
-
-      // Complex flight path
-      const newAngle = f.angle + Math.sin(f.phase) * 0.5;
-      const newRadius = f.radius + Math.cos(f.phase * 0.7) * 2;
-      const newHeight = f.height + Math.sin(f.phase * 1.3) * 1.5;
-
-      f.entity.setPosition(
-        Math.cos(newAngle) * newRadius,
-        Math.max(0.5, newHeight), // Don't go below ground
-        Math.sin(newAngle) * newRadius,
-      );
-
-      // Pulse intensity
-      if (f.entity.light) {
-        f.entity.light.intensity = 0.8 + Math.sin(f.phase * 5) * 0.4;
+        // Fade / Color
+        if (p.type === "smoke") {
+          p.entity.model.material.opacity = 0.3 * (1 - t);
+          p.entity.model.material.update();
+        } else if (p.type === "flame") {
+          p.entity.model.material.opacity = 0.8 * (1 - t);
+          p.entity.model.material.update();
+        }
       }
+    }
+
+    // Update Stars Twinkle
+    if (this.stars && this.isNight) {
+      this.stars.forEach(star => {
+        star.twinklePhase += dt * star.twinkleSpeed;
+        const brightness = star.baseBrightness + Math.sin(star.twinklePhase) * 0.3;
+        const c = star.material.emissive;
+        // mod brightness without changing color hue too much
+        star.material.emissive = new pc.Color(
+          c.r * (1 + Math.sin(star.twinklePhase) * 0.1),
+          c.g * (1 + Math.sin(star.twinklePhase) * 0.1),
+          c.b * (1 + Math.sin(star.twinklePhase) * 0.1)
+        );
+        star.material.update();
+      });
+    }
+
+    // Update Ground Fog Drift
+    if (this.fogPlanes) {
+      this.fogPlanes.forEach(fp => {
+        fp.entity.rotateLocal(0, fp.rotSpeed * dt, 0);
+        const pos = fp.entity.getPosition();
+        // Gentle drift
+        pos.x += fp.driftSpeed.x * dt;
+        pos.z += fp.driftSpeed.y * dt;
+
+        // Loop around if too far
+        if (Math.abs(pos.x) > 60) pos.x *= -0.9;
+        if (Math.abs(pos.z) > 60) pos.z *= -0.9;
+
+        fp.entity.setPosition(pos);
+      });
+    }
+
+    // Update animated features from role definitions
+    this.updateAnimatedFeatures(dt);
+
+    // Animate fireflies (enhanced)
+    if (this.isNight && this.fireflies && this.fireflies.length > 0) {
+      this.fireflies.forEach((f) => {
+        if (!f.entity) return;
+        f.phase += dt * f.speed;
+
+        // Complex flight path
+        const newAngle = f.angle + Math.sin(f.phase) * 0.5;
+        const newRadius = f.radius + Math.cos(f.phase * 0.7) * 2;
+        const newHeight = f.height + Math.sin(f.phase * 1.3) * 1.5;
+
+        f.entity.setPosition(
+          Math.cos(newAngle) * newRadius,
+          Math.max(0.5, newHeight), // Don't go below ground
+          Math.sin(newAngle) * newRadius,
+        );
+
+        // Pulse intensity
+        if (f.entity.light) {
+          f.entity.light.intensity = 0.8 + Math.sin(f.phase * 5) * 0.4;
+        }
+      });
+    }
+
+    // Make name labels always face camera (billboard effect)
+    this.playerLabels.forEach((label) => {
+      if (!label || !label.parent) return;
+
+      // Get world position of label
+      const labelPos = label.getPosition();
+      const cameraPos = this.camera.getPosition();
+
+      // Calculate world angle from label to camera
+      const dx = cameraPos.x - labelPos.x;
+      const dz = cameraPos.z - labelPos.z;
+      const worldAngle = Math.atan2(dx, dz) * (180 / Math.PI);
+
+      // Get parent's world rotation Y component
+      const parentRotation = label.parent.getEulerAngles();
+      const parentYRotation = parentRotation.y;
+
+      // Calculate local Y rotation needed (world angle minus parent's world Y rotation)
+      // Add 180 to flip the plane so the texture shows correctly (not mirrored)
+      const localYAngle = worldAngle - parentYRotation + 180;
+
+      // Set rotation: 90 on X to make plane vertical (facing forward), then local Y rotation to face camera
+      label.setLocalEulerAngles(90, localYAngle, 0);
     });
-  }
 
-  // Make name labels always face camera (billboard effect)
-  this.playerLabels.forEach((label) => {
-    if (!label || !label.parent) return;
+    // Animate Players
+    this.playerEntities.forEach((entity) => {
+      if (!entity.animState) return;
 
-    // Get world position of label
-    const labelPos = label.getPosition();
-    const cameraPos = this.camera.getPosition();
+      const anim = entity.animState;
+      anim.time += dt * anim.idleSpeed;
 
-    // Calculate world angle from label to camera
-    const dx = cameraPos.x - labelPos.x;
-    const dz = cameraPos.z - labelPos.z;
-    const worldAngle = Math.atan2(dx, dz) * (180 / Math.PI);
+      const isAlive = entity.playerData ? entity.playerData.ist_am_leben : true;
 
-    // Get parent's world rotation Y component
-    const parentRotation = label.parent.getEulerAngles();
-    const parentYRotation = parentRotation.y;
+      if (isAlive && entity.parts) {
+        // 1. Breathing (subtle scaling of torso)
+        if (entity.parts.torso) {
+          const breathing = Math.sin(anim.time * 2) * 0.03 + 1;
+          entity.parts.torso.setLocalScale(
+            0.6 * breathing,
+            0.8,
+            0.35 * breathing,
+          );
+        }
 
-    // Calculate local Y rotation needed (world angle minus parent's world Y rotation)
-    // Add 180 to flip the plane so the texture shows correctly (not mirrored)
-    const localYAngle = worldAngle - parentYRotation + 180;
+        // 2. Head Movement (idle looking around) - more noticeable
+        if (entity.parts.head) {
+          const headYaw = Math.sin(anim.time * 0.5) * 25; // Increased from 15
+          const headPitch = Math.cos(anim.time * 0.8) * 8; // Increased from 5
+          entity.parts.head.setLocalEulerAngles(headPitch, headYaw, 0);
+        }
 
-    // Set rotation: 90 on X to make plane vertical (facing forward), then local Y rotation to face camera
-    label.setLocalEulerAngles(90, localYAngle, 0);
-  });
+        // 3. Arm Swaying - more noticeable
+        if (entity.parts.arms && entity.parts.arms.length > 0) {
+          entity.parts.arms.forEach((armPivot, i) => {
+            const side = i === 0 ? 1 : -1;
+            const sway = Math.sin(anim.time * 1.5 + i * Math.PI) * 12; // Increased from 5
+            armPivot.setLocalEulerAngles(sway, 0, side * 8);
+          });
+        }
 
-  // Animate Players
-  this.playerEntities.forEach((entity) => {
-    if (!entity.animState) return;
+        // 4. Subtle body swaying - more noticeable
+        const bodyLean = Math.cos(anim.time * 0.4) * 2; // Increased from 1
+        const currentY = entity.getLocalEulerAngles().y;
+        entity.setLocalEulerAngles(0, currentY, bodyLean);
 
-    const anim = entity.animState;
-    anim.time += dt * anim.idleSpeed;
-
-    const isAlive = entity.playerData ? entity.playerData.ist_am_leben : true;
-
-    if (isAlive && entity.parts) {
-      // 1. Breathing (subtle scaling of torso)
-      if (entity.parts.torso) {
-        const breathing = Math.sin(anim.time * 2) * 0.03 + 1;
-        entity.parts.torso.setLocalScale(
-          0.6 * breathing,
-          0.8,
-          0.35 * breathing,
+        // 5. Special Accessory Animations
+        if (entity.parts.wings) {
+          entity.parts.wings.forEach((wing, i) => {
+            const side = i === 0 ? 1 : -1;
+            const flap = Math.sin(anim.time * 3) * 10;
+            wing.setLocalEulerAngles(0, side * (35 + flap), side * -25);
+          });
+        }
+      } else if (!isAlive && entity.parts) {
+        // Dead players have subtle "ghostly" floating if alive is false
+        const float = Math.sin(anim.time * 0.5) * 0.1;
+        entity.setLocalPosition(
+          entity.getLocalPosition().x,
+          float,
+          entity.getLocalPosition().z,
         );
       }
-
-      // 2. Head Movement (idle looking around) - more noticeable
-      if (entity.parts.head) {
-        const headYaw = Math.sin(anim.time * 0.5) * 25; // Increased from 15
-        const headPitch = Math.cos(anim.time * 0.8) * 8; // Increased from 5
-        entity.parts.head.setLocalEulerAngles(headPitch, headYaw, 0);
-      }
-
-      // 3. Arm Swaying - more noticeable
-      if (entity.parts.arms && entity.parts.arms.length > 0) {
-        entity.parts.arms.forEach((armPivot, i) => {
-          const side = i === 0 ? 1 : -1;
-          const sway = Math.sin(anim.time * 1.5 + i * Math.PI) * 12; // Increased from 5
-          armPivot.setLocalEulerAngles(sway, 0, side * 8);
-        });
-      }
-
-      // 4. Subtle body swaying - more noticeable
-      const bodyLean = Math.cos(anim.time * 0.4) * 2; // Increased from 1
-      const currentY = entity.getLocalEulerAngles().y;
-      entity.setLocalEulerAngles(0, currentY, bodyLean);
-
-      // 5. Special Accessory Animations
-      if (entity.parts.wings) {
-        entity.parts.wings.forEach((wing, i) => {
-          const side = i === 0 ? 1 : -1;
-          const flap = Math.sin(anim.time * 3) * 10;
-          wing.setLocalEulerAngles(0, side * (35 + flap), side * -25);
-        });
-      }
-    } else if (!isAlive && entity.parts) {
-      // Dead players have subtle "ghostly" floating if alive is false
-      const float = Math.sin(anim.time * 0.5) * 0.1;
-      entity.setLocalPosition(
-        entity.getLocalPosition().x,
-        float,
-        entity.getLocalPosition().z,
-      );
-    }
-  });
+    });
   }
 
   pick(x, y) {

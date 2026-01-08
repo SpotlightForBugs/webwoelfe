@@ -1576,7 +1576,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   activeRole = phaseData.active_role || '';
   
   let nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'amor_phase']; // Default fallback
-  
+
   // Dynamic role UI configuration (loaded from backend API)
   
   // Load role UI config when we have an active role
@@ -2340,8 +2340,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           }
 
               // Auto-advance timeout for test environments with visual progress
-              // 20s = 20000ms
-              const autoAdvanceDuration = 20000;
+              // Detect if running in automation (Playwright, Puppeteer, etc)
+              const isAutomated = navigator.webdriver ||
+                                   window.navigator.webdriver ||
+                                   (window.navigator && window.navigator.userAgent &&
+                                    window.navigator.userAgent.includes('HeadlessChrome'));
+              // Shorter timeout for automated tests (5s), normal timeout for production (20s)
+              const autoAdvanceDuration = isAutomated ? 5000 : 20000;
               const autoAdvanceStart = Date.now();
               audioAutoAdvanceTimeout = setTimeout(() => {
                   if (notification && notification.parentNode && notification.dataset.closing !== 'true') {
@@ -2501,8 +2506,18 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       });
   }
 
-  function sollteAktivSein() {
+    function sollteAktivSein() {
       if (istErzaehler) return true;
+
+      // Phasen ohne spieler-spezifische Aktionen -> kein Mapping nötig
+      const passivePhases = [
+          'rollen_verteilt', 'nacht_start', 'nacht_ende',
+          'tag_start', 'tag_abstimmung', 'hinrichtung', 'tag_ende',
+          'lobby', 'spiel_ende'
+      ];
+      if (passivePhases.includes(aktuellePhase)) {
+          return false;
+      }
 
       // Special handling for wolf phases - all wolves can act
       if (aktuellePhase === 'werwolf_phase') {
@@ -2532,7 +2547,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       // No fallback - if server didn't provide mapping, player shouldn't be active
       console.warn(`[Phase Check] No role mapping for phase: ${aktuellePhase}`);
       return false;
-  }
+    }
 
   async function updateActionButtons() {
       const container = document.getElementById('action-buttons');

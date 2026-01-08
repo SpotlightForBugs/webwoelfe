@@ -72,7 +72,7 @@ class RoleRegistry:
             name = instance.info.name
             cls._registry[name] = role_class
             cls._instances[name] = instance
-            logger.info(f"Rolle manuell registriert: {name}")
+            logger.info(f"Rolle via Decorator registriert: {name}")
         except Exception as e:
             logger.error(
                 f"Fehler beim Registrieren der Rolle {role_class.__name__}: {e}"

@@ -144,6 +144,8 @@ class Amor(Role):
             ],
             requires_target=True,
             allow_multiple_targets=True,  # Needs 2 targets
+            min_targets=2,
+            max_targets=2,
             can_skip=False,  # Must act
         )
 

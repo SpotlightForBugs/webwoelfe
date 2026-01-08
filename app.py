@@ -53,7 +53,15 @@ SPIEL_NAME = "Webwölfe"
 # Phasen-Konfiguration
 # Wartezeit zwischen automatischen Phasenwechseln (in Sekunden)
 # Mindestens 30 Sekunden um Audio-Erzählung vollständig abzuspielen
-PHASE_WECHSEL_DELAY = int(os.environ.get("PHASE_DELAY", "30"))
+PHASE_WECHSEL_DELAY = int(os.environ.get("PHASE_DELAY", "45"))
+
+# Minimum delay before accepting audio_fertig (in seconds)
+# This prevents duplicate events from the same client but allows quick phase transitions
+AUDIO_FERTIG_MIN_DELAY = float(os.environ.get("AUDIO_MIN_DELAY", "1.0"))
+
+# Track last audio_fertig per (room, phase) to prevent duplicate processing
+# Key: (room_code, phase_name), Value: timestamp
+_last_audio_fertig: dict[tuple[str, str], float] = {}
 
 
 def log_ts(msg: str):
@@ -1335,16 +1343,26 @@ def _wechsel_phase_intern(raum):
             "erzaehlung", {"text": erzaehlung_text, "audio": audio_path}, room=raum.code
         )
 
-    socketio.emit(
-        "phase_geaendert",
-        {
-            "phase": neue_phase,
-            "runde": raum.runde,
-            "alte_phase": alte_phase,
-            "erzaehler_text": erzaehler_text,
-        },
-        room=raum.code,
-    )
+    # Build phase data for emission
+    phase_data = {
+        "phase": neue_phase,
+        "runde": raum.runde,
+        "alte_phase": alte_phase,
+        "erzaehler_text": erzaehler_text,
+    }
+    
+    # Add role-specific phase data
+    if neue_phase == "hexe_phase":
+        # Include werewolf victim for Hexe
+        ww_result = game_logic.werwolf_abstimmung(raum)
+        if ww_result and "opfer_id" in ww_result:
+            opfer = db.session.get(Spieler, ww_result["opfer_id"])
+            if opfer:
+                phase_data["werwolf_opfer_id"] = opfer.id
+                phase_data["werwolf_opfer_name"] = opfer.name
+                log_ts(f"[Hexe] Opfer-Info mitgesendet: {opfer.name} (ID: {opfer.id})")
+
+    socketio.emit("phase_geaendert", phase_data, room=raum.code)
 
     # Automatische Phasen: Nur reine Übergangs-Phasen die keine Aktion erfordern
     # WICHTIG: Night-Phase ist NIEMALS automatisch - dort agieren Rollen!
@@ -1388,6 +1406,8 @@ def _wechsel_phase_intern(raum):
 @socketio.on("audio_fertig")
 def handle_audio_fertig(data):
     """Client meldet dass Audio abgespielt wurde - Phase kann wechseln"""
+    import time
+    
     spieler = hole_aktuellen_spieler()
     if not spieler:
         return
@@ -1397,6 +1417,18 @@ def handle_audio_fertig(data):
         return
 
     gemeldete_phase = data.get("phase", "")
+    
+    # Server-side debounce: Check if we verified this phase audio recently
+    current_time = time.time()
+    debounce_key = (raum.code, gemeldete_phase)
+    last_processed = _last_audio_fertig.get(debounce_key, 0)
+    
+    if current_time - last_processed < AUDIO_FERTIG_MIN_DELAY:
+        log_ts(f"[Audio] Ignoring duplicate audio_fertig for {gemeldete_phase}")
+        return
+
+    # Update timestamp
+    _last_audio_fertig[debounce_key] = current_time
 
     # Nur der erste Spieler der meldet löst den Phasenwechsel aus
     # Prüfe ob wir noch in der gleichen Phase sind
@@ -1417,6 +1449,20 @@ def handle_audio_fertig(data):
             log_ts(f"[Audio] Audio fertig für Phase {gemeldete_phase}, wechsle Phase")
             _wechsel_phase_intern(raum)
         else:
+            # Smart Advance: Check if we can proceed immediately
+            from roles import RoleRegistry
+            rolle = RoleRegistry.get_role_for_phase(gemeldete_phase)
+            should_advance = False
+            
+            if rolle:
+                if game_logic.alle_haben_gewaehlt(raum, gemeldete_phase, rolle.info.name):
+                    log_ts(f"[Audio] Smart Advance: Keine offenen Aktionen für {gemeldete_phase} (Rolle: {rolle.info.name})")
+                    should_advance = True
+            
+            if should_advance:
+                 _wechsel_phase_intern(raum)
+                 return
+
             log_ts(
                 f"[Audio] Audio fertig für interaktive Phase {gemeldete_phase} - warte auf Aktion"
             )
@@ -1763,7 +1809,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     from roles import RoleRegistry
     from roles.base import SpielKontext
-    from roles.enums import Phase
+    from roles.enums import Phase, AktionsTyp
 
     # Get the player's role class
     rolle_obj = RoleRegistry.get(spieler.rolle)

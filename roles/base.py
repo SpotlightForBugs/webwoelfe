@@ -2020,6 +2020,9 @@ class RollenUI:
     buttons: List[UIButton] = field(default_factory=list)
     requires_target: bool = True
     allow_multiple_targets: bool = False
+    min_targets: int = 1
+    max_targets: int = 1
+    allow_self_target: bool = False
     can_skip: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
@@ -2039,6 +2042,9 @@ class RollenUI:
             ],
             "requires_target": self.requires_target,
             "allow_multiple_targets": self.allow_multiple_targets,
+            "min_targets": self.min_targets,
+            "max_targets": self.max_targets,
+            "allow_self_target": self.allow_self_target,
             "can_skip": self.can_skip,
         }
 
@@ -2734,14 +2740,36 @@ class Role(ABC):
         Returns:
             AktionsErgebnis or None if action not handled
         """
+        # Handle generic "skip" action
+        if action_type == "skip":
+            return AktionsErgebnis(
+                erfolg=True,
+                nachricht="Du hast die Aktion übersprungen.",
+                effekte={"skip": True, "aktion_ausgefuehrt": True},
+                log_sichtbar_fuer=f"spieler_{spieler.id}",
+            )
+
         # Default: route to on_nacht_aktion for single-target actions
+        import inspect
+
+        kwargs = {}
+        try:
+            sig = inspect.signature(self.on_nacht_aktion)
+            if "aktion" in sig.parameters:
+                kwargs["aktion"] = action_type
+        except Exception:
+            # Fallback if signature inspection fails (e.g. on some decorated methods)
+            pass
+
         if len(targets) == 1:
-            return self.on_nacht_aktion(spieler, targets[0], kontext, aktion=action_type)
+            return self.on_nacht_aktion(spieler, targets[0], kontext, **kwargs)
         elif len(targets) == 0:
-            return self.on_nacht_aktion(spieler, None, kontext, aktion=action_type)
+            return self.on_nacht_aktion(spieler, None, kontext, **kwargs)
         else:
             # Multi-target: roles should override to handle this
-            logger.warning(f"Role {self.info.name} received multi-target action but doesn't handle it")
+            logger.warning(
+                f"Role {self.info.name} received multi-target action but doesn't handle it"
+            )
             return None
 
     def get_triggered_phases(self) -> List[SpecialPhaseConfig]:

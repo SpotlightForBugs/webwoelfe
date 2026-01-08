@@ -129,6 +129,7 @@ class Hexe(Role):
             ],
             requires_target=True,  # For poison
             allow_multiple_targets=False,
+            allow_self_target=True,
             can_skip=True,  # Can choose to do nothing
         )
 

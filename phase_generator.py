@@ -33,11 +33,14 @@ def generate_phases_for_game(raum: Raum) -> List[str]:
     active_roles = []
     lebende_spieler = hole_lebende_spieler(raum)
     is_first_night = raum.runde == 1
+    
+    logger.info(f"[PhaseGen] Generating phases. Players: {len(lebende_spieler)}, Round: {raum.runde}, First Night: {is_first_night}")
 
     # Collect all roles that should act this night
     for spieler in lebende_spieler:
         role = RoleRegistry.get(spieler.rolle)
         if not role:
+            logger.warning(f"[PhaseGen] Role not found in registry for player {spieler.name}: {spieler.rolle}")
             continue
 
         # Check if role is active this night
@@ -50,9 +53,16 @@ def generate_phases_for_game(raum: Raum) -> List[str]:
                 aktiv = role.is_active_on_every_night()
 
             if aktiv:
+                logger.debug(f"[PhaseGen] Role active: {role.info.name} (Player: {spieler.name})")
                 active_roles.append((role, spieler))
-        except AttributeError:
+            else:
+                logger.debug(f"[PhaseGen] Role INACTIVE: {role.info.name} (Player: {spieler.name})")
+                
+        except AttributeError as e:
+            logger.error(f"[PhaseGen] Error checking activity for {role.info.name}: {e}")
             pass
+
+    logger.info(f"[PhaseGen] Found {len(active_roles)} active roles")
 
     # Sort by dependencies and priority
     sorted_roles = _sort_roles_by_dependencies(active_roles)

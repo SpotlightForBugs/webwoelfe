@@ -1461,34 +1461,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       phaseData = JSON.parse('{{ raum.phase_data if raum.phase_data else "{}" | safe }}');
   } catch(e) { console.error('Error parsing phase data', e); }
   
-  let activeRole = phaseData.active_role || '';
+  activeRole = phaseData.active_role || '';
   
   let nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'amor_phase']; // Default fallback
   
   // Dynamic role UI configuration (loaded from backend API)
   
   // Load role UI config when we have an active role
-  async function loadRoleUiConfig(roleName) {
-      if (!roleName) {
-          phaseUiConfig = null;
-          return;
-      }
-      try {
-          const resp = await fetch(`/api/role/${encodeURIComponent(roleName)}/ui`);
-          const data = await resp.json();
-          if (data.success && data.ui) {
-              phaseUiConfig = data.ui;
-              console.log('[UI] Loaded role UI config:', phaseUiConfig);
-          }
-      } catch (e) {
-          console.error('[UI] Failed to load role UI config:', e);
-          phaseUiConfig = null;
-      }
-  }
-  
   // Load initial UI config if we're the active role
   if (spielerRolle && activeRole === spielerRolle) {
-      loadRoleUiConfig(spielerRolle);
+      loadRoleUI(spielerRolle).then(ui => phaseUiConfig = ui);
   }
 
   // Expose for test automation
@@ -1513,7 +1495,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       
       // Load role UI config if it's our turn
       if (activeRole === spielerRolle) {
-          loadRoleUiConfig(spielerRolle);
+          loadRoleUI(spielerRolle).then(ui => phaseUiConfig = ui);
       } else {
           phaseUiConfig = null;  // Clear when not our turn
       }
@@ -1554,6 +1536,34 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       updatePhase(data.phase, data.runde);
       if (data.erzaehler_text) {
           updateErzaehlerText(data.erzaehler_text);
+      }
+      
+      // Handle Hexe phase: Show werewolf victim info
+      if (data.phase === 'hexe_phase' && data.werwolf_opfer_id) {
+          console.log('[Hexe Phase] Werwolf-Opfer:', data.werwolf_opfer_name, '(ID:', data.werwolf_opfer_id, ')');
+          
+          // Store victim info globally for UI access
+          window.werwolfOpferId = data.werwolf_opfer_id;
+          window.werwolfOpferName = data.werwolf_opfer_name;
+          
+          // Show victim alert if player is Hexe
+          if (meineRolle === 'Hexe') {
+              showAlert(`<i class="fa-solid fa-paw"></i> Das Werwolf-Opfer ist: <strong>${data.werwolf_opfer_name}</strong>`, 'danger', 10000);
+          }
+          
+          // Highlight victim in Village3D
+          if (window.village3d && typeof window.village3d.highlightVictim === 'function') {
+              window.village3d.highlightVictim(data.werwolf_opfer_id);
+          }
+      } else {
+          // Clear victim info for other phases
+          window.werwolfOpferId = null;
+          window.werwolfOpferName = null;
+          
+          // Clear Village3D highlight
+          if (window.village3d && typeof window.village3d.clearVictimHighlight === 'function') {
+              window.village3d.clearVictimHighlight();
+          }
       }
 
       // Schließe alle bestehenden Erzähler-Overlays um Überlappung zu vermeiden
@@ -1868,13 +1878,22 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           if (isNarrator || isSelf) return;
       }
 
+      // General self-target check from role config
+      // Default allow_self_target to false if not specified, but true if config missing (legacy behavior)
+      if (id === spielerId && phaseUiConfig && phaseUiConfig.allow_self_target === false) {
+          console.warn('[Validation] Self-targeting not allowed for this role');
+          showAlert('Du kannst dich nicht selbst wählen!', 'warning');
+          return;
+      }
+
       // Dynamic multi-select support (for Amor and similar roles)
       // Uses phaseUiConfig.allow_multiple_targets instead of hardcoded role check
       if (phaseUiConfig && phaseUiConfig.allow_multiple_targets) {
+          const maxTargets = phaseUiConfig.max_targets || 2;
           if (selectedSpielerIds.includes(id)) {
               selectedSpielerIds = selectedSpielerIds.filter(i => i !== id);
               card.classList.remove('selected');
-          } else if (selectedSpielerIds.length < 2) {
+          } else if (selectedSpielerIds.length < maxTargets) {
               selectedSpielerIds.push(id);
               card.classList.add('selected');
           }
@@ -1952,21 +1971,55 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       container.innerHTML = html;
   }
 
-  // Schließt alle Erzähler-Overlays
+  // Track which phase we've sent audio_fertig for to prevent duplicates
+  let lastAudioFertigPhase = null;
+  
+  // Schließt alle Erzähler-Overlays - properly cleans up to prevent event handlers from firing
   function closeAllErzaehlungOverlays() {
       document.querySelectorAll('.erzaehlung-overlay').forEach(overlay => {
-          // Stoppe Audio falls vorhanden
+          // Mark overlay as being closed to prevent event handlers
+          overlay.dataset.closing = 'true';
+          
+          // Stoppe Audio falls vorhanden - clear event handlers FIRST
           const audio = overlay.querySelector('audio');
           if (audio) {
+              // Remove all listeners by cloning (clean removal)
+              const newAudio = audio.cloneNode(true);
+              newAudio.pause();
+              newAudio.currentTime = 0;
+              // Don't need to add to DOM, just stop the old one
               audio.pause();
               audio.currentTime = 0;
+              audio.src = ''; // Clear source to fully stop
           }
+          
+          // Clear any auto-advance timeouts stored on overlay
+          if (overlay.autoAdvanceTimeout) {
+              clearTimeout(overlay.autoAdvanceTimeout);
+          }
+          
           // Entferne Overlay
           overlay.remove();
-      });
+  });
+  }
+
+  // Helper function to safely emit audio_fertig only once per phase
+  function emitAudioFertigSafe(phase) {
+      if (phase === lastAudioFertigPhase) {
+          console.log('[Audio] Skipping duplicate audio_fertig for phase:', phase);
+          return false;
+      }
+      lastAudioFertigPhase = phase;
+      socket.emit('audio_fertig', { phase: phase });
+      console.log('[Audio] Sent audio_fertig for phase:', phase);
+      return true;
   }
 
   function showErzaehlung(text, audioPath) {
+      // Reset the lastAudioFertigPhase when starting a new erzaehlung
+      // This allows the new audio to send its own audio_fertig
+      lastAudioFertigPhase = null;
+      
       // Schließe bestehende Overlays bevor ein neues gezeigt wird
       closeAllErzaehlungOverlays();
 
@@ -2032,6 +2085,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                       <i class="fa-solid fa-volume-high" id="${playerId}-vol-icon"></i>
                   </button>
               </div>
+              <div class="audio-auto-advance-container" style="width: 100%; max-width: 400px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 2rem; border-radius: 2px; overflow: hidden; position: relative;" title="Auto-advance timer">
+                   <div id="${playerId}-auto-advance" style="width: 0%; height: 100%; background: rgba(255,182,193, 0.5); transition: width 1s linear;"></div>
+              </div>
               <audio id="${playerId}" autoplay playsinline style="display: none;">
                   <source src="${audioPath}" type="audio/mpeg">
               </audio>
@@ -2048,7 +2104,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           console.log(`[showErzaehlung] Waiting ${readingTimeMs}ms for reading...`);
 
           setTimeout(() => {
-              socket.emit('audio_fertig', { phase: aktuellePhase });
+              emitAudioFertigSafe(aktuellePhase);
               notification.style.animation = 'fadeOut 0.4s ease-out';
               setTimeout(() => {
                   if (notification && notification.parentNode) notification.remove();
@@ -2068,6 +2124,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           const playBtn = document.getElementById(playerId + '-btn');
           const playIcon = document.getElementById(playerId + '-icon');
           const waveform = document.getElementById(playerId + '-waveform');
+          
+          // Track when audio actually starts playing and its duration
+          let audioStartTime = null;
+          let audioDuration = 0;
 
           // Update progress bar
           audio.addEventListener('timeupdate', () => {
@@ -2081,10 +2141,15 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Set duration when loaded
           audio.addEventListener('loadedmetadata', () => {
               durationEl.textContent = formatAudioTime(audio.duration);
+              audioDuration = audio.duration * 1000; // Convert to ms
           });
 
           // Handle play/pause states
           audio.addEventListener('play', () => {
+              if (!audioStartTime) {
+                  audioStartTime = Date.now();
+                  console.log('[Audio] Started playing, duration:', audioDuration, 'ms');
+              }
               playIcon.className = 'fa-solid fa-pause';
               playBtn.classList.add('playing');
               waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.add('active'));
@@ -2097,15 +2162,20 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           });
 
           audio.addEventListener('ended', () => {
+              // Guard: Don't process if overlay is being force-closed
+              if (notification.dataset.closing === 'true') {
+                  console.log('[Audio] Ignoring ended event - overlay is being closed');
+                  return;
+              }
+              
               playIcon.className = 'fa-solid fa-redo';
               playBtn.classList.remove('playing');
               waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
 
-              // Benachrichtige Server dass Audio fertig ist
-              socket.emit('audio_fertig', { phase: aktuellePhase });
-              console.log('[Audio] Ended, notifying server');
+              // Notify server - server handles debouncing
+              emitAudioFertigSafe(aktuellePhase);
 
-              // Schließe das Overlay nach kurzer Verzögerung
+              // Close overlay after short delay
               setTimeout(() => {
                   notification.style.animation = 'fadeOut 0.4s ease-out';
                   setTimeout(() => notification.remove(), 400);
@@ -2147,7 +2217,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                           skipBtn.innerHTML = '<i class="fa-solid fa-forward"></i> Überspringen';
                           skipBtn.onclick = () => {
                               if (audioAutoAdvanceTimeout) clearTimeout(audioAutoAdvanceTimeout);
-                              socket.emit('audio_fertig', { phase: aktuellePhase });
+                              emitAudioFertigSafe(aktuellePhase);
                               notification.style.animation = 'fadeOut 0.4s ease-out';
                               setTimeout(() => notification.remove(), 400);
                           };
@@ -2157,23 +2227,42 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               });
           }
 
-          // Auto-advance timeout for test environments
-          if (audioPath) {
+              // Auto-advance timeout for test environments with visual progress
+              // 20s = 20000ms
+              const autoAdvanceDuration = 20000;
+              const autoAdvanceStart = Date.now();
               audioAutoAdvanceTimeout = setTimeout(() => {
-                  if (notification && notification.parentNode) {
+                  if (notification && notification.parentNode && notification.dataset.closing !== 'true') {
                       console.log('[Audio] Auto-advance timeout triggered');
-                      socket.emit('audio_fertig', { phase: aktuellePhase });
+                      emitAudioFertigSafe(aktuellePhase);
                       notification.style.animation = 'fadeOut 0.4s ease-out';
                       setTimeout(() => {
                           if (notification && notification.parentNode) notification.remove();
                       }, 400);
                   }
-              }, 35000);
+              }, autoAdvanceDuration);
+              
+              // Store timeout on notification for cleanup
+              notification.autoAdvanceTimeout = audioAutoAdvanceTimeout;
+
+              // Update progress bar
+              const autoAdvanceBar = document.getElementById(playerId + '-auto-advance');
+              if (autoAdvanceBar) {
+                  const updateInterval = setInterval(() => {
+                      if (!notification.parentNode) {
+                          clearInterval(updateInterval);
+                          return;
+                      }
+                      const elapsed = Date.now() - autoAdvanceStart;
+                      const percent = Math.min((elapsed / autoAdvanceDuration) * 100, 100);
+                      autoAdvanceBar.style.width = percent + '%';
+                      if (percent >= 100) clearInterval(updateInterval);
+                  }, 100);
+              }
 
               audio.addEventListener('ended', () => {
                   if (audioAutoAdvanceTimeout) clearTimeout(audioAutoAdvanceTimeout);
               });
-          }
       }
 
       // Entferne Overlay - bei Audio wird es im 'ended' Event entfernt
@@ -2257,6 +2346,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   // Load UI definition for a specific role
   async function loadRoleUI(roleName) {
+      if (!roleName) return null;
       if (roleUICache[roleName]) {
           return roleUICache[roleName];
       }
@@ -2267,13 +2357,37 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
           if (data.success) {
               roleUICache[roleName] = data.ui;
+              console.log(`[Role UI] Loaded for ${roleName}:`, data.ui);
               return data.ui;
           }
       } catch (error) {
           console.error(`[Role UI] Error loading for ${roleName}:`, error);
       }
 
+      // Update visuals for valid targets
+      updatePlayerValidityVisuals();
+
       return null;
+  }
+
+  function updatePlayerValidityVisuals() {
+      if (!phaseUiConfig) {
+          document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('disabled-target'));
+          return;
+      }
+
+      const allowSelf = phaseUiConfig.allow_self_target !== false; // Default true if undefined (safest for legacy)
+      
+      document.querySelectorAll('.spieler-card').forEach(card => {
+          const id = parseInt(card.getAttribute('data-id'));
+          const isSelf = id === spielerId;
+          
+          if (isSelf && !allowSelf) {
+             card.classList.add('disabled-target');
+          } else {
+             card.classList.remove('disabled-target');
+          }
+      });
   }
 
   function sollteAktivSein() {
@@ -2314,8 +2428,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       const panel = document.getElementById('action-panel');
       let html = '';
 
-      console.log(`[updateActionButtons] Phase: ${aktuellePhase}, Selected: ${selectedSpielerId}, Role: ${spielerRolle}, ShouldBeActive: ${sollteAktivSein()}`);
-
       // Verstecke Panel wenn Spieler nicht aktiv sein sollte
       if (!sollteAktivSein()) {
           panel.style.display = 'none';
@@ -2323,27 +2435,32 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       }
       panel.style.display = 'block';
 
-      if (!selectedSpielerId && selectedSpielerIds.length === 0) {
+      // Load UI definition from API
+      const roleUI = await loadRoleUI(spielerRolle);
+      phaseUiConfig = roleUI; // Update global config for interaction handling
+
+      const count = roleUI?.allow_multiple_targets ? selectedSpielerIds.length : (selectedSpielerId ? 1 : 0);
+      const min = roleUI?.min_targets !== undefined ? roleUI.min_targets : (roleUI?.requires_target ? 1 : 0);
+
+      if (roleUI?.requires_target && count === 0) {
           html = '<p class="text-muted">Wähle einen Spieler</p>';
       } else {
           // =================================================================
           // DYNAMIC BUTTON GENERATION FROM ROLE UI
-          // Try to load UI definition from API
           // =================================================================
-          const roleUI = await loadRoleUI(spielerRolle);
-          phaseUiConfig = roleUI; // Update global config for interaction handling
-
           if (roleUI && roleUI.buttons && roleUI.buttons.length > 0) {
               // Generate buttons from role UI definition
               html = roleUI.buttons.map(btn => {
                   const btnClass = btn.css_class || 'btn-primary';
                   const icon = btn.icon ? `<i class="${btn.icon}"></i>` : '';
-                  return `<button class="btn ${btnClass}" onclick="aktion('${btn.action_type}')">${icon} ${btn.label}</button>`;
+                  const disabled = (count < min) ? 'disabled' : '';
+                  const title = (count < min) ? `title="Wähle mindestens ${min} Spieler"` : '';
+                  return `<button class="btn ${btnClass}" ${disabled} ${title} onclick="aktion('${btn.action_type}')">${icon} ${btn.label}</button>`;
               }).join('\n');
 
               // Add skip button if allowed
               if (roleUI.can_skip) {
-                  html += `\n<button class="btn btn-ghost" onclick="aktion('skip')">Überspringen</button>`;
+                  html += `\n<button class="btn btn-ghost" onclick="aktion('skip', null)">Überspringen</button>`;
               }
           } else {
               // Fallback to hardcoded buttons for special cases

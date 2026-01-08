@@ -114,6 +114,13 @@ export default class Village3DPlayCanvas {
         // Refresh players with new role data if they exist
         if (this.players && this.players.length > 0) {
           console.log("[Village3D] Refreshing players with loaded role data...");
+
+          // Destroy existing entities so they get recreated with role features
+          this.playerEntities.forEach((entity) => entity.destroy());
+          this.playerEntities.clear();
+          this.playerLabels.forEach((label) => label.destroy());
+          this.playerLabels.clear();
+
           this.setPlayers(this.players);
         }
       }
@@ -4865,4 +4872,88 @@ export default class Village3DPlayCanvas {
       entity.addChild(tombstone);
     }
   }
+
+  /**
+   * Highlight a player as the werewolf victim (for Hexe phase)
+   * Shows a red pulsing effect around the player
+   */
+  highlightVictim(playerId) {
+    // Clear any existing highlight first
+    this.clearVictimHighlight();
+
+    const entity = this.playerEntities.get(playerId);
+    if (!entity) {
+      console.warn('[Village3D] Cannot highlight victim, player not found:', playerId);
+      return;
+    }
+
+    console.log('[Village3D] Highlighting victim:', playerId);
+
+    // Create a pulsing red glow effect
+    const victimMarker = new pc.Entity('VictimMarker');
+
+    // Create a glowing ring around the player
+    const ring = new pc.Entity('VictimRing');
+    ring.addComponent('model', { type: 'cylinder' });
+    ring.setLocalScale(1.5, 0.05, 1.5);
+    ring.setLocalPosition(0, 0.1, 0);
+
+    const ringMat = new pc.StandardMaterial();
+    ringMat.diffuse = new pc.Color(1.0, 0.1, 0.1);
+    ringMat.emissive = new pc.Color(1.0, 0.0, 0.0);
+    ringMat.emissiveIntensity = 2.0;
+    ringMat.opacity = 0.7;
+    ringMat.blendType = pc.BLEND_NORMAL;
+    ringMat.update();
+    ring.model.material = ringMat;
+    victimMarker.addChild(ring);
+
+    // Add a red light
+    const victimLight = new pc.Entity('VictimLight');
+    victimLight.addComponent('light', {
+      type: 'point',
+      color: new pc.Color(1.0, 0.0, 0.0),
+      intensity: 1.5,
+      range: 3,
+      castShadows: false,
+    });
+    victimLight.setLocalPosition(0, 2, 0);
+    victimMarker.addChild(victimLight);
+
+    // Add skull icon above head
+    const skullMarker = new pc.Entity('SkullMarker');
+    skullMarker.addComponent('model', { type: 'sphere' });
+    skullMarker.setLocalScale(0.4, 0.4, 0.4);
+    skullMarker.setLocalPosition(0, 3.2, 0);
+
+    const skullMat = new pc.StandardMaterial();
+    skullMat.diffuse = new pc.Color(0.8, 0.0, 0.0);
+    skullMat.emissive = new pc.Color(1.0, 0.0, 0.0);
+    skullMat.emissiveIntensity = 1.5;
+    skullMat.update();
+    skullMarker.model.material = skullMat;
+    victimMarker.addChild(skullMarker);
+
+    entity.addChild(victimMarker);
+
+    // Store reference for cleanup
+    this.currentVictimMarker = victimMarker;
+    this.currentVictimPlayerId = playerId;
+
+    // Animate the ring pulsing
+    this.victimAnimStartTime = Date.now();
+  }
+
+  /**
+   * Clear the werewolf victim highlight
+   */
+  clearVictimHighlight() {
+    if (this.currentVictimMarker) {
+      console.log('[Village3D] Clearing victim highlight');
+      this.currentVictimMarker.destroy();
+      this.currentVictimMarker = null;
+      this.currentVictimPlayerId = null;
+    }
+  }
 }
+

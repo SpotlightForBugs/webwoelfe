@@ -110,6 +110,7 @@ class Seherin(Role):
             ],
             requires_target=True,
             allow_multiple_targets=False,
+            allow_self_target=False,
             can_skip=False,  # Must act
         )
 

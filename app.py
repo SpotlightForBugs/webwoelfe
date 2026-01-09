@@ -137,6 +137,13 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
     if ergebnis.state_updates:
         for key, value in ergebnis.state_updates.items():
             spieler.set_state(key, value)
+            
+    # DEBUG: Emit full state update
+    if app.debug:
+        try:
+           socketio.emit('debug_state_update', gather_gamestate(raum))
+        except Exception as e:
+           print(f"Debug emit failed: {e}")
 
     # Handle private info notifications
     if ergebnis.private_infos:
@@ -2296,6 +2303,97 @@ def server_fehler(e):
 # ============================================================================
 # MAIN
 # ============================================================================
+
+# ============================================================================
+# DEBUGGING & VISUALIZATION
+# ============================================================================
+
+@app.route("/debug/state")
+def debug_view():
+    if not app.debug:
+        return "Not available in production", 403
+    return render_template("debug/state.html")
+
+@app.route("/api/debug/state")
+def get_debug_state():
+    """Returns full game state for debugging visualization"""
+    if not app.debug:
+        return jsonify({"error": "Not available in production"}), 403
+        
+    try:
+        raum_code = request.args.get('code')
+        if raum_code:
+            raum = Raum.query.filter_by(code=raum_code).first()
+        else:
+            # Just grab the most recent one
+            raum = Raum.query.order_by(Raum.id.desc()).first()
+            
+        if not raum:
+            return jsonify({"valid": False, "message": "No room found"})
+            
+        state = gather_gamestate(raum)
+        return jsonify(state)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"valid": False, "error": str(e), "message": "Failed to gather state"})
+
+def gather_gamestate(raum):
+    """Collects comprehensive game state for visualization"""
+    
+    # Players
+    players = []
+    for p in raum.spieler:
+        players.append({
+            "id": p.id,
+            "name": p.name,
+            "rolle": p.rolle,
+            "ist_am_leben": p.ist_am_leben,
+            "ist_erzaehler": p.ist_erzaehler,
+            "states": p.get_all_state() # Use correct retrieval method
+        })
+        
+    # Game Logic Vars (from game_logic module via inspect or shared dict usage if needed)
+    # Since specific vars are usually in DB or SpielKontext objects (which are transient)
+    # we simulate some global state visibility or pull from DB logs/actions
+    
+    # Get phases flow recommendation
+    try:
+        from phase_generator import generate_phases_for_game
+        # Just generate fresh for visualization to show "Ideal Path"
+        # Or try to retrieve actual planned phases if stored (raum.phase_data might have it)
+        planned_phases = []
+        # if raum.phase_data:
+        #    import json
+        #    try:
+        #        data = json.loads(raum.phase_data)
+        #        planned_phases = data.get('phases', [])
+        #    except:
+        #        pass
+                
+        if not planned_phases:
+             planned_phases = PHASEN # Fallback to constant
+             
+    except ImportError:
+        planned_phases = PHASEN
+
+    return {
+        "valid": True,
+        "raum": {
+            "id": raum.id,
+            "code": raum.code,
+            "aktuelle_phase": raum.aktuelle_phase,
+            "runde": raum.runde,
+            "modus": raum.modus
+        },
+        "players": players,
+        "phasen_order": planned_phases,
+        "state_vars": {
+            "phase_wechsel_delay": PHASE_WECHSEL_DELAY,
+            "last_audio_fertig": str(_last_audio_fertig),
+            "aktive_hinweise": _aktive_hinweise.get(raum.id, {})
+        }
+    }
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8888"))

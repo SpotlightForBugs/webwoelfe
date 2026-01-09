@@ -575,8 +575,11 @@ spiel_name }}{% endblock %} {% block content %}
         { lobbyMode: true }, // Simplified view for lobby
       );
 
-      // Initiale Spieler laden
-      updateVillage3D();
+      // Initiale Spieler laden mit Verzögerung für vollständige Initialisierung
+      // Initial attempt
+      setTimeout(() => updateVillage3D(), 100);
+      // Retry to ensure players are visible after role data loads
+      setTimeout(() => updateVillage3D(), 1000);
     }
   });
 </script>
@@ -585,6 +588,9 @@ spiel_name }}{% endblock %} {% block content %}
   const socket = io();
   const raumCode = "{{ raum.code }}";
   const erzaehlerModus = "{{ raum.erzaehler_modus }}";
+  
+  // Track if game has started to avoid unnecessary API calls during transition
+  let gameStarted = false;
 
   // Raum beitreten
   socket.emit("raum_beitreten", { code: raumCode });
@@ -606,6 +612,11 @@ spiel_name }}{% endblock %} {% block content %}
     // Sitzordnung aktualisieren falls vorhanden
     if (typeof initSitzordnungFromSpieler === "function") {
       initSitzordnungFromSpieler();
+    }
+    
+    // 3D Dorf aktualisieren (Online-Modus)
+    if (window.scheduleVillageUpdate) {
+      window.scheduleVillageUpdate();
     }
   }
 
@@ -676,6 +687,8 @@ spiel_name }}{% endblock %} {% block content %}
   }
 
   socket.on("spiel_gestartet", function (data) {
+    // Mark game as started to stop lobby API calls
+    gameStarted = true;
     // Navigate directly to the game page
     window.location.href = "/spiel/" + raumCode;
   });
@@ -794,14 +807,19 @@ spiel_name }}{% endblock %} {% block content %}
 
   // Rollenvorschau dynamisch aktualisieren
   async function updateRollenVorschau() {
+    // Don't fetch if game has already started (we're navigating away)
+    if (gameStarted) return;
+    
     try {
       const response = await fetch(`/api/rollen_vorschau/${raumCode}`);
+      if (!response.ok) return; // Silently ignore HTTP errors during transitions
       const data = await response.json();
       if (data.success) {
         renderRollenVorschau(data);
       }
     } catch (e) {
-      console.error("Fehler beim Aktualisieren der Rollenvorschau:", e);
+      // Silently ignore fetch errors - expected during game start transitions
+      // when the page is navigating away from the lobby
     }
   }
 

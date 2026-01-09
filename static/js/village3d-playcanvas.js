@@ -35,8 +35,8 @@ export default class Village3DPlayCanvas {
     // Default camera settings - adjust for lobby vs game mode
     if (options.lobbyMode) {
       this.defaultCameraAngle = 0;
-      this.defaultCameraHeight = 20;
-      this.defaultCameraRadius = 18;
+      this.defaultCameraHeight = 12; // Closer zoom for lobby
+      this.defaultCameraRadius = 14;
     } else {
       this.defaultCameraAngle = 0;
       this.defaultCameraHeight = 15;
@@ -212,6 +212,15 @@ export default class Village3DPlayCanvas {
 
     // Initialize fullscreen UI overlay system
     this.initFullscreenUI();
+
+    // Initialize phase display
+    setTimeout(() => {
+      if (window.aktuellePhase) {
+        this.updateTopBar(window.aktuellePhase, window.aktuelleRunde || 1);
+      } else {
+        this.updateTopBar('Lobby', 1);
+      }
+    }, 500);
   }
 
   createScene() {
@@ -652,6 +661,73 @@ export default class Village3DPlayCanvas {
       rock.model.material = rockMat;
       this.app.root.addChild(rock);
     }
+  }
+
+  createSimpleCampfire() {
+    // Simple point light for fire
+    this.fireLight = new pc.Entity("FireLight");
+    this.fireLight.addComponent("light", {
+      type: "point",
+      color: new pc.Color(1, 0.5, 0.1),
+      intensity: 3,
+      range: 20,
+      castShadows: true,
+    });
+    this.fireLight.setPosition(0, 1.0, 0);
+    this.app.root.addChild(this.fireLight);
+
+    // Simple stone ring
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const stone = new pc.Entity("Stone");
+      stone.addComponent("model", { type: "sphere" });
+      stone.setLocalScale(0.4, 0.3, 0.4);
+      stone.setLocalPosition(Math.cos(angle) * 1.5, 0.1, Math.sin(angle) * 1.5);
+
+      const stoneMat = this.getMaterial({
+        name: "SimpleStone",
+        diffuse: new pc.Color(0.3, 0.3, 0.35)
+      });
+      stone.model.material = stoneMat;
+      this.app.root.addChild(stone);
+    }
+
+    // Simple logs
+    const logMat = this.getMaterial({
+      name: "SimpleLog",
+      diffuse: new pc.Color(0.2, 0.1, 0.05)
+    });
+
+    for (let i = 0; i < 3; i++) {
+      const log = new pc.Entity("Log");
+      log.addComponent("model", { type: "cylinder" });
+      log.setLocalScale(0.3, 1.5, 0.3);
+      const angle = (i / 3) * Math.PI * 2;
+      log.setPosition(Math.cos(angle) * 0.5, 0.5, Math.sin(angle) * 0.5);
+      log.lookAt(0, 1.0, 0);
+      log.rotateLocal(90, 0, 0);
+      log.model.material = logMat;
+      this.app.root.addChild(log);
+    }
+
+    // Simple fire particle system placeholder (static emissive geometry)
+    const fireCore = new pc.Entity("FireCore");
+    fireCore.addComponent("model", { type: "cone" });
+    fireCore.setLocalScale(0.8, 1.2, 0.8);
+    fireCore.setPosition(0, 0.6, 0);
+
+    const fireMat = new pc.StandardMaterial();
+    fireMat.emissive = new pc.Color(1, 0.6, 0.1);
+    fireMat.opacity = 0.8;
+    fireMat.blendType = pc.BLEND_ADDITIVE;
+    fireMat.useLighting = false;
+    fireMat.update();
+
+    fireCore.model.material = fireMat;
+    this.app.root.addChild(fireCore);
+
+    // Animate the simple fire scale slightly
+    this.simpleFire = fireCore;
   }
 
   createEnhancedCampfire() {
@@ -2105,41 +2181,57 @@ export default class Village3DPlayCanvas {
     // Create canvas for text rendering
     const canvas = document.createElement('canvas');
     canvas.width = 512;
-    canvas.height = 128;
+    canvas.height = 128; // Power of 2 height
     const ctx = canvas.getContext('2d');
 
+    // Draw background for better readability (Semi-transparent black)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.fillRect(0, 0, 512, 128);
+
     // Draw text
-    ctx.fillStyle = isAlive ? 'rgba(255, 255, 255, 0.95)' : 'rgba(150, 150, 150, 0.7)';
-    ctx.font = 'bold 48px Arial';
+    ctx.fillStyle = isAlive ? 'rgba(255, 255, 255, 1.0)' : 'rgba(255, 100, 100, 0.9)';
+    ctx.font = 'bold 50px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+
+    // Add text shadow/outline for readability against any background
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 4;
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.strokeText(name, 256, 64);
+    ctx.shadowBlur = 0; // Reset for fill
     ctx.fillText(name, 256, 64);
 
     if (!isAlive) {
       ctx.fillStyle = 'rgba(200, 50, 50, 0.9)';
-      ctx.font = '36px Arial';
-      ctx.fillText('💀', 256, 90);
+      ctx.font = '40px Arial';
+      ctx.fillText('💀', 60, 64);
+      ctx.fillText('💀', 452, 64);
     }
 
     // Create texture from canvas
     const texture = new pc.Texture(this.app.graphicsDevice, {
       width: canvas.width,
       height: canvas.height,
-      format: pc.PIXELFORMAT_RGBA8,
+      format: pc.PIXELFORMAT_R8_G8_B8_A8,
+      magFilter: pc.FILTER_LINEAR,
+      minFilter: pc.FILTER_LINEAR,
+      addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+      addressV: pc.ADDRESS_CLAMP_TO_EDGE
     });
     texture.setSource(canvas);
-    texture.minFilter = pc.FILTER_LINEAR;
-    texture.magFilter = pc.FILTER_LINEAR;
-    texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-    texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
     // Create material
     const labelMat = new pc.StandardMaterial();
+    labelMat.diffuseMap = texture;
+    labelMat.opacityMap = texture;
     labelMat.emissiveMap = texture;
     labelMat.emissive = new pc.Color(1, 1, 1);
-    labelMat.opacity = 0.95;
-    labelMat.blendType = pc.BLEND_NORMAL;
-    labelMat.depthWrite = false;
+    labelMat.useLighting = false; // Self-illuminated
+    labelMat.blendType = pc.BLEND_NORMAL; // Alpha blending
+    labelMat.depthWrite = true; // IMPORTANT for transparency depth sorting
+    labelMat.alphaTest = 0.05; // Use alpha test to handle transparency better
     labelMat.update();
 
     label.model.material = labelMat;
@@ -2227,6 +2319,8 @@ export default class Village3DPlayCanvas {
    * Create top information bar
    */
   createTopBar() {
+    if (this.isLobbyMode) return;
+
     const topBar = document.createElement('div');
     topBar.id = 'village3d-top-bar';
     topBar.style.cssText = `
@@ -2270,6 +2364,8 @@ export default class Village3DPlayCanvas {
    * Create bottom action panel for role actions
    */
   createActionPanel() {
+    if (this.isLobbyMode) return;
+
     const actionPanel = document.createElement('div');
     actionPanel.id = 'village3d-action-panel';
     actionPanel.style.cssText = `
@@ -2301,6 +2397,8 @@ export default class Village3DPlayCanvas {
    * Create left sidebar for player status info
    */
   createLeftSidebar() {
+    if (this.isLobbyMode) return;
+
     const leftSidebar = document.createElement('div');
     leftSidebar.id = 'village3d-left-sidebar';
     leftSidebar.style.cssText = `
@@ -2344,6 +2442,8 @@ export default class Village3DPlayCanvas {
    * Create right sidebar for chat and log
    */
   createRightSidebar() {
+    if (this.isLobbyMode) return;
+
     const rightSidebar = document.createElement('div');
     rightSidebar.id = 'village3d-right-sidebar';
     rightSidebar.style.cssText = `
@@ -2639,6 +2739,62 @@ export default class Village3DPlayCanvas {
     this.targetCameraAngle = this.defaultCameraAngle;
     this.targetCameraHeight = this.defaultCameraHeight;
     this.targetCameraRadius = this.defaultCameraRadius;
+  }
+
+  /**
+   * Show a hint message in the 3D view
+   */
+  showHint(message, duration = 3000) {
+    const hintEl = document.getElementById("village-3d-hint");
+    if (hintEl) {
+      if (message) {
+        hintEl.innerHTML = `<i class="fa-solid fa-info-circle"></i> ${message}`;
+        hintEl.style.display = "block";
+        if (duration > 0) {
+          if (this.hintTimeout) clearTimeout(this.hintTimeout);
+          this.hintTimeout = setTimeout(() => {
+            hintEl.style.display = "none";
+          }, duration);
+        }
+      } else {
+        hintEl.style.display = "none";
+      }
+    }
+  }
+
+  /**
+   * Highlight the werewolf victim
+   */
+  highlightVictim(playerId) {
+    const entity = this.playerEntities.get(playerId);
+    if (!entity) return;
+
+    this.clearVictimHighlight();
+
+    const highlight = new pc.Entity("VictimHighlight");
+    highlight.addComponent("model", { type: "cylinder" });
+    highlight.setLocalScale(1.5, 0.1, 1.5);
+    highlight.setLocalPosition(0, 0.05, 0);
+
+    const mat = new pc.StandardMaterial();
+    mat.emissive = new pc.Color(1, 0, 0);
+    mat.opacity = 0.5;
+    mat.blendType = pc.BLEND_ADDITIVE;
+    mat.update();
+    highlight.model.material = mat;
+
+    entity.addChild(highlight);
+    this.victimHighlight = highlight;
+  }
+
+  /**
+   * Clear victim highlight
+   */
+  clearVictimHighlight() {
+    if (this.victimHighlight) {
+      this.victimHighlight.destroy();
+      this.victimHighlight = null;
+    }
   }
 
   setupInput() {
@@ -3054,27 +3210,9 @@ export default class Village3DPlayCanvas {
 
     // Make name labels always face camera (billboard effect)
     this.playerLabels.forEach((label) => {
-      if (!label || !label.parent) return;
-
-      // Get world position of label
-      const labelPos = label.getPosition();
-      const cameraPos = this.camera.getPosition();
-
-      // Calculate world angle from label to camera
-      const dx = cameraPos.x - labelPos.x;
-      const dz = cameraPos.z - labelPos.z;
-      const worldAngle = Math.atan2(dx, dz) * (180 / Math.PI);
-
-      // Get parent's world rotation Y component
-      const parentRotation = label.parent.getEulerAngles();
-      const parentYRotation = parentRotation.y;
-
-      // Calculate local Y rotation needed (world angle minus parent's world Y rotation)
-      // Add 180 to flip the plane so the texture shows correctly (not mirrored)
-      const localYAngle = worldAngle - parentYRotation + 180;
-
-      // Set rotation: 90 on X to make plane vertical (facing forward), then local Y rotation to face camera
-      label.setLocalEulerAngles(90, localYAngle, 0);
+      if (!label) return;
+      label.lookAt(this.camera.getPosition());
+      label.rotateLocal(90, 0, 0); // Correct for Plane orientation
     });
 
     // Animate Players

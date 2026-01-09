@@ -162,64 +162,7 @@ interface GameState {
 // UTILITIES
 // ============================================================================
 
-function calculateWindowLayout(index: number, total: number) {
-  const screenWidth = 1920;
-  const screenHeight = 1080;
-  const cols = Math.ceil(Math.sqrt(total * (screenWidth / screenHeight)));
-  const rows = Math.ceil(total / cols);
-  const width = Math.floor(screenWidth / cols);
-  const height = Math.floor(screenHeight / rows);
-  const row = Math.floor(index / cols);
-  const col = index % cols;
 
-  return {
-    x: col * width,
-    y: row * height,
-    width: Math.max(400, width - 10),
-    height: Math.max(400, height - 30), // Increased minimum height from 300 to 400
-  };
-}
-
-/**
- * Positions and resizes a browser window for tiled display on Windows.
- * Uses CDP (Chrome DevTools Protocol) for reliable window management.
- */
-async function tileWindow(
-  page: Page,
-  index: number,
-  total: number,
-): Promise<void> {
-  const layout = calculateWindowLayout(index, total);
-
-  try {
-    // Get CDP session for direct window control
-    const cdpSession = await page.context().newCDPSession(page);
-
-    // Get the current window ID
-    const { windowId } = await cdpSession.send("Browser.getWindowForTarget");
-
-    // Set window bounds (position and size)
-    await cdpSession.send("Browser.setWindowBounds", {
-      windowId,
-      bounds: {
-        left: layout.x,
-        top: layout.y,
-        width: layout.width,
-        height: layout.height,
-        windowState: "normal",
-      },
-    });
-  } catch (e) {
-    // Fallback to JavaScript window methods if CDP fails
-    await page.evaluate(
-      ({ x, y, w, h }) => {
-        window.moveTo(x, y);
-        window.resizeTo(w, h);
-      },
-      { x: layout.x, y: layout.y, w: layout.width, h: layout.height },
-    );
-  }
-}
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -265,17 +208,22 @@ test.describe("Full Game Simulation", () => {
       })
       : null;
 
+    // Create shared contexts
+    const sharedContext = await browser.newContext({ viewport: null });
+    const sharedHeadlessContext = headlessBrowser
+      ? await headlessBrowser.newContext({ viewport: null })
+      : null;
+
     try {
       // ========================================================================
       // PHASE 1: Room Creation
       // ========================================================================
       log("📝 Erstelle Raum...");
 
-      const hostContext = await browser.newContext({ viewport: null });
+      const hostContext = sharedContext;
       const hostPage = await hostContext.newPage();
 
-      // Tile the host window
-      await tileWindow(hostPage, 0, PLAYER_COUNT);
+      // Ensure window is maximized/visible (optional, handled by browser usually)
 
       await hostPage.goto(BASE_URL);
       await hostPage.waitForLoadState("networkidle");
@@ -327,8 +275,15 @@ test.describe("Full Game Simulation", () => {
           (i >= PLAYER_NAMES.length
             ? ` ${Math.floor(i / PLAYER_NAMES.length) + 1}`
             : "");
-        const targetBrowser = headlessBrowser || browser;
-        const context = await targetBrowser.newContext({ viewport: null });
+
+        let context: BrowserContext;
+        if (HEADLESS_OTHERS && sharedHeadlessContext) {
+          context = sharedHeadlessContext;
+        } else {
+          // Use separate context for each player to simulate separate windows/sessions
+          context = await browser.newContext({ viewport: null });
+        }
+
         const page = await context.newPage();
 
         // FAIL ON CONSOLE ERRORS
@@ -337,18 +292,13 @@ test.describe("Full Game Simulation", () => {
             const text = msg.text();
             // Ignore some common noise and handled warnings
             if (!text.includes("favicon") &&
-                !text.includes("ERR_BLOCKED_BY_CLIENT") &&
-                !text.includes("Viewport height is too small")) {
+              !text.includes("ERR_BLOCKED_BY_CLIENT") &&
+              !text.includes("Viewport height is too small")) {
               console.error(`🚨 CONSOLE ERROR [${playerName}]: ${text}`);
               throw new Error(`Console Error in ${playerName}: ${text}`);
             }
           }
         });
-
-        // Tile windows for non-headless mode
-        if (!HEADLESS_OTHERS) {
-          await tileWindow(page, i, PLAYER_COUNT);
-        }
 
         await page.goto(BASE_URL);
         await page.waitForLoadState("networkidle");
@@ -429,7 +379,7 @@ test.describe("Full Game Simulation", () => {
         try {
           // Extract role from the game page
           const rolleElement = player.page
-            .locator(".rolle-badge, [class*='rolle']")
+            .locator(".rolle-badge")
             .first();
           if (
             await rolleElement.isVisible({ timeout: 2000 }).catch(() => false)

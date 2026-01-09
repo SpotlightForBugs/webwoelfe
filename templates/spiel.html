@@ -1255,35 +1255,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   <div class="game-container">
     <!-- Hauptbereich -->
     <div class="main-area">
-      <!-- Phasen-Banner -->
-      <div class="phase-banner fade-in">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-          "
-        >
-          <div>
-            <div class="phase-name" id="phase-name">
-              <i
-                class="fa-solid fa-{{ 'moon' if 'nacht' in raum.aktuelle_phase else 'sun' }}"
-              ></i>
-              {{ raum.aktuelle_phase|replace('_', ' ')|title }}
-            </div>
-            <div class="text-muted">Runde {{ raum.runde }}</div>
-          </div>
-          <div>
-            <span
-              class="rolle-badge rolle-{{ spieler.rolle|css_class if spieler.rolle else 'unbekannt' }}"
-            >
-              {{ spieler.rolle or 'Warte...' }}
-            </span>
-          </div>
-        </div>
-      </div>
+      <!-- Phase Banner removed as per user request -->
+      <div style="margin-bottom:10px;"></div>
 
       <!-- 3D Dorf Ansicht - Haupt-Interaktionsfläche -->
       <div
@@ -1351,7 +1324,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       {% if rolle_info %}
       <div class="card mb-3 fade-in delay-1">
         <h4 style="color: {{ rolle_info.farbe }}; margin-bottom: 0.5rem;">
-          <i class="{{ rolle_info.icon }}"></i> {{ spieler.rolle }}
+          <i class="{{ rolle_info.icon }}"></i> <span class="rolle-badge">{{ spieler.rolle }}</span>
         </h4>
         <p>{{ rolle_info.beschreibung }}</p>
       </div>
@@ -1570,7 +1543,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   // Parse Phase Data safely
   let phaseData = {};
   try {
-      phaseData = JSON.parse('{{ raum.phase_data if raum.phase_data else "{}" | safe }}');
+      phaseData = JSON.parse('{}');
   } catch(e) { console.error('Error parsing phase data', e); }
   
   activeRole = phaseData.active_role || '';
@@ -2027,10 +2000,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       updateActionButtons();
   }
 
-  function updatePhase(phase, runde) {
+  function updatePhase(phase, runde, displayInfo) {
       const phaseEl = document.getElementById('phase-name');
       const isNacht = phase.includes('nacht') || phase.includes('phase');
-      phaseEl.innerHTML = `<i class="fa-solid fa-${isNacht && !phase.includes('tag') ? 'moon' : 'sun'}"></i> ${phase.replace(/_/g, ' ')}`;
+      
+      if (phaseEl) {
+          phaseEl.innerHTML = `<i class="fa-solid fa-${isNacht && !phase.includes('tag') ? 'moon' : 'sun'}"></i> ${phase.replace(/_/g, ' ')}`;
+      }
 
       // Update round display if exists
       const rundeEl = document.querySelector('.text-muted');
@@ -3164,15 +3140,34 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     }
   };
 
+  // Expose rollen_styles to Javascript
+  const rollenStyles = {{ rollen_styles | tojson }};
+
+  // Helper to convert role name to CSS class (matching backend logic)
+  function toCssClass(role) {
+      if (!role) return 'unbekannt';
+      // Lowercase, replace spaces with hyphens, handle umlauts, remove special chars
+      return role.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/ä/g, 'ae')
+          .replace(/ö/g, 'oe')
+          .replace(/ü/g, 'ue')
+          .replace(/ß/g, 'ss')
+          .replace(/[^a-z0-9\-]/g, '');
+  }
+
   // Hook into role UI loading
   const originalLoadRoleUI = window.loadRoleUI || (() => {});
   window.loadRoleUI = async function(rolle) {
     const ui = await originalLoadRoleUI(rolle);
 
     // Update 3D role badge when role UI is loaded
-    if (window.village3d && rollen_styles && rollen_styles[rolle|css_class]) {
-      const roleStyle = rollen_styles[rolle|css_class];
-      window.village3d.updateRoleBadge(rolle, roleStyle.avatar_gradient_from);
+    if (window.village3d && rollenStyles) {
+      const cssClass = toCssClass(rolle);
+      if (rollenStyles[cssClass]) {
+        const roleStyle = rollenStyles[cssClass];
+        window.village3d.updateRoleBadge(rolle, roleStyle.avatar_gradient_from);
+      }
     }
 
     return ui;
@@ -3187,11 +3182,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     }
   });
 
-  // Initial setup for 3D overlays
-  if (window.village3d) {
-    window.village3d.updateRoleBadge(spielerRolle);
-    window.village3d.updateTopBar(aktuellePhase, aktuelleRunde);
-  }
 
   // Exit fullscreen when game ends
   socket.on('gehe_zu_startseite', function() {
@@ -3257,8 +3247,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
           // Global speichern für Hints
           window.village3d = village3d;
+          
+          // Initialize 3D UI overlay with role and phase info
+          village3d.updateTopBar(aktuellePhase, aktuelleRunde);
+          village3d.updateRoleBadge(spielerRolle);
 
-          // Update bei Phasenwechsel
           // Update bei Phasenwechsel
           socket.on('phase_geaendert', function(data) {
               const newIsNight = data.phase.includes('nacht') ||

@@ -1,294 +1,320 @@
-{% extends "struktur.html" %}
-
-{% block title %}Debug Dashboard{% endblock %}
-
-{% block head %}
+{% extends "struktur.html" %} {% block title %}Debug Dashboard{% endblock %} {%
+block head %}
 <style>
-    .debug-container {
-        display: grid;
-        grid-template-columns: 300px 1fr 300px;
-        grid-template-rows: auto 1fr;
-        height: 100vh;
-        gap: 1rem;
-        padding: 1rem;
-        background-color: #1a1a1a;
-        color: #e0e0e0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+  .debug-container {
+    display: grid;
+    grid-template-columns: 300px 1fr 300px;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
 
-    .debug-header {
-        grid-column: 1 / -1;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #2d2d2d;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        border-bottom: 2px solid #3d3d3d;
-    }
+  .debug-header {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #2d2d2d;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border-bottom: 2px solid #3d3d3d;
+  }
 
-    .panel {
-        background: #252525;
-        border-radius: 8px;
-        padding: 1rem;
-        overflow: auto;
-        border: 1px solid #333;
-    }
+  .panel {
+    background: #252525;
+    border-radius: 8px;
+    padding: 1rem;
+    overflow: auto;
+    border: 1px solid #333;
+  }
 
-    .node-graph {
-        position: relative;
-        background-color: #111;
-        background-image: radial-gradient(#333 1px, transparent 1px);
-        background-size: 20px 20px;
-        overflow: hidden;
-    }
+  .node-graph {
+    position: relative;
+    background-color: #111;
+    background-image: radial-gradient(#333 1px, transparent 1px);
+    background-size: 20px 20px;
+    overflow: hidden;
+  }
 
-    .node {
-        position: absolute;
-        width: 150px;
-        padding: 10px;
-        background: #333;
-        border: 1px solid #555;
-        border-radius: 6px;
-        color: #fff;
-        font-size: 0.8rem;
-        cursor: grab;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        transition: border-color 0.2s, background-color 0.2s;
-    }
-    
-    .node.active {
-        border-color: #4CAF50;
-        background-color: #2E4030;
-        box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
-    }
+  .node {
+    position: absolute;
+    width: 150px;
+    padding: 10px;
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.8rem;
+    cursor: grab;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition:
+      border-color 0.2s,
+      background-color 0.2s;
+  }
 
-    .node-header {
-        font-weight: bold;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 5px;
-        margin-bottom: 5px;
-        display: flex;
-        justify-content: space-between;
-    }
+  .node.active {
+    border-color: #4caf50;
+    background-color: #2e4030;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+  }
 
-    .node-content {
-        font-family: monospace;
-        font-size: 0.75rem;
-        color: #ccc;
-    }
-    
-    .connection-line {
-        position: absolute;
-        stroke: #555;
-        stroke-width: 2;
-        fill: none;
-        pointer-events: none;
-    }
+  .node-header {
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
 
-    /* JSON Viewer */
-    pre {
-        background: #111;
-        padding: 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        color: #a5d6a7;
-    }
+  .node-content {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #ccc;
+  }
 
-    .status-badge {
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: bold;
-    }
-    .status-alive { background: #1b5e20; color: #fff; }
-    .status-dead { background: #b71c1c; color: #fff; }
+  .connection-line {
+    position: absolute;
+    stroke: #555;
+    stroke-width: 2;
+    fill: none;
+    pointer-events: none;
+  }
+
+  /* JSON Viewer */
+  pre {
+    background: #111;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #a5d6a7;
+  }
+
+  .status-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+  }
+  .status-alive {
+    background: #1b5e20;
+    color: #fff;
+  }
+  .status-dead {
+    background: #b71c1c;
+    color: #fff;
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="debug-container">
-    <div class="debug-header">
-        <h2><i class="fa-solid fa-bug"></i> Webwölfe State Visualizer</h2>
-        <div>
-            <span id="connection-status" class="badge bg-success">Connected</span>
-            <button onclick="fetchState()" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-sync"></i> Refresh</button>
-        </div>
+  <div class="debug-header">
+    <h2><i class="fa-solid fa-bug"></i> Webwölfe State Visualizer</h2>
+    <div>
+      <span id="connection-status" class="badge bg-success">Connected</span>
+      <button onclick="fetchState()" class="btn btn-sm btn-outline-light">
+        <i class="fa-solid fa-sync"></i> Refresh
+      </button>
     </div>
+  </div>
 
-    <!-- Left Panel: Player List -->
-    <div class="panel">
-        <h4>Players</h4>
-        <div id="player-list">Loading...</div>
-    </div>
+  <!-- Left Panel: Player List -->
+  <div class="panel">
+    <h4>Players</h4>
+    <div id="player-list">Loading...</div>
+  </div>
 
-    <!-- Center Panel: Flow Visualization -->
-    <div class="panel node-graph" id="flow-canvas">
-        <!-- Nodes will be injected here -->
-        <svg id="connections" style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;"></svg>
-    </div>
+  <!-- Center Panel: Flow Visualization -->
+  <div class="panel node-graph" id="flow-canvas">
+    <!-- Nodes will be injected here -->
+    <svg
+      id="connections"
+      style="
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+      "
+    ></svg>
+  </div>
 
-    <!-- Right Panel: Raw State & Logs -->
-    <div class="panel">
-        <h4>Room State</h4>
-        <div id="room-info"></div>
-        <hr>
-        <h4>Game Logic Variables</h4>
-        <pre id="game-vars">Waiting for data...</pre>
-    </div>
+  <!-- Right Panel: Raw State & Logs -->
+  <div class="panel">
+    <h4>Room State</h4>
+    <div id="room-info"></div>
+    <hr />
+    <h4>Game Logic Variables</h4>
+    <pre id="game-vars">Waiting for data...</pre>
+  </div>
 </div>
 
 <script>
-    const socket = io();
-    let currentState = {};
+  const socket = io();
+  let currentState = {};
 
-    socket.on('connect', () => {
-        document.getElementById('connection-status').className = 'badge bg-success';
-        document.getElementById('connection-status').innerText = 'Connected';
-        // Join debug room if needed or just pull data
-        fetchState();
-    });
+  socket.on("connect", () => {
+    document.getElementById("connection-status").className = "badge bg-success";
+    document.getElementById("connection-status").innerText = "Connected";
+    // Join debug room if needed or just pull data
+    fetchState();
+  });
 
-    socket.on('disconnect', () => {
-        document.getElementById('connection-status').className = 'badge bg-danger';
-        document.getElementById('connection-status').innerText = 'Disconnected';
-    });
-    
-    // Auto-update on state change events
-    socket.on('debug_state_update', (data) => {
-        updateView(data);
-    });
+  socket.on("disconnect", () => {
+    document.getElementById("connection-status").className = "badge bg-danger";
+    document.getElementById("connection-status").innerText = "Disconnected";
+  });
 
-    function fetchState() {
-        console.log('Fetching state...');
-        // In a real app this would be an API call, simulating with socket request
-         fetch('/api/debug/state')
-            .then(response => response.json())
-            .then(data => updateView(data))
-            .catch(err => console.error('Failed to fetch state:', err));
-    }
+  // Auto-update on state change events
+  socket.on("debug_state_update", (data) => {
+    updateView(data);
+  });
 
-    function updateView(data) {
-        if(!data) return;
-        currentState = data;
-        
-        // Update Players
-        const playerList = document.getElementById('player-list');
-        if (data.players) {
-            playerList.innerHTML = data.players.map(p => `
+  function fetchState() {
+    console.log("Fetching state...");
+    // In a real app this would be an API call, simulating with socket request
+    fetch("/api/debug/state")
+      .then((response) => response.json())
+      .then((data) => updateView(data))
+      .catch((err) => console.error("Failed to fetch state:", err));
+  }
+
+  function updateView(data) {
+    if (!data) return;
+    currentState = data;
+
+    // Update Players
+    const playerList = document.getElementById("player-list");
+    if (data.players) {
+      playerList.innerHTML = data.players
+        .map(
+          (p) => `
                 <div class="d-flex justify-content-between align-items-center mb-2 p-2" style="background:rgba(255,255,255,0.05); border-radius:4px;">
                     <div>
                         <strong>${p.name}</strong> <small class="text-muted">ID: ${p.id}</small><br>
                         <span class="badge bg-secondary">${p.rolle}</span>
                     </div>
-                    <span class="status-badge ${p.ist_am_leben ? 'status-alive' : 'status-dead'}">
-                        ${p.ist_am_leben ? 'ALIVE' : 'DEAD'}
+                    <span class="status-badge ${p.ist_am_leben ? "status-alive" : "status-dead"}">
+                        ${p.ist_am_leben ? "ALIVE" : "DEAD"}
                     </span>
                 </div>
-            `).join('');
-        }
+            `,
+        )
+        .join("");
+    }
 
-        // Update Room Info
-        const roomInfo = document.getElementById('room-info');
-        if (data.raum) {
-            roomInfo.innerHTML = `
+    // Update Room Info
+    const roomInfo = document.getElementById("room-info");
+    if (data.raum) {
+      roomInfo.innerHTML = `
                 <div><strong>Phase:</strong> <span style="color:#4CAF50">${data.raum.aktuelle_phase}</span></div>
                 <div><strong>Runde:</strong> ${data.raum.runde}</div>
                 <div><strong>Code:</strong> ${data.raum.code}</div>
             `;
-        }
-        
-        // Render Flow Graph
-        renderFlowGraph(data);
-
-        // Raw Vars
-        document.getElementById('game-vars').innerText = JSON.stringify(data.state_vars || {}, null, 2);
     }
 
-    function renderFlowGraph(data) {
-        // Simple visualization: Current Phase + Previous + Next potential
-        const container = document.getElementById('flow-canvas');
-        // Clear existing nodes but keep SVG
-        const svg = document.getElementById('connections');
-        // Clear nodes (elements with class .node)
-        container.querySelectorAll('.node').forEach(n => n.remove());
-        svg.innerHTML = ''; // Clear lines
+    // Render Flow Graph
+    renderFlowGraph(data);
 
-        const phaseList = data.phasen_order || []; 
-        const currentPhase = data.raum ? data.raum.aktuelle_phase : '';
-        
-        // Layout Config
-        const startX = 50;
-        const startY = 50;
-        const gapX = 200;
-        const gapY = 100;
-        
-        // Draw Nodes
-        let x = startX;
-        let y = startY;
-        
-        const nodes = [];
+    // Raw Vars
+    document.getElementById("game-vars").innerText = JSON.stringify(
+      data.state_vars || {},
+      null,
+      2,
+    );
+  }
 
-        // If we have a defined order, draw it sequentially
-        // For a more complex N8N style, we'd need a layout engine (like Dagre)
-        // Here we just list them in a grid
-        
-        phaseList.forEach((phaseName, index) => {
-            const isActive = phaseName === currentPhase;
-            const node = document.createElement('div');
-            node.className = `node ${isActive ? 'active' : ''}`;
-            node.style.left = `${x}px`;
-            node.style.top = `${y}px`;
-            node.innerHTML = `
+  function renderFlowGraph(data) {
+    // Simple visualization: Current Phase + Previous + Next potential
+    const container = document.getElementById("flow-canvas");
+    // Clear existing nodes but keep SVG
+    const svg = document.getElementById("connections");
+    // Clear nodes (elements with class .node)
+    container.querySelectorAll(".node").forEach((n) => n.remove());
+    svg.innerHTML = ""; // Clear lines
+
+    const phaseList = data.phasen_order || [];
+    const currentPhase = data.raum ? data.raum.aktuelle_phase : "";
+
+    // Layout Config
+    const startX = 50;
+    const startY = 50;
+    const gapX = 200;
+    const gapY = 100;
+
+    // Draw Nodes
+    let x = startX;
+    let y = startY;
+
+    const nodes = [];
+
+    // If we have a defined order, draw it sequentially
+    // For a more complex N8N style, we'd need a layout engine (like Dagre)
+    // Here we just list them in a grid
+
+    phaseList.forEach((phaseName, index) => {
+      const isActive = phaseName === currentPhase;
+      const node = document.createElement("div");
+      node.className = `node ${isActive ? "active" : ""}`;
+      node.style.left = `${x}px`;
+      node.style.top = `${y}px`;
+      node.innerHTML = `
                 <div class="node-header">
                     <span>${phaseName}</span>
-                    ${isActive ? '<i class="fa-solid fa-play-circle" style="color:#4CAF50"></i>' : ''}
+                    ${isActive ? '<i class="fa-solid fa-play-circle" style="color:#4CAF50"></i>' : ""}
                 </div>
                 <div class="node-content">
                     Type: Phase<br>
                     Index: ${index}
                 </div>
             `;
-            container.appendChild(node);
-            
-            nodes.push({el: node, x, y, width: 150, height: 60});
-            
-            // Grid layout
-            x += gapX;
-            if (x > container.clientWidth - 150) {
-                x = startX;
-                y += gapY;
-            }
-        });
-        
-        // Draw connections (simple sequential line)
-        for (let i = 0; i < nodes.length - 1; i++) {
-            const start = nodes[i];
-            const end = nodes[i+1];
-            
-            // Draw line from right of start to left of end
-            // Only if they are somewhat logical (this is just visual fluff without real directed graph data)
-            // But user asked for N8N "look"
-            
-            const x1 = start.x + start.width;
-            const y1 = start.y + (start.height / 2);
-            const x2 = end.x;
-            const y2 = end.y + (end.height / 2);
+      container.appendChild(node);
 
-            // If wrapping, don't draw messy line across screen
-            if (x2 < x1) continue; 
-            
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            // Bezier curve
-            const d = `M ${x1} ${y1} C ${x1 + 50} ${y1}, ${x2 - 50} ${y2}, ${x2} ${y2}`;
-            path.setAttribute("d", d);
-            path.setAttribute("class", "connection-line"); // Add class for styling
-            path.setAttribute("stroke", "#555");
-            path.setAttribute("stroke-width", "2");
-            path.setAttribute("fill", "none");
-            svg.appendChild(path);
-        }
+      nodes.push({ el: node, x, y, width: 150, height: 60 });
+
+      // Grid layout
+      x += gapX;
+      if (x > container.clientWidth - 150) {
+        x = startX;
+        y += gapY;
+      }
+    });
+
+    // Draw connections (simple sequential line)
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const start = nodes[i];
+      const end = nodes[i + 1];
+
+      // Draw line from right of start to left of end
+      // Only if they are somewhat logical (this is just visual fluff without real directed graph data)
+      // But user asked for N8N "look"
+
+      const x1 = start.x + start.width;
+      const y1 = start.y + start.height / 2;
+      const x2 = end.x;
+      const y2 = end.y + end.height / 2;
+
+      // If wrapping, don't draw messy line across screen
+      if (x2 < x1) continue;
+
+      const path = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path",
+      );
+      // Bezier curve
+      const d = `M ${x1} ${y1} C ${x1 + 50} ${y1}, ${x2 - 50} ${y2}, ${x2} ${y2}`;
+      path.setAttribute("d", d);
+      path.setAttribute("class", "connection-line"); // Add class for styling
+      path.setAttribute("stroke", "#555");
+      path.setAttribute("stroke-width", "2");
+      path.setAttribute("fill", "none");
+      svg.appendChild(path);
     }
+  }
 </script>
 {% endblock %}

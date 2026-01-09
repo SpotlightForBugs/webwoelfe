@@ -588,7 +588,7 @@ spiel_name }}{% endblock %} {% block content %}
   const socket = io();
   const raumCode = "{{ raum.code }}";
   const erzaehlerModus = "{{ raum.erzaehler_modus }}";
-  
+
   // Track if game has started to avoid unnecessary API calls during transition
   let gameStarted = false;
 
@@ -613,7 +613,7 @@ spiel_name }}{% endblock %} {% block content %}
     if (typeof initSitzordnungFromSpieler === "function") {
       initSitzordnungFromSpieler();
     }
-    
+
     // 3D Dorf aktualisieren (Online-Modus)
     if (window.scheduleVillageUpdate) {
       window.scheduleVillageUpdate();
@@ -809,7 +809,7 @@ spiel_name }}{% endblock %} {% block content %}
   async function updateRollenVorschau() {
     // Don't fetch if game has already started (we're navigating away)
     if (gameStarted) return;
-    
+
     try {
       const response = await fetch(`/api/rollen_vorschau/${raumCode}`);
       if (!response.ok) return; // Silently ignore HTTP errors during transitions

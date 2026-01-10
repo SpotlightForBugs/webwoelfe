@@ -148,7 +148,7 @@ class Prostituierte(Role):
             private_infos={
                 ziel.id: {
                     "nachricht": f"{spieler.name} hat die Nacht bei dir verbracht. Sie ist die Prostituierte!",
-                    "alert_type": "warning"
+                    "alert_type": "warning",
                 }
             },
             log_sichtbar_fuer="erzaehler",

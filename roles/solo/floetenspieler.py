@@ -147,7 +147,7 @@ class Floetenspieler(Role):
         if ziel.id not in verzauberte:
             verzauberte.append(ziel.id)
             self.set_state(spieler, "verzauberte", verzauberte)
-            
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du verzauberst {ziel.name} mit deiner Melodie.",
@@ -155,9 +155,7 @@ class Floetenspieler(Role):
             effekte={
                 "verzaubert": ziel.id,
             },
-            multi_target_updates={
-                ziel.id: {"global.ist_verzaubert": True}
-            },
+            multi_target_updates={ziel.id: {"global.ist_verzaubert": True}},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
 

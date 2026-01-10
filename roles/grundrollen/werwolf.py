@@ -93,6 +93,16 @@ class Werwolf(Role):
     def basis_hinweis_chance(self) -> float:
         return 0.15  # Höhere Chance für verdächtige Hinweise
 
+    @property
+    def is_group_action(self) -> bool:
+        """Werwölfe stimmen gemeinsam ab."""
+        return True
+
+    @property
+    def shared_phase_name(self) -> str:
+        """Alle Werwolf-Varianten teilen sich die werwolf_phase."""
+        return "werwolf_phase"
+
     def is_active_on_first_night(self) -> bool:
         """Werwolf acts on first night."""
         return True

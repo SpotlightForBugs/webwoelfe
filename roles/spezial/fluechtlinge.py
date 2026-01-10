@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -57,6 +58,11 @@ class Fluechtlinge(Role):
             erzaehler_tag=None,
             hinweis_config=None,
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: max(2, n // 6),
+                priority=20,
+            ),
             # Visual Styling
             avatar_gradient_from="#0ea5e9",
             avatar_gradient_to="#0369a1",

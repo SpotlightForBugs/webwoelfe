@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -58,6 +59,12 @@ class DunklerPriester(Role):
                 "zwei Spieler zum Verlieben."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=25,
+                exclusive_with=["Amor"],
+            ),
             # Visual Styling
             avatar_gradient_from="#18181b",
             avatar_gradient_to="#09090b",

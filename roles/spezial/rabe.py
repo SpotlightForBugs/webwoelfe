@@ -18,6 +18,7 @@ from ..base import (
     StateVisualEffect,
     GlobalStateDefinition,
     set_spieler_state,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -89,6 +90,11 @@ class Rabe(Role):
                 "{spieler} wurde vom Raben markiert und hat +2 Stimmen gegen sich!"
             ),
             erweiterung=Erweiterung.GEMEINDE,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=30,
+            ),
             hinweis_config=None,
             # Visual Styling
             avatar_gradient_from="#1f2937",

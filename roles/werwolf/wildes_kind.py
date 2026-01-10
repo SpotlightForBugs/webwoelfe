@@ -25,6 +25,7 @@ from ..base import (
     create_tail,
     create_aura,
     create_death_marker,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -77,6 +78,11 @@ class WildesKind(Role):
                 "Stirbt dieses, wird das Kind zum Werwolf."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=35,
+            ),
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",
             avatar_border_color="#ca8a04",

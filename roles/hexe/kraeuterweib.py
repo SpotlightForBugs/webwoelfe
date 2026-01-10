@@ -10,6 +10,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -50,6 +51,11 @@ class Kraeuterweib(Role):
                 "der morgen stumm sein wird."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=30,
+            ),
             # Visual Styling
             avatar_gradient_from="#22c55e",
             avatar_gradient_to="#15803d",

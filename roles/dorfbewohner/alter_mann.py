@@ -16,6 +16,7 @@ from ..base import (
     SpielKontext,
     StateField,
     StateType,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -62,6 +63,11 @@ class AlterMann(Role):
                 "schützt ihn vor dem ersten Angriff."
             ),
             erweiterung=Erweiterung.NEUMOND,
+            distribution=DistributionConfig(
+                min_players=9,
+                count_func=lambda n: 1,
+                priority=30,
+            ),
             # Visual Styling
             avatar_gradient_from="#9ca3af",
             avatar_gradient_to="#4b5563",

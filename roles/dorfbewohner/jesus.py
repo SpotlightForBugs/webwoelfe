@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
@@ -57,6 +58,11 @@ class Jesus(Role):
                 "Jesus erhebt sich und kehrt triumphierend ins Spiel zurück!"
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=20,
+            ),
             # Visual Styling
             avatar_gradient_from="#fbbf24",
             avatar_gradient_to="#d97706",

@@ -3,11 +3,11 @@ import { test, expect, chromium } from '@playwright/test';
 test('Hexe Phase bleibt nicht hängen bei Nichts tun', async () => {
   const browser = await chromium.launch();
   const context = await browser.newContext();
-  
+
   // Spieler erstellen (mindestens 5 für ein Spiel)
   const names = ['Spieler1', 'Spieler2', 'Spieler3', 'Spieler4', 'Spieler5'];
   const pages = [];
-  
+
   for (const name of names) {
     const page = await context.newPage();
     await page.goto('http://localhost:8888');
@@ -48,7 +48,7 @@ test('Hexe Phase bleibt nicht hängen bei Nichts tun', async () => {
   // Wir brauchen eine Hexe im Spiel für diesen Test. 
   // Da die Rollenverteilung zufällig ist, müssen wir eventuell den Test anpassen oder die Rollen hart setzen.
   // In diesem Projekt scheint berechne_rollen genutzt zu werden.
-  
+
   const hexe = players.find(p => p.rolle === 'Hexe');
   if (!hexe) {
     console.log('Keine Hexe in dieser Runde, überspringe Test-Details (aber fahre fort)');
@@ -77,22 +77,22 @@ test('Hexe Phase bleibt nicht hängen bei Nichts tun', async () => {
         await werwolf.page.click('text=Töten');
       }
     }
-    
+
     // Seherin Phase
     if (aktuellePhase.includes('seherin phase')) {
-        const seherin = players.find(p => p.rolle === 'Seherin');
-        if (seherin) {
-            await seherin.page.click('.spieler-card:not(.selected)');
-            await seherin.page.click('text=Identität sehen');
-        }
+      const seherin = players.find(p => p.rolle === 'Seherin');
+      if (seherin) {
+        await seherin.page.click('.spieler-card:not(.selected)');
+        await seherin.page.click('text=Identität sehen');
+      }
     }
 
     // Automatisches Weitergehen oder Host klickt weiter
     const weiterBtn = pages[0].locator('button:has-text("Weiter"), button:has-text("Nächste Phase")');
     if (await weiterBtn.isVisible()) {
-        await weiterBtn.click();
+      await weiterBtn.click();
     }
-    
+
     await new Promise(r => setTimeout(r, 2000));
   }
 

@@ -10,6 +10,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -49,6 +50,11 @@ class Prinz(Role):
                 "Der Prinz kann nicht gehängt werden! Seine Identität " "wird enthüllt."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=25,
+            ),
             # Visual Styling
             avatar_gradient_from="#eab308",
             avatar_gradient_to="#a16207",

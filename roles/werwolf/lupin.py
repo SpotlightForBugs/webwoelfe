@@ -23,6 +23,7 @@ from ..base import (
     create_tail,
     create_aura,
     create_death_marker,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
@@ -60,6 +61,12 @@ class Lupin(Role):
             prioritaet=50,
             erzaehler_nacht="Lupin ist in geraden Runden Mensch, in ungeraden Wolf.",
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=55,
+                exclusive_with=["Werwolf"],
+            ),
             avatar_gradient_from="#ca8a04",
             avatar_gradient_to="#a16207",
             avatar_border_color="#eab308",
@@ -78,6 +85,16 @@ class Lupin(Role):
         if kontext.runde % 2 == 0:
             return "Dorfbewohner"
         return "Werwolf"
+
+    @property
+    def is_group_action(self) -> bool:
+        """Lupin stimmt mit dem Rudel ab."""
+        return True
+
+    @property
+    def shared_phase_name(self) -> str:
+        """Lupin teilt sich die werwolf_phase mit dem Rudel."""
+        return "werwolf_phase"
 
     def is_active_on_first_night(self) -> bool:
         return False

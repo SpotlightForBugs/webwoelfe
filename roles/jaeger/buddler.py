@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -57,6 +58,11 @@ class Buddler(Role):
                 "Flüstere ihm die Todesursache zu."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=20,
+            ),
             # Visual Styling
             avatar_gradient_from="#78716c",
             avatar_gradient_to="#57534e",

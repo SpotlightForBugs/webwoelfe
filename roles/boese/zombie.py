@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -57,6 +58,11 @@ class Zombie(Role):
             erzaehler_nacht=("Die Zombies erwachen und infizieren einen Spieler."),
             erzaehler_tag=None,
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=15,
+                count_func=lambda n: 1,
+                priority=30,
+            ),
             # Visual Styling
             avatar_gradient_from="#4ade80",
             avatar_gradient_to="#166534",

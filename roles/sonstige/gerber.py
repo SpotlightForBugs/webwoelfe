@@ -14,6 +14,7 @@ from ..base import (
     AktionsErgebnis,
     SpielKontext,
     RollenModell,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -65,6 +66,11 @@ class Gerber(Role):
                 "ALLE verlieren außer ihm!"
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=15,
+            ),
             hinweis_config="Gerber",
             # Visual Styling
             avatar_gradient_from="#78350f",

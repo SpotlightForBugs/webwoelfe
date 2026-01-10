@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
@@ -53,6 +54,11 @@ class ZweiSchwestern(Role):
                 "Sie dürfen sich kurz absprechen."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 2,
+                priority=35,
+            ),
             # Visual Styling
             avatar_gradient_from="#f472b6",
             avatar_gradient_to="#db2777",

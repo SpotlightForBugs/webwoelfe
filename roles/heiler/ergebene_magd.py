@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -61,6 +62,12 @@ class ErgebeneMagd(Role):
                 "Die Ergebene Magd schläft. Sie wartet auf ihre Bestimmung."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=15,
+                requires_roles=["Seherin", "Hexe"],
+            ),
             # Visual Styling
             avatar_gradient_from="#14b8a6",
             avatar_gradient_to="#0f766e",

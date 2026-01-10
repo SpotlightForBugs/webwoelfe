@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
@@ -58,6 +59,12 @@ class Werwolfseherin(Role):
                 "erfährt die Rolle eines Spielers."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=55,
+                exclusive_with=["Werwolf"],
+            ),
             # Visual Styling
             avatar_gradient_from="#b91c1c",
             avatar_gradient_to="#7f1d1d",
@@ -78,6 +85,16 @@ class Werwolfseherin(Role):
     @property
     def erlaubte_ziele(self) -> str:
         return "andere"
+
+    @property
+    def is_group_action(self) -> bool:
+        """Werwolfseherin stimmt mit dem Rudel ab."""
+        return True
+
+    @property
+    def shared_phase_name(self) -> str:
+        """Werwolfseherin teilt sich die werwolf_phase mit dem Rudel."""
+        return "werwolf_phase"
 
     def is_active_on_first_night(self) -> bool:
         """Werwolfseherin acts every night."""

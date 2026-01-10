@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -58,6 +59,11 @@ class Sandmann(Role):
                 "der diese Nacht verschläft und seine Aktion nicht ausführen kann."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=30,
+            ),
             # Visual Styling
             avatar_gradient_from="#ddd6fe",
             avatar_gradient_to="#c4b5fd",

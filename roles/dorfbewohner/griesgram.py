@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -59,6 +60,11 @@ class Griesgram(Role):
                 "Er freut sich schon auf die nächste Hinrichtung."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=20,
+            ),
             # Visual Styling
             avatar_gradient_from="#6b7280",
             avatar_gradient_to="#4b5563",

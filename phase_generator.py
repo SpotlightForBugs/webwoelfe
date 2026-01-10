@@ -287,6 +287,7 @@ def build_phase_role_mapping(raum: Raum) -> Dict[str, str]:
     from game_logic import hole_lebende_spieler
 
     mapping = {}
+    shared_phase_roles = {}  # Track shared phases and their primary role
     lebende_spieler = hole_lebende_spieler(raum)
     is_first_night = raum.runde == 1
 
@@ -304,14 +305,19 @@ def build_phase_role_mapping(raum: Raum) -> Dict[str, str]:
                 aktiv = role.is_active_on_every_night()
 
             if aktiv:
-                phase_name = role.get_phase_name()
-                if phase_name:
-                    mapping[phase_name] = role.info.name
+                # Check for shared phase name (e.g., all werewolf variants share werwolf_phase)
+                shared_phase = getattr(role, 'shared_phase_name', None)
+                if shared_phase:
+                    # Track shared phases, use the first role found as primary
+                    if shared_phase not in shared_phase_roles:
+                        shared_phase_roles[shared_phase] = role.info.name
+                    mapping[shared_phase] = shared_phase_roles[shared_phase]
+                else:
+                    phase_name = role.get_phase_name()
+                    if phase_name:
+                        mapping[phase_name] = role.info.name
         except AttributeError:
             pass
-
-    # Special case: Werwolf phase is for all werewolves
-    mapping["werwolf_phase"] = "Werwolf"
 
     return mapping
 

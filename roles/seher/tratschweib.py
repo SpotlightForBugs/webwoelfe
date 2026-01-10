@@ -14,6 +14,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -59,6 +60,11 @@ class Tratschweib(Role):
                 "zeige ob sie im gleichen Team sind (Daumen hoch/runter)."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=25,
+            ),
             # Visual Styling
             avatar_gradient_from="#e11d48",
             avatar_gradient_to="#be123c",

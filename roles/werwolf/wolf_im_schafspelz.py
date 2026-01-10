@@ -21,6 +21,7 @@ from roles.base import (
     create_fangs,
     create_glowing_eyes,
     create_death_marker,
+    DistributionConfig,
 )
 from roles.enums import Team, Kategorie, SichtTyp, Erweiterung
 from roles.registry import RoleRegistry
@@ -69,6 +70,12 @@ class WolfimSchafspelz(Role):
                 "Er erscheint der Seherin als Dorfbewohner."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=55,
+                exclusive_with=["Werwolf"],
+            ),
             avatar_gradient_from="#fef3c7",
             avatar_gradient_to="#d97706",
             avatar_border_color="#fcd34d",
@@ -93,6 +100,16 @@ class WolfimSchafspelz(Role):
         if seher_rolle == "Seherin":
             return "Dorfbewohner"
         return self.info.name
+
+    @property
+    def is_group_action(self) -> bool:
+        """Wolf im Schafspelz stimmt mit dem Rudel ab."""
+        return True
+
+    @property
+    def shared_phase_name(self) -> str:
+        """Wolf im Schafspelz teilt sich die werwolf_phase mit dem Rudel."""
+        return "werwolf_phase"
 
     def is_active_on_first_night(self) -> bool:
         return False

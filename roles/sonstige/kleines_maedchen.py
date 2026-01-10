@@ -12,6 +12,7 @@ from ..base import (
     AktionsErgebnis,
     SpielKontext,
     RollenModell,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -45,6 +46,11 @@ class KleinesMaedchen(Role):
             erzaehler_tag=None,
             hinweis_config=None,
             erweiterung=Erweiterung.BASISSPIEL,
+            distribution=DistributionConfig(
+                min_players=8,
+                count_func=lambda n: 1,
+                priority=40,
+            ),
             # Visual Styling
             avatar_gradient_from="#fbbf24",
             avatar_gradient_to="#f59e0b",

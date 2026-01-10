@@ -11,6 +11,7 @@ from ..base import (
     AktionsErgebnis,
     SpielKontext,
     RollenModell,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -44,6 +45,11 @@ class Suendenbock(Role):
             erzaehler_tag="UNENTSCHIEDEN bei der Abstimmung! Das Dorf kann sich nicht einigen - also muss der Sündenbock sterben!",
             hinweis_config=None,
             erweiterung=Erweiterung.NEUMOND,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=25,
+            ),
             # Visual Styling
             avatar_gradient_from="#a8a29e",
             avatar_gradient_to="#78716c",

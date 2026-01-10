@@ -14,6 +14,7 @@ from ..base import (
     StateField,
     StateType,
     HinweisConfig,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, Erweiterung
 from ..registry import RoleRegistry
@@ -66,6 +67,11 @@ class Selbstmoerder(Role):
             team=Team.SOLO,
             kategorie=Kategorie.SOLO,
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=15,
+            ),
             beschreibung=(
                 "Du bist der Selbstmörder. Dein Ziel: Vom Dorf gehängt "
                 "werden! Du gewinnst nur so - stirbst du durch Wölfe, "

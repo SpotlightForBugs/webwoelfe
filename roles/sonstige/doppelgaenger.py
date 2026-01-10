@@ -16,6 +16,7 @@ from ..base import (
     SpielKontext,
     StateField,
     StateType,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -72,6 +73,11 @@ class Doppelgaenger(Role):
                 "Das Ziel des Doppelgängers ist tot! " "Er übernimmt dessen Rolle."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=25,
+            ),
             # Visual Styling
             avatar_gradient_from="#6366f1",
             avatar_gradient_to="#4338ca",

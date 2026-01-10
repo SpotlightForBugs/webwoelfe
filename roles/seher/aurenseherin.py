@@ -17,6 +17,7 @@ from ..base import (
     create_aura,
     create_robe,
     create_death_marker,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -53,6 +54,12 @@ class Aurenseherin(Role):
             prioritaet=22,
             erzaehler_nacht="Die Aurenseherin sieht die Aura eines Spielers.",
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=45,
+                exclusive_with=["Seherin"],
+            ),
             avatar_gradient_from="#a78bfa",
             avatar_gradient_to="#7c3aed",
             avatar_border_color="#c4b5fd",

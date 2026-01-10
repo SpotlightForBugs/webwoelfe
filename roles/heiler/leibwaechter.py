@@ -10,6 +10,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -47,6 +48,11 @@ class Leibwaechter(Role):
             prioritaet=54,
             erzaehler_nacht=("Der Leibwächter erwacht und wählt seinen Schützling."),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=35,
+            ),
             # Visual Styling
             avatar_gradient_from="#0ea5e9",
             avatar_gradient_to="#0284c7",

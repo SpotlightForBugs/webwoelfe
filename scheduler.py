@@ -142,28 +142,17 @@ def is_role_done(raum: "Raum", role: Any, spieler_liste: List["Spieler"]) -> boo
     # Wenn AktionsTyp 'abstimmung' -> warten bis timer oder alle gestimmt.
     # Wenn AktionsTyp 'kill' -> fertig.
     
-    if role.info.team == 'werwolf': # Hacky check for group role
-        # Werwolf special: Check if kill action exists OR Timer?
-        # Wir nehmen an: Wenn eine VALID action existiert, ist es getan.
-        # Aber Werwölfe stimmen ab.
-        # Wir brauchen evtl. einen Status im Raum "werwolf_done".
-        pass
-
-    # Generic check: Hat JEDER Spieler dieser Rolle eine Aktion gemacht?
-    # (Für Seherin, Hexe, Amor (1 Spieler) -> Ja)
-    # (Für Werwölfe (Gruppe) -> Nein, sie agieren als Gruppe)
-    
-    # Gruppen-Check Flag in Role?
-    is_group_action = (role.info.name == "Werwolf" or role.info.name == "Drei Brüder") # Todo: Better dynamic check
+    # Dynamically check if role acts as a group using the role's property
+    is_group_action = getattr(role, 'is_group_action', False)
     
     if is_group_action:
         # Check if ALL members acted
-        # (Assuming every wolf must vote/ack)
+        # (Assuming every member must vote/ack)
         acted_ids = {a.von_spieler_id for a in aktionen}
         needed_count = len(spieler_liste)
         
         # If any player acted "skip" (if wolves can skip?), logic might differ.
-        # But for Wernerwolf, usually all vote.
+        # But for group roles, usually all vote.
         is_done = len(acted_ids) >= needed_count
         if not is_done:
             logger.debug(f"Role {role.info.name} waiting for group action ({len(acted_ids)}/{needed_count})")

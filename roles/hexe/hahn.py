@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -62,6 +63,11 @@ class Hahn(Role):
                 "verrät er seinen Mörder!"
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=25,
+            ),
             # Visual Styling
             avatar_gradient_from="#dc2626",
             avatar_gradient_to="#991b1b",

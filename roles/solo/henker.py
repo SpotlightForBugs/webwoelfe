@@ -13,6 +13,7 @@ from ..base import (
     SpielKontext,
     StateField,
     StateType,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
@@ -59,6 +60,11 @@ class Henker(Role):
                 "Der Henker erwacht (nur erste Nacht) und waehlt sein Ziel."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=25,
+            ),
             # Visual Styling
             avatar_gradient_from="#525252",
             avatar_gradient_to="#262626",

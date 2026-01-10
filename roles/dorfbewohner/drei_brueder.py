@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
@@ -53,6 +54,11 @@ class DreiBrueder(Role):
                 "Sie dürfen sich kurz absprechen."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 3,
+                priority=40,
+            ),
             # Visual Styling
             avatar_gradient_from="#4f46e5",
             avatar_gradient_to="#312e81",
@@ -63,6 +69,11 @@ class DreiBrueder(Role):
     @property
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
+
+    @property
+    def is_group_action(self) -> bool:
+        """Drei Brüder agieren als Gruppe."""
+        return True
 
     def is_active_on_first_night(self) -> bool:
         """Drei Brüder act on first night (recognize each other)."""

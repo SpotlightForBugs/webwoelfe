@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -54,6 +55,11 @@ class Dorfdepp(Role):
                 "ernst genommen zu werden... oder auch nicht."
             ),
             erweiterung=Erweiterung.NEUMOND,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=25,
+            ),
             erzaehler_tag=(
                 "Der Dorfdepp stolpert durch den Tag. Sein Ziel: "
                 "Sich so verdächtig wie möglich machen!"

@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -57,6 +58,11 @@ class Mordlustiger(Role):
                 "Der Mordlustige erwacht und wählt sein nächtliches Opfer."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=15,
+                count_func=lambda n: 1,
+                priority=20,
+            ),
             # Visual Styling
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",

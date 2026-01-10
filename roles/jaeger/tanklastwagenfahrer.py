@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -59,6 +60,11 @@ class Tanklastwagenfahrer(Role):
                 "Er wartet auf den richtigen Moment."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=20,
+            ),
             # Visual Styling
             avatar_gradient_from="#64748b",
             avatar_gradient_to="#475569",

@@ -10,6 +10,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -48,6 +49,11 @@ class Medium(Role):
                 "Flüster dem Medium die Rolle des Toten zu."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=30,
+            ),
             # Visual Styling
             avatar_gradient_from="#c084fc",
             avatar_gradient_to="#9333ea",

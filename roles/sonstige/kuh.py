@@ -32,6 +32,7 @@ from ..base import (
     UIButtonDefinition,
     set_spieler_state,
     get_spieler_state,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -533,6 +534,11 @@ class Kuh(Role):
             erzaehler_nacht="Die Kuh muht in der Nacht. Alle hören es.",
             erzaehler_tag="Die Kuh bietet ihre Milch an. Wer traut sich zu trinken?",
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=10,
+            ),
             # Visual Styling
             avatar_gradient_from="#8B4513",
             avatar_gradient_to="#654321",

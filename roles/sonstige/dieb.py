@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -58,6 +59,11 @@ class Dieb(Role):
                 "Der Dieb erwacht zuerst und sieht zwei Rollen. " "Er muss eine wählen."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
+            distribution=DistributionConfig(
+                min_players=8,
+                count_func=lambda n: 1,
+                priority=100,
+            ),
             # Visual Styling
             avatar_gradient_from="#1e293b",
             avatar_gradient_to="#0f172a",

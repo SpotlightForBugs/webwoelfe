@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -59,6 +60,12 @@ class Hexenmeister(Role):
                 "oder den Fluch aufheben."
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=55,
+                exclusive_with=["Werwolf"],
+            ),
             # Visual Styling
             avatar_gradient_from="#4c1d95",
             avatar_gradient_to="#2e1065",

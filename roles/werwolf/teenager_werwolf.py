@@ -24,6 +24,7 @@ from ..base import (
     create_glowing_eyes,
     create_tail,
     create_death_marker,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung, AktionsTyp
 from ..registry import RoleRegistry
@@ -65,6 +66,12 @@ class TeenagerWerwolf(Role):
             prioritaet=50,
             erzaehler_nacht="Der Teenager-Werwolf kann einmal den Angriff verweigern.",
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=50,
+                exclusive_with=["Werwolf"],
+            ),
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
             avatar_border_color="#b91c1c",
@@ -78,6 +85,16 @@ class TeenagerWerwolf(Role):
     @property
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.WERWOLF
+
+    @property
+    def is_group_action(self) -> bool:
+        """Teenager-Werwolf stimmt mit dem Rudel ab."""
+        return True
+
+    @property
+    def shared_phase_name(self) -> str:
+        """Teenager-Werwolf teilt sich die werwolf_phase mit dem Rudel."""
+        return "werwolf_phase"
 
     def is_active_on_first_night(self) -> bool:
         return True

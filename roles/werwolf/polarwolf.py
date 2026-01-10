@@ -23,6 +23,7 @@ from ..base import (
     create_tail,
     create_aura,
     create_death_marker,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -65,6 +66,12 @@ class Polarwolf(Role):
             prioritaet=50,
             erzaehler_nacht=("Der Polarwolf ist immun gegen Sandmann und Jäger."),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=55,
+                exclusive_with=["Werwolf"],
+            ),
             avatar_gradient_from="#e0f2fe",
             avatar_gradient_to="#0ea5e9",
             avatar_border_color="#38bdf8",
@@ -79,6 +86,16 @@ class Polarwolf(Role):
     @property
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.WERWOLF
+
+    @property
+    def is_group_action(self) -> bool:
+        """Polarwolf stimmt mit dem Rudel ab."""
+        return True
+
+    @property
+    def shared_phase_name(self) -> str:
+        """Polarwolf teilt sich die werwolf_phase mit dem Rudel."""
+        return "werwolf_phase"
 
     def is_active_on_first_night(self) -> bool:
         return False

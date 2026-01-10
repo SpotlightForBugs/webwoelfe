@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -57,6 +58,11 @@ class Nutte(Role):
             prioritaet=47,
             erzaehler_nacht=("Die Nutte erwacht und wählt bei wem sie übernachtet."),
             erweiterung=Erweiterung.GEMEINDE,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=25,
+            ),
             # Visual Styling
             avatar_gradient_from="#ec4899",
             avatar_gradient_to="#be185d",

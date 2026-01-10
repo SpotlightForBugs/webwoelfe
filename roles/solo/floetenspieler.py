@@ -17,6 +17,7 @@ from ..base import (
     GlobalStateDefinition,
     set_spieler_state,
     get_spieler_state,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -83,6 +84,11 @@ class Floetenspieler(Role):
                 "Der Floetenspieler erwacht und waehlt 2 Spieler " "zum Verzaubern."
             ),
             erweiterung=Erweiterung.NEUMOND,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=25,
+            ),
             # Visual Styling
             avatar_gradient_from="#8b5cf6",
             avatar_gradient_to="#5b21b6",

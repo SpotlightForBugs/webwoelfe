@@ -2410,6 +2410,32 @@ class Role(ABC):
         return self.get_hinweis_config().basis_chance
 
     @property
+    def is_group_action(self) -> bool:
+        """
+        Gibt an ob diese Rolle als Gruppe agiert (alle müssen abstimmen).
+
+        Überschreibe auf True für Rollen wie Werwolf, Drei Brüder, etc.
+        wo alle Spieler der Rolle gemeinsam eine Entscheidung treffen.
+
+        Returns:
+            True wenn Gruppenabstimmung, False für Einzelaktionen
+        """
+        return False
+
+    @property
+    def shared_phase_name(self) -> Optional[str]:
+        """
+        Gibt einen gemeinsamen Phasennamen zurück falls mehrere Rollen
+        in der gleichen Phase agieren.
+
+        Überschreibe für Werwolf-Varianten die alle in 'werwolf_phase' agieren.
+
+        Returns:
+            Gemeinsamer Phasenname oder None für eigene Phase
+        """
+        return None
+
+    @property
     def sichtbar_als(self) -> SichtTyp:
         """Wie erscheint diese Rolle der Seherin?"""
         if self.info.team == Team.WERWOLF:

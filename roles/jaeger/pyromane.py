@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -65,6 +66,11 @@ class Pyromane(Role):
                 "Nachbarhäuser aus!"
             ),
             erweiterung=Erweiterung.GEMEINDE,
+            distribution=DistributionConfig(
+                min_players=15,
+                count_func=lambda n: 1,
+                priority=15,
+            ),
             # Visual Styling
             avatar_gradient_from="#f97316",
             avatar_gradient_to="#c2410c",

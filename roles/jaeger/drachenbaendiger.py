@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -58,6 +59,11 @@ class Drachenbaendiger(Role):
                 "Der Drachenbändiger schläft friedlich, " "bewacht von seinem Drachen."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=35,
+            ),
             # Visual Styling
             avatar_gradient_from="#7c3aed",
             avatar_gradient_to="#5b21b6",

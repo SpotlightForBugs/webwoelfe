@@ -24,6 +24,7 @@ from ..base import (
     create_glowing_eyes,
     create_tail,
     create_death_marker,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, SichtTyp, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -510,6 +511,11 @@ class Hund(Role):
                 "Er wird ihm treu ergeben sein... bis in den Tod."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=30,
+            ),
             # Visual Styling
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",

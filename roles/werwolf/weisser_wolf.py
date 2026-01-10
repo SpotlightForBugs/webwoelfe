@@ -24,6 +24,7 @@ from ..base import (
     create_tail,
     create_aura,
     create_death_marker,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -64,6 +65,12 @@ class WeisserWolf(Role):
                 "Möchte er einen Mitwerwolf töten?"
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=15,
+                count_func=lambda n: 1,
+                priority=50,
+                exclusive_with=["Werwolf"],
+            ),
             avatar_gradient_from="#f5f5f4",
             avatar_gradient_to="#d6d3d1",
             avatar_border_color="#e7e5e4",

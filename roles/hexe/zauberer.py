@@ -13,6 +13,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -59,6 +60,11 @@ class Zauberer(Role):
                 "(Schutz/Sicht/Schweigen) und auf wen?"
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=40,
+            ),
             # Visual Styling
             avatar_gradient_from="#3b0764",
             avatar_gradient_to="#2e1065",

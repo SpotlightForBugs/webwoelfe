@@ -14,6 +14,7 @@ from ..base import (
     AktionsErgebnis,
     SpielKontext,
     RollenModell,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -65,6 +66,11 @@ class Engel(Role):
                 "in den Himmel auf!"
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=15,
+            ),
             hinweis_config="Engel",
             # Visual Styling
             avatar_gradient_from="#fef3c7",

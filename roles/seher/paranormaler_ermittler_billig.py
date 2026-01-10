@@ -14,6 +14,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -60,6 +61,12 @@ class ParanormalerErmittlerbillig(Role):
                 "ACHTUNG: 30% Chance dass du lügen musst! (Würfle heimlich)"
             ),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=25,
+                exclusive_with=["Seherin"],
+            ),
             # Visual Styling
             avatar_gradient_from="#a3a3a3",
             avatar_gradient_to="#737373",

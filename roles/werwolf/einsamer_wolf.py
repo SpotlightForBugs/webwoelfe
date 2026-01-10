@@ -23,6 +23,7 @@ from ..base import (
     create_tail,
     create_aura,
     create_death_marker,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -65,6 +66,12 @@ class EinsamerWolf(Role):
             prioritaet=48,
             erzaehler_nacht="Der Einsame Wolf erwacht separat und wählt sein eigenes Opfer.",
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=15,
+                count_func=lambda n: 1,
+                priority=45,
+                exclusive_with=["Werwolf"],
+            ),
             avatar_gradient_from="#4c1d95",
             avatar_gradient_to="#2e1065",
             avatar_border_color="#6d28d9",

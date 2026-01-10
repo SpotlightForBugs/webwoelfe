@@ -29,6 +29,7 @@ from ..base import (
     create_tail,
     create_aura,
     create_death_marker,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -91,6 +92,12 @@ class Urwolf(Role):
                 "ein Opfer infizieren statt zu töten."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
+            distribution=DistributionConfig(
+                min_players=12,
+                count_func=lambda n: 1,
+                priority=55,
+                exclusive_with=["Werwolf"],
+            ),
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
             avatar_border_color="#b91c1c",
@@ -104,6 +111,16 @@ class Urwolf(Role):
     @property
     def sichtbar_als(self) -> SichtTyp:
         return SichtTyp.WERWOLF
+
+    @property
+    def is_group_action(self) -> bool:
+        """Urwolf stimmt mit dem Rudel ab."""
+        return True
+
+    @property
+    def shared_phase_name(self) -> str:
+        """Urwolf teilt sich die werwolf_phase mit dem Rudel."""
+        return "werwolf_phase"
 
     def is_active_on_first_night(self) -> bool:
         return True

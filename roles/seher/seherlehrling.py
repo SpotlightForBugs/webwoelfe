@@ -10,6 +10,7 @@ from ..base import (
     RollenInfo,
     AktionsErgebnis,
     SpielKontext,
+    DistributionConfig,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -47,6 +48,12 @@ class Seherlehrling(Role):
             prioritaet=21,
             erzaehler_nacht=("Der Seherlehrling schläft. Noch lernt er..."),
             erweiterung=Erweiterung.COMMUNITY,
+            distribution=DistributionConfig(
+                min_players=10,
+                count_func=lambda n: 1,
+                priority=20,
+                requires_roles=["Seherin"],
+            ),
             # Visual Styling
             avatar_gradient_from="#8b5cf6",
             avatar_gradient_to="#6d28d9",

@@ -174,9 +174,11 @@ class Hexe(Role):
                 "Du hast das Opfer geheilt.",
                 ziel_spieler_id=opfer_id,
                 effekte={
-                    "heilen": True,
                     "hexe_heilen": True,
                     "heiltrank_verbraucht": True,
+                },
+                multi_target_updates={
+                    opfer_id: {"global.ist_beschuetzt": True}
                 },
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
@@ -199,7 +201,9 @@ class Hexe(Role):
                 f"Du hast {ziel.name} vergiftet.",
                 ziel_spieler_id=ziel.id,
                 effekte={
-                    "vergiften": True,
+                    "toeten": ziel.id,
+                    "todesursache": "hexentrank",
+                    "hero_kill": True,
                     "hexe_vergiften": True,
                     "gifttrank_verbraucht": True,
                 },

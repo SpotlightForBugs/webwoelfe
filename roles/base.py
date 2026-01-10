@@ -1971,6 +1971,10 @@ class AktionsErgebnis:
     state_updates: Dict[str, Any] = field(default_factory=dict)
     # Private structured info for specific players (player_id -> data dict)
     private_infos: Dict[int, Dict[str, Any]] = field(default_factory=dict)
+    # Generic state updates for other players (player_id -> {key -> value})
+    multi_target_updates: Dict[int, Dict[str, Any]] = field(default_factory=dict)
+    # Generic logs to add to game history (List of {text, sichtbar_fuer})
+    additional_logs: List[Dict[str, str]] = field(default_factory=list)
 
 
 @dataclass

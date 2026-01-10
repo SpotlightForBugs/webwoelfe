@@ -80,86 +80,17 @@ AUDIO_CONFIRMATION_THRESHOLD = float(os.environ.get("AUDIO_THRESHOLD", "0.8"))
 
 
 # ============================================================================
-# DEBUG TRACKING SYSTEM
-# ============================================================================
 
-# Global debug log buffer
-_debug_log_buffer = []
-MAX_DEBUG_LOGS = 1000
+# ============================================================================
+# LOGGING SYSTEM
+# ============================================================================
 
 def log_ts(msg: str):
     """Log mit Timestamp für Debugging"""
     ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
     log_entry = f"[{ts}] {msg}"
     print(log_entry)
-    
-    # Add to debug buffer
-    if app.debug:
-        _debug_log_buffer.append({
-            "timestamp": ts,
-            "message": msg,
-            "type": "log"
-        })
-        # Keep buffer size limited
-        if len(_debug_log_buffer) > MAX_DEBUG_LOGS:
-            _debug_log_buffer.pop(0)
 
-def debug_track_call(func_name, args=None, kwargs=None, result=None, error=None):
-    """Track function calls for debugging"""
-    if not app.debug:
-        return
-    
-    ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    
-    # Serialize args/kwargs safely
-    try:
-        args_str = str(args)[:200] if args else "()"
-        kwargs_str = str(kwargs)[:200] if kwargs else "{}"
-        result_str = str(result)[:200] if result is not None else "None"
-        error_str = str(error) if error else None
-    except:
-        args_str = "<unserializable>"
-        kwargs_str = "<unserializable>"
-        result_str = "<unserializable>"
-        error_str = str(error) if error else None
-    
-    entry = {
-        "timestamp": ts,
-        "type": "function_call",
-        "function": func_name,
-        "args": args_str,
-        "kwargs": kwargs_str,
-        "result": result_str,
-        "error": error_str,
-        "success": error is None
-    }
-    
-    _debug_log_buffer.append(entry)
-    if len(_debug_log_buffer) > MAX_DEBUG_LOGS:
-        _debug_log_buffer.pop(0)
-    
-    # Emit to debug clients
-    try:
-        socketio.emit('debug_function_call', entry, namespace='/debug')
-    except:
-        pass
-
-def debug_track_decorator(func):
-    """Decorator to automatically track function calls"""
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if not app.debug:
-            return func(*args, **kwargs)
-        
-        func_name = f"{func.__module__}.{func.__name__}"
-        try:
-            result = func(*args, **kwargs)
-            debug_track_call(func_name, args, kwargs, result=result)
-            return result
-        except Exception as e:
-            debug_track_call(func_name, args, kwargs, error=e)
-            raise
-    return wrapper
 
 
 def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
@@ -169,10 +100,27 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
     This centralizes effect handling that was previously hardcoded for each role.
     Effects are defined dynamically by each role's execute_action method.
     """
-    if not ergebnis or not ergebnis.effekte:
+    if not ergebnis:
         return
 
-    effekte = ergebnis.effekte
+    effekte = ergebnis.effekte or {}
+
+    # 1. Generic State Updates for other players
+    if ergebnis.multi_target_updates:
+        for t_id, updates in ergebnis.multi_target_updates.items():
+            t_spieler = db.session.get(Spieler, int(t_id))
+            if t_spieler:
+                for key, value in updates.items():
+                    t_spieler.set_state(key, value)
+
+    # 2. Generic Logging
+    if ergebnis.additional_logs:
+        for log_def in ergebnis.additional_logs:
+            game_logic.log_eintrag(
+                raum.id,
+                log_def["text"],
+                sichtbar_fuer=str(log_def.get("sichtbar_fuer", "alle"))
+            )
 
     # Handle kill effects
     if "toeten" in effekte:
@@ -192,51 +140,18 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
                 room=raum.code,
             )
 
-    # Handle heal effects
-    if "heilen" in effekte or "geschuetzt" in effekte:
-        geschuetzt_id = effekte.get("heilen") or effekte.get("geschuetzt")
-        geschuetzt_spieler = db.session.get(Spieler, geschuetzt_id)
-        if geschuetzt_spieler:
-            geschuetzt_spieler.set_state("global.ist_beschuetzt", True)
-
     # Handle phase trigger effects
     if "trigger_phase" in effekte:
         phase_name = effekte["trigger_phase"]
         log_ts(f"[Effekt] Triggering special phase: {phase_name}")
         raum.aktuelle_phase = phase_name
 
-    # Handle love connection effects (from Amor)
-    if "verliebte" in effekte:
-        verliebte_ids = effekte["verliebte"]
-        if len(verliebte_ids) == 2:
-            s1 = db.session.get(Spieler, verliebte_ids[0])
-            s2 = db.session.get(Spieler, verliebte_ids[1])
-            if s1 and s2:
-                s1.set_state("global.verliebt_mit_id", s2.id)
-                s2.set_state("global.verliebt_mit_id", s1.id)
-                game_logic.log_eintrag(
-                    raum.id,
-                    f"Du bist verliebt in {s2.name}!",
-                    sichtbar_fuer=str(s1.id),
-                )
-                game_logic.log_eintrag(
-                    raum.id,
-                    f"Du bist verliebt in {s1.name}!",
-                    sichtbar_fuer=str(s2.id),
-                )
-
     # Handle state updates from the result
     if ergebnis.state_updates:
         for key, value in ergebnis.state_updates.items():
             spieler.set_state(key, value)
             
-    # DEBUG: Emit full state update (disabled during tests for performance)
-    if app.debug and not (os.environ.get('TESTING') or os.environ.get('PLAYWRIGHT_TEST')):
-        try:
-           debug_track_call('socketio.emit', args=['debug_state_update', 'gather_gamestate(raum)'])
-           socketio.emit('debug_state_update', gather_gamestate(raum), namespace='/debug')
-        except Exception as e:
-           print(f"Debug emit failed: {e}")
+
 
     # Handle private info notifications
     if ergebnis.private_infos:
@@ -253,16 +168,6 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
                     {"nachricht": info["nachricht"], "typ": info.get("alert_type", "info")},
                     room=f"player_{player_id}",
                 )
-
-    # Handle hexe-specific potion effects (for backward compatibility)
-    if "heiltrank_verbraucht" in effekte:
-        spieler.set_state("hexe.heiltrank", False)
-    if "gifttrank_verbraucht" in effekte:
-        spieler.set_state("hexe.gifttrank", False)
-
-    # Handle heiler target memory
-    if "heiler_ziel_merken" in effekte:
-        spieler.set_state("heiler.letztes_ziel", effekte["heiler_ziel_merken"])
 
 
 # Initialisierung
@@ -945,7 +850,8 @@ def set_sitzordnung(code):
         return jsonify({"success": False, "error": "Raum nicht gefunden"}), 404
 
     if raum.spiel_gestartet:
-        return jsonify({"success": False, "error": "Spiel bereits gestartet"}), 400
+        # Silently ignore seating order updates after game start (race condition)
+        return jsonify({"success": True, "ignored": True}), 200
 
     spieler = hole_aktuellen_spieler()
     if not spieler or spieler.raum_id != raum.id:
@@ -2414,173 +2320,7 @@ def server_fehler(e):
 # MAIN
 # ============================================================================
 
-# ============================================================================
-# DEBUGGING & VISUALIZATION
-# ============================================================================
 
-@app.route("/debug/state")
-def debug_view():
-    if not app.debug:
-        return "Not available in production", 403
-    return render_template("debug/state.html")
-
-@app.route("/api/debug/state")
-def get_debug_state():
-    """Returns full game state for debugging visualization"""
-    if not app.debug:
-        return jsonify({"error": "Not available in production"}), 403
-    
-    # Skip debug collection during tests - it's too expensive
-    if os.environ.get('TESTING') or os.environ.get('PLAYWRIGHT_TEST'):
-        return jsonify({"valid": False, "message": "Debug disabled during tests"}), 503
-        
-    try:
-        raum_code = request.args.get('code')
-        if raum_code:
-            raum = Raum.query.filter_by(code=raum_code).first()
-        else:
-            # Just grab the most recent one
-            raum = Raum.query.order_by(Raum.id.desc()).first()
-            
-        if not raum:
-            return jsonify({"valid": False, "message": "No room found"})
-            
-        state = gather_gamestate(raum)
-        return jsonify(state)
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"valid": False, "error": str(e), "message": "Failed to gather state"})
-
-@app.route("/api/debug/logs")
-def get_debug_logs():
-    """Returns recent debug logs"""
-    if not app.debug:
-        return jsonify({"error": "Not available in production"}), 403
-    
-    limit = int(request.args.get('limit', 100))
-    return jsonify({
-        "logs": _debug_log_buffer[-limit:] if _debug_log_buffer else [],
-        "total": len(_debug_log_buffer)
-    })
-
-@app.route("/api/debug/clear")
-def clear_debug_logs():
-    """Clear debug log buffer"""
-    if not app.debug:
-        return jsonify({"error": "Not available in production"}), 403
-    
-    global _debug_log_buffer
-    _debug_log_buffer = []
-    return jsonify({"success": True, "message": "Debug logs cleared"})
-
-def gather_gamestate(raum):
-    """Collects comprehensive game state for visualization"""
-    
-    # Skip expensive queries during tests
-    is_testing = os.environ.get('TESTING') or os.environ.get('PLAYWRIGHT_TEST')
-    
-    # Players with full state
-    players = []
-    for p in raum.spieler:
-        players.append({
-            "id": p.id,
-            "name": p.name,
-            "rolle": p.rolle,
-            "ist_am_leben": p.ist_am_leben,
-            "ist_erzaehler": p.ist_erzaehler,
-            "status": p.status,
-            "states": p.get_all_state() if not is_testing else {}
-        })
-    
-    # Get all recent actions (skip during tests)
-    actions = []
-    if not is_testing:
-        try:
-            recent_actions = SpielAktion.query.filter_by(raum_id=raum.id).order_by(SpielAktion.id.desc()).limit(50).all()
-            for action in recent_actions:
-                actions.append({
-                    "id": action.id,
-                    "runde": action.runde,
-                    "phase": action.phase,
-                    "typ": action.aktion_typ,
-                    "von_spieler_id": action.von_spieler_id,
-                    "ziel_spieler_id": action.ziel_spieler_id,
-                    "zusatz_daten": action.zusatz_daten
-                })
-        except:
-            pass
-    
-    # Get all logs (skip during tests)
-    logs = []
-    if not is_testing:
-        try:
-            recent_logs = SpielLog.query.filter_by(raum_id=raum.id).order_by(SpielLog.id.desc()).limit(100).all()
-            for log in recent_logs:
-                logs.append({
-                    "id": log.id,
-                    "nachricht": log.nachricht,
-                    "sichtbar_fuer": log.sichtbar_fuer,
-                    "zeitpunkt": log.zeitpunkt.isoformat() if log.zeitpunkt else None
-                })
-        except:
-            pass
-        
-    # Get phases flow recommendation (skip expensive generation during tests)
-    planned_phases = PHASEN
-    if not is_testing:
-        try:
-            from phase_generator import generate_phases_for_game
-            planned_phases = generate_phases_for_game(raum)
-            if not planned_phases:
-                 planned_phases = PHASEN # Fallback to constant
-        except ImportError:
-            planned_phases = PHASEN
-        except Exception as e:
-            planned_phases = PHASEN
-            print(f"Phase generation error: {e}")
-
-    # Get all rooms for overview (skip during tests)
-    all_rooms = []
-    if not is_testing:
-        try:
-            rooms = Raum.query.all()
-            for r in rooms:
-                all_rooms.append({
-                    "id": r.id,
-                    "code": r.code,
-                    "aktuelle_phase": r.aktuelle_phase,
-                    "runde": r.runde,
-                    "spiel_gestartet": r.spiel_gestartet,
-                    "spieler_count": len(r.spieler)
-                })
-        except:
-            pass
-
-    return {
-        "valid": True,
-        "timestamp": datetime.now().isoformat(),
-        "raum": {
-            "id": raum.id,
-            "code": raum.code,
-            "aktuelle_phase": raum.aktuelle_phase,
-            "runde": raum.runde,
-            "modus": raum.modus,
-            "spiel_gestartet": raum.spiel_gestartet,
-            "spieler_anzahl": raum.spieler_anzahl
-        },
-        "all_rooms": all_rooms,
-        "players": players,
-        "actions": actions,
-        "logs": logs,
-        "phasen_order": planned_phases,
-        "state_vars": {
-            "phase_wechsel_delay": PHASE_WECHSEL_DELAY,
-            "audio_fertig_players": {} if is_testing else {f"{k[0]}:{k[1]}:{k[2]}": list(v) for k, v in _audio_fertig_players.items()},
-            "aktive_hinweise": {} if is_testing else _aktive_hinweise.get(raum.id, {})
-        },
-        "function_calls": _debug_log_buffer[-100:] if _debug_log_buffer and not is_testing else []
-    }
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8888"))

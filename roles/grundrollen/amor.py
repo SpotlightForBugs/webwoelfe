@@ -239,19 +239,22 @@ class Amor(Role):
                 nachricht="Beide Spieler müssen am Leben sein.",
             )
 
-        # Setze Verliebte-Status auf beide Spieler (global state)
-        set_spieler_state(ziel1, "global.verliebt_mit_id", ziel2.id)
-        set_spieler_state(ziel2, "global.verliebt_mit_id", ziel1.id)
-
         # Markiere Amor als hat verkuppelt
         self.set_state(spieler, "hat_verkuppelt", True)
 
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"{ziel1.name} und {ziel2.name} haben sich verliebt!",
-            effekte={
-                "verliebte": [ziel1.id, ziel2.id],
+            effekte={},
+            # Use generic updates instead of hardcoded 'verliebte' key
+            multi_target_updates={
+                ziel1.id: {"global.verliebt_mit_id": ziel2.id},
+                ziel2.id: {"global.verliebt_mit_id": ziel1.id},
             },
+            additional_logs=[
+                {"text": f"Du bist verliebt in {ziel2.name}!", "sichtbar_fuer": str(ziel1.id)},
+                {"text": f"Du bist verliebt in {ziel1.name}!", "sichtbar_fuer": str(ziel2.id)},
+            ],
             log_sichtbar_fuer="erzaehler",
             private_infos={
                 ziel1.id: {

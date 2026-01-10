@@ -1195,6 +1195,10 @@ spiel_name }}{% endblock %} {% block content %}
   }
 
   async function saveSitzordnung() {
+    // Don't save if game has started (race condition prevention)
+    if (gameStarted) {
+      return;
+    }
     try {
       const ordnung = sitzordnung.map((s, i) => ({ id: s.id, sitzplatz: i }));
       const response = await fetch(`/api/sitzordnung/${raumCode}`, {

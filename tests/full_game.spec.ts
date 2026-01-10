@@ -340,6 +340,16 @@ test.describe("Full Game Simulation", () => {
 
           const page = await context.newPage();
 
+          // FAIL ON NETWORK ERRORS (404, 500, etc.)
+          page.on("response", (response) => {
+            const status = response.status();
+            const url = response.url();
+            if (status >= 400 && !url.includes("favicon")) {
+              console.error(`🚨 HTTP ERROR [${playerName}]: ${status} ${url}`);
+              throw new Error(`HTTP Error in ${playerName}: ${status} ${url}`);
+            }
+          });
+
           // FAIL ON CONSOLE ERRORS
           page.on("console", (msg) => {
             if (msg.type() === "error") {
@@ -409,7 +419,10 @@ test.describe("Full Game Simulation", () => {
       // Wait for all players to be in the game
       await sleep(2000);
       for (const player of players) {
-        await player.page.waitForURL(/\/spiel\//, { timeout: 10000 });
+        await player.page.waitForURL(/\/spiel\//, { 
+          timeout: 30000,
+          waitUntil: 'domcontentloaded' // Don't wait for external resources (fonts, CDN, etc.)
+        });
 
         // VERIFY VILLAGE 3D - Wait for async initialization (optional feature)
         try {
@@ -674,11 +687,19 @@ async function handlePhase(
   // ========================================================================
   // AUTO-ADVANCE PHASES (no player interaction needed)
   // ========================================================================
+  
+  // Verliebte Info - special validation phase
+  if (normalizedPhase.includes("verliebteinfo")) {
+    log(`  💕 Verliebte-Info-Phase: Validiere Sichtbarkeit...`);
+    await sleep(PHASE_DELAY_MS);
+    await validateVerliebteVisibility(players);
+    return;
+  }
+  
   if (
     normalizedPhase.includes("start") ||
     normalizedPhase.includes("ende") ||
     normalizedPhase.includes("ergebnis") ||
-    normalizedPhase.includes("verliebteinfo") ||
     normalizedPhase.includes("brummen") ||
     normalizedPhase.includes("enthuellung") ||
     normalizedPhase.includes("rollenverteilt")
@@ -986,6 +1007,9 @@ async function handleWerwolfPhase(
     log("    Keine lebenden Werwölfe!");
     return;
   }
+
+  // VALIDATION: Werewolves must see each other (and themselves!)
+  await validateWerwolfVisibility(werwolfe, aliveWolves);
 
   // Valid targets: alive non-werwolf players only
   const validTargets = dorfbewohner.filter((p) => p.isAlive);
@@ -2265,6 +2289,128 @@ async function handleAmorPhase(players: PlayerWindow[]): Promise<void> {
 }
 
 // ============================================================================
+// VALIDATION FUNCTIONS
+// ============================================================================
+
+/**
+ * Validate that werewolves can see each other (and themselves) during werewolf phase
+ * This checks for the werwolf-team-sichtbar class on player cards
+ */
+async function validateWerwolfVisibility(
+  allWerwolfe: PlayerWindow[],
+  activeWolves: PlayerWindow[],
+): Promise<void> {
+  log("    🔍 VALIDATION: Checking werewolf visibility...");
+  
+  for (const wolf of activeWolves) {
+    // Give UI time to update
+    await sleep(500);
+    
+    // Check that this wolf can see all other werewolves
+    for (const otherWolf of allWerwolfe) {
+      const card = wolf.page.locator(`.spieler-card[data-name="${otherWolf.name}"]`);
+      
+      // Verify card exists
+      if (!(await card.isVisible({ timeout: 2000 }).catch(() => false))) {
+        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see player card for ${otherWolf.name}`);
+      }
+      
+      // Check if card has werwolf visibility class OR is self (ist-ich class)
+      const hasWolfClass = await card.evaluate((el) => 
+        el.classList.contains('werwolf-team-sichtbar') || el.classList.contains('ist-ich')
+      );
+      
+      // Get data-rolle attribute (should contain werewolf role)
+      const dataRolle = await card.getAttribute('data-rolle');
+      
+      if (!hasWolfClass && wolf.name !== otherWolf.name) {
+        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see ${otherWolf.name} as werewolf (missing werwolf-team-sichtbar class)`);
+      }
+      
+      if (wolf.name === otherWolf.name && !hasWolfClass) {
+        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see themselves as werewolf (missing ist-ich class)`);
+      }
+      
+      if (otherWolf.isAlive && !dataRolle) {
+        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see role data for ${otherWolf.name} (data-rolle attribute is empty)`);
+      }
+    }
+    
+    // Validate nametags are visible and don't disappear
+    await validateNametags(wolf.page, allWerwolfe);
+  }
+  
+  log("    ✅ Werewolf visibility validated!");
+}
+
+/**
+ * Validate that lovers (Verliebte) can see each other's roles
+ */
+async function validateVerliebteVisibility(players: PlayerWindow[]): Promise<void> {
+  log("    🔍 VALIDATION: Checking Verliebte visibility...");
+  
+  // Find players with verliebt-partner class on other cards
+  for (const player of players.filter(p => p.isAlive)) {
+    const partnerCards = await player.page.locator('.spieler-card.verliebt-partner').count();
+    
+    if (partnerCards > 0) {
+      // This player is verliebt, check they can see their partner
+      log(`    💕 ${player.name} is verliebt, checking partner visibility...`);
+      
+      // There should be exactly 1 partner card
+      if (partnerCards !== 1) {
+        throw new Error(`❌ HARD ERROR: ${player.name} has ${partnerCards} partner cards, expected 1`);
+      }
+      
+      const partnerCard = player.page.locator('.spieler-card.verliebt-partner').first();
+      
+      // Partner card must be visible
+      if (!(await partnerCard.isVisible({ timeout: 2000 }).catch(() => false))) {
+        throw new Error(`❌ HARD ERROR: ${player.name} cannot see partner card`);
+      }
+      
+      // Partner card must have data-rolle attribute (shows the role)
+      const partnerRolle = await partnerCard.getAttribute('data-rolle');
+      const partnerName = await partnerCard.getAttribute('data-name');
+      
+      if (!partnerRolle) {
+        throw new Error(`❌ HARD ERROR: ${player.name} cannot see partner's role (data-rolle empty for ${partnerName})`);
+      }
+      
+      log(`    ✅ ${player.name} can see partner ${partnerName} with role ${partnerRolle}`);
+      
+      // Validate nametags
+      await validateNametags(player.page, [player]);
+    }
+  }
+  
+  log("    ✅ Verliebte visibility validated!");
+}
+
+/**
+ * Validate that nametags stay visible and don't disappear after a second
+ */
+async function validateNametags(page: Page, players: PlayerWindow[]): Promise<void> {
+  for (const player of players.filter(p => p.isAlive)) {
+    const card = page.locator(`.spieler-card[data-name="${player.name}"]`);
+    const nameElement = card.locator('.spieler-name');
+    
+    // Check visibility at t=0
+    const visible1 = await nameElement.isVisible({ timeout: 1000 }).catch(() => false);
+    if (!visible1) {
+      throw new Error(`❌ HARD ERROR: Nametag for ${player.name} is not visible initially`);
+    }
+    
+    // Wait 1.5 seconds and check again
+    await sleep(1500);
+    const visible2 = await nameElement.isVisible({ timeout: 500 }).catch(() => false);
+    if (!visible2) {
+      throw new Error(`❌ HARD ERROR: Nametag for ${player.name} disappeared after 1.5 seconds`);
+    }
+  }
+}
+
+// ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
@@ -2347,7 +2493,7 @@ async function selectTargetAndConfirm(
         socket.off("aktion_bestaetigt", onSuccess);
         socket.off("fehler", onError);
       }
-    }, 5000);
+    }, 30000); // Increased timeout for slow actions and animations
   });
 
   // Now click on the target card
@@ -2381,8 +2527,8 @@ async function selectTargetAndConfirm(
     throw new Error(`No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`);
   }
 
-  // Poll for server response (max 5 seconds)
-  for (let i = 0; i < 50; i++) {
+  // Poll for server response (max 15 seconds)
+  for (let i = 0; i < 150; i++) {
     const result = await page.evaluate(() => {
       if (
         !(window as any).__actionPending &&

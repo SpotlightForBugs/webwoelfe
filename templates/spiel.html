@@ -2019,12 +2019,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       // Nacht-Overlay
       const overlay = document.getElementById('nacht-overlay');
-
-      // Dynamic Night Detection logic (No hardcoded list!)
-      // Heuristic: Phase is night if:
-      // 1. It explicitly contains "nacht" (e.g. nacht_start)
-      // 2. OR it ends in "_phase" AND is not a day phase (implies role action phase)
-
+      //TODO: MAKE THIS SERVER SIDE!
       const knownDayPhases = ['tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt'];
       const isDayPhase = knownDayPhases.includes(phase) || phase.includes('tag') || phase.includes('abstimmung') || phase.includes('diskussion');
       const isNightMode = !isDayPhase && (phase.includes('nacht') || phase.includes('phase') || phase.endsWith('_phase'));

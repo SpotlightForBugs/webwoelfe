@@ -158,8 +158,10 @@ class Heiler(Role):
             nachricht=f"Du beschützt {ziel.name} in dieser Nacht.",
             ziel_spieler_id=ziel.id,
             effekte={
-                "geschuetzt": ziel.id,
                 "heiler_schutz": True,
+            },
+            multi_target_updates={
+                ziel.id: {"global.ist_beschuetzt": True}
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

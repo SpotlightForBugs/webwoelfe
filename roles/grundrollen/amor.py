@@ -184,8 +184,7 @@ class Amor(Role):
 
         # Single target not supported - needs execute_action with list
         return AktionsErgebnis(
-            erfolg=False,
-            nachricht="Amor muss zwei Spieler gleichzeitig wählen."
+            erfolg=False, nachricht="Amor muss zwei Spieler gleichzeitig wählen."
         )
 
     def execute_action(
@@ -252,8 +251,14 @@ class Amor(Role):
                 ziel2.id: {"global.verliebt_mit_id": ziel1.id},
             },
             additional_logs=[
-                {"text": f"Du bist verliebt in {ziel2.name}!", "sichtbar_fuer": str(ziel1.id)},
-                {"text": f"Du bist verliebt in {ziel1.name}!", "sichtbar_fuer": str(ziel2.id)},
+                {
+                    "text": f"Du bist verliebt in {ziel2.name}!",
+                    "sichtbar_fuer": str(ziel1.id),
+                },
+                {
+                    "text": f"Du bist verliebt in {ziel1.name}!",
+                    "sichtbar_fuer": str(ziel2.id),
+                },
             ],
             log_sichtbar_fuer="erzaehler",
             private_infos={

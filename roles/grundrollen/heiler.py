@@ -160,9 +160,7 @@ class Heiler(Role):
             effekte={
                 "heiler_schutz": True,
             },
-            multi_target_updates={
-                ziel.id: {"global.ist_beschuetzt": True}
-            },
+            multi_target_updates={ziel.id: {"global.ist_beschuetzt": True}},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
 

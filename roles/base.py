@@ -326,7 +326,9 @@ class AppearanceFeature:
     animation_amplitude: float = 1.0
 
     # Particle Effects (for auras, magic, fire, etc.)
-    particle_effect: Optional[str] = None  # "sparks", "smoke", "fire", "magic", "hearts"
+    particle_effect: Optional[str] = (
+        None  # "sparks", "smoke", "fire", "magic", "hearts"
+    )
     particle_color: Optional[str] = None
     particle_rate: float = 10.0  # Particles per second
 
@@ -629,7 +631,9 @@ class RollenModell:
             "beschreibung": self.beschreibung,
             "body": self.body.to_dict() if self.body else None,
             "appearance_self_alive": [f.to_dict() for f in self.appearance_self_alive],
-            "appearance_others_alive": [f.to_dict() for f in self.appearance_others_alive],
+            "appearance_others_alive": [
+                f.to_dict() for f in self.appearance_others_alive
+            ],
             "appearance_dead": [f.to_dict() for f in self.appearance_dead],
             "appearance_seher_view": [f.to_dict() for f in self.appearance_seher_view],
             "animations": {k: v.to_dict() for k, v in self.animations.items()},
@@ -645,6 +649,7 @@ class RollenModell:
 # FACTORY FUNCTIONS FOR COMMON 3D APPEARANCE FEATURES
 # These make it easy to create standard appearance elements in role files
 # =============================================================================
+
 
 def create_wolf_ears(color: str = None, scale: float = 1.0) -> List[AppearanceFeature]:
     """Create wolf ear features (pair of pointed ears on head)."""
@@ -672,25 +677,29 @@ def create_wolf_ears(color: str = None, scale: float = 1.0) -> List[AppearanceFe
     ]
 
 
-def create_claws(color: str = "#333333", count_per_hand: int = 3) -> List[AppearanceFeature]:
+def create_claws(
+    color: str = "#333333", count_per_hand: int = 3
+) -> List[AppearanceFeature]:
     """Create claw features on both hands."""
     claws = []
     for hand in ["left", "right"]:
         base_x = -0.45 if hand == "left" else 0.45
         for i in range(count_per_hand):
             offset_x = (i - (count_per_hand - 1) / 2) * 0.025
-            claws.append(AppearanceFeature(
-                feature_type=f"claw_{hand}_{i}",
-                geometry="cone",
-                position={"x": base_x + offset_x, "y": 0.52, "z": 0.08},
-                scale={"x": 0.025, "y": 0.08, "z": 0.025},
-                rotation={"x": 60, "y": 0, "z": 0},
-                color_source="custom",
-                custom_color=color,
-                metallic=True,
-                roughness=0.3,
-                description=f"{hand.title()} hand claw {i+1}",
-            ))
+            claws.append(
+                AppearanceFeature(
+                    feature_type=f"claw_{hand}_{i}",
+                    geometry="cone",
+                    position={"x": base_x + offset_x, "y": 0.52, "z": 0.08},
+                    scale={"x": 0.025, "y": 0.08, "z": 0.025},
+                    rotation={"x": 60, "y": 0, "z": 0},
+                    color_source="custom",
+                    custom_color=color,
+                    metallic=True,
+                    roughness=0.3,
+                    description=f"{hand.title()} hand claw {i+1}",
+                )
+            )
     return claws
 
 
@@ -724,7 +733,9 @@ def create_fangs(color: str = "#FFFEF0") -> List[AppearanceFeature]:
     ]
 
 
-def create_glowing_eyes(color: str = "#FF3333", intensity: float = 0.6) -> AppearanceFeature:
+def create_glowing_eyes(
+    color: str = "#FF3333", intensity: float = 0.6
+) -> AppearanceFeature:
     """Create glowing eyes effect."""
     return AppearanceFeature(
         feature_type="eye_glow",
@@ -744,7 +755,9 @@ def create_glowing_eyes(color: str = "#FF3333", intensity: float = 0.6) -> Appea
     )
 
 
-def create_witch_hat(color: str = "#1a1a1a", brim: bool = True) -> List[AppearanceFeature]:
+def create_witch_hat(
+    color: str = "#1a1a1a", brim: bool = True
+) -> List[AppearanceFeature]:
     """Create a pointed witch/wizard hat."""
     features = [
         AppearanceFeature(
@@ -758,15 +771,17 @@ def create_witch_hat(color: str = "#1a1a1a", brim: bool = True) -> List[Appearan
         ),
     ]
     if brim:
-        features.append(AppearanceFeature(
-            feature_type="hat_brim",
-            geometry="cylinder",
-            position={"x": 0, "y": 2.15, "z": 0},
-            scale={"x": 0.55, "y": 0.04, "z": 0.55},
-            color_source="custom",
-            custom_color=color,
-            description="Witch hat brim",
-        ))
+        features.append(
+            AppearanceFeature(
+                feature_type="hat_brim",
+                geometry="cylinder",
+                position={"x": 0, "y": 2.15, "z": 0},
+                scale={"x": 0.55, "y": 0.04, "z": 0.55},
+                color_source="custom",
+                custom_color=color,
+                description="Witch hat brim",
+            )
+        )
     return features
 
 
@@ -783,7 +798,9 @@ def create_pointed_hat(color: str = "#4B0082") -> AppearanceFeature:
     )
 
 
-def create_aura(color: str, intensity: float = 0.5, pulsing: bool = True) -> AppearanceFeature:
+def create_aura(
+    color: str, intensity: float = 0.5, pulsing: bool = True
+) -> AppearanceFeature:
     """Create a magical aura around the character."""
     return AppearanceFeature(
         feature_type="aura",
@@ -805,7 +822,9 @@ def create_aura(color: str, intensity: float = 0.5, pulsing: bool = True) -> App
     )
 
 
-def create_potion_bottles(positions: List[str] = None, colors: List[str] = None) -> List[AppearanceFeature]:
+def create_potion_bottles(
+    positions: List[str] = None, colors: List[str] = None
+) -> List[AppearanceFeature]:
     """Create potion bottles on belt."""
     if positions is None:
         positions = ["left", "right"]
@@ -815,22 +834,24 @@ def create_potion_bottles(positions: List[str] = None, colors: List[str] = None)
     features = []
     for i, (pos, color) in enumerate(zip(positions, colors)):
         x = -0.35 if pos == "left" else 0.35
-        features.append(AppearanceFeature(
-            feature_type=f"potion_{pos}",
-            geometry="cylinder",
-            position={"x": x, "y": 0.7, "z": 0.2},
-            scale={"x": 0.06, "y": 0.15, "z": 0.06},
-            color_source="custom",
-            custom_color=color,
-            opacity=0.8,
-            emissive=True,
-            emissive_intensity=0.3,
-            light_source=True,
-            light_color=color,
-            light_intensity=0.2,
-            light_range=0.5,
-            description=f"Potion bottle ({pos})",
-        ))
+        features.append(
+            AppearanceFeature(
+                feature_type=f"potion_{pos}",
+                geometry="cylinder",
+                position={"x": x, "y": 0.7, "z": 0.2},
+                scale={"x": 0.06, "y": 0.15, "z": 0.06},
+                color_source="custom",
+                custom_color=color,
+                opacity=0.8,
+                emissive=True,
+                emissive_intensity=0.3,
+                light_source=True,
+                light_color=color,
+                light_intensity=0.2,
+                light_range=0.5,
+                description=f"Potion bottle ({pos})",
+            )
+        )
     return features
 
 
@@ -877,7 +898,9 @@ def create_halo(color: str = "#FFD700") -> AppearanceFeature:
     )
 
 
-def create_wings(wing_type: str = "angel", color: str = "#FFFFFF") -> List[AppearanceFeature]:
+def create_wings(
+    wing_type: str = "angel", color: str = "#FFFFFF"
+) -> List[AppearanceFeature]:
     """Create wing pairs on the back."""
     wings = {
         "angel": [
@@ -1021,7 +1044,9 @@ def create_tail(tail_type: str = "wolf", color: str = None) -> AppearanceFeature
     return tails.get(tail_type)
 
 
-def create_horns(horn_type: str = "demon", color: str = "#2a2a2a") -> List[AppearanceFeature]:
+def create_horns(
+    horn_type: str = "demon", color: str = "#2a2a2a"
+) -> List[AppearanceFeature]:
     """Create various horn types."""
     horns = {
         "demon": [
@@ -1436,20 +1461,23 @@ def create_crown(style: str = "gold") -> List[AppearanceFeature]:
     for i in range(5):
         angle = (i / 5) * 360
         import math
+
         rad = math.radians(angle)
         x = math.sin(rad) * 0.15
         z = math.cos(rad) * 0.15
-        features.append(AppearanceFeature(
-            feature_type=f"crown_point_{i}",
-            geometry="cone",
-            position={"x": x, "y": 2.2, "z": z},
-            scale={"x": 0.04, "y": 0.12, "z": 0.04},
-            color_source="custom",
-            custom_color=color,
-            metallic=True,
-            roughness=0.2,
-            description=f"Crown point {i+1}",
-        ))
+        features.append(
+            AppearanceFeature(
+                feature_type=f"crown_point_{i}",
+                geometry="cone",
+                position={"x": x, "y": 2.2, "z": z},
+                scale={"x": 0.04, "y": 0.12, "z": 0.04},
+                color_source="custom",
+                custom_color=color,
+                metallic=True,
+                roughness=0.2,
+                description=f"Crown point {i+1}",
+            )
+        )
     return features
 
 
@@ -1530,7 +1558,9 @@ def create_robe(color: str = "#2F1B0C") -> AppearanceFeature:
     )
 
 
-def create_book(color: str = "#4a3020", glowing: bool = False) -> List[AppearanceFeature]:
+def create_book(
+    color: str = "#4a3020", glowing: bool = False
+) -> List[AppearanceFeature]:
     """Create a book held in hand or floating."""
     features = [
         AppearanceFeature(
@@ -1557,22 +1587,24 @@ def create_book(color: str = "#4a3020", glowing: bool = False) -> List[Appearanc
         ),
     ]
     if glowing:
-        features.append(AppearanceFeature(
-            feature_type="book_glow",
-            geometry="sphere",
-            position={"x": -0.4, "y": 0.8, "z": 0.15},
-            scale={"x": 0.2, "y": 0.1, "z": 0.25},
-            color_source="custom",
-            custom_color="#9966ff",
-            opacity=0.3,
-            emissive=True,
-            emissive_intensity=0.5,
-            light_source=True,
-            light_color="#9966ff",
-            light_intensity=0.3,
-            light_range=1.5,
-            description="Book magical glow",
-        ))
+        features.append(
+            AppearanceFeature(
+                feature_type="book_glow",
+                geometry="sphere",
+                position={"x": -0.4, "y": 0.8, "z": 0.15},
+                scale={"x": 0.2, "y": 0.1, "z": 0.25},
+                color_source="custom",
+                custom_color="#9966ff",
+                opacity=0.3,
+                emissive=True,
+                emissive_intensity=0.5,
+                light_source=True,
+                light_color="#9966ff",
+                light_intensity=0.3,
+                light_range=1.5,
+                description="Book magical glow",
+            )
+        )
     return features
 
 
@@ -2008,10 +2040,10 @@ class SpielKontext:
 class RoleAction:
     """
     A role action tied to a handler method.
-    
+
     Every RoleAction maps directly to a handler method on the Role class.
     This enables fully dynamic action handling without hardcoded switches.
-    
+
     Example:
         RoleAction(
             action_id="heilen",
@@ -2021,11 +2053,12 @@ class RoleAction:
             action_type="heilen"
         )
     """
-    action_id: str              # Unique identifier
-    label: str                  # UI button text
-    handler: str                # Method name on Role to call
-    action_type: str            # AktionsTyp value (for compatibility)
-    icon: str = ""              # FontAwesome icon class
+
+    action_id: str  # Unique identifier
+    label: str  # UI button text
+    handler: str  # Method name on Role to call
+    action_type: str  # AktionsTyp value (for compatibility)
+    icon: str = ""  # FontAwesome icon class
     css_class: str = "btn-primary"
     requires_target: bool = True
     target_filter: str = "lebende"  # lebende, tote, alle, andere, nachbarn
@@ -2033,15 +2066,18 @@ class RoleAction:
     tooltip: Optional[str] = None
     # Condition function (spieler, kontext) -> bool
     enabled_condition: Optional[Callable[["Spieler", SpielKontext], bool]] = None
-    
+
     def is_enabled(self, spieler: "Spieler", kontext: "SpielKontext") -> bool:
         """Check if this action is currently enabled."""
         if self.enabled_condition is not None:
             return self.enabled_condition(spieler, kontext)
         return True
-    
-    def to_dict(self, spieler: Optional["Spieler"] = None, 
-                kontext: Optional["SpielKontext"] = None) -> Dict[str, Any]:
+
+    def to_dict(
+        self,
+        spieler: Optional["Spieler"] = None,
+        kontext: Optional["SpielKontext"] = None,
+    ) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         result = {
             "action_id": self.action_id,
@@ -2120,8 +2156,8 @@ class RollenUI:
         result = self.to_dict()
         # Replace actions with context-aware versions
         result["actions"] = [
-            a.to_dict(spieler, kontext) 
-            for a in self.actions 
+            a.to_dict(spieler, kontext)
+            for a in self.actions
             if a.is_enabled(spieler, kontext)
         ]
         return result
@@ -3069,26 +3105,51 @@ class Role(ABC):
                 "anzeige_name": raw_model.anzeige_name,
                 "beschreibung": raw_model.beschreibung,
                 "seher_sicht": raw_model.seher_sicht,
-                "appearance_self_alive": [f.to_dict() if hasattr(f, 'to_dict') else f.__dict__ for f in raw_model.appearance_self_alive] if raw_model.appearance_self_alive else [],
-                "appearance_others_alive": [f.to_dict() if hasattr(f, 'to_dict') else f.__dict__ for f in raw_model.appearance_others_alive] if raw_model.appearance_others_alive else [],
-                "appearance_dead": [f.to_dict() if hasattr(f, 'to_dict') else f.__dict__ for f in raw_model.appearance_dead] if raw_model.appearance_dead else [],
+                "appearance_self_alive": (
+                    [
+                        f.to_dict() if hasattr(f, "to_dict") else f.__dict__
+                        for f in raw_model.appearance_self_alive
+                    ]
+                    if raw_model.appearance_self_alive
+                    else []
+                ),
+                "appearance_others_alive": (
+                    [
+                        f.to_dict() if hasattr(f, "to_dict") else f.__dict__
+                        for f in raw_model.appearance_others_alive
+                    ]
+                    if raw_model.appearance_others_alive
+                    else []
+                ),
+                "appearance_dead": (
+                    [
+                        f.to_dict() if hasattr(f, "to_dict") else f.__dict__
+                        for f in raw_model.appearance_dead
+                    ]
+                    if raw_model.appearance_dead
+                    else []
+                ),
             }
 
             # Include body modifications if present
             if raw_model.body:
-                model_def["body"] = raw_model.body.to_dict() if hasattr(raw_model.body, 'to_dict') else raw_model.body.__dict__
+                model_def["body"] = (
+                    raw_model.body.to_dict()
+                    if hasattr(raw_model.body, "to_dict")
+                    else raw_model.body.__dict__
+                )
 
             # Include animations if present
             if raw_model.animations:
                 model_def["animations"] = {
-                    k: (v.to_dict() if hasattr(v, 'to_dict') else v.__dict__)
+                    k: (v.to_dict() if hasattr(v, "to_dict") else v.__dict__)
                     for k, v in raw_model.animations.items()
                 }
 
             # Include hint effects if present
             if raw_model.hint_effects:
                 model_def["hint_effects"] = [
-                    (e.to_dict() if hasattr(e, 'to_dict') else e.__dict__)
+                    (e.to_dict() if hasattr(e, "to_dict") else e.__dict__)
                     for e in raw_model.hint_effects
                 ]
 
@@ -3102,7 +3163,12 @@ class Role(ABC):
             # Fallback to basic model definition if get_modell_definition fails
             logger.debug(f"Could not get model definition for {self.info.name}: {e}")
             model_def = {
-                "modell_id": self.info.name.lower().replace(" ", "_").replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss"),
+                "modell_id": self.info.name.lower()
+                .replace(" ", "_")
+                .replace("ä", "ae")
+                .replace("ö", "oe")
+                .replace("ü", "ue")
+                .replace("ß", "ss"),
                 "anzeige_name": self.info.name,
                 "beschreibung": f"{self.info.name} appearance",
                 "appearance_self_alive": [],

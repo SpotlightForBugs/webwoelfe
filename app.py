@@ -52,10 +52,10 @@ Minify(app=app, html=True, js=True, cssless=True)
 # These are pure transition/info phases
 AUTOMATISCHE_PHASEN = {
     "rollen_verteilt",  # Info-Phase nach Spielstart
-    "nacht_start",      # Übergang Tag -> Nacht
-    "nacht_ende",       # Übergang Nacht -> Tag
-    "tag_start",        # Übergang Nacht -> Tag
-    "tag_ende",         # Übergang am Tagesende
+    "nacht_start",  # Übergang Tag -> Nacht
+    "nacht_ende",  # Übergang Nacht -> Tag
+    "tag_start",  # Übergang Nacht -> Tag
+    "tag_ende",  # Übergang am Tagesende
 }
 
 # Spielname als Konstante
@@ -87,30 +87,28 @@ AUDIO_CONFIRMATION_THRESHOLD = float(os.environ.get("AUDIO_THRESHOLD", "0.8"))
 _debug_log_buffer = []
 MAX_DEBUG_LOGS = 1000
 
+
 def log_ts(msg: str):
     """Log mit Timestamp für Debugging"""
     ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
     log_entry = f"[{ts}] {msg}"
     print(log_entry)
-    
+
     # Add to debug buffer
     if app.debug:
-        _debug_log_buffer.append({
-            "timestamp": ts,
-            "message": msg,
-            "type": "log"
-        })
+        _debug_log_buffer.append({"timestamp": ts, "message": msg, "type": "log"})
         # Keep buffer size limited
         if len(_debug_log_buffer) > MAX_DEBUG_LOGS:
             _debug_log_buffer.pop(0)
+
 
 def debug_track_call(func_name, args=None, kwargs=None, result=None, error=None):
     """Track function calls for debugging"""
     if not app.debug:
         return
-    
+
     ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    
+
     # Serialize args/kwargs safely
     try:
         args_str = str(args)[:200] if args else "()"
@@ -122,7 +120,7 @@ def debug_track_call(func_name, args=None, kwargs=None, result=None, error=None)
         kwargs_str = "<unserializable>"
         result_str = "<unserializable>"
         error_str = str(error) if error else None
-    
+
     entry = {
         "timestamp": ts,
         "type": "function_call",
@@ -131,26 +129,28 @@ def debug_track_call(func_name, args=None, kwargs=None, result=None, error=None)
         "kwargs": kwargs_str,
         "result": result_str,
         "error": error_str,
-        "success": error is None
+        "success": error is None,
     }
-    
+
     _debug_log_buffer.append(entry)
     if len(_debug_log_buffer) > MAX_DEBUG_LOGS:
         _debug_log_buffer.pop(0)
-    
+
     # Emit to debug clients
     try:
-        socketio.emit('debug_function_call', entry, namespace='/debug')
+        socketio.emit("debug_function_call", entry, namespace="/debug")
     except:
         pass
 
+
 def debug_track_decorator(func):
     """Decorator to automatically track function calls"""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         if not app.debug:
             return func(*args, **kwargs)
-        
+
         func_name = f"{func.__module__}.{func.__name__}"
         try:
             result = func(*args, **kwargs)
@@ -159,6 +159,7 @@ def debug_track_decorator(func):
         except Exception as e:
             debug_track_call(func_name, args, kwargs, error=e)
             raise
+
     return wrapper
 
 
@@ -229,14 +230,20 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
     if ergebnis.state_updates:
         for key, value in ergebnis.state_updates.items():
             spieler.set_state(key, value)
-            
+
     # DEBUG: Emit full state update (disabled during tests for performance)
-    if app.debug and not (os.environ.get('TESTING') or os.environ.get('PLAYWRIGHT_TEST')):
+    if app.debug and not (
+        os.environ.get("TESTING") or os.environ.get("PLAYWRIGHT_TEST")
+    ):
         try:
-           debug_track_call('socketio.emit', args=['debug_state_update', 'gather_gamestate(raum)'])
-           socketio.emit('debug_state_update', gather_gamestate(raum), namespace='/debug')
+            debug_track_call(
+                "socketio.emit", args=["debug_state_update", "gather_gamestate(raum)"]
+            )
+            socketio.emit(
+                "debug_state_update", gather_gamestate(raum), namespace="/debug"
+            )
         except Exception as e:
-           print(f"Debug emit failed: {e}")
+            print(f"Debug emit failed: {e}")
 
     # Handle private info notifications
     if ergebnis.private_infos:
@@ -250,7 +257,10 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
             if "nachricht" in info:
                 socketio.emit(
                     "private_nachricht",
-                    {"nachricht": info["nachricht"], "typ": info.get("alert_type", "info")},
+                    {
+                        "nachricht": info["nachricht"],
+                        "typ": info.get("alert_type", "info"),
+                    },
                     room=f"player_{player_id}",
                 )
 
@@ -285,9 +295,15 @@ def css_class_filter(value):
         return "unbekannt"
     # Kleinbuchstaben, Leerzeichen durch Bindestriche ersetzen, Sonderzeichen entfernen
     import re
+
     result = str(value).lower()
     result = result.replace(" ", "-")
-    result = result.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+    result = (
+        result.replace("ä", "ae")
+        .replace("ö", "oe")
+        .replace("ü", "ue")
+        .replace("ß", "ss")
+    )
     result = re.sub(r"[^a-z0-9\-]", "", result)
     return result
 
@@ -298,17 +314,17 @@ def get_rollen_styles():
     Verwendet die RoleRegistry, um dynamische Styles zu erstellen.
     """
     from roles import RoleRegistry
-    
+
     styles = {}
     for role in RoleRegistry.get_all():
         info = role.info
         css_class = info.computed_css_class
-        
+
         # Defaults if not set
         grad_from = info.avatar_gradient_from or info.farbe or "#4a5568"
         grad_to = info.avatar_gradient_to or grad_from
         border = info.avatar_border_color or info.farbe or "#5a6678"
-        
+
         styles[css_class] = {
             "name": info.name,
             "team": info.team.value if info.team else "",
@@ -317,7 +333,7 @@ def get_rollen_styles():
             "avatar_border_color": border,
             "badge_emoji": info.badge_emoji or "",
         }
-    
+
     return styles
 
 
@@ -626,7 +642,9 @@ def spiel(code):
                 spieler.id, raum.id
             )
     except Exception:
-        log_ts("[Spiel] Seherin-Enthüllungen konnten nicht geladen werden. Tabelle existiert vielleicht noch nicht.")
+        log_ts(
+            "[Spiel] Seherin-Enthüllungen konnten nicht geladen werden. Tabelle existiert vielleicht noch nicht."
+        )
         pass  # Tabelle existiert vielleicht noch nicht
 
     # SICHER: Spieler-Daten werden OHNE Rollen (ausser eigene) gesendet
@@ -687,11 +705,11 @@ def get_role_ui(role_name):
     """Get UI definition for a specific role."""
     from roles import RoleRegistry, SpielKontext
     from roles.enums import Phase
-    
+
     rolle = RoleRegistry.get(role_name)
     if not rolle:
         return jsonify({"success": False, "error": "Role not found"}), 404
-    
+
     ui = rolle.get_ui_definition()
     ui_dict = ui.to_dict()
 
@@ -702,50 +720,63 @@ def get_role_ui(role_name):
         if raum and raum.aktuelle_phase == rolle.get_phase_name():
             # Build context to get dynamic info
             werwolf_opfer_id = None
-            
+
             # Use role property to decide if we need the victim info
             if rolle.requires_victim_info:
                 ww_result = game_logic.werwolf_abstimmung(raum)
                 if ww_result and "opfer_id" in ww_result:
                     werwolf_opfer_id = ww_result["opfer_id"]
-            
+
             kontext = SpielKontext(
                 raum_id=raum.id,
                 runde=raum.runde,
-                phase=(Phase(raum.aktuelle_phase) if raum.aktuelle_phase in [p.value for p in Phase] else raum.aktuelle_phase),
+                phase=(
+                    Phase(raum.aktuelle_phase)
+                    if raum.aktuelle_phase in [p.value for p in Phase]
+                    else raum.aktuelle_phase
+                ),
                 aktiver_spieler_id=spieler.id,
                 lebende_spieler=[s.id for s in game_logic.hole_lebende_spieler(raum)],
-                tote_spieler=[s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=False).all()],
-                werwolf_opfer_id=werwolf_opfer_id
+                tote_spieler=[
+                    s.id
+                    for s in Spieler.query.filter_by(
+                        raum_id=raum.id, ist_am_leben=False
+                    ).all()
+                ],
+                werwolf_opfer_id=werwolf_opfer_id,
             )
-            
+
             # Get dynamic info
             start_info = rolle.get_phase_start_info(spieler, kontext)
-            
+
             # Inject victim info into instructions if present
             if start_info and "werwolf_opfer_id" in start_info:
                 opfer = db.session.get(Spieler, start_info["werwolf_opfer_id"])
                 if opfer:
                     # Append strictly to instructions
-                    ui_dict["instructions"] += f" <br><strong>Das Werwolf-Opfer ist: {opfer.name}</strong>"
+                    ui_dict[
+                        "instructions"
+                    ] += f" <br><strong>Das Werwolf-Opfer ist: {opfer.name}</strong>"
 
-    return jsonify({
-        "success": True,
-        "ui": ui_dict,
-        "phase_name": rolle.get_phase_name(),
-    })
+    return jsonify(
+        {
+            "success": True,
+            "ui": ui_dict,
+            "phase_name": rolle.get_phase_name(),
+        }
+    )
 
 
 @app.route("/api/roles", methods=["GET"])
 def get_all_roles_api():
     """
     Get all roles with complete metadata for UI generation.
-    
+
     Query Parameters:
     - extension_pack: Filter by extension (base, neumond, gemeinde, charaktere, sonderedition)
     - kategorie: Filter by category
     - team: Filter by team (dorf, werwolf, solo)
-    
+
     Returns comprehensive role data including:
     - name, id, team, category
     - icon (FontAwesome), color (hex)
@@ -756,9 +787,9 @@ def get_all_roles_api():
     from roles import RoleRegistry
 
     # Get query parameters
-    extension_filter = request.args.get('extension_pack')
-    kategorie_filter = request.args.get('kategorie')
-    team_filter = request.args.get('team')
+    extension_filter = request.args.get("extension_pack")
+    kategorie_filter = request.args.get("kategorie")
+    team_filter = request.args.get("team")
 
     # Get all roles
     all_roles = RoleRegistry.get_all()
@@ -766,12 +797,18 @@ def get_all_roles_api():
     # Apply filters
     filtered_roles = all_roles
     if extension_filter:
-        filtered_roles = [r for r in filtered_roles if r.info.extension_pack == extension_filter]
+        filtered_roles = [
+            r for r in filtered_roles if r.info.extension_pack == extension_filter
+        ]
     if kategorie_filter:
         from roles.enums import Kategorie
-        filtered_roles = [r for r in filtered_roles if r.info.kategorie.value == kategorie_filter]
+
+        filtered_roles = [
+            r for r in filtered_roles if r.info.kategorie.value == kategorie_filter
+        ]
     if team_filter:
         from roles.enums import Team
+
         filtered_roles = [r for r in filtered_roles if r.info.team.value == team_filter]
 
     # Convert to dict format
@@ -789,76 +826,85 @@ def get_all_roles_api():
             logger.error(f"Fehler beim Verarbeiten der Rolle {role}: {e}")
             continue
 
-    return jsonify({
-        "success": True,
-        "roles": roles_data,
-        "grouped_by_extension": grouped_by_extension,
-        "total_count": len(roles_data),
-    })
+    return jsonify(
+        {
+            "success": True,
+            "roles": roles_data,
+            "grouped_by_extension": grouped_by_extension,
+            "total_count": len(roles_data),
+        }
+    )
 
 
 @app.route("/api/role/<role_name>/info", methods=["GET"])
 def get_role_info_api(role_name):
     """Get complete information about a role."""
     from roles import RoleRegistry
-    
+
     rolle = RoleRegistry.get(role_name)
     if not rolle:
         return jsonify({"success": False, "error": "Role not found"}), 404
-    
-    return jsonify({
-        "success": True,
-        "role": rolle.to_dict(),
-    })
+
+    return jsonify(
+        {
+            "success": True,
+            "role": rolle.to_dict(),
+        }
+    )
 
 
 @app.route("/api/game/<code>/phases", methods=["GET"])
 def get_game_phases(code):
     """Get dynamic phase list and phase-role mapping for a specific game."""
-    from phase_generator import generate_phases_for_game, get_phase_display_info, build_phase_role_mapping
-    
+    from phase_generator import (
+        generate_phases_for_game,
+        get_phase_display_info,
+        build_phase_role_mapping,
+    )
+
     raum = Raum.query.filter_by(code=code).first()
     if not raum:
         return jsonify({"success": False, "error": "Room not found"}), 404
-    
+
     spieler = hole_aktuellen_spieler()
     if not spieler or spieler.raum_id != raum.id:
         return jsonify({"success": False, "error": "Not authorized"}), 403
-    
+
     # Don't generate phases if game hasn't started yet (roles not distributed)
     if not raum.spiel_gestartet or not any(s.rolle for s in raum.spieler):
-        return jsonify({
-            "success": True,
-            "phases": [],
-            "phase_info": [],
-            "phase_mapping": {}
-        })
-    
+        return jsonify(
+            {"success": True, "phases": [], "phase_info": [], "phase_mapping": {}}
+        )
+
     phases = generate_phases_for_game(raum)
     phase_info = [get_phase_display_info(p) for p in phases]
     phase_mapping = build_phase_role_mapping(raum)
-    
-    return jsonify({
-        "success": True,
-        "phases": phases,
-        "phase_info": phase_info,
-        "phase_mapping": phase_mapping,  # NEW: Which role acts in which phase
-        "current_phase": raum.aktuelle_phase,
-        "current_round": raum.runde,
-    })
+
+    return jsonify(
+        {
+            "success": True,
+            "phases": phases,
+            "phase_info": phase_info,
+            "phase_mapping": phase_mapping,  # NEW: Which role acts in which phase
+            "current_phase": raum.aktuelle_phase,
+            "current_round": raum.runde,
+        }
+    )
 
 
 @app.route("/api/phase/<phase_name>/info", methods=["GET"])
 def get_phase_info(phase_name):
     """Get display information for a phase."""
     from phase_generator import get_phase_display_info
-    
+
     info = get_phase_display_info(phase_name)
-    return jsonify({
-        "success": True,
-        "phase": phase_name,
-        "info": info,
-    })
+    return jsonify(
+        {
+            "success": True,
+            "phase": phase_name,
+            "info": info,
+        }
+    )
 
 
 # ============================================================================
@@ -981,7 +1027,9 @@ def get_phase_role_mapping():
     # Mapping für Nacht-Phasen
     for role in RoleRegistry.get_all():
         # Check if role is active at night using the Role methods, not RollenInfo
-        is_nacht_aktiv = role.is_active_on_first_night() or role.is_active_on_every_night()
+        is_nacht_aktiv = (
+            role.is_active_on_first_night() or role.is_active_on_every_night()
+        )
         if is_nacht_aktiv:
             phase_name = role.get_phase_name()
             mapping[phase_name] = {
@@ -1027,14 +1075,16 @@ def get_raum_status(code):
     raum = Raum.query.filter_by(code=code).first()
     if not raum:
         return jsonify({"success": False, "error": "Raum nicht gefunden"}), 404
-    
-    return jsonify({
-        "success": True,
-        "spiel_gestartet": raum.spiel_gestartet,
-        "code": raum.code,
-        "aktuelle_phase": raum.aktuelle_phase,
-        "runde": raum.runde,
-    })
+
+    return jsonify(
+        {
+            "success": True,
+            "spiel_gestartet": raum.spiel_gestartet,
+            "code": raum.code,
+            "aktuelle_phase": raum.aktuelle_phase,
+            "runde": raum.runde,
+        }
+    )
 
 
 @app.route("/api/raum/<code>/erzaehler/random", methods=["POST"])
@@ -1095,6 +1145,7 @@ def waehle_zufaelligen_erzaehler(code):
 
 from typing import Optional
 
+
 def hole_aktuellen_spieler() -> Optional[Spieler]:
     """Holt den aktuellen Spieler basierend auf der Session"""
     session_id = session.get("spieler_session")
@@ -1153,9 +1204,6 @@ def api_village(code):
     )
 
 
-
-
-
 # ============================================================================
 # WEBSOCKET EVENTS - SICHER: Keine sensiblen Daten werden gebroadcastet
 # ============================================================================
@@ -1204,7 +1252,9 @@ def handle_connect():
         raum = db.session.get(Raum, spieler.raum_id)
         if raum:
             join_room(raum.code)
-            logger.info(f"[SocketIO] Player {spieler.name} (ID: {spieler.id}) connected and joined room {raum.code}")
+            logger.info(
+                f"[SocketIO] Player {spieler.name} (ID: {spieler.id}) connected and joined room {raum.code}"
+            )
             # SICHER: Nur Name und ID werden geteilt, keine Rolle
             emit(
                 "spieler_verbunden",
@@ -1222,7 +1272,9 @@ def handle_connect():
             # Sende aktualisierte Rollenvorschau an alle
             sende_rollen_vorschau_update(raum)
         else:
-            logger.warning(f"[SocketIO] Player connected but raum with ID {spieler.raum_id} not found")
+            logger.warning(
+                f"[SocketIO] Player connected but raum with ID {spieler.raum_id} not found"
+            )
     else:
         logger.warning(f"[SocketIO] Connection attempt without valid player session")
 
@@ -1308,7 +1360,9 @@ def handle_spiel_starten(data):
         alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
 
         # Spiel gestartet - alle werden zur Spielseite weitergeleitet
-        logger.info(f"[Spiel] Emitting spiel_gestartet to room {raum.code} with {len(alle_spieler)} players")
+        logger.info(
+            f"[Spiel] Emitting spiel_gestartet to room {raum.code} with {len(alle_spieler)} players"
+        )
         emit(
             "spiel_gestartet",
             {"phase": raum.aktuelle_phase, "runde": raum.runde},
@@ -1387,14 +1441,14 @@ def pruefe_phase_abschluss(raum):
     Wenn ja, wechselt automatisch zur nächsten Phase.
     """
     from roles import RoleRegistry
-    
+
     phase = raum.aktuelle_phase
     log_ts(f"[PhaseCheck] Prüfe Abschluss für Phase {phase} (Runde {raum.runde})")
 
     # Use RoleRegistry for dynamic phase-to-role mapping instead of hardcoded dict
     rolle_obj = RoleRegistry.get_role_for_phase(phase)
     rolle = rolle_obj.info.name if rolle_obj else None
-    
+
     log_ts(f"[PhaseCheck] Phase {phase} zugeordnet zu Rolle: {rolle}")
 
     # Special handling for werwolf_phase - all wolves must vote
@@ -1412,15 +1466,21 @@ def pruefe_phase_abschluss(raum):
         )
     elif rolle:
         alle_fertig = game_logic.alle_haben_gewaehlt(raum, phase, rolle)
-        
+
         # DEBUG: Wenn nicht fertig, logge warum
         if not alle_fertig:
             lebende = game_logic.hole_lebende_spieler(raum)
             relevant = [s for s in lebende if s.rolle == rolle]
-            log_ts(f"[PhaseCheck] Relevante Spieler für {rolle}: {[s.name for s in relevant]}")
-            missing = [s.name for s in relevant if not game_logic.hat_spieler_gewaehlt(s, raum, phase)]
+            log_ts(
+                f"[PhaseCheck] Relevante Spieler für {rolle}: {[s.name for s in relevant]}"
+            )
+            missing = [
+                s.name
+                for s in relevant
+                if not game_logic.hat_spieler_gewaehlt(s, raum, phase)
+            ]
             log_ts(f"[PhaseCheck] Fehlende Aktionen von: {missing}")
-            
+
             # Defensive Fix: If relevant list is empty but role is assigned, force True?
             # game_logic.alle_haben_gewaehlt returns True if list is empty.
     else:
@@ -1441,14 +1501,20 @@ def _wechsel_phase_intern(raum):
     Wird rekursiv aufgerufen für automatische Phasen.
     """
     alte_phase = raum.aktuelle_phase
-    
+
     # Clear audio tracking for the old phase (all audio files in that phase)
-    keys_to_delete = [k for k in _audio_fertig_players.keys() if k[0] == raum.code and k[1] == alte_phase]
+    keys_to_delete = [
+        k
+        for k in _audio_fertig_players.keys()
+        if k[0] == raum.code and k[1] == alte_phase
+    ]
     for key in keys_to_delete:
         del _audio_fertig_players[key]
     if keys_to_delete:
-        log_ts(f"[Phase] Cleared {len(keys_to_delete)} audio tracking entries for completed phase {alte_phase}")
-    
+        log_ts(
+            f"[Phase] Cleared {len(keys_to_delete)} audio tracking entries for completed phase {alte_phase}"
+        )
+
     neue_phase = game_logic.naechste_phase(raum)
 
     # Phase-spezifische Aktionen
@@ -1489,7 +1555,7 @@ def _wechsel_phase_intern(raum):
         "alte_phase": alte_phase,
         "erzaehler_text": erzaehler_text,
     }
-    
+
     # Add role-specific phase data
     if neue_phase == "hexe_phase":
         # Include werewolf victim for Hexe
@@ -1551,50 +1617,56 @@ def handle_audio_fertig(data):
 
     gemeldete_phase = data.get("phase", "")
     audio_file = data.get("audio_file", "")
-    
+
     # Require audio filename to ensure we're tracking the specific audio
     if not audio_file:
         log_ts(f"[Audio] ERROR: audio_fertig from {spieler.name} missing audio_file!")
         return
-    
+
     # Prüfe ob wir noch in der gleichen Phase sind
     if raum.aktuelle_phase != gemeldete_phase:
-        log_ts(f"[Audio] Ignoring audio_fertig for old phase {gemeldete_phase} (current: {raum.aktuelle_phase})")
+        log_ts(
+            f"[Audio] Ignoring audio_fertig for old phase {gemeldete_phase} (current: {raum.aktuelle_phase})"
+        )
         return
-    
+
     # Track which players have confirmed THIS SPECIFIC audio file completion
     tracking_key = (raum.code, gemeldete_phase, audio_file)
     if tracking_key not in _audio_fertig_players:
         _audio_fertig_players[tracking_key] = set()
-    
+
     # Add this player to confirmed set
     _audio_fertig_players[tracking_key].add(spieler.id)
     confirmed_players = _audio_fertig_players[tracking_key]
-    
+
     # Get all alive players who should see this phase
     alle_spieler = Spieler.query.filter_by(
-        raum_id=raum.id,
-        ist_am_leben=True,
-        ist_erzaehler=False
+        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
     ).all()
     total_players = len(alle_spieler)
     confirmed_count = len(confirmed_players)
-    
-    log_ts(f"[Audio] Player {spieler.name} confirmed audio for {gemeldete_phase} ({confirmed_count}/{total_players})")
-    
+
+    log_ts(
+        f"[Audio] Player {spieler.name} confirmed audio for {gemeldete_phase} ({confirmed_count}/{total_players})"
+    )
+
     # Calculate if we've reached threshold
-    threshold_met = confirmed_count >= max(1, int(total_players * AUDIO_CONFIRMATION_THRESHOLD))
-    
+    threshold_met = confirmed_count >= max(
+        1, int(total_players * AUDIO_CONFIRMATION_THRESHOLD)
+    )
+
     if not threshold_met:
-        log_ts(f"[Audio] Waiting for more players to confirm ({confirmed_count}/{total_players}, need {int(total_players * AUDIO_CONFIRMATION_THRESHOLD)})")
+        log_ts(
+            f"[Audio] Waiting for more players to confirm ({confirmed_count}/{total_players}, need {int(total_players * AUDIO_CONFIRMATION_THRESHOLD)})"
+        )
         return
-    
+
     # Clear tracking for this phase
     if tracking_key in _audio_fertig_players:
         del _audio_fertig_players[tracking_key]
-    
+
     log_ts(f"[Audio] Threshold met for {gemeldete_phase}, advancing phase")
-    
+
     # Check if this is an automatic phase or needs action
     if gemeldete_phase in AUTOMATISCHE_PHASEN:
         log_ts(f"[Audio] Automatic phase {gemeldete_phase}, advancing immediately")
@@ -1602,23 +1674,26 @@ def handle_audio_fertig(data):
     else:
         # Interactive phase - check if all actions are complete
         from roles import RoleRegistry
+
         rolle = RoleRegistry.get_role_for_phase(gemeldete_phase)
         should_advance = False
-        
+
         if rolle:
             # Check all players with this role (handles shared phases like werwolf_phase)
             alle_mit_rolle = [s for s in alle_spieler if s.rolle == rolle.info.name]
             if alle_mit_rolle:
                 alle_fertig = all(
-                    game_logic.hat_spieler_gewaehlt(s, raum, gemeldete_phase) 
+                    game_logic.hat_spieler_gewaehlt(s, raum, gemeldete_phase)
                     for s in alle_mit_rolle
                 )
                 if alle_fertig:
-                    log_ts(f"[Audio] All actions complete for {gemeldete_phase}, advancing")
+                    log_ts(
+                        f"[Audio] All actions complete for {gemeldete_phase}, advancing"
+                    )
                     should_advance = True
                 else:
                     log_ts(f"[Audio] Actions pending for {gemeldete_phase}, waiting")
-        
+
         if should_advance:
             _wechsel_phase_intern(raum)
 
@@ -1641,9 +1716,10 @@ def handle_aktion(data):
     # Validate player can act - dead players can only act if their role allows it (e.g., Jäger)
     if not spieler.ist_am_leben:
         from roles import RoleRegistry
+
         rolle_obj = RoleRegistry.get(spieler.rolle)
         # Check if role has on_eigener_tod that enables post-death action
-        can_act_when_dead = rolle_obj and hasattr(rolle_obj, 'on_eigener_tod')
+        can_act_when_dead = rolle_obj and hasattr(rolle_obj, "on_eigener_tod")
         if not can_act_when_dead:
             emit("fehler", {"nachricht": "Du bist tot und kannst nicht handeln"})
             return
@@ -1669,13 +1745,13 @@ def handle_aktion(data):
         }
 
         effect_data = {"aktion": aktion_typ}
-        
+
         # Determine effect from role's action type
         rolle_obj = RoleRegistry.get(spieler.rolle)
         effekt = None
         if rolle_obj:
             aktions_typ_enum = rolle_obj.aktions_typ
-            if hasattr(aktions_typ_enum, 'value'):
+            if hasattr(aktions_typ_enum, "value"):
                 effekt = AKTION_TYP_EFFEKT.get(aktions_typ_enum.value)
 
         if ziel_id and effekt:
@@ -1972,12 +2048,12 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     # Calculate execution context variables
     werwolf_opfer_id = None
-    
+
     # Check if the role requires werewolf victim info (e.g. Hexe, Heiler if modified)
     if rolle_obj.requires_victim_info:
-         ww_result = game_logic.werwolf_abstimmung(raum)
-         if ww_result and "opfer_id" in ww_result:
-             werwolf_opfer_id = ww_result["opfer_id"]
+        ww_result = game_logic.werwolf_abstimmung(raum)
+        if ww_result and "opfer_id" in ww_result:
+            werwolf_opfer_id = ww_result["opfer_id"]
 
     kontext = SpielKontext(
         raum_id=raum.id,
@@ -1991,7 +2067,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         lebende_spieler=lebende,
         tote_spieler=tote,
         aktionen_diese_runde=aktionen_liste,
-        werwolf_opfer_id=werwolf_opfer_id
+        werwolf_opfer_id=werwolf_opfer_id,
     )
 
     # Build target list (handle both single and multi-target)
@@ -2014,7 +2090,12 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             # Register the action
             first_target_id = targets[0].id if targets else None
             game_logic.registriere_aktion(
-                raum.id, raum.runde, raum.aktuelle_phase, aktion_typ, spieler.id, first_target_id
+                raum.id,
+                raum.runde,
+                raum.aktuelle_phase,
+                aktion_typ,
+                spieler.id,
+                first_target_id,
             )
 
             # Apply effects from the role action
@@ -2043,14 +2124,16 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     # Legacy fallback: use on_nacht_aktion for single-target actions
     ziel = targets[0] if len(targets) == 1 else None
 
-    log_ts(f"[Aktion] Fallback to on_nacht_aktion: {spieler.rolle} -> {ziel.name if ziel else 'None'}")
+    log_ts(
+        f"[Aktion] Fallback to on_nacht_aktion: {spieler.rolle} -> {ziel.name if ziel else 'None'}"
+    )
 
     # Pass 'aktion' only if accepted by the method signature
     sig = inspect.signature(rolle_obj.on_nacht_aktion)
     call_kwargs = {}
     if "aktion" in sig.parameters:
         call_kwargs["aktion"] = aktion_typ
-        
+
     ergebnis = rolle_obj.on_nacht_aktion(spieler, ziel, kontext, **call_kwargs)
 
     if ergebnis and ergebnis.erfolg:
@@ -2109,24 +2192,24 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             hexe_spieler = Spieler.query.filter_by(
                 raum_id=raum.id, rolle="Hexe", ist_am_leben=True
             ).all()
-            
+
             opfer = db.session.get(Spieler, ergebnis["opfer_id"])
             if opfer and hexe_spieler:
-                 for hexe in hexe_spieler:
-                     # Benutze 'role_phase_info' Event, das vom Frontend unterstützt wird
-                     socketio.emit(
-                         "role_phase_info",
-                         {
-                             "recipient_id": hexe.id,
-                             "payload": {
-                                 "nachricht": f"Die Werwölfe haben {opfer.name} als Opfer gewählt.",
-                                 "opfer_id": opfer.id,
-                                 "opfer_name": opfer.name,
-                                 "alert_type": "info"
-                             }
-                         },
-                         room=raum.code, 
-                     )
+                for hexe in hexe_spieler:
+                    # Benutze 'role_phase_info' Event, das vom Frontend unterstützt wird
+                    socketio.emit(
+                        "role_phase_info",
+                        {
+                            "recipient_id": hexe.id,
+                            "payload": {
+                                "nachricht": f"Die Werwölfe haben {opfer.name} als Opfer gewählt.",
+                                "opfer_id": opfer.id,
+                                "opfer_name": opfer.name,
+                                "alert_type": "info",
+                            },
+                        },
+                        room=raum.code,
+                    )
 
     # WICHTIG: Nacht-Tode bei nacht_ende verarbeiten!
     # Dies stellt sicher dass Tode immer verarbeitet werden, auch wenn
@@ -2138,7 +2221,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             SpielAktion.raum_id == raum.id,
             SpielAktion.runde == raum.runde,
             SpielAktion.phase == "werwolf_phase",
-            SpielAktion.aktion_typ.in_(["werwolf_wahl", "toeten"])
+            SpielAktion.aktion_typ.in_(["werwolf_wahl", "toeten"]),
         ).first()
 
         log_ts(f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}")
@@ -2418,122 +2501,151 @@ def server_fehler(e):
 # DEBUGGING & VISUALIZATION
 # ============================================================================
 
+
 @app.route("/debug/state")
 def debug_view():
     if not app.debug:
         return "Not available in production", 403
     return render_template("debug/state.html")
 
+
 @app.route("/api/debug/state")
 def get_debug_state():
     """Returns full game state for debugging visualization"""
     if not app.debug:
         return jsonify({"error": "Not available in production"}), 403
-    
+
     # Skip debug collection during tests - it's too expensive
-    if os.environ.get('TESTING') or os.environ.get('PLAYWRIGHT_TEST'):
+    if os.environ.get("TESTING") or os.environ.get("PLAYWRIGHT_TEST"):
         return jsonify({"valid": False, "message": "Debug disabled during tests"}), 503
-        
+
     try:
-        raum_code = request.args.get('code')
+        raum_code = request.args.get("code")
         if raum_code:
             raum = Raum.query.filter_by(code=raum_code).first()
         else:
             # Just grab the most recent one
             raum = Raum.query.order_by(Raum.id.desc()).first()
-            
+
         if not raum:
             return jsonify({"valid": False, "message": "No room found"})
-            
+
         state = gather_gamestate(raum)
         return jsonify(state)
     except Exception as e:
         import traceback
+
         traceback.print_exc()
-        return jsonify({"valid": False, "error": str(e), "message": "Failed to gather state"})
+        return jsonify(
+            {"valid": False, "error": str(e), "message": "Failed to gather state"}
+        )
+
 
 @app.route("/api/debug/logs")
 def get_debug_logs():
     """Returns recent debug logs"""
     if not app.debug:
         return jsonify({"error": "Not available in production"}), 403
-    
-    limit = int(request.args.get('limit', 100))
-    return jsonify({
-        "logs": _debug_log_buffer[-limit:] if _debug_log_buffer else [],
-        "total": len(_debug_log_buffer)
-    })
+
+    limit = int(request.args.get("limit", 100))
+    return jsonify(
+        {
+            "logs": _debug_log_buffer[-limit:] if _debug_log_buffer else [],
+            "total": len(_debug_log_buffer),
+        }
+    )
+
 
 @app.route("/api/debug/clear")
 def clear_debug_logs():
     """Clear debug log buffer"""
     if not app.debug:
         return jsonify({"error": "Not available in production"}), 403
-    
+
     global _debug_log_buffer
     _debug_log_buffer = []
     return jsonify({"success": True, "message": "Debug logs cleared"})
 
+
 def gather_gamestate(raum):
     """Collects comprehensive game state for visualization"""
-    
+
     # Skip expensive queries during tests
-    is_testing = os.environ.get('TESTING') or os.environ.get('PLAYWRIGHT_TEST')
-    
+    is_testing = os.environ.get("TESTING") or os.environ.get("PLAYWRIGHT_TEST")
+
     # Players with full state
     players = []
     for p in raum.spieler:
-        players.append({
-            "id": p.id,
-            "name": p.name,
-            "rolle": p.rolle,
-            "ist_am_leben": p.ist_am_leben,
-            "ist_erzaehler": p.ist_erzaehler,
-            "status": p.status,
-            "states": p.get_all_state() if not is_testing else {}
-        })
-    
+        players.append(
+            {
+                "id": p.id,
+                "name": p.name,
+                "rolle": p.rolle,
+                "ist_am_leben": p.ist_am_leben,
+                "ist_erzaehler": p.ist_erzaehler,
+                "status": p.status,
+                "states": p.get_all_state() if not is_testing else {},
+            }
+        )
+
     # Get all recent actions (skip during tests)
     actions = []
     if not is_testing:
         try:
-            recent_actions = SpielAktion.query.filter_by(raum_id=raum.id).order_by(SpielAktion.id.desc()).limit(50).all()
+            recent_actions = (
+                SpielAktion.query.filter_by(raum_id=raum.id)
+                .order_by(SpielAktion.id.desc())
+                .limit(50)
+                .all()
+            )
             for action in recent_actions:
-                actions.append({
-                    "id": action.id,
-                    "runde": action.runde,
-                    "phase": action.phase,
-                    "typ": action.aktion_typ,
-                    "von_spieler_id": action.von_spieler_id,
-                    "ziel_spieler_id": action.ziel_spieler_id,
-                    "zusatz_daten": action.zusatz_daten
-                })
+                actions.append(
+                    {
+                        "id": action.id,
+                        "runde": action.runde,
+                        "phase": action.phase,
+                        "typ": action.aktion_typ,
+                        "von_spieler_id": action.von_spieler_id,
+                        "ziel_spieler_id": action.ziel_spieler_id,
+                        "zusatz_daten": action.zusatz_daten,
+                    }
+                )
         except:
             pass
-    
+
     # Get all logs (skip during tests)
     logs = []
     if not is_testing:
         try:
-            recent_logs = SpielLog.query.filter_by(raum_id=raum.id).order_by(SpielLog.id.desc()).limit(100).all()
+            recent_logs = (
+                SpielLog.query.filter_by(raum_id=raum.id)
+                .order_by(SpielLog.id.desc())
+                .limit(100)
+                .all()
+            )
             for log in recent_logs:
-                logs.append({
-                    "id": log.id,
-                    "nachricht": log.nachricht,
-                    "sichtbar_fuer": log.sichtbar_fuer,
-                    "zeitpunkt": log.zeitpunkt.isoformat() if log.zeitpunkt else None
-                })
+                logs.append(
+                    {
+                        "id": log.id,
+                        "nachricht": log.nachricht,
+                        "sichtbar_fuer": log.sichtbar_fuer,
+                        "zeitpunkt": (
+                            log.zeitpunkt.isoformat() if log.zeitpunkt else None
+                        ),
+                    }
+                )
         except:
             pass
-        
+
     # Get phases flow recommendation (skip expensive generation during tests)
     planned_phases = PHASEN
     if not is_testing:
         try:
             from phase_generator import generate_phases_for_game
+
             planned_phases = generate_phases_for_game(raum)
             if not planned_phases:
-                 planned_phases = PHASEN # Fallback to constant
+                planned_phases = PHASEN  # Fallback to constant
         except ImportError:
             planned_phases = PHASEN
         except Exception as e:
@@ -2546,14 +2658,16 @@ def gather_gamestate(raum):
         try:
             rooms = Raum.query.all()
             for r in rooms:
-                all_rooms.append({
-                    "id": r.id,
-                    "code": r.code,
-                    "aktuelle_phase": r.aktuelle_phase,
-                    "runde": r.runde,
-                    "spiel_gestartet": r.spiel_gestartet,
-                    "spieler_count": len(r.spieler)
-                })
+                all_rooms.append(
+                    {
+                        "id": r.id,
+                        "code": r.code,
+                        "aktuelle_phase": r.aktuelle_phase,
+                        "runde": r.runde,
+                        "spiel_gestartet": r.spiel_gestartet,
+                        "spieler_count": len(r.spieler),
+                    }
+                )
         except:
             pass
 
@@ -2567,7 +2681,7 @@ def gather_gamestate(raum):
             "runde": raum.runde,
             "modus": raum.modus,
             "spiel_gestartet": raum.spiel_gestartet,
-            "spieler_anzahl": raum.spieler_anzahl
+            "spieler_anzahl": raum.spieler_anzahl,
         },
         "all_rooms": all_rooms,
         "players": players,
@@ -2576,11 +2690,21 @@ def gather_gamestate(raum):
         "phasen_order": planned_phases,
         "state_vars": {
             "phase_wechsel_delay": PHASE_WECHSEL_DELAY,
-            "audio_fertig_players": {} if is_testing else {f"{k[0]}:{k[1]}:{k[2]}": list(v) for k, v in _audio_fertig_players.items()},
-            "aktive_hinweise": {} if is_testing else _aktive_hinweise.get(raum.id, {})
+            "audio_fertig_players": (
+                {}
+                if is_testing
+                else {
+                    f"{k[0]}:{k[1]}:{k[2]}": list(v)
+                    for k, v in _audio_fertig_players.items()
+                }
+            ),
+            "aktive_hinweise": {} if is_testing else _aktive_hinweise.get(raum.id, {}),
         },
-        "function_calls": _debug_log_buffer[-100:] if _debug_log_buffer and not is_testing else []
+        "function_calls": (
+            _debug_log_buffer[-100:] if _debug_log_buffer and not is_testing else []
+        ),
     }
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8888"))

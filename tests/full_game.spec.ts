@@ -162,8 +162,6 @@ interface GameState {
 // UTILITIES
 // ============================================================================
 
-
-
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -223,29 +221,29 @@ test.describe("Full Game Simulation", () => {
 
     const headlessBrowser = HEADLESS_OTHERS
       ? await chromium.launch({
-        headless: true,
-        args: [
-          "--disable-web-security",
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-accelerated-2d-canvas",
-          "--no-first-run",
-          "--no-zygote",
-          "--disable-gpu",
-          "--disable-extensions",
-          "--disable-background-networking",
-          "--disable-default-apps",
-          "--disable-sync",
-          "--disable-translate",
-          "--hide-scrollbars",
-          "--metrics-recording-only",
-          "--mute-audio",
-          "--no-default-browser-check",
-          "--safebrowsing-disable-auto-update",
-          "--disable-features=TranslateUI,BlinkGenPropertyTrees",
-        ],
-      })
+          headless: true,
+          args: [
+            "--disable-web-security",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-accelerated-2d-canvas",
+            "--no-first-run",
+            "--no-zygote",
+            "--disable-gpu",
+            "--disable-extensions",
+            "--disable-background-networking",
+            "--disable-default-apps",
+            "--disable-sync",
+            "--disable-translate",
+            "--hide-scrollbars",
+            "--metrics-recording-only",
+            "--mute-audio",
+            "--no-default-browser-check",
+            "--safebrowsing-disable-auto-update",
+            "--disable-features=TranslateUI,BlinkGenPropertyTrees",
+          ],
+        })
       : null;
 
     // Create shared context for the host (keeps the main window visible)
@@ -262,7 +260,7 @@ test.describe("Full Game Simulation", () => {
 
       // Ensure window is maximized/visible (optional, handled by browser usually)
 
-      await hostPage.goto(BASE_URL, { waitUntil: 'domcontentloaded' }); // Faster than networkidle
+      await hostPage.goto(BASE_URL, { waitUntil: "domcontentloaded" }); // Faster than networkidle
 
       // Close pre-alpha modal if present
       const closeModalBtn = hostPage.locator("[data-close-modal]").first();
@@ -307,7 +305,7 @@ test.describe("Full Game Simulation", () => {
 
       // Join players in parallel for faster startup
       const joinPromises = [];
-      
+
       for (let i = 1; i < PLAYER_COUNT; i++) {
         const playerName =
           PLAYER_NAMES[i % PLAYER_NAMES.length] +
@@ -322,7 +320,7 @@ test.describe("Full Game Simulation", () => {
           // In headless mode we still reuse the headless browser instance, but
           // contexts stay isolated like separate browser profiles.
           if (HEADLESS_OTHERS && headlessBrowser) {
-            context = await headlessBrowser.newContext({ 
+            context = await headlessBrowser.newContext({
               viewport: null,
               // Disable unnecessary features for performance
               javaScriptEnabled: true,
@@ -330,7 +328,7 @@ test.describe("Full Game Simulation", () => {
               ignoreHTTPSErrors: true,
             });
           } else {
-            context = await browser.newContext({ 
+            context = await browser.newContext({
               viewport: null,
               javaScriptEnabled: true,
               bypassCSP: true,
@@ -345,20 +343,24 @@ test.describe("Full Game Simulation", () => {
             if (msg.type() === "error") {
               const text = msg.text();
               // Ignore some common noise and handled warnings
-              if (!text.includes("favicon") &&
+              if (
+                !text.includes("favicon") &&
                 !text.includes("ERR_BLOCKED_BY_CLIENT") &&
-                !text.includes("Viewport height is too small")) {
+                !text.includes("Viewport height is too small")
+              ) {
                 console.error(`🚨 CONSOLE ERROR [${playerName}]: ${text}`);
                 throw new Error(`Console Error in ${playerName}: ${text}`);
               }
             }
           });
 
-          await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }); // Faster than networkidle
+          await page.goto(BASE_URL, { waitUntil: "domcontentloaded" }); // Faster than networkidle
 
           // Close modal if present
           const closeModal = page.locator("[data-close-modal]").first();
-          if (await closeModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+          if (
+            await closeModal.isVisible({ timeout: 1000 }).catch(() => false)
+          ) {
             await closeModal.click();
             await page.waitForTimeout(200);
           }
@@ -374,7 +376,7 @@ test.describe("Full Game Simulation", () => {
           await page.waitForURL(/\/lobby\//);
 
           log(`  ✓ ${playerName} beigetreten (${i + 1}/${PLAYER_COUNT})`);
-          
+
           return {
             context,
             page,
@@ -383,7 +385,7 @@ test.describe("Full Game Simulation", () => {
             isHost: false,
           };
         })();
-        
+
         joinPromises.push(joinPromise);
       }
 
@@ -414,19 +416,20 @@ test.describe("Full Game Simulation", () => {
         // VERIFY VILLAGE 3D - Wait for async initialization (optional feature)
         try {
           await player.page.waitForFunction(
-            () => typeof (window as any).village3d !== 'undefined',
-            { timeout: 15000 }
+            () => typeof (window as any).village3d !== "undefined",
+            { timeout: 15000 },
           );
           // log(`✓ Village3D initialized for ${player.name}`);
         } catch (e) {
-          log(`⚠️  Village3D not initialized for ${player.name} (non-critical, continuing...)`);
+          log(
+            `⚠️  Village3D not initialized for ${player.name} (non-critical, continuing...)`,
+          );
         }
       }
 
       log("✓ Spiel gestartet!\n");
 
       // ... (Role extraction omitted for brevity, keeping existing logic) ...
-
 
       // ========================================================================
       // PHASE 4: Extract Roles
@@ -437,9 +440,7 @@ test.describe("Full Game Simulation", () => {
       for (const player of players) {
         try {
           // Extract role from the game page
-          const rolleElement = player.page
-            .locator(".rolle-badge")
-            .first();
+          const rolleElement = player.page.locator(".rolle-badge").first();
           if (
             await rolleElement.isVisible({ timeout: 2000 }).catch(() => false)
           ) {
@@ -568,8 +569,12 @@ test.describe("Full Game Simulation", () => {
           // We cannot and should not try to skip phases manually.
           // The server has a 30 second fallback timeout for stuck phases.
           if (samePhaseCount > MAX_SAME_PHASE) {
-            log(`  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`);
-            throw new Error(`Game stuck in phase: ${currentPhase} - Auto-advance failed.`);
+            log(
+              `  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`,
+            );
+            throw new Error(
+              `Game stuck in phase: ${currentPhase} - Auto-advance failed.`,
+            );
           }
           // Warte auf Phasenwechsel
           await sleep(2000);
@@ -650,7 +655,7 @@ test.describe("Full Game Simulation", () => {
       log("==========================================\n");
 
       // Wait indefinitely
-      await new Promise(() => { });
+      await new Promise(() => {});
     } catch (error) {
       log(`❌ Fehler: ${error}`);
       throw error;
@@ -1025,22 +1030,22 @@ async function handleWerwolfPhase(
       target = randomChoice(validTargets);
     }
 
-    let success = await selectTargetAndConfirm(
-      wolf.page,
-      target.name,
-      ["Töten", "Wählen", "Angreifen"],
-    );
+    let success = await selectTargetAndConfirm(wolf.page, target.name, [
+      "Töten",
+      "Wählen",
+      "Angreifen",
+    ]);
 
     // If the action failed (invalid target), retry with a valid target
     if (!success && isInvalidTarget && validTargets.length > 0) {
       log(`    🔄 ${wolf.name} Server hat abgelehnt, wähle gültiges Ziel...`);
       await sleep(500);
       const validTarget = randomChoice(validTargets);
-      success = await selectTargetAndConfirm(
-        wolf.page,
-        validTarget.name,
-        ["Töten", "Wählen", "Angreifen"],
-      );
+      success = await selectTargetAndConfirm(wolf.page, validTarget.name, [
+        "Töten",
+        "Wählen",
+        "Angreifen",
+      ]);
       if (success) {
         log(`    ✓ ${wolf.name} stimmt für ${validTarget.name}`);
       }
@@ -1055,11 +1060,10 @@ async function handleWerwolfPhase(
       log(
         `    ⚠️ [RANDOM] ${wolf.name} versucht erneut zu wählen (wird abgelehnt)`,
       );
-      await selectTargetAndConfirm(
-        wolf.page,
-        randomChoice(validTargets).name,
-        ["Töten", "Wählen"],
-      );
+      await selectTargetAndConfirm(wolf.page, randomChoice(validTargets).name, [
+        "Töten",
+        "Wählen",
+      ]);
     }
 
     await sleep(300 + Math.floor(seededRandom() * 400)); // Random delay
@@ -1960,7 +1964,7 @@ async function handleDiskussionPhase(players: PlayerWindow[]): Promise<void> {
             await chatInput.fill(randomChoice(chatMessages));
             await chatInput.press("Enter");
           }
-        } catch (e) { }
+        } catch (e) {}
         await sleep(50);
       }
     }
@@ -2378,7 +2382,9 @@ async function selectTargetAndConfirm(
   }
 
   if (!buttonClicked) {
-    throw new Error(`No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`);
+    throw new Error(
+      `No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`,
+    );
   }
 
   // Poll for server response (max 5 seconds)

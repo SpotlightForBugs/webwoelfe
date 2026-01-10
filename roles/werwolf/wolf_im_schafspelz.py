@@ -85,6 +85,7 @@ class WolfimSchafspelz(Role):
     @property
     def aktions_typ(self) -> "AktionsTyp":
         from roles.enums import AktionsTyp
+
         return AktionsTyp.KEINE
 
     @property
@@ -119,6 +120,7 @@ class WolfimSchafspelz(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from roles.base import RollenUI
+
         return RollenUI(
             title="Wolf im Schafspelz - Passive Rolle",
             instructions="Du jagst mit den Wölfen. Die Seherin sieht dich als Dorfbewohner.",

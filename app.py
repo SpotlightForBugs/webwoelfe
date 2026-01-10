@@ -1557,9 +1557,9 @@ def handle_aktion(data):
             return
 
     # Aktion basierend auf Phase und Rolle verarbeiten
-    erfolg = verarbeite_aktion(spieler, raum, aktion_typ, ziel_id)
+    ergebnis = verarbeite_aktion(spieler, raum, aktion_typ, ziel_id)
 
-    if erfolg:
+    if ergebnis and ergebnis.get("erfolg"):
         from roles.enums import AktionsTyp
         from roles import RoleRegistry
 
@@ -1576,7 +1576,13 @@ def handle_aktion(data):
             AktionsTyp.BLOCKIEREN.value: "block",
         }
 
-        effect_data = {"aktion": aktion_typ}
+        # Build effect_data with result message
+        effect_data = {
+            "aktion": aktion_typ,
+            "nachricht": ergebnis.get("nachricht", "Aktion ausgeführt"),
+            "ziel_id": ergebnis.get("ziel_id"),
+            "ziel_name": ergebnis.get("ziel_name"),
+        }
         
         # Determine effect from role's action type
         rolle_obj = RoleRegistry.get(spieler.rolle)
@@ -1586,16 +1592,23 @@ def handle_aktion(data):
             if hasattr(aktions_typ_enum, 'value'):
                 effekt = AKTION_TYP_EFFEKT.get(aktions_typ_enum.value)
 
-        if ziel_id and effekt:
+        if effekt:
             effect_data["effekt"] = effekt
-            effect_data["ziel_id"] = ziel_id
+            
+        # Include any extra effects data from role action
+        if ergebnis.get("effekte"):
+            effect_data["effekte"] = ergebnis["effekte"]
 
-        emit("aktion_bestaetigt", effect_data)
+        # Use socketio.emit to player's personal room to ensure delivery
+        # Player joins room "player_{id}" on connect (see handle_connect)
+        socketio.emit("aktion_bestaetigt", effect_data, room=f"player_{spieler.id}")
+        log_ts(f"[Aktion] Sent aktion_bestaetigt to player_{spieler.id}: {effect_data.get('nachricht')}")
 
         # Pruefen ob alle fertig sind
         pruefe_phase_abschluss(raum)
     else:
-        emit("fehler", {"nachricht": "Aktion konnte nicht ausgefuehrt werden"})
+        nachricht = ergebnis.get("nachricht", "Aktion konnte nicht ausgeführt werden") if ergebnis else "Aktion konnte nicht ausgeführt werden"
+        emit("fehler", {"nachricht": nachricht})
 
 
 @socketio.on("chat_nachricht")
@@ -1789,6 +1802,10 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     Refactored to use Role classes for validation and execution where possible.
     Some actions still require special handling (tag_wahl, jaeger_schuss).
+    
+    Returns:
+        dict with 'erfolg' (bool), 'nachricht' (str), and optional extra data
+        or None on error
     """
     log_ts(
         f"[Aktion] {aktion_typ} von {spieler.name} (Rolle: {spieler.rolle}) für Ziel-ID: {ziel_id}"
@@ -1797,9 +1814,9 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     # Special case: Day voting (not role-specific)
     if aktion_typ == "tag_wahl":
         if raum.aktuelle_phase != "tag_abstimmung":
-            return False
+            return {"erfolg": False, "nachricht": "Nicht in Abstimmungsphase"}
         if game_logic.hat_spieler_gewaehlt(spieler, raum, raum.aktuelle_phase):
-            return False
+            return {"erfolg": False, "nachricht": "Du hast bereits gewählt"}
         game_logic.registriere_aktion(
             raum.id, raum.runde, raum.aktuelle_phase, "tag_wahl", spieler.id, ziel_id
         )
@@ -1831,7 +1848,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                 },
                 room=raum.code,
             )
-        return True
+        return {"erfolg": True, "nachricht": "Stimme abgegeben"}
 
     # ==========================================================================
     # DYNAMIC ACTION HANDLER - Replaces all hardcoded role-specific handlers
@@ -1929,11 +1946,16 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             _apply_action_effects(ergebnis, spieler, targets, raum, kontext)
 
             db.session.commit()
-            return True
+            return {
+                "erfolg": True, 
+                "nachricht": ergebnis.nachricht,
+                "ziel_id": first_target_id,
+                "ziel_name": targets[0].name if targets else None
+            }
         elif ergebnis and not ergebnis.erfolg:
             log_ts(f"[Aktion] execute_action FAILED: {ergebnis.nachricht}")
             # Don't fall through - this was a valid action type that just failed validation
-            return False
+            return {"erfolg": False, "nachricht": ergebnis.nachricht}
     except Exception as e:
         log_ts(f"[Aktion] execute_action error: {e}")
         # Fall through to legacy handler
@@ -1996,9 +2018,15 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             )
 
         db.session.commit()
-        return True
+        return {
+            "erfolg": True, 
+            "nachricht": ergebnis.nachricht,
+            "ziel_id": first_target_id,
+            "ziel_name": targets[0].name if targets else None,
+            "effekte": ergebnis.effekte
+        }
 
-    return False
+    return {"erfolg": False, "nachricht": "Aktion fehlgeschlagen"}
 
 
 def handle_phase_wechsel(raum, alte_phase, neue_phase):

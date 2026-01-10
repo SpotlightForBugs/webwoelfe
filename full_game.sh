@@ -147,6 +147,10 @@ if ! curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
     export FLASK_ENV=development
     export FLASK_DEBUG=1
     export PORT=$PORT
+    # Reduce phase delay for tests (default 45s is too long)
+    export PHASE_DELAY=8
+    # Lower audio threshold for tests (80% of players = can cause delays)
+    export AUDIO_THRESHOLD=0.5
     
     # Separate Flask logs to a file
     SERVER_LOG="flask_server.log"

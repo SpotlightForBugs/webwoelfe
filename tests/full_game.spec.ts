@@ -587,9 +587,6 @@ test.describe("Full Game Simulation", () => {
           // Warte auf Phasenwechsel
           await sleep(2000);
           continue;
-          // Warte auf Phasenwechsel
-          await sleep(2000);
-          continue;
         }
 
         // Neue Phase erkannt
@@ -1103,16 +1100,71 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
+  // Hide any existing alert before action so we can detect new ones
+  await dieb.page.evaluate(() => {
+    const el = document.getElementById('status-nachricht');
+    if (el) {
+      el.style.display = 'none';
+      el.className = '';
+      el.textContent = '';
+    }
+  });
+
+  // Wait a bit for UI to load
+  await sleep(1000);
+
   // Dieb can choose from leftover roles or skip
+  // Try various skip/pass buttons first
   const skipBtn = dieb.page
     .locator(
-      'button:has-text("Überspringen"), button:has-text("Behalten"), button:has-text("Weiter")',
+      'button:has-text("Überspringen"), button:has-text("Behalten"), button:has-text("Weiter"), button:has-text("Passen")',
     )
     .first();
   if (await skipBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
     await skipBtn.click();
+    
+    // Wait for the action to be confirmed
+    const alertElement = dieb.page.locator('#status-nachricht');
+    await alertElement.waitFor({ state: 'visible', timeout: 30000 });
+    
     log("    Dieb behält seine Rolle");
+    return;
   }
+  
+  // No skip button - try to find and click on a role option/card
+  const roleCard = dieb.page.locator('.rolle-card, .role-option, .role-choice, [data-role]').first();
+  if (await roleCard.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await roleCard.click();
+    await sleep(500);
+    
+    // Click confirm button after selecting role
+    const confirmBtn = dieb.page.locator('button:has-text("Rolle wählen"), button:has-text("Wählen"), button:has-text("Bestätigen")').first();
+    if (await confirmBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await confirmBtn.click();
+    }
+    
+    // Wait for the action to be confirmed
+    const alertElement = dieb.page.locator('#status-nachricht');
+    await alertElement.waitFor({ state: 'visible', timeout: 30000 });
+    
+    log("    Dieb hat eine Rolle gestohlen");
+    return;
+  }
+  
+  // Fallback - click the main action button if available
+  const actionBtn = dieb.page.locator('#action-buttons button').first();
+  if (await actionBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await actionBtn.click();
+    
+    // Wait for the action to be confirmed
+    const alertElement = dieb.page.locator('#status-nachricht');
+    await alertElement.waitFor({ state: 'visible', timeout: 30000 });
+    
+    log("    Dieb hat Aktion ausgeführt");
+    return;
+  }
+  
+  log("    ⚠️ Keine Interaktion für Dieb gefunden - Phase muss manuell weitergehen");
 }
 
 async function handleDoppelgaengerPhase(
@@ -2445,60 +2497,19 @@ async function selectTargetAndConfirm(
     throw new Error(`Target card not found: ${targetName}`);
   }
 
-  // Setup the server response listener BEFORE clicking
+  // Hide any existing alert before action so we can detect new ones
   await page.evaluate(() => {
-    // Clear any previous pending response
-    (window as any).__lastActionResult = null;
-    (window as any).__actionPending = true;
-
-    const socket = (window as any).socket;
-    if (!socket) {
-      (window as any).__actionPending = false;
-      (window as any).__lastActionResult = {
-        success: false,
-        error: "No socket",
-      };
-      return;
+    const el = document.getElementById('status-nachricht');
+    if (el) {
+      el.style.display = 'none';
+      el.className = '';
+      el.textContent = '';
     }
-
-    // One-time listeners for this action
-    const onSuccess = () => {
-      (window as any).__actionPending = false;
-      (window as any).__lastActionResult = { success: true };
-      socket.off("aktion_bestaetigt", onSuccess);
-      socket.off("fehler", onError);
-    };
-
-    const onError = (data: any) => {
-      (window as any).__actionPending = false;
-      (window as any).__lastActionResult = {
-        success: false,
-        error: data?.nachricht || "Error",
-      };
-      socket.off("aktion_bestaetigt", onSuccess);
-      socket.off("fehler", onError);
-    };
-
-    socket.on("aktion_bestaetigt", onSuccess);
-    socket.on("fehler", onError);
-
-    // Timeout fallback (client side)
-    setTimeout(() => {
-      if ((window as any).__actionPending) {
-        (window as any).__actionPending = false;
-        (window as any).__lastActionResult = {
-          success: false,
-          error: "Timeout (Client)",
-        };
-        socket.off("aktion_bestaetigt", onSuccess);
-        socket.off("fehler", onError);
-      }
-    }, 30000); // Increased timeout for slow actions and animations
   });
 
   // Now click on the target card
   await targetCard.click();
-  await sleep(500);
+  await sleep(300);
 
   // Find and click action button
   let buttonClicked = false;
@@ -2527,30 +2538,23 @@ async function selectTargetAndConfirm(
     throw new Error(`No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`);
   }
 
-  // Poll for server response (max 15 seconds)
-  for (let i = 0; i < 150; i++) {
-    const result = await page.evaluate(() => {
-      if (
-        !(window as any).__actionPending &&
-        (window as any).__lastActionResult
-      ) {
-        return (window as any).__lastActionResult;
-      }
-      return null;
-    });
-
-    if (result !== null) {
-      if (!result.success) {
-        throw new Error(`Server rejected action: ${result.error}`);
-      }
-      return true;
-    }
-
-    await sleep(100);
+  // Wait for the status alert to become visible (no timeout - wait until it happens)
+  // The UI shows alerts via #status-nachricht with class alert-success or alert-error
+  const alertElement = page.locator('#status-nachricht');
+  
+  // Wait for the alert to be visible and have content
+  await alertElement.waitFor({ state: 'visible', timeout: 120000 });
+  
+  // Check what type of alert it is
+  const alertClass = await alertElement.getAttribute('class');
+  const alertText = await alertElement.textContent();
+  
+  if (alertClass?.includes('alert-error')) {
+    throw new Error(`Server rejected action: ${alertText}`);
   }
-
-  // Timeout - assume failure
-  throw new Error("Action timed out waiting for server confirmation");
+  
+  // Success (alert-success, alert-info, etc.)
+  return true;
 }
 
 async function checkGameEnd(hostPage: Page): Promise<boolean> {

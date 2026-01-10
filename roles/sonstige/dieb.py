@@ -84,21 +84,29 @@ class Dieb(Role):
         return False
 
     def get_ui_definition(self) -> "RollenUI":
-        """Returns the UI definition for Dieb's action panel."""
-        from ..base import RollenUI, UIButton
+        """UI definition for Dieb using dynamic RoleAction, no skipping."""
+        from ..base import RollenUI, RoleAction
 
         return RollenUI(
             title="Dieb - Rolle wählen",
-            instructions="Wähle eine der zwei verfügbaren Rollen.",
-            buttons=[
-                UIButton(
+            instructions=(
+                "Du siehst zwei verbliebene Rollen. Ist ein Werwolf dabei, musst du ihn wählen."
+            ),
+            # Use action-driven API so backend handles selection without client targets
+            actions=[
+                RoleAction(
+                    action_id="dieb_waehlen",
                     label="Rolle wählen",
+                    handler="handle_dieb_waehlen",
                     action_type="waehlen",
                     icon="fa-solid fa-mask",
                     css_class="btn-primary",
+                    requires_target=False,
                 )
             ],
-            requires_target=True,  # Needs to select option 1 or 2 (handled as index?)
+            # Legacy buttons left empty intentionally
+            buttons=[],
+            requires_target=False,
             allow_multiple_targets=False,
             can_skip=False,
         )
@@ -169,6 +177,75 @@ class Dieb(Role):
             effekte={
                 "rolle_wechsel": gewaehlte_rolle,
                 "dieb_hat_gewaehlt": True,
+            },
+            log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
+
+    # === Dynamic action handler used by RoleAction ===
+    def handle_dieb_waehlen(self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext) -> AktionsErgebnis:
+        """
+        Dynamische Auswahl ohne Client-Targets:
+        - Ermittelt zwei sinnvolle "übrige" Rollen aus der aktiven Rollenliste bzw. Registry
+        - Erzwingt Werwolf-Wahl, wenn vorhanden
+        - Wechselt die Rolle serverseitig direkt (keine app.py Hardcodes)
+        """
+        # 1) Versuche Optionen aus Kontext (falls später von Setup gesetzt)
+        optionen: List[str] = getattr(kontext, "dieb_optionen", []) or []
+
+        from models import Raum, Spieler as SpielerModel, db
+        from roles import RoleRegistry
+
+        # 2) Wenn nicht vorhanden: dynamisch ableiten
+        if len(optionen) < 2:
+            raum = db.session.get(Raum, kontext.raum_id)
+            # Aktuell vergebene Rollen im Raum
+            vergebene = [s.rolle for s in SpielerModel.query.filter_by(raum_id=kontext.raum_id).all() if s.rolle]
+            # Kandidaten: alle registrierten Rollen, die nicht bereits vergeben sind
+            kandidaten = [r for r in RoleRegistry.get_all_names() if r not in vergebene]
+
+            # Stelle sinnvolle Default-Optionen sicher
+            # Bevorzugt Werwolf + Dorfbewohner, falls verfügbar
+            bevorzugt = []
+            if "Werwolf" in kandidaten:
+                bevorzugt.append("Werwolf")
+            if "Dorfbewohner" in kandidaten:
+                bevorzugt.append("Dorfbewohner")
+
+            # Fülle ggf. auf 2 Optionen auf
+            for name in kandidaten:
+                if len(bevorzugt) >= 2:
+                    break
+                if name not in bevorzugt and name != spieler.rolle:
+                    bevorzugt.append(name)
+
+            optionen = bevorzugt[:2] if len(bevorzugt) >= 2 else (kandidaten[:2] if len(kandidaten) >= 2 else [spieler.rolle])
+
+        # 3) Erzwinge Werwolf-Wahl wenn vorhanden
+        if any("werwolf" in r.lower() for r in optionen):
+            gewaehlte = next((r for r in optionen if "werwolf" in r.lower()), optionen[0])
+        else:
+            gewaehlte = optionen[0]
+
+        # 4) Rolle sofort wechseln (ohne zentrale Hardcodes)
+        alter_name = spieler.rolle or "Unbekannt"
+        spieler.rolle = gewaehlte
+
+        # Initialisiere State der neuen Rolle
+        try:
+            RoleRegistry.init_player_state(spieler)
+        except Exception:
+            pass
+
+        db.session.commit()
+
+        # 5) Ergebnis zurückgeben (UI/Log handled generisch)
+        return AktionsErgebnis(
+            erfolg=True,
+            nachricht=f"Du wirst zum {gewaehlte}!",
+            effekte={
+                "dieb_hat_gewaehlt": True,
+                "alte_rolle": alter_name,
+                "neue_rolle": gewaehlte,
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

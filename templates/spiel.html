@@ -1921,12 +1921,15 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   });
 
   socket.on('aktion_bestaetigt', function(data) {
-      showAlert('Aktion ausgeführt!', 'success');
+      // Show the result message from the server (e.g., "Wolfgang ist ein Hexe")
+      const nachricht = data.nachricht || 'Aktion ausgeführt!';
+      showAlert(nachricht, 'success');
       clearSelection();
       // Show 3D effect if available
       if (window.village3d && data.effekt && data.ziel_id) {
           window.village3d.showActionEffect(data.ziel_id, data.effekt);
       }
+      console.log('[aktion_bestaetigt] Received:', data);
   });
 
   socket.on('fehler', function(data) {

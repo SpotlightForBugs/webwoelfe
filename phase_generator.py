@@ -366,8 +366,13 @@ def get_next_phase(raum: Raum) -> str:
     if special_phase_next:
         return special_phase_next
 
-    # 4. Night Cycle (Dynamic based on active roles)
-    if current_phase == "nacht_start" or "nacht" in current_phase or "_phase" in current_phase:
+    # 4. nacht_ende -> day start
+    if current_phase == "nacht_ende":
+        return "tag_start"
+
+    # 5. Night Cycle (Dynamic based on active roles)
+    # Note: nacht_ende is handled above, not here
+    if current_phase == "nacht_start" or ("nacht" in current_phase and current_phase != "nacht_ende") or "_phase" in current_phase:
         night_phases = generate_phases_for_game(raum)
 
         if not night_phases:
@@ -385,9 +390,6 @@ def get_next_phase(raum: Raum) -> str:
                 return night_phases[0] if night_phases else "nacht_ende"
             logger.warning(f"Phase {current_phase} not in night phases, going to nacht_ende")
             return "nacht_ende"
-
-    if current_phase == "nacht_ende":
-        return "tag_start"
 
     # Fallback
     logger.warning(f"Unknown phase {current_phase}, defaulting to tag_start")

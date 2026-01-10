@@ -97,6 +97,7 @@ class WeisserWolf(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Weißer Wolf - Verrat",
             instructions="Du kannst einen Mitwerwolf töten (jede zweite Nacht).",
@@ -154,9 +155,15 @@ class WeisserWolf(Role):
         return None
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("weisser_wolf_toeten", spieler, [ziel] if ziel else [], kontext)
+        return self.execute_action(
+            "weisser_wolf_toeten", spieler, [ziel] if ziel else [], kontext
+        )
 
     def berechne_gewinn(
         self, spieler: "Spieler", kontext: SpielKontext

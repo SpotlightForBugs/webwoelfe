@@ -591,9 +591,14 @@ spiel_name }}{% endblock %} {% block content %}
   
   // Track if game has started to avoid unnecessary API calls during transition
   let gameStarted = false;
+  let navigationTimeout = null;
+  let pollInterval = null;
 
   // Raum beitreten
   socket.emit("raum_beitreten", { code: raumCode });
+  
+  // Start fallback polling for game start
+  startGamePoll();
 
   // Spielerliste aktualisieren
   function updateSpielerListe(spielerListe) {
@@ -686,9 +691,44 @@ spiel_name }}{% endblock %} {% block content %}
     }
   }
 
+  // Fallback: Poll the server to see if game has started and redirect if needed
+  function startGamePoll() {
+    if (pollInterval) clearInterval(pollInterval);
+    
+    pollInterval = setInterval(async () => {
+      if (gameStarted) {
+        clearInterval(pollInterval);
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/raum/${raumCode}/status`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.spiel_gestartet) {
+            console.log("[Lobby] Game started detected via HTTP poll, navigating...");
+            gameStarted = true;
+            clearInterval(pollInterval);
+            window.location.href = "/spiel/" + raumCode;
+          }
+        }
+      } catch (e) {
+        // Silently ignore poll errors
+      }
+    }, 1000); // Check every 1 second
+  }
+
   socket.on("spiel_gestartet", function (data) {
     // Mark game as started to stop lobby API calls
     gameStarted = true;
+    // Clear fallback timeout and poll since we got the Socket.IO event
+    if (navigationTimeout) {
+      clearTimeout(navigationTimeout);
+    }
+    if (pollInterval) {
+      clearInterval(pollInterval);
+    }
+    console.log("[Lobby] Game started via Socket.IO event, navigating...");
     // Navigate directly to the game page
     window.location.href = "/spiel/" + raumCode;
   });

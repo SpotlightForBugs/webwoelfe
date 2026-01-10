@@ -102,8 +102,31 @@ if ! curl -s http://localhost:$PORT > /dev/null 2>&1; then
         echo "❌ Flask-Server konnte nicht gestartet werden"
         exit 1
     fi
+    
+    # Auto-open debug view in browser
+    echo "🐛 Öffne Debug Dashboard..."
+    sleep 1
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+        # Windows
+        start http://localhost:$PORT/debug/state 2>/dev/null || true
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        open http://localhost:$PORT/debug/state 2>/dev/null || true
+    else
+        # Linux
+        xdg-open http://localhost:$PORT/debug/state 2>/dev/null || true
+    fi
 else
     echo "✓ Flask-App läuft bereits auf Port $PORT"
+    # Auto-open debug view even if server was already running
+    echo "🐛 Öffne Debug Dashboard..."
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+        start http://localhost:$PORT/debug/state 2>/dev/null || true
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        open http://localhost:$PORT/debug/state 2>/dev/null || true
+    else
+        xdg-open http://localhost:$PORT/debug/state 2>/dev/null || true
+    fi
 fi
 
 # Cleanup-Funktion um Server zu beenden

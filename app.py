@@ -8,6 +8,7 @@ Ein Echtzeit-Multiplayer Werwolf-Spiel mit WebSocket-Unterstützung.
 from gevent import monkey
 import gevent
 import inspect
+from functools import wraps
 from flask_minify import Minify
 
 monkey.patch_all()
@@ -47,6 +48,16 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///webwoelfe.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 Minify(app=app, html=True, js=True, cssless=True)
 
+# Automatic phases that advance immediately after audio (no player interaction needed)
+# These are pure transition/info phases
+AUTOMATISCHE_PHASEN = {
+    "rollen_verteilt",  # Info-Phase nach Spielstart
+    "nacht_start",      # Übergang Tag -> Nacht
+    "nacht_ende",       # Übergang Nacht -> Tag
+    "tag_start",        # Übergang Nacht -> Tag
+    "tag_ende",         # Übergang am Tagesende
+}
+
 # Spielname als Konstante
 SPIEL_NAME = "Webwölfe"
 
@@ -59,15 +70,96 @@ PHASE_WECHSEL_DELAY = int(os.environ.get("PHASE_DELAY", "45"))
 # This prevents duplicate events from the same client but allows quick phase transitions
 AUDIO_FERTIG_MIN_DELAY = float(os.environ.get("AUDIO_MIN_DELAY", "1.0"))
 
-# Track last audio_fertig per (room, phase) to prevent duplicate processing
-# Key: (room_code, phase_name), Value: timestamp
-_last_audio_fertig: dict[tuple[str, str], float] = {}
+# Track audio completion per player in each phase with specific audio file
+# Key: (room_code, phase_name, audio_filename), Value: set of player_ids who confirmed audio_fertig
+# This ensures we track completion of the SPECIFIC audio file, not just any audio in that phase
+_audio_fertig_players: dict[tuple[str, str, str], set[int]] = {}
 
+# Minimum percentage of players that must confirm audio before auto-advance (80%)
+AUDIO_CONFIRMATION_THRESHOLD = float(os.environ.get("AUDIO_THRESHOLD", "0.8"))
+
+
+# ============================================================================
+# DEBUG TRACKING SYSTEM
+# ============================================================================
+
+# Global debug log buffer
+_debug_log_buffer = []
+MAX_DEBUG_LOGS = 1000
 
 def log_ts(msg: str):
     """Log mit Timestamp für Debugging"""
     ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    print(f"[{ts}] {msg}")
+    log_entry = f"[{ts}] {msg}"
+    print(log_entry)
+    
+    # Add to debug buffer
+    if app.debug:
+        _debug_log_buffer.append({
+            "timestamp": ts,
+            "message": msg,
+            "type": "log"
+        })
+        # Keep buffer size limited
+        if len(_debug_log_buffer) > MAX_DEBUG_LOGS:
+            _debug_log_buffer.pop(0)
+
+def debug_track_call(func_name, args=None, kwargs=None, result=None, error=None):
+    """Track function calls for debugging"""
+    if not app.debug:
+        return
+    
+    ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+    
+    # Serialize args/kwargs safely
+    try:
+        args_str = str(args)[:200] if args else "()"
+        kwargs_str = str(kwargs)[:200] if kwargs else "{}"
+        result_str = str(result)[:200] if result is not None else "None"
+        error_str = str(error) if error else None
+    except:
+        args_str = "<unserializable>"
+        kwargs_str = "<unserializable>"
+        result_str = "<unserializable>"
+        error_str = str(error) if error else None
+    
+    entry = {
+        "timestamp": ts,
+        "type": "function_call",
+        "function": func_name,
+        "args": args_str,
+        "kwargs": kwargs_str,
+        "result": result_str,
+        "error": error_str,
+        "success": error is None
+    }
+    
+    _debug_log_buffer.append(entry)
+    if len(_debug_log_buffer) > MAX_DEBUG_LOGS:
+        _debug_log_buffer.pop(0)
+    
+    # Emit to debug clients
+    try:
+        socketio.emit('debug_function_call', entry, namespace='/debug')
+    except:
+        pass
+
+def debug_track_decorator(func):
+    """Decorator to automatically track function calls"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not app.debug:
+            return func(*args, **kwargs)
+        
+        func_name = f"{func.__module__}.{func.__name__}"
+        try:
+            result = func(*args, **kwargs)
+            debug_track_call(func_name, args, kwargs, result=result)
+            return result
+        except Exception as e:
+            debug_track_call(func_name, args, kwargs, error=e)
+            raise
+    return wrapper
 
 
 def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
@@ -138,10 +230,11 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
         for key, value in ergebnis.state_updates.items():
             spieler.set_state(key, value)
             
-    # DEBUG: Emit full state update
-    if app.debug:
+    # DEBUG: Emit full state update (disabled during tests for performance)
+    if app.debug and not (os.environ.get('TESTING') or os.environ.get('PLAYWRIGHT_TEST')):
         try:
-           socketio.emit('debug_state_update', gather_gamestate(raum))
+           debug_track_call('socketio.emit', args=['debug_state_update', 'gather_gamestate(raum)'])
+           socketio.emit('debug_state_update', gather_gamestate(raum), namespace='/debug')
         except Exception as e:
            print(f"Debug emit failed: {e}")
 
@@ -732,6 +825,15 @@ def get_game_phases(code):
     if not spieler or spieler.raum_id != raum.id:
         return jsonify({"success": False, "error": "Not authorized"}), 403
     
+    # Don't generate phases if game hasn't started yet (roles not distributed)
+    if not raum.spiel_gestartet or not any(s.rolle for s in raum.spieler):
+        return jsonify({
+            "success": True,
+            "phases": [],
+            "phase_info": [],
+            "phase_mapping": {}
+        })
+    
     phases = generate_phases_for_game(raum)
     phase_info = [get_phase_display_info(p) for p in phases]
     phase_mapping = build_phase_role_mapping(raum)
@@ -919,6 +1021,22 @@ def get_role_info(role_name):
     )
 
 
+@app.route("/api/raum/<code>/status", methods=["GET"])
+def get_raum_status(code):
+    """Get the current status of a room (is game started, etc.)"""
+    raum = Raum.query.filter_by(code=code).first()
+    if not raum:
+        return jsonify({"success": False, "error": "Raum nicht gefunden"}), 404
+    
+    return jsonify({
+        "success": True,
+        "spiel_gestartet": raum.spiel_gestartet,
+        "code": raum.code,
+        "aktuelle_phase": raum.aktuelle_phase,
+        "runde": raum.runde,
+    })
+
+
 @app.route("/api/raum/<code>/erzaehler/random", methods=["POST"])
 def waehle_zufaelligen_erzaehler(code):
     """Wählt einen zufälligen Erzähler aus allen Spielern des Raums."""
@@ -1086,6 +1204,7 @@ def handle_connect():
         raum = db.session.get(Raum, spieler.raum_id)
         if raum:
             join_room(raum.code)
+            logger.info(f"[SocketIO] Player {spieler.name} (ID: {spieler.id}) connected and joined room {raum.code}")
             # SICHER: Nur Name und ID werden geteilt, keine Rolle
             emit(
                 "spieler_verbunden",
@@ -1102,6 +1221,10 @@ def handle_connect():
             )
             # Sende aktualisierte Rollenvorschau an alle
             sende_rollen_vorschau_update(raum)
+        else:
+            logger.warning(f"[SocketIO] Player connected but raum with ID {spieler.raum_id} not found")
+    else:
+        logger.warning(f"[SocketIO] Connection attempt without valid player session")
 
 
 @socketio.on("disconnect")
@@ -1185,6 +1308,7 @@ def handle_spiel_starten(data):
         alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
 
         # Spiel gestartet - alle werden zur Spielseite weitergeleitet
+        logger.info(f"[Spiel] Emitting spiel_gestartet to room {raum.code} with {len(alle_spieler)} players")
         emit(
             "spiel_gestartet",
             {"phase": raum.aktuelle_phase, "runde": raum.runde},
@@ -1317,6 +1441,14 @@ def _wechsel_phase_intern(raum):
     Wird rekursiv aufgerufen für automatische Phasen.
     """
     alte_phase = raum.aktuelle_phase
+    
+    # Clear audio tracking for the old phase (all audio files in that phase)
+    keys_to_delete = [k for k in _audio_fertig_players.keys() if k[0] == raum.code and k[1] == alte_phase]
+    for key in keys_to_delete:
+        del _audio_fertig_players[key]
+    if keys_to_delete:
+        log_ts(f"[Phase] Cleared {len(keys_to_delete)} audio tracking entries for completed phase {alte_phase}")
+    
     neue_phase = game_logic.naechste_phase(raum)
 
     # Phase-spezifische Aktionen
@@ -1377,17 +1509,7 @@ def _wechsel_phase_intern(raum):
     except Exception as e:
         log_ts(f"Fehler bei Hinweis-Generierung: {e}")
 
-    # Automatische Phasen: Nur reine Übergangs-Phasen die keine Aktion erfordern
-    # WICHTIG: Night-Phase ist NIEMALS automatisch - dort agieren Rollen!
-    # Diese Liste ist absichtlich minimal:
-    AUTOMATISCHE_PHASEN = {
-        "rollen_verteilt",  # Info-Phase nach Spielstart
-        "nacht_start",      # Übergang Tag -> Nacht
-        "nacht_ende",       # Übergang Nacht -> Tag
-        "tag_start",        # Übergang Nacht -> Tag
-        "tag_ende",         # Übergang am Tagesende
-    }
-    
+    # Check if this is an automatic transition phase (uses module-level AUTOMATISCHE_PHASEN)
     ist_automatische_phase = neue_phase in AUTOMATISCHE_PHASEN
 
     if raum.modus == "online" and ist_automatische_phase:
@@ -1418,9 +1540,7 @@ def _wechsel_phase_intern(raum):
 # Socket-Handler für Audio-Fertig-Event
 @socketio.on("audio_fertig")
 def handle_audio_fertig(data):
-    """Client meldet dass Audio abgespielt wurde - Phase kann wechseln"""
-    import time
-    
+    """Client meldet dass Audio VOLLSTÄNDIG abgespielt wurde - Phase kann wechseln wenn ALLE Spieler bereit sind"""
     spieler = hole_aktuellen_spieler()
     if not spieler:
         return
@@ -1430,87 +1550,77 @@ def handle_audio_fertig(data):
         return
 
     gemeldete_phase = data.get("phase", "")
+    audio_file = data.get("audio_file", "")
     
-    # Server-side debounce: Check if we verified this phase audio recently
-    current_time = time.time()
-    debounce_key = (raum.code, gemeldete_phase)
-    last_processed = _last_audio_fertig.get(debounce_key, 0)
-    
-    if current_time - last_processed < AUDIO_FERTIG_MIN_DELAY:
-        log_ts(f"[Audio] Ignoring duplicate audio_fertig for {gemeldete_phase}")
+    # Require audio filename to ensure we're tracking the specific audio
+    if not audio_file:
+        log_ts(f"[Audio] ERROR: audio_fertig from {spieler.name} missing audio_file!")
         return
-
-    # Update timestamp
-    _last_audio_fertig[debounce_key] = current_time
-
-    # Nur der erste Spieler der meldet löst den Phasenwechsel aus
+    
     # Prüfe ob wir noch in der gleichen Phase sind
-    if raum.aktuelle_phase == gemeldete_phase:
-        # WICHTIG: Nur automatische Phasen dürfen durch Audio-Ende weitergeschaltet werden!
-        # Night-Phase ist NIEMALS automatisch - dort agieren Rollen!
+    if raum.aktuelle_phase != gemeldete_phase:
+        log_ts(f"[Audio] Ignoring audio_fertig for old phase {gemeldete_phase} (current: {raum.aktuelle_phase})")
+        return
+    
+    # Track which players have confirmed THIS SPECIFIC audio file completion
+    tracking_key = (raum.code, gemeldete_phase, audio_file)
+    if tracking_key not in _audio_fertig_players:
+        _audio_fertig_players[tracking_key] = set()
+    
+    # Add this player to confirmed set
+    _audio_fertig_players[tracking_key].add(spieler.id)
+    confirmed_players = _audio_fertig_players[tracking_key]
+    
+    # Get all alive players who should see this phase
+    alle_spieler = Spieler.query.filter_by(
+        raum_id=raum.id,
+        ist_am_leben=True,
+        ist_erzaehler=False
+    ).all()
+    total_players = len(alle_spieler)
+    confirmed_count = len(confirmed_players)
+    
+    log_ts(f"[Audio] Player {spieler.name} confirmed audio for {gemeldete_phase} ({confirmed_count}/{total_players})")
+    
+    # Calculate if we've reached threshold
+    threshold_met = confirmed_count >= max(1, int(total_players * AUDIO_CONFIRMATION_THRESHOLD))
+    
+    if not threshold_met:
+        log_ts(f"[Audio] Waiting for more players to confirm ({confirmed_count}/{total_players}, need {int(total_players * AUDIO_CONFIRMATION_THRESHOLD)})")
+        return
+    
+    # Clear tracking for this phase
+    if tracking_key in _audio_fertig_players:
+        del _audio_fertig_players[tracking_key]
+    
+    log_ts(f"[Audio] Threshold met for {gemeldete_phase}, advancing phase")
+    
+    # Check if this is an automatic phase or needs action
+    if gemeldete_phase in AUTOMATISCHE_PHASEN:
+        log_ts(f"[Audio] Automatic phase {gemeldete_phase}, advancing immediately")
+        _wechsel_phase_intern(raum)
+    else:
+        # Interactive phase - check if all actions are complete
+        from roles import RoleRegistry
+        rolle = RoleRegistry.get_role_for_phase(gemeldete_phase)
+        should_advance = False
         
-        # Minimale automatische Phasen (nur Übergänge)
-        AUTOMATISCHE_PHASEN = {
-            "rollen_verteilt",
-            "nacht_start",
-            "nacht_ende",
-            "tag_start",
-            "tag_ende",
-        }
-        
-        if gemeldete_phase in AUTOMATISCHE_PHASEN:
-            log_ts(f"[Audio] Audio fertig für Phase {gemeldete_phase}, wechsle Phase")
-            _wechsel_phase_intern(raum)
-        else:
-            # Smart Advance: Check if we can proceed immediately
-            from roles import RoleRegistry
-            rolle = RoleRegistry.get_role_for_phase(gemeldete_phase)
-            should_advance = False
-            
-            if rolle:
-                if game_logic.alle_haben_gewaehlt(raum, gemeldete_phase, rolle.info.name):
-                    log_ts(f"[Audio] Smart Advance: Keine offenen Aktionen für {gemeldete_phase} (Rolle: {rolle.info.name})")
+        if rolle:
+            # Check all players with this role (handles shared phases like werwolf_phase)
+            alle_mit_rolle = [s for s in alle_spieler if s.rolle == rolle.info.name]
+            if alle_mit_rolle:
+                alle_fertig = all(
+                    game_logic.hat_spieler_gewaehlt(s, raum, gemeldete_phase) 
+                    for s in alle_mit_rolle
+                )
+                if alle_fertig:
+                    log_ts(f"[Audio] All actions complete for {gemeldete_phase}, advancing")
                     should_advance = True
-            
-            if should_advance:
-                 _wechsel_phase_intern(raum)
-                 return
-
-            log_ts(
-                f"[Audio] Audio fertig für interaktive Phase {gemeldete_phase} - warte auf Aktion"
-            )
-            # Fallback-Schutz: Wenn in Online-Partys niemand handelt, darf die Phase nicht hängen bleiben
-            if raum.modus == "online":
-                raum_code = raum.code
-                phase_bei_start = gemeldete_phase
-
-                import gevent
-
-                def interactive_fallback():
-                    # Warte auf Standard-Timeout (z.B. 30s) – danach prüfen ob Phase noch offen ist
-                    gevent.sleep(PHASE_WECHSEL_DELAY)
-                    with app.app_context():
-                        raum_aktuell = Raum.query.filter_by(code=raum_code).first()
-                        if not raum_aktuell or raum_aktuell.aktuelle_phase != phase_bei_start:
-                            return  # Phase hat sich inzwischen geändert
-
-                        # FEHLER: Fallback für interaktive Phasen sollte nie notwendig sein!
-                        logger.error(
-                            f"[Phase] FALLBACK-TIMEOUT für interaktive Phase {phase_bei_start} - Dies ist ein Fehler! Spieler haben nicht reagiert."
-                        )
-
-                        # Erst reguläre Abschlussprüfung versuchen (falls Aktionen inzwischen eingetroffen sind)
-                        try:
-                            pruefe_phase_abschluss(raum_aktuell)
-                        except Exception as exc:  # Best effort, darf den Fallback nicht blockieren
-                            log_ts(f"[Phase] Fehler bei Fallback-Abschlussprüfung: {exc}")
-
-                        # Wenn immer noch dieselbe Phase aktiv ist, erzwinge den Wechsel
-                        raum_nach_pruefung = Raum.query.filter_by(code=raum_code).first()
-                        if raum_nach_pruefung and raum_nach_pruefung.aktuelle_phase == phase_bei_start:
-                            _wechsel_phase_intern(raum_nach_pruefung)
-
-                gevent.spawn(interactive_fallback)
+                else:
+                    log_ts(f"[Audio] Actions pending for {gemeldete_phase}, waiting")
+        
+        if should_advance:
+            _wechsel_phase_intern(raum)
 
 
 @socketio.on("aktion_ausfuehren")
@@ -2319,6 +2429,10 @@ def get_debug_state():
     """Returns full game state for debugging visualization"""
     if not app.debug:
         return jsonify({"error": "Not available in production"}), 403
+    
+    # Skip debug collection during tests - it's too expensive
+    if os.environ.get('TESTING') or os.environ.get('PLAYWRIGHT_TEST'):
+        return jsonify({"valid": False, "message": "Debug disabled during tests"}), 503
         
     try:
         raum_code = request.args.get('code')
@@ -2338,10 +2452,35 @@ def get_debug_state():
         traceback.print_exc()
         return jsonify({"valid": False, "error": str(e), "message": "Failed to gather state"})
 
+@app.route("/api/debug/logs")
+def get_debug_logs():
+    """Returns recent debug logs"""
+    if not app.debug:
+        return jsonify({"error": "Not available in production"}), 403
+    
+    limit = int(request.args.get('limit', 100))
+    return jsonify({
+        "logs": _debug_log_buffer[-limit:] if _debug_log_buffer else [],
+        "total": len(_debug_log_buffer)
+    })
+
+@app.route("/api/debug/clear")
+def clear_debug_logs():
+    """Clear debug log buffer"""
+    if not app.debug:
+        return jsonify({"error": "Not available in production"}), 403
+    
+    global _debug_log_buffer
+    _debug_log_buffer = []
+    return jsonify({"success": True, "message": "Debug logs cleared"})
+
 def gather_gamestate(raum):
     """Collects comprehensive game state for visualization"""
     
-    # Players
+    # Skip expensive queries during tests
+    is_testing = os.environ.get('TESTING') or os.environ.get('PLAYWRIGHT_TEST')
+    
+    # Players with full state
     players = []
     for p in raum.spieler:
         players.append({
@@ -2350,49 +2489,97 @@ def gather_gamestate(raum):
             "rolle": p.rolle,
             "ist_am_leben": p.ist_am_leben,
             "ist_erzaehler": p.ist_erzaehler,
-            "states": p.get_all_state() # Use correct retrieval method
+            "status": p.status,
+            "states": p.get_all_state() if not is_testing else {}
         })
-        
-    # Game Logic Vars (from game_logic module via inspect or shared dict usage if needed)
-    # Since specific vars are usually in DB or SpielKontext objects (which are transient)
-    # we simulate some global state visibility or pull from DB logs/actions
     
-    # Get phases flow recommendation
-    try:
-        from phase_generator import generate_phases_for_game
-        # Just generate fresh for visualization to show "Ideal Path"
-        # Or try to retrieve actual planned phases if stored (raum.phase_data might have it)
-        planned_phases = []
-        # if raum.phase_data:
-        #    import json
-        #    try:
-        #        data = json.loads(raum.phase_data)
-        #        planned_phases = data.get('phases', [])
-        #    except:
-        #        pass
-                
-        if not planned_phases:
-             planned_phases = PHASEN # Fallback to constant
-             
-    except ImportError:
-        planned_phases = PHASEN
+    # Get all recent actions (skip during tests)
+    actions = []
+    if not is_testing:
+        try:
+            recent_actions = SpielAktion.query.filter_by(raum_id=raum.id).order_by(SpielAktion.id.desc()).limit(50).all()
+            for action in recent_actions:
+                actions.append({
+                    "id": action.id,
+                    "runde": action.runde,
+                    "phase": action.phase,
+                    "typ": action.aktion_typ,
+                    "von_spieler_id": action.von_spieler_id,
+                    "ziel_spieler_id": action.ziel_spieler_id,
+                    "zusatz_daten": action.zusatz_daten
+                })
+        except:
+            pass
+    
+    # Get all logs (skip during tests)
+    logs = []
+    if not is_testing:
+        try:
+            recent_logs = SpielLog.query.filter_by(raum_id=raum.id).order_by(SpielLog.id.desc()).limit(100).all()
+            for log in recent_logs:
+                logs.append({
+                    "id": log.id,
+                    "nachricht": log.nachricht,
+                    "sichtbar_fuer": log.sichtbar_fuer,
+                    "zeitpunkt": log.zeitpunkt.isoformat() if log.zeitpunkt else None
+                })
+        except:
+            pass
+        
+    # Get phases flow recommendation (skip expensive generation during tests)
+    planned_phases = PHASEN
+    if not is_testing:
+        try:
+            from phase_generator import generate_phases_for_game
+            planned_phases = generate_phases_for_game(raum)
+            if not planned_phases:
+                 planned_phases = PHASEN # Fallback to constant
+        except ImportError:
+            planned_phases = PHASEN
+        except Exception as e:
+            planned_phases = PHASEN
+            print(f"Phase generation error: {e}")
+
+    # Get all rooms for overview (skip during tests)
+    all_rooms = []
+    if not is_testing:
+        try:
+            rooms = Raum.query.all()
+            for r in rooms:
+                all_rooms.append({
+                    "id": r.id,
+                    "code": r.code,
+                    "aktuelle_phase": r.aktuelle_phase,
+                    "runde": r.runde,
+                    "spiel_gestartet": r.spiel_gestartet,
+                    "spieler_count": len(r.spieler)
+                })
+        except:
+            pass
 
     return {
         "valid": True,
+        "timestamp": datetime.now().isoformat(),
         "raum": {
             "id": raum.id,
             "code": raum.code,
             "aktuelle_phase": raum.aktuelle_phase,
             "runde": raum.runde,
-            "modus": raum.modus
+            "modus": raum.modus,
+            "spiel_gestartet": raum.spiel_gestartet,
+            "spieler_anzahl": raum.spieler_anzahl
         },
+        "all_rooms": all_rooms,
         "players": players,
+        "actions": actions,
+        "logs": logs,
         "phasen_order": planned_phases,
         "state_vars": {
             "phase_wechsel_delay": PHASE_WECHSEL_DELAY,
-            "last_audio_fertig": str(_last_audio_fertig),
-            "aktive_hinweise": _aktive_hinweise.get(raum.id, {})
-        }
+            "audio_fertig_players": {} if is_testing else {f"{k[0]}:{k[1]}:{k[2]}": list(v) for k, v in _audio_fertig_players.items()},
+            "aktive_hinweise": {} if is_testing else _aktive_hinweise.get(raum.id, {})
+        },
+        "function_calls": _debug_log_buffer[-100:] if _debug_log_buffer and not is_testing else []
     }
 
 if __name__ == "__main__":

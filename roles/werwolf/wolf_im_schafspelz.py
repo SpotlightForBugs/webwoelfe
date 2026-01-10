@@ -137,90 +137,58 @@ class WolfimSchafspelz(Role):
         Subtle hints: Slightly visible wolf snout, claws peeking out,
         red eyes occasionally visible through wool.
         """
-        # What OTHERS see - innocent sheep villager
-        sheep_disguise = [
-            # Fluffy wool body costume
+        # What OTHERS see - standard villager (inconspicuous, not sheep!)
+        villager_disguise = [
+            # Simple peasant tunic/body
             AppearanceFeature(
-                feature_type="wool_body",
+                feature_type="villager_tunic",
+                geometry="cylinder",
+                position={"x": 0, "y": 1.0, "z": 0},
+                scale={"x": 0.35, "y": 0.55, "z": 0.28},
+                color_source="custom",
+                custom_color="#6B4423",  # Brown peasant clothes
+                roughness=0.8,
+                description="Simple villager tunic",
+            ),
+            # Belt
+            AppearanceFeature(
+                feature_type="villager_belt",
+                geometry="cylinder",
+                position={"x": 0, "y": 0.72, "z": 0},
+                scale={"x": 0.36, "y": 0.05, "z": 0.29},
+                color_source="custom",
+                custom_color="#3D2314",  # Dark leather
+                description="Simple leather belt",
+            ),
+            # Head (normal human)
+            AppearanceFeature(
+                feature_type="villager_head",
                 geometry="sphere",
-                position={"x": 0, "y": 1.1, "z": 0},
-                scale={"x": 0.55, "y": 0.65, "z": 0.5},
+                position={"x": 0, "y": 1.85, "z": 0},
+                scale={"x": 0.22, "y": 0.25, "z": 0.22},
                 color_source="custom",
-                custom_color="#FFFEF5",  # Cream white wool
-                roughness=1.0,
-                description="Fluffy wool body",
+                custom_color="#E8C4A8",  # Skin tone
+                description="Normal villager head",
             ),
-            # Wool hood/head covering
+            # Hair
             AppearanceFeature(
-                feature_type="wool_hood",
+                feature_type="villager_hair",
                 geometry="sphere",
-                position={"x": 0, "y": 1.95, "z": 0},
-                scale={"x": 0.35, "y": 0.32, "z": 0.32},
+                position={"x": 0, "y": 1.95, "z": -0.02},
+                scale={"x": 0.23, "y": 0.15, "z": 0.2},
                 color_source="custom",
-                custom_color="#FFFEF5",
-                roughness=1.0,
-                description="Wool hood disguise",
+                custom_color="#5D4037",  # Brown hair
+                description="Normal hair",
             ),
-            # Sheep ears (floppy, cute)
+            # Simple cap
             AppearanceFeature(
-                feature_type="sheep_ear_left",
-                geometry="box",
-                position={"x": -0.25, "y": 2.0, "z": 0},
-                scale={"x": 0.12, "y": 0.08, "z": 0.04},
-                rotation={"x": 0, "y": 0, "z": -25},
+                feature_type="villager_cap",
+                geometry="cylinder",
+                position={"x": 0, "y": 2.02, "z": 0},
+                scale={"x": 0.24, "y": 0.08, "z": 0.24},
                 color_source="custom",
-                custom_color="#FFE4E1",  # Pink sheep ear
-                description="Sheep ear left",
-            ),
-            AppearanceFeature(
-                feature_type="sheep_ear_right",
-                geometry="box",
-                position={"x": 0.25, "y": 2.0, "z": 0},
-                scale={"x": 0.12, "y": 0.08, "z": 0.04},
-                rotation={"x": 0, "y": 0, "z": 25},
-                color_source="custom",
-                custom_color="#FFE4E1",
-                description="Sheep ear right",
-            ),
-            # Innocent black eyes (fake)
-            AppearanceFeature(
-                feature_type="fake_eye_left",
-                geometry="sphere",
-                position={"x": -0.08, "y": 1.92, "z": 0.28},
-                scale={"x": 0.04, "y": 0.04, "z": 0.02},
-                color_source="custom",
-                custom_color="#1a1a1a",
-                description="Fake innocent eye",
-            ),
-            AppearanceFeature(
-                feature_type="fake_eye_right",
-                geometry="sphere",
-                position={"x": 0.08, "y": 1.92, "z": 0.28},
-                scale={"x": 0.04, "y": 0.04, "z": 0.02},
-                color_source="custom",
-                custom_color="#1a1a1a",
-                description="Fake innocent eye",
-            ),
-            # Little wool puffs
-            AppearanceFeature(
-                feature_type="wool_puff_1",
-                geometry="sphere",
-                position={"x": -0.3, "y": 1.0, "z": 0.2},
-                scale={"x": 0.12, "y": 0.1, "z": 0.1},
-                color_source="custom",
-                custom_color="#FFFEF5",
-                roughness=1.0,
-                description="Wool puff",
-            ),
-            AppearanceFeature(
-                feature_type="wool_puff_2",
-                geometry="sphere",
-                position={"x": 0.28, "y": 0.9, "z": 0.15},
-                scale={"x": 0.1, "y": 0.1, "z": 0.08},
-                color_source="custom",
-                custom_color="#FFFEF5",
-                roughness=1.0,
-                description="Wool puff",
+                custom_color="#4A6741",  # Green cap
+                description="Simple peasant cap",
             ),
         ]
 
@@ -301,14 +269,14 @@ class WolfimSchafspelz(Role):
         return RollenModell(
             modell_id="wolf_im_schafspelz",
             anzeige_name="Wolf im Schafspelz",
-            beschreibung="Ein Wolf versteckt in einem Schafskostüm",
+            beschreibung="Ein Wolf getarnt als Dorfbewohner",
             body=BodyModification(
                 height_multiplier=0.98,
                 width_multiplier=1.1,  # Bulky costume
                 skin_texture="smooth",
             ),
             appearance_self_alive=wolf_true_form,
-            appearance_others_alive=sheep_disguise,  # Others see innocent sheep!
+            appearance_others_alive=villager_disguise,  # Others see normal villager!
             appearance_dead=create_death_marker(),
             seher_sicht="good",  # Appears good to Seherin
             animations={

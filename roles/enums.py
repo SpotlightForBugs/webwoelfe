@@ -153,3 +153,17 @@ class SichtTyp(Enum):
     DORF = "dorf"
     NEUTRAL = "neutral"
     NICHTS = "nichts"  # Bei blockierten Rollen
+
+
+class SeherFaehigkeit(Enum):
+    """
+    Capability types for seer-like roles.
+    
+    Used for capability-based visibility instead of hardcoded role name strings.
+    Roles override get_visibility_for(capability) to define what seers see.
+    """
+    
+    TEAM_AURA = "team_aura"       # Sees true good/evil aura (Aurenseherin)
+    ACTUAL_ROLE = "actual_role"   # Sees exact role name (Rollenseherin)
+    TEAM_BASIC = "team_basic"     # Sees team alignment, can be fooled (Seherin)
+    PROTECTED = "protected"       # Cannot see anything (blocked roles)

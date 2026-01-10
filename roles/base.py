@@ -2001,6 +2001,63 @@ class SpielKontext:
 
 
 @dataclass
+class RoleAction:
+    """
+    A role action tied to a handler method.
+    
+    Every RoleAction maps directly to a handler method on the Role class.
+    This enables fully dynamic action handling without hardcoded switches.
+    
+    Example:
+        RoleAction(
+            action_id="heilen",
+            label="Heilen",
+            icon="fa-heart",
+            handler="handle_heilen",  # Calls self.handle_heilen()
+            action_type="heilen"
+        )
+    """
+    action_id: str              # Unique identifier
+    label: str                  # UI button text
+    handler: str                # Method name on Role to call
+    action_type: str            # AktionsTyp value (for compatibility)
+    icon: str = ""              # FontAwesome icon class
+    css_class: str = "btn-primary"
+    requires_target: bool = True
+    target_filter: str = "lebende"  # lebende, tote, alle, andere, nachbarn
+    requires_confirmation: bool = False
+    tooltip: Optional[str] = None
+    # Condition function (spieler, kontext) -> bool
+    enabled_condition: Optional[Callable[["Spieler", SpielKontext], bool]] = None
+    
+    def is_enabled(self, spieler: "Spieler", kontext: "SpielKontext") -> bool:
+        """Check if this action is currently enabled."""
+        if self.enabled_condition is not None:
+            return self.enabled_condition(spieler, kontext)
+        return True
+    
+    def to_dict(self, spieler: Optional["Spieler"] = None, 
+                kontext: Optional["SpielKontext"] = None) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        result = {
+            "action_id": self.action_id,
+            "label": self.label,
+            "handler": self.handler,
+            "action_type": self.action_type,
+            "icon": self.icon,
+            "css_class": self.css_class,
+            "requires_target": self.requires_target,
+            "target_filter": self.target_filter,
+            "requires_confirmation": self.requires_confirmation,
+            "tooltip": self.tooltip,
+        }
+        # Include enabled state if context available
+        if spieler is not None and kontext is not None:
+            result["enabled"] = self.is_enabled(spieler, kontext)
+        return result
+
+
+@dataclass
 class UIButton:
     """Definition for a UI button in the action panel."""
 
@@ -2017,6 +2074,9 @@ class RollenUI:
 
     title: str
     instructions: str
+    # NEW: Action-driven architecture - each action tied to handler
+    actions: List[RoleAction] = field(default_factory=list)
+    # Legacy button support (deprecated, use actions instead)
     buttons: List[UIButton] = field(default_factory=list)
     requires_target: bool = True
     allow_multiple_targets: bool = False
@@ -2026,10 +2086,11 @@ class RollenUI:
     can_skip: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
+        """Convert to dictionary for JSON serialization (legacy compatibility)."""
         return {
             "title": self.title,
             "instructions": self.instructions,
+            "actions": [a.to_dict() for a in self.actions],
             "buttons": [
                 {
                     "label": btn.label,
@@ -2047,6 +2108,19 @@ class RollenUI:
             "allow_self_target": self.allow_self_target,
             "can_skip": self.can_skip,
         }
+
+    def to_dict_with_context(
+        self, spieler: "Spieler", kontext: "SpielKontext"
+    ) -> Dict[str, Any]:
+        """Convert to dict with context-aware action states."""
+        result = self.to_dict()
+        # Replace actions with context-aware versions
+        result["actions"] = [
+            a.to_dict(spieler, kontext) 
+            for a in self.actions 
+            if a.is_enabled(spieler, kontext)
+        ]
+        return result
 
 
 class Role(ABC):
@@ -2739,6 +2813,96 @@ class Role(ABC):
         """
         return None
 
+    # === MISSING HOOK METHODS (found in roles, added to base) ===
+
+    def on_angegriffen(
+        self, spieler: "Spieler", angreifer: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
+        """
+        Trigger: Dieser Spieler wird angegriffen (VOR Todesauflösung).
+
+        Anders als on_angriff (Observer-Pattern) wird diese Methode
+        AUF dem angegriffenen Spieler aufgerufen.
+
+        Return AktionsErgebnis mit erfolg=False um den Angriff zu BLOCKIEREN.
+
+        Beispiel: Oma blockiert Werwolf-Angriffe.
+
+        Args:
+            spieler: Der angegriffene Spieler mit dieser Rolle
+            angreifer: Der angreifende Spieler
+            kontext: Spielkontext
+
+        Returns:
+            AktionsErgebnis mit erfolg=False zum Blockieren, None sonst
+        """
+        return None
+
+    def ist_einmal_faehigkeit(self) -> bool:
+        """
+        Gibt True zurück wenn die Fähigkeit nur einmal pro Spiel nutzbar ist.
+
+        Überschreiben für Rollen wie Inquisitor, Tanklastwagenfahrer, etc.
+
+        Returns:
+            True wenn einmalige Fähigkeit, False sonst (default)
+        """
+        return False
+
+    def ist_immun_gegen(self, angriffs_typ: str) -> bool:
+        """
+        Prüft ob diese Rolle gegen einen bestimmten Angriffstyp immun ist.
+
+        Args:
+            angriffs_typ: Typ des Angriffs (z.B. "werwolf", "hexe", "jaeger")
+
+        Returns:
+            True wenn immun, False sonst
+        """
+        return False
+
+    def kann_abstimmung_aendern(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> bool:
+        """
+        Prüft ob diese Rolle Abstimmungen modifizieren kann.
+
+        Überschreiben für Rollen mit Stimm-Manipulation.
+
+        Returns:
+            True wenn Stimmen geändert werden können
+        """
+        return False
+
+    def name_fuer(self, anfragender_spieler: "Spieler") -> str:
+        """
+        Gibt den Rollennamen zurück, wie er von einem anderen Spieler gesehen wird.
+
+        Ermöglicht dynamische Namensanzeige (z.B. getarnte Rollen).
+
+        Args:
+            anfragender_spieler: Der Spieler der den Namen sehen möchte
+
+        Returns:
+            Rollenname aus Sicht des anfragenden Spielers
+        """
+        return self.info.name
+
+    def on_tag_start(
+        self, spieler: "Spieler", kontext: SpielKontext
+    ) -> Optional[AktionsErgebnis]:
+        """
+        Trigger: Der Tag beginnt.
+
+        Wird zu Beginn der Tag-Phase aufgerufen.
+        Nützlich für Tag-aktive Rollen.
+
+        Args:
+            spieler: Der Spieler mit dieser Rolle
+            kontext: Spielkontext
+        """
+        return None
+
     # === DYNAMIC ACTION EXECUTION ===
 
     def execute_action(
@@ -2754,11 +2918,11 @@ class Role(ABC):
         This is the main entry point for all role actions, replacing
         hardcoded action handlers in app.py.
 
-        Override this method to handle custom action types for your role.
-        The base implementation routes to on_nacht_aktion for compatibility.
+        NEW: First looks up RoleAction by action_id/action_type and calls
+        the handler method. Falls back to on_nacht_aktion for legacy.
 
         Args:
-            action_type: The action identifier (e.g., "hexe_heilen", "jaeger_schuss")
+            action_type: The action identifier (e.g., "heilen", "vergiften")
             spieler: The player performing the action
             targets: List of target players (may be empty, single, or multiple)
             kontext: Game context
@@ -2775,7 +2939,28 @@ class Role(ABC):
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
 
-        # Default: route to on_nacht_aktion for single-target actions
+        # NEW: Look up RoleAction by action_id and call handler
+        ui_def = self.get_ui_definition()
+        for action in ui_def.actions:
+            if action.action_id == action_type or action.action_type == action_type:
+                handler_name = action.handler
+                if hasattr(self, handler_name):
+                    handler = getattr(self, handler_name)
+                    # Determine target based on targets list
+                    ziel = targets[0] if len(targets) == 1 else None
+                    # Call handler with appropriate args
+                    try:
+                        return handler(spieler, ziel, kontext)
+                    except TypeError:
+                        # Handler might have different signature, try without ziel
+                        return handler(spieler, kontext)
+                else:
+                    logger.warning(
+                        f"Role {self.info.name} action {action_type} has handler "
+                        f"'{handler_name}' but method not found"
+                    )
+
+        # LEGACY: route to on_nacht_aktion for backwards compatibility
         import inspect
 
         kwargs = {}

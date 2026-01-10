@@ -195,24 +195,61 @@ test.describe("Full Game Simulation", () => {
     log(`Random Seed: ${RANDOM_SEED} (use SEED=${RANDOM_SEED} to reproduce)`);
     log(`==========================================\n`);
 
-    // Launch browsers
+    // Launch browsers with performance optimizations
     const browser = await chromium.launch({
       headless: false,
-      args: ["--disable-web-security", "--no-sandbox"],
+      args: [
+        "--disable-web-security",
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--disable-gpu",
+        "--disable-extensions",
+        "--disable-background-networking",
+        "--disable-default-apps",
+        "--disable-sync",
+        "--disable-translate",
+        "--hide-scrollbars",
+        "--metrics-recording-only",
+        "--mute-audio",
+        "--no-default-browser-check",
+        "--safebrowsing-disable-auto-update",
+        "--disable-features=TranslateUI,BlinkGenPropertyTrees",
+      ],
     });
 
     const headlessBrowser = HEADLESS_OTHERS
       ? await chromium.launch({
         headless: true,
-        args: ["--disable-web-security", "--no-sandbox"],
+        args: [
+          "--disable-web-security",
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas",
+          "--no-first-run",
+          "--no-zygote",
+          "--disable-gpu",
+          "--disable-extensions",
+          "--disable-background-networking",
+          "--disable-default-apps",
+          "--disable-sync",
+          "--disable-translate",
+          "--hide-scrollbars",
+          "--metrics-recording-only",
+          "--mute-audio",
+          "--no-default-browser-check",
+          "--safebrowsing-disable-auto-update",
+          "--disable-features=TranslateUI,BlinkGenPropertyTrees",
+        ],
       })
       : null;
 
-    // Create shared contexts
+    // Create shared context for the host (keeps the main window visible)
     const sharedContext = await browser.newContext({ viewport: null });
-    const sharedHeadlessContext = headlessBrowser
-      ? await headlessBrowser.newContext({ viewport: null })
-      : null;
 
     try {
       // ========================================================================
@@ -225,8 +262,7 @@ test.describe("Full Game Simulation", () => {
 
       // Ensure window is maximized/visible (optional, handled by browser usually)
 
-      await hostPage.goto(BASE_URL);
-      await hostPage.waitForLoadState("networkidle");
+      await hostPage.goto(BASE_URL, { waitUntil: 'domcontentloaded' }); // Faster than networkidle
 
       // Close pre-alpha modal if present
       const closeModalBtn = hostPage.locator("[data-close-modal]").first();
@@ -269,6 +305,9 @@ test.describe("Full Game Simulation", () => {
       // ========================================================================
       log("👥 Spieler treten bei...");
 
+      // Join players in parallel for faster startup
+      const joinPromises = [];
+      
       for (let i = 1; i < PLAYER_COUNT; i++) {
         const playerName =
           PLAYER_NAMES[i % PLAYER_NAMES.length] +
@@ -276,61 +315,81 @@ test.describe("Full Game Simulation", () => {
             ? ` ${Math.floor(i / PLAYER_NAMES.length) + 1}`
             : "");
 
-        let context: BrowserContext;
-        if (HEADLESS_OTHERS && sharedHeadlessContext) {
-          context = sharedHeadlessContext;
-        } else {
-          // Use separate context for each player to simulate separate windows/sessions
-          context = await browser.newContext({ viewport: null });
-        }
+        const joinPromise = (async () => {
+          let context: BrowserContext;
 
-        const page = await context.newPage();
-
-        // FAIL ON CONSOLE ERRORS
-        page.on("console", (msg) => {
-          if (msg.type() === "error") {
-            const text = msg.text();
-            // Ignore some common noise and handled warnings
-            if (!text.includes("favicon") &&
-              !text.includes("ERR_BLOCKED_BY_CLIENT") &&
-              !text.includes("Viewport height is too small")) {
-              console.error(`🚨 CONSOLE ERROR [${playerName}]: ${text}`);
-              throw new Error(`Console Error in ${playerName}: ${text}`);
-            }
+          // Each player gets their own context to avoid sharing cookies/sessions.
+          // In headless mode we still reuse the headless browser instance, but
+          // contexts stay isolated like separate browser profiles.
+          if (HEADLESS_OTHERS && headlessBrowser) {
+            context = await headlessBrowser.newContext({ 
+              viewport: null,
+              // Disable unnecessary features for performance
+              javaScriptEnabled: true,
+              bypassCSP: true,
+              ignoreHTTPSErrors: true,
+            });
+          } else {
+            context = await browser.newContext({ 
+              viewport: null,
+              javaScriptEnabled: true,
+              bypassCSP: true,
+              ignoreHTTPSErrors: true,
+            });
           }
-        });
 
-        await page.goto(BASE_URL);
-        await page.waitForLoadState("networkidle");
+          const page = await context.newPage();
 
-        // Close modal if present
-        const closeModal = page.locator("[data-close-modal]").first();
-        if (await closeModal.isVisible({ timeout: 1000 }).catch(() => false)) {
-          await closeModal.click();
-          await page.waitForTimeout(200);
-        }
+          // FAIL ON CONSOLE ERRORS
+          page.on("console", (msg) => {
+            if (msg.type() === "error") {
+              const text = msg.text();
+              // Ignore some common noise and handled warnings
+              if (!text.includes("favicon") &&
+                !text.includes("ERR_BLOCKED_BY_CLIENT") &&
+                !text.includes("Viewport height is too small")) {
+                console.error(`🚨 CONSOLE ERROR [${playerName}]: ${text}`);
+                throw new Error(`Console Error in ${playerName}: ${text}`);
+              }
+            }
+          });
 
-        // Join via the second card (join form)
-        const beitretenCard = page.locator(".card").nth(1);
-        await beitretenCard
-          .locator('input[name="spieler_name"]')
-          .fill(playerName);
-        await beitretenCard.locator('input[name="code"]').fill(roomCode);
-        await beitretenCard.locator('button:has-text("Beitreten")').click();
+          await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }); // Faster than networkidle
 
-        await page.waitForURL(/\/lobby\//);
+          // Close modal if present
+          const closeModal = page.locator("[data-close-modal]").first();
+          if (await closeModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+            await closeModal.click();
+            await page.waitForTimeout(200);
+          }
 
-        players.push({
-          context,
-          page,
-          name: playerName,
-          isAlive: true,
-          isHost: false,
-        });
+          // Join via the second card (join form)
+          const beitretenCard = page.locator(".card").nth(1);
+          await beitretenCard
+            .locator('input[name="spieler_name"]')
+            .fill(playerName);
+          await beitretenCard.locator('input[name="code"]').fill(roomCode);
+          await beitretenCard.locator('button:has-text("Beitreten")').click();
 
-        log(`  ✓ ${playerName} beigetreten (${i + 1}/${PLAYER_COUNT})`);
-        await sleep(200);
+          await page.waitForURL(/\/lobby\//);
+
+          log(`  ✓ ${playerName} beigetreten (${i + 1}/${PLAYER_COUNT})`);
+          
+          return {
+            context,
+            page,
+            name: playerName,
+            isAlive: true,
+            isHost: false,
+          };
+        })();
+        
+        joinPromises.push(joinPromise);
       }
+
+      // Wait for all players to join in parallel
+      const joinedPlayers = await Promise.all(joinPromises);
+      players.push(...joinedPlayers);
 
       log(`\n✅ Alle ${PLAYER_COUNT} Spieler sind beigetreten!`);
       log(`🎮 RAUMCODE: ${roomCode}\n`);

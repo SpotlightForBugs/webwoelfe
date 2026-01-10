@@ -1,19 +1,29 @@
 {% extends "struktur.html" %}
 
-{% block title %}Debug Dashboard{% endblock %}
+{% block title %}🐛 Debug Dashboard - Live Monitoring{% endblock %}
 
 {% block head %}
 <style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
     .debug-container {
         display: grid;
-        grid-template-columns: 300px 1fr 300px;
-        grid-template-rows: auto 1fr;
+        grid-template-columns: 350px 1fr 400px;
+        grid-template-rows: 60px 1fr;
         height: 100vh;
-        gap: 1rem;
-        padding: 1rem;
-        background-color: #1a1a1a;
-        color: #e0e0e0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        gap: 0;
+        background-color: #0d1117;
+        color: #e6edf3;
+        font-family: 'Segoe UI', -apple-system, sans-serif;
+        font-size: 13px;
     }
 
     .debug-header {
@@ -21,274 +31,868 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: #2d2d2d;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        border-bottom: 2px solid #3d3d3d;
+        background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+        padding: 0 1.5rem;
+        border-bottom: 1px solid #30363d;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .header-title h2 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, #58a6ff, #1f6feb);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .header-controls {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .status-indicator.connected {
+        background: rgba(46, 160, 67, 0.15);
+        color: #3fb950;
+        border: 1px solid rgba(46, 160, 67, 0.4);
+    }
+
+    .status-indicator.disconnected {
+        background: rgba(248, 81, 73, 0.15);
+        color: #f85149;
+        border: 1px solid rgba(248, 81, 73, 0.4);
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    .status-indicator.connected .status-dot {
+        background: #3fb950;
+    }
+
+    .status-indicator.disconnected .status-dot {
+        background: #f85149;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
 
     .panel {
-        background: #252525;
-        border-radius: 8px;
-        padding: 1rem;
-        overflow: auto;
-        border: 1px solid #333;
-    }
-
-    .node-graph {
-        position: relative;
-        background-color: #111;
-        background-image: radial-gradient(#333 1px, transparent 1px);
-        background-size: 20px 20px;
+        background: #161b22;
+        border-right: 1px solid #30363d;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
-    .node {
-        position: absolute;
-        width: 150px;
-        padding: 10px;
-        background: #333;
-        border: 1px solid #555;
-        border-radius: 6px;
-        color: #fff;
-        font-size: 0.8rem;
-        cursor: grab;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        transition: border-color 0.2s, background-color 0.2s;
-    }
-    
-    .node.active {
-        border-color: #4CAF50;
-        background-color: #2E4030;
-        box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+    .panel:last-child {
+        border-right: none;
     }
 
-    .node-header {
-        font-weight: bold;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 5px;
-        margin-bottom: 5px;
+    .panel-header {
+        padding: 1rem 1.25rem;
+        background: #0d1117;
+        border-bottom: 1px solid #30363d;
+        font-weight: 600;
+        font-size: 0.95rem;
         display: flex;
         justify-content: space-between;
+        align-items: center;
     }
 
-    .node-content {
-        font-family: monospace;
-        font-size: 0.75rem;
-        color: #ccc;
+    .panel-content {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 1rem;
     }
-    
-    .connection-line {
-        position: absolute;
-        stroke: #555;
-        stroke-width: 2;
-        fill: none;
-        pointer-events: none;
+
+    /* Custom scrollbar */
+    .panel-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .panel-content::-webkit-scrollbar-track {
+        background: #0d1117;
+    }
+
+    .panel-content::-webkit-scrollbar-thumb {
+        background: #30363d;
+        border-radius: 5px;
+    }
+
+    .panel-content::-webkit-scrollbar-thumb:hover {
+        background: #484f58;
+    }
+
+    /* Player Card */
+    .player-card {
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 0.9rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+    }
+
+    .player-card:hover {
+        border-color: #58a6ff;
+        box-shadow: 0 0 0 1px #58a6ff;
+    }
+
+    .player-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .player-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .player-id {
+        color: #7d8590;
+        font-size: 0.75rem;
+    }
+
+    .player-role {
+        display: inline-block;
+        padding: 0.3rem 0.6rem;
+        background: #1f6feb;
+        color: white;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-top: 0.4rem;
+    }
+
+    .badge {
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-alive {
+        background: rgba(46, 160, 67, 0.15);
+        color: #3fb950;
+    }
+
+    .badge-dead {
+        background: rgba(248, 81, 73, 0.15);
+        color: #f85149;
+    }
+
+    /* Room Info */
+    .info-grid {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.75rem 1rem;
+        background: #0d1117;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #30363d;
+        margin-bottom: 1rem;
+    }
+
+    .info-label {
+        color: #7d8590;
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #58a6ff;
+    }
+
+    /* Log Entry */
+    .log-entry {
+        padding: 0.75rem;
+        border-left: 3px solid #30363d;
+        background: #0d1117;
+        margin-bottom: 0.5rem;
+        border-radius: 0 6px 6px 0;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .log-entry:hover {
+        background: #161b22;
+    }
+
+    .log-entry.type-function_call {
+        border-left-color: #58a6ff;
+    }
+
+    .log-entry.type-log {
+        border-left-color: #7d8590;
+    }
+
+    .log-entry.type-error {
+        border-left-color: #f85149;
+        background: rgba(248, 81, 73, 0.05);
+    }
+
+    .log-timestamp {
+        color: #7d8590;
+        font-family: 'Consolas', monospace;
+        font-size: 0.75rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .log-function {
+        color: #79c0ff;
+        font-family: 'Consolas', monospace;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+
+    .log-message {
+        color: #c9d1d9;
+        word-wrap: break-word;
+    }
+
+    .log-details {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid #21262d;
+        font-size: 0.75rem;
+    }
+
+    .log-args {
+        color: #a5d6a7;
+        font-family: 'Consolas', monospace;
+    }
+
+    .log-result {
+        color: #ffa657;
+        font-family: 'Consolas', monospace;
+    }
+
+    /* Buttons */
+    .btn-debug {
+        padding: 0.5rem 1rem;
+        background: #21262d;
+        border: 1px solid #30363d;
+        color: #c9d1d9;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-debug:hover {
+        background: #30363d;
+        border-color: #58a6ff;
+    }
+
+    .btn-debug i {
+        margin-right: 0.4rem;
+    }
+
+    /* Action & Log Tables */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .data-table th {
+        background: #0d1117;
+        padding: 0.6rem;
+        text-align: left;
+        border-bottom: 2px solid #30363d;
+        font-weight: 600;
+        color: #7d8590;
+    }
+
+    .data-table td {
+        padding: 0.6rem;
+        border-bottom: 1px solid #21262d;
+    }
+
+    .data-table tr:hover {
+        background: #0d1117;
+    }
+
+    /* Room Selector */
+    .room-selector {
+        padding: 0.5rem;
+        background: #0d1117;
+        border: 1px solid #30363d;
+        color: #c9d1d9;
+        border-radius: 6px;
+        font-size: 0.85rem;
+    }
+
+    /* Stats */
+    .stat-card {
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #58a6ff;
+    }
+
+    .stat-label {
+        color: #7d8590;
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+    }
+
+    /* Phase visualization */
+    .phase-flow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .phase-node {
+        padding: 0.5rem 0.9rem;
+        background: #21262d;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+    }
+
+    .phase-node.active {
+        background: #1f6feb;
+        border-color: #58a6ff;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
     }
 
     /* JSON Viewer */
-    pre {
-        background: #111;
-        padding: 0.5rem;
-        border-radius: 4px;
+    pre.json-view {
+        background: #0d1117;
+        padding: 1rem;
+        border-radius: 6px;
+        border: 1px solid #30363d;
         font-size: 0.75rem;
         color: #a5d6a7;
+        overflow-x: auto;
+        font-family: 'Consolas', monospace;
     }
 
-    .status-badge {
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: bold;
+    /* Filters */
+    .filter-bar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
     }
-    .status-alive { background: #1b5e20; color: #fff; }
-    .status-dead { background: #b71c1c; color: #fff; }
+
+    .filter-btn {
+        padding: 0.4rem 0.8rem;
+        background: #21262d;
+        border: 1px solid #30363d;
+        color: #7d8590;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+        background: #1f6feb;
+        border-color: #58a6ff;
+        color: white;
+    }
+
+    .filter-btn:hover {
+        border-color: #58a6ff;
+    }
+
+    /* Tabs */
+    .tabs {
+        display: flex;
+        gap: 0.25rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #30363d;
+    }
+
+    .tab {
+        padding: 0.6rem 1.2rem;
+        background: transparent;
+        border: none;
+        color: #7d8590;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .tab.active {
+        color: #58a6ff;
+        border-bottom-color: #58a6ff;
+    }
+
+    .tab:hover {
+        color: #c9d1d9;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 {% endblock %}
 
 {% block content %}
 <div class="debug-container">
+    <!-- Header -->
     <div class="debug-header">
-        <h2><i class="fa-solid fa-bug"></i> Webwölfe State Visualizer</h2>
-        <div>
-            <span id="connection-status" class="badge bg-success">Connected</span>
-            <button onclick="fetchState()" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-sync"></i> Refresh</button>
+        <div class="header-title">
+            <h2><i class="fa-solid fa-bug"></i> Live Debug Dashboard</h2>
+            <select id="room-selector" class="room-selector">
+                <option value="">Loading rooms...</option>
+            </select>
+        </div>
+        <div class="header-controls">
+            <div id="connection-status" class="status-indicator connected">
+                <span class="status-dot"></span>
+                <span>Connected</span>
+            </div>
+            <button onclick="clearLogs()" class="btn-debug">
+                <i class="fa-solid fa-trash"></i> Clear Logs
+            </button>
+            <button onclick="fetchState()" class="btn-debug">
+                <i class="fa-solid fa-sync"></i> Refresh
+            </button>
         </div>
     </div>
 
-    <!-- Left Panel: Player List -->
+    <!-- Left Panel: Players & Room -->
     <div class="panel">
-        <h4>Players</h4>
-        <div id="player-list">Loading...</div>
+        <div class="panel-header">
+            <span><i class="fa-solid fa-users"></i> Players & Room</span>
+            <span id="player-count" class="badge badge-alive">0</span>
+        </div>
+        <div class="panel-content">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-round">-</div>
+                <div class="stat-label">Current Round</div>
+            </div>
+
+            <div class="info-grid" id="room-info">
+                <span class="info-label">Phase:</span>
+                <span class="info-value" id="info-phase">-</span>
+                
+                <span class="info-label">Room Code:</span>
+                <span class="info-value" id="info-code">-</span>
+                
+                <span class="info-label">Mode:</span>
+                <span class="info-value" id="info-mode">-</span>
+                
+                <span class="info-label">Started:</span>
+                <span class="info-value" id="info-started">-</span>
+            </div>
+
+            <h5 style="margin: 1rem 0 0.5rem 0; color: #7d8590;">Players</h5>
+            <div id="player-list">
+                <div class="player-card">
+                    <div class="player-header">
+                        <span class="player-name">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <h5 style="margin: 1rem 0 0.5rem 0; color: #7d8590;">Phase Flow</h5>
+            <div class="phase-flow" id="phase-flow"></div>
+        </div>
     </div>
 
-    <!-- Center Panel: Flow Visualization -->
-    <div class="panel node-graph" id="flow-canvas">
-        <!-- Nodes will be injected here -->
-        <svg id="connections" style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;"></svg>
+    <!-- Center Panel: Live Logs & Function Calls -->
+    <div class="panel">
+        <div class="panel-header">
+            <span><i class="fa-solid fa-terminal"></i> Live Activity Stream</span>
+            <span id="log-count" class="badge badge-alive">0</span>
+        </div>
+        <div class="panel-content">
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="toggleFilter('all')">All</button>
+                <button class="filter-btn" onclick="toggleFilter('function_call')">Functions</button>
+                <button class="filter-btn" onclick="toggleFilter('log')">Logs</button>
+                <button class="filter-btn" onclick="toggleFilter('error')">Errors</button>
+            </div>
+            <div id="log-stream"></div>
+        </div>
     </div>
 
-    <!-- Right Panel: Raw State & Logs -->
+    <!-- Right Panel: Detailed Info -->
     <div class="panel">
-        <h4>Room State</h4>
-        <div id="room-info"></div>
-        <hr>
-        <h4>Game Logic Variables</h4>
-        <pre id="game-vars">Waiting for data...</pre>
+        <div class="panel-header">
+            <span><i class="fa-solid fa-database"></i> Game Data</span>
+        </div>
+        <div class="panel-content">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('actions')">Actions</button>
+                <button class="tab" onclick="switchTab('logs')">Logs</button>
+                <button class="tab" onclick="switchTab('state')">State Vars</button>
+            </div>
+
+            <div id="tab-actions" class="tab-content active">
+                <h5 style="margin: 0 0 0.75rem 0; color: #7d8590;">Recent Actions</h5>
+                <div id="actions-list"></div>
+            </div>
+
+            <div id="tab-logs" class="tab-content">
+                <h5 style="margin: 0 0 0.75rem 0; color: #7d8590;">Game Logs</h5>
+                <div id="game-logs-list"></div>
+            </div>
+
+            <div id="tab-state" class="tab-content">
+                <h5 style="margin: 0 0 0.75rem 0; color: #7d8590;">State Variables</h5>
+                <pre id="state-vars" class="json-view">Loading...</pre>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     const socket = io();
     let currentState = {};
+    let activeFilters = new Set(['all']);
+    let updateInterval = null;
 
+    // Connection handling
     socket.on('connect', () => {
-        document.getElementById('connection-status').className = 'badge bg-success';
-        document.getElementById('connection-status').innerText = 'Connected';
-        // Join debug room if needed or just pull data
+        updateStatus(true);
         fetchState();
+        startAutoRefresh();
     });
 
     socket.on('disconnect', () => {
-        document.getElementById('connection-status').className = 'badge bg-danger';
-        document.getElementById('connection-status').innerText = 'Disconnected';
+        updateStatus(false);
+        stopAutoRefresh();
     });
+
+    // Live updates via debug namespace
+    const debugSocket = io('/debug');
     
-    // Auto-update on state change events
-    socket.on('debug_state_update', (data) => {
+    debugSocket.on('debug_state_update', (data) => {
+        console.log('Received state update', data);
         updateView(data);
     });
 
+    debugSocket.on('debug_function_call', (call) => {
+        console.log('Received function call', call);
+        addLogEntry(call);
+    });
+
+    function updateStatus(connected) {
+        const statusEl = document.getElementById('connection-status');
+        if (connected) {
+            statusEl.className = 'status-indicator connected';
+            statusEl.innerHTML = '<span class="status-dot"></span><span>Connected</span>';
+        } else {
+            statusEl.className = 'status-indicator disconnected';
+            statusEl.innerHTML = '<span class="status-dot"></span><span>Disconnected</span>';
+        }
+    }
+
+    function startAutoRefresh() {
+        if (updateInterval) clearInterval(updateInterval);
+        updateInterval = setInterval(() => {
+            fetchState();
+        }, 5000); // Update every 5 seconds (reduced from 2s for performance)
+    }
+
+    function stopAutoRefresh() {
+        if (updateInterval) {
+            clearInterval(updateInterval);
+            updateInterval = null;
+        }
+    }
+
     function fetchState() {
-        console.log('Fetching state...');
-        // In a real app this would be an API call, simulating with socket request
-         fetch('/api/debug/state')
+        const roomCode = document.getElementById('room-selector').value;
+        const url = `/api/debug/state${roomCode ? '?code=' + roomCode : ''}`;
+        
+        fetch(url)
             .then(response => response.json())
-            .then(data => updateView(data))
-            .catch(err => console.error('Failed to fetch state:', err));
+            .then(data => {
+                if (data.valid) {
+                    updateView(data);
+                } else if (data.message === 'Debug disabled during tests') {
+                    // Don't spam logs during tests
+                    if (updateInterval) stopAutoRefresh();
+                }
+            })
+            .catch(err => {
+                // Silent fail during tests - debug is disabled
+                console.debug('Debug state unavailable');
+            });
     }
 
     function updateView(data) {
-        if(!data) return;
+        if (!data || !data.valid) return;
         currentState = data;
+
+        // Update room selector
+        if (data.all_rooms && data.all_rooms.length > 0) {
+            const selector = document.getElementById('room-selector');
+            const currentValue = selector.value;
+            selector.innerHTML = '<option value="">Latest Room</option>' +
+                data.all_rooms.map(r => 
+                    `<option value="${r.code}" ${r.code === currentValue ? 'selected' : ''}>${r.code} - ${r.aktuelle_phase} (R${r.runde})</option>`
+                ).join('');
+        }
+
+        // Update stats
+        document.getElementById('stat-round').textContent = data.raum?.runde || '-';
+        document.getElementById('player-count').textContent = data.players?.length || 0;
         
-        // Update Players
-        const playerList = document.getElementById('player-list');
+        // Update room info
+        if (data.raum) {
+            document.getElementById('info-phase').textContent = data.raum.aktuelle_phase || '-';
+            document.getElementById('info-code').textContent = data.raum.code || '-';
+            document.getElementById('info-mode').textContent = data.raum.modus || '-';
+            document.getElementById('info-started').textContent = data.raum.spiel_gestartet ? 'Yes' : 'No';
+        }
+
+        // Update players
         if (data.players) {
+            const playerList = document.getElementById('player-list');
             playerList.innerHTML = data.players.map(p => `
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2" style="background:rgba(255,255,255,0.05); border-radius:4px;">
-                    <div>
-                        <strong>${p.name}</strong> <small class="text-muted">ID: ${p.id}</small><br>
-                        <span class="badge bg-secondary">${p.rolle}</span>
+                <div class="player-card">
+                    <div class="player-header">
+                        <div>
+                            <div class="player-name">${escapeHtml(p.name)}</div>
+                            <div class="player-id">ID: ${p.id}</div>
+                        </div>
+                        <span class="badge ${p.ist_am_leben ? 'badge-alive' : 'badge-dead'}">
+                            ${p.ist_am_leben ? 'ALIVE' : 'DEAD'}
+                        </span>
                     </div>
-                    <span class="status-badge ${p.ist_am_leben ? 'status-alive' : 'status-dead'}">
-                        ${p.ist_am_leben ? 'ALIVE' : 'DEAD'}
-                    </span>
+                    <div class="player-role">${escapeHtml(p.rolle || 'No Role')}</div>
+                    ${p.states ? `<div style="margin-top:0.5rem; font-size:0.75rem; color:#7d8590;">State vars: ${Object.keys(p.states).length}</div>` : ''}
                 </div>
             `).join('');
         }
 
-        // Update Room Info
-        const roomInfo = document.getElementById('room-info');
-        if (data.raum) {
-            roomInfo.innerHTML = `
-                <div><strong>Phase:</strong> <span style="color:#4CAF50">${data.raum.aktuelle_phase}</span></div>
-                <div><strong>Runde:</strong> ${data.raum.runde}</div>
-                <div><strong>Code:</strong> ${data.raum.code}</div>
-            `;
+        // Update phase flow
+        if (data.phasen_order) {
+            const phaseFlow = document.getElementById('phase-flow');
+            const currentPhase = data.raum?.aktuelle_phase || '';
+            phaseFlow.innerHTML = data.phasen_order.map(phase => 
+                `<div class="phase-node ${phase === currentPhase ? 'active' : ''}">${escapeHtml(phase)}</div>`
+            ).join('');
         }
-        
-        // Render Flow Graph
-        renderFlowGraph(data);
 
-        // Raw Vars
-        document.getElementById('game-vars').innerText = JSON.stringify(data.state_vars || {}, null, 2);
-    }
-
-    function renderFlowGraph(data) {
-        // Simple visualization: Current Phase + Previous + Next potential
-        const container = document.getElementById('flow-canvas');
-        // Clear existing nodes but keep SVG
-        const svg = document.getElementById('connections');
-        // Clear nodes (elements with class .node)
-        container.querySelectorAll('.node').forEach(n => n.remove());
-        svg.innerHTML = ''; // Clear lines
-
-        const phaseList = data.phasen_order || []; 
-        const currentPhase = data.raum ? data.raum.aktuelle_phase : '';
-        
-        // Layout Config
-        const startX = 50;
-        const startY = 50;
-        const gapX = 200;
-        const gapY = 100;
-        
-        // Draw Nodes
-        let x = startX;
-        let y = startY;
-        
-        const nodes = [];
-
-        // If we have a defined order, draw it sequentially
-        // For a more complex N8N style, we'd need a layout engine (like Dagre)
-        // Here we just list them in a grid
-        
-        phaseList.forEach((phaseName, index) => {
-            const isActive = phaseName === currentPhase;
-            const node = document.createElement('div');
-            node.className = `node ${isActive ? 'active' : ''}`;
-            node.style.left = `${x}px`;
-            node.style.top = `${y}px`;
-            node.innerHTML = `
-                <div class="node-header">
-                    <span>${phaseName}</span>
-                    ${isActive ? '<i class="fa-solid fa-play-circle" style="color:#4CAF50"></i>' : ''}
+        // Update actions
+        if (data.actions) {
+            const actionsList = document.getElementById('actions-list');
+            actionsList.innerHTML = data.actions.slice(0, 20).map(a => `
+                <div class="log-entry type-log">
+                    <div class="log-timestamp">R${a.runde} - ${a.phase}</div>
+                    <div class="log-function">${escapeHtml(a.typ)}</div>
+                    <div class="log-message">
+                        Von: ${a.von_spieler_id} → Ziel: ${a.ziel_spieler_id || 'None'}
+                        ${a.zusatz_daten ? '<br><small>' + escapeHtml(a.zusatz_daten) + '</small>' : ''}
+                    </div>
                 </div>
-                <div class="node-content">
-                    Type: Phase<br>
-                    Index: ${index}
+            `).join('');
+        }
+
+        // Update game logs
+        if (data.logs) {
+            const logsList = document.getElementById('game-logs-list');
+            logsList.innerHTML = data.logs.slice(0, 30).map(log => `
+                <div class="log-entry type-log">
+                    <div class="log-timestamp">${log.zeitpunkt || ''}</div>
+                    <div class="log-message">${escapeHtml(log.nachricht)}</div>
+                    <div style="font-size:0.7rem; color:#7d8590; margin-top:0.3rem;">Visible: ${log.sichtbar_fuer}</div>
                 </div>
-            `;
-            container.appendChild(node);
+            `).join('');
+        }
+
+        // Update state vars
+        document.getElementById('state-vars').textContent = JSON.stringify(data.state_vars || {}, null, 2);
+
+        // Update function call log
+        if (data.function_calls) {
+            const logStream = document.getElementById('log-stream');
+            const currentHTML = logStream.innerHTML;
             
-            nodes.push({el: node, x, y, width: 150, height: 60});
-            
-            // Grid layout
-            x += gapX;
-            if (x > container.clientWidth - 150) {
-                x = startX;
-                y += gapY;
+            // Only add new entries (compare count)
+            const existingCount = logStream.children.length;
+            if (data.function_calls.length > existingCount) {
+                const newEntries = data.function_calls.slice(existingCount);
+                newEntries.forEach(entry => addLogEntry(entry));
             }
-        });
-        
-        // Draw connections (simple sequential line)
-        for (let i = 0; i < nodes.length - 1; i++) {
-            const start = nodes[i];
-            const end = nodes[i+1];
-            
-            // Draw line from right of start to left of end
-            // Only if they are somewhat logical (this is just visual fluff without real directed graph data)
-            // But user asked for N8N "look"
-            
-            const x1 = start.x + start.width;
-            const y1 = start.y + (start.height / 2);
-            const x2 = end.x;
-            const y2 = end.y + (end.height / 2);
+        }
 
-            // If wrapping, don't draw messy line across screen
-            if (x2 < x1) continue; 
-            
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            // Bezier curve
-            const d = `M ${x1} ${y1} C ${x1 + 50} ${y1}, ${x2 - 50} ${y2}, ${x2} ${y2}`;
-            path.setAttribute("d", d);
-            path.setAttribute("class", "connection-line"); // Add class for styling
-            path.setAttribute("stroke", "#555");
-            path.setAttribute("stroke-width", "2");
-            path.setAttribute("fill", "none");
-            svg.appendChild(path);
+        // Update log count
+        document.getElementById('log-count').textContent = data.function_calls?.length || 0;
+    }
+
+    function addLogEntry(entry) {
+        const logStream = document.getElementById('log-stream');
+        const logEl = document.createElement('div');
+        logEl.className = `log-entry type-${entry.type || 'log'}`;
+        
+        let content = `<div class="log-timestamp">${escapeHtml(entry.timestamp)}</div>`;
+        
+        if (entry.type === 'function_call') {
+            content += `<div class="log-function">${escapeHtml(entry.function)}</div>`;
+            if (entry.args) {
+                content += `<div class="log-details"><div class="log-args">Args: ${escapeHtml(entry.args)}</div></div>`;
+            }
+            if (entry.result && entry.result !== 'None') {
+                content += `<div class="log-details"><div class="log-result">→ ${escapeHtml(entry.result)}</div></div>`;
+            }
+            if (entry.error) {
+                content += `<div class="log-details" style="color:#f85149;">Error: ${escapeHtml(entry.error)}</div>`;
+            }
+        } else {
+            content += `<div class="log-message">${escapeHtml(entry.message)}</div>`;
+        }
+        
+        logEl.innerHTML = content;
+        
+        // Check filters
+        if (!shouldShowLog(entry)) {
+            logEl.style.display = 'none';
+        }
+        
+        logStream.insertBefore(logEl, logStream.firstChild);
+        
+        // Keep only last 200 entries
+        while (logStream.children.length > 200) {
+            logStream.removeChild(logStream.lastChild);
         }
     }
+
+    function shouldShowLog(entry) {
+        if (activeFilters.has('all')) return true;
+        return activeFilters.has(entry.type);
+    }
+
+    function toggleFilter(type) {
+        const btn = event.target;
+        
+        if (type === 'all') {
+            activeFilters.clear();
+            activeFilters.add('all');
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        } else {
+            activeFilters.delete('all');
+            document.querySelector('.filter-btn').classList.remove('active');
+            
+            if (activeFilters.has(type)) {
+                activeFilters.delete(type);
+                btn.classList.remove('active');
+            } else {
+                activeFilters.add(type);
+                btn.classList.add('active');
+            }
+            
+            if (activeFilters.size === 0) {
+                activeFilters.add('all');
+                document.querySelector('.filter-btn').classList.add('active');
+            }
+        }
+        
+        // Update visibility
+        document.querySelectorAll('.log-entry').forEach(entry => {
+            const type = Array.from(entry.classList).find(c => c.startsWith('type-'))?.replace('type-', '');
+            entry.style.display = (activeFilters.has('all') || activeFilters.has(type)) ? 'block' : 'none';
+        });
+    }
+
+    function switchTab(tab) {
+        // Update tab buttons
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    function clearLogs() {
+        if (confirm('Clear all debug logs?')) {
+            fetch('/api/debug/clear')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('log-stream').innerHTML = '';
+                        document.getElementById('log-count').textContent = '0';
+                    }
+                })
+                .catch(err => console.error('Failed to clear logs:', err));
+        }
+    }
+
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        const div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    }
+
+    // Room selector change
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('room-selector').addEventListener('change', () => {
+            fetchState();
+        });
+    });
 </script>
 {% endblock %}

@@ -1377,7 +1377,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                  {% endif %}
             >
               <span class="avatar-initial">{{ s.name[0]|upper }}</span>
-              {# Dynamic icons from effects - replaces hardcoded werwolf/seherin icons #}
               {% for effect in spieler_effekte %}
                 {% if effect.icon %}
                 <span class="rolle-icon effect-icon" title="{{ effect.name }}">{{ effect.icon }}</span>
@@ -1655,8 +1654,12 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       closeAllErzaehlungOverlays();
   });
 
-  socket.on('rolle_erhalten', function(data) {
+  socket.on('rolle_erhalten', async function(data) {
       showAlert('Deine Rolle: ' + data.rolle, 'success');
+      
+      // Load phase mapping when game starts (role is assigned)
+      console.log('[Init] Game started - loading phase mapping');
+      await loadPhaseRoleMapping();
   });
 
   socket.on('spieler_gestorben', function(data) {
@@ -2059,8 +2062,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       container.innerHTML = html;
   }
 
-  // Track which phase we've sent audio_fertig for to prevent duplicates
-  let lastAudioFertigPhase = null;
+  // Track which audio files we've sent audio_fertig for to prevent duplicates
+  // Key: "phase:audioFile"
+  let lastAudioFertigSent = new Set();
   
   // Schließt alle Erzähler-Overlays - properly cleans up to prevent event handlers from firing
   function closeAllErzaehlungOverlays() {
@@ -2068,45 +2072,60 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Mark overlay as being closed to prevent event handlers
           overlay.dataset.closing = 'true';
           
-          // Stoppe Audio falls vorhanden - clear event handlers FIRST
-          const audio = overlay.querySelector('audio');
-          if (audio) {
-              // Remove all listeners by cloning (clean removal)
-              const newAudio = audio.cloneNode(true);
-              newAudio.pause();
-              newAudio.currentTime = 0;
-              // Don't need to add to DOM, just stop the old one
-              audio.pause();
-              audio.currentTime = 0;
-              audio.src = ''; // Clear source to fully stop
-          }
-          
           // Clear any auto-advance timeouts stored on overlay
           if (overlay.autoAdvanceTimeout) {
               clearTimeout(overlay.autoAdvanceTimeout);
+              overlay.autoAdvanceTimeout = null;
           }
           
-          // Entferne Overlay
+          // Stoppe Audio falls vorhanden
+          const audio = overlay.querySelector('audio');
+          if (audio) {
+              // Pause and clear source to fully stop
+              audio.pause();
+              audio.currentTime = 0;
+              audio.src = '';
+              // Remove all event listeners by replacing with clone (no listeners attached)
+              const clone = audio.cloneNode(false);
+              audio.parentNode?.replaceChild(clone, audio);
+          }
+          
+          // Clear any update intervals
+          const autoAdvanceBar = overlay.querySelector('[id$="-auto-advance"]');
+          if (autoAdvanceBar && autoAdvanceBar.updateInterval) {
+              clearInterval(autoAdvanceBar.updateInterval);
+              autoAdvanceBar.updateInterval = null;
+          }
+          
+          // Remove overlay
           overlay.remove();
-  });
+      });
   }
 
-  // Helper function to safely emit audio_fertig only once per phase
-  function emitAudioFertigSafe(phase) {
-      if (phase === lastAudioFertigPhase) {
-          console.log('[Audio] Skipping duplicate audio_fertig for phase:', phase);
+  // Helper function to safely emit audio_fertig only once per audio file
+  // Requires both phase AND audio file path to ensure we track specific audio completion
+  function emitAudioFertigSafe(phase, audioFile) {
+      if (!audioFile) {
+          console.error('[Audio] ERROR: Cannot emit audio_fertig without audio file!');
           return false;
       }
-      lastAudioFertigPhase = phase;
-      socket.emit('audio_fertig', { phase: phase });
-      console.log('[Audio] Sent audio_fertig for phase:', phase);
+      
+      const key = `${phase}:${audioFile}`;
+      if (lastAudioFertigSent.has(key)) {
+          console.log('[Audio] Skipping duplicate audio_fertig for:', key);
+          return false;
+      }
+      
+      lastAudioFertigSent.add(key);
+      socket.emit('audio_fertig', { phase: phase, audio_file: audioFile });
+      console.log('[Audio] Sent audio_fertig for phase:', phase, 'file:', audioFile);
       return true;
   }
 
   function showErzaehlung(text, audioPath) {
-      // Reset the lastAudioFertigPhase when starting a new erzaehlung
-      // This allows the new audio to send its own audio_fertig
-      lastAudioFertigPhase = null;
+      // Note: We DON'T clear lastAudioFertigSent here because we want to prevent
+      // duplicate sends even across different erzaehlungen. The server will
+      // handle phase changes and clear its tracking.
       
       // Schließe bestehende Overlays bevor ein neues gezeigt wird
       closeAllErzaehlungOverlays();
@@ -2192,7 +2211,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           console.log(`[showErzaehlung] Waiting ${readingTimeMs}ms for reading...`);
 
           setTimeout(() => {
-              emitAudioFertigSafe(aktuellePhase);
+              // No audio file, use empty string to indicate text-only
+              emitAudioFertigSafe(aktuellePhase, 'no-audio');
               notification.style.animation = 'fadeOut 0.4s ease-out';
               setTimeout(() => {
                   if (notification && notification.parentNode) notification.remove();
@@ -2256,12 +2276,26 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   return;
               }
               
+              // Verify audio actually completed (not just seeked to end)
+              if (audio.currentTime < audio.duration - 0.5) {
+                  console.log('[Audio] Ignoring ended - audio did not complete naturally');
+                  return;
+              }
+              
+              // Clear auto-advance timeout since audio finished naturally
+              if (audioAutoAdvanceTimeout) {
+                  clearTimeout(audioAutoAdvanceTimeout);
+                  audioAutoAdvanceTimeout = null;
+                  console.log('[Audio] Cleared auto-advance timeout (audio ended naturally)');
+              }
+              
               playIcon.className = 'fa-solid fa-redo';
               playBtn.classList.remove('playing');
               waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
 
-              // Notify server - server handles debouncing
-              emitAudioFertigSafe(aktuellePhase);
+              // Notify server with AUDIO FILE PATH - server waits for all players to finish THIS audio
+              console.log('[Audio] Audio completed naturally. File:', audioPath, 'Duration:', audio.duration, 'CurrentTime:', audio.currentTime);
+              emitAudioFertigSafe(aktuellePhase, audioPath);
 
               // Close overlay after short delay
               setTimeout(() => {
@@ -2305,7 +2339,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                           skipBtn.innerHTML = '<i class="fa-solid fa-forward"></i> Überspringen';
                           skipBtn.onclick = () => {
                               if (audioAutoAdvanceTimeout) clearTimeout(audioAutoAdvanceTimeout);
-                              emitAudioFertigSafe(aktuellePhase);
+                              emitAudioFertigSafe(aktuellePhase, audioPath);
                               notification.style.animation = 'fadeOut 0.4s ease-out';
                               setTimeout(() => notification.remove(), 400);
                           };
@@ -2315,47 +2349,47 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               });
           }
 
-              // Auto-advance timeout for test environments with visual progress
-              // Detect if running in automation (Playwright, Puppeteer, etc)
-              const isAutomated = navigator.webdriver ||
-                                   window.navigator.webdriver ||
-                                   (window.navigator && window.navigator.userAgent &&
-                                    window.navigator.userAgent.includes('HeadlessChrome'));
-              // Shorter timeout for automated tests (5s), normal timeout for production (20s)
-              const autoAdvanceDuration = isAutomated ? 5000 : 20000;
-              const autoAdvanceStart = Date.now();
-              audioAutoAdvanceTimeout = setTimeout(() => {
-                  if (notification && notification.parentNode && notification.dataset.closing !== 'true') {
-                      console.log('[Audio] Auto-advance timeout triggered');
-                      emitAudioFertigSafe(aktuellePhase);
-                      notification.style.animation = 'fadeOut 0.4s ease-out';
-                      setTimeout(() => {
-                          if (notification && notification.parentNode) notification.remove();
-                      }, 400);
-                  }
-              }, autoAdvanceDuration);
-              
-              // Store timeout on notification for cleanup
-              notification.autoAdvanceTimeout = audioAutoAdvanceTimeout;
-
-              // Update progress bar
-              const autoAdvanceBar = document.getElementById(playerId + '-auto-advance');
-              if (autoAdvanceBar) {
-                  const updateInterval = setInterval(() => {
-                      if (!notification.parentNode) {
-                          clearInterval(updateInterval);
-                          return;
-                      }
-                      const elapsed = Date.now() - autoAdvanceStart;
-                      const percent = Math.min((elapsed / autoAdvanceDuration) * 100, 100);
-                      autoAdvanceBar.style.width = percent + '%';
-                      if (percent >= 100) clearInterval(updateInterval);
-                  }, 100);
+          // Auto-advance timeout for test environments with visual progress
+          // Detect if running in automation (Playwright, Puppeteer, etc)
+          const isAutomated = navigator.webdriver ||
+                               window.navigator.webdriver ||
+                               (window.navigator && window.navigator.userAgent &&
+                                window.navigator.userAgent.includes('HeadlessChrome'));
+          // Shorter timeout for automated tests (5s), normal timeout for production (20s)
+          const autoAdvanceDuration = isAutomated ? 5000 : 20000;
+          const autoAdvanceStart = Date.now();
+          audioAutoAdvanceTimeout = setTimeout(() => {
+              if (notification && notification.parentNode && notification.dataset.closing !== 'true') {
+                  console.log('[Audio] Auto-advance timeout triggered (audio may not have played)');
+                  // Even in timeout, send the audio file path
+                  emitAudioFertigSafe(aktuellePhase, audioPath);
+                  notification.style.animation = 'fadeOut 0.4s ease-out';
+                  setTimeout(() => {
+                      if (notification && notification.parentNode) notification.remove();
+                  }, 400);
               }
+          }, autoAdvanceDuration);
+          
+          // Store timeout on notification for cleanup
+          notification.autoAdvanceTimeout = audioAutoAdvanceTimeout;
 
-              audio.addEventListener('ended', () => {
-                  if (audioAutoAdvanceTimeout) clearTimeout(audioAutoAdvanceTimeout);
-              });
+          // Update progress bar
+          const autoAdvanceBar = document.getElementById(playerId + '-auto-advance');
+          if (autoAdvanceBar) {
+              const updateInterval = setInterval(() => {
+                  if (!notification.parentNode) {
+                      clearInterval(updateInterval);
+                      return;
+                  }
+                  const elapsed = Date.now() - autoAdvanceStart;
+                  const percent = Math.min((elapsed / autoAdvanceDuration) * 100, 100);
+                  autoAdvanceBar.style.width = percent + '%';
+                  if (percent >= 100) clearInterval(updateInterval);
+              }, 100);
+              // Store reference for cleanup
+              autoAdvanceBar.updateInterval = updateInterval;
+          }
+
       }
 
       // Entferne Overlay - bei Audio wird es im 'ended' Event entfernt
@@ -2596,9 +2630,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', async function() {
-      // Load phase→role mapping
-      await loadPhaseRoleMapping();
-      console.log('[Init] Phase/Role mapping loaded');
+      // Don't load phase mapping yet - wait until game actually starts
+      // This prevents unnecessary API calls during lobby phase
+      console.log('[Init] Ready - phase mapping will load when game starts');
   });
 
   // =========================================================================

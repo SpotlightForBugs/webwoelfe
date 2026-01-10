@@ -136,9 +136,20 @@ class Prostituierte(Role):
             ziel_spieler_id=ziel.id,
             effekte={
                 "prostituierte_bei": ziel.id,
-                "beide_geschuetzt": [spieler.id, ziel.id],
-                "identitaet_enthuellt": True,
                 "partner_weiss_rolle": ziel.id,
+            },
+            multi_target_updates={
+                spieler.id: {"global.ist_beschuetzt": True},
+                ziel.id: {"global.ist_beschuetzt": True},
+                # Identität enthüllen via Private Info handled below/elsewhere?
+                # Actually, "partner_weiss_rolle" might be handled by UI/Logs?
+                # Let's verify if we need to send a private message here.
+            },
+            private_infos={
+                ziel.id: {
+                    "nachricht": f"{spieler.name} hat die Nacht bei dir verbracht. Sie ist die Prostituierte!",
+                    "alert_type": "warning"
+                }
             },
             log_sichtbar_fuer="erzaehler",
         )

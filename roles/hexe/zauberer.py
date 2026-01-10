@@ -189,8 +189,10 @@ class Zauberer(Role):
             nachricht=f"Du beschützt {ziel.name} mit deinem Zauber.",
             ziel_spieler_id=ziel.id,
             effekte={
-                "geschuetzt": ziel.id,
                 "zauberer_schutz_verbraucht": True,
+            },
+            multi_target_updates={
+                ziel.id: {"global.ist_beschuetzt": True}
             },
             log_sichtbar_fuer="erzaehler",
         )

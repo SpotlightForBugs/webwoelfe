@@ -1110,7 +1110,9 @@ def handle_connect():
         raum = db.session.get(Raum, spieler.raum_id)
         if raum:
             join_room(raum.code)
-            logger.info(f"[SocketIO] Player {spieler.name} (ID: {spieler.id}) connected and joined room {raum.code}")
+            # Private room for individual updates
+            join_room(f"player_{spieler.id}")
+            logger.info(f"[SocketIO] Player {spieler.name} (ID: {spieler.id}) connected and joined room {raum.code} and player_{spieler.id}")
             # SICHER: Nur Name und ID werden geteilt, keine Rolle
             emit(
                 "spieler_verbunden",

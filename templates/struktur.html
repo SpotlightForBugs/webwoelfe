@@ -42,17 +42,17 @@
 
     <!-- Theme CSS (Logo colors) - Inlined -->
     <style>
-    {{ read_css('css/theme.css') }}
+      {{ read_css('css/theme.css') }}
     </style>
 
     <!-- Hint System CSS - Inlined -->
     <style>
-    {{ read_css('css/hints.css') }}
+      {{ read_css('css/hints.css') }}
     </style>
 
     <!-- Character Styling CSS - Inlined -->
     <style>
-    {{ read_css('css/characters.css') }}
+      {{ read_css('css/characters.css') }}
     </style>
 
     <style>
@@ -549,7 +549,10 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
-    <script type="module" src="{{ versioned_url('static', filename='js/dist/hints.js') }}"></script>
+    <script
+      type="module"
+      src="{{ versioned_url('static', filename='js/dist/hints.js') }}"
+    ></script>
 
     <!-- Anti-DevTools Schutz - Verhindert Spicken via F12 -->
     {% if not debug and not true %} {# Disabled for now using 'and not true' #}
@@ -691,8 +694,6 @@
         });
       })();
     </script>
-    {% endif %}
-
-    {% block scripts %}{% endblock %}
+    {% endif %} {% block scripts %}{% endblock %}
   </body>
 </html>

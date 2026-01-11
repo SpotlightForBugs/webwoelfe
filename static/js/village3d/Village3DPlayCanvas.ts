@@ -4,7 +4,7 @@
  * TypeScript version with modular architecture
  */
 
-import type { PlayerData, RoleModel, RoleData, Village3DOptions, PlayerEntity, RolesAPIResponse, PCApplication, PCEntity, PCColor, PCMaterial, PCVec3, UIButtonData, PCModel, HintEntity, AnimatedEntity, PulseEntity } from './types.js';
+import type { PlayerData, RoleModel, RoleData, Village3DOptions, PlayerEntity, RolesAPIResponse, PCApplication, PCEntity, PCColor, PCMaterial, PCVec3, UIButtonData, PCModel, HintEntity, AnimatedEntity, PulseEntity, ViewMode } from './types.js';
 import { PlayerAvatarBuilder } from './PlayerAvatarBuilder.js';
 
 export default class Village3DPlayCanvas {
@@ -93,6 +93,14 @@ export default class Village3DPlayCanvas {
   private cameraHeight: number = 15;
   private cameraRadius: number = 25;
   private targetPosition: PCVec3 | null = null;
+
+  // First-person camera state
+  private viewMode: ViewMode = 'orbit';
+  private firstPersonPlayerId: number | null = null;
+  private firstPersonYaw: number = 0;
+  private firstPersonPitch: number = 0;
+  private firstPersonHeight: number = 1.7;
+  private firstPersonLerp: number = 10;
   
   // Buildings
   private buildings: PCEntity[] = [];
@@ -142,6 +150,9 @@ export default class Village3DPlayCanvas {
     
     this.isLobbyMode = options.lobbyMode || false;
     this.onPlayerClick = options.onPlayerClick || null;
+    this.viewMode = options.startView === 'first-person' ? 'first-person' : 'orbit';
+    this.firstPersonPlayerId = options.firstPersonPlayerId ?? null;
+    this.firstPersonHeight = options.firstPersonHeight ?? this.firstPersonHeight;
     
     // Camera defaults based on mode
     if (this.isLobbyMode) {
@@ -335,8 +346,9 @@ export default class Village3DPlayCanvas {
     if (!this.light) throw new Error('Failed to create light');
     this.light.addComponent('light', {
       type: 'directional',
-      color: this.isNight ? new pc.Color(0.4, 0.4, 0.6) : new pc.Color(1, 1, 0.9),
-      intensity: this.isNight ? 0.4 : 0.8,
+      // Düsterwald: cold moonlight at night, pale overcast by day
+      color: this.isNight ? new pc.Color(0.25, 0.3, 0.55) : new pc.Color(0.7, 0.7, 0.75),
+      intensity: this.isNight ? 0.35 : 0.55,
       castShadows: true,
       shadowDistance: 50,
       shadowResolution: 2048,
@@ -368,10 +380,10 @@ export default class Village3DPlayCanvas {
     this.rimLight.setLocalEulerAngles(10, -90, 0);
     this.app.root.addChild(this.rimLight);
 
-    // Ambient light
+    // Ambient light - Düsterwald: very dark, cold blue-green tint
     this.app.scene.ambientLight = this.isNight 
-      ? new pc.Color(0.15, 0.15, 0.2) 
-      : new pc.Color(0.3, 0.3, 0.35);
+      ? new pc.Color(0.06, 0.07, 0.12) 
+      : new pc.Color(0.18, 0.18, 0.22);
 
     // Sky dome with stars
     if (!this.isLobbyMode) {
@@ -409,11 +421,11 @@ export default class Village3DPlayCanvas {
       this.skyDome.setPosition(0, 0, 0);
     }
 
-    // Night sky gradient material
+    // Night sky gradient material - Düsterwald: pitch black with hint of deep purple
     this.skyMaterial = new pc.StandardMaterial();
     if (!this.skyMaterial) throw new Error('Failed to create sky material');
-    this.skyMaterial.diffuse = new pc.Color(0.02, 0.03, 0.08); // Deep night blue
-    this.skyMaterial.emissive = new pc.Color(0.015, 0.025, 0.06); // Subtle glow
+    this.skyMaterial.diffuse = new pc.Color(0.008, 0.01, 0.025);
+    this.skyMaterial.emissive = new pc.Color(0.01, 0.008, 0.03);
     this.skyMaterial.useLighting = false;
     this.skyMaterial.cull = pc.CULLFACE_FRONT; // Render inside
     this.skyMaterial.update();
@@ -581,9 +593,10 @@ export default class Village3DPlayCanvas {
     ground.setLocalScale(groundSize, 1, groundSize);
 
     const material = new pc.StandardMaterial();
-    material.diffuse = new pc.Color(0.1, 0.15, 0.08); // Darker, richer base
-    material.specular = new pc.Color(0.02, 0.02, 0.02);
-    material.shininess = 2;
+    // Düsterwald: very dark, almost black forest floor
+    material.diffuse = new pc.Color(0.04, 0.06, 0.03);
+    material.specular = new pc.Color(0.01, 0.01, 0.01);
+    material.shininess = 1;
     material.update();
 
     (ground.model as PCModel).material = material;
@@ -607,13 +620,14 @@ export default class Village3DPlayCanvas {
       patch.setEulerAngles(0, Math.random() * 360, 0);
 
       const patchMat = new pc.StandardMaterial();
-      const colorVar = Math.random() * 0.05;
+      // Düsterwald: very dark, almost invisible patches
+      const colorVar = Math.random() * 0.02;
       patchMat.diffuse = new pc.Color(
-        0.12 + colorVar,
-        0.18 + colorVar,
-        0.1 + colorVar
+        0.03 + colorVar,
+        0.05 + colorVar,
+        0.02 + colorVar
       );
-      patchMat.opacity = 0.8;
+      patchMat.opacity = 0.7;
       patchMat.blendType = pc.BLEND_NORMAL;
       patchMat.update();
       (patch.model as PCModel).material = patchMat;
@@ -634,8 +648,9 @@ export default class Village3DPlayCanvas {
 
     const squareMat = this.getMaterial({
       name: 'VillageSquare',
-      diffuse: new pc.Color(0.25, 0.22, 0.2), // Darker stone
-      specular: new pc.Color(0.05, 0.05, 0.05),
+      // Düsterwald: dark, worn cobblestone
+      diffuse: new pc.Color(0.12, 0.1, 0.09),
+      specular: new pc.Color(0.02, 0.02, 0.02),
     });
     (centerSquare.model as PCModel).material = squareMat;
     this.app.root.addChild(centerSquare);
@@ -670,8 +685,9 @@ export default class Village3DPlayCanvas {
       path.setLocalEulerAngles(0, pathData.rotation, 0);
 
       const pathMat = new pc.StandardMaterial();
-      pathMat.diffuse = new pc.Color(0.2, 0.15, 0.1);
-      pathMat.specular = new pc.Color(0.02, 0.02, 0.02);
+      // Düsterwald: muddy, dark paths
+      pathMat.diffuse = new pc.Color(0.08, 0.06, 0.04);
+      pathMat.specular = new pc.Color(0.01, 0.01, 0.01);
       pathMat.update();
       const pathModel = path.model as PCModel;
       if (pathModel) {
@@ -843,16 +859,17 @@ export default class Village3DPlayCanvas {
     );
 
     const trunkMat = new pc.StandardMaterial();
-    trunkMat.diffuse = new pc.Color(0.25, 0.2, 0.15);
-    trunkMat.specular = new pc.Color(0.05, 0.05, 0.05);
+    // Düsterwald: gnarled, almost black bark
+    trunkMat.diffuse = new pc.Color(0.1, 0.08, 0.06);
+    trunkMat.specular = new pc.Color(0.02, 0.02, 0.02);
     trunkMat.update();
     (trunk.model as PCModel).material = trunkMat;
     tree.addChild(trunk);
 
-    // Foliage clumps
+    // Foliage clumps - Düsterwald: dark, nearly black-green
     const foliageMat = new pc.StandardMaterial();
-    foliageMat.diffuse = new pc.Color(0.05, 0.15 + Math.random() * 0.1, 0.05);
-    foliageMat.specular = new pc.Color(0.01, 0.05, 0.01);
+    foliageMat.diffuse = new pc.Color(0.02, 0.06 + Math.random() * 0.04, 0.02);
+    foliageMat.specular = new pc.Color(0.005, 0.02, 0.005);
     foliageMat.update();
 
     const layers = 3;
@@ -895,8 +912,9 @@ export default class Village3DPlayCanvas {
     const bush = new pc.Entity('Bush');
 
     const bushMat = new pc.StandardMaterial();
-    bushMat.diffuse = new pc.Color(0.1, 0.2 + Math.random() * 0.1, 0.08);
-    bushMat.specular = new pc.Color(0.02, 0.05, 0.02);
+    // Düsterwald: dark, thorny-looking bushes
+    bushMat.diffuse = new pc.Color(0.04, 0.08 + Math.random() * 0.04, 0.03);
+    bushMat.specular = new pc.Color(0.01, 0.02, 0.01);
     bushMat.update();
 
     const clusterCount = 3 + Math.floor(Math.random() * 3);
@@ -967,22 +985,23 @@ export default class Village3DPlayCanvas {
     stoneBase.setLocalPosition(0, 0.75, 0);
 
     const stoneMat = new pc.StandardMaterial();
-    stoneMat.diffuse = new pc.Color(0.45, 0.45, 0.48);
-    stoneMat.specular = new pc.Color(0.1, 0.1, 0.1);
-    stoneMat.shininess = 5;
+    // Düsterwald: dark, mossy stone
+    stoneMat.diffuse = new pc.Color(0.18, 0.18, 0.2);
+    stoneMat.specular = new pc.Color(0.04, 0.04, 0.04);
+    stoneMat.shininess = 3;
     stoneMat.update();
     (stoneBase.model as PCModel).material = stoneMat;
     house.addChild(stoneBase);
 
-    // Upper floor
+    // Upper floor - Düsterwald: weathered, dark timber houses
     const upperFloor = new pc.Entity('UpperFloor');
     upperFloor.addComponent('model', { type: 'box' });
     upperFloor.setLocalScale(4, 2, 5);
     upperFloor.setLocalPosition(0, 2.5, 0);
 
     const plasterMat = new pc.StandardMaterial();
-    const hue = 0.05 + Math.random() * 0.1;
-    plasterMat.diffuse = new pc.Color(0.85 + hue, 0.8 + hue, 0.7 + hue);
+    const hue = 0.02 + Math.random() * 0.04;
+    plasterMat.diffuse = new pc.Color(0.25 + hue, 0.22 + hue, 0.18 + hue);
     plasterMat.update();
     (upperFloor.model as PCModel).material = plasterMat;
     house.addChild(upperFloor);
@@ -1015,7 +1034,8 @@ export default class Village3DPlayCanvas {
     const roofLength = houseDepth + roofOverhang * 2;
 
     const roofMat = new pc.StandardMaterial();
-    roofMat.diffuse = new pc.Color(0.4, 0.22, 0.15);
+    // Düsterwald: dark, weathered thatch/wood
+    roofMat.diffuse = new pc.Color(0.18, 0.1, 0.06);
     roofMat.update();
 
     const roofLeft = new pc.Entity('RoofLeft');
@@ -1062,9 +1082,10 @@ export default class Village3DPlayCanvas {
       window.setLocalPosition(pos.x, pos.y, pos.z);
 
       const windowMat = new pc.StandardMaterial();
-      windowMat.diffuse = new pc.Color(0.5, 0.6, 0.7);
-      windowMat.emissive = new pc.Color(0.8, 0.7, 0.4);
-      windowMat.opacity = 0.8;
+      // Düsterwald: dim candlelight glow through grimy glass
+      windowMat.diffuse = new pc.Color(0.15, 0.12, 0.1);
+      windowMat.emissive = new pc.Color(0.4, 0.25, 0.1);
+      windowMat.opacity = 0.7;
       windowMat.blendType = pc.BLEND_NORMAL;
       windowMat.update();
       (window.model as PCModel).material = windowMat;
@@ -1224,7 +1245,7 @@ export default class Village3DPlayCanvas {
     base.setLocalPosition(0, 3, 0);
 
     const stoneMat = new pc.StandardMaterial();
-    stoneMat.diffuse = new pc.Color(0.55, 0.55, 0.58);
+    stoneMat.diffuse = new pc.Color(0.22, 0.22, 0.25);
     stoneMat.specular = new pc.Color(0.1, 0.1, 0.1);
     stoneMat.shininess = 5;
     stoneMat.update();
@@ -1314,9 +1335,10 @@ export default class Village3DPlayCanvas {
     crossV.setLocalPosition(0, 14.6, -3.5);
 
     const crossMat = new pc.StandardMaterial();
-    crossMat.diffuse = new pc.Color(0.8, 0.7, 0.3);
-    crossMat.emissive = new pc.Color(0.4, 0.35, 0.15);
-    crossMat.shininess = 80;
+    // Düsterwald: tarnished, weathered
+    crossMat.diffuse = new pc.Color(0.35, 0.3, 0.15);
+    crossMat.emissive = new pc.Color(0.12, 0.1, 0.05);
+    crossMat.shininess = 20;
     crossMat.update();
     (crossV.model as PCModel).material = crossMat;
     church.addChild(crossV);
@@ -1361,7 +1383,8 @@ export default class Village3DPlayCanvas {
     base.setLocalPosition(0, 0.5, 0);
 
     const baseMat = new pc.StandardMaterial();
-    baseMat.diffuse = new pc.Color(0.4, 0.4, 0.45);
+    // Düsterwald: mossy, dark stone
+    baseMat.diffuse = new pc.Color(0.15, 0.16, 0.14);
     baseMat.update();
     (base.model as PCModel).material = baseMat;
     well.addChild(base);
@@ -1387,7 +1410,8 @@ export default class Village3DPlayCanvas {
     roof.setLocalPosition(0, 3.5, 0);
 
     const roofMat = new pc.StandardMaterial();
-    roofMat.diffuse = new pc.Color(0.4, 0.2, 0.15);
+    // Düsterwald: rotting wood
+    roofMat.diffuse = new pc.Color(0.12, 0.08, 0.05);
     roofMat.update();
     (roof.model as PCModel).material = roofMat;
     well.addChild(roof);
@@ -1749,6 +1773,16 @@ export default class Village3DPlayCanvas {
       this.updatePlayerEffects(playerEntity, player);
     });
 
+    if (this.viewMode === 'first-person') {
+      const target = this.getFirstPersonTarget();
+      if (target) {
+        this.syncFirstPersonOrientation(target);
+        this.snapCameraToFirstPerson(target);
+      } else {
+        this.viewMode = 'orbit';
+      }
+    }
+
     console.log(`[Village3D] Created ${players.length} player avatars`);
   }
 
@@ -1804,20 +1838,20 @@ export default class Village3DPlayCanvas {
     this.isNight = isNight;
     console.log(`[Village3D] Setting time to ${isNight ? 'night' : 'day'}`);
     
-    // Update lighting
+    // Update lighting - Düsterwald: always ominous
     if (this.light) {
       const lightComp = this.light.light!;
       if (lightComp) {
-        lightComp.color = isNight ? new window.pc.Color(0.4, 0.4, 0.6) : new window.pc.Color(1, 1, 0.9);
-        lightComp.intensity = isNight ? 0.4 : 0.8;
+        lightComp.color = isNight ? new window.pc.Color(0.25, 0.3, 0.55) : new window.pc.Color(0.6, 0.6, 0.7);
+        lightComp.intensity = isNight ? 0.35 : 0.5;
       }
     }
     
-    // Update ambient light
+    // Update ambient light - Düsterwald: always dark
     if (this.app) {
       this.app.scene.ambientLight = isNight 
-        ? new window.pc.Color(0.15, 0.15, 0.2) 
-        : new window.pc.Color(0.3, 0.3, 0.35);
+        ? new window.pc.Color(0.06, 0.07, 0.12) 
+        : new window.pc.Color(0.15, 0.15, 0.18);
     }
     
     // Update celestial bodies
@@ -1826,14 +1860,14 @@ export default class Village3DPlayCanvas {
     if (this.moon) this.moon.enabled = isNight;
     if (this.moonGlow) this.moonGlow.enabled = isNight;
     
-    // Update fog
+    // Update fog - Düsterwald: thick, oppressive mist
     this.setSceneSettings({
       fog: isNight ? 'linear' : 'linear',
-      fogStart: isNight ? 30 : 50,
-      fogEnd: isNight ? 100 : 150,
+      fogStart: isNight ? 12 : 20,
+      fogEnd: isNight ? 55 : 80,
       fogColor: isNight 
-        ? new window.pc.Color(0.02, 0.02, 0.06)
-        : new window.pc.Color(0.6, 0.7, 0.8)
+        ? new window.pc.Color(0.015, 0.02, 0.04)
+        : new window.pc.Color(0.25, 0.28, 0.32)
     });
   }
 
@@ -1899,30 +1933,10 @@ export default class Village3DPlayCanvas {
       // Currently just checking length to avoid unused variable warning
     }
 
-    // Camera smoothing
-    const camera = this.app.root.findByName('Camera');
-    if (camera) {
-      const pc = window.pc;
-      const targetX = Math.cos(this.targetCameraAngle) * this.targetCameraRadius;
-      const targetZ = Math.sin(this.targetCameraAngle) * this.targetCameraRadius;
-      
-      // Update target position
-      if (!this.targetPosition) {
-        this.targetPosition = new pc.Vec3(targetX, this.targetCameraHeight, targetZ);
-      } else {
-        this.targetPosition.set(targetX, this.targetCameraHeight, targetZ);
-      }
-      
-      const currentPos = camera.getPosition();
-      const lerpFactor = Math.min(dt * 3, 1);
-      
-      camera.setPosition(
-        currentPos.x + (this.targetPosition.x - currentPos.x) * lerpFactor,
-        currentPos.y + (this.targetPosition.y - currentPos.y) * lerpFactor,
-        currentPos.z + (this.targetPosition.z - currentPos.z) * lerpFactor
-      );
-      
-      camera.lookAt(0, 0, 0);
+    if (this.viewMode === 'first-person') {
+      this.updateFirstPersonCamera(dt);
+    } else {
+      this.updateOrbitCamera(dt);
     }
 
     // Billboard effect: keep name labels facing the camera
@@ -1973,6 +1987,144 @@ export default class Village3DPlayCanvas {
         }
       });
     });
+  }
+
+  private updateOrbitCamera(dt: number): void {
+    if (!this.camera) return;
+    const pc = window.pc;
+    const targetX = Math.cos(this.targetCameraAngle) * this.targetCameraRadius;
+    const targetZ = Math.sin(this.targetCameraAngle) * this.targetCameraRadius;
+
+    if (!this.targetPosition) {
+      this.targetPosition = new pc.Vec3(targetX, this.targetCameraHeight, targetZ);
+    } else {
+      this.targetPosition.set(targetX, this.targetCameraHeight, targetZ);
+    }
+
+    const currentPos = this.camera.getPosition();
+    const lerpFactor = Math.min(dt * 3, 1);
+
+    this.camera.setPosition(
+      currentPos.x + (this.targetPosition.x - currentPos.x) * lerpFactor,
+      currentPos.y + (this.targetPosition.y - currentPos.y) * lerpFactor,
+      currentPos.z + (this.targetPosition.z - currentPos.z) * lerpFactor
+    );
+
+    this.camera.lookAt(0, 0, 0);
+  }
+
+  private updateFirstPersonCamera(dt: number): void {
+    if (!this.camera) return;
+
+    const target = this.getFirstPersonTarget();
+    if (!target) {
+      if (this.players.length === 0) return;
+      this.viewMode = 'orbit';
+      return;
+    }
+
+    const pc = window.pc;
+    const basePos = target.getPosition();
+    const desiredEye = new pc.Vec3(basePos.x, basePos.y + this.firstPersonHeight, basePos.z);
+
+    const currentPos = this.camera.getPosition();
+    const lerpFactor = Math.min(dt * this.firstPersonLerp, 1);
+
+    this.camera.setPosition(
+      currentPos.x + (desiredEye.x - currentPos.x) * lerpFactor,
+      currentPos.y + (desiredEye.y - currentPos.y) * lerpFactor,
+      currentPos.z + (desiredEye.z - currentPos.z) * lerpFactor
+    );
+
+    const dir = new pc.Vec3(
+      Math.sin(this.firstPersonYaw) * Math.cos(this.firstPersonPitch),
+      Math.sin(this.firstPersonPitch),
+      -Math.cos(this.firstPersonYaw) * Math.cos(this.firstPersonPitch)
+    );
+    dir.normalize();
+
+    const lookTarget = desiredEye.clone().add(dir);
+    this.camera.lookAt(lookTarget);
+  }
+
+  private getFirstPersonTarget(): PlayerEntity | null {
+    const candidateId = this.firstPersonPlayerId ?? this.findFirstAlivePlayerId();
+    if (candidateId === null) return null;
+
+    const target = this.playerEntities.get(candidateId) || null;
+    if (target) {
+      this.firstPersonPlayerId = candidateId;
+    }
+    return target;
+  }
+
+  private findFirstAlivePlayerId(): number | null {
+    const alive = this.players.find(p => p.ist_am_leben);
+    if (alive) return alive.id;
+    return this.players.length > 0 ? this.players[0].id : null;
+  }
+
+  private syncFirstPersonOrientation(target: PlayerEntity): void {
+    const yawDeg = target.getEulerAngles().y;
+    this.firstPersonYaw = (yawDeg * Math.PI) / 180;
+    this.firstPersonPitch = 0;
+  }
+
+  private snapCameraToFirstPerson(target: PlayerEntity): void {
+    if (!this.camera) return;
+    const pc = window.pc;
+    const pos = target.getPosition();
+    const eye = new pc.Vec3(pos.x, pos.y + this.firstPersonHeight, pos.z);
+
+    const dir = new pc.Vec3(
+      Math.sin(this.firstPersonYaw) * Math.cos(this.firstPersonPitch),
+      Math.sin(this.firstPersonPitch),
+      -Math.cos(this.firstPersonYaw) * Math.cos(this.firstPersonPitch)
+    ).normalize();
+
+    this.camera.setPosition(eye);
+    this.camera.lookAt(eye.clone().add(dir));
+  }
+
+  toggleFirstPerson(playerId?: number): ViewMode {
+    if (playerId !== undefined) {
+      this.firstPersonPlayerId = playerId;
+    }
+
+    if (this.viewMode === 'first-person') {
+      this.exitFirstPerson();
+      this.resetCamera();
+      return this.viewMode;
+    }
+
+    return this.enterFirstPerson();
+  }
+
+  enterFirstPerson(playerId?: number): ViewMode {
+    if (playerId !== undefined) {
+      this.firstPersonPlayerId = playerId;
+    }
+
+    const target = this.getFirstPersonTarget();
+    if (!target) return this.viewMode;
+
+    this.viewMode = 'first-person';
+    this.syncFirstPersonOrientation(target);
+    this.snapCameraToFirstPerson(target);
+
+    if (this.canvas) {
+      this.canvas.style.cursor = 'crosshair';
+    }
+
+    return this.viewMode;
+  }
+
+  exitFirstPerson(): ViewMode {
+    this.viewMode = 'orbit';
+    if (this.canvas) {
+      this.canvas.style.cursor = 'grab';
+    }
+    return this.viewMode;
   }
 
   /**
@@ -2180,7 +2332,7 @@ export default class Village3DPlayCanvas {
           this.pick(x, y);
         }
         isDragging = false;
-        this.canvas!.style.cursor = 'grab';
+        this.canvas!.style.cursor = this.viewMode === 'first-person' ? 'crosshair' : 'grab';
       }
     });
 
@@ -2193,8 +2345,14 @@ export default class Village3DPlayCanvas {
           hasMoved = true;
         }
 
-        this.targetCameraAngle -= deltaX * 0.01;
-        this.targetCameraHeight = Math.max(5, Math.min(50, this.targetCameraHeight - deltaY * 0.1));
+        if (this.viewMode === 'first-person') {
+          this.firstPersonYaw -= deltaX * 0.01;
+          const clampedPitch = this.firstPersonPitch - deltaY * 0.01;
+          this.firstPersonPitch = Math.max(-Math.PI / 2 + 0.2, Math.min(Math.PI / 2 - 0.2, clampedPitch));
+        } else {
+          this.targetCameraAngle -= deltaX * 0.01;
+          this.targetCameraHeight = Math.max(5, Math.min(50, this.targetCameraHeight - deltaY * 0.1));
+        }
 
         lastX = e.clientX;
         lastY = e.clientY;
@@ -2208,7 +2366,8 @@ export default class Village3DPlayCanvas {
           const y = e.clientY - rect.top;
           const hoveredId = this.getPlayerIdAtScreen(x, y);
           this.setHoveredPlayer(hoveredId);
-          this.canvas!.style.cursor = hoveredId !== null ? 'pointer' : 'grab';
+          const baseCursor = this.viewMode === 'first-person' ? 'crosshair' : 'grab';
+          this.canvas!.style.cursor = hoveredId !== null ? 'pointer' : baseCursor;
         }
       }
     });
@@ -2224,6 +2383,7 @@ export default class Village3DPlayCanvas {
     // Mouse wheel
     this.canvas.addEventListener('wheel', (e: WheelEvent) => {
       e.preventDefault();
+      if (this.viewMode === 'first-person') return;
       this.targetCameraRadius = Math.max(10, Math.min(60, this.targetCameraRadius + e.deltaY * 0.05));
     });
 
@@ -2231,13 +2391,26 @@ export default class Village3DPlayCanvas {
     const keyboard = this.app.keyboard;
     if (keyboard) {
       keyboard.on('keydown', (e: KeyboardEvent) => {
-        if ((e as unknown as { key: number }).key === pc.KEY_R) {
-          this.resetCamera();
+        const keyCode = (e as unknown as { key: number }).key;
+        if (keyCode === pc.KEY_R) {
+          if (this.viewMode === 'first-person') {
+            const target = this.getFirstPersonTarget();
+            if (target) {
+              this.syncFirstPersonOrientation(target);
+              this.snapCameraToFirstPerson(target);
+            }
+          } else {
+            this.resetCamera();
+          }
+        }
+
+        if (keyCode === pc.KEY_F) {
+          this.toggleFirstPerson();
         }
       }, this);
     }
 
-    this.canvas.style.cursor = 'grab';
+    this.canvas.style.cursor = this.viewMode === 'first-person' ? 'crosshair' : 'grab';
   }
 
   /**
@@ -2757,12 +2930,29 @@ export default class Village3DPlayCanvas {
    */
   private setSceneSettings(settings: Record<string, unknown>): void {
     if (!this.app) return;
+    const pc = window.pc;
+    const scene = this.app.scene;
     
-    const scene = this.app.scene as unknown as Record<string, unknown>;
     if (scene && settings) {
+      // Handle fog type specially - it's a getter-only in PlayCanvas
+      if ('fog' in settings) {
+        const fogType = settings.fog;
+        const sceneWithFog = scene as unknown as { fog: unknown };
+        if (fogType === 'linear') {
+          sceneWithFog.fog = pc.FOG_LINEAR;
+        } else if (fogType === 'exp' || fogType === 'exp2') {
+          sceneWithFog.fog = pc.FOG_EXP2;
+        } else if (fogType === 'none') {
+          sceneWithFog.fog = pc.FOG_NONE;
+        }
+        delete settings.fog;
+      }
+      
+      // Set remaining properties
+      const sceneAny = scene as unknown as Record<string, unknown>;
       Object.keys(settings).forEach(key => {
-        if (key in scene) {
-          scene[key] = settings[key];
+        if (key in sceneAny) {
+          sceneAny[key] = settings[key];
         }
       });
     }

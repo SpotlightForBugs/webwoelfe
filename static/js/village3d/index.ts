@@ -16,6 +16,7 @@ export type {
   RoleData,
   AppearanceFeature,
   Village3DOptions,
+  ViewMode,
   VisualEffect,
   BodyModification,
   AnimationState,

@@ -194,6 +194,8 @@ export interface CameraState {
   target: PCVec3;
 }
 
+export type ViewMode = 'orbit' | 'first-person';
+
 export interface InputState {
   isMouseDown: boolean;
   lastMouseX: number;
@@ -224,6 +226,9 @@ export interface MaterialOptions {
 export interface Village3DOptions {
   lobbyMode?: boolean;
   onPlayerClick?: (playerId: number) => void;
+  startView?: ViewMode;
+  firstPersonPlayerId?: number;
+  firstPersonHeight?: number;
 }
 
 // ============================================================================

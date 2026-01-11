@@ -3002,8 +3002,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       // This prevents unnecessary API calls during lobby phase
       console.log('[Init] Ready - phase mapping will load when game starts');
 
-      // Default to the Village3D HUD-first UI
-      document.querySelector('.game-container')?.classList.add('village3d-primary');
+      // Keep both UIs visible until parity is reached
+      // Players can toggle fullscreen 3D mode manually
   });
 
   // =========================================================================

@@ -46,6 +46,10 @@ RUN find static/js -name "*.map" -type f -delete \
     && rm -rf playwright-report \
     && rm -f build.sh
 
+# Add entrypoint to run migrations before starting the app
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 RUN addgroup --system webwoelfe \
     && adduser --system --ingroup webwoelfe webwoelfe \
     && mkdir -p /app/instance \
@@ -59,6 +63,7 @@ VOLUME ["/app/instance", "/app/.cache"]
 
 EXPOSE 5001
 
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["gunicorn", \
      "--worker-class", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", \
      "--workers", "1", \

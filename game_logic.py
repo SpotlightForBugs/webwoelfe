@@ -706,7 +706,7 @@ def hat_spieler_gewaehlt(spieler: Spieler, raum: Raum, phase: str) -> bool:
     return aktion is not None
 
 
-def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: str = None) -> bool:
+def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: str | None = None) -> bool:
     """
     Prüft ob alle berechtigten Spieler (optional gefiltert nach Rolle)
     in dieser Phase eine Aktion durchgeführt haben.

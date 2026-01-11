@@ -1,6 +1,24 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:16
+    container_name: webwoelfe-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-webwoelfe}
+      - POSTGRES_USER=${POSTGRES_USER:-webwoelfe}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-webwoelfe}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - webwoelfe-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   webwoelfe:
     build:
       context: .
@@ -8,43 +26,44 @@ services:
     image: webwoelfe:latest
     container_name: webwoelfe
     restart: unless-stopped
-    
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "5001:5001"
-    
     environment:
       # Flask Configuration
       - FLASK_ENV=production
       - FLASK_APP=app.py
-      
+
       # Secret key - should be set via Coolify environment variables
       - FLASK_SECRET_KEY=${FLASK_SECRET_KEY:-change-me-in-production}
-      
+
       # Phase timing configuration (optional)
       - PHASE_DELAY=${PHASE_DELAY:-45}
       - AUDIO_MIN_DELAY=${AUDIO_MIN_DELAY:-1.0}
       - AUDIO_THRESHOLD=${AUDIO_THRESHOLD:-0.8}
-      
-      # Database configuration
-      - SQLALCHEMY_DATABASE_URI=sqlite:///instance/webwoelfe.db
-      
+
+      # Database configuration: use Postgres by default in compose
+      - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-webwoelfe}:${POSTGRES_PASSWORD:-webwoelfe}@db:5432/${POSTGRES_DB:-webwoelfe}}
+
     volumes:
-      # Persistent database storage
-      - webwoelfe-db:/app/instance
-      
+      # Persistent app instance directory (e.g., for logs/cache if needed)
+      - webwoelfe-instance:/app/instance
+
       # Cache directory (for any temporary files)
       - webwoelfe-cache:/app/.cache
-    
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    
+
     networks:
       - webwoelfe-network
-    
+
     labels:
       # Coolify labels for proper discovery and management
       - "coolify.managed=true"
@@ -53,10 +72,14 @@ services:
 
 volumes:
   # Named volumes for persistence across container restarts
-  webwoelfe-db:
+  pgdata:
     driver: local
-    name: webwoelfe-db
-    
+    name: webwoelfe-pgdata
+
+  webwoelfe-instance:
+    driver: local
+    name: webwoelfe-instance
+
   webwoelfe-cache:
     driver: local
     name: webwoelfe-cache

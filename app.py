@@ -19,6 +19,7 @@ load_dotenv()  # Load environment variables from .env file
 
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_migrate import Migrate
 from models import (
     db,
     Raum,
@@ -44,7 +45,20 @@ from datetime import datetime, timezone
 # App Konfiguration
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///webwoelfe.db"
+
+# Database configuration: prefer env-provided URI (e.g., Postgres in Docker)
+def _resolve_database_uri() -> str:
+    # Common env var names
+    uri = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
+    if uri:
+        # Normalize deprecated postgres:// scheme to postgresql:// for SQLAlchemy
+        if uri.startswith("postgres://"):
+            uri = uri.replace("postgres://", "postgresql://", 1)
+        return uri
+    # Default to local SQLite when no env var is set
+    return "sqlite:///webwoelfe.db"
+
+app.config["SQLALCHEMY_DATABASE_URI"] = _resolve_database_uri()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 Minify(app=app, html=True, js=True, cssless=True)
 
@@ -59,6 +73,8 @@ def inject_css_reader():
     def read_css(filename):
         """Read a CSS file from static folder for inlining."""
         try:
+            if app.static_folder is None:
+                raise ValueError("Static folder is not configured")
             css_path = os.path.join(app.static_folder, filename)
             with open(css_path, 'r', encoding='utf-8') as f:
                 return f.read()
@@ -176,21 +192,22 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
     if ergebnis.private_infos:
         for player_id, info in ergebnis.private_infos.items():
             if "overlay" in info:
-                socketio.emit(
+                socketio.emit( 
                     "zeige_overlay",
                     info["overlay"],
-                    room=f"player_{player_id}",
+                    room=f"player_{player_id}", # pyright: ignore[reportCallIssue]
                 )
             if "nachricht" in info:
-                socketio.emit(
+                socketio.emit(  
                     "private_nachricht",
                     {"nachricht": info["nachricht"], "typ": info.get("alert_type", "info")},
-                    room=f"player_{player_id}",
+                    room=f"player_{player_id}", # pyright: ignore[reportCallIssue]
                 )
 
 
 # Initialisierung
 db.init_app(app)
+Migrate(app, db)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
 
 
@@ -245,34 +262,11 @@ def get_rollen_styles():
     return styles
 
 
-# Datenbank erstellen
-with app.app_context():
-    db.create_all()
-
-
-# Cleanup Task starten
-def start_cleanup_task():
-    """Startet den Hintergrund-Task zur Bereinigung alter Spiele"""
-    try:
-        import gevent
-        from cleanup import cleanup_old_games
-
-        def run_cleanup():
-            print("[System] Cleanup-Task gestartet.")
-            # Einmal beim Start ausführen
-            cleanup_old_games(app, max_age_hours=24)
-            while True:
-                gevent.sleep(3600)  # Warte 1 Stunde
-                cleanup_old_games(app, max_age_hours=24)
-
-        gevent.spawn(run_cleanup)
-    except ImportError:
-        print("[System] Warnung: Gevent nicht verfügbar, Cleanup-Task deaktiviert.")
-    except Exception as e:
-        log_ts(f"[System] Fehler beim Starten des Cleanup-Tasks: {e}")
-
-
-start_cleanup_task()
+# Datenbank-Migrationen werden per Alembic/Flask-Migrate verwaltet.
+# Für lokale Entwicklung optional automatische Schemaerstellung aktivieren:
+if os.environ.get("AUTO_DB_CREATE_ALL", "0") == "1":
+    with app.app_context():
+        db.create_all()
 
 
 # ============================================================================
@@ -385,7 +379,7 @@ def raum_erstellen():
 
     # Raum erstellen
     # Spieleranzahl wird jetzt dynamisch aus der Lobby berechnet – keine manuelle Eingabe nötig
-    raum = Raum(
+    raum = Raum(  # pyright: ignore[reportCallIssue]
         code=Raum.generiere_code(),
         name=name,
         modus=modus,
@@ -397,7 +391,7 @@ def raum_erstellen():
 
     # Ersteller als ersten Spieler hinzufuegen
     session_id = Spieler.generiere_session()
-    spieler = Spieler(
+    spieler = Spieler(  # pyright: ignore[reportCallIssue]
         name=spieler_name[:30],
         session_id=session_id,
         raum_id=raum.id,
@@ -438,7 +432,7 @@ def raum_beitreten():
 
     # Spieler erstellen
     session_id = Spieler.generiere_session()
-    spieler = Spieler(name=spieler_name[:30], session_id=session_id, raum_id=raum.id)
+    spieler = Spieler(name=spieler_name[:30], session_id=session_id, raum_id=raum.id)  # type: ignore[call-arg]
     db.session.add(spieler)
     db.session.commit()
 
@@ -526,7 +520,7 @@ def spiel(code):
             SpielLog.query.filter(
                 SpielLog.raum_id == raum.id,
                 db.or_(
-                    SpielLog.sichtbar_fuer == "alle",
+                    SpielLog.sichtbar_fuer == "alle", #TODO: These Strings should be Enums. also applies to other places in the code
                     SpielLog.sichtbar_fuer == str(spieler.id),
                     SpielLog.sichtbar_fuer == spieler.rolle,
                 ),
@@ -568,16 +562,17 @@ def spiel(code):
         elif not s.ist_am_leben:
             spieler_data["rolle"] = s.rolle
         # Werwoelfe sehen sich gegenseitig
-        elif game_logic.ist_werwolf_rolle(
+        elif game_logic.ist_werwolf_rolle(  #TODO: REMOVE ROLE BASED HARDCODING
             spieler.rolle
         ) and game_logic.ist_werwolf_rolle(s.rolle):
-            spieler_data["ist_werwolf"] = True
+            spieler_data["ist_werwolf"] = True #TODO: REMOVE ROLE BASED HARDCODING
         
         # =========================================================================
         # DYNAMIC VISIBILITY - Replaces hardcoded Amor/lover checks
         # =========================================================================
         # Get all GlobalStateDefinitions from registered roles
         from roles.base import get_player_visual_effects
+        from roles import RoleRegistry
         
         global_state_defs = RoleRegistry.get_all_global_state_definitions_objects()
         
@@ -611,8 +606,6 @@ def spiel(code):
             if effect.get("icon"):
                 spieler_data.setdefault("effect_icons", []).append(effect["icon"])
         
-        # Note: Amor-specific visibility is now handled via GlobalStateDefinition
-        # with visible_to="source_role" - no hardcoded role checks needed
         
         sichere_spieler.append(spieler_data)
 
@@ -667,13 +660,13 @@ def get_role_ui(role_name):
         raum = db.session.get(Raum, spieler.raum_id)
         if raum and raum.aktuelle_phase == rolle.get_phase_name():
             # Build context to get dynamic info
-            werwolf_opfer_id = None
+            werwolf_opfer_id = None #TODO: REMOVE ROLE BASED HARDCODING
             
             # Use role property to decide if we need the victim info
             if rolle.requires_victim_info:
-                ww_result = game_logic.werwolf_abstimmung(raum)
-                if ww_result and "opfer_id" in ww_result:
-                    werwolf_opfer_id = ww_result["opfer_id"]
+                ww_result = game_logic.werwolf_abstimmung(raum) #TODO: REMOVE ROLE BASED HARDCODING
+                if ww_result and "opfer_id" in ww_result: #TODO: REMOVE ROLE BASED HARDCODING
+                    werwolf_opfer_id = ww_result["opfer_id"] #TODO: REMOVE ROLE BASED HARDCODING
             
             kontext = SpielKontext(
                 raum_id=raum.id,
@@ -689,11 +682,11 @@ def get_role_ui(role_name):
             start_info = rolle.get_phase_start_info(spieler, kontext)
             
             # Inject victim info into instructions if present
-            if start_info and "werwolf_opfer_id" in start_info:
-                opfer = db.session.get(Spieler, start_info["werwolf_opfer_id"])
+            if start_info and "werwolf_opfer_id" in start_info: #TODO: REMOVE ROLE BASED HARDCODING
+                opfer = db.session.get(Spieler, start_info["werwolf_opfer_id"]) #TODO: REMOVE ROLE BASED HARDCODING
                 if opfer:
-                    # Append strictly to instructions
-                    ui_dict["instructions"] += f" <br><strong>Das Werwolf-Opfer ist: {opfer.name}</strong>"
+                    # Append strictly to instructions #TODO: REMOVE ROLE BASED HARDCODING #TODO: REMOVE ROLE BASED HARDCODING
+                    ui_dict["instructions"] += f" <br><strong>Das Werwolf-Opfer ist: {opfer.name}</strong>" #TODO: REMOVE ROLE BASED HARDCODING
 
     return jsonify({
         "success": True,
@@ -1033,7 +1026,7 @@ def set_sitzordnung(code):
     db.session.commit()
 
     # Broadcastet die neue Sitzordnung an alle Spieler
-    socketio.emit("sitzordnung_aktualisiert", {"ordnung": ordnung}, room=raum.code)
+    socketio.emit("sitzordnung_aktualisiert", {"ordnung": ordnung}, room=raum.code)  # pyright: ignore[reportCallIssue]
 
     return jsonify({"success": True})
 
@@ -1564,7 +1557,7 @@ def _wechsel_phase_intern(raum):
     }
     
     # Add role-specific phase data
-    if neue_phase == "hexe_phase":
+    if neue_phase == "hexe_phase": #TODO: REMOVE ROLE BASED HARDCODING
         # Include werewolf victim for Hexe
         ww_result = game_logic.werwolf_abstimmung(raum)
         if ww_result and "opfer_id" in ww_result:
@@ -1729,7 +1722,7 @@ def handle_aktion(data):
         from roles import RoleRegistry
 
         # Map action types to 3D effect types dynamically
-        AKTION_TYP_EFFEKT = {
+        AKTION_TYP_EFFEKT = {  
             AktionsTyp.HEILEN.value: "heal",
             AktionsTyp.SCHUETZEN.value: "protect",
             AktionsTyp.VERGIFTEN.value: "poison",
@@ -1885,8 +1878,8 @@ def handle_hinweis_senden(data):
     )
 
     # Log für Erzähler
-    log = SpielLog(
-        raum_id=raum.id, 
+    log = SpielLog(  # pyright: ignore[reportCallIssue]
+        raum_id=raum.id,
         nachricht=f"[HINWEIS] {spieler.name} zeigte: {hinweis_typ}",
         sichtbar_fuer="erzaehler",
     )
@@ -2163,14 +2156,14 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         # DYNAMIC: Check if action was a SEHEN action (Seherin style)
         if aktion_typ == AktionsTyp.SEHEN.value and ergebnis.effekte:
             # Seherin gets a special result event
-            socketio.emit(
-                "seherin_ergebnis",
+            socketio.emit(  # type: ignore[call-arg]
+                "seherin_ergebnis",#TODO: REMOVE THIS HARDCODED EVENT NAME 
                 {
                     "ziel_name": ziel.name if ziel else "Unbekannt",
                     "ist_werwolf": ergebnis.effekte.get("ist_werwolf", False),
                     "rolle": ergebnis.effekte.get("rolle", "Unbekannt"),
                 },
-                room=request.sid,
+                room=request.sid,  # type: ignore[attr-defined]
             )
         elif ergebnis.nachricht:
             # Generic result message
@@ -2199,28 +2192,28 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
     log_ts(f"[Phase] Wechsel: {alte_phase} -> {neue_phase}")
 
     # Heiler-Schutz zuruecksetzen am Nachtende
-    if alte_phase == "heiler_phase":
+    if alte_phase == "heiler_phase": #TODO: REMOVE ROLE BASED HARDCODING
         pass  # Schutz bleibt bis Nacht-Ende
 
-    if alte_phase == "werwolf_phase":
+    if alte_phase == "werwolf_phase": #TODO: REMOVE ROLE BASED HARDCODING
         # Werwolf-Opfer ermitteln und an Hexe senden
         ergebnis = game_logic.werwolf_abstimmung(raum)
         if ergebnis and "opfer_id" in ergebnis:
             # Sende Info an alle Hexe-Spieler (mit richtiger Targeting)
             hexe_spieler = Spieler.query.filter_by(
-                raum_id=raum.id, rolle="Hexe", ist_am_leben=True
+                raum_id=raum.id, rolle="Hexe", ist_am_leben=True #TODO: REMOVE ROLE BASED HARDCODING
             ).all()
             
             opfer = db.session.get(Spieler, ergebnis["opfer_id"])
             if opfer and hexe_spieler:
-                 for hexe in hexe_spieler:
+                 for hexe in hexe_spieler: #TODO: REMOVE ROLE BASED HARDCODING
                      # Benutze 'role_phase_info' Event, das vom Frontend unterstützt wird
                      socketio.emit(
                          "role_phase_info",
                          {
                              "recipient_id": hexe.id,
                              "payload": {
-                                 "nachricht": f"Die Werwölfe haben {opfer.name} als Opfer gewählt.",
+                                 "nachricht": f"Die Werwölfe haben {opfer.name} als Opfer gewählt.", #TODO: REMOVE ROLE BASED HARDCODING
                                  "opfer_id": opfer.id,
                                  "opfer_name": opfer.name,
                                  "alert_type": "info"
@@ -2238,23 +2231,23 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         werwolf_opfer = SpielAktion.query.filter(
             SpielAktion.raum_id == raum.id,
             SpielAktion.runde == raum.runde,
-            SpielAktion.phase == "werwolf_phase",
-            SpielAktion.aktion_typ.in_(["werwolf_wahl", "toeten"])
+            SpielAktion.phase == "werwolf_phase", #TODO: REMOVE ROLE BASED HARDCODING
+            SpielAktion.aktion_typ.in_(["werwolf_wahl", "toeten"]) #TODO: REMOVE ROLE BASED HARDCODING
         ).first()
 
-        log_ts(f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}")
+        log_ts(f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}") #TODO: REMOVE ROLE BASED HARDCODING
         if werwolf_opfer:
-            log_ts(f"[Nacht] Werwolf-Ziel-ID: {werwolf_opfer.ziel_spieler_id}")
+            log_ts(f"[Nacht] Werwolf-Ziel-ID: {werwolf_opfer.ziel_spieler_id}") #TODO: REMOVE ROLE BASED HARDCODING
 
         geheilt = SpielAktion.query.filter_by(
-            raum_id=raum.id, runde=raum.runde, phase="hexe_phase", aktion_typ="heilen"
+            raum_id=raum.id, runde=raum.runde, phase="hexe_phase", aktion_typ="heilen" #TODO: REMOVE ROLE BASED HARDCODING
         ).first()
 
         vergiftet = SpielAktion.query.filter_by(
             raum_id=raum.id,
             runde=raum.runde,
-            phase="hexe_phase",
-            aktion_typ="vergiften",
+            phase="hexe_phase", #TODO: REMOVE ROLE BASED HARDCODING
+            aktion_typ="vergiften", #TODO: REMOVE ROLE BASED HARDCODING
         ).first()
 
         tote = []
@@ -2269,18 +2262,18 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             if opfer and opfer.ist_am_leben:
                 # Pruefen ob geheilt
                 if geheilt and geheilt.ziel_spieler_id == opfer.id:
-                    log_ts(f"[Nacht] {opfer.name} wurde von Hexe geheilt!")
+                    log_ts(f"[Nacht] {opfer.name} wurde von Hexe geheilt!") #TODO: REMOVE ROLE BASED HARDCODING
                 # Pruefen ob vom Heiler geschuetzt
                 elif opfer.get_state("global.ist_beschuetzt", False):
-                    log_ts(f"[Nacht] {opfer.name} wurde vom Heiler geschützt!")
+                    log_ts(f"[Nacht] {opfer.name} wurde vom Heiler geschützt!") #TODO: REMOVE ROLE BASED HARDCODING
                 else:
                     log_ts(f"[Nacht] {opfer.name} STIRBT durch Werwolf!")
-                    game_logic.toete_spieler(opfer, "werwolf")
+                    game_logic.toete_spieler(opfer, "werwolf") #TODO: REMOVE ROLE BASED HARDCODING
                     tote.append(
                         {
                             "name": opfer.name,
                             "rolle": opfer.rolle,
-                            "todesart": "werwolf",
+                            "todesart": "werwolf", #TODO: REMOVE ROLE BASED HARDCODING
                         }
                     )
 
@@ -2288,10 +2281,10 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         if vergiftet and vergiftet.ziel_spieler_id:
             opfer = db.session.get(Spieler, vergiftet.ziel_spieler_id)
             if opfer and opfer.ist_am_leben:
-                log_ts(f"[Nacht] {opfer.name} STIRBT durch Hexen-Gift!")
+                log_ts(f"[Nacht] {opfer.name} STIRBT durch Hexen-Gift!") #TODO: REMOVE ROLE BASED HARDCODING
                 game_logic.toete_spieler(opfer, "hexe")
                 tote.append(
-                    {"name": opfer.name, "rolle": opfer.rolle, "todesart": "hexe"}
+                    {"name": opfer.name, "rolle": opfer.rolle, "todesart": "hexe"} #TODO: REMOVE ROLE BASED HARDCODING
                 )
 
         # Heiler-Schutz zuruecksetzen
@@ -2301,7 +2294,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
 
         log_ts(f"[Nacht] Tote in dieser Nacht: {len(tote)}")
         if tote:
-            socketio.emit("nacht_ergebnis", {"tote": tote}, room=raum.code)
+            socketio.emit("nacht_ergebnis", {"tote": tote}, room=raum.code)  # pyright: ignore[reportCallIssue]
         else:
             socketio.emit(
                 "nacht_ergebnis",
@@ -2315,7 +2308,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             log_ts(f"[Spiel] ENDE! Gewinner: {ende.get('gewinner', 'unbekannt')}")
             raum.aktuelle_phase = "spiel_ende"
             db.session.commit()
-            socketio.emit("spiel_ende", ende, room=raum.code)
+            socketio.emit("spiel_ende", ende, room=raum.code)  # pyright: ignore[reportCallIssue]
 
     elif alte_phase == "hinrichtung":
         # Hinrichtung abgeschlossen - prüfe Spielende
@@ -2323,7 +2316,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         if ende:
             raum.aktuelle_phase = "spiel_ende"
             db.session.commit()
-            socketio.emit("spiel_ende", ende, room=raum.code)
+            socketio.emit("spiel_ende", ende, room=raum.code)  # pyright: ignore[reportCallIssue]
 
     # Initialisierung für Tag-Abstimmung (Timer setzen)
     if neue_phase == "tag_abstimmung":
@@ -2363,7 +2356,7 @@ def handle_timer_tick():
         # Werte Abstimmung aus
         ergebnis = game_logic.werte_abstimmung_aus(raum)
         if ergebnis:
-            socketio.emit("abstimmung_ergebnis", ergebnis, room=raum.code)
+            socketio.emit("abstimmung_ergebnis", ergebnis, room=raum.code)  # pyright: ignore[reportCallIssue]
 
             # Wenn Opfer: töte es
             if not ergebnis.get("kein_opfer"):
@@ -2409,7 +2402,7 @@ def handle_spieler_abstimmen(data):
             # Alle haben abgestimmt - werte aus und wechsle Phase
             ergebnis = game_logic.werte_abstimmung_aus(raum)
             if ergebnis:
-                socketio.emit("abstimmung_ergebnis", ergebnis, room=raum.code)
+                socketio.emit("abstimmung_ergebnis", ergebnis, room=raum.code)  # pyright: ignore[reportCallIssue]
 
                 # Wenn Opfer: töte es
                 if not ergebnis.get("kein_opfer"):
@@ -2456,7 +2449,7 @@ def handle_hole_abstimmung_status():
         if ziel_spieler:
             ziel_stimmen_str[ziel_spieler.name] = stimmen
 
-    emit(
+    emit(  # type: ignore[call-arg]
         "abstimmung_status",
         {
             "gesamt_spieler": stats["gesamt_spieler"],
@@ -2467,7 +2460,7 @@ def handle_hole_abstimmung_status():
             "fuehrende_stimmen": stats["fuehrende_stimmen"],
             "sekunden_verbleibend": verbleibend,
         },
-        room=request.sid,
+        room=request.sid,  # type: ignore[attr-defined]
     )
 
 
@@ -2519,5 +2512,6 @@ def server_fehler(e):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8888"))
+    debug_mode = os.environ.get("FLASK_DEBUG", "1") == "1"
     # use_reloader=False verhindert gevent fork-Fehler
-    socketio.run(app, debug=True, host="0.0.0.0", port=port, use_reloader=False)
+    socketio.run(app, debug=debug_mode, host="0.0.0.0", port=port, use_reloader=False)

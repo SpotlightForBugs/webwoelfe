@@ -1106,17 +1106,18 @@
 
     try {
       const response = await fetch("/api/roles");
-      
+
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(`Server returned ${response.status}: ${text.substring(0, 100)}`);
+        throw new Error(
+          `Server returned ${response.status}: ${text.substring(0, 100)}`,
+        );
       }
 
       const data = await response.json();
 
       if (!data.success) {
-        container.innerHTML =
-          `<div class="error">Fehler beim Laden der Rollen: ${data.error || 'Unbekannter Fehler'}</div>`;
+        container.innerHTML = `<div class="error">Fehler beim Laden der Rollen: ${data.error || "Unbekannter Fehler"}</div>`;
         return;
       }
 
@@ -1136,8 +1137,7 @@
       updateRolesPreview();
     } catch (error) {
       console.error("Error loading roles:", error);
-      container.innerHTML =
-        `<div class="error">Fehler: Rollen konnten nicht geladen werden.<br><small>${error.message}</small></div>`;
+      container.innerHTML = `<div class="error">Fehler: Rollen konnten nicht geladen werden.<br><small>${error.message}</small></div>`;
     }
   }
 
@@ -1180,8 +1180,14 @@
     let html = "";
 
     // Define the correct order for extensions //TODO: move to backend!
-    const extensionOrder = ['base', 'neumond', 'gemeinde', 'charaktere', 'sonderedition'];
-    
+    const extensionOrder = [
+      "base",
+      "neumond",
+      "gemeinde",
+      "charaktere",
+      "sonderedition",
+    ];
+
     // Sort extensions: predefined order first, then alphabetical for any others
     const sortedExtensions = Object.keys(grouped).sort((a, b) => {
       const indexA = extensionOrder.indexOf(a);
@@ -1200,21 +1206,21 @@
         badge: extPack,
         badgeClass: "community",
       };
-      
+
       // Make a shallow copy to avoid mutating the original info object if reused
       info = { ...info };
 
       // Dynamically generate description if not manually provided or to override
       if (roles && roles.length > 0) {
-            //TODO: pick Random!
-          const previewRoles = roles.slice(0, 4).map(r => r.name);
-          let desc = previewRoles.join(", ");
-          if (roles.length > 4) {
-              desc += " & mehr";
-          }
-          info.desc = desc;
+        //TODO: pick Random!
+        const previewRoles = roles.slice(0, 4).map((r) => r.name);
+        let desc = previewRoles.join(", ");
+        if (roles.length > 4) {
+          desc += " & mehr";
+        }
+        info.desc = desc;
       } else {
-          info.desc = "Keine Rollen verfügbar";
+        info.desc = "Keine Rollen verfügbar";
       }
 
       const isRequired = info.required;
@@ -1262,7 +1268,7 @@
         const isBasicRole =
           role.name === "Werwolf" || role.name === "Dorfbewohner";
         const isPreselected = role.name === "Seherin";
-        
+
         // Fallback for icon if missing (shouldn't happen with valid roles)
         const iconClass = role.icon || "fa-solid fa-user";
 

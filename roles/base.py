@@ -2123,9 +2123,65 @@ class SpielKontext:
         """Alias für Runde (wird von einigen Rollen verwendet)."""
         return self.runde
 
+
     def hat_spieler_rolle(self, spieler_id: int, rolle: str) -> bool:
         """Prüft, ob ein Spieler eine bestimmte Rolle hat."""
         return self.spieler_rollen.get(spieler_id) == rolle
+
+    @classmethod
+    def from_raum(cls, raum: Any) -> "SpielKontext":
+        """
+        Erstellt einen SpielKontext aus einem Raum-Objekt.
+        
+        Args:
+            raum: Das Raum-Objekt (models.Raum)
+            
+        Returns:
+            Neuer SpielKontext
+        """
+        # Import local to avoid circular deps
+        from .enums import Phase
+        
+        # Phase validation
+        phase_val = raum.aktuelle_phase
+        try:
+            # Try to match Enum value
+            phase_val = Phase(phase_val)
+        except (ValueError, TypeError):
+            # Keep as string if no match (runtime compatibility)
+            pass
+            
+        # Collect player IDs
+        lebende = []
+        tote = []
+        spieler_rollen = {}
+        spieler_namen = {}
+        
+        # Verify access to spieler list (handle detached sessions if needed)
+        players = getattr(raum, "spieler", [])
+        
+        for s in players:
+            if s.ist_erzaehler:
+                continue
+                
+            if s.ist_am_leben:
+                lebende.append(s.id)
+            else:
+                tote.append(s.id)
+                
+            spieler_rollen[s.id] = s.rolle
+            spieler_namen[s.id] = s.name
+            
+        return cls(
+            raum_id=raum.id,
+            runde=raum.runde,
+            phase=phase_val, # type: ignore
+            aktiver_spieler_id=0, # Not context-specific
+            lebende_spieler=lebende,
+            tote_spieler=tote,
+            spieler_rollen=spieler_rollen,
+            spieler_namen=spieler_namen
+        )
 
 
 @dataclass

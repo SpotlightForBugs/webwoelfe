@@ -181,13 +181,19 @@ export default class Village3DPlayCanvas {
       keyboard: new pc.Keyboard(window),
       elementInput: new pc.ElementInput(this.canvas),
       graphicsDeviceOptions: {
+        // 2026 Recommendation: Specify preferred device types
+        deviceTypes: ['webgpu', 'webgl2'],
         antialias: true,
         alpha: false,
         depth: true,
         stencil: true,
         powerPreference: "high-performance",
+        // Optional: Required for some WebGPU compute/shader features
+        glslangUrl: 'cdn.jsdelivr.net',
+        twgslUrl: 'cdn.jsdelivr.net'
       },
     });
+
 
     this.app.start();
     // Use NONE to respect container size, not FILL_WINDOW which ignores it

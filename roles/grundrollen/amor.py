@@ -141,7 +141,7 @@ class Amor(Role):
             buttons=[
                 UIButton(
                     label="Verlieben",
-                    action_type="armor_verlieben",
+                    action_type="amor_verlieben",
                     icon="fa-solid fa-heart",
                     css_class="btn-primary",
                     requires_confirmation=True,
@@ -203,12 +203,12 @@ class Amor(Role):
         """
         Execute Amor actions dynamically with multi-target support.
 
-        This replaces the hardcoded 'armor_verlieben' handler in app.py.
+        This replaces the hardcoded 'amor_verlieben' handler in app.py.
 
         Handles:
-        - armor_verlieben: Connect two players as lovers
+        - amor_verlieben: Connect two players as lovers
         """
-        if action_type == "armor_verlieben":
+        if action_type == "amor_verlieben":
             if len(targets) != 2:
                 return AktionsErgebnis(
                     erfolg=False,

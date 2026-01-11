@@ -890,8 +890,23 @@ def get_game_phase_info(code):
     if spieler.rolle and active_role:
         viewer_role = RoleRegistry.get(spieler.rolle)
         if viewer_role:
-            kontext = game_logic.SpielKontext.from_raum(raum)
+
             try:
+                # Use from_raum safely
+                if hasattr(game_logic.SpielKontext, 'from_raum'):
+                    kontext = game_logic.SpielKontext.from_raum(raum)
+                else:
+                    # Fallback manual construction (should not be needed with fix, but safe)
+                    from roles.enums import Phase
+                    kontext = game_logic.SpielKontext(
+                        raum_id=raum.id,
+                        runde=raum.runde,
+                        phase=(Phase(raum.aktuelle_phase) if raum.aktuelle_phase in [p.value for p in Phase] else raum.aktuelle_phase), # type: ignore
+                        aktiver_spieler_id=spieler.id,
+                        lebende_spieler=[s.id for s in game_logic.hole_lebende_spieler(raum)],
+                        tote_spieler=[s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=False).all()],
+                    )
+                
                 start_info = viewer_role.get_phase_start_info(spieler, kontext)
                 if start_info and "werwolf_opfer_id" in start_info:
                     opfer = db.session.get(Spieler, start_info["werwolf_opfer_id"])
@@ -902,6 +917,8 @@ def get_game_phase_info(code):
                         }
             except Exception as e:
                 log_ts(f"[Phase Info] Error getting start info: {e}")
+                # Don't crash the whole endpoint just because victim info failed
+                pass
     
     return jsonify({
         "success": True,
@@ -2000,7 +2017,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     # ==========================================================================
     # DYNAMIC ACTION HANDLER - Replaces all hardcoded role-specific handlers
-    # Actions like jaeger_schuss, armor_verlieben are now handled by role classes
+    # Actions like jaeger_schuss, amor_verlieben are now handled by role classes
     # ==========================================================================
 
     from roles import RoleRegistry

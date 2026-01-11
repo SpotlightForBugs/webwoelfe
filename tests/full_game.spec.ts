@@ -715,7 +715,7 @@ async function handlePhase(
   }
 
   // Amor - creates love pair
-  if (normalizedPhase.includes("armor") || normalizedPhase.includes("amor")) {
+  if (normalizedPhase.includes("amor")) {
     await handleAmorPhase(players);
     return;
   }

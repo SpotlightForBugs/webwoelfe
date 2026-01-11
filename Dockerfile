@@ -49,9 +49,13 @@ RUN find static/js -name "*.map" -type f -delete \
 RUN addgroup --system webwoelfe \
     && adduser --system --ingroup webwoelfe webwoelfe \
     && mkdir -p /app/instance \
+    && mkdir -p /app/.cache \
     && chown -R webwoelfe:webwoelfe /app
 
 USER webwoelfe
+
+# Persistent volumes for Coolify deployment
+VOLUME ["/app/instance", "/app/.cache"]
 
 EXPOSE 5001
 
@@ -61,10 +65,8 @@ CMD ["gunicorn", \
      "--worker-connections", "1000", \
      "--bind", "0.0.0.0:5001", \
      "--timeout", "120", \
-     "--keepalive", "5", \
      "--max-requests", "1000", \
      "--max-requests-jitter", "100", \
-     "--preload-app", \
      "--access-logfile", "-", \
      "--error-logfile", "-", \
      "--log-level", "info", \

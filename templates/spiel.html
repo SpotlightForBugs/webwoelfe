@@ -1821,10 +1821,18 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   const istErzaehler = {{ 'true' if spieler.ist_erzaehler else 'false' }};
   const spielModus = "{{ raum.modus }}";
 
-  // Alle Spieler für Abstimmungs-UI
+  // Alle Spieler (UI-Source of truth)
+  // Rolle wird nur gesetzt, wenn dieser Client sie sehen darf (Erzähler, self, oder tot).
   const alleSpieler = [
       {% for s in alle_spieler %}
-      { id: {{ s.id }}, name: "{{ s.name }}", istAmLeben: {{ 'true' if s.ist_am_leben else 'false' }}, istErzaehler: {{ 'true' if s.ist_erzaehler else 'false' }} },
+      {
+        id: {{ s.id }},
+        name: "{{ s.name|e }}",
+        istAmLeben: {{ 'true' if s.ist_am_leben else 'false' }},
+        istErzaehler: {{ 'true' if s.ist_erzaehler else 'false' }},
+        rolle: "{{ (s.rolle if (spieler.ist_erzaehler or s.id == spieler.id or not s.ist_am_leben) and s.rolle else '')|e }}",
+        istVerliebt: {{ 'true' if s.ist_verliebt else 'false' }}
+      },
       {% endfor %}
   ];
 
@@ -2267,15 +2275,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   });
 
   // Funktionen
-  function selectSpieler(id) {
-      const card = document.querySelector(`[data-id="${id}"]`);
-      if (card.classList.contains('tot') || card.classList.contains('disabled')) return;
+    function selectSpieler(id) {
+      const p = alleSpieler.find(s => s.id === id);
+      if (!p) return;
+      if (!p.istAmLeben) return;
 
       // During voting (abstimmung), cannot select the narrator or yourself
       if (aktuellePhase === 'abstimmung') {
-          const isNarrator = card.getAttribute('data-ist-erzaehler') === 'true';
-          const isSelf = id === spielerId;
-          if (isNarrator || isSelf) return;
+        const isNarrator = !!p.istErzaehler;
+        const isSelf = id === spielerId;
+        if (isNarrator || isSelf) return;
       }
 
       // General self-target check from role config
@@ -2288,31 +2297,32 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       // Dynamic multi-select support (for Amor and similar roles)
       // Uses phaseUiConfig.allow_multiple_targets instead of hardcoded role check
-      if (phaseUiConfig && phaseUiConfig.allow_multiple_targets) {
+        if (phaseUiConfig && phaseUiConfig.allow_multiple_targets) {
           const maxTargets = phaseUiConfig.max_targets || 2;
           if (selectedSpielerIds.includes(id)) {
               selectedSpielerIds = selectedSpielerIds.filter(i => i !== id);
-              card.classList.remove('selected');
           } else if (selectedSpielerIds.length < maxTargets) {
               selectedSpielerIds.push(id);
-              card.classList.add('selected');
           }
           updateActionButtons();
+          window.updateVillage3DPlayerList?.();
+          if (window.village3d) window.village3d.setSelectedPlayer?.(selectedSpielerIds[selectedSpielerIds.length - 1] || null);
           return;
       }
 
       // Normale Auswahl (1 Spieler)
-      document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
       selectedSpielerId = id;
       updateActionButtons();
+        window.updateVillage3DPlayerList?.();
+        if (window.village3d) window.village3d.setSelectedPlayer?.(selectedSpielerId);
   }
 
   function clearSelection() {
-      document.querySelectorAll('.spieler-card').forEach(c => c.classList.remove('selected'));
       selectedSpielerId = null;
       selectedSpielerIds = [];
       updateActionButtons();
+      window.updateVillage3DPlayerList?.();
+      if (window.village3d) window.village3d.setSelectedPlayer?.(null);
   }
 
   function updatePhase(phase, runde, displayInfo) {

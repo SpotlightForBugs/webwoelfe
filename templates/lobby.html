@@ -511,15 +511,15 @@ spiel_name }}{% endblock %} {% block content %}
 <!-- 3D Dorf für Nicht-Lokal-Modus (Three.js) -->
 {% if raum.modus != 'lokal' %}
 <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js"
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js"
+    }
   }
-}
 </script>
 <script type="module">
-import * as THREE from 'three';
-window.THREE = THREE;
+  import * as THREE from "three";
+  window.THREE = THREE;
   import Village3DThree from "{{ versioned_url('static', filename='js/village3d/dist/Village3DThree.js') }}";
 
   // Konstante für Update-Verzögerung (Zeit für DOM-Updates)
@@ -585,17 +585,17 @@ window.THREE = THREE;
       return;
     }
 
-      window.village3dLobby = new Village3DThree(
-        "village-3d-lobby-container",
-        "{{ raum.code }}",
-        { lobbyMode: true } // Simplified view for lobby
-      );
+    window.village3dLobby = new Village3DThree(
+      "village-3d-lobby-container",
+      "{{ raum.code }}",
+      { lobbyMode: true }, // Simplified view for lobby
+    );
 
-      // Initiale Spieler laden mit Verzögerung für vollständige Initialisierung
-      // Initial attempt
-      setTimeout(() => window.updateVillage3D?.(), 100);
-      // Retry to ensure players are visible after role data loads
-      setTimeout(() => window.updateVillage3D?.(), 1000);
+    // Initiale Spieler laden mit Verzögerung für vollständige Initialisierung
+    // Initial attempt
+    setTimeout(() => window.updateVillage3D?.(), 100);
+    // Retry to ensure players are visible after role data loads
+    setTimeout(() => window.updateVillage3D?.(), 1000);
   });
 </script>
 {% endif %}
@@ -603,7 +603,7 @@ window.THREE = THREE;
   const socket = io();
   const raumCode = "{{ raum.code }}";
   const erzaehlerModus = "{{ raum.erzaehler_modus }}";
-  
+
   // Track if game has started to avoid unnecessary API calls during transition
   let gameStarted = false;
   let navigationTimeout = null;
@@ -611,7 +611,7 @@ window.THREE = THREE;
 
   // Raum beitreten
   socket.emit("raum_beitreten", { code: raumCode });
-  
+
   // Start fallback polling for game start
   startGamePoll();
 
@@ -633,7 +633,7 @@ window.THREE = THREE;
     if (typeof initSitzordnungFromSpieler === "function") {
       initSitzordnungFromSpieler();
     }
-    
+
     // 3D Dorf aktualisieren (Online-Modus)
     if (window.scheduleVillageUpdate) {
       window.scheduleVillageUpdate();
@@ -709,19 +709,21 @@ window.THREE = THREE;
   // Fallback: Poll the server to see if game has started and redirect if needed
   function startGamePoll() {
     if (pollInterval) clearInterval(pollInterval);
-    
+
     pollInterval = setInterval(async () => {
       if (gameStarted) {
         clearInterval(pollInterval);
         return;
       }
-      
+
       try {
         const response = await fetch(`/api/raum/${raumCode}/status`);
         if (response.ok) {
           const data = await response.json();
           if (data.spiel_gestartet) {
-            console.log("[Lobby] Game started detected via HTTP poll, navigating...");
+            console.log(
+              "[Lobby] Game started detected via HTTP poll, navigating...",
+            );
             gameStarted = true;
             clearInterval(pollInterval);
             window.location.href = "/spiel/" + raumCode;
@@ -864,7 +866,7 @@ window.THREE = THREE;
   async function updateRollenVorschau() {
     // Don't fetch if game has already started (we're navigating away)
     if (gameStarted) return;
-    
+
     try {
       const response = await fetch(`/api/rollen_vorschau/${raumCode}`);
       if (!response.ok) return; // Silently ignore HTTP errors during transitions

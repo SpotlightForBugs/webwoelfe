@@ -24,10 +24,14 @@ set -e
 PLAYERS=""
 HL_FLAG=""
 
-# delete the db file to start fresh
-if [ -f "instance/webwoelfe.db" ]; then
-    rm instance/webwoelfe.db
-    echo "🗑️  Alte Datenbankdatei gelöscht"
+# delete the db file to start fresh (only in development, not in Docker/production)
+if [ -z "$DOCKER_CONTAINER" ] && [ -z "$COOLIFY_DEPLOYMENT" ]; then
+    if [ -f "instance/webwoelfe.db" ]; then
+        rm instance/webwoelfe.db
+        echo "🗑️  Alte Datenbankdatei gelöscht (Development Mode)"
+    fi
+else
+    echo "📦 Production/Docker Mode: Datenbankdatei wird beibehalten"
 fi
 
 # Build TypeScript if node_modules exists

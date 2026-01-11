@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  webwoelfe:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: webwoelfe:latest
+    container_name: webwoelfe
+    restart: unless-stopped
+    
+    ports:
+      - "5001:5001"
+    
+    environment:
+      # Flask Configuration
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+      
+      # Secret key - should be set via Coolify environment variables
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY:-change-me-in-production}
+      
+      # Phase timing configuration (optional)
+      - PHASE_DELAY=${PHASE_DELAY:-45}
+      - AUDIO_MIN_DELAY=${AUDIO_MIN_DELAY:-1.0}
+      - AUDIO_THRESHOLD=${AUDIO_THRESHOLD:-0.8}
+      
+      # Database configuration
+      - SQLALCHEMY_DATABASE_URI=sqlite:///instance/webwoelfe.db
+      
+    volumes:
+      # Persistent database storage
+      - webwoelfe-db:/app/instance
+      
+      # Cache directory (for any temporary files)
+      - webwoelfe-cache:/app/.cache
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    networks:
+      - webwoelfe-network
+    
+    labels:
+      # Coolify labels for proper discovery and management
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=webwoelfe"
+
+volumes:
+  # Named volumes for persistence across container restarts
+  webwoelfe-db:
+    driver: local
+    name: webwoelfe-db
+    
+  webwoelfe-cache:
+    driver: local
+    name: webwoelfe-cache
+
+networks:
+  webwoelfe-network:
+    driver: bridge

@@ -42,6 +42,16 @@ PORT=5001
 # ============================================================================
 echo "🔪 Beende laufende Prozesse..."
 
+# delete the db file to start fresh (only in development, not in Docker/production)
+if [ -z "$DOCKER_CONTAINER" ] && [ -z "$COOLIFY_DEPLOYMENT" ]; then
+    if [ -f "instance/webwoelfe.db" ]; then
+        rm instance/webwoelfe.db
+        echo "🗑️  Alte Datenbankdatei gelöscht (Development Mode)"
+    fi
+else
+    echo "📦 Production/Docker Mode: Datenbankdatei wird beibehalten"
+fi
+
 # Kill any existing Python/Flask processes on our port
 kill_by_port() {
     local port=$1

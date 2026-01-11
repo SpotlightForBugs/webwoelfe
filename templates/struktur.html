@@ -42,17 +42,17 @@
 
     <!-- Theme CSS (Logo colors) - Inlined -->
     <style>
-    {{ read_css('css/theme.css') }}
+      {{ read_css('css/theme.css') }}
     </style>
 
     <!-- Hint System CSS - Inlined -->
     <style>
-    {{ read_css('css/hints.css') }}
+      {{ read_css('css/hints.css') }}
     </style>
 
     <!-- Character Styling CSS - Inlined -->
     <style>
-    {{ read_css('css/characters.css') }}
+      {{ read_css('css/characters.css') }}
     </style>
 
     <style>
@@ -691,8 +691,6 @@
         });
       })();
     </script>
-    {% endif %}
-
-    {% block scripts %}{% endblock %}
+    {% endif %} {% block scripts %}{% endblock %}
   </body>
 </html>

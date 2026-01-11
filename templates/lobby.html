@@ -508,8 +508,8 @@ spiel_name }}{% endblock %} {% block content %}
   }
 </style>
 {% endblock %} {% block scripts %}
-<!-- 3D Dorf für Online-Modus (Three.js) -->
-{% if raum.modus == 'online' %}
+<!-- 3D Dorf für Nicht-Lokal-Modus (Three.js) -->
+{% if raum.modus != 'lokal' %}
 <script src="https://cdn.jsdelivr.net/npm/three@latest/build/three.min.js"></script>
 <script type="module">
   import Village3DThree from "{{ url_for('static', filename='js/village3d/dist/Village3DThree.js') }}";
@@ -568,19 +568,26 @@ spiel_name }}{% endblock %} {% block content %}
   // Initialisiere 3D-Dorf in der Lobby
   document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById("village-3d-lobby-container");
-      if (container && typeof THREE !== "undefined") {
+    if (!container) return;
+
+    if (typeof THREE === "undefined") {
+      // If Three.js failed to load, avoid a silent black box.
+      container.innerHTML =
+        '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:0.9rem">3D-Dorf konnte nicht geladen werden (Three.js fehlt)</div>';
+      return;
+    }
+
       window.village3dLobby = new Village3DThree(
         "village-3d-lobby-container",
         "{{ raum.code }}",
-        { lobbyMode: true }, // Simplified view for lobby
+        { lobbyMode: true } // Simplified view for lobby
       );
 
       // Initiale Spieler laden mit Verzögerung für vollständige Initialisierung
       // Initial attempt
-      setTimeout(() => updateVillage3D(), 100);
+      setTimeout(() => window.updateVillage3D?.(), 100);
       // Retry to ensure players are visible after role data loads
-      setTimeout(() => updateVillage3D(), 1000);
-    }
+      setTimeout(() => window.updateVillage3D?.(), 1000);
   });
 </script>
 {% endif %}

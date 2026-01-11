@@ -699,9 +699,14 @@ export default class Village3DThree {
     pathPositions.forEach((pathData, idx) => {
       const path = new pc.Entity(`Path-${idx}`);
       path.addComponent('model', { type: 'box' });
-      path.setLocalScale(pathData.scaleX, 0.02, pathData.scaleZ);
-      path.setPosition(pathData.x, 0.02, pathData.z);
-      path.setLocalEulerAngles(0, pathData.rotation, 0);
+      const scaleX = Math.max(1, pathData.scaleX + (Math.random() - 0.5) * 3);
+      const scaleZ = Math.max(1, pathData.scaleZ + (Math.random() - 0.5) * 3);
+      const offsetX = (Math.random() - 0.5) * 3;
+      const offsetZ = (Math.random() - 0.5) * 3;
+      const rotation = pathData.rotation + (Math.random() - 0.5) * 12;
+      path.setLocalScale(scaleX, 0.02, scaleZ);
+      path.setPosition(pathData.x + offsetX, 0.02, pathData.z + offsetZ);
+      path.setLocalEulerAngles(0, rotation, 0);
 
       const pathMat = new pc.StandardMaterial();
       // Düsterwald: muddy, dark paths
@@ -726,9 +731,9 @@ export default class Village3DThree {
     if (!this.app) return;
     const pc = window.pc;
 
-    const decorationCount = 20;
+    const decorationCount = 16 + Math.floor(Math.random() * 10);
     for (let i = 0; i < decorationCount; i++) {
-      const angle = (i / decorationCount) * Math.PI * 2;
+      const angle = Math.random() * Math.PI * 2;
       const radius = 8 + Math.random() * 4;
 
       const deco = new pc.Entity(`Decoration-${i}`);
@@ -785,28 +790,47 @@ export default class Village3DThree {
    * Create village buildings
    */
   private createVillageBuildings(): void {
-    // Village houses around the perimeter
-    const housePositions = [
-      { x: -20, z: -8, rot: 45 },
-      { x: -18, z: 10, rot: -30 },
-      { x: -5, z: 18, rot: -90 },
-      { x: 10, z: 16, rot: -120 },
-      { x: 18, z: 5, rot: 180 },
-      { x: 16, z: -12, rot: 150 },
-    ];
+    const houseCount = this.isLobbyMode
+      ? 5 + Math.floor(Math.random() * 3)
+      : 8 + Math.floor(Math.random() * 4);
+    const angleOffset = Math.random() * Math.PI * 2;
+    const minRadius = this.isLobbyMode ? 16 : 20;
+    const maxRadius = this.isLobbyMode ? 24 : 30;
+    const angleStep = (Math.PI * 2) / houseCount;
 
-    housePositions.forEach((pos, idx) => {
-      const offsetX = (Math.random() - 0.5) * 2;
-      const offsetZ = (Math.random() - 0.5) * 2;
-      const offsetRot = (Math.random() - 0.5) * 10;
-      this.createHouse(pos.x + offsetX, pos.z + offsetZ, pos.rot + offsetRot, idx);
-    });
+    for (let i = 0; i < houseCount; i++) {
+      const angle =
+        angleOffset + i * angleStep + (Math.random() - 0.5) * angleStep * 0.7;
+      const radius = minRadius + Math.random() * (maxRadius - minRadius);
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const facing = (-angle * 180) / Math.PI + 90;
+      const rot = facing + (Math.random() - 0.5) * 25;
+      const scale = 0.85 + Math.random() * 0.35;
+      this.createHouse(x, z, rot, i, scale);
+    }
 
     // Church (special building)
-    this.createChurch(-12, -20);
+    const churchBase = this.isLobbyMode ? { x: -10, z: -16 } : { x: -12, z: -20 };
+    const churchFlipX = Math.random() < 0.5 ? -1 : 1;
+    const churchFlipZ = Math.random() < 0.5 ? -1 : 1;
+    const churchOffsetX = (Math.random() - 0.5) * 6;
+    const churchOffsetZ = (Math.random() - 0.5) * 6;
+    this.createChurch(
+      churchBase.x * churchFlipX + churchOffsetX,
+      churchBase.z * churchFlipZ + churchOffsetZ
+    );
 
     // Well (near center)
-    this.createWell(12, 12);
+    const wellBase = this.isLobbyMode ? { x: 8, z: 8 } : { x: 12, z: 12 };
+    const wellFlipX = Math.random() < 0.5 ? -1 : 1;
+    const wellFlipZ = Math.random() < 0.5 ? -1 : 1;
+    const wellOffsetX = (Math.random() - 0.5) * 4;
+    const wellOffsetZ = (Math.random() - 0.5) * 4;
+    this.createWell(
+      wellBase.x * wellFlipX + wellOffsetX,
+      wellBase.z * wellFlipZ + wellOffsetZ
+    );
 
     // Create enhanced environment (trees, bushes, rocks)
     this.createEnhancedEnvironment();
@@ -991,7 +1015,7 @@ export default class Village3DThree {
   /**
    * Create a house
    */
-  private createHouse(x: number, z: number, rotation: number, index: number): void {
+  private createHouse(x: number, z: number, rotation: number, index: number, scale: number = 1): void {
     if (!this.app) return;
     const pc = window.pc;
 
@@ -1040,7 +1064,7 @@ export default class Village3DThree {
     }
 
     // Roof
-    const roofAngle = 35;
+    const roofAngle = 28 + Math.random() * 18;
     const houseWidth = 4.2;
     const houseDepth = 5.2;
     const roofOverhang = 0.5;
@@ -1054,7 +1078,8 @@ export default class Village3DThree {
 
     const roofMat = new pc.StandardMaterial();
     // Düsterwald: dark, weathered thatch/wood
-    roofMat.diffuse = new pc.Color(0.18, 0.1, 0.06);
+    const roofShift = (Math.random() - 0.5) * 0.06;
+    roofMat.diffuse = new pc.Color(0.18 + roofShift, 0.1 + roofShift * 0.6, 0.06 + roofShift * 0.4);
     roofMat.update();
 
     const roofLeft = new pc.Entity('RoofLeft');
@@ -1115,6 +1140,7 @@ export default class Village3DThree {
     this.createHouseFence(house);
     this.createGardenPatch(house);
 
+    house.setLocalScale(scale, scale, scale);
     house.setPosition(x, 0, z);
     house.setEulerAngles(0, rotation, 0);
     this.app.root.addChild(house);

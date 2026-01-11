@@ -510,20 +510,19 @@ spiel_name }}{% endblock %} {% block content %}
 {% endblock %} {% block scripts %}
 <!-- 3D Dorf für Nicht-Lokal-Modus (Three.js) -->
 {% if raum.modus != 'lokal' %}
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js"
-  }
-}
-</script>
 <script type="module">
-import * as THREE from 'three';
-window.THREE = THREE;
-  import Village3DThree from "{{ versioned_url('static', filename='js/village3d/dist/Village3DThree.js') }}";
-
   // Konstante für Update-Verzögerung (Zeit für DOM-Updates)
   const VILLAGE_UPDATE_DELAY = 100;
+
+  // Load Three.js first, then Village3DThree
+  const loadThreeJS = async () => {
+    if (typeof window.THREE !== 'undefined') {
+      return;
+    }
+    // Load Three.js as ES module
+    const threeModule = await import('https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js');
+    window.THREE = threeModule;
+  };
 
   // Funktion um 3D Dorf mit aktuellen Spielern zu aktualisieren
   window.updateVillage3D = function () {
@@ -574,16 +573,21 @@ window.THREE = THREE;
   };
 
   // Initialisiere 3D-Dorf in der Lobby
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", async function () {
     const container = document.getElementById("village-3d-lobby-container");
     if (!container) return;
 
-    if (typeof THREE === "undefined") {
-      // If Three.js failed to load, avoid a silent black box.
-      container.innerHTML =
-        '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:0.9rem">3D-Dorf konnte nicht geladen werden (Three.js fehlt)</div>';
-      return;
-    }
+    try {
+      // Load Three.js first, wait for it to be available
+      await loadThreeJS();
+
+      if (typeof window.THREE === "undefined") {
+        throw new Error("Three.js failed to load");
+      }
+
+      // Now load Village3DThree (which imports pc_shim.js that needs window.THREE)
+      const module = await import("{{ versioned_url('static', filename='js/village3d/dist/Village3DThree.js') }}");
+      const Village3DThree = module.default;
 
       window.village3dLobby = new Village3DThree(
         "village-3d-lobby-container",
@@ -596,6 +600,11 @@ window.THREE = THREE;
       setTimeout(() => window.updateVillage3D?.(), 100);
       // Retry to ensure players are visible after role data loads
       setTimeout(() => window.updateVillage3D?.(), 1000);
+    } catch (error) {
+      console.error("[Village3D] Failed to initialize:", error);
+      container.innerHTML =
+        '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:0.9rem">3D-Dorf konnte nicht geladen werden</div>';
+    }
   });
 </script>
 {% endif %}

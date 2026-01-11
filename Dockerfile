@@ -55,4 +55,18 @@ USER webwoelfe
 
 EXPOSE 5001
 
-CMD ["gunicorn", "--worker-class", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", "-w", "1", "--bind", "0.0.0.0:5001", "app:app"]
+CMD ["gunicorn", \
+     "--worker-class", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", \
+     "--workers", "4", \
+     "--worker-connections", "1000", \
+     "--bind", "0.0.0.0:5001", \
+     "--timeout", "120", \
+     "--keepalive", "5", \
+     "--max-requests", "1000", \
+     "--max-requests-jitter", "100", \
+     "--preload-app", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--log-level", "info", \
+     "--capture-output", \
+     "app:app"]

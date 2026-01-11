@@ -61,7 +61,7 @@ EXPOSE 5001
 
 CMD ["gunicorn", \
      "--worker-class", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", \
-     "--workers", "4", \
+     "--workers", "1", \
      "--worker-connections", "1000", \
      "--bind", "0.0.0.0:5001", \
      "--timeout", "120", \

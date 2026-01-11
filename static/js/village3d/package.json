@@ -11,6 +11,6 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "playcanvas": "^2.14.4"
+    "three": "^0.182.0"
   }
 }

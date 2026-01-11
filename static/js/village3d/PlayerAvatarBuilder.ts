@@ -2,6 +2,8 @@
  * PlayerAvatarBuilder - Builds 3D player avatars with role-specific appearances
  */
 
+import './pc_shim.js';
+
 import type { PlayerData, PlayerEntity, RoleModel, PCEntity, PCColor, PCMaterial, PCModel } from './types.js';
 import { AppearanceFeatureRenderer } from './AppearanceFeatureRenderer.js';
 
@@ -322,15 +324,13 @@ export class PlayerAvatarBuilder {
     const deadMat = this.materialCache.get('deadMaterial');
     if (!deadMat) return;
     
-    const applyToChildren = (parent: pc.Entity) => {
-      if (parent.model && 'material' in parent.model) {
-        (parent.model as { material: PCMaterial }).material = deadMat;
+    const applyToChildren = (parent: PCEntity) => {
+      if ((parent as unknown as { model?: unknown }).model) {
+        (parent.model as unknown as { material: PCMaterial }).material = deadMat;
       }
-      if (parent.children) {
-        parent.children.forEach((child) => {
-          applyToChildren(child as pc.Entity);
-        });
-      }
+      parent.children.forEach((child) => {
+        applyToChildren(child as unknown as PCEntity);
+      });
     };
 
     applyToChildren(entity);

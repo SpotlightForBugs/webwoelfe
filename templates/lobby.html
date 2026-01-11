@@ -508,9 +508,9 @@ spiel_name }}{% endblock %} {% block content %}
   }
 </style>
 {% endblock %} {% block scripts %}
-<!-- 3D Dorf für Online-Modus mit PlayCanvas -->
+<!-- 3D Dorf für Online-Modus (Three.js) -->
 {% if raum.modus == 'online' %}
-<script src="https://code.playcanvas.com/playcanvas-stable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@latest/build/three.min.js"></script>
 <script type="module">
   import Village3DPlayCanvas from "{{ url_for('static', filename='js/village3d/dist/Village3DPlayCanvas.js') }}";
 
@@ -568,7 +568,7 @@ spiel_name }}{% endblock %} {% block content %}
   // Initialisiere 3D-Dorf in der Lobby
   document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById("village-3d-lobby-container");
-    if (container && typeof pc !== "undefined") {
+      if (container && typeof THREE !== "undefined") {
       window.village3dLobby = new Village3DPlayCanvas(
         "village-3d-lobby-container",
         "{{ raum.code }}",

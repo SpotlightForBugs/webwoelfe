@@ -1,26 +1,22 @@
 /**
- * Type definitions for Village3D PlayCanvas renderer
+ * Type definitions for Village3D renderer.
+ *
+ * The codebase historically used PlayCanvas types; we now provide a local
+ * compatibility layer backed by Three.js.
  */
 
-import * as pc from 'playcanvas';
+export type PCApplication = import('./pc_shim.js').Application;
+export type PCEntity = import('./pc_shim.js').Entity;
+export type PCColor = import('./pc_shim.js').Color;
+export type PCVec3 = import('./pc_shim.js').Vec3;
+export type PCMaterial = import('./pc_shim.js').StandardMaterial;
+export type PCCamera = import('./pc_shim.js').CameraComponent;
+export type PCLight = import('./pc_shim.js').LightComponent;
+export type PCModel = import('./pc_shim.js').ModelComponent;
 
-// Re-export PlayCanvas types for convenience
-export type PCApplication = pc.Application;
-export type PCEntity = pc.Entity;
-export type PCColor = pc.Color;
-export type PCVec3 = pc.Vec3;
-export type PCMaterial = pc.StandardMaterial;
-export type PCCamera = pc.CameraComponent;
-export type PCLight = pc.LightComponent;
-export type PCElement = pc.ElementComponent;
-export type PCScene = pc.Scene;
-export type PCMeshInstance = pc.MeshInstance;
-
-// Extended ModelComponent interface to include material property
-// which exists at runtime for convenience (sets material on all mesh instances)
-export interface PCModel extends pc.ModelComponent {
-  material: PCMaterial;
-}
+export type PCElement = unknown;
+export type PCScene = unknown;
+export type PCMeshInstance = unknown;
 
 // ============================================================================
 // Player and Game Data Types

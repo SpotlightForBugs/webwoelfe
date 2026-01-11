@@ -3672,22 +3672,22 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       window.location.href = '/';
     }
   });
-  const loadPlayCanvas = () => {
+    const loadThreeJS = () => {
       return new Promise((resolve, reject) => {
-          if (typeof pc !== 'undefined') {
-              resolve();
-              return;
-          }
+        if (typeof THREE !== 'undefined') {
+          resolve();
+          return;
+        }
 
-          const script = document.createElement('script');
-          script.src = 'https://code.playcanvas.com/playcanvas-stable.min.js';
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/three@latest/build/three.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
       });
-  };
+    };
 
-  loadPlayCanvas().then(() => {
+    loadThreeJS().then(() => {
       return import('{{ url_for('static', filename='js/village3d/dist/Village3DPlayCanvas.js') }}');
   }).then(module => {
       const Village3DPlayCanvas = module.default;

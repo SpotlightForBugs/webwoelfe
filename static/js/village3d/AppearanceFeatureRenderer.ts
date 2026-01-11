@@ -3,6 +3,8 @@
  * Handles custom accessories, body modifications, and visual effects from role definitions
  */
 
+import './pc_shim.js';
+
 import type { AppearanceFeature, PlayerData, PlayerEntity, PCColor, PCMaterial, PCEntity, PCModel } from './types.js';
 
 export class AppearanceFeatureRenderer {

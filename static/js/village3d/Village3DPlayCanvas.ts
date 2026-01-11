@@ -4,6 +4,8 @@
  * TypeScript version with modular architecture
  */
 
+import './pc_shim.js';
+
 import type { PlayerData, RoleModel, RoleData, Village3DOptions, PlayerEntity, RolesAPIResponse, PCApplication, PCEntity, PCColor, PCMaterial, PCVec3, UIButtonData, PCModel, HintEntity, AnimatedEntity, PulseEntity, ViewMode } from './types.js';
 import { PlayerAvatarBuilder } from './PlayerAvatarBuilder.js';
 
@@ -1693,8 +1695,8 @@ export default class Village3DPlayCanvas {
       }
 
       // Face camera
-      if (this.app.root.findByName('Camera')) {
-        const cam = this.app.root.findByName('Camera');
+      const cam = this.app.root.findByName('Camera');
+      if (cam) {
         p.entity.lookAt(cam.getPosition());
       }
     }

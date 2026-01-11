@@ -512,7 +512,7 @@ spiel_name }}{% endblock %} {% block content %}
 {% if raum.modus == 'online' %}
 <script src="https://cdn.jsdelivr.net/npm/three@latest/build/three.min.js"></script>
 <script type="module">
-  import Village3DPlayCanvas from "{{ url_for('static', filename='js/village3d/dist/Village3DPlayCanvas.js') }}";
+  import Village3DThree from "{{ url_for('static', filename='js/village3d/dist/Village3DThree.js') }}";
 
   // Konstante für Update-Verzögerung (Zeit für DOM-Updates)
   const VILLAGE_UPDATE_DELAY = 100;
@@ -569,7 +569,7 @@ spiel_name }}{% endblock %} {% block content %}
   document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById("village-3d-lobby-container");
       if (container && typeof THREE !== "undefined") {
-      window.village3dLobby = new Village3DPlayCanvas(
+      window.village3dLobby = new Village3DThree(
         "village-3d-lobby-container",
         "{{ raum.code }}",
         { lobbyMode: true }, // Simplified view for lobby

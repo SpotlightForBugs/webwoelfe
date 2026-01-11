@@ -1,6 +1,6 @@
 /**
- * Village3DPlayCanvas - Main renderer class
- * 
+ * Village3DThree - Main renderer class
+ *
  * TypeScript version with modular architecture
  */
 
@@ -9,7 +9,7 @@ import './pc_shim.js';
 import type { PlayerData, RoleModel, RoleData, Village3DOptions, PlayerEntity, RolesAPIResponse, PCApplication, PCEntity, PCColor, PCMaterial, PCVec3, UIButtonData, PCModel, HintEntity, AnimatedEntity, PulseEntity, ViewMode } from './types.js';
 import { PlayerAvatarBuilder } from './PlayerAvatarBuilder.js';
 
-export default class Village3DPlayCanvas {
+export default class Village3DThree {
   private container: HTMLElement;
   private canvas: HTMLCanvasElement | null = null;
   private app: PCApplication | null = null;
@@ -2176,6 +2176,26 @@ export default class Village3DPlayCanvas {
     const hud = document.querySelector('#village3d-hud') as HTMLElement | null;
     if (hud) {
       hud.classList.toggle('is-visible', show);
+    }
+
+    // Mobile-first: when entering fullscreen HUD, start with panels collapsed.
+    // Users can open them via the topbar buttons.
+    if (show) {
+      const isMobile =
+        (typeof window !== 'undefined' &&
+          (window.matchMedia?.('(max-width: 768px)')?.matches ||
+            window.matchMedia?.('(pointer: coarse)')?.matches)) ||
+        false;
+
+      if (isMobile) {
+        this.leftSidebarVisible = false;
+        this.rightSidebarVisible = false;
+
+        const left = document.querySelector('#village3d-left-panel') as HTMLElement | null;
+        const right = document.querySelector('#village3d-right-panel') as HTMLElement | null;
+        left?.classList.add('is-collapsed');
+        right?.classList.add('is-collapsed');
+      }
     }
   }
 

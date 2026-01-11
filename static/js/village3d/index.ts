@@ -4,7 +4,7 @@
  * Export all public interfaces and classes
  */
 
-export { default as Village3DPlayCanvas } from './Village3DPlayCanvas.js';
+export { default as Village3DThree } from './Village3DThree.js';
 export { PlayerAvatarBuilder } from './PlayerAvatarBuilder.js';
 export { AppearanceFeatureRenderer } from './AppearanceFeatureRenderer.js';
 

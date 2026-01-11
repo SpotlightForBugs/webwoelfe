@@ -189,6 +189,40 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     display: none;
   }
 
+  /* Mobile: panels become full-width bottom sheets */
+  @media (max-width: 768px) {
+    .village3d-topbar {
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      padding: 8px 10px;
+      border-radius: 12px;
+    }
+
+    .village3d-panel {
+      left: 8px !important;
+      right: 8px !important;
+      width: auto;
+      top: auto;
+      bottom: 78px;
+      height: 45vh;
+      border-radius: 14px;
+    }
+
+    .village3d-panel.left,
+    .village3d-panel.right {
+      left: 8px;
+      right: 8px;
+    }
+
+    .village3d-bottombar {
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      padding: 8px 10px;
+    }
+  }
+
   .village3d-panel-title {
     font-family: var(--font-display);
     font-weight: 700;
@@ -3506,8 +3540,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       // Hide 3D overlays
       if (window.village3d) {
-        // HUD stays visible in Village3D primary mode
-        window.village3d.showFullscreenUI(true);
+        window.village3d.showFullscreenUI(false);
       }
     }
   };
@@ -3688,11 +3721,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     };
 
     loadThreeJS().then(() => {
-      return import('{{ url_for('static', filename='js/village3d/dist/Village3DPlayCanvas.js') }}');
-  }).then(module => {
-      const Village3DPlayCanvas = module.default;
-      if (typeof Village3DPlayCanvas !== 'undefined') {
-          const village3d = new Village3DPlayCanvas('village-3d', raumCode);
+      return import('{{ url_for('static', filename='js/village3d/dist/Village3DThree.js') }}');
+    }).then(module => {
+      const Village3DThree = module.default;
+      if (typeof Village3DThree !== 'undefined') {
+        const village3d = new Village3DThree('village-3d', raumCode);
 
           // Spieler-Klick-Handler für Aktionen
           village3d.onPlayerClick = (playerId) => {
@@ -3727,10 +3760,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Global speichern für Hints
           window.village3d = village3d;
           
-          // Initialize 3D UI overlay with role and phase info
+          // Keep HUD overlay hidden unless we are in fullscreen 3D mode
           village3d.updateTopBar(aktuellePhase, aktuelleRunde);
           village3d.updateRoleBadge(spielerRolle);
-          village3d.showFullscreenUI(true);
+          village3d.showFullscreenUI(isFullscreen3D);
           // Populate HUD list now that village3d is available
           window.updateVillage3DPlayerList?.();
 

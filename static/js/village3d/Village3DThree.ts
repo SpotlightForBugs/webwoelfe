@@ -426,15 +426,22 @@ export default class Village3DThree {
     this.skyDome = new pc.Entity('SkyDome');
     if (this.skyDome) {
       this.skyDome.addComponent('model', { type: 'sphere' });
-      this.skyDome.setLocalScale(-150, -150, -150); // Inverted (inside-out)
+      this.skyDome.setLocalScale(-400, -400, -400); // Inverted (inside-out)
       this.skyDome.setPosition(0, 0, 0);
     }
 
     // Night sky gradient material - Düsterwald: pitch black with hint of deep purple
     this.skyMaterial = new pc.StandardMaterial();
     if (!this.skyMaterial) throw new Error('Failed to create sky material');
-    this.skyMaterial.diffuse = new pc.Color(0.008, 0.01, 0.025);
-    this.skyMaterial.emissive = new pc.Color(0.01, 0.008, 0.03);
+    
+    if (this.isLobbyMode) {
+      this.skyMaterial.diffuse = new pc.Color(0.05, 0.08, 0.15);
+      this.skyMaterial.emissive = new pc.Color(0.02, 0.03, 0.06);
+    } else {
+      this.skyMaterial.diffuse = new pc.Color(0.008, 0.01, 0.025);
+      this.skyMaterial.emissive = new pc.Color(0.01, 0.008, 0.03);
+    }
+    
     this.skyMaterial.useLighting = false;
     this.skyMaterial.cull = pc.CULLFACE_FRONT; // Render inside
     this.skyMaterial.update();
@@ -457,7 +464,7 @@ export default class Village3DThree {
       // Random position on sphere surface
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const radius = 140;
+      const radius = 380;
       const x = radius * Math.sin(phi) * Math.cos(theta);
       const y = Math.abs(radius * Math.cos(phi)) + 10; // Only upper hemisphere
       const z = radius * Math.sin(phi) * Math.sin(theta);
@@ -602,8 +609,12 @@ export default class Village3DThree {
     ground.setLocalScale(groundSize, 1, groundSize);
 
     const material = new pc.StandardMaterial();
-    // Düsterwald: very dark, almost black forest floor
-    material.diffuse = new pc.Color(0.04, 0.06, 0.03);
+    // Düsterwald: dark forest floor, but visible
+    if (this.isLobbyMode) {
+      material.diffuse = new pc.Color(0.12, 0.18, 0.12);
+    } else {
+      material.diffuse = new pc.Color(0.08, 0.1, 0.06);
+    }
     material.specular = new pc.Color(0.01, 0.01, 0.01);
     material.shininess = 1;
     material.update();

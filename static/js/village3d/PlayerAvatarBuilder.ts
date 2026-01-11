@@ -63,11 +63,6 @@ export class PlayerAvatarBuilder {
       this.applyDeadEffect(playerEntity);
     }
 
-    // Create name label
-    const label = this.createPlayerLabel(player.name, player.ist_am_leben);
-    label.setLocalPosition(0, 3.2, 0);
-    playerEntity.addChild(label);
-
     // Position and rotation
     playerEntity.setPosition(x, 0, z);
     playerEntity.setLocalEulerAngles(0, -(angle * 180 / Math.PI) + 180, 0);
@@ -285,25 +280,6 @@ export class PlayerAvatarBuilder {
     });
     (blade.model as PCModel).material = bladeMat;
     handle.addChild(blade);
-  }
-
-  /**
-   * Create name label for player
-   */
-  private createPlayerLabel(name: string, isAlive: boolean): PCEntity {
-    const pc = window.pc;
-    
-    const label = new pc.Entity('Label');
-    label.addComponent('element', {
-      type: 'text',
-      text: name,
-      fontSize: 0.5,
-      color: isAlive ? new pc.Color(1, 1, 1) : new pc.Color(0.5, 0.5, 0.5),
-      anchor: [0.5, 0.5, 0.5, 0.5],
-      pivot: [0.5, 0.5],
-    });
-
-    return label;
   }
 
   /**

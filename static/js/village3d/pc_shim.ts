@@ -288,7 +288,7 @@ export class CameraComponent {
   nearClip: number;
   farClip: number;
 
-  constructor(canvas: HTMLCanvasElement, opts: { farClip?: number } = {}) {
+  constructor(canvas: HTMLCanvasElement, opts: { farClip?: number; clearColor?: unknown } = {}) {
     const THREE = getTHREE();
     const aspect = canvas.clientWidth > 0 && canvas.clientHeight > 0
       ? canvas.clientWidth / canvas.clientHeight
@@ -296,6 +296,10 @@ export class CameraComponent {
     this.nearClip = 0.1;
     this.farClip = opts.farClip ?? 1000;
     this.camera = new THREE.PerspectiveCamera(60, aspect, this.nearClip, this.farClip);
+
+    if (opts.clearColor instanceof Color) {
+      (this.camera as any).userData.__pc_clearColor = opts.clearColor.toThree();
+    }
   }
 
   screenToWorld(x: number, y: number, distance: number, canvas?: HTMLCanvasElement): Vec3 {
@@ -330,6 +334,7 @@ export class LightComponent {
     if (type === 'directional') {
       this.light = new THREE.DirectionalLight(color.toThree(), intensity);
       (this.light as THREE_NS.DirectionalLight).castShadow = true;
+      (this.light as THREE_NS.DirectionalLight).position.set(0, 0, 0);
     } else if (type === 'point') {
       this.light = new THREE.PointLight(color.toThree(), intensity, 100);
     } else {
@@ -420,9 +425,11 @@ export class Entity {
           break;
         case 'plane':
           geom = new THREE.PlaneGeometry(1, 1);
+          geom.rotateX(-Math.PI / 2);
           break;
         case 'torus':
           geom = new THREE.TorusGeometry(0.5, 0.15, 12, 32);
+          geom.rotateX(-Math.PI / 2);
           break;
         case 'capsule':
           // CapsuleGeometry exists in newer Three; fall back if missing.
@@ -448,11 +455,7 @@ export class Entity {
       if (!canvas) {
         throw new Error('[Village3D] pc_shim: canvas not registered');
       }
-      this.camera = new CameraComponent(canvas, { farClip: opts?.farClip });
-      // Three.js cameras look down -Z by default, but when parented to an Entity
-      // that uses lookAt(), the camera ends up facing backwards. Rotate 180° on Y
-      // to align the camera's forward direction with the parent Entity's forward.
-      this.camera.camera.rotation.y = Math.PI;
+      this.camera = new CameraComponent(canvas, { farClip: opts?.farClip, clearColor: opts?.clearColor });
       this.object.add(this.camera.camera);
       return;
     }
@@ -464,6 +467,10 @@ export class Entity {
       const comp = new LightComponent(lightType, color ?? new Color(1, 1, 1), intensity);
       if (lightType === 'directional') {
         const dir = comp.light as THREE_NS.DirectionalLight;
+        if (dir.target && !dir.target.parent) {
+          dir.target.position.set(0, 0, -1);
+          this.object.add(dir.target);
+        }
         dir.castShadow = !!opts?.castShadows;
         if (opts?.shadowResolution) {
           dir.shadow.mapSize.set(opts.shadowResolution, opts.shadowResolution);
@@ -507,6 +514,7 @@ export class Entity {
       tex.needsUpdate = true;
 
       const geom = new THREE.PlaneGeometry(2 * fontSize * 3, fontSize * 3);
+      geom.rotateX(-Math.PI / 2);
       const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
       const mesh = new THREE.Mesh(geom, mat);
       mesh.renderOrder = 999;
@@ -678,6 +686,11 @@ export class Application extends Emitter {
     this.renderer.setPixelRatio(window.devicePixelRatio || 1);
     this.renderer.setSize(canvas.clientWidth || 1, canvas.clientHeight || 1, false);
     this.renderer.shadowMap.enabled = true;
+    (this.renderer as any).outputColorSpace = (THREE as any).SRGBColorSpace ?? (this.renderer as any).outputColorSpace;
+    (this.renderer as any).toneMapping = (THREE as any).ACESFilmicToneMapping ?? (this.renderer as any).toneMapping;
+    (this.renderer as any).toneMappingExposure = 1.1;
+    (this.renderer as any).physicallyCorrectLights = true;
+    this.renderer.shadowMap.type = (THREE as any).PCFSoftShadowMap ?? this.renderer.shadowMap.type;
 
     this.threeScene = new THREE.Scene();
     this.root = new Entity('Root', this.threeScene as any);
@@ -703,6 +716,8 @@ export class Application extends Emitter {
 
       const camera = this.findActiveCamera();
       if (camera) {
+        const cc = (camera as any).userData?.__pc_clearColor as THREE_NS.Color | undefined;
+        if (cc) this.renderer.setClearColor(cc, 1);
         this.renderer.render(this.threeScene, camera);
       }
 

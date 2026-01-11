@@ -426,7 +426,7 @@ export default class Village3DThree {
     this.skyDome = new pc.Entity('SkyDome');
     if (this.skyDome) {
       this.skyDome.addComponent('model', { type: 'sphere' });
-      this.skyDome.setLocalScale(-400, -400, -400); // Inverted (inside-out)
+      this.skyDome.setLocalScale(400, 400, 400);
       this.skyDome.setPosition(0, 0, 0);
     }
 
@@ -533,10 +533,10 @@ export default class Village3DThree {
     }
 
     // Moon glow (larger, softer sphere behind)
-    const moonGlow = new pc.Entity('MoonGlow');
-    moonGlow.addComponent('model', { type: 'sphere' });
-    moonGlow.setLocalScale(14, 14, 14);
-    moonGlow.setPosition(60, 80, -50);
+    this.moonGlow = new pc.Entity('MoonGlow');
+    this.moonGlow.addComponent('model', { type: 'sphere' });
+    this.moonGlow.setLocalScale(14, 14, 14);
+    this.moonGlow.setPosition(60, 80, -50);
 
     const glowMat = new pc.StandardMaterial();
     glowMat.emissive = new pc.Color(0.3, 0.35, 0.5);
@@ -544,9 +544,9 @@ export default class Village3DThree {
     glowMat.blendType = pc.BLEND_ADDITIVE;
     glowMat.useLighting = false;
     glowMat.update();
-    (moonGlow.model as PCModel).material = glowMat;
+    (this.moonGlow.model as PCModel).material = glowMat;
 
-    this.app.root.addChild(moonGlow);
+    this.app.root.addChild(this.moonGlow);
 
     // Sun (hidden by default, shown during day)
     this.sun = new pc.Entity('Sun');

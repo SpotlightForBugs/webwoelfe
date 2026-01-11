@@ -3,7 +3,7 @@
  * Handles custom accessories, body modifications, and visual effects from role definitions
  */
 
-import type { AppearanceFeature, PlayerData, PlayerEntity, PCColor, PCMaterial, PCEntity } from './types.js';
+import type { AppearanceFeature, PlayerData, PlayerEntity, PCColor, PCMaterial, PCEntity, PCModel } from './types.js';
 
 export class AppearanceFeatureRenderer {
   private materialCache: Map<string, PCMaterial>;
@@ -46,7 +46,7 @@ export class AppearanceFeatureRenderer {
     baseColor: PCColor,
     playerData: PlayerData
   ): void {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     const featureEntity = new pc.Entity(`Feature-${feature.feature_type}-${index}`);
     
     // Determine geometry type
@@ -61,7 +61,7 @@ export class AppearanceFeatureRenderer {
     // Apply material
     const featureColor = this.determineColor(feature, baseColor);
     const material = this.createMaterial(feature, featureColor, playerData, index);
-    featureEntity.model.material = material;
+    (featureEntity.model as PCModel).material = material;
     
     // Add to player entity
     playerEntity.addChild(featureEntity);
@@ -124,7 +124,7 @@ export class AppearanceFeatureRenderer {
    * Determine color based on color source
    */
   private determineColor(feature: AppearanceFeature, baseColor: PCColor): PCColor {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     
     switch (feature.color_source) {
       case 'role':
@@ -151,7 +151,7 @@ export class AppearanceFeatureRenderer {
    * Parse color from string or object
    */
   private parseColor(color: string | { r: number; g: number; b: number }): PCColor {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     
     if (typeof color === 'string' && color.startsWith('#')) {
       const r = parseInt(color.slice(1, 3), 16) / 255;
@@ -174,7 +174,7 @@ export class AppearanceFeatureRenderer {
     playerData: PlayerData,
     index: number
   ): PCMaterial {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     
     // Calculate emissive color
     const emissiveColor = feature.emissive && (feature.emissive_intensity ?? 0) > 0
@@ -210,7 +210,7 @@ export class AppearanceFeatureRenderer {
       return cached;
     }
 
-    const pc = (window as any).pc;
+    const pc = window.pc;
     const material = new pc.StandardMaterial();
     
     material.diffuse = options.diffuse;

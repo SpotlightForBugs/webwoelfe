@@ -156,7 +156,7 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
                     "todesart": todesursache,
                     "rolle": ziel.rolle,
                 },
-                room=raum.code,
+                room=raum.code, # pyright: ignore[reportCallIssue]
             )
 
     # Handle phase trigger effects
@@ -1152,7 +1152,7 @@ def waehle_zufaelligen_erzaehler(code):
     socketio.emit(
         "erzaehler_gewaehlt",
         {"spieler_id": erzaehler.id, "name": erzaehler.name},
-        room=raum.code,
+        room=raum.code, # pyright: ignore[reportCallIssue] # pyright: ignore[reportCallIssue]
     )
 
     return jsonify(
@@ -1263,7 +1263,7 @@ def sende_rollen_vorschau_update(raum):
             "total": rollen_vorschau_total,
             "hat_erzaehler": bool(erzaehler),
         },
-        room=raum.code,
+        room=raum.code, # pyright: ignore[reportCallIssue]
     )
 
 
@@ -1290,7 +1290,7 @@ def handle_connect():
                     "spieler_id": spieler.id,
                     "spieler_name": spieler.name,
                 },
-                room=raum.code,
+                room=raum.code, # pyright: ignore[reportCallIssue]
             )
             # Sende aktualisierte Rollenvorschau an alle
             sende_rollen_vorschau_update(raum)
@@ -1311,7 +1311,7 @@ def handle_disconnect():
             emit(
                 "spieler_getrennt",
                 {"spieler_id": spieler.id, "spieler_name": spieler.name},
-                room=raum.code,
+                room=raum.code, # pyright: ignore[reportCallIssue]
             )
             # Sende aktualisierte Rollenvorschau an alle
             sende_rollen_vorschau_update(raum)
@@ -1335,7 +1335,7 @@ def handle_raum_beitreten(data):
                         for s in alle_spieler
                     ]
                 },
-                room=code,
+                room=code, # pyright: ignore[reportCallIssue]
             )
 
             # Online-Modus: Sende Erzählung für aktuelle Phase wenn Spiel läuft
@@ -1385,7 +1385,7 @@ def handle_spiel_starten(data):
         emit(
             "spiel_gestartet",
             {"phase": raum.aktuelle_phase, "runde": raum.runde},
-            room=raum.code,
+            room=raum.code, # pyright: ignore[reportCallIssue]
         )
 
         # Online-Modus: Automatisch die erste Phase (rollen_verteilt) anzeigen und weiterschalten
@@ -1402,7 +1402,7 @@ def handle_spiel_starten(data):
                 socketio.emit(
                     "erzaehlung",
                     {"text": erzaehler_text, "audio": audio_path},
-                    room=raum.code,
+                    room=raum.code, # pyright: ignore[reportCallIssue]
                 )
 
             # Starte Fallback-Timer für automatische Phasen-Progression
@@ -1552,7 +1552,7 @@ def _wechsel_phase_intern(raum):
             audio_path = generiere_erzaehler_audio(erzaehlung_text, stil=stil)
 
         socketio.emit(
-            "erzaehlung", {"text": erzaehlung_text, "audio": audio_path}, room=raum.code
+            "erzaehlung", {"text": erzaehlung_text, "audio": audio_path}, room=raum.code # pyright: ignore[reportCallIssue]
         )
 
     # Build phase data for emission
@@ -1574,7 +1574,7 @@ def _wechsel_phase_intern(raum):
                 phase_data["werwolf_opfer_name"] = opfer.name
                 log_ts(f"[Hexe] Opfer-Info mitgesendet: {opfer.name} (ID: {opfer.id})")
 
-    socketio.emit("phase_geaendert", phase_data, room=raum.code)
+    socketio.emit("phase_geaendert", phase_data, room=raum.code) # pyright: ignore[reportCallIssue]
 
     # Zufällige Hinweise generieren
     try:
@@ -1766,7 +1766,7 @@ def handle_aktion(data):
 
         # Use socketio.emit to player's personal room to ensure delivery
         # Player joins room "player_{id}" on connect (see handle_connect)
-        socketio.emit("aktion_bestaetigt", effect_data, room=f"player_{spieler.id}")
+        socketio.emit("aktion_bestaetigt", effect_data, room=f"player_{spieler.id}") # pyright: ignore[reportCallIssue]
         log_ts(f"[Aktion] Sent aktion_bestaetigt to player_{spieler.id}: {effect_data.get('nachricht')}")
 
         # Pruefen ob alle fertig sind
@@ -1795,7 +1795,7 @@ def handle_chat(data):
         emit(
             "chat_tot",
             {"von": spieler.name, "nachricht": nachricht, "spieler_id": spieler.id},
-            room=raum.code,
+            room=raum.code, # pyright: ignore[reportCallIssue]
         )
     else:
         emit(
@@ -1806,7 +1806,7 @@ def handle_chat(data):
                 "ist_tot": False,
                 "spieler_id": spieler.id,
             },
-            room=raum.code,
+            room=raum.code, # pyright: ignore[reportCallIssue]
         )
 
 
@@ -1881,12 +1881,12 @@ def handle_hinweis_senden(data):
             "hintTyp": hinweis_typ,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         },
-        room=raum.code,
+        room=raum.code, # pyright: ignore[reportCallIssue]
     )
 
     # Log für Erzähler
     log = SpielLog(
-        raum_id=raum.id,
+        raum_id=raum.id, 
         nachricht=f"[HINWEIS] {spieler.name} zeigte: {hinweis_typ}",
         sichtbar_fuer="erzaehler",
     )
@@ -1952,7 +1952,7 @@ def generiere_zufalls_hinweis(raum_id: int):
                 "hintTyp": hinweis_typ,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             },
-            room=raum.code,
+            room=raum.code, # pyright: ignore[reportCallIssue]
         )
 
 
@@ -1998,7 +1998,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                     "ziel_id": ziel.id,
                     "ziel_name": ziel.name,
                 },
-                room=raum.code,
+                room=raum.code, # pyright: ignore[reportCallIssue]
             )
             stats = game_logic.berechne_abstimmungs_statistik(raum)
             socketio.emit(
@@ -2011,7 +2011,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                     "fuehrender_id": stats["fuehrender_id"],
                     "fuehrende_stimmen": stats["fuehrende_stimmen"],
                 },
-                room=raum.code,
+                room=raum.code, # pyright: ignore[reportCallIssue]
             )
         return {"erfolg": True, "nachricht": "Stimme abgegeben"}
 
@@ -2226,7 +2226,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
                                  "alert_type": "info"
                              }
                          },
-                         room=raum.code, 
+                         room=raum.code, # pyright: ignore[reportCallIssue] 
                      )
 
     # WICHTIG: Nacht-Tode bei nacht_ende verarbeiten!
@@ -2306,7 +2306,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             socketio.emit(
                 "nacht_ergebnis",
                 {"tote": [], "nachricht": "Niemand ist in der Nacht gestorben."},
-                room=raum.code,
+                room=raum.code, # pyright: ignore[reportCallIssue]
             )
 
         # Spielende pruefen
@@ -2355,7 +2355,7 @@ def handle_timer_tick():
             "sekunden_verbleibend": verbleibend,
             "timer_abgelaufen": abgelaufen,
         },
-        room=raum.code,
+        room=raum.code, # pyright: ignore[reportCallIssue]
     )
 
     # Wenn Timer abgelaufen und Phase noch nicht gewechselt, wechsle jetzt
@@ -2378,7 +2378,7 @@ def handle_timer_tick():
                             "rolle": opfer.rolle,
                             "todesart": "hinrichtung",
                         },
-                        room=raum.code,
+                        room=raum.code, # pyright: ignore[reportCallIssue]
                     )
 
         # Wechsle zur nächsten Phase
@@ -2424,7 +2424,7 @@ def handle_spieler_abstimmen(data):
                                 "rolle": opfer.rolle,
                                 "todesart": "hinrichtung",
                             },
-                            room=raum.code,
+                            room=raum.code, # pyright: ignore[reportCallIssue]
                         )
 
             # Wechsle zur nächsten Phase
@@ -2492,7 +2492,7 @@ def handle_starte_tag_abstimmung(data):
             "phase": "diskussion_abstimmung",
             "dauer_sekunden": dauer,
         },
-        room=raum.code,
+        room=raum.code, # pyright: ignore[reportCallIssue]
     )
 
 

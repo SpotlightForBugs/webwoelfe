@@ -2,21 +2,25 @@
  * Type definitions for Village3D PlayCanvas renderer
  */
 
-// Reference official PlayCanvas types from @types/playcanvas
-/// <reference types="playcanvas" />
+import * as pc from 'playcanvas';
 
-// Re-export PlayCanvas types for convenience  
-// These are accessed via window.pc at runtime
+// Re-export PlayCanvas types for convenience
 export type PCApplication = pc.Application;
 export type PCEntity = pc.Entity;
 export type PCColor = pc.Color;
 export type PCVec3 = pc.Vec3;
 export type PCMaterial = pc.StandardMaterial;
-export type PCModel = pc.ModelComponent;
 export type PCCamera = pc.CameraComponent;
 export type PCLight = pc.LightComponent;
 export type PCElement = pc.ElementComponent;
 export type PCScene = pc.Scene;
+export type PCMeshInstance = pc.MeshInstance;
+
+// Extended ModelComponent interface to include material property
+// which exists at runtime for convenience (sets material on all mesh instances)
+export interface PCModel extends pc.ModelComponent {
+  material: PCMaterial;
+}
 
 // ============================================================================
 // Player and Game Data Types
@@ -83,7 +87,7 @@ export interface AppearanceFeature {
 
 export interface BodyModification {
   type: string;
-  modifications: Record<string, any>;
+  modifications: Record<string, unknown>;
 }
 
 export interface AnimationState {
@@ -138,6 +142,22 @@ export interface PlayerEntity extends PCEntity {
     time: number;
     idleSpeed: number;
   };
+}
+
+// Entity with hint animation data
+export interface HintEntity extends PCEntity {
+  hintTime?: number;
+  hintType?: string;
+}
+
+// Entity with animation callback
+export interface AnimatedEntity extends PCEntity {
+  animateCallback?: (dt: number) => void;
+}
+
+// Entity with pulse animation data
+export interface PulseEntity extends PCEntity {
+  pulseTime?: number;
 }
 
 // ============================================================================
@@ -211,8 +231,9 @@ export interface Village3DOptions {
 // ============================================================================
 
 export interface UIButtonData {
-  label: string;
-  action: string;
+  label?: string;
+  text?: string; // Alternative to label
+  action: string | (() => void);
   icon?: string;
   color?: string;
   onClick?: () => void;

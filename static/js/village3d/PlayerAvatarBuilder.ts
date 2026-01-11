@@ -2,7 +2,7 @@
  * PlayerAvatarBuilder - Builds 3D player avatars with role-specific appearances
  */
 
-import type { PlayerData, PlayerEntity, RoleModel, PCEntity, PCColor, PCMaterial } from './types.js';
+import type { PlayerData, PlayerEntity, RoleModel, PCEntity, PCColor, PCMaterial, PCModel } from './types.js';
 import { AppearanceFeatureRenderer } from './AppearanceFeatureRenderer.js';
 
 export class PlayerAvatarBuilder {
@@ -31,7 +31,7 @@ export class PlayerAvatarBuilder {
     z: number,
     angle: number
   ): PlayerEntity {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     const playerEntity = new pc.Entity(`Player-${player.id}`) as PlayerEntity;
     playerEntity.playerData = player;
 
@@ -87,7 +87,7 @@ export class PlayerAvatarBuilder {
     player: PlayerData,
     roleColor: PCColor
   ): void {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     const isDorfbewohner = player.rolle === 'Dorfbewohner';
 
     // Torso
@@ -102,7 +102,7 @@ export class PlayerAvatarBuilder {
       diffuse: torsoColor,
       specular: new pc.Color(0.1, 0.1, 0.1),
     });
-    torso.model.material = torsoMat;
+    (torso.model as PCModel).material = torsoMat;
     playerEntity.addChild(torso);
     playerEntity.parts.torso = torso;
 
@@ -118,7 +118,7 @@ export class PlayerAvatarBuilder {
         diffuse: new pc.Color(0.9, 0.88, 0.82),
         specular: new pc.Color(0.05, 0.05, 0.05),
       });
-      shirt.model.material = shirtMat;
+      (shirt.model as PCModel).material = shirtMat;
       torso.addChild(shirt);
     }
 
@@ -133,7 +133,7 @@ export class PlayerAvatarBuilder {
       diffuse: new pc.Color(0.95, 0.8, 0.7),
       specular: new pc.Color(0.05, 0.05, 0.05),
     });
-    head.model.material = headMat;
+    (head.model as PCModel).material = headMat;
     playerEntity.addChild(head);
     playerEntity.parts.head = head;
 
@@ -163,7 +163,7 @@ export class PlayerAvatarBuilder {
     torsoMat: PCMaterial,
     isDorfbewohner: boolean
   ): void {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     playerEntity.parts.arms = [];
 
     for (let i = 0; i < 2; i++) {
@@ -182,9 +182,9 @@ export class PlayerAvatarBuilder {
           diffuse: new pc.Color(0.9, 0.88, 0.82),
           specular: new pc.Color(0.05, 0.05, 0.05),
         });
-        arm.model.material = sleeveMat;
+        (arm.model as PCModel).material = sleeveMat;
       } else {
-        arm.model.material = torsoMat;
+        (arm.model as PCModel).material = torsoMat;
       }
 
       armPivot.addChild(arm);
@@ -201,7 +201,7 @@ export class PlayerAvatarBuilder {
     player: PlayerData,
     isDorfbewohner: boolean
   ): void {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     playerEntity.parts.legs = [];
 
     for (let i = 0; i < 2; i++) {
@@ -217,7 +217,7 @@ export class PlayerAvatarBuilder {
         diffuse: legColor,
         specular: new pc.Color(0.05, 0.05, 0.05),
       });
-      leg.model.material = legMat;
+      (leg.model as PCModel).material = legMat;
       playerEntity.addChild(leg);
       playerEntity.parts.legs.push(leg);
     }
@@ -227,7 +227,7 @@ export class PlayerAvatarBuilder {
    * Add straw hat for Dorfbewohner
    */
   private addDorfbewohnerHat(head: PCEntity, player: PlayerData): void {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     
     const hat = new pc.Entity('StrawHat');
     hat.addComponent('model', { type: 'cylinder' });
@@ -239,14 +239,14 @@ export class PlayerAvatarBuilder {
       diffuse: new pc.Color(0.8, 0.7, 0.4),
       specular: new pc.Color(0.05, 0.05, 0.05),
     });
-    hat.model.material = hatMat;
+    (hat.model as PCModel).material = hatMat;
     head.addChild(hat);
 
     const hatTop = new pc.Entity('HatTop');
     hatTop.addComponent('model', { type: 'cone' });
     hatTop.setLocalScale(0.5, 0.25, 0.5);
     hatTop.setLocalPosition(0, 0.55, 0);
-    hatTop.model.material = hatMat;
+    (hatTop.model as PCModel).material = hatMat;
     head.addChild(hatTop);
   }
 
@@ -254,7 +254,7 @@ export class PlayerAvatarBuilder {
    * Add farming tool for Dorfbewohner
    */
   private addFarmingTool(playerEntity: PlayerEntity, player: PlayerData): void {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     
     const handle = new pc.Entity('ToolHandle');
     handle.addComponent('model', { type: 'cylinder' });
@@ -267,7 +267,7 @@ export class PlayerAvatarBuilder {
       diffuse: new pc.Color(0.4, 0.3, 0.2),
       specular: new pc.Color(0.05, 0.05, 0.05),
     });
-    handle.model.material = handleMat;
+    (handle.model as PCModel).material = handleMat;
     playerEntity.addChild(handle);
 
     const blade = new pc.Entity('ToolBlade');
@@ -281,7 +281,7 @@ export class PlayerAvatarBuilder {
       diffuse: new pc.Color(0.5, 0.5, 0.55),
       specular: new pc.Color(0.3, 0.3, 0.3),
     });
-    blade.model.material = bladeMat;
+    (blade.model as PCModel).material = bladeMat;
     handle.addChild(blade);
   }
 
@@ -289,7 +289,7 @@ export class PlayerAvatarBuilder {
    * Create name label for player
    */
   private createPlayerLabel(name: string, isAlive: boolean): PCEntity {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     
     const label = new pc.Entity('Label');
     label.addComponent('element', {
@@ -308,7 +308,7 @@ export class PlayerAvatarBuilder {
    * Apply death effect to player entity
    */
   private applyDeadEffect(entity: PlayerEntity): void {
-    const pc = (window as any).pc;
+    const pc = window.pc;
     
     if (!this.materialCache.has('deadMaterial')) {
       const deadMat = new pc.StandardMaterial();
@@ -353,7 +353,7 @@ export class PlayerAvatarBuilder {
       return cached;
     }
 
-    const pc = (window as any).pc;
+    const pc = window.pc;
     const material = new pc.StandardMaterial();
     
     material.diffuse = options.diffuse;

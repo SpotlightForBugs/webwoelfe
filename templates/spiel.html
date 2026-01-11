@@ -1366,7 +1366,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                          rolle-{{ s.rolle|css_class if kennt_rolle and s.rolle else 'unbekannt' }}"
             data-id="{{ s.id }}"
             data-name="{{ s.name }}"
-            data-rolle="{{ s.rolle if s.rolle else '' }}"
+            {# Nur anzeigen, wenn Spieler diese Rolle sehen darf #}
+            data-rolle="{{ s.rolle if kennt_rolle and s.rolle else '' }}"
             data-ist-erzaehler="{{ s.ist_erzaehler|lower }}"
             data-ist-verliebt="{{ 'true' if s.ist_verliebt else 'false' }}"
             onclick="selectSpieler({{ s.id }})"

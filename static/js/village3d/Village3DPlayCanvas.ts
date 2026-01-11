@@ -1878,6 +1878,21 @@ export default class Village3DPlayCanvas {
       camera.lookAt(0, 0, 0);
     }
 
+    // Billboard effect: keep name labels facing the camera
+    if (this.camera) {
+      const camPos = this.camera.getPosition();
+      this.playerLabels.forEach((label) => {
+        if (!label || !label.parent) return;
+        const labelPos = label.getPosition();
+        const dx = camPos.x - labelPos.x;
+        const dz = camPos.z - labelPos.z;
+        const worldAngleDeg = Math.atan2(dx, dz) * (180 / Math.PI);
+        const parentRot = label.parent.getEulerAngles();
+        const localYAngle = worldAngleDeg - parentRot.y + 180;
+        label.setLocalEulerAngles(90, localYAngle, 0);
+      });
+    }
+
     // Animate players
     this.playerEntities.forEach(entity => {
       if (entity.animState) {
@@ -1996,6 +2011,7 @@ export default class Village3DPlayCanvas {
 
     const pc = window.pc;
     let isDragging = false;
+    let hasMoved = false;
     let lastX = 0;
     let lastY = 0;
 
@@ -2003,6 +2019,7 @@ export default class Village3DPlayCanvas {
     this.canvas.addEventListener('mousedown', (e: MouseEvent) => {
       if (e.button === 0) { // Left click
         isDragging = true;
+        hasMoved = false;
         lastX = e.clientX;
         lastY = e.clientY;
         this.canvas!.style.cursor = 'grabbing';
@@ -2012,8 +2029,8 @@ export default class Village3DPlayCanvas {
     // Mouse up
     this.canvas.addEventListener('mouseup', (e: MouseEvent) => {
       if (e.button === 0) {
-        if (!isDragging) {
-          // Click without drag - try to pick player
+        // Treat as click if there was no drag movement
+        if (isDragging && !hasMoved) {
           const rect = this.canvas!.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
@@ -2029,6 +2046,9 @@ export default class Village3DPlayCanvas {
       if (isDragging) {
         const deltaX = e.clientX - lastX;
         const deltaY = e.clientY - lastY;
+        if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+          hasMoved = true;
+        }
 
         this.targetCameraAngle -= deltaX * 0.01;
         this.targetCameraHeight = Math.max(5, Math.min(50, this.targetCameraHeight - deltaY * 0.1));
@@ -2036,6 +2056,14 @@ export default class Village3DPlayCanvas {
         lastX = e.clientX;
         lastY = e.clientY;
       }
+    });
+
+    // Click fallback
+    this.canvas.addEventListener('click', (e: MouseEvent) => {
+      const rect = this.canvas!.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      this.pick(x, y);
     });
 
     // Mouse wheel
@@ -2492,18 +2520,47 @@ export default class Village3DPlayCanvas {
   private createNameLabel(name: string, isAlive: boolean): PCEntity {
     const pc = window.pc;
     const label = new pc.Entity('NameLabel');
-    
-    label.addComponent('element', {
-      type: 'text',
-      text: name,
-      fontSize: 0.5,
-      color: isAlive ? new pc.Color(1, 1, 1) : new pc.Color(0.5, 0.5, 0.5),
-      anchor: [0.5, 0, 0.5, 0],
-      pivot: [0.5, 0.5]
-    });
-    
+    label.addComponent('model', { type: 'plane' });
+    label.setLocalScale(-2, 0.5, 1); // Flip so text is not mirrored
+
+    // High-res canvas for crisp text
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+
+    // Background
+    ctx.fillStyle = isAlive ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Text styling
+    ctx.fillStyle = isAlive ? '#FFFFFF' : '#999999';
+    ctx.font = 'bold 64px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    ctx.fillText(name, canvas.width / 2, canvas.height / 2);
+
+    // Texture from canvas
+    const texture = new pc.Texture(this.app!.graphicsDevice);
+    texture.setSource(canvas);
+
+    // Material setup
+    const mat = new pc.StandardMaterial();
+    mat.diffuseMap = texture;
+    mat.emissive = new pc.Color(1, 1, 1);
+    mat.emissiveMap = texture;
+    mat.opacity = isAlive ? 1.0 : 0.6;
+    mat.blendType = pc.BLEND_NORMAL;
+    mat.cull = pc.CULLFACE_NONE; // Double-sided
+    mat.depthWrite = false; // helps transparency sorting
+    mat.update();
+    (label.model as PCModel).material = mat;
+
     label.setLocalPosition(0, 3, 0);
-    
     return label;
   }
 

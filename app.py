@@ -46,6 +46,7 @@ from datetime import datetime, timezone
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
 
+
 # Database configuration: prefer env-provided URI (e.g., Postgres in Docker)
 def _resolve_database_uri() -> str:
     # Common env var names
@@ -58,6 +59,7 @@ def _resolve_database_uri() -> str:
     # Default to local SQLite when no env var is set
     return "sqlite:///webwoelfe.db"
 
+
 app.config["SQLALCHEMY_DATABASE_URI"] = _resolve_database_uri()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 Minify(app=app, html=True, js=True, cssless=True)
@@ -67,30 +69,34 @@ Minify(app=app, html=True, js=True, cssless=True)
 # TEMPLATE HELPERS - For CSS inlining
 # =============================================================================
 
+
 @app.context_processor
 def inject_css_reader():
     """Inject a function to read CSS files for inlining."""
+
     def read_css(filename):
         """Read a CSS file from static folder for inlining."""
         try:
             if app.static_folder is None:
                 raise ValueError("Static folder is not configured")
             css_path = os.path.join(app.static_folder, filename)
-            with open(css_path, 'r', encoding='utf-8') as f:
+            with open(css_path, "r", encoding="utf-8") as f:
                 return f.read()
         except Exception as e:
             logger.warning(f"Could not read CSS file {filename}: {e}")
-            return f"/* Error loading {filename} */" #Make this also a console.log error in the browser
+            return f"/* Error loading {filename} */"  # Make this also a console.log error in the browser
+
     return dict(read_css=read_css)
+
 
 # Automatic phases that advance immediately after audio (no player interaction needed)
 # These are pure transition/info phases
 AUTOMATISCHE_PHASEN = {
     "rollen_verteilt",  # Info-Phase nach Spielstart
-    "nacht_start",      # Übergang Tag -> Nacht
-    "nacht_ende",       # Übergang Nacht -> Tag
-    "tag_start",        # Übergang Nacht -> Tag
-    "tag_ende",         # Übergang am Tagesende
+    "nacht_start",  # Übergang Tag -> Nacht
+    "nacht_ende",  # Übergang Nacht -> Tag
+    "tag_start",  # Übergang Nacht -> Tag
+    "tag_ende",  # Übergang am Tagesende
 }
 
 # Spielname als Konstante
@@ -120,12 +126,12 @@ AUDIO_CONFIRMATION_THRESHOLD = float(os.environ.get("AUDIO_THRESHOLD", "0.8"))
 # LOGGING SYSTEM
 # ============================================================================
 
+
 def log_ts(msg: str):
     """Log mit Timestamp für Debugging"""
     ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
     log_entry = f"[{ts}] {msg}"
     print(log_entry)
-
 
 
 def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
@@ -154,7 +160,7 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
             game_logic.log_eintrag(
                 raum.id,
                 log_def["text"],
-                sichtbar_fuer=str(log_def.get("sichtbar_fuer", "alle"))
+                sichtbar_fuer=str(log_def.get("sichtbar_fuer", "alle")),
             )
 
     # Handle kill effects
@@ -172,7 +178,7 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
                     "todesart": todesursache,
                     "rolle": ziel.rolle,
                 },
-                room=raum.code, # pyright: ignore[reportCallIssue]
+                room=raum.code,  # pyright: ignore[reportCallIssue]
             )
 
     # Handle phase trigger effects
@@ -185,23 +191,24 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
     if ergebnis.state_updates:
         for key, value in ergebnis.state_updates.items():
             spieler.set_state(key, value)
-            
-
 
     # Handle private info notifications
     if ergebnis.private_infos:
         for player_id, info in ergebnis.private_infos.items():
             if "overlay" in info:
-                socketio.emit( 
+                socketio.emit(
                     "zeige_overlay",
                     info["overlay"],
-                    room=f"player_{player_id}", # pyright: ignore[reportCallIssue]
+                    room=f"player_{player_id}",  # pyright: ignore[reportCallIssue]
                 )
             if "nachricht" in info:
-                socketio.emit(  
+                socketio.emit(
                     "private_nachricht",
-                    {"nachricht": info["nachricht"], "typ": info.get("alert_type", "info")},
-                    room=f"player_{player_id}", # pyright: ignore[reportCallIssue]
+                    {
+                        "nachricht": info["nachricht"],
+                        "typ": info.get("alert_type", "info"),
+                    },
+                    room=f"player_{player_id}",  # pyright: ignore[reportCallIssue]
                 )
 
 
@@ -226,9 +233,15 @@ def css_class_filter(value):
         return "unbekannt"
     # Kleinbuchstaben, Leerzeichen durch Bindestriche ersetzen, Sonderzeichen entfernen
     import re
+
     result = str(value).lower()
     result = result.replace(" ", "-")
-    result = result.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+    result = (
+        result.replace("ä", "ae")
+        .replace("ö", "oe")
+        .replace("ü", "ue")
+        .replace("ß", "ss")
+    )
     result = re.sub(r"[^a-z0-9\-]", "", result)
     return result
 
@@ -239,17 +252,17 @@ def get_rollen_styles():
     Verwendet die RoleRegistry, um dynamische Styles zu erstellen.
     """
     from roles import RoleRegistry
-    
+
     styles = {}
     for role in RoleRegistry.get_all():
         info = role.info
         css_class = info.computed_css_class
-        
+
         # Defaults if not set
         grad_from = info.avatar_gradient_from or info.farbe or "#4a5568"
         grad_to = info.avatar_gradient_to or grad_from
         border = info.avatar_border_color or info.farbe or "#5a6678"
-        
+
         styles[css_class] = {
             "name": info.name,
             "team": info.team.value if info.team else "",
@@ -258,7 +271,7 @@ def get_rollen_styles():
             "avatar_border_color": border,
             "badge_emoji": info.badge_emoji or "",
         }
-    
+
     return styles
 
 
@@ -520,7 +533,8 @@ def spiel(code):
             SpielLog.query.filter(
                 SpielLog.raum_id == raum.id,
                 db.or_(
-                    SpielLog.sichtbar_fuer == "alle", #TODO: These Strings should be Enums. also applies to other places in the code
+                    SpielLog.sichtbar_fuer
+                    == "alle",  # TODO: These Strings should be Enums. also applies to other places in the code
                     SpielLog.sichtbar_fuer == str(spieler.id),
                     SpielLog.sichtbar_fuer == spieler.rolle,
                 ),
@@ -544,7 +558,9 @@ def spiel(code):
                 spieler.id, raum.id
             )
     except Exception:
-        log_ts("[Spiel] Seherin-Enthüllungen konnten nicht geladen werden. Tabelle existiert vielleicht noch nicht.")
+        log_ts(
+            "[Spiel] Seherin-Enthüllungen konnten nicht geladen werden. Tabelle existiert vielleicht noch nicht."
+        )
         pass  # Tabelle existiert vielleicht noch nicht
 
     # SICHER: Spieler-Daten werden OHNE Rollen (ausser eigene) gesendet
@@ -562,51 +578,51 @@ def spiel(code):
         elif not s.ist_am_leben:
             spieler_data["rolle"] = s.rolle
         # Werwoelfe sehen sich gegenseitig
-        elif game_logic.ist_werwolf_rolle(  #TODO: REMOVE ROLE BASED HARDCODING
+        elif game_logic.ist_werwolf_rolle(  # TODO: REMOVE ROLE BASED HARDCODING
             spieler.rolle
         ) and game_logic.ist_werwolf_rolle(s.rolle):
-            spieler_data["ist_werwolf"] = True #TODO: REMOVE ROLE BASED HARDCODING
-        
+            spieler_data["ist_werwolf"] = True  # TODO: REMOVE ROLE BASED HARDCODING
+
         # =========================================================================
         # DYNAMIC VISIBILITY - Replaces hardcoded Amor/lover checks
         # =========================================================================
         # Get all GlobalStateDefinitions from registered roles
         from roles.base import get_player_visual_effects
         from roles import RoleRegistry
-        
+
         global_state_defs = RoleRegistry.get_all_global_state_definitions_objects()
-        
+
         # Get visual effects for this player, filtered by viewer visibility
         player_effects = get_player_visual_effects(
-            s, 
-            global_state_defs,
-            viewer_id=spieler.id,
-            viewer_rolle=spieler.rolle
+            s, global_state_defs, viewer_id=spieler.id, viewer_rolle=spieler.rolle
         )
-        
+
         # Apply effects to player data
         for effect in player_effects:
             # Mark player with the effect's CSS class
             if effect.get("css_class"):
-                spieler_data.setdefault("effect_classes", []).append(effect["css_class"])
-            
+                spieler_data.setdefault("effect_classes", []).append(
+                    effect["css_class"]
+                )
+
             # Mark visual effect type (e.g., "heart" for lovers)
             if effect.get("visual_effect"):
-                spieler_data.setdefault("visual_effects", []).append(effect["visual_effect"])
+                spieler_data.setdefault("visual_effects", []).append(
+                    effect["visual_effect"]
+                )
                 # Special handling for known effect types
                 if effect["visual_effect"] == "heart":
                     spieler_data["ist_verliebt"] = True
-            
+
             # If this effect reveals the target's role, include it
             if effect.get("reveals_role") and effect.get("revealed_role"):
                 spieler_data["rolle"] = effect["revealed_role"]
                 spieler_data["ist_partner"] = True  # Mark as partner for UI styling
-            
+
             # Add icon if present
             if effect.get("icon"):
                 spieler_data.setdefault("effect_icons", []).append(effect["icon"])
-        
-        
+
         sichere_spieler.append(spieler_data)
 
     # Erzähler-Text für Gruppen-Modus
@@ -646,11 +662,11 @@ def get_role_ui(role_name):
     """Get UI definition for a specific role."""
     from roles import RoleRegistry, SpielKontext
     from roles.enums import Phase
-    
+
     rolle = RoleRegistry.get(role_name)
     if not rolle:
         return jsonify({"success": False, "error": "Role not found"}), 404
-    
+
     ui = rolle.get_ui_definition()
     ui_dict = ui.to_dict()
 
@@ -660,51 +676,74 @@ def get_role_ui(role_name):
         raum = db.session.get(Raum, spieler.raum_id)
         if raum and raum.aktuelle_phase == rolle.get_phase_name():
             # Build context to get dynamic info
-            werwolf_opfer_id = None #TODO: REMOVE ROLE BASED HARDCODING
-            
+            werwolf_opfer_id = None  # TODO: REMOVE ROLE BASED HARDCODING
+
             # Use role property to decide if we need the victim info
             if rolle.requires_victim_info:
-                ww_result = game_logic.werwolf_abstimmung(raum) #TODO: REMOVE ROLE BASED HARDCODING
-                if ww_result and "opfer_id" in ww_result: #TODO: REMOVE ROLE BASED HARDCODING
-                    werwolf_opfer_id = ww_result["opfer_id"] #TODO: REMOVE ROLE BASED HARDCODING
-            
+                ww_result = game_logic.werwolf_abstimmung(
+                    raum
+                )  # TODO: REMOVE ROLE BASED HARDCODING
+                if (
+                    ww_result and "opfer_id" in ww_result
+                ):  # TODO: REMOVE ROLE BASED HARDCODING
+                    werwolf_opfer_id = ww_result[
+                        "opfer_id"
+                    ]  # TODO: REMOVE ROLE BASED HARDCODING
+
             kontext = SpielKontext(
                 raum_id=raum.id,
                 runde=raum.runde,
-                phase=(Phase(raum.aktuelle_phase) if raum.aktuelle_phase in [p.value for p in Phase] else raum.aktuelle_phase),
+                phase=(
+                    Phase(raum.aktuelle_phase)
+                    if raum.aktuelle_phase in [p.value for p in Phase]
+                    else raum.aktuelle_phase
+                ),
                 aktiver_spieler_id=spieler.id,
                 lebende_spieler=[s.id for s in game_logic.hole_lebende_spieler(raum)],
-                tote_spieler=[s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=False).all()],
-                werwolf_opfer_id=werwolf_opfer_id
+                tote_spieler=[
+                    s.id
+                    for s in Spieler.query.filter_by(
+                        raum_id=raum.id, ist_am_leben=False
+                    ).all()
+                ],
+                werwolf_opfer_id=werwolf_opfer_id,
             )
-            
+
             # Get dynamic info
             start_info = rolle.get_phase_start_info(spieler, kontext)
-            
+
             # Inject victim info into instructions if present
-            if start_info and "werwolf_opfer_id" in start_info: #TODO: REMOVE ROLE BASED HARDCODING
-                opfer = db.session.get(Spieler, start_info["werwolf_opfer_id"]) #TODO: REMOVE ROLE BASED HARDCODING
+            if (
+                start_info and "werwolf_opfer_id" in start_info
+            ):  # TODO: REMOVE ROLE BASED HARDCODING
+                opfer = db.session.get(
+                    Spieler, start_info["werwolf_opfer_id"]
+                )  # TODO: REMOVE ROLE BASED HARDCODING
                 if opfer:
                     # Append strictly to instructions #TODO: REMOVE ROLE BASED HARDCODING #TODO: REMOVE ROLE BASED HARDCODING
-                    ui_dict["instructions"] += f" <br><strong>Das Werwolf-Opfer ist: {opfer.name}</strong>" #TODO: REMOVE ROLE BASED HARDCODING
+                    ui_dict["instructions"] += (
+                        f" <br><strong>Das Werwolf-Opfer ist: {opfer.name}</strong>"  # TODO: REMOVE ROLE BASED HARDCODING
+                    )
 
-    return jsonify({
-        "success": True,
-        "ui": ui_dict,
-        "phase_name": rolle.get_phase_name(),
-    })
+    return jsonify(
+        {
+            "success": True,
+            "ui": ui_dict,
+            "phase_name": rolle.get_phase_name(),
+        }
+    )
 
 
 @app.route("/api/roles", methods=["GET"])
 def get_all_roles_api():
     """
     Get all roles with complete metadata for UI generation.
-    
+
     Query Parameters:
     - extension_pack: Filter by extension (base, neumond, gemeinde, charaktere, sonderedition)
     - kategorie: Filter by category
     - team: Filter by team (dorf, werwolf, solo)
-    
+
     Returns comprehensive role data including:
     - name, id, team, category
     - icon (FontAwesome), color (hex)
@@ -715,9 +754,9 @@ def get_all_roles_api():
     from roles import RoleRegistry
 
     # Get query parameters
-    extension_filter = request.args.get('extension_pack')
-    kategorie_filter = request.args.get('kategorie')
-    team_filter = request.args.get('team')
+    extension_filter = request.args.get("extension_pack")
+    kategorie_filter = request.args.get("kategorie")
+    team_filter = request.args.get("team")
 
     # Get all roles
     all_roles = RoleRegistry.get_all()
@@ -725,12 +764,18 @@ def get_all_roles_api():
     # Apply filters
     filtered_roles = all_roles
     if extension_filter:
-        filtered_roles = [r for r in filtered_roles if r.info.extension_pack == extension_filter]
+        filtered_roles = [
+            r for r in filtered_roles if r.info.extension_pack == extension_filter
+        ]
     if kategorie_filter:
         from roles.enums import Kategorie
-        filtered_roles = [r for r in filtered_roles if r.info.kategorie.value == kategorie_filter]
+
+        filtered_roles = [
+            r for r in filtered_roles if r.info.kategorie.value == kategorie_filter
+        ]
     if team_filter:
         from roles.enums import Team
+
         filtered_roles = [r for r in filtered_roles if r.info.team.value == team_filter]
 
     # Convert to dict format
@@ -748,83 +793,92 @@ def get_all_roles_api():
             logger.error(f"Fehler beim Verarbeiten der Rolle {role}: {e}")
             continue
 
-    return jsonify({
-        "success": True,
-        "roles": roles_data,
-        "grouped_by_extension": grouped_by_extension,
-        "total_count": len(roles_data),
-    })
+    return jsonify(
+        {
+            "success": True,
+            "roles": roles_data,
+            "grouped_by_extension": grouped_by_extension,
+            "total_count": len(roles_data),
+        }
+    )
 
 
 @app.route("/api/role/<role_name>/info", methods=["GET"])
 def get_role_info_api(role_name):
     """Get complete information about a role."""
     from roles import RoleRegistry
-    
+
     rolle = RoleRegistry.get(role_name)
     if not rolle:
         return jsonify({"success": False, "error": "Role not found"}), 404
-    
-    return jsonify({
-        "success": True,
-        "role": rolle.to_dict(),
-    })
+
+    return jsonify(
+        {
+            "success": True,
+            "role": rolle.to_dict(),
+        }
+    )
 
 
 @app.route("/api/game/<code>/phases", methods=["GET"])
 def get_game_phases(code):
     """Get dynamic phase list and phase-role mapping for a specific game."""
-    from phase_generator import generate_phases_for_game, get_phase_display_info, build_phase_role_mapping
-    
+    from phase_generator import (
+        generate_phases_for_game,
+        get_phase_display_info,
+        build_phase_role_mapping,
+    )
+
     raum = Raum.query.filter_by(code=code).first()
     if not raum:
         return jsonify({"success": False, "error": "Room not found"}), 404
-    
+
     spieler = hole_aktuellen_spieler()
     if not spieler or spieler.raum_id != raum.id:
         return jsonify({"success": False, "error": "Not authorized"}), 403
-    
+
     # Don't generate phases if game hasn't started yet (roles not distributed)
     if not raum.spiel_gestartet or not any(s.rolle for s in raum.spieler):
-        return jsonify({
-            "success": True,
-            "phases": [],
-            "phase_info": [],
-            "phase_mapping": {}
-        })
-    
+        return jsonify(
+            {"success": True, "phases": [], "phase_info": [], "phase_mapping": {}}
+        )
+
     phases = generate_phases_for_game(raum)
     phase_info = [get_phase_display_info(p) for p in phases]
     phase_mapping = build_phase_role_mapping(raum)
-    
-    return jsonify({
-        "success": True,
-        "phases": phases,
-        "phase_info": phase_info,
-        "phase_mapping": phase_mapping,  # NEW: Which role acts in which phase
-        "current_phase": raum.aktuelle_phase,
-        "current_round": raum.runde,
-    })
+
+    return jsonify(
+        {
+            "success": True,
+            "phases": phases,
+            "phase_info": phase_info,
+            "phase_mapping": phase_mapping,  # NEW: Which role acts in which phase
+            "current_phase": raum.aktuelle_phase,
+            "current_round": raum.runde,
+        }
+    )
 
 
 @app.route("/api/phase/<phase_name>/info", methods=["GET"])
 def get_phase_info(phase_name):
     """Get display information for a phase."""
     from phase_generator import get_phase_display_info
-    
+
     info = get_phase_display_info(phase_name)
-    return jsonify({
-        "success": True,
-        "phase": phase_name,
-        "info": info,
-    })
+    return jsonify(
+        {
+            "success": True,
+            "phase": phase_name,
+            "info": info,
+        }
+    )
 
 
 @app.route("/api/game/<code>/phase-info", methods=["GET"])
 def get_game_phase_info(code):
     """
     Get dynamic phase type information for a game.
-    
+
     This replaces hardcoded phase lists in the frontend.
     Returns:
         - phase: Current phase name
@@ -834,23 +888,32 @@ def get_game_phase_info(code):
         - victim_info: Victim information for roles like Hexe (if applicable)
     """
     from roles import RoleRegistry
-    
+
     raum = Raum.query.filter_by(code=code).first()
     if not raum:
         return jsonify({"success": False, "error": "Raum nicht gefunden"}), 404
-    
+
     spieler = hole_aktuellen_spieler()
     if not spieler or spieler.raum_id != raum.id:
         return jsonify({"success": False, "error": "Nicht autorisiert"}), 403
-    
+
     phase = raum.aktuelle_phase
-    
+
     # Determine phase type dynamically
     # Day phases are explicit; night phases are derived from role phases
-    known_day_phases = ['tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 
-                        'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt',
-                        'diskussion_abstimmung', 'abstimmung_ergebnis']
-    
+    known_day_phases = [
+        "tag_start",
+        "diskussion",
+        "abstimmung",
+        "hinrichtung",
+        "tag_ende",
+        "spiel_ende",
+        "lobby",
+        "rollen_verteilt",
+        "diskussion_abstimmung",
+        "abstimmung_ergebnis",
+    ]
+
     if phase in known_day_phases:
         phase_type = "day"
         is_night = False
@@ -862,7 +925,9 @@ def get_game_phase_info(code):
         role = RoleRegistry.get_role_for_phase(phase)
         if role:
             # If role has night activity, it's a night phase
-            is_active = role.is_active_on_first_night() or role.is_active_on_every_night()
+            is_active = (
+                role.is_active_on_first_night() or role.is_active_on_every_night()
+            )
             phase_type = "night" if is_active else "transition"
             is_night = is_active
         else:
@@ -871,35 +936,46 @@ def get_game_phase_info(code):
     else:
         phase_type = "transition"
         is_night = False
-    
+
     # Get active role for this phase
     active_role = None
     role = RoleRegistry.get_role_for_phase(phase)
     if role:
         active_role = role.info.name
-    
+
     # Get victim info if applicable (for Hexe, etc.)
     victim_info = None
     if spieler.rolle and active_role:
         viewer_role = RoleRegistry.get(spieler.rolle)
         if viewer_role:
-
             try:
                 # Use from_raum safely
-                if hasattr(game_logic.SpielKontext, 'from_raum'):
+                if hasattr(game_logic.SpielKontext, "from_raum"):
                     kontext = game_logic.SpielKontext.from_raum(raum)
                 else:
                     # Fallback manual construction (should not be needed with fix, but safe)
                     from roles.enums import Phase
+
                     kontext = game_logic.SpielKontext(
                         raum_id=raum.id,
                         runde=raum.runde,
-                        phase=(Phase(raum.aktuelle_phase) if raum.aktuelle_phase in [p.value for p in Phase] else raum.aktuelle_phase), # type: ignore
+                        phase=(
+                            Phase(raum.aktuelle_phase)
+                            if raum.aktuelle_phase in [p.value for p in Phase]
+                            else raum.aktuelle_phase
+                        ),  # type: ignore
                         aktiver_spieler_id=spieler.id,
-                        lebende_spieler=[s.id for s in game_logic.hole_lebende_spieler(raum)],
-                        tote_spieler=[s.id for s in Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=False).all()],
+                        lebende_spieler=[
+                            s.id for s in game_logic.hole_lebende_spieler(raum)
+                        ],
+                        tote_spieler=[
+                            s.id
+                            for s in Spieler.query.filter_by(
+                                raum_id=raum.id, ist_am_leben=False
+                            ).all()
+                        ],
                     )
-                
+
                 start_info = viewer_role.get_phase_start_info(spieler, kontext)
                 if start_info and "werwolf_opfer_id" in start_info:
                     opfer = db.session.get(Spieler, start_info["werwolf_opfer_id"])
@@ -912,16 +988,18 @@ def get_game_phase_info(code):
                 log_ts(f"[Phase Info] Error getting start info: {e}")
                 # Don't crash the whole endpoint just because victim info failed
                 pass
-    
-    return jsonify({
-        "success": True,
-        "phase": phase,
-        "phase_type": phase_type,
-        "is_night": is_night,
-        "active_role": active_role,
-        "victim_info": victim_info,
-        "runde": raum.runde,
-    })
+
+    return jsonify(
+        {
+            "success": True,
+            "phase": phase,
+            "phase_type": phase_type,
+            "is_night": is_night,
+            "active_role": active_role,
+            "victim_info": victim_info,
+            "runde": raum.runde,
+        }
+    )
 
 
 # ============================================================================
@@ -1045,7 +1123,9 @@ def get_phase_role_mapping():
     # Mapping für Nacht-Phasen
     for role in RoleRegistry.get_all():
         # Check if role is active at night using the Role methods, not RollenInfo
-        is_nacht_aktiv = role.is_active_on_first_night() or role.is_active_on_every_night()
+        is_nacht_aktiv = (
+            role.is_active_on_first_night() or role.is_active_on_every_night()
+        )
         if is_nacht_aktiv:
             phase_name = role.get_phase_name()
             mapping[phase_name] = {
@@ -1091,14 +1171,16 @@ def get_raum_status(code):
     raum = Raum.query.filter_by(code=code).first()
     if not raum:
         return jsonify({"success": False, "error": "Raum nicht gefunden"}), 404
-    
-    return jsonify({
-        "success": True,
-        "spiel_gestartet": raum.spiel_gestartet,
-        "code": raum.code,
-        "aktuelle_phase": raum.aktuelle_phase,
-        "runde": raum.runde,
-    })
+
+    return jsonify(
+        {
+            "success": True,
+            "spiel_gestartet": raum.spiel_gestartet,
+            "code": raum.code,
+            "aktuelle_phase": raum.aktuelle_phase,
+            "runde": raum.runde,
+        }
+    )
 
 
 @app.route("/api/raum/<code>/erzaehler/random", methods=["POST"])
@@ -1145,7 +1227,7 @@ def waehle_zufaelligen_erzaehler(code):
     socketio.emit(
         "erzaehler_gewaehlt",
         {"spieler_id": erzaehler.id, "name": erzaehler.name},
-        room=raum.code, # pyright: ignore[reportCallIssue] # pyright: ignore[reportCallIssue]
+        room=raum.code,  # pyright: ignore[reportCallIssue] # pyright: ignore[reportCallIssue]
     )
 
     return jsonify(
@@ -1158,6 +1240,7 @@ def waehle_zufaelligen_erzaehler(code):
 # ============================================================================
 
 from typing import Optional
+
 
 def hole_aktuellen_spieler() -> Optional[Spieler]:
     """Holt den aktuellen Spieler basierend auf der Session"""
@@ -1217,9 +1300,6 @@ def api_village(code):
     )
 
 
-
-
-
 # ============================================================================
 # WEBSOCKET EVENTS - SICHER: Keine sensiblen Daten werden gebroadcastet
 # ============================================================================
@@ -1256,7 +1336,7 @@ def sende_rollen_vorschau_update(raum):
             "total": rollen_vorschau_total,
             "hat_erzaehler": bool(erzaehler),
         },
-        room=raum.code, # pyright: ignore[reportCallIssue]
+        room=raum.code,  # pyright: ignore[reportCallIssue]
     )
 
 
@@ -1270,7 +1350,9 @@ def handle_connect():
             join_room(raum.code)
             # Private room for individual updates
             join_room(f"player_{spieler.id}")
-            logger.info(f"[SocketIO] Player {spieler.name} (ID: {spieler.id}) connected and joined room {raum.code} and player_{spieler.id}")
+            logger.info(
+                f"[SocketIO] Player {spieler.name} (ID: {spieler.id}) connected and joined room {raum.code} and player_{spieler.id}"
+            )
             # SICHER: Nur Name und ID werden geteilt, keine Rolle
             emit(
                 "spieler_verbunden",
@@ -1283,12 +1365,14 @@ def handle_connect():
                     "spieler_id": spieler.id,
                     "spieler_name": spieler.name,
                 },
-                room=raum.code, # pyright: ignore[reportCallIssue]
+                room=raum.code,  # pyright: ignore[reportCallIssue]
             )
             # Sende aktualisierte Rollenvorschau an alle
             sende_rollen_vorschau_update(raum)
         else:
-            logger.warning(f"[SocketIO] Player connected but raum with ID {spieler.raum_id} not found")
+            logger.warning(
+                f"[SocketIO] Player connected but raum with ID {spieler.raum_id} not found"
+            )
     else:
         logger.warning(f"[SocketIO] Connection attempt without valid player session")
 
@@ -1304,7 +1388,7 @@ def handle_disconnect():
             emit(
                 "spieler_getrennt",
                 {"spieler_id": spieler.id, "spieler_name": spieler.name},
-                room=raum.code, # pyright: ignore[reportCallIssue]
+                room=raum.code,  # pyright: ignore[reportCallIssue]
             )
             # Sende aktualisierte Rollenvorschau an alle
             sende_rollen_vorschau_update(raum)
@@ -1328,7 +1412,7 @@ def handle_raum_beitreten(data):
                         for s in alle_spieler
                     ]
                 },
-                room=code, # pyright: ignore[reportCallIssue]
+                room=code,  # pyright: ignore[reportCallIssue]
             )
 
             # Online-Modus: Sende Erzählung für aktuelle Phase wenn Spiel läuft
@@ -1374,11 +1458,13 @@ def handle_spiel_starten(data):
         alle_spieler = Spieler.query.filter_by(raum_id=raum.id).all()
 
         # Spiel gestartet - alle werden zur Spielseite weitergeleitet
-        logger.info(f"[Spiel] Emitting spiel_gestartet to room {raum.code} with {len(alle_spieler)} players")
+        logger.info(
+            f"[Spiel] Emitting spiel_gestartet to room {raum.code} with {len(alle_spieler)} players"
+        )
         emit(
             "spiel_gestartet",
             {"phase": raum.aktuelle_phase, "runde": raum.runde},
-            room=raum.code, # pyright: ignore[reportCallIssue]
+            room=raum.code,  # pyright: ignore[reportCallIssue]
         )
 
         # Online-Modus: Automatisch die erste Phase (rollen_verteilt) anzeigen und weiterschalten
@@ -1395,7 +1481,7 @@ def handle_spiel_starten(data):
                 socketio.emit(
                     "erzaehlung",
                     {"text": erzaehler_text, "audio": audio_path},
-                    room=raum.code, # pyright: ignore[reportCallIssue]
+                    room=raum.code,  # pyright: ignore[reportCallIssue]
                 )
 
             # Starte Fallback-Timer für automatische Phasen-Progression
@@ -1453,14 +1539,14 @@ def pruefe_phase_abschluss(raum):
     Wenn ja, wechselt automatisch zur nächsten Phase.
     """
     from roles import RoleRegistry
-    
+
     phase = raum.aktuelle_phase
     log_ts(f"[PhaseCheck] Prüfe Abschluss für Phase {phase} (Runde {raum.runde})")
 
     # Use RoleRegistry for dynamic phase-to-role mapping instead of hardcoded dict
     rolle_obj = RoleRegistry.get_role_for_phase(phase)
     rolle = rolle_obj.info.name if rolle_obj else None
-    
+
     log_ts(f"[PhaseCheck] Phase {phase} zugeordnet zu Rolle: {rolle}")
 
     # Special handling for werwolf_phase - all wolves must vote
@@ -1478,15 +1564,21 @@ def pruefe_phase_abschluss(raum):
         )
     elif rolle:
         alle_fertig = game_logic.alle_haben_gewaehlt(raum, phase, rolle)
-        
+
         # DEBUG: Wenn nicht fertig, logge warum
         if not alle_fertig:
             lebende = game_logic.hole_lebende_spieler(raum)
             relevant = [s for s in lebende if s.rolle == rolle]
-            log_ts(f"[PhaseCheck] Relevante Spieler für {rolle}: {[s.name for s in relevant]}")
-            missing = [s.name for s in relevant if not game_logic.hat_spieler_gewaehlt(s, raum, phase)]
+            log_ts(
+                f"[PhaseCheck] Relevante Spieler für {rolle}: {[s.name for s in relevant]}"
+            )
+            missing = [
+                s.name
+                for s in relevant
+                if not game_logic.hat_spieler_gewaehlt(s, raum, phase)
+            ]
             log_ts(f"[PhaseCheck] Fehlende Aktionen von: {missing}")
-            
+
             # Defensive Fix: If relevant list is empty but role is assigned, force True?
             # game_logic.alle_haben_gewaehlt returns True if list is empty.
     else:
@@ -1507,14 +1599,20 @@ def _wechsel_phase_intern(raum):
     Wird rekursiv aufgerufen für automatische Phasen.
     """
     alte_phase = raum.aktuelle_phase
-    
+
     # Clear audio tracking for the old phase (all audio files in that phase)
-    keys_to_delete = [k for k in _audio_fertig_players.keys() if k[0] == raum.code and k[1] == alte_phase]
+    keys_to_delete = [
+        k
+        for k in _audio_fertig_players.keys()
+        if k[0] == raum.code and k[1] == alte_phase
+    ]
     for key in keys_to_delete:
         del _audio_fertig_players[key]
     if keys_to_delete:
-        log_ts(f"[Phase] Cleared {len(keys_to_delete)} audio tracking entries for completed phase {alte_phase}")
-    
+        log_ts(
+            f"[Phase] Cleared {len(keys_to_delete)} audio tracking entries for completed phase {alte_phase}"
+        )
+
     neue_phase = game_logic.naechste_phase(raum)
 
     # Phase-spezifische Aktionen
@@ -1545,7 +1643,9 @@ def _wechsel_phase_intern(raum):
             audio_path = generiere_erzaehler_audio(erzaehlung_text, stil=stil)
 
         socketio.emit(
-            "erzaehlung", {"text": erzaehlung_text, "audio": audio_path}, room=raum.code # pyright: ignore[reportCallIssue]
+            "erzaehlung",
+            {"text": erzaehlung_text, "audio": audio_path},
+            room=raum.code,  # pyright: ignore[reportCallIssue]
         )
 
     # Build phase data for emission
@@ -1555,9 +1655,9 @@ def _wechsel_phase_intern(raum):
         "alte_phase": alte_phase,
         "erzaehler_text": erzaehler_text,
     }
-    
+
     # Add role-specific phase data
-    if neue_phase == "hexe_phase": #TODO: REMOVE ROLE BASED HARDCODING
+    if neue_phase == "hexe_phase":  # TODO: REMOVE ROLE BASED HARDCODING
         # Include werewolf victim for Hexe
         ww_result = game_logic.werwolf_abstimmung(raum)
         if ww_result and "opfer_id" in ww_result:
@@ -1567,7 +1667,7 @@ def _wechsel_phase_intern(raum):
                 phase_data["werwolf_opfer_name"] = opfer.name
                 log_ts(f"[Hexe] Opfer-Info mitgesendet: {opfer.name} (ID: {opfer.id})")
 
-    socketio.emit("phase_geaendert", phase_data, room=raum.code) # pyright: ignore[reportCallIssue]
+    socketio.emit("phase_geaendert", phase_data, room=raum.code)  # pyright: ignore[reportCallIssue]
 
     # Zufällige Hinweise generieren
     try:
@@ -1617,50 +1717,56 @@ def handle_audio_fertig(data):
 
     gemeldete_phase = data.get("phase", "")
     audio_file = data.get("audio_file", "")
-    
+
     # Require audio filename to ensure we're tracking the specific audio
     if not audio_file:
         log_ts(f"[Audio] ERROR: audio_fertig from {spieler.name} missing audio_file!")
         return
-    
+
     # Prüfe ob wir noch in der gleichen Phase sind
     if raum.aktuelle_phase != gemeldete_phase:
-        log_ts(f"[Audio] Ignoring audio_fertig for old phase {gemeldete_phase} (current: {raum.aktuelle_phase})")
+        log_ts(
+            f"[Audio] Ignoring audio_fertig for old phase {gemeldete_phase} (current: {raum.aktuelle_phase})"
+        )
         return
-    
+
     # Track which players have confirmed THIS SPECIFIC audio file completion
     tracking_key = (raum.code, gemeldete_phase, audio_file)
     if tracking_key not in _audio_fertig_players:
         _audio_fertig_players[tracking_key] = set()
-    
+
     # Add this player to confirmed set
     _audio_fertig_players[tracking_key].add(spieler.id)
     confirmed_players = _audio_fertig_players[tracking_key]
-    
+
     # Get all alive players who should see this phase
     alle_spieler = Spieler.query.filter_by(
-        raum_id=raum.id,
-        ist_am_leben=True,
-        ist_erzaehler=False
+        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
     ).all()
     total_players = len(alle_spieler)
     confirmed_count = len(confirmed_players)
-    
-    log_ts(f"[Audio] Player {spieler.name} confirmed audio for {gemeldete_phase} ({confirmed_count}/{total_players})")
-    
+
+    log_ts(
+        f"[Audio] Player {spieler.name} confirmed audio for {gemeldete_phase} ({confirmed_count}/{total_players})"
+    )
+
     # Calculate if we've reached threshold
-    threshold_met = confirmed_count >= max(1, int(total_players * AUDIO_CONFIRMATION_THRESHOLD))
-    
+    threshold_met = confirmed_count >= max(
+        1, int(total_players * AUDIO_CONFIRMATION_THRESHOLD)
+    )
+
     if not threshold_met:
-        log_ts(f"[Audio] Waiting for more players to confirm ({confirmed_count}/{total_players}, need {int(total_players * AUDIO_CONFIRMATION_THRESHOLD)})")
+        log_ts(
+            f"[Audio] Waiting for more players to confirm ({confirmed_count}/{total_players}, need {int(total_players * AUDIO_CONFIRMATION_THRESHOLD)})"
+        )
         return
-    
+
     # Clear tracking for this phase
     if tracking_key in _audio_fertig_players:
         del _audio_fertig_players[tracking_key]
-    
+
     log_ts(f"[Audio] Threshold met for {gemeldete_phase}, advancing phase")
-    
+
     # Check if this is an automatic phase or needs action
     if gemeldete_phase in AUTOMATISCHE_PHASEN:
         log_ts(f"[Audio] Automatic phase {gemeldete_phase}, advancing immediately")
@@ -1668,23 +1774,26 @@ def handle_audio_fertig(data):
     else:
         # Interactive phase - check if all actions are complete
         from roles import RoleRegistry
+
         rolle = RoleRegistry.get_role_for_phase(gemeldete_phase)
         should_advance = False
-        
+
         if rolle:
             # Check all players with this role (handles shared phases like werwolf_phase)
             alle_mit_rolle = [s for s in alle_spieler if s.rolle == rolle.info.name]
             if alle_mit_rolle:
                 alle_fertig = all(
-                    game_logic.hat_spieler_gewaehlt(s, raum, gemeldete_phase) 
+                    game_logic.hat_spieler_gewaehlt(s, raum, gemeldete_phase)
                     for s in alle_mit_rolle
                 )
                 if alle_fertig:
-                    log_ts(f"[Audio] All actions complete for {gemeldete_phase}, advancing")
+                    log_ts(
+                        f"[Audio] All actions complete for {gemeldete_phase}, advancing"
+                    )
                     should_advance = True
                 else:
                     log_ts(f"[Audio] Actions pending for {gemeldete_phase}, waiting")
-        
+
         if should_advance:
             _wechsel_phase_intern(raum)
 
@@ -1707,9 +1816,10 @@ def handle_aktion(data):
     # Validate player can act - dead players can only act if their role allows it (e.g., Jäger)
     if not spieler.ist_am_leben:
         from roles import RoleRegistry
+
         rolle_obj = RoleRegistry.get(spieler.rolle)
         # Check if role has on_eigener_tod that enables post-death action
-        can_act_when_dead = rolle_obj and hasattr(rolle_obj, 'on_eigener_tod')
+        can_act_when_dead = rolle_obj and hasattr(rolle_obj, "on_eigener_tod")
         if not can_act_when_dead:
             emit("fehler", {"nachricht": "Du bist tot und kannst nicht handeln"})
             return
@@ -1722,7 +1832,7 @@ def handle_aktion(data):
         from roles import RoleRegistry
 
         # Map action types to 3D effect types dynamically
-        AKTION_TYP_EFFEKT = {  
+        AKTION_TYP_EFFEKT = {
             AktionsTyp.HEILEN.value: "heal",
             AktionsTyp.SCHUETZEN.value: "protect",
             AktionsTyp.VERGIFTEN.value: "poison",
@@ -1741,31 +1851,37 @@ def handle_aktion(data):
             "ziel_id": ergebnis.get("ziel_id"),
             "ziel_name": ergebnis.get("ziel_name"),
         }
-        
+
         # Determine effect from role's action type
         rolle_obj = RoleRegistry.get(spieler.rolle)
         effekt = None
         if rolle_obj:
             aktions_typ_enum = rolle_obj.aktions_typ
-            if hasattr(aktions_typ_enum, 'value'):
+            if hasattr(aktions_typ_enum, "value"):
                 effekt = AKTION_TYP_EFFEKT.get(aktions_typ_enum.value)
 
         if effekt:
             effect_data["effekt"] = effekt
-            
+
         # Include any extra effects data from role action
         if ergebnis.get("effekte"):
             effect_data["effekte"] = ergebnis["effekte"]
 
         # Use socketio.emit to player's personal room to ensure delivery
         # Player joins room "player_{id}" on connect (see handle_connect)
-        socketio.emit("aktion_bestaetigt", effect_data, room=f"player_{spieler.id}") # pyright: ignore[reportCallIssue]
-        log_ts(f"[Aktion] Sent aktion_bestaetigt to player_{spieler.id}: {effect_data.get('nachricht')}")
+        socketio.emit("aktion_bestaetigt", effect_data, room=f"player_{spieler.id}")  # pyright: ignore[reportCallIssue]
+        log_ts(
+            f"[Aktion] Sent aktion_bestaetigt to player_{spieler.id}: {effect_data.get('nachricht')}"
+        )
 
         # Pruefen ob alle fertig sind
         pruefe_phase_abschluss(raum)
     else:
-        nachricht = ergebnis.get("nachricht", "Aktion konnte nicht ausgeführt werden") if ergebnis else "Aktion konnte nicht ausgeführt werden"
+        nachricht = (
+            ergebnis.get("nachricht", "Aktion konnte nicht ausgeführt werden")
+            if ergebnis
+            else "Aktion konnte nicht ausgeführt werden"
+        )
         emit("fehler", {"nachricht": nachricht})
 
 
@@ -1788,7 +1904,7 @@ def handle_chat(data):
         emit(
             "chat_tot",
             {"von": spieler.name, "nachricht": nachricht, "spieler_id": spieler.id},
-            room=raum.code, # pyright: ignore[reportCallIssue]
+            room=raum.code,  # pyright: ignore[reportCallIssue]
         )
     else:
         emit(
@@ -1799,7 +1915,7 @@ def handle_chat(data):
                 "ist_tot": False,
                 "spieler_id": spieler.id,
             },
-            room=raum.code, # pyright: ignore[reportCallIssue]
+            room=raum.code,  # pyright: ignore[reportCallIssue]
         )
 
 
@@ -1874,7 +1990,7 @@ def handle_hinweis_senden(data):
             "hintTyp": hinweis_typ,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         },
-        room=raum.code, # pyright: ignore[reportCallIssue]
+        room=raum.code,  # pyright: ignore[reportCallIssue]
     )
 
     # Log für Erzähler
@@ -1945,7 +2061,7 @@ def generiere_zufalls_hinweis(raum_id: int):
                 "hintTyp": hinweis_typ,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             },
-            room=raum.code, # pyright: ignore[reportCallIssue]
+            room=raum.code,  # pyright: ignore[reportCallIssue]
         )
 
 
@@ -1960,7 +2076,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     Refactored to use Role classes for validation and execution where possible.
     Some actions still require special handling (tag_wahl, jaeger_schuss).
-    
+
     Returns:
         dict with 'erfolg' (bool), 'nachricht' (str), and optional extra data
         or None on error
@@ -1991,7 +2107,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                     "ziel_id": ziel.id,
                     "ziel_name": ziel.name,
                 },
-                room=raum.code, # pyright: ignore[reportCallIssue]
+                room=raum.code,  # pyright: ignore[reportCallIssue]
             )
             stats = game_logic.berechne_abstimmungs_statistik(raum)
             socketio.emit(
@@ -2004,7 +2120,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
                     "fuehrender_id": stats["fuehrender_id"],
                     "fuehrende_stimmen": stats["fuehrende_stimmen"],
                 },
-                room=raum.code, # pyright: ignore[reportCallIssue]
+                room=raum.code,  # pyright: ignore[reportCallIssue]
             )
         return {"erfolg": True, "nachricht": "Stimme abgegeben"}
 
@@ -2055,12 +2171,12 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     # Calculate execution context variables
     werwolf_opfer_id = None
-    
+
     # Check if the role requires werewolf victim info (e.g. Hexe, Heiler if modified)
     if rolle_obj.requires_victim_info:
-         ww_result = game_logic.werwolf_abstimmung(raum)
-         if ww_result and "opfer_id" in ww_result:
-             werwolf_opfer_id = ww_result["opfer_id"]
+        ww_result = game_logic.werwolf_abstimmung(raum)
+        if ww_result and "opfer_id" in ww_result:
+            werwolf_opfer_id = ww_result["opfer_id"]
 
     kontext = SpielKontext(
         raum_id=raum.id,
@@ -2074,7 +2190,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         lebende_spieler=lebende,
         tote_spieler=tote,
         aktionen_diese_runde=aktionen_liste,
-        werwolf_opfer_id=werwolf_opfer_id
+        werwolf_opfer_id=werwolf_opfer_id,
     )
 
     # Build target list (handle both single and multi-target)
@@ -2097,7 +2213,12 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             # Register the action
             first_target_id = targets[0].id if targets else None
             game_logic.registriere_aktion(
-                raum.id, raum.runde, raum.aktuelle_phase, aktion_typ, spieler.id, first_target_id
+                raum.id,
+                raum.runde,
+                raum.aktuelle_phase,
+                aktion_typ,
+                spieler.id,
+                first_target_id,
             )
 
             # Apply effects from the role action
@@ -2105,10 +2226,10 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
             db.session.commit()
             return {
-                "erfolg": True, 
+                "erfolg": True,
                 "nachricht": ergebnis.nachricht,
                 "ziel_id": first_target_id,
-                "ziel_name": targets[0].name if targets else None
+                "ziel_name": targets[0].name if targets else None,
             }
         elif ergebnis and not ergebnis.erfolg:
             log_ts(f"[Aktion] execute_action FAILED: {ergebnis.nachricht}")
@@ -2131,14 +2252,16 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     # Legacy fallback: use on_nacht_aktion for single-target actions
     ziel = targets[0] if len(targets) == 1 else None
 
-    log_ts(f"[Aktion] Fallback to on_nacht_aktion: {spieler.rolle} -> {ziel.name if ziel else 'None'}")
+    log_ts(
+        f"[Aktion] Fallback to on_nacht_aktion: {spieler.rolle} -> {ziel.name if ziel else 'None'}"
+    )
 
     # Pass 'aktion' only if accepted by the method signature
     sig = inspect.signature(rolle_obj.on_nacht_aktion)
     call_kwargs = {}
     if "aktion" in sig.parameters:
         call_kwargs["aktion"] = aktion_typ
-        
+
     ergebnis = rolle_obj.on_nacht_aktion(spieler, ziel, kontext, **call_kwargs)
 
     if ergebnis and ergebnis.erfolg:
@@ -2157,7 +2280,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         if aktion_typ == AktionsTyp.SEHEN.value and ergebnis.effekte:
             # Seherin gets a special result event
             socketio.emit(  # type: ignore[call-arg]
-                "seherin_ergebnis",#TODO: REMOVE THIS HARDCODED EVENT NAME 
+                "seherin_ergebnis",  # TODO: REMOVE THIS HARDCODED EVENT NAME
                 {
                     "ziel_name": ziel.name if ziel else "Unbekannt",
                     "ist_werwolf": ergebnis.effekte.get("ist_werwolf", False),
@@ -2177,11 +2300,11 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
         db.session.commit()
         return {
-            "erfolg": True, 
+            "erfolg": True,
             "nachricht": ergebnis.nachricht,
             "ziel_id": first_target_id,
             "ziel_name": targets[0].name if targets else None,
-            "effekte": ergebnis.effekte
+            "effekte": ergebnis.effekte,
         }
 
     return {"erfolg": False, "nachricht": "Aktion fehlgeschlagen"}
@@ -2192,35 +2315,37 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
     log_ts(f"[Phase] Wechsel: {alte_phase} -> {neue_phase}")
 
     # Heiler-Schutz zuruecksetzen am Nachtende
-    if alte_phase == "heiler_phase": #TODO: REMOVE ROLE BASED HARDCODING
+    if alte_phase == "heiler_phase":  # TODO: REMOVE ROLE BASED HARDCODING
         pass  # Schutz bleibt bis Nacht-Ende
 
-    if alte_phase == "werwolf_phase": #TODO: REMOVE ROLE BASED HARDCODING
+    if alte_phase == "werwolf_phase":  # TODO: REMOVE ROLE BASED HARDCODING
         # Werwolf-Opfer ermitteln und an Hexe senden
         ergebnis = game_logic.werwolf_abstimmung(raum)
         if ergebnis and "opfer_id" in ergebnis:
             # Sende Info an alle Hexe-Spieler (mit richtiger Targeting)
             hexe_spieler = Spieler.query.filter_by(
-                raum_id=raum.id, rolle="Hexe", ist_am_leben=True #TODO: REMOVE ROLE BASED HARDCODING
+                raum_id=raum.id,
+                rolle="Hexe",
+                ist_am_leben=True,  # TODO: REMOVE ROLE BASED HARDCODING
             ).all()
-            
+
             opfer = db.session.get(Spieler, ergebnis["opfer_id"])
             if opfer and hexe_spieler:
-                 for hexe in hexe_spieler: #TODO: REMOVE ROLE BASED HARDCODING
-                     # Benutze 'role_phase_info' Event, das vom Frontend unterstützt wird
-                     socketio.emit(
-                         "role_phase_info",
-                         {
-                             "recipient_id": hexe.id,
-                             "payload": {
-                                 "nachricht": f"Die Werwölfe haben {opfer.name} als Opfer gewählt.", #TODO: REMOVE ROLE BASED HARDCODING
-                                 "opfer_id": opfer.id,
-                                 "opfer_name": opfer.name,
-                                 "alert_type": "info"
-                             }
-                         },
-                         room=raum.code, # pyright: ignore[reportCallIssue] 
-                     )
+                for hexe in hexe_spieler:  # TODO: REMOVE ROLE BASED HARDCODING
+                    # Benutze 'role_phase_info' Event, das vom Frontend unterstützt wird
+                    socketio.emit(
+                        "role_phase_info",
+                        {
+                            "recipient_id": hexe.id,
+                            "payload": {
+                                "nachricht": f"Die Werwölfe haben {opfer.name} als Opfer gewählt.",  # TODO: REMOVE ROLE BASED HARDCODING
+                                "opfer_id": opfer.id,
+                                "opfer_name": opfer.name,
+                                "alert_type": "info",
+                            },
+                        },
+                        room=raum.code,  # pyright: ignore[reportCallIssue]
+                    )
 
     # WICHTIG: Nacht-Tode bei nacht_ende verarbeiten!
     # Dies stellt sicher dass Tode immer verarbeitet werden, auch wenn
@@ -2231,23 +2356,32 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         werwolf_opfer = SpielAktion.query.filter(
             SpielAktion.raum_id == raum.id,
             SpielAktion.runde == raum.runde,
-            SpielAktion.phase == "werwolf_phase", #TODO: REMOVE ROLE BASED HARDCODING
-            SpielAktion.aktion_typ.in_(["werwolf_wahl", "toeten"]) #TODO: REMOVE ROLE BASED HARDCODING
+            SpielAktion.phase == "werwolf_phase",  # TODO: REMOVE ROLE BASED HARDCODING
+            SpielAktion.aktion_typ.in_(
+                ["werwolf_wahl", "toeten"]
+            ),  # TODO: REMOVE ROLE BASED HARDCODING
         ).first()
 
-        log_ts(f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}") #TODO: REMOVE ROLE BASED HARDCODING
+        log_ts(
+            f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}"
+        )  # TODO: REMOVE ROLE BASED HARDCODING
         if werwolf_opfer:
-            log_ts(f"[Nacht] Werwolf-Ziel-ID: {werwolf_opfer.ziel_spieler_id}") #TODO: REMOVE ROLE BASED HARDCODING
+            log_ts(
+                f"[Nacht] Werwolf-Ziel-ID: {werwolf_opfer.ziel_spieler_id}"
+            )  # TODO: REMOVE ROLE BASED HARDCODING
 
         geheilt = SpielAktion.query.filter_by(
-            raum_id=raum.id, runde=raum.runde, phase="hexe_phase", aktion_typ="heilen" #TODO: REMOVE ROLE BASED HARDCODING
+            raum_id=raum.id,
+            runde=raum.runde,
+            phase="hexe_phase",
+            aktion_typ="heilen",  # TODO: REMOVE ROLE BASED HARDCODING
         ).first()
 
         vergiftet = SpielAktion.query.filter_by(
             raum_id=raum.id,
             runde=raum.runde,
-            phase="hexe_phase", #TODO: REMOVE ROLE BASED HARDCODING
-            aktion_typ="vergiften", #TODO: REMOVE ROLE BASED HARDCODING
+            phase="hexe_phase",  # TODO: REMOVE ROLE BASED HARDCODING
+            aktion_typ="vergiften",  # TODO: REMOVE ROLE BASED HARDCODING
         ).first()
 
         tote = []
@@ -2262,18 +2396,24 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             if opfer and opfer.ist_am_leben:
                 # Pruefen ob geheilt
                 if geheilt and geheilt.ziel_spieler_id == opfer.id:
-                    log_ts(f"[Nacht] {opfer.name} wurde von Hexe geheilt!") #TODO: REMOVE ROLE BASED HARDCODING
+                    log_ts(
+                        f"[Nacht] {opfer.name} wurde von Hexe geheilt!"
+                    )  # TODO: REMOVE ROLE BASED HARDCODING
                 # Pruefen ob vom Heiler geschuetzt
                 elif opfer.get_state("global.ist_beschuetzt", False):
-                    log_ts(f"[Nacht] {opfer.name} wurde vom Heiler geschützt!") #TODO: REMOVE ROLE BASED HARDCODING
+                    log_ts(
+                        f"[Nacht] {opfer.name} wurde vom Heiler geschützt!"
+                    )  # TODO: REMOVE ROLE BASED HARDCODING
                 else:
                     log_ts(f"[Nacht] {opfer.name} STIRBT durch Werwolf!")
-                    game_logic.toete_spieler(opfer, "werwolf") #TODO: REMOVE ROLE BASED HARDCODING
+                    game_logic.toete_spieler(
+                        opfer, "werwolf"
+                    )  # TODO: REMOVE ROLE BASED HARDCODING
                     tote.append(
                         {
                             "name": opfer.name,
                             "rolle": opfer.rolle,
-                            "todesart": "werwolf", #TODO: REMOVE ROLE BASED HARDCODING
+                            "todesart": "werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
                         }
                     )
 
@@ -2281,10 +2421,16 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         if vergiftet and vergiftet.ziel_spieler_id:
             opfer = db.session.get(Spieler, vergiftet.ziel_spieler_id)
             if opfer and opfer.ist_am_leben:
-                log_ts(f"[Nacht] {opfer.name} STIRBT durch Hexen-Gift!") #TODO: REMOVE ROLE BASED HARDCODING
+                log_ts(
+                    f"[Nacht] {opfer.name} STIRBT durch Hexen-Gift!"
+                )  # TODO: REMOVE ROLE BASED HARDCODING
                 game_logic.toete_spieler(opfer, "hexe")
                 tote.append(
-                    {"name": opfer.name, "rolle": opfer.rolle, "todesart": "hexe"} #TODO: REMOVE ROLE BASED HARDCODING
+                    {
+                        "name": opfer.name,
+                        "rolle": opfer.rolle,
+                        "todesart": "hexe",
+                    }  # TODO: REMOVE ROLE BASED HARDCODING
                 )
 
         # Heiler-Schutz zuruecksetzen
@@ -2299,7 +2445,7 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
             socketio.emit(
                 "nacht_ergebnis",
                 {"tote": [], "nachricht": "Niemand ist in der Nacht gestorben."},
-                room=raum.code, # pyright: ignore[reportCallIssue]
+                room=raum.code,  # pyright: ignore[reportCallIssue]
             )
 
         # Spielende pruefen
@@ -2348,7 +2494,7 @@ def handle_timer_tick():
             "sekunden_verbleibend": verbleibend,
             "timer_abgelaufen": abgelaufen,
         },
-        room=raum.code, # pyright: ignore[reportCallIssue]
+        room=raum.code,  # pyright: ignore[reportCallIssue]
     )
 
     # Wenn Timer abgelaufen und Phase noch nicht gewechselt, wechsle jetzt
@@ -2371,7 +2517,7 @@ def handle_timer_tick():
                             "rolle": opfer.rolle,
                             "todesart": "hinrichtung",
                         },
-                        room=raum.code, # pyright: ignore[reportCallIssue]
+                        room=raum.code,  # pyright: ignore[reportCallIssue]
                     )
 
         # Wechsle zur nächsten Phase
@@ -2417,7 +2563,7 @@ def handle_spieler_abstimmen(data):
                                 "rolle": opfer.rolle,
                                 "todesart": "hinrichtung",
                             },
-                            room=raum.code, # pyright: ignore[reportCallIssue]
+                            room=raum.code,  # pyright: ignore[reportCallIssue]
                         )
 
             # Wechsle zur nächsten Phase
@@ -2485,7 +2631,7 @@ def handle_starte_tag_abstimmung(data):
             "phase": "diskussion_abstimmung",
             "dauer_sekunden": dauer,
         },
-        room=raum.code, # pyright: ignore[reportCallIssue]
+        room=raum.code,  # pyright: ignore[reportCallIssue]
     )
 
 
@@ -2507,7 +2653,6 @@ def server_fehler(e):
 # ============================================================================
 # MAIN
 # ============================================================================
-
 
 
 if __name__ == "__main__":

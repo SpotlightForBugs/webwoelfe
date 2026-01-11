@@ -3,7 +3,7 @@
  * PlayCanvas is loaded at runtime via <script> tag and exposes itself on window.pc
  */
 
-import * as pc from 'playcanvas';
+import * as pc from "playcanvas";
 
 declare global {
   interface Window {

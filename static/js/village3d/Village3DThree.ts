@@ -102,7 +102,6 @@ export default class Village3DThree {
   private firstPersonYaw: number = 0;
   private firstPersonPitch: number = 0;
   private firstPersonHeight: number = 1.7;
-  private firstPersonLerp: number = 10;
   
   // Buildings
   private buildings: PCEntity[] = [];
@@ -152,7 +151,7 @@ export default class Village3DThree {
     
     this.isLobbyMode = options.lobbyMode || false;
     this.onPlayerClick = options.onPlayerClick || null;
-    this.viewMode = options.startView === 'first-person' ? 'first-person' : 'orbit';
+    this.viewMode = 'first-person';
     this.firstPersonPlayerId = options.firstPersonPlayerId ?? null;
     this.firstPersonHeight = options.firstPersonHeight ?? this.firstPersonHeight;
     
@@ -1798,8 +1797,6 @@ export default class Village3DThree {
       if (target) {
         this.syncFirstPersonOrientation(target);
         this.snapCameraToFirstPerson(target);
-      } else {
-        this.viewMode = 'orbit';
       }
     }
 
@@ -1954,7 +1951,7 @@ export default class Village3DThree {
     }
 
     if (this.viewMode === 'first-person') {
-      this.updateFirstPersonCamera(dt);
+      this.updateFirstPersonCamera();
     } else {
       this.updateOrbitCamera(dt);
     }
@@ -2033,13 +2030,12 @@ export default class Village3DThree {
     this.camera.lookAt(0, 0, 0);
   }
 
-  private updateFirstPersonCamera(dt: number): void {
+  private updateFirstPersonCamera(): void {
     if (!this.camera) return;
 
     const target = this.getFirstPersonTarget();
     if (!target) {
       if (this.players.length === 0) return;
-      this.viewMode = 'orbit';
       return;
     }
 
@@ -2047,14 +2043,7 @@ export default class Village3DThree {
     const basePos = target.getPosition();
     const desiredEye = new pc.Vec3(basePos.x, basePos.y + this.firstPersonHeight, basePos.z);
 
-    const currentPos = this.camera.getPosition();
-    const lerpFactor = Math.min(dt * this.firstPersonLerp, 1);
-
-    this.camera.setPosition(
-      currentPos.x + (desiredEye.x - currentPos.x) * lerpFactor,
-      currentPos.y + (desiredEye.y - currentPos.y) * lerpFactor,
-      currentPos.z + (desiredEye.z - currentPos.z) * lerpFactor
-    );
+    this.camera.setPosition(desiredEye);
 
     const dir = new pc.Vec3(
       Math.sin(this.firstPersonYaw) * Math.cos(this.firstPersonPitch),
@@ -2111,12 +2100,6 @@ export default class Village3DThree {
       this.firstPersonPlayerId = playerId;
     }
 
-    if (this.viewMode === 'first-person') {
-      this.exitFirstPerson();
-      this.resetCamera();
-      return this.viewMode;
-    }
-
     return this.enterFirstPerson();
   }
 
@@ -2125,12 +2108,12 @@ export default class Village3DThree {
       this.firstPersonPlayerId = playerId;
     }
 
-    const target = this.getFirstPersonTarget();
-    if (!target) return this.viewMode;
-
     this.viewMode = 'first-person';
-    this.syncFirstPersonOrientation(target);
-    this.snapCameraToFirstPerson(target);
+    const target = this.getFirstPersonTarget();
+    if (target) {
+      this.syncFirstPersonOrientation(target);
+      this.snapCameraToFirstPerson(target);
+    }
 
     if (this.canvas) {
       this.canvas.style.cursor = 'crosshair';
@@ -2140,9 +2123,9 @@ export default class Village3DThree {
   }
 
   exitFirstPerson(): ViewMode {
-    this.viewMode = 'orbit';
+    this.viewMode = 'first-person';
     if (this.canvas) {
-      this.canvas.style.cursor = 'grab';
+      this.canvas.style.cursor = 'crosshair';
     }
     return this.viewMode;
   }
@@ -2349,6 +2332,11 @@ export default class Village3DThree {
     let hasMoved = false;
     let lastX = 0;
     let lastY = 0;
+    const stopDrag = () => {
+      if (!isDragging) return;
+      isDragging = false;
+      this.canvas!.style.cursor = this.viewMode === 'first-person' ? 'crosshair' : 'grab';
+    };
 
     // Mouse down
     this.canvas.addEventListener('mousedown', (e: MouseEvent) => {
@@ -2371,8 +2359,7 @@ export default class Village3DThree {
           const y = e.clientY - rect.top;
           this.pick(x, y);
         }
-        isDragging = false;
-        this.canvas!.style.cursor = this.viewMode === 'first-person' ? 'crosshair' : 'grab';
+        stopDrag();
       }
     });
 
@@ -2414,11 +2401,16 @@ export default class Village3DThree {
 
     // Click fallback
     this.canvas.addEventListener('click', (e: MouseEvent) => {
+      if (hasMoved) return;
       const rect = this.canvas!.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       this.pick(x, y);
     });
+
+    this.canvas.addEventListener('mouseleave', stopDrag);
+    window.addEventListener('mouseup', stopDrag);
+    window.addEventListener('blur', stopDrag);
 
     // Mouse wheel
     this.canvas.addEventListener('wheel', (e: WheelEvent) => {

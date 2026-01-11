@@ -113,7 +113,9 @@ def text_zu_audio_elevenlabs(
         # Prüfe ob bereits eine Generierung für diesen Key läuft
         if cache_key in _audio_in_progress:
             wait_event = _audio_in_progress[cache_key]
-            logger.info(f"[ELEVENLABS] Warte auf laufende Generierung: {cache_key[:20]}...")
+            logger.info(
+                f"[ELEVENLABS] Warte auf laufende Generierung: {cache_key[:20]}..."
+            )
         else:
             # Markiere als "in Bearbeitung"
             wait_event = threading.Event()
@@ -400,7 +402,6 @@ async def generiere_erzaehler_audio_cache():
     logger.info("=" * 60)
 
     alle_texte = []
-
 
     # Sammle alle Event-Texte
     for event_id, event_info in ERZAEHLER_EVENTS.items():

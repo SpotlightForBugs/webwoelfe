@@ -208,7 +208,12 @@ class Kuh(Role):
 
         Brown and white spotted cow with udder, horns, bell.
         """
-        from ..base import BodyModification, AnimationState, HintEffect3D, create_death_marker
+        from ..base import (
+            BodyModification,
+            AnimationState,
+            HintEffect3D,
+            create_death_marker,
+        )
 
         cow_features = [
             # Cow body (horizontal, large, quadruped)

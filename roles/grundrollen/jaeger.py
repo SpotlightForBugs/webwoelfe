@@ -45,7 +45,9 @@ class Jaeger(Role):
 
     def state_fields(self) -> List[StateField]:
         return [
-            StateField("schuss_verfuegbar", StateType.BOOL, True, "Schuss bereit", icon="🔫"),
+            StateField(
+                "schuss_verfuegbar", StateType.BOOL, True, "Schuss bereit", icon="🔫"
+            ),
         ]
 
     @property
@@ -123,7 +125,9 @@ class Jaeger(Role):
             SpecialPhaseConfig(
                 phase_name="jaeger_phase",
                 trigger_event="on_death",
-                trigger_condition=lambda spieler, kontext: spieler.get_state("jaeger.schuss_verfuegbar", True),
+                trigger_condition=lambda spieler, kontext: spieler.get_state(
+                    "jaeger.schuss_verfuegbar", True
+                ),
                 next_phase_override=None,  # Return to normal flow after
                 priority=100,  # High priority - happens immediately
                 interruptible=False,  # Cannot be interrupted
@@ -144,7 +148,9 @@ class Jaeger(Role):
         - jaeger_schuss: The last shot when dying
         """
         if action_type == "jaeger_schuss":
-            return self._execute_schuss(spieler, targets[0] if targets else None, kontext)
+            return self._execute_schuss(
+                spieler, targets[0] if targets else None, kontext
+            )
 
         return None
 

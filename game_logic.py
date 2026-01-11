@@ -261,13 +261,17 @@ def naechste_phase(raum: Raum) -> str:
     # Check for round increment:
     # A new round starts when we transition TO any night-starting phase
     # This includes: "nacht_start", "nacht", or dynamic role phases after tag_ende
-    is_entering_night = (
-        next_p in ("nacht_start", "nacht") or
-        (old_phase in ("tag_ende", "hinrichtung") and "nacht" in next_p)
+    is_entering_night = next_p in ("nacht_start", "nacht") or (
+        old_phase in ("tag_ende", "hinrichtung") and "nacht" in next_p
     )
 
     # Only increment if we're entering night from a day phase (not on first transition)
-    if is_entering_night and old_phase not in ("lobby", "rollen_verteilt", "nacht_start", "nacht"):
+    if is_entering_night and old_phase not in (
+        "lobby",
+        "rollen_verteilt",
+        "nacht_start",
+        "nacht",
+    ):
         raum.runde += 1
         logger.info(f"Round incremented to {raum.runde}")
 
@@ -361,7 +365,9 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
     role_obj = RoleRegistry.get(spieler.rolle)
     if role_obj and hasattr(role_obj, "on_eigener_tod"):
         try:
-            alle_spieler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=False).all()
+            alle_spieler = Spieler.query.filter_by(
+                raum_id=raum.id, ist_erzaehler=False
+            ).all()
             kontext = SpielKontext(
                 raum_id=spieler.raum_id,
                 runde=raum.runde,
@@ -722,7 +728,6 @@ def alle_haben_gewaehlt(raum: Raum, phase: str, rolle: str = None) -> bool:
             return False
 
     return True
-
 
 
 def werwolf_abstimmung(raum: Raum) -> Optional[dict]:

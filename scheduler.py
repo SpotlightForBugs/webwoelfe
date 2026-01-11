@@ -14,33 +14,37 @@ from logger import logger
 
 # logger = logging.getLogger(__name__) # Use centralized logger
 
+
 @dataclass
 class PhaseState:
     phase: str
     active_role: Optional[str] = None
     display_info: Optional[Dict[str, Any]] = None
 
+
 def get_next_phase_state(raum: "Raum") -> PhaseState:
     """
     Ermittelt den nächsten Spielzustand (Phase + Aktive Rolle).
     """
-    logger.debug(f"Scheduler: Calculating next phase state for room {raum.code} (Current: {raum.aktuelle_phase})")
+    logger.debug(
+        f"Scheduler: Calculating next phase state for room {raum.code} (Current: {raum.aktuelle_phase})"
+    )
     current_phase = raum.aktuelle_phase
-    
+
     # 1. Start -> Rollen Verteilung
     if current_phase == "lobby":
         return PhaseState("rollen_verteilt")
-        
+
     # 2. Rollen Verteilung -> Nacht Start
     if current_phase == "rollen_verteilt":
         return get_next_night_step(raum)
-        
+
     # 3. Nacht-Zyklus
     if current_phase == "nacht" or current_phase == "nacht_start":
         return get_next_night_step(raum)
-        
+
     # 4. Tag-Zyklus
-    # (Hier könnte man auch eine Tag-Queue implementieren, 
+    # (Hier könnte man auch eine Tag-Queue implementieren,
     # aber Tag-Phasen sind meist statisch: Diskussion -> Abstimmung -> Hinrichtung)
     if current_phase == "tag_start":
         return PhaseState("diskussion")
@@ -52,9 +56,10 @@ def get_next_phase_state(raum: "Raum") -> PhaseState:
         return PhaseState("tag_ende")
     if current_phase == "tag_ende":
         return get_next_night_step(raum)
-        
+
     # Fallback
     return PhaseState("nacht")
+
 
 def get_next_night_step(raum: "Raum") -> PhaseState:
     """
@@ -63,7 +68,7 @@ def get_next_night_step(raum: "Raum") -> PhaseState:
     logger.debug(f"Scheduler: Calculating next night step for room {raum.code}")
     # 1. Hole alle aktiven Rollen für diese Nacht (sortiert)
     active_roles = get_active_roles_ordered(raum)
-    
+
     # 2. Prüfe wer schon fertig ist
     for role_obj, spieler_liste in active_roles:
         if not is_role_done(raum, role_obj, spieler_liste):
@@ -72,12 +77,15 @@ def get_next_night_step(raum: "Raum") -> PhaseState:
             return PhaseState(
                 phase="nacht",
                 active_role=role_obj.info.name,
-                display_info=role_obj.get_phase_display_info() if hasattr(role_obj, 'get_phase_display_info') else None
+                display_info=role_obj.get_phase_display_info()
+                if hasattr(role_obj, "get_phase_display_info")
+                else None,
             )
-            
+
     # Alle fertig -> Tag
     logger.info("Scheduler: Night finished, transitioning to day")
     return PhaseState("tag_start")
+
 
 def get_active_roles_ordered(raum: "Raum") -> List[Any]:
     """
@@ -85,16 +93,19 @@ def get_active_roles_ordered(raum: "Raum") -> List[Any]:
     """
     # Hole lebende Spieler
     # (Optimierung: Könnte man cachen oder via Query optimieren)
-    lebende = Spieler.query.filter_by(raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False).all()
-    
-    role_map = {} # RoleName -> (RoleObj, [Spieler])
-    
-    is_first_night = (raum.runde == 1)
-    
+    lebende = Spieler.query.filter_by(
+        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
+    ).all()
+
+    role_map = {}  # RoleName -> (RoleObj, [Spieler])
+
+    is_first_night = raum.runde == 1
+
     for s in lebende:
         role = RoleRegistry.get(s.rolle)
-        if not role: continue
-        
+        if not role:
+            continue
+
         # Check night activity
         active = False
         if is_first_night:
@@ -103,20 +114,21 @@ def get_active_roles_ordered(raum: "Raum") -> List[Any]:
         else:
             if role.is_active_on_every_night():
                 active = True
-                
+
         if active:
             if role.info.name not in role_map:
                 role_map[role.info.name] = (role, [])
             role_map[role.info.name][1].append(s)
-            
+
     # Sortiere nach Priorität (aufsteigend = früher)
-    # TODO: Dependencies (requires_roles) berücksichtigen? 
+    # TODO: Dependencies (requires_roles) berücksichtigen?
     # Current phase_generator did topo sort.
     # For now, simple priority sort is usually enough if priorities are well set.
     # If dependencies are needed, we can port the topo sort logic.
-    
+
     sorted_roles = sorted(role_map.values(), key=lambda x: x[0].info.prioritaet)
     return sorted_roles
+
 
 def is_role_done(raum: "Raum", role: Any, spieler_liste: List["Spieler"]) -> bool:
     """
@@ -125,37 +137,43 @@ def is_role_done(raum: "Raum", role: Any, spieler_liste: List["Spieler"]) -> boo
     # Checke Aktionen in DB
     # Wir suchen Aktionen in raum, runde, phase='nacht' (oder generic), rolle=...
     # Aber Aktionen speichern 'von_spieler_id'.
-    
+
     player_ids = [s.id for s in spieler_liste]
-    
-    aktionen = SpielAktion.query.filter_by(
-        raum_id=raum.id,
-        runde=raum.runde
-        # phase filter weg lassen oder 'nacht'? 
-        # Da wir generic 'nacht' nutzen, filtern wir danach.
-    ).filter(SpielAktion.von_spieler_id.in_(player_ids)).all()
-    
+
+    aktionen = (
+        SpielAktion.query.filter_by(
+            raum_id=raum.id,
+            runde=raum.runde,
+            # phase filter weg lassen oder 'nacht'?
+            # Da wir generic 'nacht' nutzen, filtern wir danach.
+        )
+        .filter(SpielAktion.von_spieler_id.in_(player_ids))
+        .all()
+    )
+
     # 1. Gruppen-Rollen (Werwolf): EINE Aktion reicht (gewöhnlich) oder Mehrheit?
     # Werwolf logic: Alle müssen voten oder Einer 'finalisiert'?
     # Vereinfachung: Wenn 1 Aktion existiert (Targets chosen), ist Rolle fertig.
     # TODO: Abstimmungs-Logik für Werwölfe (ActionType 'vote' vs 'kill').
     # Wenn AktionsTyp 'abstimmung' -> warten bis timer oder alle gestimmt.
     # Wenn AktionsTyp 'kill' -> fertig.
-    
+
     # Dynamically check if role acts as a group using the role's property
-    is_group_action = getattr(role, 'is_group_action', False)
-    
+    is_group_action = getattr(role, "is_group_action", False)
+
     if is_group_action:
         # Check if ALL members acted
         # (Assuming every member must vote/ack)
         acted_ids = {a.von_spieler_id for a in aktionen}
         needed_count = len(spieler_liste)
-        
+
         # If any player acted "skip" (if wolves can skip?), logic might differ.
         # But for group roles, usually all vote.
         is_done = len(acted_ids) >= needed_count
         if not is_done:
-            logger.debug(f"Role {role.info.name} waiting for group action ({len(acted_ids)}/{needed_count})")
+            logger.debug(
+                f"Role {role.info.name} waiting for group action ({len(acted_ids)}/{needed_count})"
+            )
         return is_done
 
     else:
@@ -168,9 +186,11 @@ def is_role_done(raum: "Raum", role: Any, spieler_liste: List["Spieler"]) -> boo
                 if ui_def.can_skip:
                     # If can skip, we might need explicit "skip" action in DB?
                     # Yes, "skip" action should be recorded.
-                    logger.debug(f"Role {role.info.name} waiting for player {s.name} (can skip: {ui_def.can_skip})")
+                    logger.debug(
+                        f"Role {role.info.name} waiting for player {s.name} (can skip: {ui_def.can_skip})"
+                    )
                     return False
                 logger.debug(f"Role {role.info.name} waiting for player {s.name}")
                 return False
-                
+
     return True

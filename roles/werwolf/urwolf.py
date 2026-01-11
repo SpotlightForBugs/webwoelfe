@@ -54,7 +54,13 @@ class Urwolf(Role):
     def state_fields(self) -> List[StateField]:
         """Definiert die Zustandsfelder des Urwolfs."""
         return [
-            StateField("infektion_verfuegbar", StateType.BOOL, True, "Kann noch infizieren", icon="🦠"),
+            StateField(
+                "infektion_verfuegbar",
+                StateType.BOOL,
+                True,
+                "Kann noch infizieren",
+                icon="🦠",
+            ),
         ]
 
     def global_state_definitions(self) -> List[GlobalStateDefinition]:
@@ -130,6 +136,7 @@ class Urwolf(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Urwolf - Infizieren",
             instructions="Du kannst einmalig das Opfer infizieren statt zu töten.",
@@ -179,10 +186,16 @@ class Urwolf(Role):
         return None
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
         """Legacy handler - routes to execute_action."""
-        return self.execute_action("urwolf_infizieren", spieler, [ziel] if ziel else [], kontext)
+        return self.execute_action(
+            "urwolf_infizieren", spieler, [ziel] if ziel else [], kontext
+        )
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """

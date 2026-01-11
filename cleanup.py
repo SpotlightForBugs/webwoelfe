@@ -1,6 +1,15 @@
 from datetime import datetime, timedelta, timezone
-from models import db, Raum, Spieler, SpielAktion, SpielLog, ErzaehlerEvent, SeherinEnthuellung
+from models import (
+    db,
+    Raum,
+    Spieler,
+    SpielAktion,
+    SpielLog,
+    ErzaehlerEvent,
+    SeherinEnthuellung,
+)
 from logger import logger
+
 
 def cleanup_old_games(app, max_age_hours=24):
     """
@@ -45,4 +54,3 @@ def cleanup_old_games(app, max_age_hours=24):
         except Exception as e:
             logger.error(f"[Cleanup] Fehler beim Bereinigen: {e}")
             db.session.rollback()
-

@@ -8,6 +8,6 @@ from .prinz import Prinz
 from .kamikaze import Kamikaze
 
 __all__ = [
-    'Prinz',
-    'Kamikaze',
+    "Prinz",
+    "Kamikaze",
 ]

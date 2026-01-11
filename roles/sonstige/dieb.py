@@ -56,7 +56,7 @@ class Dieb(Role):
             farbe="#1e293b",
             prioritaet=1,  # Erste Rolle!
             erzaehler_nacht=(
-                "Der Dieb erwacht zuerst und sieht zwei Rollen. " "Er muss eine wählen."
+                "Der Dieb erwacht zuerst und sieht zwei Rollen. Er muss eine wählen."
             ),
             erweiterung=Erweiterung.BASISSPIEL,
             distribution=DistributionConfig(
@@ -182,7 +182,9 @@ class Dieb(Role):
         )
 
     # === Dynamic action handler used by RoleAction ===
-    def handle_dieb_waehlen(self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext) -> AktionsErgebnis:
+    def handle_dieb_waehlen(
+        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext
+    ) -> AktionsErgebnis:
         """
         Dynamische Auswahl ohne Client-Targets:
         - Ermittelt zwei sinnvolle "übrige" Rollen aus der aktiven Rollenliste bzw. Registry
@@ -199,7 +201,11 @@ class Dieb(Role):
         if len(optionen) < 2:
             raum = db.session.get(Raum, kontext.raum_id)
             # Aktuell vergebene Rollen im Raum
-            vergebene = [s.rolle for s in SpielerModel.query.filter_by(raum_id=kontext.raum_id).all() if s.rolle]
+            vergebene = [
+                s.rolle
+                for s in SpielerModel.query.filter_by(raum_id=kontext.raum_id).all()
+                if s.rolle
+            ]
             # Kandidaten: alle registrierten Rollen, die nicht bereits vergeben sind
             kandidaten = [r for r in RoleRegistry.get_all_names() if r not in vergebene]
 
@@ -218,11 +224,17 @@ class Dieb(Role):
                 if name not in bevorzugt and name != spieler.rolle:
                     bevorzugt.append(name)
 
-            optionen = bevorzugt[:2] if len(bevorzugt) >= 2 else (kandidaten[:2] if len(kandidaten) >= 2 else [spieler.rolle])
+            optionen = (
+                bevorzugt[:2]
+                if len(bevorzugt) >= 2
+                else (kandidaten[:2] if len(kandidaten) >= 2 else [spieler.rolle])
+            )
 
         # 3) Erzwinge Werwolf-Wahl wenn vorhanden
         if any("werwolf" in r.lower() for r in optionen):
-            gewaehlte = next((r for r in optionen if "werwolf" in r.lower()), optionen[0])
+            gewaehlte = next(
+                (r for r in optionen if "werwolf" in r.lower()), optionen[0]
+            )
         else:
             gewaehlte = optionen[0]
 

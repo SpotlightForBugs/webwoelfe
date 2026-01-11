@@ -47,7 +47,13 @@ class TeenagerWerwolf(Role):
 
     def state_fields(self) -> List[StateField]:
         return [
-            StateField("hat_verweigert", StateType.BOOL, False, "Hat bereits verweigert", icon="✋"),
+            StateField(
+                "hat_verweigert",
+                StateType.BOOL,
+                False,
+                "Hat bereits verweigert",
+                icon="✋",
+            ),
         ]
 
     @property
@@ -104,6 +110,7 @@ class TeenagerWerwolf(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Teenager-Werwolf - Rebellieren",
             instructions="Du kannst einmal pro Spiel den Angriff des Rudels stoppen.",
@@ -129,7 +136,9 @@ class TeenagerWerwolf(Role):
     ) -> Optional[AktionsErgebnis]:
         if action_type == "teenager_verweigern":
             if self.get_state(spieler, "hat_verweigert"):
-                return AktionsErgebnis(erfolg=False, nachricht="Du hast bereits einmal rebelliert!")
+                return AktionsErgebnis(
+                    erfolg=False, nachricht="Du hast bereits einmal rebelliert!"
+                )
 
             self.set_state(spieler, "hat_verweigert", True)
             return AktionsErgebnis(
@@ -142,7 +151,11 @@ class TeenagerWerwolf(Role):
         return None
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
         return self.execute_action("teenager_verweigern", spieler, [], kontext)
 

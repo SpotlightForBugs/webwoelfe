@@ -147,16 +147,18 @@ class Putzfrau(Role):
         if enthuellungen:
             logs = []
             for enth in enthuellungen:
-                 logs.append({
-                     "text": f"🧹 Die Putzfrau hat beim Aufräumen eine Rolle entdeckt: {enth['rolle']}",
-                     "sichtbar_fuer": "alle"
-                 })
-            
+                logs.append(
+                    {
+                        "text": f"🧹 Die Putzfrau hat beim Aufräumen eine Rolle entdeckt: {enth['rolle']}",
+                        "sichtbar_fuer": "alle",
+                    }
+                )
+
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht=f"🧹 Die Putzfrau hat {len(enthuellungen)} Rolle(n) beim Aufräumen entdeckt!",
                 effekte={"enthuellungen": enthuellungen},
-                additional_logs=logs
+                additional_logs=logs,
             )
 
         return None

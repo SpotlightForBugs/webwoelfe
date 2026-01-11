@@ -20,11 +20,11 @@ from .heiler import Heiler
 from .amor import Amor
 
 __all__ = [
-    'Dorfbewohner',
-    'Werwolf',
-    'Seherin',
-    'Hexe',
-    'Jaeger',
-    'Heiler',
-    'Amor',
+    "Dorfbewohner",
+    "Werwolf",
+    "Seherin",
+    "Hexe",
+    "Jaeger",
+    "Heiler",
+    "Amor",
 ]

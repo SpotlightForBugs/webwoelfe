@@ -179,7 +179,7 @@ class Tonks(Role):
         return AktionsErgebnis(
             erfolg=True,
             nachricht=(
-                "Du verwandelst dich! Deine neue Rolle wird dir gleich " "offenbart..."
+                "Du verwandelst dich! Deine neue Rolle wird dir gleich offenbart..."
             ),
             ziel_spieler_id=toter_spieler_id,
             effekte={

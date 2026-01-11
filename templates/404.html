@@ -1,14 +1,17 @@
-{% extends 'struktur.html' %}
-
-{% block title %}Seite nicht gefunden{% endblock %}
-
-{% block content %}
-<div class="container text-center" style="padding: 4rem 0;">
-    <div class="fade-in">
-        <div style="font-size: 8rem; color: var(--accent-red); margin-bottom: 1rem;">404</div>
-        <h1 style="margin-bottom: 1rem;">Seite nicht gefunden</h1>
-        <p class="text-muted mb-4">Die gesuchte Seite existiert nicht oder wurde verschoben.</p>
-        <a href="{{ url_for('index') }}" class="btn btn-primary">Zurueck zur Startseite</a>
+{% extends 'struktur.html' %} {% block title %}Seite nicht gefunden{% endblock
+%} {% block content %}
+<div class="container text-center" style="padding: 4rem 0">
+  <div class="fade-in">
+    <div style="font-size: 8rem; color: var(--accent-red); margin-bottom: 1rem">
+      404
     </div>
+    <h1 style="margin-bottom: 1rem">Seite nicht gefunden</h1>
+    <p class="text-muted mb-4">
+      Die gesuchte Seite existiert nicht oder wurde verschoben.
+    </p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary"
+      >Zurueck zur Startseite</a
+    >
+  </div>
 </div>
 {% endblock %}

@@ -54,8 +54,12 @@ class WildesKind(Role):
 
     def state_fields(self) -> List[StateField]:
         return [
-            StateField("vorbild_id", StateType.PLAYER_ID, None, "ID des Vorbilds", icon="👤"),
-            StateField("verwandelt", StateType.BOOL, False, "Zum Werwolf verwandelt", icon="🐺"),
+            StateField(
+                "vorbild_id", StateType.PLAYER_ID, None, "ID des Vorbilds", icon="👤"
+            ),
+            StateField(
+                "verwandelt", StateType.BOOL, False, "Zum Werwolf verwandelt", icon="🐺"
+            ),
         ]
 
     @property
@@ -92,6 +96,7 @@ class WildesKind(Role):
     @property
     def aktions_typ(self) -> "AktionsTyp":
         from ..enums import AktionsTyp
+
         return AktionsTyp.WAEHLEN
 
     @property
@@ -106,6 +111,7 @@ class WildesKind(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Wildes Kind - Vorbild wählen",
             instructions="Wähle dein Vorbild. Wenn es stirbt, wirst du zum Werwolf.",
@@ -161,9 +167,15 @@ class WildesKind(Role):
         return None
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("wildes_kind_waehlen", spieler, [ziel] if ziel else [], kontext)
+        return self.execute_action(
+            "wildes_kind_waehlen", spieler, [ziel] if ziel else [], kontext
+        )
 
     def on_spieler_stirbt(
         self,

@@ -70,7 +70,7 @@ class Doppelgaenger(Role):
                 "Der Doppelgänger erwacht (erste Nacht) und wählt sein Ziel."
             ),
             erzaehler_tag=(
-                "Das Ziel des Doppelgängers ist tot! " "Er übernimmt dessen Rolle."
+                "Das Ziel des Doppelgängers ist tot! Er übernimmt dessen Rolle."
             ),
             erweiterung=Erweiterung.COMMUNITY,
             distribution=DistributionConfig(

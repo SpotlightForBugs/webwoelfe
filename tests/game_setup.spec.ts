@@ -103,7 +103,11 @@ function calculateWindowLayout(
  * Positions and resizes a browser window for tiled display on Windows.
  * Uses CDP (Chrome DevTools Protocol) for reliable window management.
  */
-async function tileWindow(page: Page, index: number, total: number): Promise<void> {
+async function tileWindow(
+  page: Page,
+  index: number,
+  total: number,
+): Promise<void> {
   const layout = calculateWindowLayout(index, total);
 
   try {
@@ -111,25 +115,28 @@ async function tileWindow(page: Page, index: number, total: number): Promise<voi
     const cdpSession = await page.context().newCDPSession(page);
 
     // Get the current window ID
-    const { windowId } = await cdpSession.send('Browser.getWindowForTarget');
+    const { windowId } = await cdpSession.send("Browser.getWindowForTarget");
 
     // Set window bounds (position and size)
-    await cdpSession.send('Browser.setWindowBounds', {
+    await cdpSession.send("Browser.setWindowBounds", {
       windowId,
       bounds: {
         left: layout.x,
         top: layout.y,
         width: layout.width,
         height: layout.height,
-        windowState: 'normal'
-      }
+        windowState: "normal",
+      },
     });
   } catch (e) {
     // Fallback to JavaScript window methods if CDP fails
-    await page.evaluate(({ x, y, w, h }) => {
-      window.moveTo(x, y);
-      window.resizeTo(w, h);
-    }, { x: layout.x, y: layout.y, w: layout.width, h: layout.height });
+    await page.evaluate(
+      ({ x, y, w, h }) => {
+        window.moveTo(x, y);
+        window.resizeTo(w, h);
+      },
+      { x: layout.x, y: layout.y, w: layout.width, h: layout.height },
+    );
   }
 }
 
@@ -188,8 +195,8 @@ test.describe("Game Setup - Auto-Create and Stay Open", () => {
 
       // Online-Modus auswählen (automatischer Erzähler)
       // Dies ist der Standard, aber wir stellen sicher, dass er ausgewählt ist
-      const modusSelect = erzaehlerPage.locator('#modus-select');
-      await modusSelect.selectOption('online');
+      const modusSelect = erzaehlerPage.locator("#modus-select");
+      await modusSelect.selectOption("online");
       console.log("✓ Online-Modus mit automatischem Erzähler ausgewählt");
 
       // Raum erstellen

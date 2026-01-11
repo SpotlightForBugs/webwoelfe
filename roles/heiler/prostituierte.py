@@ -56,7 +56,7 @@ class Prostituierte(Role):
             farbe="#f43f5e",
             prioritaet=46,  # Vor Werwölfen
             erzaehler_nacht=(
-                "Die Prostituierte erwacht und wählt einen Spieler für " "die Nacht."
+                "Die Prostituierte erwacht und wählt einen Spieler für die Nacht."
             ),
             erweiterung=Erweiterung.COMMUNITY,
             distribution=DistributionConfig(
@@ -148,7 +148,7 @@ class Prostituierte(Role):
             private_infos={
                 ziel.id: {
                     "nachricht": f"{spieler.name} hat die Nacht bei dir verbracht. Sie ist die Prostituierte!",
-                    "alert_type": "warning"
+                    "alert_type": "warning",
                 }
             },
             log_sichtbar_fuer="erzaehler",

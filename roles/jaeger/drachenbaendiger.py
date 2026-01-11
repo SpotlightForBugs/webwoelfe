@@ -56,7 +56,7 @@ class Drachenbaendiger(Role):
             farbe="#7c3aed",
             prioritaet=93,
             erzaehler_nacht=(
-                "Der Drachenbändiger schläft friedlich, " "bewacht von seinem Drachen."
+                "Der Drachenbändiger schläft friedlich, bewacht von seinem Drachen."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
             distribution=DistributionConfig(

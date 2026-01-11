@@ -37,7 +37,6 @@ CORE_PHASE_EVENTS: Dict[str, NarratorEvent] = {
         bedingung={"phase": "rollen_verteilt"},
         einmalig=True,
     ),
-
     # Night transitions
     "nacht_start": NarratorEvent(
         event_id="nacht_start",
@@ -60,7 +59,6 @@ CORE_PHASE_EVENTS: Dict[str, NarratorEvent] = {
         bedingung={"runde": 1, "phase": "nacht_start"},
         einmalig=True,
     ),
-
     # Day transitions
     "tag_start": NarratorEvent(
         event_id="tag_start",
@@ -83,7 +81,6 @@ CORE_PHASE_EVENTS: Dict[str, NarratorEvent] = {
         bedingung={"phase": "tag_ende"},
         einmalig=False,
     ),
-
     # Game end
     "dorf_gewonnen": NarratorEvent(
         event_id="dorf_gewonnen",
@@ -138,6 +135,7 @@ def get_all_narrator_events() -> Dict[str, Dict[str, Any]]:
     # Add role-specific events from registry
     try:
         from roles import RoleRegistry
+
         role_events = RoleRegistry.get_all_erzaehler_events()
         all_events.update(role_events)
     except Exception as e:
@@ -158,7 +156,9 @@ def get_narrator_text_for_phase(phase: str) -> Optional[Dict[str, Any]]:
     return all_events.get(phase)
 
 
-def hole_erzaehler_text(raum_id: int, event_typ: str, kontext: Optional[Dict] = None) -> Optional[Dict[str, Any]]:
+def hole_erzaehler_text(
+    raum_id: int, event_typ: str, kontext: Optional[Dict] = None
+) -> Optional[Dict[str, Any]]:
     """
     Get narrator text for an event, checking if it was already played.
 
@@ -240,4 +240,3 @@ class _DynamicErzaehlerEvents(dict):
 
 # Dynamic events dict for backwards compatibility
 ERZAEHLER_EVENTS = _DynamicErzaehlerEvents()
-

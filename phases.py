@@ -191,11 +191,14 @@ def get_phase_display_name(phase: str) -> str:
 
 def get_phase_display_info(phase: str) -> Dict[str, Any]:
     """Gibt vollständige Display-Infos für eine Phase zurück."""
-    return PHASE_DISPLAY.get(phase, {
-        "name": phase.replace("_", " ").title(),
-        "icon": "fa-solid fa-circle",
-        "description": "",
-    })
+    return PHASE_DISPLAY.get(
+        phase,
+        {
+            "name": phase.replace("_", " ").title(),
+            "icon": "fa-solid fa-circle",
+            "description": "",
+        },
+    )
 
 
 # Export phase list for imports

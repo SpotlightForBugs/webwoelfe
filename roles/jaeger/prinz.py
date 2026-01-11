@@ -47,7 +47,7 @@ class Prinz(Role):
             farbe="#eab308",
             prioritaet=98,
             erzaehler_tag=(
-                "Der Prinz kann nicht gehängt werden! Seine Identität " "wird enthüllt."
+                "Der Prinz kann nicht gehängt werden! Seine Identität wird enthüllt."
             ),
             erweiterung=Erweiterung.COMMUNITY,
             distribution=DistributionConfig(

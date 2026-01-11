@@ -1,7 +1,8 @@
-
 import sys
+
 # Filter out external package warnings
 import warnings
+
 warnings.filterwarnings("ignore")
 
 
@@ -14,11 +15,12 @@ sys.path.append(os.getcwd())
 
 try:
     from roles import RoleRegistry
+
     print("RoleRegistry imported successfully.")
-    
+
     roles = RoleRegistry.get_all()
     print(f"RoleRegistry.get_all() returned {len(roles)} roles.")
-    
+
     # Simulate app.py logic
     grouped_by_extension = {}
     for role in roles:
@@ -38,13 +40,16 @@ try:
                     json.dumps({k: v})
                 except TypeError:
                     print(f"  Field '{k}' is not serializable: {type(v)}")
-        
+
         grouped_by_extension[ext_pack].append(role_dict)
-        
-    print(f"Successfully grouped {len(roles)} roles into {len(grouped_by_extension)} extensions.")
+
+    print(
+        f"Successfully grouped {len(roles)} roles into {len(grouped_by_extension)} extensions."
+    )
     print("Extensions found:", list(grouped_by_extension.keys()))
-    
+
 except Exception as e:
     print(f"Error: {e}")
     import traceback
+
     traceback.print_exc()

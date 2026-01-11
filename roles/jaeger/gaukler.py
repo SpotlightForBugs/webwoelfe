@@ -56,8 +56,7 @@ class Gaukler(Role):
             farbe="#c026d3",
             prioritaet=90,
             erzaehler_nacht=(
-                "Der Gaukler probt seine Tricks im Schlaf. "
-                "Ein Meister der Verwirrung."
+                "Der Gaukler probt seine Tricks im Schlaf. Ein Meister der Verwirrung."
             ),
             erweiterung=Erweiterung.CHARAKTERE,
             distribution=DistributionConfig(

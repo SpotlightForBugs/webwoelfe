@@ -81,7 +81,7 @@ class Floetenspieler(Role):
             farbe="#8b5cf6",
             prioritaet=70,
             erzaehler_nacht=(
-                "Der Floetenspieler erwacht und waehlt 2 Spieler " "zum Verzaubern."
+                "Der Floetenspieler erwacht und waehlt 2 Spieler zum Verzaubern."
             ),
             erweiterung=Erweiterung.NEUMOND,
             distribution=DistributionConfig(
@@ -147,7 +147,7 @@ class Floetenspieler(Role):
         if ziel.id not in verzauberte:
             verzauberte.append(ziel.id)
             self.set_state(spieler, "verzauberte", verzauberte)
-            
+
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Du verzauberst {ziel.name} mit deiner Melodie.",
@@ -155,9 +155,7 @@ class Floetenspieler(Role):
             effekte={
                 "verzaubert": ziel.id,
             },
-            multi_target_updates={
-                ziel.id: {"global.ist_verzaubert": True}
-            },
+            multi_target_updates={ziel.id: {"global.ist_verzaubert": True}},
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
 

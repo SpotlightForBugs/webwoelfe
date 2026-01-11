@@ -3255,7 +3255,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   };
 
   loadPlayCanvas().then(() => {
-      return import('/static/js/village3d-playcanvas.js');
+      return import('/static/js/village3d/dist/Village3DPlayCanvas.js');
   }).then(module => {
       const Village3DPlayCanvas = module.default;
       if (typeof Village3DPlayCanvas !== 'undefined') {

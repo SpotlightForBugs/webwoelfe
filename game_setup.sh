@@ -30,6 +30,22 @@ if [ -f "instance/webwoelfe.db" ]; then
     echo "🗑️  Alte Datenbankdatei gelöscht"
 fi
 
+# Build TypeScript if node_modules exists
+if [ -d "node_modules" ]; then
+    echo "🔨 Building TypeScript modules..."
+    npm run build
+    if [ $? -ne 0 ]; then
+        echo "⚠️  TypeScript build failed, continuing anyway..."
+    else
+        echo "✅ TypeScript build completed"
+    fi
+elif command -v npm &> /dev/null; then
+    echo "📦 Installing npm dependencies and building..."
+    npm install && npm run build
+else
+    echo "⚠️  Node.js/npm not found, skipping TypeScript build"
+fi
+
 # operating system aware venv activation
 if [ -f ".venv/Scripts/activate" ]; then
     # Windows

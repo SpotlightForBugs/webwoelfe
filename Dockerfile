@@ -14,13 +14,22 @@ RUN apt-get update \
         libssl-dev \
         libjpeg-dev \
         zlib1g-dev \
+        curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
+COPY package*.json ./
+RUN npm install
+
 COPY . .
+
+# Build TypeScript modules
+RUN chmod +x build.sh && ./build.sh
 
 RUN addgroup --system webwoelfe \
     && adduser --system --ingroup webwoelfe webwoelfe \

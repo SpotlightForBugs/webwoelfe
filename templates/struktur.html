@@ -552,7 +552,7 @@
     <script type="module" src="{{ url_for('static', filename='js/dist/hints.js') }}"></script>
 
     <!-- Anti-DevTools Schutz - Verhindert Spicken via F12 -->
-    {% if not debug %}
+    {% if not debug and not true %} {# Disabled for now using 'and not true' #}
     <script>
       (function () {
         "use strict";

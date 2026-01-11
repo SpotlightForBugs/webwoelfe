@@ -512,7 +512,7 @@ spiel_name }}{% endblock %} {% block content %}
 {% if raum.modus == 'online' %}
 <script src="https://code.playcanvas.com/playcanvas-stable.min.js"></script>
 <script type="module">
-  import Village3DPlayCanvas from "/static/js/village3d/dist/Village3DPlayCanvas.js";
+  import Village3DPlayCanvas from "{{ url_for('static', filename='js/village3d/dist/Village3DPlayCanvas.js') }}";
 
   // Konstante für Update-Verzögerung (Zeit für DOM-Updates)
   const VILLAGE_UPDATE_DELAY = 100;

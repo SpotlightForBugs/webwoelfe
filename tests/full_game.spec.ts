@@ -163,8 +163,6 @@ interface GameState {
 // UTILITIES
 // ============================================================================
 
-
-
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -218,23 +216,23 @@ test.describe("Full Game Simulation", () => {
 
     const headlessBrowser = HEADLESS_OTHERS
       ? await chromium.launch({
-        headless: true,
-        args: [
-          "--disable-web-security",
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--no-first-run",
-          "--disable-extensions",
-          "--disable-default-apps",
-          "--disable-sync",
-          "--disable-translate",
-          "--hide-scrollbars",
-          "--mute-audio",
-          "--no-default-browser-check",
-          "--safebrowsing-disable-auto-update",
-        ],
-      })
+          headless: true,
+          args: [
+            "--disable-web-security",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--no-first-run",
+            "--disable-extensions",
+            "--disable-default-apps",
+            "--disable-sync",
+            "--disable-translate",
+            "--hide-scrollbars",
+            "--mute-audio",
+            "--no-default-browser-check",
+            "--safebrowsing-disable-auto-update",
+          ],
+        })
       : null;
 
     // Create shared context for the host (keeps the main window visible)
@@ -251,7 +249,7 @@ test.describe("Full Game Simulation", () => {
 
       // Ensure window is maximized/visible (optional, handled by browser usually)
 
-      await hostPage.goto(BASE_URL, { waitUntil: 'domcontentloaded' }); // Faster than networkidle
+      await hostPage.goto(BASE_URL, { waitUntil: "domcontentloaded" }); // Faster than networkidle
 
       // Close pre-alpha modal if present
       const closeModalBtn = hostPage.locator("[data-close-modal]").first();
@@ -344,20 +342,24 @@ test.describe("Full Game Simulation", () => {
             if (msg.type() === "error") {
               const text = msg.text();
               // Ignore some common noise and handled warnings
-              if (!text.includes("favicon") &&
+              if (
+                !text.includes("favicon") &&
                 !text.includes("ERR_BLOCKED_BY_CLIENT") &&
-                !text.includes("Viewport height is too small")) {
+                !text.includes("Viewport height is too small")
+              ) {
                 console.error(`🚨 CONSOLE ERROR [${playerName}]: ${text}`);
                 throw new Error(`Console Error in ${playerName}: ${text}`);
               }
             }
           });
 
-          await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }); // Faster than networkidle
+          await page.goto(BASE_URL, { waitUntil: "domcontentloaded" }); // Faster than networkidle
 
           // Close modal if present
           const closeModal = page.locator("[data-close-modal]").first();
-          if (await closeModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+          if (
+            await closeModal.isVisible({ timeout: 1000 }).catch(() => false)
+          ) {
             await closeModal.click();
             await page.waitForTimeout(200);
           }
@@ -410,25 +412,26 @@ test.describe("Full Game Simulation", () => {
       for (const player of players) {
         await player.page.waitForURL(/\/spiel\//, {
           timeout: 8000,
-          waitUntil: 'domcontentloaded' // Don't wait for external resources (fonts, CDN, etc.)
+          waitUntil: "domcontentloaded", // Don't wait for external resources (fonts, CDN, etc.)
         });
 
         // VERIFY VILLAGE 3D - Wait for async initialization (optional feature)
         try {
           await player.page.waitForFunction(
-            () => typeof (window as any).village3d !== 'undefined',
-            { timeout: 3000 }
+            () => typeof (window as any).village3d !== "undefined",
+            { timeout: 3000 },
           );
           // log(`✓ Village3D initialized for ${player.name}`);
         } catch (e) {
-          log(`⚠️  Village3D not initialized for ${player.name} (non-critical, continuing...)`);
+          log(
+            `⚠️  Village3D not initialized for ${player.name} (non-critical, continuing...)`,
+          );
         }
       }
 
       log("✓ Spiel gestartet!\n");
 
       // ... (Role extraction omitted for brevity, keeping existing logic) ...
-
 
       // ========================================================================
       // PHASE 4: Extract Roles
@@ -439,9 +442,7 @@ test.describe("Full Game Simulation", () => {
       for (const player of players) {
         try {
           // Extract role from the game page
-          const rolleElement = player.page
-            .locator(".rolle-badge")
-            .first();
+          const rolleElement = player.page.locator(".rolle-badge").first();
           if (
             await rolleElement.isVisible({ timeout: 2000 }).catch(() => false)
           ) {
@@ -570,8 +571,12 @@ test.describe("Full Game Simulation", () => {
           // We cannot and should not try to skip phases manually.
           // The server has a 30 second fallback timeout for stuck phases.
           if (samePhaseCount > MAX_SAME_PHASE) {
-            log(`  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`);
-            throw new Error(`Game stuck in phase: ${currentPhase} - Auto-advance failed.`);
+            log(
+              `  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`,
+            );
+            throw new Error(
+              `Game stuck in phase: ${currentPhase} - Auto-advance failed.`,
+            );
           }
           // Warte auf Phasenwechsel
           await sleep(2000);
@@ -649,7 +654,7 @@ test.describe("Full Game Simulation", () => {
       log("==========================================\n");
 
       // Wait indefinitely
-      await new Promise(() => { });
+      await new Promise(() => {});
     } catch (error) {
       log(`❌ Fehler: ${error}`);
       throw error;
@@ -1035,22 +1040,22 @@ async function handleWerwolfPhase(
       target = randomChoice(validTargets);
     }
 
-    let success = await selectTargetAndConfirm(
-      wolf.page,
-      target.name,
-      ["Töten", "Wählen", "Angreifen"],
-    );
+    let success = await selectTargetAndConfirm(wolf.page, target.name, [
+      "Töten",
+      "Wählen",
+      "Angreifen",
+    ]);
 
     // If the action failed (invalid target), retry with a valid target
     if (!success && isInvalidTarget && validTargets.length > 0) {
       log(`    🔄 ${wolf.name} Server hat abgelehnt, wähle gültiges Ziel...`);
       await sleep(500);
       const validTarget = randomChoice(validTargets);
-      success = await selectTargetAndConfirm(
-        wolf.page,
-        validTarget.name,
-        ["Töten", "Wählen", "Angreifen"],
-      );
+      success = await selectTargetAndConfirm(wolf.page, validTarget.name, [
+        "Töten",
+        "Wählen",
+        "Angreifen",
+      ]);
       if (success) {
         log(`    ✓ ${wolf.name} stimmt für ${validTarget.name}`);
       }
@@ -1065,11 +1070,10 @@ async function handleWerwolfPhase(
       log(
         `    ⚠️ [RANDOM] ${wolf.name} versucht erneut zu wählen (wird abgelehnt)`,
       );
-      await selectTargetAndConfirm(
-        wolf.page,
-        randomChoice(validTargets).name,
-        ["Töten", "Wählen"],
-      );
+      await selectTargetAndConfirm(wolf.page, randomChoice(validTargets).name, [
+        "Töten",
+        "Wählen",
+      ]);
     }
 
     await sleep(300); // Random delay
@@ -1091,11 +1095,11 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
 
   // Hide any existing alert before action so we can detect new ones
   await dieb.page.evaluate(() => {
-    const el = document.getElementById('status-nachricht');
+    const el = document.getElementById("status-nachricht");
     if (el) {
-      el.style.display = 'none';
-      el.className = '';
-      el.textContent = '';
+      el.style.display = "none";
+      el.className = "";
+      el.textContent = "";
     }
   });
 
@@ -1113,47 +1117,55 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
     await skipBtn.click();
 
     // Wait for the action to be confirmed
-    const alertElement = dieb.page.locator('#status-nachricht');
-    await alertElement.waitFor({ state: 'visible', timeout: 30000 });
+    const alertElement = dieb.page.locator("#status-nachricht");
+    await alertElement.waitFor({ state: "visible", timeout: 30000 });
 
     log("    Dieb behält seine Rolle");
     return;
   }
 
   // No skip button - try to find and click on a role option/card
-  const roleCard = dieb.page.locator('.rolle-card, .role-option, .role-choice, [data-role]').first();
+  const roleCard = dieb.page
+    .locator(".rolle-card, .role-option, .role-choice, [data-role]")
+    .first();
   if (await roleCard.isVisible({ timeout: 2000 }).catch(() => false)) {
     await roleCard.click();
     await sleep(500);
 
     // Click confirm button after selecting role
-    const confirmBtn = dieb.page.locator('button:has-text("Rolle wählen"), button:has-text("Wählen"), button:has-text("Bestätigen")').first();
+    const confirmBtn = dieb.page
+      .locator(
+        'button:has-text("Rolle wählen"), button:has-text("Wählen"), button:has-text("Bestätigen")',
+      )
+      .first();
     if (await confirmBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await confirmBtn.click();
     }
 
     // Wait for the action to be confirmed
-    const alertElement = dieb.page.locator('#status-nachricht');
-    await alertElement.waitFor({ state: 'visible', timeout: 30000 });
+    const alertElement = dieb.page.locator("#status-nachricht");
+    await alertElement.waitFor({ state: "visible", timeout: 30000 });
 
     log("    Dieb hat eine Rolle gestohlen");
     return;
   }
 
   // Fallback - click the main action button if available
-  const actionBtn = dieb.page.locator('#action-buttons button').first();
+  const actionBtn = dieb.page.locator("#action-buttons button").first();
   if (await actionBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
     await actionBtn.click();
 
     // Wait for the action to be confirmed
-    const alertElement = dieb.page.locator('#status-nachricht');
-    await alertElement.waitFor({ state: 'visible', timeout: 30000 });
+    const alertElement = dieb.page.locator("#status-nachricht");
+    await alertElement.waitFor({ state: "visible", timeout: 30000 });
 
     log("    Dieb hat Aktion ausgeführt");
     return;
   }
 
-  log("    ⚠️ Keine Interaktion für Dieb gefunden - Phase muss manuell weitergehen");
+  log(
+    "    ⚠️ Keine Interaktion für Dieb gefunden - Phase muss manuell weitergehen",
+  );
 }
 
 async function handleDoppelgaengerPhase(
@@ -2025,7 +2037,7 @@ async function handleDiskussionPhase(players: PlayerWindow[]): Promise<void> {
             await chatInput.fill(randomChoice(chatMessages));
             await chatInput.press("Enter");
           }
-        } catch (e) { }
+        } catch (e) {}
         await sleep(50);
       }
     }
@@ -2349,31 +2361,43 @@ async function validateWerwolfVisibility(
 
     // Check that this wolf can see all other werewolves
     for (const otherWolf of allWerwolfe) {
-      const card = wolf.page.locator(`.spieler-card[data-name="${otherWolf.name}"]`);
+      const card = wolf.page.locator(
+        `.spieler-card[data-name="${otherWolf.name}"]`,
+      );
 
       // Verify card exists
       if (!(await card.isVisible({ timeout: 2000 }).catch(() => false))) {
-        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see player card for ${otherWolf.name}`);
+        throw new Error(
+          `❌ HARD ERROR: ${wolf.name} cannot see player card for ${otherWolf.name}`,
+        );
       }
 
       // Check if card has werwolf visibility class OR is self (ist-ich class)
-      const hasWolfClass = await card.evaluate((el) =>
-        el.classList.contains('werwolf-team-sichtbar') || el.classList.contains('ist-ich')
+      const hasWolfClass = await card.evaluate(
+        (el) =>
+          el.classList.contains("werwolf-team-sichtbar") ||
+          el.classList.contains("ist-ich"),
       );
 
       // Get data-rolle attribute (should contain werewolf role)
-      const dataRolle = await card.getAttribute('data-rolle');
+      const dataRolle = await card.getAttribute("data-rolle");
 
       if (!hasWolfClass && wolf.name !== otherWolf.name) {
-        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see ${otherWolf.name} as werewolf (missing werwolf-team-sichtbar class)`);
+        throw new Error(
+          `❌ HARD ERROR: ${wolf.name} cannot see ${otherWolf.name} as werewolf (missing werwolf-team-sichtbar class)`,
+        );
       }
 
       if (wolf.name === otherWolf.name && !hasWolfClass) {
-        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see themselves as werewolf (missing ist-ich class)`);
+        throw new Error(
+          `❌ HARD ERROR: ${wolf.name} cannot see themselves as werewolf (missing ist-ich class)`,
+        );
       }
 
       if (otherWolf.isAlive && !dataRolle) {
-        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see role data for ${otherWolf.name} (data-rolle attribute is empty)`);
+        throw new Error(
+          `❌ HARD ERROR: ${wolf.name} cannot see role data for ${otherWolf.name} (data-rolle attribute is empty)`,
+        );
       }
     }
 
@@ -2387,12 +2411,16 @@ async function validateWerwolfVisibility(
 /**
  * Validate that lovers (Verliebte) can see each other's roles
  */
-async function validateVerliebteVisibility(players: PlayerWindow[]): Promise<void> {
+async function validateVerliebteVisibility(
+  players: PlayerWindow[],
+): Promise<void> {
   log("    🔍 VALIDATION: Checking Verliebte visibility...");
 
   // Find players with verliebt-partner class on other cards
-  for (const player of players.filter(p => p.isAlive)) {
-    const partnerCards = await player.page.locator('.spieler-card.verliebt-partner').count();
+  for (const player of players.filter((p) => p.isAlive)) {
+    const partnerCards = await player.page
+      .locator(".spieler-card.verliebt-partner")
+      .count();
 
     if (partnerCards > 0) {
       // This player is verliebt, check they can see their partner
@@ -2400,25 +2428,37 @@ async function validateVerliebteVisibility(players: PlayerWindow[]): Promise<voi
 
       // There should be exactly 1 partner card
       if (partnerCards !== 1) {
-        throw new Error(`❌ HARD ERROR: ${player.name} has ${partnerCards} partner cards, expected 1`);
+        throw new Error(
+          `❌ HARD ERROR: ${player.name} has ${partnerCards} partner cards, expected 1`,
+        );
       }
 
-      const partnerCard = player.page.locator('.spieler-card.verliebt-partner').first();
+      const partnerCard = player.page
+        .locator(".spieler-card.verliebt-partner")
+        .first();
 
       // Partner card must be visible
-      if (!(await partnerCard.isVisible({ timeout: 2000 }).catch(() => false))) {
-        throw new Error(`❌ HARD ERROR: ${player.name} cannot see partner card`);
+      if (
+        !(await partnerCard.isVisible({ timeout: 2000 }).catch(() => false))
+      ) {
+        throw new Error(
+          `❌ HARD ERROR: ${player.name} cannot see partner card`,
+        );
       }
 
       // Partner card must have data-rolle attribute (shows the role)
-      const partnerRolle = await partnerCard.getAttribute('data-rolle');
-      const partnerName = await partnerCard.getAttribute('data-name');
+      const partnerRolle = await partnerCard.getAttribute("data-rolle");
+      const partnerName = await partnerCard.getAttribute("data-name");
 
       if (!partnerRolle) {
-        throw new Error(`❌ HARD ERROR: ${player.name} cannot see partner's role (data-rolle empty for ${partnerName})`);
+        throw new Error(
+          `❌ HARD ERROR: ${player.name} cannot see partner's role (data-rolle empty for ${partnerName})`,
+        );
       }
 
-      log(`    ✅ ${player.name} can see partner ${partnerName} with role ${partnerRolle}`);
+      log(
+        `    ✅ ${player.name} can see partner ${partnerName} with role ${partnerRolle}`,
+      );
 
       // Validate nametags
       await validateNametags(player.page, [player]);
@@ -2431,22 +2471,33 @@ async function validateVerliebteVisibility(players: PlayerWindow[]): Promise<voi
 /**
  * Validate that nametags stay visible and don't disappear after a second
  */
-async function validateNametags(page: Page, players: PlayerWindow[]): Promise<void> {
-  for (const player of players.filter(p => p.isAlive)) {
+async function validateNametags(
+  page: Page,
+  players: PlayerWindow[],
+): Promise<void> {
+  for (const player of players.filter((p) => p.isAlive)) {
     const card = page.locator(`.spieler-card[data-name="${player.name}"]`);
-    const nameElement = card.locator('.spieler-name');
+    const nameElement = card.locator(".spieler-name");
 
     // Check visibility at t=0
-    const visible1 = await nameElement.isVisible({ timeout: 1000 }).catch(() => false);
+    const visible1 = await nameElement
+      .isVisible({ timeout: 1000 })
+      .catch(() => false);
     if (!visible1) {
-      throw new Error(`❌ HARD ERROR: Nametag for ${player.name} is not visible initially`);
+      throw new Error(
+        `❌ HARD ERROR: Nametag for ${player.name} is not visible initially`,
+      );
     }
 
     // Wait 1.5 seconds and check again
     await sleep(1500);
-    const visible2 = await nameElement.isVisible({ timeout: 500 }).catch(() => false);
+    const visible2 = await nameElement
+      .isVisible({ timeout: 500 })
+      .catch(() => false);
     if (!visible2) {
-      throw new Error(`❌ HARD ERROR: Nametag for ${player.name} disappeared after 1.5 seconds`);
+      throw new Error(
+        `❌ HARD ERROR: Nametag for ${player.name} disappeared after 1.5 seconds`,
+      );
     }
   }
 }
@@ -2488,11 +2539,11 @@ async function selectTargetAndConfirm(
 
   // Hide any existing alert before action so we can detect new ones
   await page.evaluate(() => {
-    const el = document.getElementById('status-nachricht');
+    const el = document.getElementById("status-nachricht");
     if (el) {
-      el.style.display = 'none';
-      el.className = '';
-      el.textContent = '';
+      el.style.display = "none";
+      el.className = "";
+      el.textContent = "";
     }
   });
 
@@ -2524,21 +2575,23 @@ async function selectTargetAndConfirm(
   }
 
   if (!buttonClicked) {
-    throw new Error(`No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`);
+    throw new Error(
+      `No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`,
+    );
   }
 
   // Wait for the status alert to become visible (no timeout - wait until it happens)
   // The UI shows alerts via #status-nachricht with class alert-success or alert-error
-  const alertElement = page.locator('#status-nachricht');
+  const alertElement = page.locator("#status-nachricht");
 
   // Wait for the alert to be visible and have content
-  await alertElement.waitFor({ state: 'visible', timeout: 5000 });
+  await alertElement.waitFor({ state: "visible", timeout: 5000 });
 
   // Check what type of alert it is
-  const alertClass = await alertElement.getAttribute('class');
+  const alertClass = await alertElement.getAttribute("class");
   const alertText = await alertElement.textContent();
 
-  if (alertClass?.includes('alert-error')) {
+  if (alertClass?.includes("alert-error")) {
     throw new Error(`Server rejected action: ${alertText}`);
   }
 

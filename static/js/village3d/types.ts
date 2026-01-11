@@ -237,6 +237,8 @@ export interface UIButtonData {
   icon?: string;
   color?: string;
   onClick?: () => void;
+  disabled?: boolean;
+  title?: string;
 }
 
 // ============================================================================

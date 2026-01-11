@@ -104,6 +104,14 @@ export default class Village3DPlayCanvas {
   
   // Victim highlight tracking
   private victimHighlight: { entity: PCEntity; material: PCMaterial } | null = null;
+
+  // HUD state
+  private hudVisible: boolean = false;
+  private leftSidebarVisible: boolean = true;
+  private rightSidebarVisible: boolean = true;
+
+  // Selection highlight
+  private selectedHighlight: { playerId: number; entity: PCEntity } | null = null;
   
   // Role data
   private roleColors: Record<string, PCColor> = {};
@@ -1966,6 +1974,57 @@ export default class Village3DPlayCanvas {
   }
 
   /**
+   * Show/hide the HTML HUD overlay for fullscreen play.
+   * This does not use the browser fullscreen API; it just toggles the HUD.
+   */
+  showFullscreenUI(show: boolean): void {
+    if (this.hudVisible === show) return;
+    this.hudVisible = show;
+    const hud = document.querySelector('#village3d-hud') as HTMLElement | null;
+    if (hud) {
+      hud.classList.toggle('is-visible', show);
+    }
+  }
+
+  /** Toggle the left HUD panel (player list / role info). */
+  toggleLeftSidebar(): void {
+    this.leftSidebarVisible = !this.leftSidebarVisible;
+    const el = document.querySelector('#village3d-left-panel') as HTMLElement | null;
+    if (el) {
+      el.classList.toggle('is-collapsed', !this.leftSidebarVisible);
+    }
+  }
+
+  /** Toggle the right HUD panel (chat/log). */
+  toggleRightSidebar(): void {
+    this.rightSidebarVisible = !this.rightSidebarVisible;
+    const el = document.querySelector('#village3d-right-panel') as HTMLElement | null;
+    if (el) {
+      el.classList.toggle('is-collapsed', !this.rightSidebarVisible);
+    }
+  }
+
+  /**
+   * Append a message to the 3D HUD chat feed and show a small bubble above the sender if we can resolve them.
+   */
+  addChatMessage(from: string, text: string, _isDead: boolean = false): void {
+    const list = document.querySelector('#village3d-chat-messages') as HTMLElement | null;
+    if (list) {
+      const row = document.createElement('div');
+      row.className = 'village3d-chat-row';
+      row.textContent = `${from}: ${text}`;
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+    }
+
+    // Best-effort: show a bubble above the matching player
+    const player = this.players.find(p => p.name === from);
+    if (player) {
+      this.showChatBubble(player.id, text);
+    }
+  }
+
+  /**
    * Update action buttons in the action panel
    */
   updateActionButtons(buttons: UIButtonData[]): void {
@@ -1994,13 +2053,58 @@ export default class Village3DPlayCanvas {
         pointer-events: auto;
       `;
       button.textContent = btn.label || btn.text || 'Action';
+      if (btn.title) button.title = btn.title;
+      if (btn.disabled) {
+        button.disabled = true;
+        button.style.opacity = '0.5';
+        button.style.cursor = 'not-allowed';
+      }
       button.addEventListener('click', () => {
+        if (button.disabled) return;
+        if (btn.onClick) {
+          btn.onClick();
+          return;
+        }
         if (btn.action && typeof btn.action === 'function') {
           btn.action();
         }
       });
       (container as HTMLElement).appendChild(button);
     });
+  }
+
+  /**
+   * Persistent selection highlight ring (separate from temporary highlightPlayer pulses).
+   */
+  setSelectedPlayer(playerId: number | null, color: string = '#ffd54a'): void {
+    if (this.selectedHighlight) {
+      const prevEntity = this.playerEntities.get(this.selectedHighlight.playerId);
+      if (prevEntity && this.selectedHighlight.entity.parent) {
+        this.selectedHighlight.entity.destroy();
+      }
+      this.selectedHighlight = null;
+    }
+
+    if (playerId === null) return;
+    const playerEntity = this.playerEntities.get(playerId);
+    if (!playerEntity) return;
+
+    const pc = window.pc;
+    const ring = new pc.Entity('SelectedHighlight');
+    ring.addComponent('model', { type: 'torus' });
+    ring.setLocalScale(2.2, 2.2, 0.35);
+    ring.setLocalPosition(0, 0.11, 0);
+
+    const mat = new pc.StandardMaterial();
+    mat.emissive = this.hexToColor(color);
+    mat.emissiveIntensity = 2.5;
+    mat.opacity = 0.9;
+    mat.blendType = pc.BLEND_ADDITIVE;
+    mat.update();
+    (ring.model as PCModel).material = mat;
+
+    playerEntity.addChild(ring);
+    this.selectedHighlight = { playerId, entity: ring };
   }
 
   /**

@@ -31,6 +31,21 @@ COPY . .
 # Build TypeScript modules
 RUN chmod +x build.sh && ./build.sh
 
+# Remove development artifacts for production
+RUN find static/js -name "*.map" -type f -delete \
+    && find static/js -name "*.d.ts" -type f -delete \
+    && find static/js -name "*.d.ts.map" -type f -delete \
+    && rm -rf static/js/village3d/tsconfig.json \
+    && rm -rf static/js/tsconfig.json \
+    && rm -rf node_modules \
+    && rm -rf package*.json \
+    && rm -rf tsconfig*.json \
+    && rm -rf .git* \
+    && rm -rf tests \
+    && rm -rf test-results \
+    && rm -rf playwright-report \
+    && rm -f build.sh
+
 RUN addgroup --system webwoelfe \
     && adduser --system --ingroup webwoelfe webwoelfe \
     && mkdir -p /app/instance \

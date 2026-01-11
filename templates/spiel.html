@@ -22,6 +22,27 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     margin: 0;
   }
 
+  /* Village3D primary mode (HUD-first even without fullscreen API) */
+  .game-container.village3d-primary {
+    display: block;
+    max-width: none;
+    margin: 0;
+  }
+
+  .game-container.village3d-primary .sidebar {
+    display: none;
+  }
+
+  .game-container.village3d-primary #village-3d-container {
+    height: min(86vh, 900px) !important;
+  }
+
+  /* In 3D-only modes, only keep the village container visible inside main-area */
+  .game-container.fullscreen-3d .main-area > :not(#village-3d-container),
+  .game-container.village3d-primary .main-area > :not(#village-3d-container) {
+    display: none !important;
+  }
+
   .game-container.fullscreen-3d .main-area {
     position: fixed;
     top: 0;
@@ -78,6 +99,205 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     right: 10px !important;
     gap: 10px;
   }
+
+  /* ============================================================
+     VILLAGE 3D HUD (Fullscreen primary UI)
+     ============================================================ */
+  .village3d-hud {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: none;
+    pointer-events: none;
+    font-family: var(--font-body);
+  }
+
+  .village3d-hud.is-visible {
+    display: block;
+  }
+
+  .village3d-topbar {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    pointer-events: auto;
+  }
+
+  .village3d-topbar .v3d-phase {
+    font-family: var(--font-display);
+    letter-spacing: 0.04em;
+    font-weight: 700;
+  }
+
+  .village3d-topbar .v3d-round {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    margin-left: 10px;
+  }
+
+  .village3d-role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(212, 165, 116, 0.25);
+    border: 1px solid rgba(212, 165, 116, 0.35);
+    font-weight: 700;
+  }
+
+  .v3d-icon-btn {
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+  }
+
+  .village3d-panel {
+    position: absolute;
+    top: 70px;
+    bottom: 90px;
+    width: 310px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: auto;
+    overflow: hidden;
+  }
+
+  .village3d-panel.left { left: 10px; }
+  .village3d-panel.right { right: 10px; }
+
+  .village3d-panel.is-collapsed {
+    display: none;
+  }
+
+  .village3d-panel-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .village3d-player-list {
+    overflow: auto;
+    padding-right: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .village3d-player-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .village3d-player-btn.is-dead {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .village3d-player-btn.is-selected {
+    border-color: rgba(212, 165, 116, 0.7);
+    box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.25);
+  }
+
+  .village3d-player-btn .meta {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.85rem;
+  }
+
+  .village3d-chat-messages {
+    flex: 1;
+    overflow: auto;
+    padding-right: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.9rem;
+  }
+
+  .village3d-chat-row {
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .village3d-chat-input-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .village3d-chat-input-row input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    outline: none;
+  }
+
+  .village3d-chat-input-row button {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(212, 165, 116, 0.9);
+    color: #000;
+    font-weight: 700;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .village3d-bottombar {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    pointer-events: auto;
+  }
+
+  .village3d-action-hint {
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+  }
+
+  /* HUD visibility is controlled via .is-visible (showFullscreenUI) */
 
   /* Fullscreen button styling */
   .fullscreen-toggle-btn {
@@ -1317,6 +1537,58 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
         >
           <i class="fa-solid fa-hand-pointer"></i> Klicke auf einen Spieler zum
           Auswählen
+        </div>
+
+        <!-- 3D HUD Overlay (only UI needed in fullscreen mode) -->
+        <div id="village3d-hud" class="village3d-hud">
+          <div class="village3d-topbar">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button class="v3d-icon-btn" onclick="window.toggleLeftSidebar?.()" title="Panel links umschalten">
+                <i class="fa-solid fa-bars"></i>
+              </button>
+              <div>
+                <div id="village3d-phase-name" class="v3d-phase">...</div>
+                <div id="village3d-round-info" class="v3d-round">Runde ...</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span id="village3d-role-badge" class="village3d-role-badge">Warte...</span>
+              <button class="v3d-icon-btn" onclick="window.toggleRightSidebar?.()" title="Panel rechts umschalten">
+                <i class="fa-solid fa-comments"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="village3d-left-panel" class="village3d-panel left">
+            <div class="village3d-panel-title"><i class="fa-solid fa-bullseye"></i> Ziele</div>
+            <div id="village3d-player-list" class="village3d-player-list"></div>
+
+            <div class="village3d-panel-title"><i class="fa-solid fa-masks-theater"></i> Deine Rolle</div>
+            <div id="village3d-role-desc" style="color: rgba(255,255,255,0.9); font-size: 0.95rem; line-height: 1.35;">
+              {% if rolle_info %}
+                <div style="font-weight: 700; margin-bottom: 6px; color: {{ rolle_info.farbe }};">
+                  <i class="{{ rolle_info.icon }}"></i> {{ spieler.rolle }}
+                </div>
+                <div style="color: rgba(255,255,255,0.85);">{{ rolle_info.beschreibung }}</div>
+              {% else %}
+                <div style="color: rgba(255,255,255,0.75);">Warte auf Rolleninfo...</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div id="village3d-right-panel" class="village3d-panel right">
+            <div class="village3d-panel-title"><i class="fa-solid fa-comments"></i> Chat</div>
+            <div id="village3d-chat-messages" class="village3d-chat-messages"></div>
+            <div class="village3d-chat-input-row">
+              <input id="village3d-chat-input" placeholder="Nachricht..." onkeydown="if(event.key==='Enter'){ window.sendChatMessage?.(); }" />
+              <button onclick="window.sendChatMessage?.()">Senden</button>
+            </div>
+          </div>
+
+          <div class="village3d-bottombar">
+            <div id="village3d-action-hint" class="village3d-action-hint">Warte auf deine Aktion...</div>
+            <div id="village3d-action-buttons"></div>
+          </div>
         </div>
       </div>
 
@@ -2577,9 +2849,21 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       const panel = document.getElementById('action-panel');
       let html = '';
 
+      const setVillage3DActionHint = (text) => {
+        const el = document.getElementById('village3d-action-hint');
+        if (el) el.textContent = text;
+      };
+
+      let hudButtons = [];
+
       // Verstecke Panel wenn Spieler nicht aktiv sein sollte
       if (!sollteAktivSein()) {
           panel.style.display = 'none';
+          // Keep the Village3D HUD in sync
+          if (window.village3d && window.village3d.updateActionButtons) {
+            window.village3d.updateActionButtons([]);
+          }
+          setVillage3DActionHint('Warte auf deine Aktion...');
           return;
       }
       panel.style.display = 'block';
@@ -2593,6 +2877,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       if (roleUI?.requires_target && count === 0) {
           html = '<p class="text-muted">Wähle einen Spieler</p>';
+          setVillage3DActionHint('Wähle einen Spieler als Ziel.');
+          if (window.village3d && window.village3d.updateActionButtons) {
+            window.village3d.updateActionButtons([]);
+          }
       } else {
           // =================================================================
           // DYNAMIC BUTTON GENERATION FROM ROLE UI
@@ -2607,10 +2895,26 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   return `<button class="btn ${btnClass}" ${disabled} ${title} onclick="aktion('${btn.action_type}')">${icon} ${btn.label}</button>`;
               }).join('\n');
 
+            hudButtons = roleUI.buttons.map(btn => {
+              return {
+                label: btn.label,
+                title: (count < min) ? `Wähle mindestens ${min} Spieler` : '',
+                disabled: (count < min),
+                action: () => aktion(btn.action_type)
+              };
+            });
+
               // Add skip button if allowed
               if (roleUI.can_skip) {
                   html += `\n<button class="btn btn-ghost" onclick="aktion('skip', null)">Überspringen</button>`;
+              hudButtons.push({
+                label: 'Überspringen',
+                disabled: false,
+                action: () => aktion('skip', null)
+              });
               }
+
+            setVillage3DActionHint('Wähle deine Aktion.');
           } else {
               // Fallback to hardcoded buttons for special cases
               if (aktuellePhase === 'abstimmung') {
@@ -2618,6 +2922,12 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                       <button class="btn btn-primary" onclick="aktion('tag_wahl')"><i class="fa-solid fa-check"></i> Abstimmen</button>
                       <button class="btn btn-ghost" onclick="aktion('tag_wahl', null)">Enthalten</button>
                   `;
+
+              hudButtons = [
+                { label: 'Abstimmen', disabled: false, action: () => aktion('tag_wahl') },
+                { label: 'Enthalten', disabled: false, action: () => aktion('tag_wahl', null) }
+              ];
+              setVillage3DActionHint('Gib deine Stimme ab.');
               } else if (aktuellePhase === 'diskussion_abstimmung') {
                   html = `
                       <div class="text-center">
@@ -2626,14 +2936,27 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                       </div>
                   `;
                   showVotingOverlay();
+
+              setVillage3DActionHint('Abstimmung läuft.');
+              hudButtons = [];
               } else {
                   // Generic fallback button
                   html = `<button class="btn btn-primary" onclick="aktion('generic')"><i class="fa-solid fa-hand-pointer"></i> Aktion ausführen</button>`;
+
+              hudButtons = [
+                { label: 'Aktion ausführen', disabled: false, action: () => aktion('generic') }
+              ];
+              setVillage3DActionHint('Aktion verfügbar.');
               }
           }
       }
 
       container.innerHTML = html;
+
+        // Sync Village3D HUD action buttons
+        if (window.village3d && window.village3d.updateActionButtons) {
+          window.village3d.updateActionButtons(hudButtons);
+        }
 
       // Legacy support
       if (aktuellePhase === 'diskussion_abstimmung') {
@@ -3180,11 +3503,64 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   const originalSelectSpieler = window.selectSpieler || (() => {});
   window.selectSpieler = function(spielerId) {
     originalSelectSpieler(spielerId);
-    // Highlight in 3D scene
+    // Highlight in 3D scene (persistent)
     if (window.village3d) {
-      window.village3d.highlightPlayer(spielerId, 'yellow');
+      window.village3d.setSelectedPlayer?.(spielerId, '#ffd54a');
       window.village3d.focusOnPlayer(spielerId);
     }
+    window.updateVillage3DPlayerList?.();
+  };
+
+  // Keep clearSelection in sync with Village3D selection
+  const originalClearSelection = window.clearSelection || (() => {});
+  window.clearSelection = function() {
+    originalClearSelection();
+    if (window.village3d) {
+      window.village3d.setSelectedPlayer?.(null);
+    }
+    window.updateVillage3DPlayerList?.();
+  };
+
+  // HUD player list (lets players play without watching the 3D scene)
+  window.updateVillage3DPlayerList = function() {
+    const list = document.getElementById('village3d-player-list');
+    if (!list) return;
+
+    // Source of truth: existing player cards (even when hidden in fullscreen)
+    const cards = Array.from(document.querySelectorAll('.spieler-card'));
+    const items = cards.map(card => {
+      const id = parseInt(card.getAttribute('data-id'));
+      const name = card.getAttribute('data-name') || 'Unbekannt';
+      const isAlive = !card.classList.contains('tot');
+      const isNarrator = card.getAttribute('data-ist-erzaehler') === 'true';
+      return { id, name, isAlive, isNarrator };
+    }).sort((a, b) => a.id - b.id);
+
+    list.innerHTML = '';
+    items.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'village3d-player-btn';
+      btn.type = 'button';
+
+      const isSelected = (typeof selectedSpielerId !== 'undefined' && selectedSpielerId === p.id)
+        || (typeof selectedSpielerIds !== 'undefined' && Array.isArray(selectedSpielerIds) && selectedSpielerIds.includes(p.id));
+
+      if (!p.isAlive) btn.classList.add('is-dead');
+      if (isSelected) btn.classList.add('is-selected');
+      if (p.isNarrator) btn.style.opacity = '0.65';
+
+      btn.innerHTML = `
+        <span>${p.name}</span>
+        <span class="meta">${p.isAlive ? '' : '💀'}${p.isNarrator ? ' Erz.' : ''}</span>
+      `;
+
+      btn.addEventListener('click', () => {
+        if (!p.isAlive) return;
+        selectSpieler(p.id);
+      });
+
+      list.appendChild(btn);
+    });
   };
 
   // Expose rollen_styles to Javascript
@@ -3220,14 +3596,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     return ui;
   };
 
-  // Update 3D overlays on player death
-  const originalSocket_spieler_gestorben = socket.on('spieler_gestorben', () => {});
-  socket.on('spieler_gestorben', function(data) {
-    // Update 3D scene
-    if (window.village3d) {
-      window.village3d.updatePlayerStatus(data.spieler_name, '', false);
-    }
-  });
+  // Initial HUD population
+  window.updateVillage3DPlayerList?.();
 
 
   // Exit fullscreen when game ends
@@ -3299,6 +3669,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Initialize 3D UI overlay with role and phase info
           village3d.updateTopBar(aktuellePhase, aktuelleRunde);
           village3d.updateRoleBadge(spielerRolle);
+          // Populate HUD list now that village3d is available
+          window.updateVillage3DPlayerList?.();
 
           // Update bei Phasenwechsel
           socket.on('phase_geaendert', function(data) {
@@ -3327,6 +3699,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Show death effect in 3D
           socket.on('spieler_gestorben', function(data) {
               village3d.updatePlayerStatus(data.spieler_id, false);
+              window.updateVillage3DPlayerList?.();
           });
       }
   }).catch(err => {

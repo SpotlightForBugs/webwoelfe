@@ -604,7 +604,7 @@ export default class Village3DThree {
     ground.addComponent('model', { type: 'plane' });
 
     // Larger ground for better horizon
-    const groundSize = this.isLobbyMode ? 120 : 180;
+    const groundSize = this.isLobbyMode ? 600 : 900;
     ground.setLocalScale(groundSize, 1, groundSize);
 
     const material = new pc.StandardMaterial();
@@ -621,8 +621,10 @@ export default class Village3DThree {
     (ground.model as PCModel).material = material;
     this.app.root.addChild(ground);
 
+    this.createTerrainUndulations(groundSize);
+
     // Random grass patches for variation
-    const patchCount = this.isLobbyMode ? 20 : 50;
+    const patchCount = this.isLobbyMode ? 40 : 90;
     for (let i = 0; i < patchCount; i++) {
       const patch = new pc.Entity('GrassPatch');
       patch.addComponent('model', { type: 'plane' });
@@ -677,6 +679,105 @@ export default class Village3DThree {
     // Add decorative stones around the square
     if (!this.isLobbyMode) {
       this.createSquareDecorations();
+    }
+  }
+
+  private createTerrainUndulations(groundSize: number): void {
+    if (!this.app) return;
+    const pc = window.pc;
+
+    const hillColors = [
+      new pc.Color(0.07, 0.09, 0.05),
+      new pc.Color(0.06, 0.08, 0.05),
+      new pc.Color(0.08, 0.11, 0.06),
+    ];
+    const hillMats = hillColors.map(color => {
+      const mat = new pc.StandardMaterial();
+      mat.diffuse = color;
+      mat.specular = new pc.Color(0.01, 0.01, 0.01);
+      mat.shininess = 1;
+      mat.update();
+      return mat;
+    });
+
+    const ridgeMat = new pc.StandardMaterial();
+    ridgeMat.diffuse = new pc.Color(0.07, 0.09, 0.05);
+    ridgeMat.specular = new pc.Color(0.01, 0.01, 0.01);
+    ridgeMat.shininess = 1;
+    ridgeMat.update();
+
+    const innerBumpCount = this.isLobbyMode ? 6 : 10;
+    for (let i = 0; i < innerBumpCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 10 + Math.random() * 12;
+      const size = 6 + Math.random() * 8;
+      const height = 0.3 + Math.random() * 0.7;
+
+      const bump = new pc.Entity(`Bump-${i}`);
+      bump.addComponent('model', { type: 'sphere' });
+      bump.setLocalScale(size, height, size);
+      bump.setPosition(
+        Math.cos(angle) * radius,
+        height * 0.35,
+        Math.sin(angle) * radius
+      );
+      (bump.model as PCModel).material =
+        hillMats[Math.floor(Math.random() * hillMats.length)];
+      this.app.root.addChild(bump);
+    }
+
+    const hillCount = this.isLobbyMode ? 10 : 18;
+    const hillMinRadius = this.isLobbyMode ? 24 : 32;
+    const hillMaxRadius = groundSize * 0.45;
+    for (let i = 0; i < hillCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = hillMinRadius + Math.random() * (hillMaxRadius - hillMinRadius);
+      const size = this.isLobbyMode ? 12 + Math.random() * 18 : 18 + Math.random() * 28;
+      const height = this.isLobbyMode ? 1.6 + Math.random() * 3 : 2.2 + Math.random() * 4.5;
+
+      const hill = new pc.Entity(`Hill-${i}`);
+      hill.addComponent('model', { type: 'sphere' });
+      hill.setLocalScale(size, height, size);
+      hill.setPosition(
+        Math.cos(angle) * radius,
+        height * 0.35,
+        Math.sin(angle) * radius
+      );
+      hill.setLocalEulerAngles(
+        (Math.random() - 0.5) * 6,
+        Math.random() * 360,
+        (Math.random() - 0.5) * 6
+      );
+      (hill.model as PCModel).material =
+        hillMats[Math.floor(Math.random() * hillMats.length)];
+      this.app.root.addChild(hill);
+    }
+
+    const ridgeCount = this.isLobbyMode ? 5 : 8;
+    const ridgeMinRadius = this.isLobbyMode ? 18 : 26;
+    const ridgeMaxRadius = groundSize * 0.4;
+    for (let i = 0; i < ridgeCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = ridgeMinRadius + Math.random() * (ridgeMaxRadius - ridgeMinRadius);
+      const length = this.isLobbyMode ? 25 + Math.random() * 35 : 35 + Math.random() * 55;
+      const width = 6 + Math.random() * 10;
+      const height = 0.6 + Math.random() * 1.6;
+
+      const ridge = new pc.Entity(`Ridge-${i}`);
+      ridge.addComponent('model', { type: 'box' });
+      ridge.setLocalScale(length, height, width);
+      ridge.setPosition(
+        Math.cos(angle) * radius,
+        height * 0.5,
+        Math.sin(angle) * radius
+      );
+      ridge.setLocalEulerAngles(
+        (Math.random() - 0.5) * 4,
+        Math.random() * 360,
+        (Math.random() - 0.5) * 4
+      );
+      (ridge.model as PCModel).material = ridgeMat;
+      this.app.root.addChild(ridge);
     }
   }
 
@@ -790,43 +891,75 @@ export default class Village3DThree {
    * Create village buildings
    */
   private createVillageBuildings(): void {
-    const houseCount = this.isLobbyMode
-      ? 5 + Math.floor(Math.random() * 3)
-      : 8 + Math.floor(Math.random() * 4);
-    const angleOffset = Math.random() * Math.PI * 2;
-    const minRadius = this.isLobbyMode ? 16 : 20;
-    const maxRadius = this.isLobbyMode ? 24 : 30;
-    const angleStep = (Math.PI * 2) / houseCount;
+    const innerCount = this.isLobbyMode
+      ? 7 + Math.floor(Math.random() * 4)
+      : 12 + Math.floor(Math.random() * 6);
+    const outerCount = this.isLobbyMode
+      ? 4 + Math.floor(Math.random() * 3)
+      : 8 + Math.floor(Math.random() * 5);
+    const innerOffset = Math.random() * Math.PI * 2;
+    const outerOffset = Math.random() * Math.PI * 2;
+    const innerStep = (Math.PI * 2) / innerCount;
+    const outerStep = (Math.PI * 2) / outerCount;
+    let buildingIndex = 0;
 
-    for (let i = 0; i < houseCount; i++) {
-      const angle =
-        angleOffset + i * angleStep + (Math.random() - 0.5) * angleStep * 0.7;
-      const radius = minRadius + Math.random() * (maxRadius - minRadius);
+    for (let i = 0; i < innerCount; i++) {
+      const angle = innerOffset + i * innerStep + (Math.random() - 0.5) * innerStep * 0.6;
+      const radius = (this.isLobbyMode ? 14 : 18) + Math.random() * (this.isLobbyMode ? 8 : 12);
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      const facing = (-angle * 180) / Math.PI + 90;
-      const rot = facing + (Math.random() - 0.5) * 25;
-      const scale = 0.85 + Math.random() * 0.35;
-      this.createHouse(x, z, rot, i, scale);
+      const rot = (-angle * 180) / Math.PI + 90 + (Math.random() - 0.5) * 18;
+      const scale = 0.85 + Math.random() * 0.4;
+      const typeRoll = Math.random();
+
+      if (typeRoll < 0.5) {
+        this.createHouse(x, z, rot, buildingIndex, scale);
+      } else if (typeRoll < 0.75) {
+        this.createHut(x, z, rot, buildingIndex, scale);
+      } else {
+        this.createLonghouse(x, z, rot, buildingIndex, scale);
+      }
+      buildingIndex += 1;
+    }
+
+    for (let i = 0; i < outerCount; i++) {
+      const angle = outerOffset + i * outerStep + (Math.random() - 0.5) * outerStep * 0.7;
+      const radius = (this.isLobbyMode ? 24 : 32) + Math.random() * (this.isLobbyMode ? 10 : 18);
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const rot = (-angle * 180) / Math.PI + 90 + (Math.random() - 0.5) * 25;
+      const scale = 0.9 + Math.random() * 0.5;
+      const typeRoll = Math.random();
+
+      if (typeRoll < 0.35) {
+        this.createBarn(x, z, rot, buildingIndex, scale);
+      } else if (typeRoll < 0.6) {
+        this.createWatchTower(x, z, rot, buildingIndex, scale);
+      } else if (typeRoll < 0.8) {
+        this.createHut(x, z, rot, buildingIndex, scale);
+      } else {
+        this.createLonghouse(x, z, rot, buildingIndex, scale);
+      }
+      buildingIndex += 1;
     }
 
     // Church (special building)
-    const churchBase = this.isLobbyMode ? { x: -10, z: -16 } : { x: -12, z: -20 };
+    const churchBase = this.isLobbyMode ? { x: -10, z: -18 } : { x: -14, z: -24 };
     const churchFlipX = Math.random() < 0.5 ? -1 : 1;
     const churchFlipZ = Math.random() < 0.5 ? -1 : 1;
-    const churchOffsetX = (Math.random() - 0.5) * 6;
-    const churchOffsetZ = (Math.random() - 0.5) * 6;
+    const churchOffsetX = (Math.random() - 0.5) * 8;
+    const churchOffsetZ = (Math.random() - 0.5) * 8;
     this.createChurch(
       churchBase.x * churchFlipX + churchOffsetX,
       churchBase.z * churchFlipZ + churchOffsetZ
     );
 
     // Well (near center)
-    const wellBase = this.isLobbyMode ? { x: 8, z: 8 } : { x: 12, z: 12 };
+    const wellBase = this.isLobbyMode ? { x: 8, z: 9 } : { x: 12, z: 14 };
     const wellFlipX = Math.random() < 0.5 ? -1 : 1;
     const wellFlipZ = Math.random() < 0.5 ? -1 : 1;
-    const wellOffsetX = (Math.random() - 0.5) * 4;
-    const wellOffsetZ = (Math.random() - 0.5) * 4;
+    const wellOffsetX = (Math.random() - 0.5) * 6;
+    const wellOffsetZ = (Math.random() - 0.5) * 6;
     this.createWell(
       wellBase.x * wellFlipX + wellOffsetX,
       wellBase.z * wellFlipZ + wellOffsetZ
@@ -1010,6 +1143,326 @@ export default class Village3DThree {
     );
 
     this.app.root.addChild(rock);
+  }
+
+  private createHut(x: number, z: number, rotation: number, index: number, scale: number = 1): void {
+    if (!this.app) return;
+    const pc = window.pc;
+
+    const hut = new pc.Entity(`Hut-${index}`);
+
+    const base = new pc.Entity('HutBase');
+    base.addComponent('model', { type: 'cylinder' });
+    base.setLocalScale(3.2, 1.4, 3.2);
+    base.setLocalPosition(0, 0.7, 0);
+
+    const wallMat = new pc.StandardMaterial();
+    const wallTint = 0.02 + Math.random() * 0.04;
+    wallMat.diffuse = new pc.Color(0.22 + wallTint, 0.18 + wallTint, 0.14 + wallTint);
+    wallMat.specular = new pc.Color(0.03, 0.03, 0.03);
+    wallMat.update();
+    (base.model as PCModel).material = wallMat;
+    hut.addChild(base);
+
+    const roof = new pc.Entity('HutRoof');
+    roof.addComponent('model', { type: 'cone' });
+    roof.setLocalScale(4.1, 2.4, 4.1);
+    roof.setLocalPosition(0, 2.4, 0);
+
+    const roofMat = new pc.StandardMaterial();
+    const roofTint = (Math.random() - 0.5) * 0.06;
+    roofMat.diffuse = new pc.Color(0.18 + roofTint, 0.1 + roofTint * 0.6, 0.06 + roofTint * 0.4);
+    roofMat.update();
+    (roof.model as PCModel).material = roofMat;
+    hut.addChild(roof);
+
+    const door = new pc.Entity('HutDoor');
+    door.addComponent('model', { type: 'box' });
+    door.setLocalScale(0.9, 1.5, 0.12);
+    door.setLocalPosition(0, 0.75, 1.6);
+    const doorMat = new pc.StandardMaterial();
+    doorMat.diffuse = new pc.Color(0.2, 0.14, 0.08);
+    doorMat.update();
+    (door.model as PCModel).material = doorMat;
+    hut.addChild(door);
+
+    const windowMat = new pc.StandardMaterial();
+    windowMat.diffuse = new pc.Color(0.12, 0.1, 0.08);
+    windowMat.emissive = new pc.Color(0.35, 0.22, 0.1);
+    windowMat.opacity = 0.75;
+    windowMat.blendType = pc.BLEND_NORMAL;
+    windowMat.update();
+
+    const windowLeft = new pc.Entity('HutWindowL');
+    windowLeft.addComponent('model', { type: 'box' });
+    windowLeft.setLocalScale(0.5, 0.5, 0.08);
+    windowLeft.setLocalPosition(-0.9, 1.0, 1.45);
+    (windowLeft.model as PCModel).material = windowMat;
+    hut.addChild(windowLeft);
+
+    const windowRight = new pc.Entity('HutWindowR');
+    windowRight.addComponent('model', { type: 'box' });
+    windowRight.setLocalScale(0.5, 0.5, 0.08);
+    windowRight.setLocalPosition(0.9, 1.0, 1.45);
+    (windowRight.model as PCModel).material = windowMat;
+    hut.addChild(windowRight);
+
+    const chimney = new pc.Entity('HutChimney');
+    chimney.addComponent('model', { type: 'box' });
+    chimney.setLocalScale(0.35, 1.1, 0.35);
+    chimney.setLocalPosition(1.1, 2.6, -0.4);
+    const chimneyMat = new pc.StandardMaterial();
+    chimneyMat.diffuse = new pc.Color(0.14, 0.14, 0.16);
+    chimneyMat.update();
+    (chimney.model as PCModel).material = chimneyMat;
+    hut.addChild(chimney);
+
+    hut.setLocalScale(scale, scale, scale);
+    hut.setPosition(x, 0, z);
+    hut.setEulerAngles(0, rotation, 0);
+    this.app.root.addChild(hut);
+    this.buildings.push(hut);
+  }
+
+  private createLonghouse(x: number, z: number, rotation: number, index: number, scale: number = 1): void {
+    if (!this.app) return;
+    const pc = window.pc;
+
+    const longhouse = new pc.Entity(`Longhouse-${index}`);
+
+    const base = new pc.Entity('LonghouseBase');
+    base.addComponent('model', { type: 'box' });
+    base.setLocalScale(7, 2.0, 3.6);
+    base.setLocalPosition(0, 1.0, 0);
+
+    const baseMat = new pc.StandardMaterial();
+    const baseTint = 0.02 + Math.random() * 0.04;
+    baseMat.diffuse = new pc.Color(0.2 + baseTint, 0.17 + baseTint, 0.13 + baseTint);
+    baseMat.specular = new pc.Color(0.03, 0.03, 0.03);
+    baseMat.update();
+    (base.model as PCModel).material = baseMat;
+    longhouse.addChild(base);
+
+    const roofAngle = 22 + Math.random() * 12;
+    const houseWidth = 7.2;
+    const houseDepth = 3.8;
+    const roofOverhang = 0.6;
+    const roofBaseY = 2.2;
+
+    const roofRad = (roofAngle * Math.PI) / 180;
+    const halfWidth = houseWidth / 2 + roofOverhang;
+    const roofPanelWidth = halfWidth / Math.cos(roofRad);
+    const roofPeakHeight = halfWidth * Math.tan(roofRad);
+    const roofLength = houseDepth + roofOverhang * 2;
+
+    const roofMat = new pc.StandardMaterial();
+    const roofTint = (Math.random() - 0.5) * 0.06;
+    roofMat.diffuse = new pc.Color(0.17 + roofTint, 0.09 + roofTint * 0.6, 0.06 + roofTint * 0.4);
+    roofMat.update();
+
+    const roofLeft = new pc.Entity('LonghouseRoofLeft');
+    roofLeft.addComponent('model', { type: 'box' });
+    roofLeft.setLocalScale(roofPanelWidth, 0.14, roofLength);
+    const panelCenterX = -halfWidth / 2;
+    const panelCenterY = roofBaseY + roofPeakHeight / 2;
+    roofLeft.setLocalPosition(panelCenterX, panelCenterY, 0);
+    roofLeft.setLocalEulerAngles(0, 0, roofAngle);
+    (roofLeft.model as PCModel).material = roofMat;
+    longhouse.addChild(roofLeft);
+
+    const roofRight = new pc.Entity('LonghouseRoofRight');
+    roofRight.addComponent('model', { type: 'box' });
+    roofRight.setLocalScale(roofPanelWidth, 0.14, roofLength);
+    roofRight.setLocalPosition(halfWidth / 2, panelCenterY, 0);
+    roofRight.setLocalEulerAngles(0, 0, -roofAngle);
+    (roofRight.model as PCModel).material = roofMat;
+    longhouse.addChild(roofRight);
+
+    const door = new pc.Entity('LonghouseDoor');
+    door.addComponent('model', { type: 'box' });
+    door.setLocalScale(1.2, 1.8, 0.12);
+    door.setLocalPosition(0, 0.9, 1.9);
+    const doorMat = new pc.StandardMaterial();
+    doorMat.diffuse = new pc.Color(0.2, 0.14, 0.08);
+    doorMat.update();
+    (door.model as PCModel).material = doorMat;
+    longhouse.addChild(door);
+
+    const windowMat = new pc.StandardMaterial();
+    windowMat.diffuse = new pc.Color(0.12, 0.1, 0.08);
+    windowMat.emissive = new pc.Color(0.35, 0.22, 0.1);
+    windowMat.opacity = 0.7;
+    windowMat.blendType = pc.BLEND_NORMAL;
+    windowMat.update();
+
+    for (let i = 0; i < 3; i++) {
+      const window = new pc.Entity(`LonghouseWindow-${i}`);
+      window.addComponent('model', { type: 'box' });
+      window.setLocalScale(0.7, 0.6, 0.08);
+      window.setLocalPosition(-2.4 + i * 2.4, 1.0, 1.9);
+      (window.model as PCModel).material = windowMat;
+      longhouse.addChild(window);
+    }
+
+    longhouse.setLocalScale(scale, scale, scale);
+    longhouse.setPosition(x, 0, z);
+    longhouse.setEulerAngles(0, rotation, 0);
+    this.app.root.addChild(longhouse);
+    this.buildings.push(longhouse);
+  }
+
+  private createBarn(x: number, z: number, rotation: number, index: number, scale: number = 1): void {
+    if (!this.app) return;
+    const pc = window.pc;
+
+    const barn = new pc.Entity(`Barn-${index}`);
+
+    const base = new pc.Entity('BarnBase');
+    base.addComponent('model', { type: 'box' });
+    base.setLocalScale(6.6, 3.0, 4.4);
+    base.setLocalPosition(0, 1.5, 0);
+
+    const baseMat = new pc.StandardMaterial();
+    const baseTint = 0.02 + Math.random() * 0.05;
+    baseMat.diffuse = new pc.Color(0.23 + baseTint, 0.18 + baseTint, 0.13 + baseTint);
+    baseMat.specular = new pc.Color(0.03, 0.03, 0.03);
+    baseMat.update();
+    (base.model as PCModel).material = baseMat;
+    barn.addChild(base);
+
+    const roofAngle = 28 + Math.random() * 10;
+    const barnWidth = 6.9;
+    const barnDepth = 4.6;
+    const roofOverhang = 0.7;
+    const roofBaseY = 3.2;
+
+    const roofRad = (roofAngle * Math.PI) / 180;
+    const halfWidth = barnWidth / 2 + roofOverhang;
+    const roofPanelWidth = halfWidth / Math.cos(roofRad);
+    const roofPeakHeight = halfWidth * Math.tan(roofRad);
+    const roofLength = barnDepth + roofOverhang * 2;
+
+    const roofMat = new pc.StandardMaterial();
+    const roofTint = (Math.random() - 0.5) * 0.06;
+    roofMat.diffuse = new pc.Color(0.16 + roofTint, 0.09 + roofTint * 0.6, 0.05 + roofTint * 0.4);
+    roofMat.update();
+
+    const roofLeft = new pc.Entity('BarnRoofLeft');
+    roofLeft.addComponent('model', { type: 'box' });
+    roofLeft.setLocalScale(roofPanelWidth, 0.16, roofLength);
+    const panelCenterX = -halfWidth / 2;
+    const panelCenterY = roofBaseY + roofPeakHeight / 2;
+    roofLeft.setLocalPosition(panelCenterX, panelCenterY, 0);
+    roofLeft.setLocalEulerAngles(0, 0, roofAngle);
+    (roofLeft.model as PCModel).material = roofMat;
+    barn.addChild(roofLeft);
+
+    const roofRight = new pc.Entity('BarnRoofRight');
+    roofRight.addComponent('model', { type: 'box' });
+    roofRight.setLocalScale(roofPanelWidth, 0.16, roofLength);
+    roofRight.setLocalPosition(halfWidth / 2, panelCenterY, 0);
+    roofRight.setLocalEulerAngles(0, 0, -roofAngle);
+    (roofRight.model as PCModel).material = roofMat;
+    barn.addChild(roofRight);
+
+    const barnDoor = new pc.Entity('BarnDoor');
+    barnDoor.addComponent('model', { type: 'box' });
+    barnDoor.setLocalScale(2.4, 2.2, 0.14);
+    barnDoor.setLocalPosition(0, 1.1, 2.25);
+    const doorMat = new pc.StandardMaterial();
+    doorMat.diffuse = new pc.Color(0.2, 0.14, 0.08);
+    doorMat.update();
+    (barnDoor.model as PCModel).material = doorMat;
+    barn.addChild(barnDoor);
+
+    const loft = new pc.Entity('BarnLoftWindow');
+    loft.addComponent('model', { type: 'box' });
+    loft.setLocalScale(1.2, 0.8, 0.1);
+    loft.setLocalPosition(0, 2.4, 2.26);
+    const loftMat = new pc.StandardMaterial();
+    loftMat.diffuse = new pc.Color(0.12, 0.1, 0.08);
+    loftMat.emissive = new pc.Color(0.3, 0.2, 0.1);
+    loftMat.opacity = 0.6;
+    loftMat.blendType = pc.BLEND_NORMAL;
+    loftMat.update();
+    (loft.model as PCModel).material = loftMat;
+    barn.addChild(loft);
+
+    barn.setLocalScale(scale, scale, scale);
+    barn.setPosition(x, 0, z);
+    barn.setEulerAngles(0, rotation, 0);
+    this.app.root.addChild(barn);
+    this.buildings.push(barn);
+  }
+
+  private createWatchTower(x: number, z: number, rotation: number, index: number, scale: number = 1): void {
+    if (!this.app) return;
+    const pc = window.pc;
+
+    const tower = new pc.Entity(`WatchTower-${index}`);
+
+    const base = new pc.Entity('TowerBase');
+    base.addComponent('model', { type: 'box' });
+    base.setLocalScale(2.6, 3.6, 2.6);
+    base.setLocalPosition(0, 1.8, 0);
+
+    const baseMat = new pc.StandardMaterial();
+    baseMat.diffuse = new pc.Color(0.18, 0.14, 0.1);
+    baseMat.specular = new pc.Color(0.03, 0.03, 0.03);
+    baseMat.update();
+    (base.model as PCModel).material = baseMat;
+    tower.addChild(base);
+
+    const mid = new pc.Entity('TowerMid');
+    mid.addComponent('model', { type: 'box' });
+    mid.setLocalScale(2.1, 3.0, 2.1);
+    mid.setLocalPosition(0, 4.8, 0);
+    const midMat = new pc.StandardMaterial();
+    midMat.diffuse = new pc.Color(0.16, 0.12, 0.08);
+    midMat.specular = new pc.Color(0.03, 0.03, 0.03);
+    midMat.update();
+    (mid.model as PCModel).material = midMat;
+    tower.addChild(mid);
+
+    const platform = new pc.Entity('TowerPlatform');
+    platform.addComponent('model', { type: 'box' });
+    platform.setLocalScale(3.4, 0.6, 3.4);
+    platform.setLocalPosition(0, 6.6, 0);
+    const platformMat = new pc.StandardMaterial();
+    platformMat.diffuse = new pc.Color(0.2, 0.15, 0.1);
+    platformMat.update();
+    (platform.model as PCModel).material = platformMat;
+    tower.addChild(platform);
+
+    const roof = new pc.Entity('TowerRoof');
+    roof.addComponent('model', { type: 'cone' });
+    roof.setLocalScale(3.2, 2.4, 3.2);
+    roof.setLocalPosition(0, 8.0, 0);
+    const roofMat = new pc.StandardMaterial();
+    roofMat.diffuse = new pc.Color(0.15, 0.08, 0.05);
+    roofMat.update();
+    (roof.model as PCModel).material = roofMat;
+    tower.addChild(roof);
+
+    const windowMat = new pc.StandardMaterial();
+    windowMat.diffuse = new pc.Color(0.12, 0.1, 0.08);
+    windowMat.emissive = new pc.Color(0.28, 0.2, 0.1);
+    windowMat.opacity = 0.6;
+    windowMat.blendType = pc.BLEND_NORMAL;
+    windowMat.update();
+
+    const towerWindow = new pc.Entity('TowerWindow');
+    towerWindow.addComponent('model', { type: 'box' });
+    towerWindow.setLocalScale(0.5, 0.5, 0.08);
+    towerWindow.setLocalPosition(0, 5.2, 1.08);
+    (towerWindow.model as PCModel).material = windowMat;
+    tower.addChild(towerWindow);
+
+    tower.setLocalScale(scale, scale, scale);
+    tower.setPosition(x, 0, z);
+    tower.setEulerAngles(0, rotation, 0);
+    this.app.root.addChild(tower);
+    this.buildings.push(tower);
   }
 
   /**

@@ -74,6 +74,11 @@ class Amor(Role):
                 icon="💕",
                 query_name="verliebte",
                 defined_by="Amor",
+                # Dynamic visibility: Partners + Amor see lovers
+                visible_to=["partner", "source_role"],  # Partners see each other, Amor sees all lovers
+                reveals_role=True,  # Partners see each other's roles
+                snapshot_role_on_set=True,  # Store role at time of amor's action
+                snapshot_key="global.verliebt_rolle_snapshot",
             ),
         ]
 

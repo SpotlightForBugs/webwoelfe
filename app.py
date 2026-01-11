@@ -48,6 +48,25 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///webwoelfe.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 Minify(app=app, html=True, js=True, cssless=True)
 
+
+# =============================================================================
+# TEMPLATE HELPERS - For CSS inlining
+# =============================================================================
+
+@app.context_processor
+def inject_css_reader():
+    """Inject a function to read CSS files for inlining."""
+    def read_css(filename):
+        """Read a CSS file from static folder for inlining."""
+        try:
+            css_path = os.path.join(app.static_folder, filename)
+            with open(css_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except Exception as e:
+            logger.warning(f"Could not read CSS file {filename}: {e}")
+            return f"/* Error loading {filename} */" #Make this also a console.log error in the browser
+    return dict(read_css=read_css)
+
 # Automatic phases that advance immediately after audio (no player interaction needed)
 # These are pure transition/info phases
 AUTOMATISCHE_PHASEN = {
@@ -553,6 +572,48 @@ def spiel(code):
             spieler.rolle
         ) and game_logic.ist_werwolf_rolle(s.rolle):
             spieler_data["ist_werwolf"] = True
+        
+        # =========================================================================
+        # DYNAMIC VISIBILITY - Replaces hardcoded Amor/lover checks
+        # =========================================================================
+        # Get all GlobalStateDefinitions from registered roles
+        from roles.base import get_player_visual_effects
+        
+        global_state_defs = RoleRegistry.get_all_global_state_definitions_objects()
+        
+        # Get visual effects for this player, filtered by viewer visibility
+        player_effects = get_player_visual_effects(
+            s, 
+            global_state_defs,
+            viewer_id=spieler.id,
+            viewer_rolle=spieler.rolle
+        )
+        
+        # Apply effects to player data
+        for effect in player_effects:
+            # Mark player with the effect's CSS class
+            if effect.get("css_class"):
+                spieler_data.setdefault("effect_classes", []).append(effect["css_class"])
+            
+            # Mark visual effect type (e.g., "heart" for lovers)
+            if effect.get("visual_effect"):
+                spieler_data.setdefault("visual_effects", []).append(effect["visual_effect"])
+                # Special handling for known effect types
+                if effect["visual_effect"] == "heart":
+                    spieler_data["ist_verliebt"] = True
+            
+            # If this effect reveals the target's role, include it
+            if effect.get("reveals_role") and effect.get("revealed_role"):
+                spieler_data["rolle"] = effect["revealed_role"]
+                spieler_data["ist_partner"] = True  # Mark as partner for UI styling
+            
+            # Add icon if present
+            if effect.get("icon"):
+                spieler_data.setdefault("effect_icons", []).append(effect["icon"])
+        
+        # Note: Amor-specific visibility is now handled via GlobalStateDefinition
+        # with visible_to="source_role" - no hardcoded role checks needed
+        
         sichere_spieler.append(spieler_data)
 
     # Erzähler-Text für Gruppen-Modus
@@ -763,6 +824,93 @@ def get_phase_info(phase_name):
         "success": True,
         "phase": phase_name,
         "info": info,
+    })
+
+
+@app.route("/api/game/<code>/phase-info", methods=["GET"])
+def get_game_phase_info(code):
+    """
+    Get dynamic phase type information for a game.
+    
+    This replaces hardcoded phase lists in the frontend.
+    Returns:
+        - phase: Current phase name
+        - phase_type: "day", "night", or "transition"
+        - is_night: Boolean for day/night cycle
+        - active_role: Role that is currently acting (if applicable)
+        - victim_info: Victim information for roles like Hexe (if applicable)
+    """
+    from roles import RoleRegistry
+    
+    raum = Raum.query.filter_by(code=code).first()
+    if not raum:
+        return jsonify({"success": False, "error": "Raum nicht gefunden"}), 404
+    
+    spieler = hole_aktuellen_spieler()
+    if not spieler or spieler.raum_id != raum.id:
+        return jsonify({"success": False, "error": "Nicht autorisiert"}), 403
+    
+    phase = raum.aktuelle_phase
+    
+    # Determine phase type dynamically
+    # Day phases are explicit; night phases are derived from role phases
+    known_day_phases = ['tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 
+                        'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt',
+                        'diskussion_abstimmung', 'abstimmung_ergebnis']
+    
+    if phase in known_day_phases:
+        phase_type = "day"
+        is_night = False
+    elif phase.startswith("nacht") or phase == "nacht_start" or phase == "nacht_ende":
+        phase_type = "night"
+        is_night = True
+    elif phase.endswith("_phase"):
+        # Role phase - check if it's a night role
+        role = RoleRegistry.get_role_for_phase(phase)
+        if role:
+            # If role has night activity, it's a night phase
+            is_active = role.is_active_on_first_night() or role.is_active_on_every_night()
+            phase_type = "night" if is_active else "transition"
+            is_night = is_active
+        else:
+            phase_type = "night"  # Default to night for unknown _phase endings
+            is_night = True
+    else:
+        phase_type = "transition"
+        is_night = False
+    
+    # Get active role for this phase
+    active_role = None
+    role = RoleRegistry.get_role_for_phase(phase)
+    if role:
+        active_role = role.info.name
+    
+    # Get victim info if applicable (for Hexe, etc.)
+    victim_info = None
+    if spieler.rolle and active_role:
+        viewer_role = RoleRegistry.get(spieler.rolle)
+        if viewer_role:
+            kontext = game_logic.SpielKontext.from_raum(raum)
+            try:
+                start_info = viewer_role.get_phase_start_info(spieler, kontext)
+                if start_info and "werwolf_opfer_id" in start_info:
+                    opfer = db.session.get(Spieler, start_info["werwolf_opfer_id"])
+                    if opfer:
+                        victim_info = {
+                            "id": opfer.id,
+                            "name": opfer.name,
+                        }
+            except Exception as e:
+                log_ts(f"[Phase Info] Error getting start info: {e}")
+    
+    return jsonify({
+        "success": True,
+        "phase": phase,
+        "phase_type": phase_type,
+        "is_night": is_night,
+        "active_role": active_role,
+        "victim_info": victim_info,
+        "runde": raum.runde,
     })
 
 

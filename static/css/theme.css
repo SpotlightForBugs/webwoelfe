@@ -1,9 +1,3 @@
-/**
- * Webwoelfe Theme System
- * Color palette based on logo-mit-text.png
- * https://coolors.co/0a0606-950706-941814-332a29-6c5d5b
- */
-
 :root {
     /* === PRIMARY PALETTE (from logo) === */
     --color-void: #0A0606;           /* Deepest black - backgrounds */

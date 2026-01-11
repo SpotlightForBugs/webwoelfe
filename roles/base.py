@@ -207,6 +207,11 @@ class GlobalStateDefinition:
 
     Wird von Rollen definiert und beim Registry-Laden gesammelt.
     Ermöglicht dynamische Queries statt hardcoded Checks.
+    
+    Visibility Control:
+        - visible_to: Who can see that this state is active on a player
+        - reveals_role: If True, the target's role is revealed to viewers
+        - snapshot_role_on_set: If True, store a copy of the role at state-set time
     """
 
     key: str  # Voller Key inkl. "global." prefix
@@ -228,6 +233,26 @@ class GlobalStateDefinition:
 
     # Targeting config for complex targeting
     targeting_config: Optional[TargetingConfig] = None
+    
+    # =========================================================================
+    # DYNAMIC VISIBILITY CONTROL - Replaces hardcoded role checks in app.py
+    # =========================================================================
+    
+    # Who can see this state on a player?
+    # Options: "all", "self", "source_role", "partner", "team", "erzaehler"
+    # "partner" = the player referenced in the state value (for PLAYER_ID types)
+    # Can be a single string or a list for multiple visibility rules (OR logic)
+    visible_to: Union[str, List[str]] = "all"
+    
+    # If True, viewers who can see this state also see the target's role
+    reveals_role: bool = False
+    
+    # If True, snapshot the role at time of state assignment
+    # (useful for converted players - shows what they were before conversion)
+    snapshot_role_on_set: bool = False
+    
+    # Additional key to store the snapshotted role (e.g., "global.verliebt_rolle_snapshot")
+    snapshot_key: Optional[str] = None
 
 
 @dataclass
@@ -1739,6 +1764,7 @@ def get_player_visual_effects(
     spieler: "Spieler",
     global_state_defs: Dict[str, "GlobalStateDefinition"],
     viewer_id: Optional[int] = None,
+    viewer_rolle: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """
     Ermittelt alle visuellen Effekte die für einen Spieler angezeigt werden sollen.
@@ -1747,9 +1773,10 @@ def get_player_visual_effects(
         spieler: Der Spieler dessen Effekte ermittelt werden
         global_state_defs: Dict aller GlobalStateDefinitions
         viewer_id: ID des betrachtenden Spielers (für Sichtbarkeit)
+        viewer_rolle: Rolle des betrachtenden Spielers
 
     Returns:
-        Liste von Effekt-Dicts mit css_class, icon, etc.
+        Liste von Effekt-Dicts mit css_class, icon, reveals_role, etc.
     """
     effects = []
     all_state = get_all_spieler_state(spieler)
@@ -1763,20 +1790,117 @@ def get_player_visual_effects(
         # Suche GlobalStateDefinition
         if key in global_state_defs:
             gsd = global_state_defs[key]
-            effects.append(
-                {
-                    "key": key,
-                    "value": value,
-                    "css_class": gsd.css_class,
-                    "icon": gsd.icon,
-                    "visual_effect": (
-                        gsd.visual_effect.value if gsd.visual_effect else None
-                    ),
-                    "name": gsd.name,
-                }
+            
+            # Check visibility rules
+            is_visible = _check_visibility(
+                gsd, spieler, value, viewer_id, viewer_rolle
             )
+            
+            if not is_visible:
+                continue
+            
+            effect_dict = {
+                "key": key,
+                "value": value,
+                "css_class": gsd.css_class,
+                "icon": gsd.icon,
+                "visual_effect": (
+                    gsd.visual_effect.value if gsd.visual_effect else None
+                ),
+                "name": gsd.name,
+                "reveals_role": gsd.reveals_role,
+            }
+            
+            # If this state reveals role, include it
+            if gsd.reveals_role:
+                # Prefer snapshot if available
+                if gsd.snapshot_key:
+                    snapshot = get_spieler_state(spieler, gsd.snapshot_key)
+                    if snapshot:
+                        effect_dict["revealed_role"] = snapshot
+                    else:
+                        effect_dict["revealed_role"] = spieler.rolle
+                else:
+                    effect_dict["revealed_role"] = spieler.rolle
+            
+            effects.append(effect_dict)
 
     return effects
+
+
+def _check_visibility(
+    gsd: "GlobalStateDefinition",
+    target: "Spieler",
+    state_value: Any,
+    viewer_id: Optional[int],
+    viewer_rolle: Optional[str],
+) -> bool:
+    """
+    Prüft ob ein Viewer einen bestimmten State auf einem Spieler sehen kann.
+    
+    Args:
+        gsd: Die GlobalStateDefinition
+        target: Der Spieler auf dem der State ist
+        state_value: Der Wert des States
+        viewer_id: ID des Viewers
+        viewer_rolle: Rolle des Viewers
+        
+    Returns:
+        True wenn sichtbar, False sonst
+    """
+    visible_to = gsd.visible_to
+    
+    # Handle list values (OR logic - visible if ANY rule matches)
+    if isinstance(visible_to, list):
+        return any(
+            _check_single_visibility(rule, gsd, target, state_value, viewer_id, viewer_rolle)
+            for rule in visible_to
+        )
+    
+    return _check_single_visibility(visible_to, gsd, target, state_value, viewer_id, viewer_rolle)
+
+
+def _check_single_visibility(
+    rule: str,
+    gsd: "GlobalStateDefinition",
+    target: "Spieler",
+    state_value: Any,
+    viewer_id: Optional[int],
+    viewer_rolle: Optional[str],
+) -> bool:
+    """Check a single visibility rule."""
+    if rule == "all":
+        return True
+    
+    if viewer_id is None:
+        # No viewer specified - only "all" visibility passes
+        return rule == "all"
+    
+    if rule == "self":
+        # Only the player with the state can see it
+        return viewer_id == target.id
+    
+    if rule == "partner":
+        # Only the partner (referenced in state value) can see it
+        # For PLAYER_ID types, the value IS the partner ID
+        if gsd.typ == StateType.PLAYER_ID:
+            return viewer_id == state_value or viewer_id == target.id
+        return viewer_id == target.id
+    
+    if rule == "source_role":
+        # Only the role that defined this state can see it
+        return viewer_rolle == gsd.defined_by
+    
+    if rule == "erzaehler":
+        # Only Erzähler - but Erzähler is not a rolle, it's a flag
+        # This would need special handling in app.py
+        return False
+    
+    if rule == "team":
+        # Would need team lookup - for now, allow all
+        return True
+    
+    return True
 
 
 def get_role_state_display(spieler: "Spieler") -> List[Dict[str, Any]]:

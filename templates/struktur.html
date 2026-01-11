@@ -40,23 +40,20 @@
       referrerpolicy="no-referrer"
     />
 
-    <!-- Theme CSS (Logo colors) -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/theme.css') }}"
-    />
+    <!-- Theme CSS (Logo colors) - Inlined -->
+    <style>
+    {{ read_css('css/theme.css') }}
+    </style>
 
-    <!-- Hint System CSS -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/hints.css') }}"
-    />
+    <!-- Hint System CSS - Inlined -->
+    <style>
+    {{ read_css('css/hints.css') }}
+    </style>
 
-    <!-- Character Styling CSS -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/characters.css') }}"
-    />
+    <!-- Character Styling CSS - Inlined -->
+    <style>
+    {{ read_css('css/characters.css') }}
+    </style>
 
     <style>
       /* Core color palette from logo-mit-text.png */

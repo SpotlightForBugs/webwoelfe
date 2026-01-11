@@ -1366,8 +1366,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                          rolle-{{ s.rolle|css_class if kennt_rolle and s.rolle else 'unbekannt' }}"
             data-id="{{ s.id }}"
             data-name="{{ s.name }}"
-            data-rolle="{{ s.rolle if kennt_rolle or ist_werwolf_sichtbar else '' }}"
+            data-rolle="{{ s.rolle if s.rolle else '' }}"
             data-ist-erzaehler="{{ s.ist_erzaehler|lower }}"
+            data-ist-verliebt="{{ 'true' if s.ist_verliebt else 'false' }}"
             onclick="selectSpieler({{ s.id }})"
           >
             <div class="spieler-avatar"
@@ -1622,32 +1623,45 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           updateErzaehlerText(data.erzaehler_text);
       }
       
-      // Handle Hexe phase: Show werewolf victim info
-      if (data.phase === 'hexe_phase' && data.werwolf_opfer_id) {
-          console.log('[Hexe Phase] Werwolf-Opfer:', data.werwolf_opfer_name, '(ID:', data.werwolf_opfer_id, ')');
+      // =========================================================================
+      // DYNAMIC PHASE INFO - Replaces hardcoded role checks
+      // =========================================================================
+      // Fetch dynamic phase info from server (includes victim info for Hexe, etc.)
+      try {
+          const phaseInfoResponse = await fetch(`/api/game/${raumCode}/phase-info`);
+          const phaseInfo = await phaseInfoResponse.json();
           
-          // Store victim info globally for UI access
-          window.werwolfOpferId = data.werwolf_opfer_id;
-          window.werwolfOpferName = data.werwolf_opfer_name;
-          
-          // Show victim alert if player is Hexe
-          if (meineRolle === 'Hexe') {
-              showAlert(`<i class="fa-solid fa-paw"></i> Das Werwolf-Opfer ist: <strong>${data.werwolf_opfer_name}</strong>`, 'danger', 10000);
+          if (phaseInfo.success) {
+              // Store phase type for UI decisions
+              window.isNightPhase = phaseInfo.is_night;
+              window.activeRole = phaseInfo.active_role;
+              
+              // Handle victim info dynamically (for Hexe and similar roles)
+              if (phaseInfo.victim_info) {
+                  window.werwolfOpferId = phaseInfo.victim_info.id;
+                  window.werwolfOpferName = phaseInfo.victim_info.name;
+                  
+                  // Show victim alert to the active role
+                  if (spielerRolle === phaseInfo.active_role) {
+                      showAlert(`<i class="fa-solid fa-paw"></i> Das Werwolf-Opfer ist: <strong>${phaseInfo.victim_info.name}</strong>`, 'danger', 10000);
+                  }
+                  
+                  // Highlight victim in Village3D
+                  if (window.village3d && typeof window.village3d.highlightVictim === 'function') {
+                      window.village3d.highlightVictim(phaseInfo.victim_info.id);
+                  }
+              } else {
+                  // Clear victim info
+                  window.werwolfOpferId = null;
+                  window.werwolfOpferName = null;
+                  
+                  if (window.village3d && typeof window.village3d.clearVictimHighlight === 'function') {
+                      window.village3d.clearVictimHighlight();
+                  }
+              }
           }
-          
-          // Highlight victim in Village3D
-          if (window.village3d && typeof window.village3d.highlightVictim === 'function') {
-              window.village3d.highlightVictim(data.werwolf_opfer_id);
-          }
-      } else {
-          // Clear victim info for other phases
-          window.werwolfOpferId = null;
-          window.werwolfOpferName = null;
-          
-          // Clear Village3D highlight
-          if (window.village3d && typeof window.village3d.clearVictimHighlight === 'function') {
-              window.village3d.clearVictimHighlight();
-          }
+      } catch (error) {
+          console.warn('[Phase Info] Error fetching phase info:', error);
       }
 
       // Schließe alle bestehenden Erzähler-Overlays um Überlappung zu vermeiden
@@ -3260,7 +3274,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   name: card.getAttribute('data-name'),
                   rolle: card.getAttribute('data-rolle') || null,
                   ist_am_leben: !card.classList.contains('tot'),
-                  ist_erzaehler: card.getAttribute('data-ist-erzaehler') === 'true'
+                  ist_erzaehler: card.getAttribute('data-ist-erzaehler') === 'true',
+                  ist_verliebt: card.getAttribute('data-ist-verliebt') === 'true'
               });
           });
 

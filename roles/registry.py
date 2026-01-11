@@ -354,6 +354,30 @@ class RoleRegistry:
         return result
 
     @classmethod
+    def get_all_global_state_definitions_objects(cls) -> Dict[str, "GlobalStateDefinition"]:
+        """
+        Sammelt alle GlobalStateDefinitions als Objekte (nicht Dicts).
+
+        Für Verwendung durch get_player_visual_effects() die Zugriff auf
+        die vollständigen Objekte inkl. Visibility-Felder benötigt.
+
+        Returns:
+            Dict von state_key -> GlobalStateDefinition-Objekt
+        """
+        from .base import GlobalStateDefinition
+
+        result = {}
+        for name, role in cls._instances.items():
+            try:
+                defs = role.global_state_definitions()
+                for gsd in defs:
+                    result[gsd.key] = gsd
+            except Exception as e:
+                logger.warning(f"Fehler beim Laden der GlobalStateDefinitions von {name}: {e}")
+
+        return result
+
+    @classmethod
     def get_players_by_query(cls, spieler_liste: List["Spieler"],
                               query_name: str) -> List["Spieler"]:
         """

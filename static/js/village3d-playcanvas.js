@@ -140,6 +140,23 @@ export default class Village3DPlayCanvas {
     }
   }
 
+  // Helper to check if a position is inside any building
+  isInsideBuilding(x, z, radius = 2) {
+    if (!this.buildings) return false;
+    for (const building of this.buildings) {
+      const pos = building.getPosition();
+      // Simple circular collision check
+      const dx = pos.x - x;
+      const dz = pos.z - z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      // Average building radius ~5-8 units
+      if (dist < 9 + radius) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   init() {
     // Check minimum container size to prevent PlayCanvas errors
     const minHeight = 300;
@@ -959,7 +976,11 @@ export default class Village3DPlayCanvas {
       const z = Math.sin(angle) * radius;
 
       const treeHeight = 4 + Math.random() * 4;
-      this.createDetailedTree(x, z, treeHeight);
+
+      // Check collision with buildings
+      if (!this.isInsideBuilding(x, z, 2)) {
+        this.createDetailedTree(x, z, treeHeight);
+      }
     }
 
     // Create dense bushes around the perimeter
@@ -975,7 +996,12 @@ export default class Village3DPlayCanvas {
     for (let i = 0; i < rockCount; i++) {
       const radius = 10 + Math.random() * 60;
       const angle = Math.random() * Math.PI * 2;
-      this.createRock(Math.cos(angle) * radius, Math.sin(angle) * radius);
+      const rx = Math.cos(angle) * radius;
+      const rz = Math.sin(angle) * radius;
+
+      if (!this.isInsideBuilding(rx, rz, 1)) {
+        this.createRock(rx, rz);
+      }
     }
   }
 
@@ -1191,7 +1217,11 @@ export default class Village3DPlayCanvas {
     ];
 
     housePositions.forEach((pos, idx) => {
-      this.createHouse(pos.x, pos.z, pos.rot, idx);
+      // Add small randomization to avoid repetitive look
+      const offsetX = (Math.random() - 0.5) * 2;
+      const offsetZ = (Math.random() - 0.5) * 2;
+      const offsetRot = (Math.random() - 0.5) * 10;
+      this.createHouse(pos.x + offsetX, pos.z + offsetZ, pos.rot + offsetRot, idx);
     });
 
     // Church (special building)
@@ -1940,21 +1970,30 @@ export default class Village3DPlayCanvas {
   /**
    * Set players and create their 3D avatars
    */
-  setPlayers(players) {
-    console.log('[Village3D] Setting players:', players);
 
+
+  setPlayers(players) {
     // Store player data
     this.players = players || [];
-
-    // Clear existing player entities
-    this.playerEntities.forEach((entity) => entity.destroy());
-    this.playerEntities.clear();
-    this.playerLabels.forEach((label) => label.destroy());
-    this.playerLabels.clear();
 
     if (this.players.length === 0) {
       console.warn('[Village3D] No players to display');
       return;
+    }
+
+    // Mark all existing for potential removal
+    const activeIds = new Set(this.players.map(p => p.id));
+
+    // Remove players that are no longer in the list
+    for (const [id, entity] of this.playerEntities) {
+      if (!activeIds.has(id)) {
+        entity.destroy();
+        this.playerEntities.delete(id);
+        if (this.playerLabels.has(id)) {
+          this.playerLabels.get(id).destroy();
+          this.playerLabels.delete(id);
+        }
+      }
     }
 
     // Calculate player positions in a circle
@@ -1966,10 +2005,349 @@ export default class Village3DPlayCanvas {
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
-      this.createPlayerAvatar(player, x, z, angle);
+      // Check if entity exists
+      let playerEntity = this.playerEntities.get(player.id);
+
+      if (playerEntity) {
+        // Update existing
+        // Position usually stays same unless count changes, but let's animate to new pos if needed
+        // For now just snap (or we could lerp)
+        playerEntity.setPosition(x, 0, z);
+        playerEntity.setLocalEulerAngles(0, -(angle * 180 / Math.PI) + 180, 0);
+
+        // Update data
+        playerEntity.playerData = player;
+
+        // Update label status (alive/dead)
+        const label = this.playerLabels.get(player.id);
+        if (label && label.isAlive !== player.ist_am_leben) {
+          // Recreate label if status changed
+          label.destroy();
+          const newLabel = this.createPlayerLabel(player.name, player.ist_am_leben);
+          newLabel.setLocalPosition(0, 3.2, 0);
+          playerEntity.addChild(newLabel);
+          this.playerLabels.set(player.id, newLabel);
+        }
+
+        // Update Death Visuals
+        if (!player.ist_am_leben && !playerEntity.isDeadVisualApplied) {
+          this.applyDeadEffect(playerEntity);
+          playerEntity.isDeadVisualApplied = true;
+        }
+
+        // Visuals for Lovers
+        this.updateLoverVisuals(playerEntity, player);
+
+      } else {
+        // Create new
+        this.createPlayerAvatar(player, x, z, angle);
+      }
+    });
+  }
+
+  // =========================================================================
+  // DYNAMIC VISUAL EFFECTS - Replaces hardcoded updateLoverVisuals
+  // =========================================================================
+
+  /**
+   * Updates visual effects on a player entity based on effect data from server.
+   * Supports multiple effect types defined in GlobalStateDefinition.visual_effect
+   * 
+   * @param {pc.Entity} entity - The player entity to update
+   * @param {Object} data - Player data including visual_effects array
+   */
+  updatePlayerEffects(entity, data) {
+    // Get visual effects from player data
+    const effects = data.visual_effects || [];
+
+    // Also check ist_verliebt for backward compatibility
+    if (data.ist_verliebt && !effects.includes('heart')) {
+      effects.push('heart');
+    }
+
+    // Process each effect
+    for (const effect of effects) {
+      switch (effect) {
+        case 'heart':
+          if (!entity.hasHeart) {
+            this.createHeart(entity);
+            entity.hasHeart = true;
+          }
+          break;
+        case 'infected':
+          if (!entity.hasInfected) {
+            this.createInfectedEffect(entity);
+            entity.hasInfected = true;
+          }
+          break;
+        case 'protected':
+          if (!entity.hasProtected) {
+            this.createProtectedEffect(entity);
+            entity.hasProtected = true;
+          }
+          break;
+        case 'marked':
+          if (!entity.hasMarked) {
+            this.createMarkedEffect(entity);
+            entity.hasMarked = true;
+          }
+          break;
+        case 'cursed':
+          if (!entity.hasCursed) {
+            this.createCursedEffect(entity);
+            entity.hasCursed = true;
+          }
+          break;
+        case 'wolf':
+          if (!entity.hasWolfIcon) {
+            this.createWolfIcon(entity);
+            entity.hasWolfIcon = true;
+          }
+          break;
+        default:
+          // Unknown effect - create generic aura
+          if (!entity.hasGenericEffect) {
+            this.createAura(entity, new pc.Color(0.5, 0.5, 1));
+            entity.hasGenericEffect = true;
+          }
+      }
+    }
+  }
+
+  // Legacy method for backward compatibility
+  updateLoverVisuals(entity, data) {
+    this.updatePlayerEffects(entity, data);
+  }
+
+  createHeart(parentEntity) {
+    const heart = new pc.Entity("Heart");
+    heart.addComponent("model", { type: "plane" }); // Simple billboard or icon
+    // Better: Use a particle or a simple shape combo
+    // Let's make a simple red emissive sphere combining 2 spheres
+
+    const left = new pc.Entity("Left");
+    left.addComponent("model", { type: "sphere" });
+    left.setLocalScale(0.15, 0.15, 0.15);
+    left.setLocalPosition(-0.08, 0, 0);
+
+    const right = new pc.Entity("Right");
+    right.addComponent("model", { type: "sphere" });
+    right.setLocalScale(0.15, 0.15, 0.15);
+    right.setLocalPosition(0.08, 0, 0);
+
+    const bottom = new pc.Entity("Bottom");
+    bottom.addComponent("model", { type: "cone" });
+    bottom.setLocalScale(0.22, 0.22, 0.22);
+    bottom.setLocalPosition(0, -0.1, 0);
+    bottom.setLocalEulerAngles(180, 0, 0);
+
+    const heartMat = new pc.StandardMaterial();
+    heartMat.diffuse = new pc.Color(1, 0, 0.2);
+    heartMat.emissive = new pc.Color(1, 0.1, 0.3);
+    heartMat.update();
+
+    left.model.material = heartMat;
+    right.model.material = heartMat;
+    bottom.model.material = heartMat;
+
+    heart.addChild(left);
+    heart.addChild(right);
+    heart.addChild(bottom);
+
+    heart.setLocalPosition(0, 2.6, 0); // Above head
+
+    // Floating animation script
+    heart.addComponent("script");
+    heart.script.create("heartAnim", {
+      update: function (dt) {
+        this.entity.rotate(0, 50 * dt, 0);
+        this.entity.setLocalPosition(0, 2.6 + Math.sin(Date.now() / 500) * 0.1, 0);
+      }
     });
 
-    console.log('[Village3D] Created', this.playerEntities.size, 'player avatars');
+    parentEntity.addChild(heart);
+  }
+
+  // API to show visual hints
+  showHint(spielerId, effectType) {
+    const entity = this.playerEntities.get(parseInt(spielerId));
+    if (!entity) return;
+
+    console.log("[Village3D] Showing hint:", effectType, "on player", spielerId);
+
+    switch (effectType) {
+      case 'eyes_glow_red':
+        this.createEyeGlow(entity, new pc.Color(1, 0, 0));
+        break;
+      case 'shadow_pass':
+        this.createShadowEffect(entity);
+        break;
+      case 'moonbeam':
+        this.createMoonBeam(entity);
+        break;
+      case 'aura_glow':
+        this.createAura(entity, new pc.Color(0.5, 0, 1));
+        break;
+      case 'character_shake':
+        this.shakeCharacter(entity);
+        break;
+      default:
+        // Generic highlight if unknown
+        this.createAura(entity, new pc.Color(1, 1, 0));
+    }
+  }
+
+  // API to show visual hints
+  // ... existing code ...
+
+  highlightPlayer(spielerId, color) {
+    this.highlightTarget(spielerId, color);
+  }
+
+  showVoteIndicator(zielId, waehlerName) {
+    const entity = this.playerEntities.get(parseInt(zielId));
+    if (!entity) return;
+
+    // Create a floating text that rises and fades
+    const text = new pc.Entity("VoteIndicator");
+    text.addComponent("element", {
+      type: "text",
+      text: `Gewählt von ${waehlerName}`,
+      fontAsset: this.fontAsset,
+      fontSize: 32,
+      color: new pc.Color(1, 0, 0),
+      width: 400,
+      height: 100,
+      pivot: new pc.Vec2(0.5, 0.5),
+      alignment: new pc.Vec2(0.5, 0.5)
+    });
+    // Billboard behavior (face camera)
+    text.setLocalPosition(0, 4, 0);
+    text.setLocalScale(0.05, 0.05, 0.05); // Scale down because UI units are large
+
+    // Look at camera
+    if (this.camera) {
+      text.lookAt(this.camera.getPosition());
+      text.rotateLocal(0, 180, 0); // Text is often backwards
+    }
+
+    entity.addChild(text);
+
+    // Animate
+    let time = 0;
+    const interval = setInterval(() => {
+      time += 0.05;
+      text.setLocalPosition(0, 4 + time, 0);
+      text.element.opacity = 1 - (time / 2); // Fade out over 2 units rise
+
+      if (time > 2) {
+        clearInterval(interval);
+        text.destroy();
+      }
+    }, 50);
+  }
+
+  highlightTarget(spielerId, colorHex = '#ff0000') {
+    const entity = this.playerEntities.get(parseInt(spielerId));
+    if (!entity) return;
+
+    // Remove old highlight if any
+    if (entity.highlight) entity.highlight.destroy();
+
+    // Convert hex
+    const r = parseInt(colorHex.slice(1, 3), 16) / 255;
+    const g = parseInt(colorHex.slice(3, 5), 16) / 255;
+    const b = parseInt(colorHex.slice(5, 7), 16) / 255;
+
+    this.createAura(entity, new pc.Color(r, g, b), 2.0); // 2 seconds duration
+  }
+
+  createEyeGlow(entity, color) {
+    // Assuming head is at entity.parts.head
+    if (!entity.parts || !entity.parts.head) return;
+
+    const eyes = new pc.Entity("GlowingEyes");
+    eyes.addComponent("light", {
+      type: "point",
+      color: color,
+      range: 1,
+      intensity: 3
+    });
+    eyes.setLocalPosition(0, 0, 0.25); // Front of head
+    entity.parts.head.addChild(eyes);
+
+    setTimeout(() => eyes.destroy(), 2000);
+  }
+
+  createShadowEffect(entity) {
+    // Dark smoke around feet
+    const smoke = this.createParticle("smoke");
+    smoke.entity.setLocalScale(2, 2, 2);
+    smoke.entity.setPosition(entity.getPosition());
+    this.app.root.addChild(smoke.entity);
+  }
+
+  createMoonBeam(entity) {
+    const beam = new pc.Entity("MoonBeam");
+    beam.addComponent("model", { type: "cylinder" });
+    beam.setLocalScale(1, 10, 1);
+    beam.setPosition(entity.getPosition().x, 5, entity.getPosition().z);
+
+    const mat = new pc.StandardMaterial();
+    mat.diffuse = new pc.Color(0.8, 0.9, 1);
+    mat.opacity = 0.3;
+    mat.blendType = pc.BLEND_ADDITIVE;
+    mat.update();
+    beam.model.material = mat;
+
+    this.app.root.addChild(beam);
+    setTimeout(() => beam.destroy(), 3000);
+  }
+
+  createAura(entity, color, duration = 2.5) {
+    const aura = new pc.Entity("Aura");
+    aura.addComponent("model", { type: "cylinder" }); // Cylinder ring
+    aura.setLocalScale(1.5, 0.1, 1.5);
+    aura.setLocalPosition(0, 0.1, 0); // At feet
+
+    const mat = new pc.StandardMaterial();
+    mat.emissive = color;
+    mat.opacity = 0.6;
+    mat.blendType = pc.BLEND_ADDITIVE;
+    mat.update();
+    aura.model.material = mat;
+
+    entity.addChild(aura);
+
+    // Pulse animation
+    let time = 0;
+    const interval = setInterval(() => {
+      time += 0.1;
+      const scale = 1.5 + Math.sin(time * 5) * 0.2;
+      aura.setLocalScale(scale, 0.1, scale);
+    }, 30);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      aura.destroy();
+    }, duration * 1000);
+  }
+
+  shakeCharacter(entity) {
+    const origPos = entity.getLocalPosition().clone();
+    let time = 0;
+    const interval = setInterval(() => {
+      time += 1;
+      entity.setLocalPosition(
+        origPos.x + (Math.random() - 0.5) * 0.1,
+        origPos.y,
+        origPos.z + (Math.random() - 0.5) * 0.1
+      );
+      if (time > 20) {
+        clearInterval(interval);
+        entity.setLocalPosition(origPos);
+      }
+    }, 50);
   }
 
   /**
@@ -2168,6 +2546,9 @@ export default class Village3DPlayCanvas {
     // Add to scene
     this.app.root.addChild(playerEntity);
     this.playerEntities.set(player.id, playerEntity);
+
+    // Initial lover check
+    this.updateLoverVisuals(playerEntity, player);
   }
 
   /**
@@ -2236,6 +2617,7 @@ export default class Village3DPlayCanvas {
 
     label.model.material = labelMat;
 
+    label.isAlive = isAlive; // Store state
     return label;
   }
 

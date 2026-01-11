@@ -1,26 +1,37 @@
 /**
  * Village3DPlayCanvas - Main renderer class
- * 
+ *
  * TypeScript version with modular architecture
  */
 
-import type { PlayerData, RoleModel, RoleData, Village3DOptions, PlayerEntity, RolesAPIResponse, PCApplication, PCEntity, PCColor, PCMaterial } from './types.js';
-import { PlayerAvatarBuilder } from './PlayerAvatarBuilder.js';
+import type {
+  PlayerData,
+  RoleModel,
+  RoleData,
+  Village3DOptions,
+  PlayerEntity,
+  RolesAPIResponse,
+  PCApplication,
+  PCEntity,
+  PCColor,
+  PCMaterial,
+} from "./types.js";
+import { PlayerAvatarBuilder } from "./PlayerAvatarBuilder.js";
 
 export default class Village3DPlayCanvas {
   private container: HTMLElement;
   private canvas: HTMLCanvasElement | null = null;
   private app: PCApplication | null = null;
-  
+
   // Player data
   private players: PlayerData[] = [];
   private playerEntities: Map<number, PlayerEntity> = new Map();
   private playerLabels: Map<number, PCEntity> = new Map();
-  
+
   // State
   private isNight: boolean = true;
   private isLobbyMode: boolean = false;
-  
+
   // Camera
   private targetCameraAngle: number = 0;
   private targetCameraHeight: number = 15;
@@ -28,14 +39,20 @@ export default class Village3DPlayCanvas {
   private defaultCameraAngle: number = 0;
   private defaultCameraHeight: number = 15;
   private defaultCameraRadius: number = 25;
-  
+
   // Sky and celestial bodies
   private skyDome: PCEntity | null = null;
-  private stars: Array<{ entity: PCEntity; material: PCMaterial; baseBrightness: number; twinkleSpeed: number; twinklePhase: number }> = [];
+  private stars: Array<{
+    entity: PCEntity;
+    material: PCMaterial;
+    baseBrightness: number;
+    twinkleSpeed: number;
+    twinklePhase: number;
+  }> = [];
   private moon: PCEntity | null = null;
   private sun: PCEntity | null = null;
   private sunGlow: PCEntity | null = null;
-  
+
   // Particles and effects
   private fireParticles: Array<{
     entity: PCEntity;
@@ -46,44 +63,48 @@ export default class Village3DPlayCanvas {
     startScale: number;
     endScale: number;
   }> = [];
-  
+
   // Role data
   private roleColors: Record<string, PCColor> = {};
   private roleModels: Record<string, RoleModel> = {};
-  
+
   // Materials and caching
   private materialCache: Map<string, PCMaterial> = new Map();
-  
+
   // Modules (initialized in init())
   private avatarBuilder!: PlayerAvatarBuilder;
-  
+
   // Callbacks
   public onPlayerClick: ((playerId: number) => void) | null = null;
-  
+
   // Update binding
   private updateBound: ((dt: number) => void) | null = null;
 
-  constructor(containerId: string, _raumCode: string, options: Village3DOptions = {}) {
+  constructor(
+    containerId: string,
+    _raumCode: string,
+    options: Village3DOptions = {},
+  ) {
     const container = document.getElementById(containerId);
     if (!container) {
       throw new Error(`Container element with id "${containerId}" not found`);
     }
     this.container = container;
-    
+
     this.isLobbyMode = options.lobbyMode || false;
     this.onPlayerClick = options.onPlayerClick || null;
-    
+
     // Camera defaults based on mode
     if (this.isLobbyMode) {
       this.defaultCameraAngle = Math.PI / 4;
       this.defaultCameraHeight = 20;
       this.defaultCameraRadius = 30;
     }
-    
+
     this.targetCameraAngle = this.defaultCameraAngle;
     this.targetCameraHeight = this.defaultCameraHeight;
     this.targetCameraRadius = this.defaultCameraRadius;
-    
+
     this.loadRoleDataFromAPI();
     this.init();
   }
@@ -93,17 +114,17 @@ export default class Village3DPlayCanvas {
    */
   private async loadRoleDataFromAPI(): Promise<void> {
     try {
-      const response = await fetch('/api/roles');
+      const response = await fetch("/api/roles");
       const data: RolesAPIResponse = await response.json();
 
       if (data.success && data.roles) {
         const pc = (window as any).pc;
-        
+
         data.roles.forEach((role: RoleData) => {
           const roleName = role.name;
 
           // Load color
-          if (role.farbe && role.farbe.startsWith('#')) {
+          if (role.farbe && role.farbe.startsWith("#")) {
             const r = parseInt(role.farbe.slice(1, 3), 16) / 255;
             const g = parseInt(role.farbe.slice(3, 5), 16) / 255;
             const b = parseInt(role.farbe.slice(5, 7), 16) / 255;
@@ -117,25 +138,27 @@ export default class Village3DPlayCanvas {
         });
 
         console.log(
-          '[Village3D] Loaded',
+          "[Village3D] Loaded",
           Object.keys(this.roleColors).length,
-          'role colors and',
+          "role colors and",
           Object.keys(this.roleModels).length,
-          'model definitions from API'
+          "model definitions from API",
         );
 
         // Refresh players with new role data
         if (this.players.length > 0 && this.avatarBuilder) {
-          console.log('[Village3D] Refreshing players with loaded role data...');
-          this.playerEntities.forEach(entity => entity.destroy());
+          console.log(
+            "[Village3D] Refreshing players with loaded role data...",
+          );
+          this.playerEntities.forEach((entity) => entity.destroy());
           this.playerEntities.clear();
-          this.playerLabels.forEach(label => label.destroy());
+          this.playerLabels.forEach((label) => label.destroy());
           this.playerLabels.clear();
           this.setPlayers(this.players);
         }
       }
     } catch (error) {
-      console.warn('[Village3D] Failed to load role data from API:', error);
+      console.warn("[Village3D] Failed to load role data from API:", error);
       // Fallback colors
       const pc = (window as any).pc;
       this.roleColors = {
@@ -153,19 +176,21 @@ export default class Village3DPlayCanvas {
    */
   private init(): void {
     const pc = (window as any).pc;
-    
+
     // Check minimum container size
     const minHeight = 300;
     if (this.container.clientHeight < minHeight) {
       this.container.style.minHeight = `${minHeight}px`;
-      console.warn(`[Village3D] Container height was below minimum, setting to ${minHeight}px`);
+      console.warn(
+        `[Village3D] Container height was below minimum, setting to ${minHeight}px`,
+      );
     }
 
     // Create canvas
-    this.canvas = document.createElement('canvas');
-    this.canvas.style.width = '100%';
-    this.canvas.style.height = '100%';
-    this.canvas.style.display = 'block';
+    this.canvas = document.createElement("canvas");
+    this.canvas.style.width = "100%";
+    this.canvas.style.height = "100%";
+    this.canvas.style.display = "block";
     this.canvas.tabIndex = 0;
     this.container.appendChild(this.canvas);
 
@@ -180,15 +205,15 @@ export default class Village3DPlayCanvas {
         alpha: false,
         depth: true,
         stencil: true,
-        powerPreference: 'high-performance',
-        deviceTypes: ['webgpu', 'webgl2'],
-        glslangUrl: 'cdn.jsdelivr.net',
-        twgslUrl: 'cdn.jsdelivr.net'
+        powerPreference: "high-performance",
+        deviceTypes: ["webgpu", "webgl2"],
+        glslangUrl: "cdn.jsdelivr.net",
+        twgslUrl: "cdn.jsdelivr.net",
       },
     });
 
     if (!this.app) {
-      throw new Error('PlayCanvas application failed to initialize');
+      throw new Error("PlayCanvas application failed to initialize");
     }
 
     this.app.start();
@@ -205,26 +230,26 @@ export default class Village3DPlayCanvas {
       }
     };
 
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
     // Create scene and modules
     this.createScene();
-    
+
     // Initialize avatar builder now that app is ready
     this.avatarBuilder = new PlayerAvatarBuilder(
       this.materialCache,
       this.roleColors,
-      this.roleModels
+      this.roleModels,
     );
 
     if (!this.app) {
-      throw new Error('PlayCanvas application not initialized');
+      throw new Error("PlayCanvas application not initialized");
     }
 
     // Register update loop
     this.updateBound = (dt: number) => this.update(dt);
-    this.app.on('update', this.updateBound);
+    this.app.on("update", this.updateBound);
   }
 
   /**
@@ -232,14 +257,14 @@ export default class Village3DPlayCanvas {
    */
   private createScene(): void {
     if (!this.app) {
-      throw new Error('PlayCanvas application not initialized');
+      throw new Error("PlayCanvas application not initialized");
     }
 
     const pc = (window as any).pc;
 
     // Camera
-    const camera = new pc.Entity('Camera');
-    camera.addComponent('camera', {
+    const camera = new pc.Entity("Camera");
+    camera.addComponent("camera", {
       clearColor: new pc.Color(0.1, 0.1, 0.15),
       farClip: 1000,
     });
@@ -248,10 +273,12 @@ export default class Village3DPlayCanvas {
     this.app.root.addChild(camera);
 
     // Directional light (sun/moon)
-    const light = new pc.Entity('DirectionalLight');
-    light.addComponent('light', {
-      type: 'directional',
-      color: this.isNight ? new pc.Color(0.4, 0.4, 0.6) : new pc.Color(1, 1, 0.9),
+    const light = new pc.Entity("DirectionalLight");
+    light.addComponent("light", {
+      type: "directional",
+      color: this.isNight
+        ? new pc.Color(0.4, 0.4, 0.6)
+        : new pc.Color(1, 1, 0.9),
       intensity: this.isNight ? 0.4 : 0.8,
       castShadows: true,
       shadowDistance: 50,
@@ -261,8 +288,8 @@ export default class Village3DPlayCanvas {
     this.app.root.addChild(light);
 
     // Ambient light
-    this.app.scene.ambientLight = this.isNight 
-      ? new pc.Color(0.15, 0.15, 0.2) 
+    this.app.scene.ambientLight = this.isNight
+      ? new pc.Color(0.15, 0.15, 0.2)
       : new pc.Color(0.3, 0.3, 0.35);
 
     // Sky dome with stars
@@ -288,9 +315,9 @@ export default class Village3DPlayCanvas {
     const pc = (window as any).pc;
 
     // Large inverted sphere for sky
-    this.skyDome = new pc.Entity('SkyDome');
+    this.skyDome = new pc.Entity("SkyDome");
     if (this.skyDome) {
-      this.skyDome.addComponent('model', { type: 'sphere' });
+      this.skyDome.addComponent("model", { type: "sphere" });
       this.skyDome.setLocalScale(-150, -150, -150); // Inverted (inside-out)
       this.skyDome.setPosition(0, 0, 0);
     }
@@ -302,7 +329,7 @@ export default class Village3DPlayCanvas {
     skyMat.useLighting = false;
     skyMat.cull = pc.CULLFACE_FRONT; // Render inside
     skyMat.update();
-    
+
     if (this.skyDome) {
       const skyModel = this.skyDome.model as any;
       if (skyModel) {
@@ -316,7 +343,7 @@ export default class Village3DPlayCanvas {
     const starCount = this.isLobbyMode ? 100 : 180;
     for (let i = 0; i < starCount; i++) {
       const star = new pc.Entity(`Star-${i}`);
-      star.addComponent('model', { type: 'sphere' });
+      star.addComponent("model", { type: "sphere" });
 
       // Random position on sphere surface
       const theta = Math.random() * Math.PI * 2;
@@ -337,9 +364,17 @@ export default class Village3DPlayCanvas {
       const warmth = Math.random();
       // Mix between white, blue, and yellow stars
       if (warmth < 0.3) {
-        starMat.emissive = new pc.Color(brightness, brightness * 0.9, brightness * 0.7); // Warm
+        starMat.emissive = new pc.Color(
+          brightness,
+          brightness * 0.9,
+          brightness * 0.7,
+        ); // Warm
       } else if (warmth < 0.6) {
-        starMat.emissive = new pc.Color(brightness * 0.8, brightness * 0.85, brightness); // Blue
+        starMat.emissive = new pc.Color(
+          brightness * 0.8,
+          brightness * 0.85,
+          brightness,
+        ); // Blue
       } else {
         starMat.emissive = new pc.Color(brightness, brightness, brightness); // White
       }
@@ -368,9 +403,9 @@ export default class Village3DPlayCanvas {
     const pc = (window as any).pc;
 
     // Moon
-    this.moon = new pc.Entity('Moon');
+    this.moon = new pc.Entity("Moon");
     if (this.moon) {
-      this.moon.addComponent('model', { type: 'sphere' });
+      this.moon.addComponent("model", { type: "sphere" });
       this.moon.setLocalScale(8, 8, 8);
       this.moon.setPosition(60, 80, -50);
 
@@ -379,7 +414,7 @@ export default class Village3DPlayCanvas {
       moonMat.emissive = new pc.Color(0.7, 0.75, 0.85);
       moonMat.useLighting = false;
       moonMat.update();
-      
+
       const moonModel = this.moon.model as any;
       if (moonModel) {
         moonModel.material = moonMat;
@@ -389,8 +424,8 @@ export default class Village3DPlayCanvas {
     }
 
     // Moon glow (larger, softer sphere behind)
-    const moonGlow = new pc.Entity('MoonGlow');
-    moonGlow.addComponent('model', { type: 'sphere' });
+    const moonGlow = new pc.Entity("MoonGlow");
+    moonGlow.addComponent("model", { type: "sphere" });
     moonGlow.setLocalScale(14, 14, 14);
     moonGlow.setPosition(60, 80, -50);
 
@@ -405,9 +440,9 @@ export default class Village3DPlayCanvas {
     this.app.root.addChild(moonGlow);
 
     // Sun (hidden by default, shown during day)
-    this.sun = new pc.Entity('Sun');
+    this.sun = new pc.Entity("Sun");
     if (this.sun) {
-      this.sun.addComponent('model', { type: 'sphere' });
+      this.sun.addComponent("model", { type: "sphere" });
       this.sun.setLocalScale(12, 12, 12);
       this.sun.setPosition(80, 100, 60);
       this.sun.enabled = false;
@@ -416,7 +451,7 @@ export default class Village3DPlayCanvas {
       sunMat.emissive = new pc.Color(1, 0.95, 0.7);
       sunMat.useLighting = false;
       sunMat.update();
-      
+
       const sunModel = this.sun.model as any;
       if (sunModel) {
         sunModel.material = sunMat;
@@ -426,9 +461,9 @@ export default class Village3DPlayCanvas {
     }
 
     // Sun rays/glow
-    this.sunGlow = new pc.Entity('SunGlow');
+    this.sunGlow = new pc.Entity("SunGlow");
     if (this.sunGlow) {
-      this.sunGlow.addComponent('model', { type: 'sphere' });
+      this.sunGlow.addComponent("model", { type: "sphere" });
       this.sunGlow.setLocalScale(25, 25, 25);
       this.sunGlow.setPosition(80, 100, 60);
       this.sunGlow.enabled = false;
@@ -439,7 +474,7 @@ export default class Village3DPlayCanvas {
       sunGlowMat.blendType = pc.BLEND_ADDITIVE;
       sunGlowMat.useLighting = false;
       sunGlowMat.update();
-      
+
       const sunGlowModel = this.sunGlow.model as any;
       if (sunGlowModel) {
         sunGlowModel.material = sunGlowMat;
@@ -457,8 +492,8 @@ export default class Village3DPlayCanvas {
     const pc = (window as any).pc;
 
     // Main ground - varied grass terrain
-    const ground = new pc.Entity('Ground');
-    ground.addComponent('model', { type: 'plane' });
+    const ground = new pc.Entity("Ground");
+    ground.addComponent("model", { type: "plane" });
 
     // Larger ground for better horizon
     const groundSize = this.isLobbyMode ? 120 : 180;
@@ -476,8 +511,8 @@ export default class Village3DPlayCanvas {
     // Random grass patches for variation
     const patchCount = this.isLobbyMode ? 20 : 50;
     for (let i = 0; i < patchCount; i++) {
-      const patch = new pc.Entity('GrassPatch');
-      patch.addComponent('model', { type: 'plane' });
+      const patch = new pc.Entity("GrassPatch");
+      patch.addComponent("model", { type: "plane" });
       const scale = 5 + Math.random() * 10;
       patch.setLocalScale(scale, 1, scale);
 
@@ -486,7 +521,7 @@ export default class Village3DPlayCanvas {
       patch.setPosition(
         Math.cos(angle) * dist,
         0.01 + Math.random() * 0.01,
-        Math.sin(angle) * dist
+        Math.sin(angle) * dist,
       );
       patch.setEulerAngles(0, Math.random() * 360, 0);
 
@@ -495,7 +530,7 @@ export default class Village3DPlayCanvas {
       patchMat.diffuse = new pc.Color(
         0.12 + colorVar,
         0.18 + colorVar,
-        0.1 + colorVar
+        0.1 + colorVar,
       );
       patchMat.opacity = 0.8;
       patchMat.blendType = pc.BLEND_NORMAL;
@@ -510,14 +545,14 @@ export default class Village3DPlayCanvas {
     }
 
     // Center village square (cobblestone)
-    const centerSquare = new pc.Entity('CenterSquare');
-    centerSquare.addComponent('model', { type: 'cylinder' });
+    const centerSquare = new pc.Entity("CenterSquare");
+    centerSquare.addComponent("model", { type: "cylinder" });
     const squareSize = this.isLobbyMode ? 10 : 15;
     centerSquare.setLocalScale(squareSize, 0.05, squareSize);
     centerSquare.setPosition(0, 0.03, 0);
 
     const squareMat = this.getMaterial({
-      name: 'VillageSquare',
+      name: "VillageSquare",
       diffuse: new pc.Color(0.25, 0.22, 0.2), // Darker stone
       specular: new pc.Color(0.05, 0.05, 0.05),
     });
@@ -548,7 +583,7 @@ export default class Village3DPlayCanvas {
 
     pathPositions.forEach((pathData, idx) => {
       const path = new pc.Entity(`Path-${idx}`);
-      path.addComponent('model', { type: 'box' });
+      path.addComponent("model", { type: "box" });
       path.setLocalScale(pathData.scaleX, 0.02, pathData.scaleZ);
       path.setPosition(pathData.x, 0.02, pathData.z);
       path.setLocalEulerAngles(0, pathData.rotation, 0);
@@ -581,18 +616,18 @@ export default class Village3DPlayCanvas {
       const radius = 8 + Math.random() * 4;
 
       const deco = new pc.Entity(`Decoration-${i}`);
-      deco.addComponent('model', { type: 'box' });
+      deco.addComponent("model", { type: "box" });
       const size = 0.15 + Math.random() * 0.25;
       deco.setLocalScale(size, size * 0.5, size);
       deco.setPosition(
         Math.cos(angle) * radius,
         0.05,
-        Math.sin(angle) * radius
+        Math.sin(angle) * radius,
       );
       deco.setLocalEulerAngles(
         Math.random() * 10 - 5,
         Math.random() * 360,
-        Math.random() * 10 - 5
+        Math.random() * 10 - 5,
       );
 
       const decoMat = new pc.StandardMaterial();
@@ -611,13 +646,13 @@ export default class Village3DPlayCanvas {
   // @ts-expect-error - Legacy method kept for reference
   private createGround(): void {
     if (!this.app) {
-      throw new Error('PlayCanvas application not initialized');
+      throw new Error("PlayCanvas application not initialized");
     }
 
     const pc = (window as any).pc;
-    
-    const ground = new pc.Entity('Ground');
-    ground.addComponent('model', { type: 'plane' });
+
+    const ground = new pc.Entity("Ground");
+    ground.addComponent("model", { type: "plane" });
     ground.setLocalScale(100, 1, 100);
     ground.setLocalPosition(0, 0, 0);
 
@@ -648,7 +683,12 @@ export default class Village3DPlayCanvas {
       const offsetX = (Math.random() - 0.5) * 2;
       const offsetZ = (Math.random() - 0.5) * 2;
       const offsetRot = (Math.random() - 0.5) * 10;
-      this.createHouse(pos.x + offsetX, pos.z + offsetZ, pos.rot + offsetRot, idx);
+      this.createHouse(
+        pos.x + offsetX,
+        pos.z + offsetZ,
+        pos.rot + offsetRot,
+        idx,
+      );
     });
 
     // Church (special building)
@@ -709,21 +749,21 @@ export default class Village3DPlayCanvas {
     if (!this.app) return;
     const pc = (window as any).pc;
 
-    const tree = new pc.Entity('Tree');
+    const tree = new pc.Entity("Tree");
 
     // Trunk
-    const trunk = new pc.Entity('Trunk');
-    trunk.addComponent('model', { type: 'cylinder' });
+    const trunk = new pc.Entity("Trunk");
+    trunk.addComponent("model", { type: "cylinder" });
     trunk.setLocalScale(
       0.5 + Math.random() * 0.3,
       height,
-      0.5 + Math.random() * 0.3
+      0.5 + Math.random() * 0.3,
     );
     trunk.setLocalPosition(0, height / 2, 0);
     trunk.setLocalEulerAngles(
       Math.random() * 10 - 5,
       0,
-      Math.random() * 10 - 5
+      Math.random() * 10 - 5,
     );
 
     const trunkMat = new pc.StandardMaterial();
@@ -746,8 +786,8 @@ export default class Village3DPlayCanvas {
       const clumps = 2 + i + Math.floor(Math.random() * 2);
 
       for (let j = 0; j < clumps; j++) {
-        const clump = new pc.Entity('FoliageClump');
-        clump.addComponent('model', { type: 'sphere' });
+        const clump = new pc.Entity("FoliageClump");
+        clump.addComponent("model", { type: "sphere" });
         const size = 1 + Math.random() * 1.5;
         clump.setLocalScale(size, size * 0.7, size);
 
@@ -757,7 +797,7 @@ export default class Village3DPlayCanvas {
         clump.setLocalPosition(
           Math.cos(angle) * dist,
           layerY + Math.random(),
-          Math.sin(angle) * dist
+          Math.sin(angle) * dist,
         );
         clump.model.material = foliageMat;
         tree.addChild(clump);
@@ -776,7 +816,7 @@ export default class Village3DPlayCanvas {
     if (!this.app) return;
     const pc = (window as any).pc;
 
-    const bush = new pc.Entity('Bush');
+    const bush = new pc.Entity("Bush");
 
     const bushMat = new pc.StandardMaterial();
     bushMat.diffuse = new pc.Color(0.1, 0.2 + Math.random() * 0.1, 0.08);
@@ -785,8 +825,8 @@ export default class Village3DPlayCanvas {
 
     const clusterCount = 3 + Math.floor(Math.random() * 3);
     for (let i = 0; i < clusterCount; i++) {
-      const clump = new pc.Entity('BushClump');
-      clump.addComponent('model', { type: 'sphere' });
+      const clump = new pc.Entity("BushClump");
+      clump.addComponent("model", { type: "sphere" });
       const size = 0.5 + Math.random() * 0.8;
       clump.setLocalScale(size, size * 0.8, size);
 
@@ -796,7 +836,7 @@ export default class Village3DPlayCanvas {
       clump.setLocalPosition(
         Math.cos(angle) * dist,
         0.4 + Math.random() * 0.2,
-        Math.sin(angle) * dist
+        Math.sin(angle) * dist,
       );
       clump.model.material = bushMat;
       bush.addChild(clump);
@@ -813,8 +853,8 @@ export default class Village3DPlayCanvas {
     if (!this.app) return;
     const pc = (window as any).pc;
 
-    const rock = new pc.Entity('Rock');
-    rock.addComponent('model', { type: 'sphere' });
+    const rock = new pc.Entity("Rock");
+    rock.addComponent("model", { type: "sphere" });
 
     const size = 0.5 + Math.random() * 1.5;
     rock.setLocalScale(size, size * 0.6, size);
@@ -829,7 +869,7 @@ export default class Village3DPlayCanvas {
     rock.setLocalEulerAngles(
       Math.random() * 360,
       Math.random() * 360,
-      Math.random() * 360
+      Math.random() * 360,
     );
 
     this.app.root.addChild(rock);
@@ -838,15 +878,20 @@ export default class Village3DPlayCanvas {
   /**
    * Create a house
    */
-  private createHouse(x: number, z: number, rotation: number, index: number): void {
+  private createHouse(
+    x: number,
+    z: number,
+    rotation: number,
+    index: number,
+  ): void {
     if (!this.app) return;
     const pc = (window as any).pc;
 
     const house = new pc.Entity(`House-${index}`);
 
     // Stone base
-    const stoneBase = new pc.Entity('StoneBase');
-    stoneBase.addComponent('model', { type: 'box' });
+    const stoneBase = new pc.Entity("StoneBase");
+    stoneBase.addComponent("model", { type: "box" });
     stoneBase.setLocalScale(4.2, 1.5, 5.2);
     stoneBase.setLocalPosition(0, 0.75, 0);
 
@@ -859,8 +904,8 @@ export default class Village3DPlayCanvas {
     house.addChild(stoneBase);
 
     // Upper floor
-    const upperFloor = new pc.Entity('UpperFloor');
-    upperFloor.addComponent('model', { type: 'box' });
+    const upperFloor = new pc.Entity("UpperFloor");
+    upperFloor.addComponent("model", { type: "box" });
     upperFloor.setLocalScale(4, 2, 5);
     upperFloor.setLocalPosition(0, 2.5, 0);
 
@@ -874,7 +919,7 @@ export default class Village3DPlayCanvas {
     // Timber beams (vertical)
     for (let i = 0; i < 5; i++) {
       const beam = new pc.Entity(`Beam-V-${i}`);
-      beam.addComponent('model', { type: 'box' });
+      beam.addComponent("model", { type: "box" });
       beam.setLocalScale(0.15, 2, 0.15);
       beam.setLocalPosition(-1.8 + i * 0.9, 2.5, 2.55);
 
@@ -902,8 +947,8 @@ export default class Village3DPlayCanvas {
     roofMat.diffuse = new pc.Color(0.4, 0.22, 0.15);
     roofMat.update();
 
-    const roofLeft = new pc.Entity('RoofLeft');
-    roofLeft.addComponent('model', { type: 'box' });
+    const roofLeft = new pc.Entity("RoofLeft");
+    roofLeft.addComponent("model", { type: "box" });
     roofLeft.setLocalScale(roofPanelWidth, 0.12, roofLength);
     const panelCenterX = -halfWidth / 2;
     const panelCenterY = roofBaseY + roofPeakHeight / 2;
@@ -912,8 +957,8 @@ export default class Village3DPlayCanvas {
     roofLeft.model.material = roofMat;
     house.addChild(roofLeft);
 
-    const roofRight = new pc.Entity('RoofRight');
-    roofRight.addComponent('model', { type: 'box' });
+    const roofRight = new pc.Entity("RoofRight");
+    roofRight.addComponent("model", { type: "box" });
     roofRight.setLocalScale(roofPanelWidth, 0.12, roofLength);
     roofRight.setLocalPosition(halfWidth / 2, panelCenterY, 0);
     roofRight.setLocalEulerAngles(0, 0, -roofAngle);
@@ -921,8 +966,8 @@ export default class Village3DPlayCanvas {
     house.addChild(roofRight);
 
     // Door
-    const door = new pc.Entity('Door');
-    door.addComponent('model', { type: 'box' });
+    const door = new pc.Entity("Door");
+    door.addComponent("model", { type: "box" });
     door.setLocalScale(1, 1.8, 0.1);
     door.setLocalPosition(0, 0.9, 2.65);
 
@@ -941,7 +986,7 @@ export default class Village3DPlayCanvas {
 
     windowPositions.forEach((pos, idx) => {
       const window = new pc.Entity(`Window-${idx}`);
-      window.addComponent('model', { type: 'box' });
+      window.addComponent("model", { type: "box" });
       window.setLocalScale(0.7, 0.7, 0.08);
       window.setLocalPosition(pos.x, pos.y, pos.z);
 
@@ -971,7 +1016,7 @@ export default class Village3DPlayCanvas {
     if (!this.app) return;
 
     const fenceMat = this.getMaterial({
-      name: 'WoodenFence',
+      name: "WoodenFence",
       diffuse: new (window as any).pc.Color(0.3, 0.22, 0.15),
       shininess: 3,
     });
@@ -995,7 +1040,7 @@ export default class Village3DPlayCanvas {
     const pc = (window as any).pc;
     postPositions.forEach((pos, idx) => {
       const post = new pc.Entity(`FencePost-${idx}`);
-      post.addComponent('model', { type: 'box' });
+      post.addComponent("model", { type: "box" });
       post.setLocalScale(0.12, 0.8, 0.12);
       post.setLocalPosition(pos.x, 0.4, pos.z);
       post.model.material = fenceMat;
@@ -1007,7 +1052,7 @@ export default class Village3DPlayCanvas {
     railHeight.forEach((height, idx) => {
       // Left side
       const railL = new pc.Entity(`FenceRail-L-${idx}`);
-      railL.addComponent('model', { type: 'box' });
+      railL.addComponent("model", { type: "box" });
       railL.setLocalScale(0.08, 0.08, 6.5);
       railL.setLocalPosition(-fenceDistance, height, 0);
       railL.model.material = fenceMat;
@@ -1015,7 +1060,7 @@ export default class Village3DPlayCanvas {
 
       // Right side
       const railR = new pc.Entity(`FenceRail-R-${idx}`);
-      railR.addComponent('model', { type: 'box' });
+      railR.addComponent("model", { type: "box" });
       railR.setLocalScale(0.08, 0.08, 6.5);
       railR.setLocalPosition(fenceDistance, height, 0);
       railR.model.material = fenceMat;
@@ -1023,7 +1068,7 @@ export default class Village3DPlayCanvas {
 
       // Back side
       const railB = new pc.Entity(`FenceRail-B-${idx}`);
-      railB.addComponent('model', { type: 'box' });
+      railB.addComponent("model", { type: "box" });
       railB.setLocalScale(6.5, 0.08, 0.08);
       railB.setLocalPosition(0, height, -fenceDistance);
       railB.model.material = fenceMat;
@@ -1031,14 +1076,14 @@ export default class Village3DPlayCanvas {
 
       // Front side (with gate opening)
       const railFL = new pc.Entity(`FenceRail-FL-${idx}`);
-      railFL.addComponent('model', { type: 'box' });
+      railFL.addComponent("model", { type: "box" });
       railFL.setLocalScale(2, 0.08, 0.08);
       railFL.setLocalPosition(-2.5, height, fenceDistance);
       railFL.model.material = fenceMat;
       house.addChild(railFL);
 
       const railFR = new pc.Entity(`FenceRail-FR-${idx}`);
-      railFR.addComponent('model', { type: 'box' });
+      railFR.addComponent("model", { type: "box" });
       railFR.setLocalScale(2, 0.08, 0.08);
       railFR.setLocalPosition(2.5, height, fenceDistance);
       railFR.model.material = fenceMat;
@@ -1054,13 +1099,13 @@ export default class Village3DPlayCanvas {
     const pc = (window as any).pc;
 
     const gardenMat = this.getMaterial({
-      name: 'GardenSoil',
+      name: "GardenSoil",
       diffuse: new pc.Color(0.2, 0.15, 0.1),
       shininess: 1,
     });
 
-    const garden = new pc.Entity('Garden');
-    garden.addComponent('model', { type: 'box' });
+    const garden = new pc.Entity("Garden");
+    garden.addComponent("model", { type: "box" });
     garden.setLocalScale(2, 0.05, 2);
     garden.setLocalPosition(-3, 0.025, -3);
     garden.model.material = gardenMat;
@@ -1069,12 +1114,12 @@ export default class Village3DPlayCanvas {
     // Add some small plants/crops
     for (let i = 0; i < 4; i++) {
       const plant = new pc.Entity(`Plant-${i}`);
-      plant.addComponent('model', { type: 'box' });
+      plant.addComponent("model", { type: "box" });
       plant.setLocalScale(0.15, 0.3, 0.15);
       plant.setLocalPosition(
         -3.5 + (i % 2) * 0.8,
         0.15,
-        -3.5 + Math.floor(i / 2) * 0.8
+        -3.5 + Math.floor(i / 2) * 0.8,
       );
 
       const plantMat = this.getMaterial({
@@ -1094,11 +1139,11 @@ export default class Village3DPlayCanvas {
     if (!this.app) return;
     const pc = (window as any).pc;
 
-    const church = new pc.Entity('Church');
+    const church = new pc.Entity("Church");
 
     // Main base
-    const base = new pc.Entity('Base');
-    base.addComponent('model', { type: 'box' });
+    const base = new pc.Entity("Base");
+    base.addComponent("model", { type: "box" });
     base.setLocalScale(8, 6, 10);
     base.setLocalPosition(0, 3, 0);
 
@@ -1127,8 +1172,8 @@ export default class Village3DPlayCanvas {
     roofMat.diffuse = new pc.Color(0.28, 0.12, 0.08);
     roofMat.update();
 
-    const roofLeft = new pc.Entity('RoofLeft');
-    roofLeft.addComponent('model', { type: 'box' });
+    const roofLeft = new pc.Entity("RoofLeft");
+    roofLeft.addComponent("model", { type: "box" });
     roofLeft.setLocalScale(churchRoofPanelWidth, 0.2, churchRoofLength);
     const churchPanelCenterX = -churchHalfWidth / 2;
     const churchPanelCenterY = churchRoofBaseY + churchRoofPeakHeight / 2;
@@ -1137,8 +1182,8 @@ export default class Village3DPlayCanvas {
     roofLeft.model.material = roofMat;
     church.addChild(roofLeft);
 
-    const roofRight = new pc.Entity('RoofRight');
-    roofRight.addComponent('model', { type: 'box' });
+    const roofRight = new pc.Entity("RoofRight");
+    roofRight.addComponent("model", { type: "box" });
     roofRight.setLocalScale(churchRoofPanelWidth, 0.2, churchRoofLength);
     roofRight.setLocalPosition(churchHalfWidth / 2, churchPanelCenterY, 0);
     roofRight.setLocalEulerAngles(0, 0, -churchRoofAngle);
@@ -1146,8 +1191,8 @@ export default class Village3DPlayCanvas {
     church.addChild(roofRight);
 
     // Bell tower
-    const tower = new pc.Entity('Tower');
-    tower.addComponent('model', { type: 'box' });
+    const tower = new pc.Entity("Tower");
+    tower.addComponent("model", { type: "box" });
     tower.setLocalScale(2.5, 8, 2.5);
     tower.setLocalPosition(0, 7, -3.5);
     tower.model.material = stoneMat;
@@ -1162,7 +1207,7 @@ export default class Village3DPlayCanvas {
 
     for (let i = 0; i < 4; i++) {
       const window = new pc.Entity(`TowerWindow-${i}`);
-      window.addComponent('model', { type: 'box' });
+      window.addComponent("model", { type: "box" });
       window.setLocalScale(0.6, 1.2, 0.1);
       const angle = (i / 4) * Math.PI * 2;
       const windowX = Math.sin(angle) * 1.3;
@@ -1174,8 +1219,8 @@ export default class Village3DPlayCanvas {
     }
 
     // Spire (tower roof)
-    const spire = new pc.Entity('Spire');
-    spire.addComponent('model', { type: 'cone' });
+    const spire = new pc.Entity("Spire");
+    spire.addComponent("model", { type: "cone" });
     spire.setLocalScale(2, 4, 2);
     spire.setLocalPosition(0, 12.5, -3.5);
 
@@ -1187,8 +1232,8 @@ export default class Village3DPlayCanvas {
     church.addChild(spire);
 
     // Cross on top
-    const crossV = new pc.Entity('CrossVertical');
-    crossV.addComponent('model', { type: 'box' });
+    const crossV = new pc.Entity("CrossVertical");
+    crossV.addComponent("model", { type: "box" });
     crossV.setLocalScale(0.15, 1.2, 0.15);
     crossV.setLocalPosition(0, 14.6, -3.5);
 
@@ -1200,16 +1245,16 @@ export default class Village3DPlayCanvas {
     crossV.model.material = crossMat;
     church.addChild(crossV);
 
-    const crossH = new pc.Entity('CrossHorizontal');
-    crossH.addComponent('model', { type: 'box' });
+    const crossH = new pc.Entity("CrossHorizontal");
+    crossH.addComponent("model", { type: "box" });
     crossH.setLocalScale(0.6, 0.15, 0.15);
     crossH.setLocalPosition(0, 14.3, -3.5);
     crossH.model.material = crossMat;
     church.addChild(crossH);
 
     // Main entrance
-    const entrance = new pc.Entity('Entrance');
-    entrance.addComponent('model', { type: 'box' });
+    const entrance = new pc.Entity("Entrance");
+    entrance.addComponent("model", { type: "box" });
     entrance.setLocalScale(2.5, 3.5, 0.2);
     entrance.setLocalPosition(0, 1.75, 5.1);
 
@@ -1230,11 +1275,11 @@ export default class Village3DPlayCanvas {
     if (!this.app) return;
     const pc = (window as any).pc;
 
-    const well = new pc.Entity('Well');
+    const well = new pc.Entity("Well");
 
     // Base
-    const base = new pc.Entity('Base');
-    base.addComponent('model', { type: 'cylinder' });
+    const base = new pc.Entity("Base");
+    base.addComponent("model", { type: "cylinder" });
     base.setLocalScale(1.5, 1, 1.5);
     base.setLocalPosition(0, 0.5, 0);
 
@@ -1246,8 +1291,8 @@ export default class Village3DPlayCanvas {
 
     // Posts
     for (let i = 0; i < 2; i++) {
-      const post = new pc.Entity('Post');
-      post.addComponent('model', { type: 'cylinder' });
+      const post = new pc.Entity("Post");
+      post.addComponent("model", { type: "cylinder" });
       post.setLocalScale(0.1, 2, 0.1);
       post.setLocalPosition(i === 0 ? -1 : 1, 2, 0);
 
@@ -1259,8 +1304,8 @@ export default class Village3DPlayCanvas {
     }
 
     // Roof
-    const roof = new pc.Entity('Roof');
-    roof.addComponent('model', { type: 'cone' });
+    const roof = new pc.Entity("Roof");
+    roof.addComponent("model", { type: "cone" });
     roof.setLocalScale(2, 1.2, 2);
     roof.setLocalPosition(0, 3.5, 0);
 
@@ -1285,9 +1330,9 @@ export default class Village3DPlayCanvas {
     const pc = (window as any).pc;
 
     // Main fire light with warmer, flickering color
-    const fireLight = new pc.Entity('FireLight');
-    fireLight.addComponent('light', {
-      type: 'point',
+    const fireLight = new pc.Entity("FireLight");
+    fireLight.addComponent("light", {
+      type: "point",
       color: new pc.Color(1, 0.4, 0.1),
       intensity: 4,
       range: 25,
@@ -1297,9 +1342,9 @@ export default class Village3DPlayCanvas {
     this.app.root.addChild(fireLight);
 
     // Core heat light (intense yellow)
-    const coreLight = new pc.Entity('FireCoreLight');
-    coreLight.addComponent('light', {
-      type: 'point',
+    const coreLight = new pc.Entity("FireCoreLight");
+    coreLight.addComponent("light", {
+      type: "point",
       color: new pc.Color(1, 0.8, 0.2),
       intensity: 1.5,
       range: 5,
@@ -1311,22 +1356,22 @@ export default class Village3DPlayCanvas {
     // Stone ring - more irregular
     for (let i = 0; i < 12; i++) {
       const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.2;
-      const stone = new pc.Entity('Stone');
-      stone.addComponent('model', { type: 'sphere' });
+      const stone = new pc.Entity("Stone");
+      stone.addComponent("model", { type: "sphere" });
       stone.setLocalScale(
         0.3 + Math.random() * 0.2,
         0.25 + Math.random() * 0.15,
-        0.3 + Math.random() * 0.2
+        0.3 + Math.random() * 0.2,
       );
       const dist = 1.4 + Math.random() * 0.2;
       stone.setLocalPosition(
         Math.cos(angle) * dist,
         0.1,
-        Math.sin(angle) * dist
+        Math.sin(angle) * dist,
       );
 
       const stoneMat = this.getMaterial({
-        name: 'CampfireStone',
+        name: "CampfireStone",
         diffuse: new pc.Color(0.25, 0.25, 0.3),
       });
       stone.model.material = stoneMat;
@@ -1335,14 +1380,14 @@ export default class Village3DPlayCanvas {
 
     // Crossed logs (teepee style)
     const logMat = this.getMaterial({
-      name: 'BurntLog',
+      name: "BurntLog",
       diffuse: new pc.Color(0.15, 0.1, 0.05),
       emissive: new pc.Color(0.2, 0.05, 0), // Glowing embers
     });
 
     for (let i = 0; i < 4; i++) {
-      const log = new pc.Entity('Log');
-      log.addComponent('model', { type: 'cylinder' });
+      const log = new pc.Entity("Log");
+      log.addComponent("model", { type: "cylinder" });
       log.setLocalScale(0.25, 1.6, 0.25);
 
       const angle = (i / 4) * Math.PI * 2;
@@ -1378,11 +1423,11 @@ export default class Village3DPlayCanvas {
       let particle;
 
       if (type < 0.6) {
-        particle = this.createParticle('flame');
+        particle = this.createParticle("flame");
       } else if (type < 0.9) {
-        particle = this.createParticle('smoke');
+        particle = this.createParticle("smoke");
       } else {
-        particle = this.createParticle('ember');
+        particle = this.createParticle("ember");
       }
 
       this.fireParticles.push(particle);
@@ -1393,7 +1438,7 @@ export default class Village3DPlayCanvas {
   /**
    * Create a single particle entity
    */
-  private createParticle(type: 'flame' | 'smoke' | 'ember'): {
+  private createParticle(type: "flame" | "smoke" | "ember"): {
     entity: PCEntity;
     type: string;
     life: number;
@@ -1403,8 +1448,8 @@ export default class Village3DPlayCanvas {
     endScale: number;
   } {
     const pc = (window as any).pc;
-    const entity = new pc.Entity('Particle');
-    entity.addComponent('model', { type: 'plane' });
+    const entity = new pc.Entity("Particle");
+    entity.addComponent("model", { type: "plane" });
 
     const particle = {
       entity,
@@ -1416,23 +1461,23 @@ export default class Village3DPlayCanvas {
       endScale: 0,
     };
 
-    if (type === 'flame') {
+    if (type === "flame") {
       particle.maxLife = 0.8 + Math.random() * 0.6;
       particle.startScale = 0.5 + Math.random() * 0.3;
       particle.endScale = 0.1;
       particle.velocity.set(
         (Math.random() - 0.5) * 0.5,
         1.5 + Math.random(),
-        (Math.random() - 0.5) * 0.5
+        (Math.random() - 0.5) * 0.5,
       );
       entity.setPosition(
         (Math.random() - 0.5) * 0.5,
         0.2,
-        (Math.random() - 0.5) * 0.5
+        (Math.random() - 0.5) * 0.5,
       );
 
       const mat = this.getMaterial({
-        name: 'FlameMat',
+        name: "FlameMat",
         emissive: new pc.Color(1, 0.8, 0.2),
         opacity: 0.8,
       });
@@ -1440,23 +1485,23 @@ export default class Village3DPlayCanvas {
       if (flameModel) {
         flameModel.material = mat;
       }
-    } else if (type === 'smoke') {
+    } else if (type === "smoke") {
       particle.maxLife = 2.0 + Math.random();
       particle.startScale = 0.3;
       particle.endScale = 1.5;
       particle.velocity.set(
         (Math.random() - 0.5) * 0.8,
         1.0 + Math.random() * 0.5,
-        (Math.random() - 0.5) * 0.8
+        (Math.random() - 0.5) * 0.8,
       );
       entity.setPosition(
         (Math.random() - 0.5) * 0.5,
         1.5,
-        (Math.random() - 0.5) * 0.5
+        (Math.random() - 0.5) * 0.5,
       );
 
       const mat = this.getMaterial({
-        name: 'SmokeMat',
+        name: "SmokeMat",
         diffuse: new pc.Color(0.2, 0.2, 0.2),
         opacity: 0.3,
       });
@@ -1472,12 +1517,12 @@ export default class Village3DPlayCanvas {
       particle.velocity.set(
         (Math.random() - 0.5) * 2,
         2 + Math.random() * 2,
-        (Math.random() - 0.5) * 2
+        (Math.random() - 0.5) * 2,
       );
       entity.setPosition(0, 0.5, 0);
 
       const mat = this.getMaterial({
-        name: 'EmberMat',
+        name: "EmberMat",
         emissive: new pc.Color(1, 0.6, 0.1),
         opacity: 1,
       });
@@ -1527,8 +1572,8 @@ export default class Village3DPlayCanvas {
       }
 
       // Face camera
-      if (this.app.root.findByName('Camera')) {
-        const cam = this.app.root.findByName('Camera');
+      if (this.app.root.findByName("Camera")) {
+        const cam = this.app.root.findByName("Camera");
         p.entity.lookAt(cam.getPosition());
       }
     }
@@ -1551,7 +1596,7 @@ export default class Village3DPlayCanvas {
   }): PCMaterial {
     const pc = (window as any).pc;
     const key = options.name || JSON.stringify(options);
-    
+
     const cached = this.materialCache.get(key);
     if (cached) {
       return cached;
@@ -1578,7 +1623,7 @@ export default class Village3DPlayCanvas {
     this.players = players;
 
     // Clear existing
-    this.playerEntities.forEach(entity => entity.destroy());
+    this.playerEntities.forEach((entity) => entity.destroy());
     this.playerEntities.clear();
     this.playerLabels.clear();
 
@@ -1591,12 +1636,17 @@ export default class Village3DPlayCanvas {
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
-      const playerEntity = this.avatarBuilder.createPlayerAvatar(player, x, z, angle);
-      
+      const playerEntity = this.avatarBuilder.createPlayerAvatar(
+        player,
+        x,
+        z,
+        angle,
+      );
+
       if (this.app) {
         this.app.root.addChild(playerEntity);
       }
-      
+
       this.playerEntities.set(player.id, playerEntity);
 
       // Update visual effects
@@ -1612,8 +1662,10 @@ export default class Village3DPlayCanvas {
   private updatePlayerEffects(_entity: PlayerEntity, data: PlayerData): void {
     // Apply visual effects from data.visual_effects
     if (data.visual_effects && Array.isArray(data.visual_effects)) {
-      data.visual_effects.forEach(effect => {
-        console.log(`[Village3D] Applying effect ${effect.type} to player ${data.id}`);
+      data.visual_effects.forEach((effect) => {
+        console.log(
+          `[Village3D] Applying effect ${effect.type} to player ${data.id}`,
+        );
         // Effect application logic would go here
       });
     }
@@ -1624,7 +1676,7 @@ export default class Village3DPlayCanvas {
    */
   setTimeOfDay(isNight: boolean): void {
     this.isNight = isNight;
-    console.log(`[Village3D] Setting time to ${isNight ? 'night' : 'day'}`);
+    console.log(`[Village3D] Setting time to ${isNight ? "night" : "day"}`);
     // Update lighting and atmosphere
   }
 
@@ -1638,28 +1690,30 @@ export default class Village3DPlayCanvas {
     this.updateParticles(dt);
 
     // Camera smoothing
-    const camera = this.app.root.findByName('Camera');
+    const camera = this.app.root.findByName("Camera");
     if (camera) {
-      const targetX = Math.cos(this.targetCameraAngle) * this.targetCameraRadius;
-      const targetZ = Math.sin(this.targetCameraAngle) * this.targetCameraRadius;
-      
+      const targetX =
+        Math.cos(this.targetCameraAngle) * this.targetCameraRadius;
+      const targetZ =
+        Math.sin(this.targetCameraAngle) * this.targetCameraRadius;
+
       const currentPos = camera.getPosition();
       const lerpFactor = Math.min(dt * 3, 1);
-      
+
       camera.setPosition(
         currentPos.x + (targetX - currentPos.x) * lerpFactor,
         currentPos.y + (this.targetCameraHeight - currentPos.y) * lerpFactor,
-        currentPos.z + (targetZ - currentPos.z) * lerpFactor
+        currentPos.z + (targetZ - currentPos.z) * lerpFactor,
       );
-      
+
       camera.lookAt(0, 0, 0);
     }
 
     // Animate players
-    this.playerEntities.forEach(entity => {
+    this.playerEntities.forEach((entity) => {
       if (entity.animState) {
         entity.animState.time += dt * entity.animState.idleSpeed;
-        
+
         // Simple idle animation
         if (entity.parts.arms) {
           entity.parts.arms.forEach((arm: PCEntity, i: number) => {
@@ -1684,11 +1738,11 @@ export default class Village3DPlayCanvas {
    * Update top bar with phase and round information
    */
   updateTopBar(phase: string, round: number): void {
-    const phaseEl = document.querySelector('#village3d-phase-name');
-    const roundEl = document.querySelector('#village3d-round-info');
+    const phaseEl = document.querySelector("#village3d-phase-name");
+    const roundEl = document.querySelector("#village3d-round-info");
 
     if (phaseEl) {
-      phaseEl.textContent = phase.replace(/_/g, ' ').toUpperCase();
+      phaseEl.textContent = phase.replace(/_/g, " ").toUpperCase();
     }
     if (roundEl) {
       roundEl.textContent = `Runde ${round}`;
@@ -1699,11 +1753,12 @@ export default class Village3DPlayCanvas {
    * Update role badge in top bar
    */
   updateRoleBadge(role: string, color: string | null = null): void {
-    const badge = document.querySelector('#village3d-role-badge');
+    const badge = document.querySelector("#village3d-role-badge");
     if (badge) {
-      badge.textContent = role || 'Warte...';
+      badge.textContent = role || "Warte...";
       if (color) {
-        (badge as HTMLElement).style.background = `linear-gradient(135deg, ${color}80 0%, ${color}40 100%)`;
+        (badge as HTMLElement).style.background =
+          `linear-gradient(135deg, ${color}80 0%, ${color}40 100%)`;
       }
     }
   }
@@ -1712,18 +1767,19 @@ export default class Village3DPlayCanvas {
    * Update action buttons in the action panel
    */
   updateActionButtons(buttons: any[]): void {
-    const container = document.querySelector('#village3d-action-buttons');
+    const container = document.querySelector("#village3d-action-buttons");
     if (!container) return;
 
-    (container as HTMLElement).innerHTML = '';
+    (container as HTMLElement).innerHTML = "";
 
     if (!buttons || buttons.length === 0) {
-      (container as HTMLElement).innerHTML = '<p style="color: #999; pointer-events: auto;">Warte auf deine Aktion...</p>';
+      (container as HTMLElement).innerHTML =
+        '<p style="color: #999; pointer-events: auto;">Warte auf deine Aktion...</p>';
       return;
     }
 
     buttons.forEach((btn) => {
-      const button = document.createElement('button');
+      const button = document.createElement("button");
       button.style.cssText = `
         padding: 0.75rem 1.5rem;
         background: linear-gradient(135deg, #d4a574 0%, #b8885a 100%);
@@ -1737,8 +1793,8 @@ export default class Village3DPlayCanvas {
         pointer-events: auto;
       `;
       button.textContent = btn.label || btn.text;
-      button.addEventListener('click', () => {
-        if (btn.action && typeof btn.action === 'function') {
+      button.addEventListener("click", () => {
+        if (btn.action && typeof btn.action === "function") {
           btn.action();
         }
       });
@@ -1751,17 +1807,17 @@ export default class Village3DPlayCanvas {
    */
   destroy(): void {
     if (this.updateBound && this.app) {
-      this.app.off('update', this.updateBound);
+      this.app.off("update", this.updateBound);
     }
-    
-    this.playerEntities.forEach(entity => entity.destroy());
+
+    this.playerEntities.forEach((entity) => entity.destroy());
     this.playerEntities.clear();
     this.playerLabels.clear();
-    
+
     if (this.app) {
       this.app.destroy();
     }
-    
+
     if (this.canvas && this.canvas.parentElement) {
       this.canvas.parentElement.removeChild(this.canvas);
     }

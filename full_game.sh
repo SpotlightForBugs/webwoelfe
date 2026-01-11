@@ -177,6 +177,8 @@ if ! curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
     export PHASE_DELAY=1
     # Lower audio threshold for tests (80% of players = can cause delays)
     export AUDIO_THRESHOLD=0.1
+    # Auto-create database tables since we delete the db file for fresh tests
+    export AUTO_DB_CREATE_ALL=1
     
     # Separate Flask logs to a file
     SERVER_LOG="flask_server.log"

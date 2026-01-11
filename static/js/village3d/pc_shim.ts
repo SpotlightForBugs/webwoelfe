@@ -449,6 +449,10 @@ export class Entity {
         throw new Error('[Village3D] pc_shim: canvas not registered');
       }
       this.camera = new CameraComponent(canvas, { farClip: opts?.farClip });
+      // Three.js cameras look down -Z by default, but when parented to an Entity
+      // that uses lookAt(), the camera ends up facing backwards. Rotate 180° on Y
+      // to align the camera's forward direction with the parent Entity's forward.
+      this.camera.camera.rotation.y = Math.PI;
       this.object.add(this.camera.camera);
       return;
     }

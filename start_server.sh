@@ -53,6 +53,8 @@ if ! curl -s http://localhost:$PORT > /dev/null 2>&1; then
     export FLASK_ENV=development
     export FLASK_DEBUG=1
     export PORT=$PORT
+    # Auto-create database tables since we delete the db file for fresh tests
+    export AUTO_DB_CREATE_ALL=1
     python app.py &
     SERVER_PID=$!
     
@@ -86,3 +88,10 @@ cleanup() {
     fi
 }
 trap cleanup EXIT
+
+# Keep script running - wait for the server process
+if [ -n "$SERVER_PID" ]; then
+    echo "📡 Server läuft auf http://localhost:$PORT"
+    echo "   Drücke Ctrl+C zum Beenden..."
+    wait $SERVER_PID
+fi

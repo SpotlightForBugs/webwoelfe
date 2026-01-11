@@ -1179,7 +1179,21 @@
 
     let html = "";
 
-    for (const [extPack, roles] of Object.entries(grouped)) {
+    // Define the correct order for extensions //TODO: move to backend!
+    const extensionOrder = ['base', 'neumond', 'gemeinde', 'charaktere', 'sonderedition'];
+    
+    // Sort extensions: predefined order first, then alphabetical for any others
+    const sortedExtensions = Object.keys(grouped).sort((a, b) => {
+      const indexA = extensionOrder.indexOf(a);
+      const indexB = extensionOrder.indexOf(b);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    for (const extPack of sortedExtensions) {
+      const roles = grouped[extPack];
       let info = extensionInfo[extPack] || {
         name: extPack,
         icon: "fa-puzzle-piece",

@@ -510,8 +510,16 @@ spiel_name }}{% endblock %} {% block content %}
 {% endblock %} {% block scripts %}
 <!-- 3D Dorf für Nicht-Lokal-Modus (Three.js) -->
 {% if raum.modus != 'lokal' %}
-<script src="https://cdn.jsdelivr.net/npm/three@latest/build/three.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js"
+  }
+}
+</script>
 <script type="module">
+import * as THREE from 'three';
+window.THREE = THREE;
   import Village3DThree from "{{ versioned_url('static', filename='js/village3d/dist/Village3DThree.js') }}";
 
   // Konstante für Update-Verzögerung (Zeit für DOM-Updates)

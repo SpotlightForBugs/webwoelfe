@@ -325,7 +325,10 @@ export default class Village3DThree {
     this.camera = new pc.Entity('Camera');
     if (!this.camera) throw new Error('Failed to create camera');
     this.camera.addComponent('camera', {
-      clearColor: new pc.Color(0.1, 0.1, 0.15),
+      // Lobby mode uses brighter sky color
+      clearColor: this.isLobbyMode 
+        ? new pc.Color(0.35, 0.45, 0.55) 
+        : new pc.Color(0.1, 0.1, 0.15),
       farClip: 1000,
     });
     this.camera.setPosition(0, this.targetCameraHeight, this.targetCameraRadius);
@@ -382,14 +385,18 @@ export default class Village3DThree {
     this.rimLight.setLocalEulerAngles(10, -90, 0);
     this.app.root.addChild(this.rimLight);
 
-    // Ambient light - Düsterwald: very dark, cold blue-green tint
-    this.app.scene.ambientLight = this.isNight 
-      ? new pc.Color(0.06, 0.07, 0.12) 
-      : new pc.Color(0.18, 0.18, 0.22);
+    // Ambient light - Düsterwald: very dark, cold blue-green tint (brighter for lobby)
+    if (this.isLobbyMode) {
+      this.app.scene.ambientLight = new pc.Color(0.25, 0.25, 0.3);
+    } else {
+      this.app.scene.ambientLight = this.isNight 
+        ? new pc.Color(0.06, 0.07, 0.12) 
+        : new pc.Color(0.18, 0.18, 0.22);
+    }
 
-    // Sky dome with stars
+    // Sky dome with stars (also for lobby mode for proper background)
+    this.createSkyDome();
     if (!this.isLobbyMode) {
-      this.createSkyDome();
       this.createCelestialBodies();
     }
 

@@ -133,6 +133,7 @@ class Spieler(db.Model):
             value: Der Wert
         """
         import json
+
         logger.debug(f"State update: {self.name}.{key} = {value}")
 
         try:
@@ -174,7 +175,7 @@ class Spieler(db.Model):
         if condition_id in conditions:
             conditions.remove(condition_id)
             self.set_state("win_conditions", conditions)
-            
+
     def has_win_condition(self, condition_id: str) -> bool:
         """Prüft ob eine Gewinnbedingung existiert."""
         conditions = self.get_state("win_conditions", [])
@@ -194,7 +195,7 @@ class Spieler(db.Model):
         if condition_id in conditions:
             del conditions[condition_id]
             self.set_state("lose_conditions", conditions)
-            
+
     def get_lose_conditions(self) -> dict:
         """Gibt alle aktiven Niederlagenbedingungen zurück."""
         result = self.get_state("lose_conditions", {})
@@ -358,7 +359,7 @@ class SpielerPosition(db.Model):
     )
 
 
-class SeherinEnthuellung(db.Model): #TODO: REMOVE ROLE BASED HARDCODING
+class SeherinEnthuellung(db.Model):  # TODO: REMOVE ROLE BASED HARDCODING
     """
     Snapshot der Seherin-Enthüllungen.
 
@@ -398,7 +399,9 @@ class SeherinEnthuellung(db.Model): #TODO: REMOVE ROLE BASED HARDCODING
         runde: int,
     ):
         """Speichert eine neue Enthüllung als Snapshot"""
-        logger.info(f"Saving Seherin reveal: Seherin {seherin_id} -> Target {ziel_id} ({rolle})")
+        logger.info(
+            f"Saving Seherin reveal: Seherin {seherin_id} -> Target {ziel_id} ({rolle})"
+        )
         # Prüfe ob bereits enthüllt
         bestehend = SeherinEnthuellung.query.filter_by(
             seherin_id=seherin_id, ziel_id=ziel_id, raum_id=raum_id
@@ -408,7 +411,7 @@ class SeherinEnthuellung(db.Model): #TODO: REMOVE ROLE BASED HARDCODING
             # Bereits enthüllt - keine Änderung
             return bestehend
 
-        enthuellung = SeherinEnthuellung(  # pyright: ignore[reportCallIssue]  #TODO: REMOVE ROLE BASED HARDCODING 
+        enthuellung = SeherinEnthuellung(  # pyright: ignore[reportCallIssue]  #TODO: REMOVE ROLE BASED HARDCODING
             raum_id=raum_id,
             seherin_id=seherin_id,
             ziel_id=ziel_id,
@@ -443,10 +446,14 @@ class SeherinEnthuellung(db.Model): #TODO: REMOVE ROLE BASED HARDCODING
 
     # Relationships mit expliziten foreign_keys
     seherin = db.relationship(
-        "Spieler", foreign_keys=[seherin_id], backref="enthüllungen_als_seherin" #TODO: REMOVE ROLE BASED HARDCODING
+        "Spieler",
+        foreign_keys=[seherin_id],
+        backref="enthüllungen_als_seherin",  # TODO: REMOVE ROLE BASED HARDCODING
     )
     ziel = db.relationship(
-        "Spieler", foreign_keys=[ziel_id], backref="enthüllungen_als_ziel"  #TODO: REMOVE ROLE BASED HARDCODING
+        "Spieler",
+        foreign_keys=[ziel_id],
+        backref="enthüllungen_als_ziel",  # TODO: REMOVE ROLE BASED HARDCODING
     )
 
 
@@ -479,7 +486,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Ein kurzer Schatten huscht über den Spieler",
         "dauer_ms": 300,
         "css_class": "hint-shadow",
-        "audio": "shadow_swoosh.mp3",#TODO: Add sound
+        "audio": "shadow_swoosh.mp3",  # TODO: Add sound
         "verdaechtigkeit": 0.2,
     },
     "heulen_fern": {
@@ -487,7 +494,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Ein leises, fernes Wolfsheulen ist zu hören",
         "dauer_ms": 2000,
         "css_class": None,
-        "audio": "distant_howl.mp3",#TODO: Add sound
+        "audio": "distant_howl.mp3",  # TODO: Add sound
         "verdaechtigkeit": 0.4,
     },
     "mond_schein": {
@@ -519,15 +526,15 @@ HINWEIS_TYPEN = {
         "beschreibung": "Ein Kratzgeräusch ist zu hören",
         "dauer_ms": 1000,
         "css_class": None,
-        "audio": "scratch.mp3",#TODO: Add sound
+        "audio": "scratch.mp3",  # TODO: Add sound
         "verdaechtigkeit": 0.35,
     },
     "herzschlag": {
         "name": "Schneller Herzschlag",
         "beschreibung": "Ein schneller Herzschlag pulsiert",
         "dauer_ms": 1500,
-        "css_class": "hint-heartbeat", 
-        "audio": "heartbeat_fast.mp3", #TODO: Add sound
+        "css_class": "hint-heartbeat",
+        "audio": "heartbeat_fast.mp3",  # TODO: Add sound
         "verdaechtigkeit": 0.3,
     },
     "gluehen": {
@@ -543,7 +550,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Unverständliches Flüstern ist zu hören",
         "dauer_ms": 1200,
         "css_class": None,
-        "audio": "whisper.mp3",#TODO: Add sound
+        "audio": "whisper.mp3",  # TODO: Add sound
         "verdaechtigkeit": 0.25,
     },
     "selbst_verdaechtigung": {
@@ -551,7 +558,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Der Spieler macht sich selbst verdächtig (Selbstmörder)",
         "dauer_ms": 1000,
         "css_class": "hint-sus-self",
-        "audio": "suspicious.mp3",#TODO: Add sound
+        "audio": "suspicious.mp3",  # TODO: Add sound
         "verdaechtigkeit": 0.5,  # Spieler-kontrolliert
     },
     "stolpern": {
@@ -559,7 +566,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Der Spieler scheint zu stolpern",
         "dauer_ms": 500,
         "css_class": "hint-stumble",
-        "audio": "stumble.mp3",#TODO: Add sound
+        "audio": "stumble.mp3",  # TODO: Add sound
         "verdaechtigkeit": 0.1,
     },
     "kichern": {
@@ -567,7 +574,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Ein leises, böses Kichern",
         "dauer_ms": 800,
         "css_class": None,
-        "audio": "evil_chuckle.mp3",#TODO: Add sound
+        "audio": "evil_chuckle.mp3",  # TODO: Add sound
         "verdaechtigkeit": 0.45,
     },
 }
@@ -596,7 +603,7 @@ HINWEIS_MODUS = {
 
 # Hinweis-Konfiguration pro Rollen-Team
 HINWEIS_CHANCEN = {
-    "werwolf": {  #TODO: REMOVE ROLE BASED HARDCODING
+    "werwolf": {  # TODO: REMOVE ROLE BASED HARDCODING
         # Werwölfe haben höhere Chancen, verdächtige Hinweise zu produzieren
         "basis_chance": 0.15,  # 15% Basis-Chance pro Nachtphase
         "hinweise": ["augen_flackern", "schatten", "mond_schein"],  # Nur visuelle!
@@ -651,7 +658,7 @@ SYNCHRONISIERTE_HINWEISE = {
         "nachricht": "{spieler} wendet den Blick ab...",
         "3d_effekt": "look_away",
     },
-    "selbst_verdaechtigung": { #TOOD: DAS IST NICHT AKZEPTABEL WEIL DANN OFFENSICHTLICH IST; DASS DAS EIN SELBSTMÖRDER IST
+    "selbst_verdaechtigung": {  # TOOD: DAS IST NICHT AKZEPTABEL WEIL DANN OFFENSICHTLICH IST; DASS DAS EIN SELBSTMÖRDER IST
         "nachricht": "{spieler} verhält sich verdächtig!",
         "3d_effekt": "suspicious_behavior",
     },
@@ -659,7 +666,7 @@ SYNCHRONISIERTE_HINWEISE = {
 
 # Spezielle Rollen-Hinweise (überschreiben Team-Standard)
 SPEZIAL_HINWEISE = {
-    "Selbstmörder": { #TODO: REMOVE ROLE BASED HARDCODING
+    "Selbstmörder": {  # TODO: REMOVE ROLE BASED HARDCODING
         # Der Selbstmörder kann aktiv Hinweise auf sich ziehen!
         "kann_hinweis_senden": True,
         "verfuegbare_hinweise": [
@@ -671,37 +678,37 @@ SPEZIAL_HINWEISE = {
         "hinweise_pro_tag": 3,  # Kann 3x pro Tag sich verdächtig machen
         "beschreibung": 'Klicke auf "Verdächtig wirken" um subtile Hinweise zu senden.',
     },
-    "Gerber": { #TODO: REMOVE ROLE BASED HARDCODING
+    "Gerber": {  # TODO: REMOVE ROLE BASED HARDCODING
         "kann_hinweis_senden": True,
         "verfuegbare_hinweise": ["selbst_verdaechtigung", "nervoes"],
         "hinweise_pro_tag": 2,
         "beschreibung": "Du kannst dich verdächtig machen, um gehängt zu werden.",
     },
-    "Dorfdepp": { #TODO: REMOVE ROLE BASED HARDCODING
+    "Dorfdepp": {  # TODO: REMOVE ROLE BASED HARDCODING
         "kann_hinweis_senden": True,
         "verfuegbare_hinweise": ["stolpern", "nervoes"],
         "hinweise_pro_tag": 2,
         "beschreibung": "Mach dich zum Deppen und wirke verdächtig!",
     },
-    "Engel": { #TODO: REMOVE ROLE BASED HARDCODING
+    "Engel": {  # TODO: REMOVE ROLE BASED HARDCODING
         "kann_hinweis_senden": True,
         "verfuegbare_hinweise": ["gluehen", "selbst_verdaechtigung"],
         "hinweise_pro_tag": 2,
         "beschreibung": "Du musst in der ersten Runde sterben! Ziehe Aufmerksamkeit auf dich.",
     },
-    "Weißer Wolf": { #TODO: REMOVE ROLE BASED HARDCODING
+    "Weißer Wolf": {  # TODO: REMOVE ROLE BASED HARDCODING
         # Besonders unauffällig unter Wölfen
         "basis_chance_override": 0.08,  # Niedrigere Chance als normale Werwölfe
         "hinweise": ["schatten"],
     },
-    "Wolfshund": { #TODO: REMOVE ROLE BASED HARDCODING
+    "Wolfshund": {  # TODO: REMOVE ROLE BASED HARDCODING
         # Je nach Entscheidung verschiedene Hinweise
         "dynamisch": True,
     },
 }
 
 # Spielregeln/Varianten für Regelauswahl
-SPIEL_REGELN = { #TODO: MAKE THOSE ACTUALLY WORK AND DO STUFF.
+SPIEL_REGELN = {  # TODO: MAKE THOSE ACTUALLY WORK AND DO STUFF.
     "standard": {
         "name": "Standard-Regeln",
         "beschreibung": "Die klassischen Werwolf-Regeln.",
@@ -789,6 +796,7 @@ def _erstelle_rollen_dict():
     """
     try:
         from roles import get_alle_rollen
+
         logger.debug("Loading roles from registry...")
         return get_alle_rollen()
     except Exception as e:
@@ -808,9 +816,22 @@ PHASEN = get_phase_list()
 # Rollen-Konfiguration nach Spielerzahl (Empfehlung)
 # For games larger than defined here, use berechne_rollen() from game_logic.py
 ROLLEN_EMPFEHLUNG = {
-    5: ["Werwolf", "Werwolf", "Seherin", "Dorfbewohner", "Dorfbewohner"], #TODO: REMOVE ROLE BASED HARDCODING
-    6: ["Werwolf", "Werwolf", "Seherin", "Hexe", "Dorfbewohner", "Dorfbewohner"], #TODO: REMOVE ROLE BASED HARDCODING
-    7: [ #TODO: REMOVE ROLE BASED HARDCODING #TODO: REMOVE ROLE BASED HARDCODING
+    5: [
+        "Werwolf",
+        "Werwolf",
+        "Seherin",
+        "Dorfbewohner",
+        "Dorfbewohner",
+    ],  # TODO: REMOVE ROLE BASED HARDCODING
+    6: [
+        "Werwolf",
+        "Werwolf",
+        "Seherin",
+        "Hexe",
+        "Dorfbewohner",
+        "Dorfbewohner",
+    ],  # TODO: REMOVE ROLE BASED HARDCODING
+    7: [  # TODO: REMOVE ROLE BASED HARDCODING #TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Werwolf",
         "Seherin",
@@ -819,7 +840,7 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    8: [ #TODO: REMOVE ROLE BASED HARDCODING
+    8: [  # TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Werwolf",
         "Seherin",
@@ -829,18 +850,18 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    9: [ #TODO: REMOVE ROLE BASED HARDCODING
+    9: [  # TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Werwolf",
         "Seherin",
-        "Hexe", #TODO: REMOVE ROLE BASED HARDCODING
+        "Hexe",  # TODO: REMOVE ROLE BASED HARDCODING
         "Jaeger",
         "Amor",
-        "Heiler", #TODO: REMOVE ROLE BASED HARDCODING
+        "Heiler",  # TODO: REMOVE ROLE BASED HARDCODING
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    10: [ #TODO: REMOVE ROLE BASED HARDCODING
+    10: [  # TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Werwolf",
         "Werwolf",
@@ -852,7 +873,7 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    11: [ #TODO: REMOVE ROLE BASED HARDCODING
+    11: [  # TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Werwolf",
         "Werwolf",
@@ -865,7 +886,7 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    12: [ #TODO: REMOVE ROLE BASED HARDCODING
+    12: [  # TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Werwolf",
         "Werwolf",
@@ -879,7 +900,7 @@ ROLLEN_EMPFEHLUNG = {
         "Zwei Schwestern",
         "Dorfbewohner",
     ],
-    13: [ #TODO: REMOVE ROLE BASED HARDCODING
+    13: [  # TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Werwolf",
         "Werwolf",
@@ -894,7 +915,7 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    14: [ #TODO: REMOVE ROLE BASED HARDCODING
+    14: [  # TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Werwolf",
         "Werwolf",
@@ -910,48 +931,48 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    15: [ #TODO: REMOVE ROLE BASED HARDCODING
+    15: [  # TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Werwolf",
         "Werwolf",
         "Werwolf",
         "Seherin",
-        "Hexe", #TODO: REMOVE ROLE BASED HARDCODING
+        "Hexe",  # TODO: REMOVE ROLE BASED HARDCODING
         "Jaeger",
         "Amor",
         "Heiler",
-        "Alter Mann", #TODO: REMOVE ROLE BASED HARDCODING
+        "Alter Mann",  # TODO: REMOVE ROLE BASED HARDCODING
         "Medium",
         "Rabe",
         "Dorfbewohner",
-        "Dorfbewohner", #TODO: REMOVE ROLE BASED HARDCODING
+        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
         "Dorfbewohner",
     ],
     16: [
         "Werwolf",
         "Werwolf",
-        "Werwolf", #TODO: REMOVE ROLE BASED HARDCODING
+        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Seherin",
         "Hexe",
         "Jaeger",
         "Amor",
-        "Heiler", #TODO: REMOVE ROLE BASED HARDCODING
+        "Heiler",  # TODO: REMOVE ROLE BASED HARDCODING
         "Alter Mann",
         "Medium",
-        "Rabe", #TODO: REMOVE ROLE BASED HARDCODING
+        "Rabe",  # TODO: REMOVE ROLE BASED HARDCODING
         "Prinz",
         "Dorfbewohner",
         "Dorfbewohner",
         "Dorfbewohner",
     ],
     17: [
-        "Werwolf", #TODO: REMOVE ROLE BASED HARDCODING
+        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
         "Werwolf",
         "Werwolf",
         "Werwolf",
         "Urwolf",
-        "Seherin", #TODO: REMOVE ROLE BASED HARDCODING
+        "Seherin",  # TODO: REMOVE ROLE BASED HARDCODING
         "Hexe",
         "Jaeger",
         "Amor",
@@ -960,29 +981,29 @@ ROLLEN_EMPFEHLUNG = {
         "Medium",
         "Rabe",
         "Prinz",
-        "Dorfbewohner", #TODO: REMOVE ROLE BASED HARDCODING
-        "Dorfbewohner", #TODO: REMOVE ROLE BASED HARDCODING
-        "Dorfbewohner", #TODO: REMOVE ROLE BASED HARDCODING
+        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
     ],
     18: [
-        "Werwolf", #TODO: REMOVE ROLE BASED HARDCODING
-        "Werwolf", #TODO: REMOVE ROLE BASED HARDCODING
-        "Werwolf", #TODO: REMOVE ROLE BASED HARDCODING
-        "Werwolf", #TODO: REMOVE ROLE BASED HARDCODING
-        "Urwolf", #TODO: REMOVE ROLE BASED HARDCODING
-        "Seherin", #TODO: REMOVE ROLE BASED HARDCODING
-        "Hexe", #TODO: REMOVE ROLE BASED HARDCODING
-        "Jaeger", #TODO: REMOVE ROLE BASED HARDCODING
-        "Amor", #TODO: REMOVE ROLE BASED HARDCODING
-        "Heiler", #TODO: REMOVE ROLE BASED HARDCODING
-        "Alter Mann", #TODO: REMOVE ROLE BASED HARDCODING
-        "Medium", #TODO: REMOVE ROLE BASED HARDCODING
-        "Rabe", #TODO: REMOVE ROLE BASED HARDCODING
-        "Prinz", #TODO: REMOVE ROLE BASED HARDCODING
-        "Floetenspieler", #TODO: REMOVE ROLE BASED HARDCODING
-        "Dorfbewohner", #TODO: REMOVE ROLE BASED HARDCODING
-        "Dorfbewohner", #TODO: REMOVE ROLE BASED HARDCODING
-        "Dorfbewohner", #TODO: REMOVE ROLE BASED HARDCODING
+        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Urwolf",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Seherin",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Hexe",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Jaeger",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Amor",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Heiler",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Alter Mann",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Medium",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Rabe",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Prinz",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Floetenspieler",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
     ],
 }
 
@@ -1032,7 +1053,9 @@ def berechne_balance_statistik(spieler_anzahl: int) -> dict:
         "team_solo": team_solo,
         "team_andere": team_andere,
         "dorf_prozent": round(team_dorf / total * 100, 1) if total > 0 else 0,
-        "werwolf_prozent": round(team_werwolf / total * 100, 1) if total > 0 else 0, #TODO: REMOVE ROLE BASED HARDCODING
+        "werwolf_prozent": round(team_werwolf / total * 100, 1)
+        if total > 0
+        else 0,  # TODO: REMOVE ROLE BASED HARDCODING
         "solo_prozent": round(team_solo / total * 100, 1) if total > 0 else 0,
         "andere_prozent": round(team_andere / total * 100, 1) if total > 0 else 0,
         "rollen": rollen,

@@ -3721,7 +3721,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     };
 
     loadThreeJS().then(() => {
-      return import('{{ url_for('static', filename='js/village3d/dist/Village3DThree.js') }}');
+      return import('{{ versioned_url('static', filename='js/village3d/dist/Village3DThree.js') }}');
     }).then(module => {
       const Village3DThree = module.default;
       if (typeof Village3DThree !== 'undefined') {

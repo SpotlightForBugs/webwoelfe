@@ -44,8 +44,8 @@ services:
       - AUDIO_MIN_DELAY=${AUDIO_MIN_DELAY:-1.0}
       - AUDIO_THRESHOLD=${AUDIO_THRESHOLD:-0.8}
 
-      # Database configuration: use Postgres by default in compose
-      - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-webwoelfe}:${POSTGRES_PASSWORD:-webwoelfe}@db:5432/${POSTGRES_DB:-webwoelfe}}
+      # Database configuration: avoid nested defaults so Coolify template parsing succeeds
+      - DATABASE_URL=${DATABASE_URL:-postgresql://webwoelfe:webwoelfe@db:5432/webwoelfe}
 
     volumes:
       # Persistent app instance directory (e.g., for logs/cache if needed)

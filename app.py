@@ -89,6 +89,35 @@ def inject_css_reader():
     return dict(read_css=read_css)
 
 
+@app.context_processor
+def inject_cache_buster():
+    """Inject a function to add cache busting query parameters to static files."""
+    
+    def versioned_url(endpoint, **values):
+        """
+        Generate a URL with a cache-busting query parameter based on file modification time.
+        Usage in templates: {{ versioned_url('static', filename='js/dist/hints.js') }}
+        """
+        if endpoint == 'static' and 'filename' in values:
+            filename = values['filename']
+            try:
+                if app.static_folder is None:
+                    raise ValueError("Static folder is not configured")
+                filepath = os.path.join(app.static_folder, filename)
+                if os.path.exists(filepath):
+                    # Get file modification time as cache buster
+                    mtime = int(os.path.getmtime(filepath))
+                    values['v'] = mtime
+            except Exception as e:
+                logger.warning(f"Could not get mtime for {filename}: {e}")
+                # Fallback to timestamp if file doesn't exist or error
+                values['v'] = int(datetime.now(timezone.utc).timestamp())
+        
+        return url_for(endpoint, **values)
+    
+    return dict(versioned_url=versioned_url)
+
+
 # Automatic phases that advance immediately after audio (no player interaction needed)
 # These are pure transition/info phases
 AUTOMATISCHE_PHASEN = {

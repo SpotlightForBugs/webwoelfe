@@ -1553,11 +1553,33 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
               <span id="village3d-role-badge" class="village3d-role-badge">Warte...</span>
+              {% if spieler.ist_erzaehler %}
+              <button class="v3d-icon-btn" onclick="naechstePhase()" title="Nächste Phase">
+                <i class="fa-solid fa-forward"></i>
+              </button>
+              {% endif %}
               <button class="v3d-icon-btn" onclick="window.toggleRightSidebar?.()" title="Panel rechts umschalten">
                 <i class="fa-solid fa-comments"></i>
               </button>
             </div>
           </div>
+
+          <div id="village3d-toast" style="
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 720px;
+            width: calc(100% - 24px);
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.65);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.95);
+            display: none;
+            pointer-events: none;
+            z-index: 30;
+          "></div>
 
           <div id="village3d-left-panel" class="village3d-panel left">
             <div class="village3d-panel-title"><i class="fa-solid fa-bullseye"></i> Ziele</div>

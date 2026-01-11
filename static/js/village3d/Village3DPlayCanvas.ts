@@ -4,8 +4,8 @@
  * TypeScript version with modular architecture
  */
 
-import type { PlayerData, RoleModel, RoleData, Village3DOptions, PlayerEntity, RolesAPIResponse, PCApplication, PCEntity, PCColor, PCMaterial } from './types';
-import { PlayerAvatarBuilder } from './PlayerAvatarBuilder';
+import type { PlayerData, RoleModel, RoleData, Village3DOptions, PlayerEntity, RolesAPIResponse, PCApplication, PCEntity, PCColor, PCMaterial } from './types.js';
+import { PlayerAvatarBuilder } from './PlayerAvatarBuilder.js';
 
 export default class Village3DPlayCanvas {
   private container: HTMLElement;
@@ -393,6 +393,72 @@ export default class Village3DPlayCanvas {
     this.targetCameraAngle = this.defaultCameraAngle;
     this.targetCameraHeight = this.defaultCameraHeight;
     this.targetCameraRadius = this.defaultCameraRadius;
+  }
+
+  /**
+   * Update top bar with phase and round information
+   */
+  updateTopBar(phase: string, round: number): void {
+    const phaseEl = document.querySelector('#village3d-phase-name');
+    const roundEl = document.querySelector('#village3d-round-info');
+
+    if (phaseEl) {
+      phaseEl.textContent = phase.replace(/_/g, ' ').toUpperCase();
+    }
+    if (roundEl) {
+      roundEl.textContent = `Runde ${round}`;
+    }
+  }
+
+  /**
+   * Update role badge in top bar
+   */
+  updateRoleBadge(role: string, color: string | null = null): void {
+    const badge = document.querySelector('#village3d-role-badge');
+    if (badge) {
+      badge.textContent = role || 'Warte...';
+      if (color) {
+        (badge as HTMLElement).style.background = `linear-gradient(135deg, ${color}80 0%, ${color}40 100%)`;
+      }
+    }
+  }
+
+  /**
+   * Update action buttons in the action panel
+   */
+  updateActionButtons(buttons: any[]): void {
+    const container = document.querySelector('#village3d-action-buttons');
+    if (!container) return;
+
+    (container as HTMLElement).innerHTML = '';
+
+    if (!buttons || buttons.length === 0) {
+      (container as HTMLElement).innerHTML = '<p style="color: #999; pointer-events: auto;">Warte auf deine Aktion...</p>';
+      return;
+    }
+
+    buttons.forEach((btn) => {
+      const button = document.createElement('button');
+      button.style.cssText = `
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, #d4a574 0%, #b8885a 100%);
+        border: none;
+        border-radius: 8px;
+        color: #000;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        pointer-events: auto;
+      `;
+      button.textContent = btn.label || btn.text;
+      button.addEventListener('click', () => {
+        if (btn.action && typeof btn.action === 'function') {
+          btn.action();
+        }
+      });
+      (container as HTMLElement).appendChild(button);
+    });
   }
 
   /**

@@ -3,7 +3,7 @@
  * Handles custom accessories, body modifications, and visual effects from role definitions
  */
 
-import type { AppearanceFeature, PlayerData, PlayerEntity, PCColor, PCMaterial, PCEntity } from './types';
+import type { AppearanceFeature, PlayerData, PlayerEntity, PCColor, PCMaterial, PCEntity } from './types.js';
 
 export class AppearanceFeatureRenderer {
   private materialCache: Map<string, PCMaterial>;

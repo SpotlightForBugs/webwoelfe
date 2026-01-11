@@ -2,8 +2,8 @@
  * PlayerAvatarBuilder - Builds 3D player avatars with role-specific appearances
  */
 
-import type { PlayerData, PlayerEntity, RoleModel, PCEntity, PCColor, PCMaterial } from './types';
-import { AppearanceFeatureRenderer } from './AppearanceFeatureRenderer';
+import type { PlayerData, PlayerEntity, RoleModel, PCEntity, PCColor, PCMaterial } from './types.js';
+import { AppearanceFeatureRenderer } from './AppearanceFeatureRenderer.js';
 
 export class PlayerAvatarBuilder {
   private materialCache: Map<string, PCMaterial>;

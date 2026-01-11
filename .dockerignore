@@ -48,7 +48,8 @@ playwright-report/
 instance/*.db
 instance/*.db-*
 
-# Shell scripts (except build.sh and start_server.sh)
+# Shell scripts (except build.sh, start_server.sh, and docker-entrypoint.sh)
 *.sh
 !build.sh
 !start_server.sh
+!docker-entrypoint.sh

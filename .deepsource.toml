@@ -1,23 +1,25 @@
 version = 1
 
 [[analyzers]]
+name = "shell"
+
+[[analyzers]]
+name = "docker"
+
+[[analyzers]]
 name = "python"
-enabled = true
 
   [analyzers.meta]
   runtime_version = "3.x.x"
 
 [[analyzers]]
 name = "javascript"
-enabled = true
 
   [analyzers.meta]
-  plugins = ["react"]
+  environment = ["browser"]
 
-[[transformers]]
-name = "black"
-enabled = true
-
-[[transformers]]
+[[code_formatters]]
 name = "prettier"
-enabled = true
+
+[[code_formatters]]
+name = "ruff"

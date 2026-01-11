@@ -48,6 +48,7 @@ playwright-report/
 instance/*.db
 instance/*.db-*
 
-# Shell scripts (except build.sh)
+# Shell scripts (except build.sh and start_server.sh)
 *.sh
 !build.sh
+!start_server.sh

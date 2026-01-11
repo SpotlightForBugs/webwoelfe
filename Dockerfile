@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci --prefer-offline --no-audit
 
 COPY . .
 

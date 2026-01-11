@@ -112,6 +112,10 @@ export default class Village3DPlayCanvas {
 
   // Selection highlight
   private selectedHighlight: { playerId: number; entity: PCEntity } | null = null;
+
+  // Hover highlight (interaction cue)
+  private hoverHighlight: { playerId: number; entity: PCEntity } | null = null;
+  private lastHoverCheckAt: number = 0;
   
   // Role data
   private roleColors: Record<string, PCColor> = {};
@@ -1726,6 +1730,9 @@ export default class Village3DPlayCanvas {
       const angle = Math.atan2(pos.z, pos.x);
 
       const playerEntity = this.avatarBuilder.createPlayerAvatar(player, pos.x, pos.z, angle);
+
+      // UI-style pedestal to make positions clearer
+      this.addPlayerPedestal(playerEntity);
       
       // Add name label
       const nameLabel = this.createNameLabel(player.name, player.ist_am_leben);
@@ -1743,6 +1750,38 @@ export default class Village3DPlayCanvas {
     });
 
     console.log(`[Village3D] Created ${players.length} player avatars`);
+  }
+
+  private addPlayerPedestal(playerEntity: PlayerEntity): void {
+    const pc = window.pc;
+
+    const base = new pc.Entity('Pedestal');
+    base.addComponent('model', { type: 'cylinder' });
+    base.setLocalScale(2.4, 0.12, 2.4);
+    base.setLocalPosition(0, 0.02, 0);
+
+    const baseMat = this.getMaterial({
+      name: 'PlayerPedestal',
+      diffuse: new pc.Color(0.18, 0.16, 0.15),
+      specular: new pc.Color(0.06, 0.06, 0.06),
+    });
+    (base.model as PCModel).material = baseMat;
+    playerEntity.addChild(base);
+
+    // Subtle ring
+    const ring = new pc.Entity('PedestalRing');
+    ring.addComponent('model', { type: 'torus' });
+    ring.setLocalScale(2.8, 2.8, 0.25);
+    ring.setLocalPosition(0, 0.06, 0);
+
+    const ringMat = new pc.StandardMaterial();
+    ringMat.emissive = new pc.Color(0.25, 0.2, 0.15);
+    ringMat.emissiveIntensity = 1.2;
+    ringMat.opacity = 0.35;
+    ringMat.blendType = pc.BLEND_ADDITIVE;
+    ringMat.update();
+    (ring.model as PCModel).material = ringMat;
+    playerEntity.addChild(ring);
   }
 
   /**
@@ -2159,6 +2198,18 @@ export default class Village3DPlayCanvas {
 
         lastX = e.clientX;
         lastY = e.clientY;
+      } else {
+        // Hover feedback (throttled)
+        const now = performance.now();
+        if (now - this.lastHoverCheckAt > 80) {
+          this.lastHoverCheckAt = now;
+          const rect = this.canvas!.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const hoveredId = this.getPlayerIdAtScreen(x, y);
+          this.setHoveredPlayer(hoveredId);
+          this.canvas!.style.cursor = hoveredId !== null ? 'pointer' : 'grab';
+        }
       }
     });
 
@@ -2193,56 +2244,89 @@ export default class Village3DPlayCanvas {
    * Pick player from screen coordinates
    */
   private pick(x: number, y: number): void {
-    if (!this.app || !this.camera) return;
+    const id = this.getPlayerIdAtScreen(x, y);
+    if (id !== null) {
+      if (this.onPlayerClick) this.onPlayerClick(id);
+      console.log(`[Village3D] Clicked player ${id}`);
+    }
+  }
 
+  private getPlayerIdAtScreen(x: number, y: number): number | null {
+    if (!this.app || !this.camera) return null;
     const pc = window.pc;
     const camera = this.camera.camera!;
-    if (!camera) return;
+    if (!camera) return null;
 
-    // Convert screen coordinates to world ray
     const from = camera.screenToWorld(x, y, camera.nearClip);
     const to = camera.screenToWorld(x, y, camera.farClip);
 
-    // Raycast - simplified without rigidbody system
-    // Instead, check distance to each player entity
     let closestPlayerId: number | null = null;
     let closestDistance = Infinity;
-    
+
     const rayDir = new pc.Vec3();
     rayDir.sub2(to, from).normalize();
-    
+
     this.playerEntities.forEach((entity, playerId) => {
       const playerPos = entity.getPosition();
       const toPlayer = new pc.Vec3();
       toPlayer.sub2(playerPos, from);
-      
-      // Project onto ray
+
       const dot = toPlayer.dot(rayDir);
       if (dot > 0) {
         const closest = new pc.Vec3();
         closest.copy(rayDir);
-        closest.scale(dot); // Use scale instead of mulScalar
+        closest.scale(dot);
         closest.add(from);
-        // Calculate distance manually
+
         const dx = closest.x - playerPos.x;
         const dy = closest.y - playerPos.y;
         const dz = closest.z - playerPos.z;
         const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        
-        // If within 2 units of player center
+
         if (dist < 2 && dot < closestDistance) {
           closestDistance = dot;
           closestPlayerId = playerId;
         }
       }
     });
-    
-    if (closestPlayerId !== null) {
-      if (this.onPlayerClick) {
-        this.onPlayerClick(closestPlayerId);
+
+    return closestPlayerId;
+  }
+
+  private setHoveredPlayer(playerId: number | null): void {
+    if (playerId === null) {
+      if (this.hoverHighlight) {
+        this.hoverHighlight.entity.destroy();
+        this.hoverHighlight = null;
       }
-      console.log(`[Village3D] Clicked player ${closestPlayerId}`);
+      return;
     }
+
+    if (this.hoverHighlight && this.hoverHighlight.playerId === playerId) return;
+    if (this.hoverHighlight) {
+      this.hoverHighlight.entity.destroy();
+      this.hoverHighlight = null;
+    }
+
+    const playerEntity = this.playerEntities.get(playerId);
+    if (!playerEntity) return;
+
+    const pc = window.pc;
+    const ring = new pc.Entity('HoverHighlight');
+    ring.addComponent('model', { type: 'torus' });
+    ring.setLocalScale(2.35, 2.35, 0.3);
+    ring.setLocalPosition(0, 0.12, 0);
+
+    const mat = new pc.StandardMaterial();
+    mat.emissive = new pc.Color(1, 0.85, 0.4);
+    mat.emissiveIntensity = 2.2;
+    mat.opacity = 0.45;
+    mat.blendType = pc.BLEND_ADDITIVE;
+    mat.update();
+    (ring.model as PCModel).material = mat;
+
+    playerEntity.addChild(ring);
+    this.hoverHighlight = { playerId, entity: ring };
   }
 
   /**

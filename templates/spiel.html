@@ -3001,6 +3001,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       // Don't load phase mapping yet - wait until game actually starts
       // This prevents unnecessary API calls during lobby phase
       console.log('[Init] Ready - phase mapping will load when game starts');
+
+      // Default to the Village3D HUD-first UI
+      document.querySelector('.game-container')?.classList.add('village3d-primary');
   });
 
   // =========================================================================
@@ -3340,14 +3343,28 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   function showAlert(text, type) {
+      // Legacy alert area (may be hidden in Village3D primary mode)
       const el = document.getElementById('status-nachricht');
-      el.textContent = text;
-      el.className = `alert alert-${type} mb-3`;
-      el.style.display = 'block';
-
-      setTimeout(() => {
+      if (el) {
+        el.textContent = text;
+        el.className = `alert alert-${type} mb-3`;
+        el.style.display = 'block';
+        setTimeout(() => {
           el.style.display = 'none';
-      }, 5000);
+        }, 5000);
+      }
+
+      // Village3D HUD toast
+      const toast = document.getElementById('village3d-toast');
+      if (toast) {
+        toast.textContent = text;
+        toast.style.display = 'block';
+        toast.style.borderColor = type === 'error' ? 'rgba(255,80,80,0.35)'
+        : (type === 'warning' ? 'rgba(255,210,80,0.35)' : 'rgba(212,165,116,0.35)');
+        setTimeout(() => {
+          toast.style.display = 'none';
+        }, 5000);
+      }
   }
 
   function addLog(text) {
@@ -3363,6 +3380,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   function addChatMessage(von, text, istTot) {
       const container = document.getElementById('chat-messages');
+      if (!container) return;
       const msg = document.createElement('div');
       msg.className = 'chat-msg' + (istTot ? ' tot' : '');
       msg.innerHTML = `<strong>${von}:</strong> ${text}`;
@@ -3372,6 +3390,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   function sendChat() {
       const input = document.getElementById('chat-input');
+      if (!input) return;
       const text = input.value.trim();
       if (text) {
           socket.emit('chat_nachricht', { nachricht: text });
@@ -3379,9 +3398,12 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       }
   }
 
-  document.getElementById('chat-input').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') sendChat();
-  });
+    const legacyChatInput = document.getElementById('chat-input');
+    if (legacyChatInput) {
+      legacyChatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendChat();
+      });
+    }
 
   function showSpielEndeModal(data) {
       const overlay = document.createElement('div');
@@ -3484,7 +3506,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       // Hide 3D overlays
       if (window.village3d) {
-        window.village3d.showFullscreenUI(false);
+        // HUD stays visible in Village3D primary mode
+        window.village3d.showFullscreenUI(true);
       }
     }
   };
@@ -3558,15 +3581,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     const list = document.getElementById('village3d-player-list');
     if (!list) return;
 
-    // Source of truth: existing player cards (even when hidden in fullscreen)
-    const cards = Array.from(document.querySelectorAll('.spieler-card'));
-    const items = cards.map(card => {
-      const id = parseInt(card.getAttribute('data-id'));
-      const name = card.getAttribute('data-name') || 'Unbekannt';
-      const isAlive = !card.classList.contains('tot');
-      const isNarrator = card.getAttribute('data-ist-erzaehler') === 'true';
-      return { id, name, isAlive, isNarrator };
-    }).sort((a, b) => a.id - b.id);
+    const allowSelf = !(phaseUiConfig && phaseUiConfig.allow_self_target === false);
+
+    const items = (alleSpieler || []).slice().sort((a, b) => a.id - b.id);
 
     list.innerHTML = '';
     items.forEach(p => {
@@ -3577,17 +3594,30 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       const isSelected = (typeof selectedSpielerId !== 'undefined' && selectedSpielerId === p.id)
         || (typeof selectedSpielerIds !== 'undefined' && Array.isArray(selectedSpielerIds) && selectedSpielerIds.includes(p.id));
 
-      if (!p.isAlive) btn.classList.add('is-dead');
+      // Disable rules
+      const isSelf = p.id === spielerId;
+      const isAlive = !!p.istAmLeben;
+      const isNarrator = !!p.istErzaehler;
+      const disabledBySelfRule = isSelf && !allowSelf;
+      const disabledByVotingRule = (aktuellePhase === 'abstimmung') && (isSelf || isNarrator);
+      const isDisabled = !isAlive || disabledBySelfRule || disabledByVotingRule;
+
+      if (!isAlive) btn.classList.add('is-dead');
       if (isSelected) btn.classList.add('is-selected');
-      if (p.isNarrator) btn.style.opacity = '0.65';
+
+      if (isNarrator) btn.style.opacity = '0.65';
+      if (isDisabled) {
+        btn.disabled = true;
+        btn.style.cursor = 'not-allowed';
+        btn.style.opacity = '0.55';
+      }
 
       btn.innerHTML = `
         <span>${p.name}</span>
-        <span class="meta">${p.isAlive ? '' : '💀'}${p.isNarrator ? ' Erz.' : ''}</span>
+        <span class="meta">${isAlive ? '' : '💀'}${isNarrator ? ' Erz.' : ''}</span>
       `;
 
       btn.addEventListener('click', () => {
-        if (!p.isAlive) return;
         selectSpieler(p.id);
       });
 
@@ -3670,17 +3700,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           };
 
           // Spieler-Daten für 3D Dorf
-          const spielerDaten = [];
-          document.querySelectorAll('.spieler-card').forEach(card => {
-              spielerDaten.push({
-                  id: parseInt(card.getAttribute('data-id')),
-                  name: card.getAttribute('data-name'),
-                  rolle: card.getAttribute('data-rolle') || null,
-                  ist_am_leben: !card.classList.contains('tot'),
-                  ist_erzaehler: card.getAttribute('data-ist-erzaehler') === 'true',
-                  ist_verliebt: card.getAttribute('data-ist-verliebt') === 'true'
-              });
-          });
+            const spielerDaten = (alleSpieler || []).map(s => {
+              return {
+                id: s.id,
+                name: s.name,
+                rolle: s.rolle || null,
+                ist_am_leben: !!s.istAmLeben,
+                ist_erzaehler: !!s.istErzaehler,
+                ist_verliebt: !!s.istVerliebt
+              };
+            });
 
           if (spielerDaten.length > 0) {
               // Sortiere nach ID für konsistente Positionen zwischen Lobby und Spiel
@@ -3701,6 +3730,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Initialize 3D UI overlay with role and phase info
           village3d.updateTopBar(aktuellePhase, aktuelleRunde);
           village3d.updateRoleBadge(spielerRolle);
+          village3d.showFullscreenUI(true);
           // Populate HUD list now that village3d is available
           window.updateVillage3DPlayerList?.();
 

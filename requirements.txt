@@ -15,3 +15,5 @@ requests>=2.32.0
 python-dotenv>=1.2.1
 Flask-Minify; sys_platform == "win32"
 Flask-Minify[go]; sys_platform == "linux"
+werkzeug>=3.1.5 # not directly required, pinned by Snyk to avoid a vulnerability
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability

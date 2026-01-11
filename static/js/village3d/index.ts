@@ -1,12 +1,12 @@
 /**
  * Village3D Module Entry Point
- * 
+ *
  * Export all public interfaces and classes
  */
 
-export { default as Village3DPlayCanvas } from './Village3DPlayCanvas.js';
-export { PlayerAvatarBuilder } from './PlayerAvatarBuilder.js';
-export { AppearanceFeatureRenderer } from './AppearanceFeatureRenderer.js';
+export { default as Village3DPlayCanvas } from "./Village3DPlayCanvas.js";
+export { PlayerAvatarBuilder } from "./PlayerAvatarBuilder.js";
+export { AppearanceFeatureRenderer } from "./AppearanceFeatureRenderer.js";
 
 // Export types
 export type {
@@ -21,4 +21,4 @@ export type {
   BodyModification,
   AnimationState,
   RolesAPIResponse,
-} from './types';
+} from "./types";

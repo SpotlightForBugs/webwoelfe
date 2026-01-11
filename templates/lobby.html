@@ -568,7 +568,7 @@ spiel_name }}{% endblock %} {% block content %}
   // Initialisiere 3D-Dorf in der Lobby
   document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById("village-3d-lobby-container");
-      if (container && typeof THREE !== "undefined") {
+    if (container && typeof THREE !== "undefined") {
       window.village3dLobby = new Village3DPlayCanvas(
         "village-3d-lobby-container",
         "{{ raum.code }}",
@@ -588,7 +588,7 @@ spiel_name }}{% endblock %} {% block content %}
   const socket = io();
   const raumCode = "{{ raum.code }}";
   const erzaehlerModus = "{{ raum.erzaehler_modus }}";
-  
+
   // Track if game has started to avoid unnecessary API calls during transition
   let gameStarted = false;
   let navigationTimeout = null;
@@ -596,7 +596,7 @@ spiel_name }}{% endblock %} {% block content %}
 
   // Raum beitreten
   socket.emit("raum_beitreten", { code: raumCode });
-  
+
   // Start fallback polling for game start
   startGamePoll();
 
@@ -618,7 +618,7 @@ spiel_name }}{% endblock %} {% block content %}
     if (typeof initSitzordnungFromSpieler === "function") {
       initSitzordnungFromSpieler();
     }
-    
+
     // 3D Dorf aktualisieren (Online-Modus)
     if (window.scheduleVillageUpdate) {
       window.scheduleVillageUpdate();
@@ -694,19 +694,21 @@ spiel_name }}{% endblock %} {% block content %}
   // Fallback: Poll the server to see if game has started and redirect if needed
   function startGamePoll() {
     if (pollInterval) clearInterval(pollInterval);
-    
+
     pollInterval = setInterval(async () => {
       if (gameStarted) {
         clearInterval(pollInterval);
         return;
       }
-      
+
       try {
         const response = await fetch(`/api/raum/${raumCode}/status`);
         if (response.ok) {
           const data = await response.json();
           if (data.spiel_gestartet) {
-            console.log("[Lobby] Game started detected via HTTP poll, navigating...");
+            console.log(
+              "[Lobby] Game started detected via HTTP poll, navigating...",
+            );
             gameStarted = true;
             clearInterval(pollInterval);
             window.location.href = "/spiel/" + raumCode;
@@ -849,7 +851,7 @@ spiel_name }}{% endblock %} {% block content %}
   async function updateRollenVorschau() {
     // Don't fetch if game has already started (we're navigating away)
     if (gameStarted) return;
-    
+
     try {
       const response = await fetch(`/api/rollen_vorschau/${raumCode}`);
       if (!response.ok) return; // Silently ignore HTTP errors during transitions

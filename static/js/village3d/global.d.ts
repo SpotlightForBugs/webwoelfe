@@ -3,8 +3,18 @@
  * Three.js is loaded at runtime via <script> tag and exposes itself on window.THREE
  */
 
-import type * as THREE from 'three';
-import type { Application, Entity, Color, Vec3, Texture, StandardMaterial, ModelComponent, CameraComponent, LightComponent } from './pc_shim.js';
+import type * as THREE from "three";
+import type {
+  Application,
+  Entity,
+  Color,
+  Vec3,
+  Texture,
+  StandardMaterial,
+  ModelComponent,
+  CameraComponent,
+  LightComponent,
+} from "./pc_shim.js";
 
 type PcShim = {
   Application: typeof Application;

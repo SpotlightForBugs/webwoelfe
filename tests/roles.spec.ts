@@ -52,9 +52,7 @@ test.describe("Werewolf Role Mechanics", () => {
 
         // 5. Wait for roles (mocking phase to trigger logic would be ideal, but for now just check load)
         // Verify players can see the game UI and Village3D (TS) loads
-        // Note: Roles are random, so this test might fail if "HexePlayer" doesn't get Hexe.
-        // To make this robust, we should force roles via a debug API or just check general UI stability.
-        // Assuming random mode, we just check that the 3D view loads for everyone.
+        
 
         await hexePage.waitForFunction(
             () => {

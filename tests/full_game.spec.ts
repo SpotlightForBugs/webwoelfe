@@ -105,7 +105,7 @@ function getRandomTarget(
 }
 
 // Player names
-const PLAYER_NAMES = [
+const PLAYER_NAMES = [ //TODO: Generate those automatically so that we always have enough unique names.
   "Wolfgang",
   "Maria",
   "Hans",
@@ -188,7 +188,7 @@ test.describe("Full Game Simulation", () => {
     let roomCode = "";
     let gameState: GameState = { phase: "", runde: 0, isEnded: false };
 
-    log(`🐺 Webwölfe - Full Game Simulation (RANDOM MODE)`);
+    log(`🐺 Webwölfe - Full Game Simulation `);
     log(`==========================================`);
     log(`Spieleranzahl: ${PLAYER_COUNT}`);
     log(`Base URL: ${BASE_URL}`);
@@ -432,7 +432,6 @@ test.describe("Full Game Simulation", () => {
 
       log("✓ Spiel gestartet!\n");
 
-      // ... (Role extraction omitted for brevity, keeping existing logic) ...
 
 
       // ========================================================================
@@ -743,6 +742,12 @@ async function handlePhase(
     return;
   }
 
+  // Wolfsjunge - chooses a role model
+  if (normalizedPhase.includes("wolfsjunge")) {
+    await handleWolfsjungePhase(players);
+    return;
+  }
+
   // Hund - chooses to be wolf or villager
   if (normalizedPhase.includes("hund") && !normalizedPhase.includes("baeren")) {
     await handleHundPhase(players);
@@ -989,7 +994,7 @@ async function handleWerwolfPhase(
   werwolfe: PlayerWindow[],
   dorfbewohner: PlayerWindow[],
 ): Promise<void> {
-  log("  🐺 Werwolf-Phase: Wähle Opfer... (RANDOM MODE)");
+  log("  🐺 Werwolf-Phase: Wähle Opfer... ()");
 
   // Random: Sometimes skip the entire phase (only for testing timeout handling)
   // DISABLED: This causes stuck phases! The server requires votes.
@@ -1169,7 +1174,7 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
 async function handleDoppelgaengerPhase(
   players: PlayerWindow[],
 ): Promise<void> {
-  log("  👤 Doppelgänger-Phase: Wähle Spieler zum Kopieren... (RANDOM MODE)");
+  log("  👤 Doppelgänger-Phase: Wähle Spieler zum Kopieren... ()");
 
   const doppelgaenger = findPlayerByRole(players, ["Doppelgänger"]);
   if (!doppelgaenger) {
@@ -1184,14 +1189,14 @@ async function handleDoppelgaengerPhase(
 
   const target = getRandomTarget(players, doppelgaenger);
   await selectTargetAndConfirm(doppelgaenger.page, target.name, [
-    "Kopieren",
+    "Ziel wählen",
     "Wählen",
   ]);
   log(`    Doppelgänger kopiert ${target.name}`);
 }
 
 async function handlePriesterPhase(players: PlayerWindow[]): Promise<void> {
-  log("  ⛪ Dunkler Priester-Phase: Markiere einen Spieler... (RANDOM MODE)");
+  log("  ⛪ Dunkler Priester-Phase: Verliebe zwei Spieler... ()");
 
   const priester = findPlayerByRole(players, ["Dunkler Priester", "Priester"]);
   if (!priester) {
@@ -1204,16 +1209,36 @@ async function handlePriesterPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  const target = getRandomTarget(players, priester);
-  await selectTargetAndConfirm(priester.page, target.name, [
-    "Markieren",
+  // Dunkler Priester needs to select TWO players to make them fall in love
+  const otherPlayers = players.filter((p) => p !== priester);
+  if (otherPlayers.length < 2) {
+    log("    Zu wenige Spieler für Dunkler Priester");
+    return;
+  }
+
+  // Select two different random players
+  const shuffled = [...otherPlayers].sort(() => seededRandom() - 0.5);
+  const target1 = shuffled[0];
+  const target2 = shuffled[1];
+
+  // Select first player
+  await selectTargetAndConfirm(priester.page, target1.name, [
+    "Verlieben",
     "Wählen",
   ]);
-  log(`    Dunkler Priester markiert ${target.name}`);
+  await sleep(300);
+
+  // Select second player
+  await selectTargetAndConfirm(priester.page, target2.name, [
+    "Verlieben",
+    "Wählen",
+  ]);
+
+  log(`    Dunkler Priester verliebt ${target1.name} und ${target2.name}`);
 }
 
 async function handleWildesKindPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🐕 Wildes Kind-Phase: Wähle Vorbild... (RANDOM MODE)");
+  log("  🐕 Wildes Kind-Phase: Wähle Vorbild... ()");
 
   const wildesKind = findPlayerByRole(players, ["Wildes Kind"]);
   if (!wildesKind) {
@@ -1228,14 +1253,36 @@ async function handleWildesKindPhase(players: PlayerWindow[]): Promise<void> {
 
   const target = getRandomTarget(players, wildesKind);
   await selectTargetAndConfirm(wildesKind.page, target.name, [
+    "Vorbild wählen",
     "Wählen",
-    "Vorbild",
   ]);
   log(`    Wildes Kind wählt ${target.name} als Vorbild`);
 }
 
+async function handleWolfsjungePhase(players: PlayerWindow[]): Promise<void> {
+  log("  🐺👦 Wolfsjunge-Phase: Wähle Vorbild... ()");
+
+  const wolfsjunge = findPlayerByRole(players, ["Wolfsjunge"]);
+  if (!wolfsjunge) {
+    log("    Kein Wolfsjunge im Spiel");
+    return;
+  }
+
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Wolfsjunge überspringt");
+    return;
+  }
+
+  const target = getRandomTarget(players, wolfsjunge);
+  await selectTargetAndConfirm(wolfsjunge.page, target.name, [
+    "Vorbild wählen",
+    "Wählen",
+  ]);
+  log(`    Wolfsjunge wählt ${target.name} als Vorbild`);
+}
+
 async function handleHundPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🐶 Hund-Phase: Wolf oder Dorfbewohner?... (RANDOM MODE)");
+  log("  🐶 Hund-Phase: Wähle Herrchen... ()");
 
   const hund = findPlayerByRole(players, ["Hund"]);
   if (!hund) {
@@ -1244,17 +1291,16 @@ async function handleHundPhase(players: PlayerWindow[]): Promise<void> {
   }
 
   if (shouldSkipAction()) {
-    log("⚠️ [RANDOM] Hund überspringt");
+    log("    ⚠️ [RANDOM] Hund überspringt");
     return;
   }
 
-  // Randomly choose wolf or villager
-  const choice = seededRandom() > 0.5 ? "Werwolf" : "Dorfbewohner";
-  const btn = hund.page.locator(`button:has-text("${choice}")`).first();
-  if (await btn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await btn.click();
-    log(`    Hund wird ${choice}`);
-  }
+  const target = getRandomTarget(players, hund);
+  await selectTargetAndConfirm(hund.page, target.name, [
+    "Herrchen wählen",
+    "Wählen",
+  ]);
+  log(`    Hund wählt ${target.name} als Herrchen`);
 }
 
 // ============================================================================
@@ -1273,7 +1319,7 @@ async function handleSeherVariantPhase(
         ? ["Paranormaler Ermittler"]
         : ["Seherin"];
 
-  log(`  👁️ ${roleNames[0]}-Phase: Wähle Spieler zum Sehen... (RANDOM MODE)`);
+  log(`  👁️ ${roleNames[0]}-Phase: Wähle Spieler zum Sehen... ()`);
 
   const seher = findPlayerByRole(players, roleNames);
   if (!seher) {
@@ -1289,7 +1335,7 @@ async function handleSeherVariantPhase(
 
   const target = getRandomTarget(players, seher, !shouldTargetWrong());
   const success = await selectTargetAndConfirm(seher.page, target.name, [
-    "Identität sehen",
+    "Aura sehen",
     "Sehen",
     "Wählen",
     "Prüfen",
@@ -1311,7 +1357,7 @@ async function handleSeherVariantPhase(
 }
 
 async function handleMediumPhase(players: PlayerWindow[]): Promise<void> {
-  log("  👻 Medium-Phase: Kontaktiere Tote... (RANDOM MODE)");
+  log("  👻 Medium-Phase: Kontaktiere Tote... ()");
 
   const medium = findPlayerByRole(players, ["Medium"]);
   if (!medium) {
@@ -1336,15 +1382,14 @@ async function handleMediumPhase(players: PlayerWindow[]): Promise<void> {
       ? randomChoice(deadPlayers)
       : getRandomTarget(players, medium); // Edge case: target alive
   await selectTargetAndConfirm(medium.page, target.name, [
-    "Kontaktieren",
-    "Sehen",
+    "Geist befragen",
     "Wählen",
   ]);
   log(`    Medium kontaktiert ${target.name} (am Leben: ${target.isAlive})`);
 }
 
 async function handleTratschweibPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🗣️ Tratschweib-Phase: Erfrage Information... (RANDOM MODE)");
+  log("  🗣️ Tratschweib-Phase: Automatische Information... ()");
 
   const tratschweib = findPlayerByRole(players, ["Tratschweib"]);
   if (!tratschweib) {
@@ -1352,31 +1397,17 @@ async function handleTratschweibPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  if (shouldSkipAction()) {
-    log("    ⚠️ [RANDOM] Tratschweib überspringt");
-    return;
-  }
-
-  // Select two players to compare (randomly, including edge cases)
-  const targets = players.filter((p) => p !== tratschweib);
-  if (targets.length < 2) return;
-
-  const shuffled = [...targets].sort(() => seededRandom() - 0.5);
-  await selectTargetAndConfirm(tratschweib.page, shuffled[0].name, ["Wählen"]);
-  await sleep(300);
-  await selectTargetAndConfirm(tratschweib.page, shuffled[1].name, [
-    "Vergleichen",
-    "Prüfen",
-    "Wählen",
-  ]);
-  log(`    Tratschweib vergleicht ${shuffled[0].name} und ${shuffled[1].name}`);
+  // Tratschweib doesn't need to take any action - it's automatic
+  // Just wait a moment for the information to appear
+  await sleep(1000);
+  log(`    Tratschweib erhält automatisch Information über zwei Spieler`);
 }
 
 async function handleWerwolfseherinPhase(
   players: PlayerWindow[],
   werwolfe: PlayerWindow[],
 ): Promise<void> {
-  log("  👁️🐺 Werwolfseherin-Phase: Sieht mit den Wölfen... (RANDOM MODE)");
+  log("  👁️🐺 Werwolfseherin-Phase: Sieht mit den Wölfen... ()");
 
   const werwolfseherin = findPlayerByRole(players, ["Werwolfseherin"]);
   if (!werwolfseherin) {
@@ -1417,7 +1448,7 @@ async function handleHeilerVariantPhase(
     : ["Heiler"];
 
   log(
-    `  💉 ${roleNames[0]}-Phase: Wähle Spieler zum Schützen... (RANDOM MODE)`,
+    `  💉 ${roleNames[0]}-Phase: Wähle Spieler zum Schützen... ()`,
   );
 
   const heiler = findPlayerByRole(players, roleNames);
@@ -1445,7 +1476,7 @@ async function handleHeilerVariantPhase(
 }
 
 async function handleHurePhase(players: PlayerWindow[]): Promise<void> {
-  log("  💋 Hure/Prostituierte-Phase: Besuche Spieler... (RANDOM MODE)");
+  log("  💋 Hure/Prostituierte-Phase: Besuche Spieler... ()");
 
   const hure = findPlayerByRole(players, ["Hure", "Prostituierte", "Nutte"]);
   if (!hure) {
@@ -1471,7 +1502,7 @@ async function handleEinsamerWolfPhase(
   einsameWoelfe: PlayerWindow[],
   dorfbewohner: PlayerWindow[],
 ): Promise<void> {
-  log("  🐺💀 Einsamer Wolf-Phase: Eigene Tötung... (RANDOM MODE)");
+  log("  🐺💀 Einsamer Wolf-Phase: Eigene Tötung... ()");
 
   const aliveEinsameWoelfe = einsameWoelfe.filter((w) => w.isAlive);
   if (aliveEinsameWoelfe.length === 0) {
@@ -1503,7 +1534,7 @@ async function handleUrwolfPhase(
   players: PlayerWindow[],
   _dorfbewohner: PlayerWindow[],
 ): Promise<void> {
-  log("  🐺⚡ Urwolf-Phase: Verwandle oder töte... (RANDOM MODE)");
+  log("  🐺⚡ Urwolf-Phase: Verwandle oder töte... ()");
 
   const urwolf = findPlayerByRole(players, ["Urwolf"]);
   if (!urwolf) {
@@ -1519,11 +1550,11 @@ async function handleUrwolfPhase(
   // Random target from all players
   const target = getRandomTarget(players, urwolf, !shouldTargetWrong());
   await selectTargetAndConfirm(urwolf.page, target.name, [
-    "Verwandeln",
+    "Infizieren",
     "Wählen",
   ]);
   log(
-    `    Urwolf versucht ${target.name} zu verwandeln (am Leben: ${target.isAlive})`,
+    `    Urwolf versucht ${target.name} zu infizieren (am Leben: ${target.isAlive})`,
   );
 }
 
@@ -1531,7 +1562,7 @@ async function handleWeisserWolfPhase(
   players: PlayerWindow[],
   werwolfe: PlayerWindow[],
 ): Promise<void> {
-  log("  🐺⚪ Weißer Wolf-Phase: Töte Mitwolf... (RANDOM MODE)");
+  log("  🐺⚪ Weißer Wolf-Phase: Töte Mitwolf... ()");
 
   const weisserWolf = findPlayerByRole(players, ["Weißer Wolf"]);
   if (!weisserWolf) {
@@ -1564,7 +1595,7 @@ async function handleWeisserWolfPhase(
 }
 
 async function handleMordlustigerPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🔪 Mordlustiger-Phase: Zusätzliche Tötung... (RANDOM MODE)");
+  log("  🔪 Mordlustiger-Phase: Zusätzliche Tötung... ()");
 
   const mordlustiger = findPlayerByRole(players, ["Mordlustiger"]);
   if (!mordlustiger) {
@@ -1577,9 +1608,19 @@ async function handleMordlustigerPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
+  // Check if the skip button is visible (Mordlustiger can skip)
+  const skipBtn = mordlustiger.page.locator('button:has-text("Überspringen")').first();
+  if (await skipBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+    // Randomly decide to skip or act
+    if (seededRandom() > 0.5) {
+      await skipBtn.click();
+      log("    Mordlustiger überspringt diese Nacht");
+      return;
+    }
+  }
+
   const target = getRandomTarget(players, mordlustiger, !shouldTargetWrong());
   await selectTargetAndConfirm(mordlustiger.page, target.name, [
-    "Töten",
     "Ermorden",
     "Wählen",
   ]);
@@ -1591,7 +1632,7 @@ async function handleMordlustigerPhase(players: PlayerWindow[]): Promise<void> {
 // ============================================================================
 
 async function handleHexePhase(players: PlayerWindow[]): Promise<void> {
-  log("  🧙 Hexe-Phase: Entscheide über Heilen/Töten... (RANDOM MODE)");
+  log("  🧙 Hexe-Phase: Entscheide über Heilen/Töten... ()");
 
   const hexe = findPlayerByRole(players, ["Hexe"]);
   if (!hexe) {
@@ -1658,7 +1699,7 @@ async function handleHexePhase(players: PlayerWindow[]): Promise<void> {
 }
 
 async function handleHexenmeisterPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🧙‍♂️ Hexenmeister-Phase: Verzaubere... (RANDOM MODE)");
+  log("  🧙‍♂️ Hexenmeister-Phase: Verzaubere... ()");
 
   const hexenmeister = findPlayerByRole(players, ["Hexenmeister"]);
   if (!hexenmeister) {
@@ -1673,16 +1714,16 @@ async function handleHexenmeisterPhase(players: PlayerWindow[]): Promise<void> {
 
   const target = getRandomTarget(players, hexenmeister, !shouldTargetWrong());
   await selectTargetAndConfirm(hexenmeister.page, target.name, [
-    "Verzaubern",
+    "Verfluchen",
     "Wählen",
   ]);
-  log(`    Hexenmeister verzaubert ${target.name}`);
+  log(`    Hexenmeister verflucht ${target.name}`);
 }
 
 async function handleGiftmischerinPhase(
   players: PlayerWindow[],
 ): Promise<void> {
-  log("  🧪 Giftmischerin-Phase: Vergebe Gift... (RANDOM MODE)");
+  log("  🧪 Giftmischerin-Phase: Vergebe Gift... ()");
 
   const giftmischerin = findPlayerByRole(players, ["Giftmischerin"]);
   if (!giftmischerin) {
@@ -1704,7 +1745,7 @@ async function handleGiftmischerinPhase(
 }
 
 async function handleKraeuterweibPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🌿 Kräuterweib-Phase: Verteile Kräuter... (RANDOM MODE)");
+  log("  🌿 Kräuterweib-Phase: Verteile Kräuter... ()");
 
   const kraeuterweib = findPlayerByRole(players, ["Kräuterweib"]);
   if (!kraeuterweib) {
@@ -1719,14 +1760,14 @@ async function handleKraeuterweibPhase(players: PlayerWindow[]): Promise<void> {
 
   const target = getRandomTarget(players, kraeuterweib, !shouldTargetWrong());
   await selectTargetAndConfirm(kraeuterweib.page, target.name, [
-    "Kräuter geben",
+    "Stumm machen",
     "Wählen",
   ]);
-  log(`    Kräuterweib gibt ${target.name} Kräuter`);
+  log(`    Kräuterweib macht ${target.name} stumm`);
 }
 
 async function handleZaubererPhase(players: PlayerWindow[]): Promise<void> {
-  log("  ✨ Zauberer-Phase: Wirke Zauber... (RANDOM MODE)");
+  log("  ✨ Zauberer-Phase: Wirke Zauber... ()");
 
   const zauberer = findPlayerByRole(players, ["Zauberer"]);
   if (!zauberer) {
@@ -1741,14 +1782,16 @@ async function handleZaubererPhase(players: PlayerWindow[]): Promise<void> {
 
   const target = getRandomTarget(players, zauberer, !shouldTargetWrong());
   await selectTargetAndConfirm(zauberer.page, target.name, [
-    "Zaubern",
+    "Schutz-Zauber",
+    "Sicht-Zauber",
+    "Schweigen-Zauber",
     "Wählen",
   ]);
   log(`    Zauberer zaubert auf ${target.name}`);
 }
 
 async function handleSandmannPhase(players: PlayerWindow[]): Promise<void> {
-  log("  😴 Sandmann-Phase: Schläfere ein... (RANDOM MODE)");
+  log("  😴 Sandmann-Phase: Schläfere ein... ()");
 
   const sandmann = findPlayerByRole(players, ["Sandmann"]);
   if (!sandmann) {
@@ -1774,7 +1817,7 @@ async function handleSandmannPhase(players: PlayerWindow[]): Promise<void> {
 // ============================================================================
 
 async function handleZahnarztPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🦷 Zahnarzt-Phase: Behandle Zähne... (RANDOM MODE)");
+  log("  🦷 Zahnarzt-Phase: Behandle Zähne... ()");
 
   const zahnarzt = findPlayerByRole(players, ["Zahnarzt"]);
   if (!zahnarzt) {
@@ -1796,7 +1839,7 @@ async function handleZahnarztPhase(players: PlayerWindow[]): Promise<void> {
 }
 
 async function handleRabePhase(players: PlayerWindow[]): Promise<void> {
-  log("  🐦 Rabe-Phase: Markiere verdächtigen... (RANDOM MODE)");
+  log("  🐦 Rabe-Phase: Markiere verdächtigen... ()");
 
   const rabe = findPlayerByRole(players, ["Rabe"]);
   if (!rabe) {
@@ -1817,7 +1860,7 @@ async function handleRabePhase(players: PlayerWindow[]): Promise<void> {
 async function handleFloetenspielerPhase(
   players: PlayerWindow[],
 ): Promise<void> {
-  log("  🎵 Flötenspieler-Phase: Verzaubere... (RANDOM MODE)");
+  log("  🎵 Flötenspieler-Phase: Verzaubere... ()");
 
   const floetenspieler = findPlayerByRole(players, ["Flötenspieler"]);
   if (!floetenspieler) {
@@ -1839,7 +1882,7 @@ async function handleFloetenspielerPhase(
 }
 
 async function handleVampirPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🧛 Vampir-Phase: Beiße... (RANDOM MODE)");
+  log("  🧛 Vampir-Phase: Beiße... ()");
 
   const vampir = findPlayerByRole(players, ["Vampir"]);
   if (!vampir) {
@@ -1858,7 +1901,7 @@ async function handleVampirPhase(players: PlayerWindow[]): Promise<void> {
 }
 
 async function handleZombiePhase(players: PlayerWindow[]): Promise<void> {
-  log("  🧟 Zombie-Phase: Erwecke Toten... (RANDOM MODE)");
+  log("  🧟 Zombie-Phase: Erwecke Toten... ()");
 
   const zombie = findPlayerByRole(players, ["Zombie"]);
   if (!zombie) {
@@ -1890,7 +1933,7 @@ async function handleZombiePhase(players: PlayerWindow[]): Promise<void> {
 }
 
 async function handlePyromanePhase(players: PlayerWindow[]): Promise<void> {
-  log("  🔥 Pyromane-Phase: Markiere oder zünde... (RANDOM MODE)");
+  log("  🔥 Pyromane-Phase: Markiere oder zünde... ()");
 
   const pyromane = findPlayerByRole(players, ["Pyromane"]);
   if (!pyromane) {
@@ -1927,7 +1970,7 @@ async function handlePyromanePhase(players: PlayerWindow[]): Promise<void> {
 }
 
 async function handleTonksPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🎭 Tonks-Phase: Verwandle Aussehen... (RANDOM MODE)");
+  log("  🎭 Tonks-Phase: Verwandle Aussehen... ()");
 
   const tonks = findPlayerByRole(players, ["Tonks"]);
   if (!tonks) {
@@ -1949,7 +1992,7 @@ async function handleTonksPhase(players: PlayerWindow[]): Promise<void> {
 }
 
 async function handleBuddlerPhase(players: PlayerWindow[]): Promise<void> {
-  log("  ⛏️ Buddler-Phase: Grabe Grab aus... (RANDOM MODE)");
+  log("  ⛏️ Buddler-Phase: Grabe Grab aus... ()");
 
   const buddler = findPlayerByRole(players, ["Buddler"]);
   if (!buddler) {
@@ -1983,7 +2026,7 @@ async function handleBuddlerPhase(players: PlayerWindow[]): Promise<void> {
 }
 
 async function handleHenkerPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🪓 Henker-Phase: Wähle Ziel zum Hängen... (RANDOM MODE)");
+  log("  🪓 Henker-Phase: Wähle Ziel zum Hängen... ()");
 
   const henker = findPlayerByRole(players, ["Henker"]);
   if (!henker) {
@@ -2009,7 +2052,7 @@ async function handleHenkerPhase(players: PlayerWindow[]): Promise<void> {
 // ============================================================================
 
 async function handleDiskussionPhase(players: PlayerWindow[]): Promise<void> {
-  log("  💬 Diskussion: Spieler chatten... (RANDOM MODE)");
+  log("  💬 Diskussion: Spieler chatten... ()");
 
   const chatMessages = [
     "Ich bin unschuldig!",
@@ -2084,7 +2127,7 @@ async function handleAbstimmungPhase(
   players: PlayerWindow[],
   _werwolfe: PlayerWindow[],
 ): Promise<void> {
-  log("  🗳️ Abstimmung: Spieler stimmen ab... (RANDOM MODE)");
+  log("  🗳️ Abstimmung: Spieler stimmen ab... ()");
 
   const alivePlayers = players.filter((p) => p.isAlive);
   const allPlayers = players; // For edge case testing (voting for dead)
@@ -2159,7 +2202,7 @@ async function handleJaegerPhase(
   players: PlayerWindow[],
   _werwolfe: PlayerWindow[],
 ): Promise<void> {
-  log("  🎯 Jäger-Phase: Wähle Ziel zum Erschießen... (RANDOM MODE)");
+  log("  🎯 Jäger-Phase: Wähle Ziel zum Erschießen... ()");
 
   // Find dying hunter
   const jaeger = players.find(
@@ -2203,7 +2246,7 @@ async function handleKamikazePhase(
   players: PlayerWindow[],
   _werwolfe: PlayerWindow[],
 ): Promise<void> {
-  log("  💣 Kamikaze-Phase: Selbstmordanschlag... (RANDOM MODE)");
+  log("  💣 Kamikaze-Phase: Selbstmordanschlag... ()");
 
   const kamikaze = findPlayerByRole(players, ["Kamikaze"]);
   if (!kamikaze) {
@@ -2239,7 +2282,7 @@ async function handleKamikazePhase(
 // ============================================================================
 
 async function handleAmorPhase(players: PlayerWindow[]): Promise<void> {
-  log("  💕 Amor-Phase (amor_phase): Wähle Liebespaar... (RANDOM MODE)");
+  log("  💕 Amor-Phase (amor_phase): Wähle Liebespaar... ()");
 
   const amor = findPlayerByRole(players, ["Amor"]);
   if (!amor) {

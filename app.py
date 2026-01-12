@@ -126,6 +126,7 @@ AUTOMATISCHE_PHASEN = {
     "nacht_ende",  # Übergang Nacht -> Tag
     "tag_start",  # Übergang Nacht -> Tag
     "tag_ende",  # Übergang am Tagesende
+    "tratschweib_phase",  # Tratschweib erhält automatisch Information
 }
 
 # Spielname als Konstante
@@ -596,6 +597,7 @@ def spiel(code):
 
     # SICHER: Spieler-Daten werden OHNE Rollen (ausser eigene) gesendet
     sichere_spieler = []
+    all_player_effects = {}  # Dict to collect effects for template
     for s in alle_spieler:
         spieler_data = {
             "id": s.id,
@@ -611,6 +613,8 @@ def spiel(code):
         # Werewolves see each other (uses dynamic role registry for team check)
         elif game_logic.ist_werwolf_rolle(spieler.rolle) and game_logic.ist_werwolf_rolle(s.rolle):
             spieler_data["ist_werwolf"] = True  # Mark as werewolf for frontend
+            # Add CSS class for werewolf visibility
+            spieler_data.setdefault("effect_classes", []).append("werwolf-team-sichtbar")
 
         # =========================================================================
         # DYNAMIC VISIBILITY - Replaces hardcoded Amor/lover checks
@@ -625,6 +629,22 @@ def spiel(code):
         player_effects = get_player_visual_effects(
             s, global_state_defs, viewer_id=spieler.id, viewer_rolle=spieler.rolle
         )
+        
+        # Add werewolf visibility effect if both are werewolves
+        if game_logic.ist_werwolf_rolle(spieler.rolle) and game_logic.ist_werwolf_rolle(s.rolle):
+            # Inject werewolf visibility effect
+            player_effects.append({
+                "key": "visibility.werwolf_team",
+                "value": True,
+                "css_class": "werwolf-team-sichtbar",
+                "icon": None,
+                "visual_effect": None,
+                "name": "Werwolf-Team sichtbar",
+                "reveals_role": False,
+            })
+        
+        # Store effects for template
+        all_player_effects[s.id] = player_effects
 
         # Apply effects to player data
         for effect in player_effects:
@@ -678,6 +698,7 @@ def spiel(code):
         erzaehler_text=erzaehler_text,
         enthuellung=enthuellung,  # Seherin-Snapshot
         rollen_styles=get_rollen_styles(),  # Dynamische Rollen-Styles
+        player_effects=all_player_effects,  # Visual effects for each player
     )
 
 

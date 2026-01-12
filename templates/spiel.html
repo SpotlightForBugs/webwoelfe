@@ -1682,8 +1682,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           {% endfor %}
 
           {# Check if player knows this player's role (for data-rolle attribute) #}
-          {% set kennt_rolle = spieler.ist_erzaehler or s.id == spieler.id or not s.ist_am_leben %}
           {% set ist_werwolf_sichtbar = spieler_effekte|selectattr('key', 'equalto', 'visibility.werwolf_team')|list|length > 0 %}
+          {% set kennt_rolle = spieler.ist_erzaehler or s.id == spieler.id or not s.ist_am_leben or ist_werwolf_sichtbar %}
 
           <div
             class="spieler-card

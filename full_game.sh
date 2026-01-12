@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# Webwölfe - Full Game Simulation Script (RANDOM MODE)
+# Webwölfe - Full Game Simulation Script
 # ============================================================================
 # Spawns multiple browser windows, auto-creates a game, and simulates
 # an entire game with RANDOM actions for edge case discovery.
@@ -155,7 +155,7 @@ if [ "$PLAYERS" -lt 5 ]; then
 fi
 
 echo ""
-echo "🐺 Webwölfe - Full Game Simulation (RANDOM MODE)"
+echo "🐺 Webwölfe - Full Game Simulation "
 echo "==================================="
 echo "Spieleranzahl: $PLAYERS"
 if [ -n "$SEED" ]; then

@@ -146,27 +146,32 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/Spotli
 Before you start contributing, you need to set up your local development environment:
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/SpotlightForBugs/webwoelfe.git
    cd webwoelfe
    ```
 
 2. **Install Python dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
 
 3. **Install Node.js dependencies** (for frontend assets)
+
    ```bash
    npm install
    ```
 
 4. **Set up the database**
+
    ```bash
    flask db upgrade
    ```
 
 5. **Generate CSS** (if needed)
+
    ```bash
    python generate_css.py
    ```

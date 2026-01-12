@@ -190,7 +190,7 @@ export interface CameraState {
   target: PCVec3;
 }
 
-export type ViewMode = 'orbit' | 'first-person';
+export type ViewMode = 'top-down' | 'first-person';
 
 export interface InputState {
   isMouseDown: boolean;

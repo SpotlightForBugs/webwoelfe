@@ -24,10 +24,8 @@ export default class Village3DThree {
   private isLobbyMode: boolean = false;
   
   // Camera
-  private targetCameraAngle: number = 0;
   private targetCameraHeight: number = 15;
   private targetCameraRadius: number = 25;
-  private defaultCameraAngle: number = 0;
   private defaultCameraHeight: number = 15;
   private defaultCameraRadius: number = 25;
   
@@ -90,14 +88,15 @@ export default class Village3DThree {
   // Sleeping players tracking
   private sleepingPlayers: Set<number> = new Set();
   
-  // Current orbit for camera
-  private cameraAngle: number = 0;
+  // Camera state for top-down view
   private cameraHeight: number = 15;
   private cameraRadius: number = 25;
   private targetPosition: PCVec3 | null = null;
+  private cameraPanX: number = 0;
+  private cameraPanZ: number = 0;
 
-  // First-person camera state
-  private viewMode: ViewMode = 'orbit';
+  // Camera view mode state
+  private viewMode: ViewMode = 'top-down';
   private firstPersonPlayerId: number | null = null;
   private firstPersonYaw: number = 0;
   private firstPersonPitch: number = 0;
@@ -154,7 +153,7 @@ export default class Village3DThree {
 
     const requestedView: ViewMode = options.startView
       ? options.startView
-      : (this.isLobbyMode ? 'orbit' : (options.firstPersonPlayerId !== undefined ? 'first-person' : 'orbit'));
+      : (this.isLobbyMode ? 'top-down' : (options.firstPersonPlayerId !== undefined ? 'first-person' : 'top-down'));
 
     this.viewMode = requestedView;
     this.firstPersonPlayerId = options.firstPersonPlayerId ?? null;
@@ -162,12 +161,10 @@ export default class Village3DThree {
     
     // Camera defaults based on mode
     if (this.isLobbyMode) {
-      this.defaultCameraAngle = Math.PI / 4;
       this.defaultCameraHeight = 20;
       this.defaultCameraRadius = 30;
     }
     
-    this.targetCameraAngle = this.defaultCameraAngle;
     this.targetCameraHeight = this.defaultCameraHeight;
     this.targetCameraRadius = this.defaultCameraRadius;
     
@@ -340,10 +337,8 @@ export default class Village3DThree {
     this.app.root.addChild(this.camera);
     
     // Initialize camera tracking variables
-    this.cameraAngle = this.defaultCameraAngle;
     this.cameraHeight = this.defaultCameraHeight;
     this.cameraRadius = this.defaultCameraRadius;
-    this.targetCameraAngle = this.cameraAngle;
     this.targetCameraHeight = this.cameraHeight;
     this.targetCameraRadius = this.cameraRadius;
     
@@ -2532,7 +2527,7 @@ export default class Village3DThree {
     if (this.viewMode === 'first-person') {
       this.updateFirstPersonCamera();
     } else {
-      this.updateOrbitCamera(dt);
+      this.updateTopDownCamera(dt);
     }
 
     // Billboard effect: keep name labels facing the camera
@@ -2585,16 +2580,19 @@ export default class Village3DThree {
     });
   }
 
-  private updateOrbitCamera(dt: number): void {
+  private updateTopDownCamera(dt: number): void {
     if (!this.camera) return;
     const pc = window.pc;
-    const targetX = Math.cos(this.targetCameraAngle) * this.targetCameraRadius;
-    const targetZ = Math.sin(this.targetCameraAngle) * this.targetCameraRadius;
+    
+    // Top-down view: camera positioned directly above, looking straight down
+    const targetX = this.cameraPanX;
+    const targetZ = this.cameraPanZ;
+    const cameraHeight = this.targetCameraRadius * 1.5; // Use radius to control zoom level
 
     if (!this.targetPosition) {
-      this.targetPosition = new pc.Vec3(targetX, this.targetCameraHeight, targetZ);
+      this.targetPosition = new pc.Vec3(targetX, cameraHeight, targetZ);
     } else {
-      this.targetPosition.set(targetX, this.targetCameraHeight, targetZ);
+      this.targetPosition.set(targetX, cameraHeight, targetZ);
     }
 
     const currentPos = this.camera.getPosition();
@@ -2606,7 +2604,8 @@ export default class Village3DThree {
       currentPos.z + (this.targetPosition.z - currentPos.z) * lerpFactor
     );
 
-    this.camera.lookAt(0, 0, 0);
+    // Look straight down
+    this.camera.setEulerAngles(-90, 0, 0);
   }
 
   private updateFirstPersonCamera(): void {
@@ -2710,7 +2709,7 @@ export default class Village3DThree {
   }
 
   exitFirstPerson(): ViewMode {
-    this.viewMode = 'orbit';
+    this.viewMode = 'top-down';
     this.firstPersonPlayerId = null;
     this.resetCamera();
     if (this.canvas) {
@@ -2723,9 +2722,10 @@ export default class Village3DThree {
    * Reset camera to default position
    */
   resetCamera(): void {
-    this.targetCameraAngle = this.defaultCameraAngle;
     this.targetCameraHeight = this.defaultCameraHeight;
     this.targetCameraRadius = this.defaultCameraRadius;
+    this.cameraPanX = 0;
+    this.cameraPanZ = 0;
   }
 
   /**
@@ -2969,8 +2969,10 @@ export default class Village3DThree {
           const clampedPitch = this.firstPersonPitch - deltaY * 0.01;
           this.firstPersonPitch = Math.max(-Math.PI / 2 + 0.2, Math.min(Math.PI / 2 - 0.2, clampedPitch));
         } else {
-          this.targetCameraAngle -= deltaX * 0.01;
-          this.targetCameraHeight = Math.max(5, Math.min(50, this.targetCameraHeight - deltaY * 0.1));
+          // Top-down view: pan the camera position
+          const panSpeed = this.targetCameraRadius * 0.01;
+          this.cameraPanX -= deltaX * panSpeed;
+          this.cameraPanZ -= deltaY * panSpeed;
         }
 
         lastX = e.clientX;
@@ -3138,11 +3140,11 @@ export default class Village3DThree {
     if (!playerEntity) return;
 
     const pos = playerEntity.getPosition();
-    const angle = Math.atan2(pos.z, pos.x);
     
-    this.targetCameraAngle = angle;
+    // Pan to center on player for top-down view
+    this.cameraPanX = pos.x;
+    this.cameraPanZ = pos.z;
     this.targetCameraRadius = 15;
-    this.targetCameraHeight = 10;
   }
 
   /**

@@ -592,7 +592,7 @@ spiel_name }}{% endblock %} {% block content %}
       window.village3dLobby = new Village3DThree(
         "village-3d-lobby-container",
         "{{ raum.code }}",
-        { lobbyMode: true } // Simplified view for lobby
+        { lobbyMode: true, startView: 'orbit' } // Simplified view for lobby
       );
 
       // Initiale Spieler laden mit Verzögerung für vollständige Initialisierung

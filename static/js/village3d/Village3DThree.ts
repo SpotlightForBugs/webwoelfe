@@ -101,7 +101,7 @@ export default class Village3DThree {
   private firstPersonPlayerId: number | null = null;
   private firstPersonYaw: number = 0;
   private firstPersonPitch: number = 0;
-  private firstPersonHeight: number = 1.7;
+  private firstPersonHeight: number = 2.0;
   
   // Buildings
   private buildings: PCEntity[] = [];
@@ -151,7 +151,12 @@ export default class Village3DThree {
     
     this.isLobbyMode = options.lobbyMode || false;
     this.onPlayerClick = options.onPlayerClick || null;
-    this.viewMode = 'first-person';
+
+    const requestedView: ViewMode = options.startView
+      ? options.startView
+      : (this.isLobbyMode ? 'orbit' : (options.firstPersonPlayerId !== undefined ? 'first-person' : 'orbit'));
+
+    this.viewMode = requestedView;
     this.firstPersonPlayerId = options.firstPersonPlayerId ?? null;
     this.firstPersonHeight = options.firstPersonHeight ?? this.firstPersonHeight;
     
@@ -2333,6 +2338,14 @@ export default class Village3DThree {
     this.playerEntities.clear();
     this.playerLabels.clear();
 
+    // Drop interaction highlights that referenced destroyed entities
+    if (this.selectedHighlight) {
+      this.selectedHighlight = null;
+    }
+    if (this.hoverHighlight) {
+      this.hoverHighlight = null;
+    }
+
     // Calculate layout using getPlayerPosition
     players.forEach((player, index) => {
       const pos = this.getPlayerPosition(index, players.length);
@@ -2661,12 +2674,16 @@ export default class Village3DThree {
     this.camera.lookAt(eye.clone().add(dir));
   }
 
-  toggleFirstPerson(playerId?: number): ViewMode {
-    if (playerId !== undefined) {
-      this.firstPersonPlayerId = playerId;
+  toggleViewMode(playerId?: number): ViewMode {
+    if (this.viewMode === 'first-person') {
+      return this.exitFirstPerson();
     }
+    return this.enterFirstPerson(playerId);
+  }
 
-    return this.enterFirstPerson();
+  // Backwards compatibility for existing callers
+  toggleFirstPerson(playerId?: number): ViewMode {
+    return this.toggleViewMode(playerId);
   }
 
   enterFirstPerson(playerId?: number): ViewMode {
@@ -2688,10 +2705,16 @@ export default class Village3DThree {
     return this.viewMode;
   }
 
+  getViewMode(): ViewMode {
+    return this.viewMode;
+  }
+
   exitFirstPerson(): ViewMode {
-    this.viewMode = 'first-person';
+    this.viewMode = 'orbit';
+    this.firstPersonPlayerId = null;
+    this.resetCamera();
     if (this.canvas) {
-      this.canvas.style.cursor = 'crosshair';
+      this.canvas.style.cursor = 'grab';
     }
     return this.viewMode;
   }

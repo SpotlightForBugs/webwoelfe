@@ -1546,6 +1546,15 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           </button>
           <button
             class="btn btn-sm"
+            id="camera-view-btn"
+            style="background: rgba(0, 0, 0, 0.6); color: white; border: none"
+            onclick="window.toggleCameraView?.()"
+            title="Ansicht wechseln (Orbit/First-Person)"
+          >
+            <i class="fa-solid fa-street-view"></i>
+          </button>
+          <button
+            class="btn btn-sm"
             id="fullscreen-toggle-btn"
             style="background: rgba(0, 0, 0, 0.6); color: white; border: none"
             onclick="window.toggleFullscreenMode?.()"
@@ -3506,6 +3515,28 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   let isFullscreen3D = false;
 
+  const updateCameraButtonUI = (viewMode = 'orbit') => {
+    const btn = document.getElementById('camera-view-btn');
+    const hint = document.getElementById('village-3d-hint');
+    if (!btn) return;
+
+    if (viewMode === 'first-person') {
+      btn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+      btn.title = 'Zur Orbit-Ansicht wechseln';
+      if (hint) hint.textContent = 'First-Person: Zieh mit der Maus zum Umsehen, Mausrad zum Zoomen, klicke zum Wählen.';
+    } else {
+      btn.innerHTML = '<i class="fa-solid fa-street-view"></i>';
+      btn.title = 'Zur First-Person-Ansicht wechseln';
+      if (hint) hint.textContent = 'Orbit: Zieh zum Drehen, Mausrad zum Zoomen, klicke Spieler zum Wählen.';
+    }
+  };
+
+  window.toggleCameraView = () => {
+    if (!window.village3d) return;
+    const mode = window.village3d.toggleViewMode?.();
+    updateCameraButtonUI(mode || window.village3d.getViewMode?.() || 'orbit');
+  };
+
   window.toggleFullscreenMode = () => {
     const container = document.querySelector('.game-container');
     const fullscreenBtn = document.getElementById('fullscreen-toggle-btn');
@@ -3732,9 +3763,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     }).then(module => {
       const Village3DThree = module.default;
       if (typeof Village3DThree !== 'undefined') {
-        const village3d = new Village3DThree('village-3d', raumCode);
+        const village3d = new Village3DThree('village-3d', raumCode, {
+          startView: 'orbit',
+          firstPersonPlayerId: spielerId,
+          onPlayerClick: (playerId) => selectSpieler(playerId),
+        });
 
-          // Spieler-Klick-Handler für Aktionen
+          // Spieler-Klick-Handler für Aktionen (fallback, already passed above)
           village3d.onPlayerClick = (playerId) => {
               selectSpieler(playerId);
           };
@@ -3766,6 +3801,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
           // Global speichern für Hints
           window.village3d = village3d;
+          updateCameraButtonUI(village3d.getViewMode?.() || 'orbit');
           
           // Keep HUD overlay hidden unless we are in fullscreen 3D mode
           village3d.updateTopBar(aktuellePhase, aktuelleRunde);

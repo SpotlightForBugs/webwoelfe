@@ -112,118 +112,14 @@ SPIEL_REGELN = {
 
 
 # ============================================================================
-# ROLLEN-EMPFEHLUNGEN NACH SPIELERZAHL
+# ROLLEN-EMPFEHLUNGEN
 # ============================================================================
-# Für Spiele mit mehr Spielern als hier definiert, verwende berechne_rollen()
-# aus game_logic.py
-
-ROLLEN_EMPFEHLUNG = {
-    5: ["Werwolf", "Werwolf", "Seherin", "Dorfbewohner", "Dorfbewohner"],
-    6: ["Werwolf", "Werwolf", "Seherin", "Hexe", "Dorfbewohner", "Dorfbewohner"],
-    7: [
-        "Werwolf",
-        "Werwolf",
-        "Seherin",
-        "Hexe",
-        "Jaeger",
-        "Dorfbewohner",
-        "Dorfbewohner",
-    ],
-    8: [
-        "Werwolf",
-        "Werwolf",
-        "Seherin",
-        "Hexe",
-        "Jaeger",
-        "Amor",
-        "Dorfbewohner",
-        "Dorfbewohner",
-    ],
-    9: [
-        "Werwolf",
-        "Werwolf",
-        "Seherin",
-        "Hexe",
-        "Jaeger",
-        "Amor",
-        "Heiler",
-        "Dorfbewohner",
-        "Dorfbewohner",
-    ],
-    10: [
-        "Werwolf",
-        "Werwolf",
-        "Werwolf",
-        "Seherin",
-        "Hexe",
-        "Jaeger",
-        "Amor",
-        "Heiler",
-        "Dorfbewohner",
-        "Dorfbewohner",
-    ],
-    11: [
-        "Werwolf",
-        "Werwolf",
-        "Werwolf",
-        "Seherin",
-        "Hexe",
-        "Jaeger",
-        "Amor",
-        "Heiler",
-        "Alter Mann",
-        "Dorfbewohner",
-        "Dorfbewohner",
-    ],
-    12: [
-        "Werwolf",
-        "Werwolf",
-        "Werwolf",
-        "Seherin",
-        "Hexe",
-        "Jaeger",
-        "Amor",
-        "Heiler",
-        "Alter Mann",
-        "Zwei Schwestern",
-        "Zwei Schwestern",
-        "Dorfbewohner",
-    ],
-    14: [
-        "Werwolf",
-        "Werwolf",
-        "Werwolf",
-        "Werwolf",
-        "Seherin",
-        "Hexe",
-        "Jaeger",
-        "Amor",
-        "Heiler",
-        "Alter Mann",
-        "Medium",
-        "Rabe",
-        "Dorfbewohner",
-        "Dorfbewohner",
-    ],
-    16: [
-        "Werwolf",
-        "Werwolf",
-        "Werwolf",
-        "Werwolf",
-        "Seherin",
-        "Hexe",
-        "Jaeger",
-        "Amor",
-        "Heiler",
-        "Alter Mann",
-        "Medium",
-        "Rabe",
-        "Dorfbewohner",
-        "Dorfbewohner",
-        "Dorfbewohner",
-        "Dorfbewohner",
-    ],
-}
+# Role recommendations are now generated dynamically from DistributionConfig
+# in each role's definition. Use get_recommended_roles() which delegates to
+# game_logic.berechne_rollen() for dynamic distribution.
+#
+# Legacy static recommendations removed - all roles define their own
+# distribution rules via DistributionConfig in roles/base.py
 
 
 # ============================================================================
@@ -234,6 +130,9 @@ ROLLEN_EMPFEHLUNG = {
 def get_recommended_roles(player_count: int, include_narrator: bool = False) -> list:
     """
     Gibt empfohlene Rollen für eine bestimmte Spieleranzahl zurück.
+    
+    Uses dynamic role distribution from DistributionConfig instead of 
+    hardcoded lists. Each role defines its own distribution rules.
 
     Args:
         player_count: Anzahl der Spieler
@@ -242,24 +141,16 @@ def get_recommended_roles(player_count: int, include_narrator: bool = False) -> 
     Returns:
         Liste der empfohlenen Rollen-Namen
     """
-    effective_count = player_count - (1 if include_narrator else 0)
-
-    # Suche nächste passende Konfiguration
-    if effective_count in ROLLEN_EMPFEHLUNG:
-        roles = ROLLEN_EMPFEHLUNG[effective_count].copy()
-    else:
-        # Nehme nächst kleinere Konfiguration oder use game_logic
-        available = [k for k in ROLLEN_EMPFEHLUNG.keys() if k <= effective_count]
-        if available:
-            closest = max(available)
-            roles = ROLLEN_EMPFEHLUNG[closest].copy()
-        else:
-            # Fallback für sehr kleine Spiele
-            roles = ROLLEN_EMPFEHLUNG[5].copy()
-
-    if include_narrator:
-        roles.insert(0, "Erzaehler")
-
+    # Import here to avoid circular imports
+    from game_logic import berechne_rollen
+    
+    role_distribution = berechne_rollen(player_count, mit_erzaehler=include_narrator)
+    
+    # Convert dict {role: count} to list [role, role, ...]
+    roles = []
+    for role_name, count in role_distribution.items():
+        roles.extend([role_name] * count)
+    
     return roles
 
 

@@ -442,7 +442,7 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
             kontext = SpielKontext(
                 raum_id=spieler.raum_id,
                 runde=raum.runde,
-                phase=Phase.TAG if "tag" in raum.aktuelle_phase else Phase.NACHT,
+                phase=Phase.TAG_ABSTIMMUNG if "tag" in raum.aktuelle_phase else Phase.NACHT,
                 aktiver_spieler_id=spieler.id,
                 lebende_spieler=[s.id for s in alle_spieler if s.ist_am_leben],
                 tote_spieler=[s.id for s in alle_spieler if not s.ist_am_leben],
@@ -469,114 +469,145 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
         except Exception as e:
             logger.error(f"Error calling on_eigener_tod for {spieler.rolle}: {e}")
 
-    # 3. Check effects for others (e.g. Wildes Kind, Hund)
-    # This requires scanning all players or having a listener system
-    # For now, we hardcode the known ones or migrate them to a listener system later
-
-    # Wildes Kind / Vorbild
-    # Check if any player has this player as "vorbild_id"
-    # This requires iterating all players or a query
-    # Optimization: Query JSON field? SQLite JSON support varies.
-    # Better: Iterate living players with roles that care.
-    # ... (Implementation of Wildes Kind etc. would go here)
+    # 3. Check effects on OTHER players (e.g. Wildes Kind, Hund)
+    # Iterate ALL living players and call handle_anderer_stirbt if they have it
+    alle_lebenden = Spieler.query.filter_by(
+        raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
+    ).all()
+    
+    for anderer_spieler in alle_lebenden:
+        if anderer_spieler.id == spieler.id:
+            continue  # Skip the dying player
+            
+        anderer_role = RoleRegistry.get(anderer_spieler.rolle)
+        if anderer_role and hasattr(anderer_role, "handle_anderer_stirbt"):
+            try:
+                # Build fresh context with updated dead player list
+                alle_spieler = Spieler.query.filter_by(
+                    raum_id=raum.id, ist_erzaehler=False
+                ).all()
+                kontext = SpielKontext(
+                    raum_id=raum.id,
+                    runde=raum.runde,
+                    phase=Phase.TAG_ABSTIMMUNG if "tag" in raum.aktuelle_phase else Phase.NACHT,
+                    aktiver_spieler_id=anderer_spieler.id,
+                    lebende_spieler=[s.id for s in alle_spieler if s.ist_am_leben],
+                    tote_spieler=[s.id for s in alle_spieler if not s.ist_am_leben],
+                )
+                
+                result = anderer_role.handle_anderer_stirbt(
+                    anderer_spieler, spieler, todesart, kontext
+                )
+                
+                if result and result.erfolg:
+                    # Apply state updates
+                    if hasattr(result, 'state_updates') and result.state_updates:
+                        for state_key, state_value in result.state_updates.items():
+                            anderer_spieler.set_state(state_key, state_value)
+                    
+                    # Check if this triggered a death (e.g., Wildes Kind transforms)
+                    if result.effekte.get("stirbt"):
+                        res = toete_spieler(anderer_spieler, result.effekte.get("todesart", "folgeeffekt"))
+                        tote.extend(res["tote"])
+                        folge_aktionen.extend(res["folge_aktionen"])
+                    
+                    # Add follow-up actions
+                    for effect_key, effect_value in result.effekte.items():
+                        if effect_value is True and effect_key not in ("stirbt",):
+                            folge_aktionen.append(effect_key)
+                    
+                    if result.nachricht:
+                        log_eintrag(
+                            raum.id,
+                            result.nachricht,
+                            sichtbar_fuer=result.log_sichtbar_fuer or "alle",
+                        )
+            except Exception as e:
+                logger.error(f"Error calling handle_anderer_stirbt for {anderer_spieler.rolle}: {e}")
 
     db.session.commit()
     return {"tote": tote, "folge_aktionen": folge_aktionen}
 
 
-def pruefe_spielende(raum: Raum) -> Optional[dict]: #TODO: only depend on the roles files win conditions. This hardcoded logic is not scalable or acceptable. 
+def pruefe_spielende(raum: Raum) -> Optional[dict]:
     """
     Prüft ob das Spiel vorbei ist.
+    
+    Uses dynamic win conditions from role definitions instead of hardcoded logic.
+    Win condition priority:
+    1. No survivors -> draw
+    2. Solo role wins (checked via role.berechne_gewinn)
+    3. Lovers win (last 2 alive and in love)
+    4. Team majority wins (werwolf >= dorf, or all wolves dead)
     """
     logger.debug(f"Checking win conditions for room {raum.code}")
     lebende = hole_lebende_spieler(raum)
+    from roles import RoleRegistry
 
     if not lebende:
         logger.info("Game over: No survivors")
         return {
             "gewinner": "niemand",
             "nachricht": "Alle sind gestorben. Das Dorf ist ausgelöscht.",
+            "team": "niemand",
         }
 
-    # Zähle Teams
-    werwoelfe = 0
-    dorfbewohner = 0
-    andere = 0
-
-    from roles import RoleRegistry
-
-    for s in lebende:
-        role = RoleRegistry.get(s.rolle)
-        if not role:
-            dorfbewohner += 1  # Fallback
-            continue
-
-        team = role.info.team
-
-        if team.value == "werwolf":
-            werwoelfe += 1
-        elif team.value == "dorf":
-            dorfbewohner += 1
-        else:
-            andere += 1  # Solo, etc.
-
-    logger.debug(f"Stats: WW={werwoelfe}, Dorf={dorfbewohner}, Andere={andere}")
-
-    # Get all players for context
+    # Build context for win condition checks
     alle_spieler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=False).all()
     tote_spieler_ids = [s.id for s in alle_spieler if not s.ist_am_leben]
 
-    # Build context for win condition checks
     kontext = SpielKontext(
         raum_id=raum.id,
         runde=raum.runde,
-        phase=Phase.TAG if "tag" in raum.aktuelle_phase else Phase.NACHT,
-        aktiver_spieler_id=0,  # Not relevant for win checks
+        phase=Phase.TAG_ABSTIMMUNG if "tag" in raum.aktuelle_phase else Phase.NACHT,
+        aktiver_spieler_id=0,
         lebende_spieler=[s.id for s in lebende],
         tote_spieler=tote_spieler_ids,
     )
 
-    # 1. Check role-specific solo win conditions (highest priority)
-    # Examples: Weißer Wolf, Flötenspieler, etc.
+    # Count teams dynamically from role definitions
+    team_counts: dict[str, int] = {}
     for s in lebende:
         role = RoleRegistry.get(s.rolle)
         if role:
-            # Check role's berechne_gewinn method
+            team_value = role.info.team.value
+        else:
+            team_value = "dorf"  # Fallback for unknown roles
+        team_counts[team_value] = team_counts.get(team_value, 0) + 1
+
+    werwoelfe = team_counts.get("werwolf", 0)
+    dorfbewohner = team_counts.get("dorf", 0)
+    vampir = team_counts.get("vampir", 0)
+    zombie = team_counts.get("zombie", 0)
+    solo = team_counts.get("solo", 0)
+    neutral = team_counts.get("neutral", 0)
+    
+    # Calculate non-wolf villager side (includes neutral roles that side with village)
+    village_side = dorfbewohner + neutral
+    # Evil factions combined
+    evil_factions = werwoelfe + vampir + zombie
+
+    logger.debug(f"Team counts: WW={werwoelfe}, Dorf={dorfbewohner}, Vampir={vampir}, Zombie={zombie}, Solo={solo}, Neutral={neutral}")
+
+    # 1. Check role-specific win conditions (highest priority)
+    # This handles Solo roles, special win conditions, etc.
+    for s in lebende:
+        role = RoleRegistry.get(s.rolle)
+        if role:
             gewonnen_team = role.berechne_gewinn(s, kontext)
-            if gewonnen_team and gewonnen_team.value == "solo":
-                logger.info(f"Game over: {s.rolle} wins solo")
+            if gewonnen_team:
+                logger.info(f"Game over: {s.rolle} wins ({gewonnen_team.value})")
                 return {
                     "gewinner": s.rolle.lower().replace(" ", "_"),
-                    "nachricht": f"{s.rolle} hat alle anderen vernichtet und gewinnt allein!",
-                    "team": "solo",
+                    "nachricht": f"{s.rolle} hat gewonnen!",
+                    "team": gewonnen_team.value,
                     "spieler_id": s.id,
                 }
 
-    # 2. Werwölfe gewinnen
-    # Wenn Werwölfe >= Dorfbewohner (und keine Solo-Rollen mehr da sind, die das verhindern)
-    # Note: Solo roles with special win conditions are checked first
-    if werwoelfe >= (dorfbewohner + andere):
-        logger.info("Game over: Werewolves win")
-        return {
-            "gewinner": "werwolf",
-            "nachricht": "Die Werwölfe haben die Überhand gewonnen!",
-            "team": "werwolf",
-        }
-
-    # 3. Dorf gewinnt
-    if werwoelfe == 0 and andere == 0:
-        logger.info("Game over: Villagers win")
-        return {
-            "gewinner": "dorf",
-            "nachricht": "Alle Werwölfe wurden vernichtet. Das Dorf hat gewonnen!",
-            "team": "dorf",
-        }
-
-    # 4. Gemischtes Paar (Amor) gewinnt
-    # Wenn nur noch 2 Spieler leben und sie verliebt sind (und in verschiedenen Teams waren)
+    # 2. Check lovers win condition
+    # Lovers win if they are the last 2 survivors
     if len(lebende) == 2:
-        s1 = lebende[0]
-        s2 = lebende[1]
+        s1, s2 = lebende[0], lebende[1]
         if s1.get_state("global.verliebt_mit_id") == s2.id:
             logger.info("Game over: Lovers win")
             return {
@@ -585,7 +616,44 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]: #TODO: only depend on the ro
                 "team": "verliebte",
             }
 
-    # Spiel geht weiter
+    # 3. Check team majority wins
+    # Werewolves win if they have majority
+    if werwoelfe > 0 and werwoelfe >= village_side + solo:
+        logger.info("Game over: Werewolves win by majority")
+        return {
+            "gewinner": "werwolf",
+            "nachricht": "Die Werwölfe haben die Überhand gewonnen!",
+            "team": "werwolf",
+        }
+
+    # Vampires win if they are majority and no werewolves
+    if vampir > 0 and werwoelfe == 0 and vampir >= village_side + solo:
+        logger.info("Game over: Vampires win by majority")
+        return {
+            "gewinner": "vampir",
+            "nachricht": "Die Vampire haben das Dorf übernommen!",
+            "team": "vampir",
+        }
+
+    # Zombies win if they are majority and no werewolves
+    if zombie > 0 and werwoelfe == 0 and zombie >= village_side + solo:
+        logger.info("Game over: Zombies win by majority")
+        return {
+            "gewinner": "zombie",
+            "nachricht": "Die Zombies haben alle infiziert!",
+            "team": "zombie",
+        }
+
+    # 4. Village wins if all evil factions are eliminated
+    if evil_factions == 0 and solo == 0:
+        logger.info("Game over: Villagers win - all threats eliminated")
+        return {
+            "gewinner": "dorf",
+            "nachricht": "Alle Bedrohungen wurden vernichtet. Das Dorf hat gewonnen!",
+            "team": "dorf",
+        }
+
+    # Game continues
     return None
 
 

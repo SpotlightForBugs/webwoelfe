@@ -33,7 +33,7 @@ from models import (
     get_rollen_nach_kategorie_liste,
     get_rollen_anzahl,
 )
-from constants import TEAMS, SPIEL_REGELN, ROLLEN_EMPFEHLUNG
+from constants import TEAMS, SPIEL_REGELN, get_recommended_roles
 from roles import get_rollen_nach_erweiterung, ERWEITERUNG_INFO, KATEGORIE_INFO
 from logger import logger
 import game_logic

@@ -56,8 +56,10 @@ class ZweiSchwestern(Role):
             erweiterung=Erweiterung.CHARAKTERE,
             distribution=DistributionConfig(
                 min_players=10,
-                count_func=lambda n: 2,                min_role_count=2,
-                max_role_count=2,                priority=35,
+                count_func=lambda n: 2,
+                min_role_count=2,
+                max_role_count=2,
+                priority=35,
             ),
             # Visual Styling
             avatar_gradient_from="#f472b6",
@@ -89,25 +91,27 @@ class ZweiSchwestern(Role):
     def erlaubt_private_nachrichten(self) -> bool:
         """Zwei Schwestern dürfen private Nachrichten schreiben."""
         return True
-    
+
     def erlaubte_chat_partner(
         self, spieler: "Spieler", kontext: "SpielKontext"
     ) -> List["Spieler"]:
         """
         Zwei Schwestern dürfen nur mit ihrer Schwester chatten.
-        
+
         Findet die andere Schwester basierend auf der Rolle.
         """
         from typing import List, TYPE_CHECKING
+
         if TYPE_CHECKING:
             from models import Spieler as SpielerType
-        
+
         # Finde alle lebenden Spieler mit der Rolle "Zwei Schwestern"
         alle_schwestern = [
-            s for s in kontext.lebende_spieler_objekte
+            s
+            for s in kontext.lebende_spieler_objekte
             if s.rolle == "Zwei Schwestern" and s.id != spieler.id
         ]
-        
+
         return alle_schwestern
 
     def get_ui_definition(self) -> "RollenUI":

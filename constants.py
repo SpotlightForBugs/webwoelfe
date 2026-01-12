@@ -130,8 +130,8 @@ SPIEL_REGELN = {
 def get_recommended_roles(player_count: int, include_narrator: bool = False) -> list:
     """
     Gibt empfohlene Rollen für eine bestimmte Spieleranzahl zurück.
-    
-    Uses dynamic role distribution from DistributionConfig instead of 
+
+    Uses dynamic role distribution from DistributionConfig instead of
     hardcoded lists. Each role defines its own distribution rules.
 
     Args:
@@ -143,14 +143,14 @@ def get_recommended_roles(player_count: int, include_narrator: bool = False) -> 
     """
     # Import here to avoid circular imports
     from game_logic import berechne_rollen
-    
+
     role_distribution = berechne_rollen(player_count, mit_erzaehler=include_narrator)
-    
+
     # Convert dict {role: count} to list [role, role, ...]
     roles = []
     for role_name, count in role_distribution.items():
         roles.extend([role_name] * count)
-    
+
     return roles
 
 

@@ -158,26 +158,27 @@ class SichtTyp(Enum):
 class SeherFaehigkeit(Enum):
     """
     Capability types for seer-like roles.
-    
+
     Used for capability-based visibility instead of hardcoded role name strings.
     Roles override get_visibility_for(capability) to define what seers see.
     """
-    
-    TEAM_AURA = "team_aura"       # Sees true good/evil aura (Aurenseherin)
-    ACTUAL_ROLE = "actual_role"   # Sees exact role name (Rollenseherin)
-    TEAM_BASIC = "team_basic"     # Sees team alignment, can be fooled (Seherin)
-    PROTECTED = "protected"       # Cannot see anything (blocked roles)
+
+    TEAM_AURA = "team_aura"  # Sees true good/evil aura (Aurenseherin)
+    ACTUAL_ROLE = "actual_role"  # Sees exact role name (Rollenseherin)
+    TEAM_BASIC = "team_basic"  # Sees team alignment, can be fooled (Seherin)
+    PROTECTED = "protected"  # Cannot see anything (blocked roles)
+
 
 class SichtbarkeitFuerWoelfe(Enum):
     """
     Visibility levels for werewolves (replaces hardcoded strings).
     Defines who can see whom during night phase.
     """
-    
-    ALLE = "alle"                 # Visible to all werewolves
-    EIGENTEAM = "eigenteam"       # Only visible to own team
-    NIEMAND = "niemand"           # Not visible to anyone
-    RUDEL = "rudel"              # Visible only to werewolf pack
+
+    ALLE = "alle"  # Visible to all werewolves
+    EIGENTEAM = "eigenteam"  # Only visible to own team
+    NIEMAND = "niemand"  # Not visible to anyone
+    RUDEL = "rudel"  # Visible only to werewolf pack
 
 
 class EventName(Enum):
@@ -185,28 +186,28 @@ class EventName(Enum):
     Standard event names (replaces hardcoded string literals).
     Used for database queries and phase transitions.
     """
-    
+
     # Seer events
     SEHERIN_ERGEBNIS = "seherin_ergebnis"
     AURENSEHERIN_ERGEBNIS = "aurenseherin_ergebnis"
-    
+
     # Win condition events
     WERWOLF_GEWONNEN = "werwolf_gewonnen"
     DORF_GEWONNEN = "dorf_gewonnen"
     VERLIEBTE_GEWONNEN = "verliebte_gewonnen"
     SOLO_GEWONNEN = "solo_gewonnen"
     VAMPIR_GEWONNEN = "vampir_gewonnen"
-    
+
     # Phase events
     HEILER_PHASE = "heiler_phase"
     HEXE_PHASE = "hexe_phase"
     WERWOLF_PHASE = "werwolf_phase"
     JAEGER_PHASE = "jaeger_phase"
-    
+
     # Death/damage events
     WERWOLF_OPFER = "werwolf_opfer"
     VERGIFTUNG = "vergiftung"
     HEILUNG = "heilung"
-    
+
     def __str__(self) -> str:
         return self.value

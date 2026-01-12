@@ -92,14 +92,14 @@ def inject_css_reader():
 @app.context_processor
 def inject_cache_buster():
     """Inject a function to add cache busting query parameters to static files."""
-    
+
     def versioned_url(endpoint, **values):
         """
         Generate a URL with a cache-busting query parameter based on file modification time.
         Usage in templates: {{ versioned_url('static', filename='js/dist/hints.js') }}
         """
-        if endpoint == 'static' and 'filename' in values:
-            filename = values['filename']
+        if endpoint == "static" and "filename" in values:
+            filename = values["filename"]
             try:
                 if app.static_folder is None:
                     raise ValueError("Static folder is not configured")
@@ -107,14 +107,14 @@ def inject_cache_buster():
                 if os.path.exists(filepath):
                     # Get file modification time as cache buster
                     mtime = int(os.path.getmtime(filepath))
-                    values['v'] = mtime
+                    values["v"] = mtime
             except Exception as e:
                 logger.warning(f"Could not get mtime for {filename}: {e}")
                 # Fallback to timestamp if file doesn't exist or error
-                values['v'] = int(datetime.now(timezone.utc).timestamp())
-        
+                values["v"] = int(datetime.now(timezone.utc).timestamp())
+
         return url_for(endpoint, **values)
-    
+
     return dict(versioned_url=versioned_url)
 
 
@@ -1273,23 +1273,32 @@ def hole_aktuellen_spieler() -> Optional[Spieler]:
 # CONFIGURATION APIs - Server-side logic for frontend
 # ============================================================================
 
+
 @app.route("/api/config/extension-order", methods=["GET"])
 def get_extension_order():
     """
     Get the correct order for extension packs.
     Moved from frontend to ensure consistency.
     """
-    return jsonify({
-        "success": True,
-        "extension_order": ['base', 'neumond', 'gemeinde', 'charaktere', 'sonderedition'],
-        "extension_info": {
-            "base": {"name": "Basis", "icon": "fa-home", "required": True},
-            "neumond": {"name": "Neumond", "icon": "fa-moon"},
-            "gemeinde": {"name": "Gemeinde", "icon": "fa-users"},
-            "charaktere": {"name": "Charaktere", "icon": "fa-user-friends"},
-            "sonderedition": {"name": "Sonderedition", "icon": "fa-star"}
+    return jsonify(
+        {
+            "success": True,
+            "extension_order": [
+                "base",
+                "neumond",
+                "gemeinde",
+                "charaktere",
+                "sonderedition",
+            ],
+            "extension_info": {
+                "base": {"name": "Basis", "icon": "fa-home", "required": True},
+                "neumond": {"name": "Neumond", "icon": "fa-moon"},
+                "gemeinde": {"name": "Gemeinde", "icon": "fa-users"},
+                "charaktere": {"name": "Charaktere", "icon": "fa-user-friends"},
+                "sonderedition": {"name": "Sonderedition", "icon": "fa-star"},
+            },
         }
-    })
+    )
 
 
 @app.route("/api/roles/preview", methods=["GET"])
@@ -1297,34 +1306,40 @@ def get_random_role_preview():
     """
     Get random role previews for extension packs.
     Replaces frontend logic that just took first 4 roles.
-    
+
     Query Parameters:
     - extension_pack: Filter by extension pack
     - count: Number of roles to return (default: 4)
     """
     import random
     from roles import RoleRegistry
-    
+
     extension_pack = request.args.get("extension_pack")
     count = int(request.args.get("count", 4))
-    
+
     # Get roles for the extension pack
     all_roles = RoleRegistry.get_all()
     if extension_pack:
-        filtered_roles = [r for r in all_roles if r.info.extension_pack == extension_pack]
+        filtered_roles = [
+            r for r in all_roles if r.info.extension_pack == extension_pack
+        ]
     else:
         filtered_roles = all_roles
-    
+
     # Randomly select roles
     preview_count = min(count, len(filtered_roles))
-    selected_roles = random.sample(filtered_roles, preview_count) if filtered_roles else []
-    
-    return jsonify({
-        "success": True,
-        "roles": [{"name": r.info.name, "id": r.info.id} for r in selected_roles],
-        "total_in_pack": len(filtered_roles),
-        "has_more": len(filtered_roles) > count
-    })
+    selected_roles = (
+        random.sample(filtered_roles, preview_count) if filtered_roles else []
+    )
+
+    return jsonify(
+        {
+            "success": True,
+            "roles": [{"name": r.info.name, "id": r.info.id} for r in selected_roles],
+            "total_in_pack": len(filtered_roles),
+            "has_more": len(filtered_roles) > count,
+        }
+    )
 
 
 @app.route("/api/phase/is-day", methods=["GET"])
@@ -1332,45 +1347,49 @@ def check_if_phase_is_day():
     """
     Server-authoritative phase type determination.
     Replaces client-side hardcoded phase list.
-    
+
     Query Parameters:
     - phase: Phase name to check
     """
     phase = request.args.get("phase", "")
-    
+
     # Definitive day phases
     day_phases = {
-        'tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 
-        'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt'
+        "tag_start",
+        "diskussion",
+        "abstimmung",
+        "hinrichtung",
+        "tag_ende",
+        "spiel_ende",
+        "lobby",
+        "rollen_verteilt",
     }
-    
+
     # Check explicit day phases
     is_day = phase in day_phases
-    
+
     # Check patterns for day/night classification
     if not is_day:
         is_day = (
-            'tag' in phase.lower() or 
-            'abstimmung' in phase.lower() or 
-            'diskussion' in phase.lower()
+            "tag" in phase.lower()
+            or "abstimmung" in phase.lower()
+            or "diskussion" in phase.lower()
         )
-    
+
     # Night mode is everything else that has phase indicators
-    is_night = (
-        not is_day and (
-            'nacht' in phase.lower() or 
-            'phase' in phase.lower() or 
-            phase.endswith('_phase')
-        )
+    is_night = not is_day and (
+        "nacht" in phase.lower() or "phase" in phase.lower() or phase.endswith("_phase")
     )
-    
-    return jsonify({
-        "success": True,
-        "phase": phase,
-        "is_day": is_day,
-        "is_night": is_night,
-        "phase_type": "day" if is_day else ("night" if is_night else "neutral")
-    })
+
+    return jsonify(
+        {
+            "success": True,
+            "phase": phase,
+            "is_day": is_day,
+            "is_night": is_night,
+            "phase_type": "day" if is_day else ("night" if is_night else "neutral"),
+        }
+    )
 
 
 # ============================================================================

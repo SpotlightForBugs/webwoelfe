@@ -72,6 +72,8 @@ class Werwolf(Role):
                 min_players=5,
                 # ~20% Werwölfe, min 1
                 count_func=lambda n: max(1, int(n * 0.20)),
+                min_role_count=1,
+                max_role_count=None,
                 priority=50,
                 exclusive_with=[],
             ),

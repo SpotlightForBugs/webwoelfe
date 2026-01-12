@@ -54,6 +54,8 @@ class Freimaurer(Role):
             distribution=DistributionConfig(
                 min_players=10,
                 count_func=lambda n: 2,
+                min_role_count=2,
+                max_role_count=None,
                 priority=35,
             ),
             # Visual Styling

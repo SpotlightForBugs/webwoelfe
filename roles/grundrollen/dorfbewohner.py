@@ -63,6 +63,8 @@ class Dorfbewohner(Role):
             distribution=DistributionConfig(
                 min_players=0,
                 count_func=lambda n: 0,  # Wird als Filler berechnet
+                min_role_count=1,
+                max_role_count=None,
                 priority=100,
                 exclusive_with=[],
                 is_filler=True,

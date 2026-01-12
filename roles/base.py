@@ -1981,6 +1981,12 @@ class DistributionConfig:
     # Lambda function: (player_count) -> role_count
     # Standard: 1 wenn min_players erreicht
     count_func: Callable[[int], int] = field(default=lambda n: 1)
+
+    # Wie viele dieser Rolle müssen mindestens im Spiel sein, damit sie Sinn macht?
+    min_role_count: int = 1
+    # Wie viele dieser Rolle dürfen maximal im Spiel sein? None = unbegrenzt
+    max_role_count: Optional[int] = 1
+
     priority: int = 50  # Höher = wird zuerst verteilt
     # Muss zusammen mit mind. einer dieser Rollen im Spiel sein
     requires_roles: List[str] = field(default_factory=list)

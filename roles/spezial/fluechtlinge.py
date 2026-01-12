@@ -61,6 +61,8 @@ class Fluechtlinge(Role):
             distribution=DistributionConfig(
                 min_players=12,
                 count_func=lambda n: max(2, n // 6),
+                min_role_count=2,
+                max_role_count=None,
                 priority=20,
             ),
             # Visual Styling

@@ -63,6 +63,8 @@ class Vampir(Role):
             distribution=DistributionConfig(
                 min_players=15,
                 count_func=lambda n: 1,
+                min_role_count=1,
+                max_role_count=None,
                 priority=20,
             ),
             # Visual Styling

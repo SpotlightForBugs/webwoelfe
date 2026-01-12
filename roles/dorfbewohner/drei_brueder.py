@@ -57,6 +57,8 @@ class DreiBrueder(Role):
             distribution=DistributionConfig(
                 min_players=12,
                 count_func=lambda n: 3,
+                min_role_count=3,
+                max_role_count=3,
                 priority=40,
             ),
             # Visual Styling

@@ -56,8 +56,8 @@ class ZweiSchwestern(Role):
             erweiterung=Erweiterung.CHARAKTERE,
             distribution=DistributionConfig(
                 min_players=10,
-                count_func=lambda n: 2,
-                priority=35,
+                count_func=lambda n: 2,                min_role_count=2,
+                max_role_count=2,                priority=35,
             ),
             # Visual Styling
             avatar_gradient_from="#f472b6",

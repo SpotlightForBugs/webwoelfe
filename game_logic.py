@@ -74,8 +74,17 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
 
         # Berechne Anzahl via Lambda
         anzahl = dist.count_func(effektive_anzahl)
-
+        
+        # Enforce min/max constraints
         if anzahl > 0:
+            # Check Max
+            if dist.max_role_count is not None and anzahl > dist.max_role_count:
+                anzahl = dist.max_role_count
+                
+            # Check Min
+            if anzahl < dist.min_role_count:
+                continue
+
             # Check ob genug Platz
             if aktuelle_anzahl + anzahl > effektive_anzahl:
                 continue
@@ -91,7 +100,8 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
         if fillers:
             # Standard: Nehme den ersten Filler (meist Dorfbewohner)
             filler_role = fillers[0]
-            rolle_config[filler_role.info.name] = rest_plaetze
+            if rest_plaetze >= filler_role.info.distribution.min_role_count:
+                rolle_config[filler_role.info.name] = rest_plaetze
         else:
             # Fallback wenn kein Filler definiert
             rolle_config["Dorfbewohner"] = rest_plaetze
@@ -474,7 +484,7 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
     return {"tote": tote, "folge_aktionen": folge_aktionen}
 
 
-def pruefe_spielende(raum: Raum) -> Optional[dict]:
+def pruefe_spielende(raum: Raum) -> Optional[dict]: #TODO: only depend on the roles files win conditions. This hardcoded logic is not scalable or acceptable. 
     """
     Prüft ob das Spiel vorbei ist.
     """

@@ -172,6 +172,7 @@ def _generate_random_role_distribution(spieler_anzahl: int, mit_erzaehler: bool 
     """
     Generates a random role distribution for testing ALL roles in the game.
     This ensures comprehensive test coverage across all implemented roles.
+    Respects min_players requirements for each role.
     """
     from roles import RoleRegistry
     
@@ -182,11 +183,15 @@ def _generate_random_role_distribution(spieler_anzahl: int, mit_erzaehler: bool 
     if effektive_anzahl <= 0:
         return {"Erzaehler": 1} if mit_erzaehler else {}
     
-    # Get all available non-erzaehler roles
+    # Get all available non-erzaehler roles that meet min_players requirement
     alle_rollen = []
     for role in RoleRegistry.get_all():
-        if role.info.name != "Erzaehler":
-            alle_rollen.append(role.info.name)
+        if role.info.name == "Erzaehler":
+            continue
+        # Check min_players requirement
+        if role.info.distribution and role.info.distribution.min_players > effektive_anzahl:
+            continue
+        alle_rollen.append(role.info.name)
     
     # Shuffle to randomize role selection
     random.shuffle(alle_rollen)

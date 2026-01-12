@@ -2601,10 +2601,11 @@ class Role(ABC):
         events = []
 
         # Standard-Events aus RollenInfo
+        # Use get_phase_name() for event_id to match phase lookup
         if self.info.erzaehler_nacht:
             events.append(
                 ErzaehlerEvent(
-                    event_id=f"{self.info.name.lower().replace(' ', '_')}_nacht",
+                    event_id=self.get_phase_name(),
                     text=self.info.erzaehler_nacht,
                     anweisung=self.info.erzaehler_nacht,
                     einmalig=False,

@@ -1402,13 +1402,15 @@ async function handlePriesterPhase(players: PlayerWindow[]): Promise<void> {
 }
 
 async function handleWildesKindPhase(players: PlayerWindow[]): Promise<void> {
-  log("  🐕 Wildes Kind-Phase: Wähle Vorbild... ()");
+  log("  🐕 Wildes Kind-Phase: Wähle Vorbild...");
 
   const wildesKind = findPlayerByRole(players, ["Wildes Kind"]);
   if (!wildesKind) {
     log("    Kein Wildes Kind im Spiel");
     return;
   }
+  
+  log(`    Wildes Kind gefunden: ${wildesKind.name} (Rolle: ${wildesKind.rolle})`);
 
   if (shouldSkipAction()) {
     log("    ⚠️ [RANDOM] Wildes Kind überspringt");
@@ -1613,7 +1615,7 @@ async function handleHeilerVariantPhase(
     : ["Heiler"];
 
   log(
-    `  💉 ${roleNames[0]}-Phase: Wähle Spieler zum Schützen... ()`,
+    `  💉 ${roleNames[0]}-Phase: Wähle Spieler zum Schützen...`,
   );
 
   const heiler = findPlayerByRole(players, roleNames);
@@ -1621,6 +1623,8 @@ async function handleHeilerVariantPhase(
     log(`    Kein ${roleNames[0]} im Spiel`);
     return;
   }
+  
+  log(`    ${roleNames[0]} gefunden: ${heiler.name} (Rolle: ${heiler.rolle})`);
 
   // Random: Sometimes skip
   if (shouldSkipAction()) {
@@ -2772,12 +2776,19 @@ async function selectTargetAndConfirm(
     console.log('[selectTargetAndConfirm] Warning: Action buttons not visible');
   });
 
-  // First, check if target card is visible
+  // First, check if target card is visible (traditional UI or Village3D HUD)
   let targetCard = page.locator(`.spieler-card[data-name="${targetName}"]`);
 
   if (!(await targetCard.isVisible({ timeout: 1000 }).catch(() => false))) {
     targetCard = page
       .locator(`.spieler-card:has-text("${targetName}")`)
+      .first();
+  }
+
+  // Fallback: Village3D HUD player buttons
+  if (!(await targetCard.isVisible({ timeout: 1000 }).catch(() => false))) {
+    targetCard = page
+      .locator(`#village3d-player-list button:has-text("${targetName}")`)
       .first();
   }
 
@@ -2795,7 +2806,7 @@ async function selectTargetAndConfirm(
     }
   });
 
-  // Now click on the target card
+  // Now click on the target card/button
   await targetCard.click();
   // Wait for buttons to appear/update after selecting a target
   await page

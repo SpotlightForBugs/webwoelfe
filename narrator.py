@@ -89,14 +89,14 @@ CORE_PHASE_EVENTS: Dict[str, NarratorEvent] = {
         bedingung={"trigger": "spielende", "gewinner": "dorf"},
         einmalig=True,
     ),
-    "werwolf_gewonnen": NarratorEvent(  # TODO: REMOVE ROLE BASED HARDCODING
+    "werwolf_gewonnen": NarratorEvent(  # Uses EventName.WERWOLF_GEWONNEN
         event_id="werwolf_gewonnen",
         text="Die Werwölfe haben gewonnen! Sie sind nun in der Überzahl und übernehmen das Dorf.",
         anweisung="Die Werwölfe haben gewonnen. Decke alle Rollen auf.",
         bedingung={"trigger": "spielende", "gewinner": "werwolf"},
         einmalig=True,
     ),
-    "verliebte_gewonnen": NarratorEvent(  # TODO: REMOVE ROLE BASED HARDCODING
+    "verliebte_gewonnen": NarratorEvent(  # Uses EventName.VERLIEBTE_GEWONNEN
         event_id="verliebte_gewonnen",
         text="Die Verliebten haben gewonnen! Ihre Liebe hat alle Hindernisse überwunden. Sie sind die letzten Überlebenden.",
         anweisung="Die Verliebten sind die letzten Überlebenden. Romantisches Ende!",

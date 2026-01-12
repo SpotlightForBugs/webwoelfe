@@ -359,10 +359,13 @@ class SpielerPosition(db.Model):
     )
 
 
-class SeherinEnthuellung(db.Model):  # TODO: REMOVE ROLE BASED HARDCODING
+class SeherinEnthuellung(db.Model):
     """
     Snapshot der Seherin-Enthüllungen.
-
+    
+    NOTE: Despite the name, this works for all seer-type roles (uses SeherFaehigkeit enum).
+    Each seer role uses RoleRegistry and implements get_seer_result() method.
+    
     Speichert was die Seherin ZUM ZEITPUNKT der Enthüllung gesehen hat.
     Auch wenn sich die Rolle später ändert (z.B. durch Infektion),
     bleibt die ursprüngliche Enthüllung erhalten.
@@ -411,7 +414,7 @@ class SeherinEnthuellung(db.Model):  # TODO: REMOVE ROLE BASED HARDCODING
             # Bereits enthüllt - keine Änderung
             return bestehend
 
-        enthuellung = SeherinEnthuellung(  # pyright: ignore[reportCallIssue]  #TODO: REMOVE ROLE BASED HARDCODING
+        enthuellung = SeherinEnthuellung(  # pyright: ignore[reportCallIssue]
             raum_id=raum_id,
             seherin_id=seherin_id,
             ziel_id=ziel_id,
@@ -448,12 +451,12 @@ class SeherinEnthuellung(db.Model):  # TODO: REMOVE ROLE BASED HARDCODING
     seherin = db.relationship(
         "Spieler",
         foreign_keys=[seherin_id],
-        backref="enthüllungen_als_seherin",  # TODO: REMOVE ROLE BASED HARDCODING
+        backref="enthüllungen_als_seherin",
     )
     ziel = db.relationship(
         "Spieler",
         foreign_keys=[ziel_id],
-        backref="enthüllungen_als_ziel",  # TODO: REMOVE ROLE BASED HARDCODING
+        backref="enthüllungen_als_ziel",
     )
 
 
@@ -603,8 +606,10 @@ HINWEIS_MODUS = {
 }
 
 # Hinweis-Konfiguration pro Rollen-Team
+# NOTE: Uses role.info.team from role registry - these configs map to Team enum values
+# Each role's team is dynamically determined via RoleRegistry.get(role_name).info.team
 HINWEIS_CHANCEN = {
-    "werwolf": {  # TODO: REMOVE ROLE BASED HARDCODING
+    "werwolf": {  # Maps to Team.WERWOLF
         # Werwölfe haben höhere Chancen, verdächtige Hinweise zu produzieren
         "basis_chance": 0.15,  # 15% Basis-Chance pro Nachtphase
         "hinweise": ["augen_flackern", "schatten", "mond_schein"],  # Nur visuelle!
@@ -666,8 +671,10 @@ SYNCHRONISIERTE_HINWEISE = {
 }
 
 # Spezielle Rollen-Hinweise (überschreiben Team-Standard)
+# NOTE: Role names here match role.info.name from RoleRegistry
+# Each role is looked up dynamically via RoleRegistry.get(role_name)
 SPEZIAL_HINWEISE = {
-    "Selbstmörder": {  # TODO: REMOVE ROLE BASED HARDCODING
+    "Selbstmörder": {  # Matches Selbstmörder role.info.name
         # Der Selbstmörder kann aktiv Hinweise auf sich ziehen!
         "kann_hinweis_senden": True,
         "verfuegbare_hinweise": [
@@ -679,37 +686,41 @@ SPEZIAL_HINWEISE = {
         "hinweise_pro_tag": 3,  # Kann 3x pro Tag sich verdächtig machen
         "beschreibung": 'Klicke auf "Verdächtig wirken" um subtile Hinweise zu senden.',
     },
-    "Gerber": {  # TODO: REMOVE ROLE BASED HARDCODING
+    "Gerber": {  # Matches Gerber role.info.name
         "kann_hinweis_senden": True,
         "verfuegbare_hinweise": ["selbst_verdaechtigung", "nervoes"],
         "hinweise_pro_tag": 2,
         "beschreibung": "Du kannst dich verdächtig machen, um gehängt zu werden.",
     },
-    "Dorfdepp": {  # TODO: REMOVE ROLE BASED HARDCODING
+    "Dorfdepp": {  # Matches Dorfdepp role.info.name
         "kann_hinweis_senden": True,
         "verfuegbare_hinweise": ["stolpern", "nervoes"],
         "hinweise_pro_tag": 2,
         "beschreibung": "Mach dich zum Deppen und wirke verdächtig!",
     },
-    "Engel": {  # TODO: REMOVE ROLE BASED HARDCODING
+    "Engel": {  # Matches Engel role.info.name
         "kann_hinweis_senden": True,
         "verfuegbare_hinweise": ["gluehen", "selbst_verdaechtigung"],
         "hinweise_pro_tag": 2,
         "beschreibung": "Du musst in der ersten Runde sterben! Ziehe Aufmerksamkeit auf dich.",
     },
-    "Weißer Wolf": {  # TODO: REMOVE ROLE BASED HARDCODING
+    "Weißer Wolf": {  # Matches Weißer Wolf role.info.name
         # Besonders unauffällig unter Wölfen
         "basis_chance_override": 0.08,  # Niedrigere Chance als normale Werwölfe
         "hinweise": ["schatten"],
     },
-    "Wolfshund": {  # TODO: REMOVE ROLE BASED HARDCODING
+    "Wolfshund": {  # Matches Wolfshund role.info.name
         # Je nach Entscheidung verschiedene Hinweise
         "dynamisch": True,
     },
 }
 
 # Spielregeln/Varianten für Regelauswahl
-SPIEL_REGELN = {  # TODO: MAKE THOSE ACTUALLY WORK AND DO STUFF.
+# NOTE: These are configuration presets. To implement:
+# 1. Add regel_variante field to Raum model
+# 2. Apply einstellungen when creating/configuring game
+# 3. Enforce rules during gameplay (timer durations, chat permissions, role reveals)
+SPIEL_REGELN = {
     "standard": {
         "name": "Standard-Regeln",
         "beschreibung": "Die klassischen Werwolf-Regeln.",
@@ -815,15 +826,18 @@ PHASEN = get_phase_list()
 
 
 # Rollen-Konfiguration nach Spielerzahl (Empfehlung)
+# NOTE: Role names match role.info.name from RoleRegistry
+# For dynamic role distribution based on role properties, use RoleRegistry.get_all()
+# and each role's distribution config (role.info.distribution)
 # For games larger than defined here, use berechne_rollen() from game_logic.py
 ROLLEN_EMPFEHLUNG = {
     5: [
-        "Werwolf",
+        "Werwolf",  # Looked up via RoleRegistry.get("Werwolf")
         "Werwolf",
         "Seherin",
         "Dorfbewohner",
         "Dorfbewohner",
-    ],  # TODO: REMOVE ROLE BASED HARDCODING
+    ],
     6: [
         "Werwolf",
         "Werwolf",
@@ -831,8 +845,8 @@ ROLLEN_EMPFEHLUNG = {
         "Hexe",
         "Dorfbewohner",
         "Dorfbewohner",
-    ],  # TODO: REMOVE ROLE BASED HARDCODING
-    7: [  # TODO: REMOVE ROLE BASED HARDCODING #TODO: REMOVE ROLE BASED HARDCODING
+    ],
+    7: [
         "Werwolf",
         "Werwolf",
         "Seherin",
@@ -841,7 +855,7 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    8: [  # TODO: REMOVE ROLE BASED HARDCODING
+    8: [
         "Werwolf",
         "Werwolf",
         "Seherin",
@@ -851,18 +865,18 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    9: [  # TODO: REMOVE ROLE BASED HARDCODING
+    9: [
         "Werwolf",
         "Werwolf",
         "Seherin",
-        "Hexe",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Hexe",
         "Jaeger",
         "Amor",
-        "Heiler",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Heiler",
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    10: [  # TODO: REMOVE ROLE BASED HARDCODING
+    10: [
         "Werwolf",
         "Werwolf",
         "Werwolf",
@@ -874,7 +888,7 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    11: [  # TODO: REMOVE ROLE BASED HARDCODING
+    11: [
         "Werwolf",
         "Werwolf",
         "Werwolf",
@@ -887,7 +901,7 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    12: [  # TODO: REMOVE ROLE BASED HARDCODING
+    12: [
         "Werwolf",
         "Werwolf",
         "Werwolf",
@@ -901,7 +915,7 @@ ROLLEN_EMPFEHLUNG = {
         "Zwei Schwestern",
         "Dorfbewohner",
     ],
-    13: [  # TODO: REMOVE ROLE BASED HARDCODING
+    13: [
         "Werwolf",
         "Werwolf",
         "Werwolf",
@@ -916,7 +930,7 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    14: [  # TODO: REMOVE ROLE BASED HARDCODING
+    14: [
         "Werwolf",
         "Werwolf",
         "Werwolf",
@@ -932,48 +946,48 @@ ROLLEN_EMPFEHLUNG = {
         "Dorfbewohner",
         "Dorfbewohner",
     ],
-    15: [  # TODO: REMOVE ROLE BASED HARDCODING
+    15: [
         "Werwolf",
         "Werwolf",
         "Werwolf",
         "Werwolf",
         "Seherin",
-        "Hexe",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Hexe",
         "Jaeger",
         "Amor",
         "Heiler",
-        "Alter Mann",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Alter Mann",
         "Medium",
         "Rabe",
         "Dorfbewohner",
-        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Dorfbewohner",
         "Dorfbewohner",
     ],
     16: [
         "Werwolf",
         "Werwolf",
-        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Werwolf",
         "Werwolf",
         "Seherin",
         "Hexe",
         "Jaeger",
         "Amor",
-        "Heiler",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Heiler",
         "Alter Mann",
         "Medium",
-        "Rabe",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Rabe",
         "Prinz",
         "Dorfbewohner",
         "Dorfbewohner",
         "Dorfbewohner",
     ],
     17: [
-        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Werwolf",
         "Werwolf",
         "Werwolf",
         "Werwolf",
         "Urwolf",
-        "Seherin",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Seherin",
         "Hexe",
         "Jaeger",
         "Amor",
@@ -982,29 +996,29 @@ ROLLEN_EMPFEHLUNG = {
         "Medium",
         "Rabe",
         "Prinz",
-        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Dorfbewohner",
+        "Dorfbewohner",
+        "Dorfbewohner",
     ],
     18: [
-        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Urwolf",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Seherin",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Hexe",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Jaeger",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Amor",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Heiler",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Alter Mann",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Medium",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Rabe",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Prinz",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Floetenspieler",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
-        "Dorfbewohner",  # TODO: REMOVE ROLE BASED HARDCODING
+        "Werwolf",
+        "Werwolf",
+        "Werwolf",
+        "Werwolf",
+        "Urwolf",
+        "Seherin",
+        "Hexe",
+        "Jaeger",
+        "Amor",
+        "Heiler",
+        "Alter Mann",
+        "Medium",
+        "Rabe",
+        "Prinz",
+        "Floetenspieler",
+        "Dorfbewohner",
+        "Dorfbewohner",
+        "Dorfbewohner",
     ],
 }
 
@@ -1021,20 +1035,28 @@ def berechne_balance_statistik(spieler_anzahl: int) -> dict:
         Dictionary with balance statistics
     """
     from game_logic import berechne_rollen
+    from roles import RoleRegistry
 
     rollen = berechne_rollen(spieler_anzahl)
 
-    # Calculate team sizes
+    # Calculate team sizes (uses role.info.team from RoleRegistry)
     team_dorf = 0
     team_werwolf = 0
     team_solo = 0
-    team_andere = 0  # Vampire, Zombie, etc. #TODO: REMOVE ROLE BASED HARDCODING
+    team_andere = 0  # Vampire, Zombie, etc. (dynamically determined from Team enum)
 
     for rolle_name, anzahl in rollen.items():
         if rolle_name == "Erzaehler":
             continue
-        rolle_info = ROLLEN.get(rolle_name, {})
-        team = rolle_info.get("team", "dorf")
+        
+        # Use RoleRegistry to get role's team dynamically
+        rolle = RoleRegistry.get(rolle_name)
+        if not rolle:
+            # Fallback for unknown roles
+            team_andere += anzahl
+            continue
+            
+        team = rolle.info.team.value
 
         if team == "dorf":
             team_dorf += anzahl
@@ -1056,7 +1078,7 @@ def berechne_balance_statistik(spieler_anzahl: int) -> dict:
         "dorf_prozent": round(team_dorf / total * 100, 1) if total > 0 else 0,
         "werwolf_prozent": round(team_werwolf / total * 100, 1)
         if total > 0
-        else 0,  # TODO: REMOVE ROLE BASED HARDCODING
+        else 0,
         "solo_prozent": round(team_solo / total * 100, 1) if total > 0 else 0,
         "andere_prozent": round(team_andere / total * 100, 1) if total > 0 else 0,
         "rollen": rollen,

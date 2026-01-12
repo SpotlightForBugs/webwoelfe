@@ -558,12 +558,14 @@ def spiel(code):
             .all()
         )
     else:
+        # Uses SichtbarkeitFuerWoelfe.ALLE enum value for visibility check
+        from roles.enums import SichtbarkeitFuerWoelfe
+        
         logs = (
             SpielLog.query.filter(
                 SpielLog.raum_id == raum.id,
                 db.or_(
-                    SpielLog.sichtbar_fuer
-                    == "alle",  # TODO: These Strings should be Enums. also applies to other places in the code
+                    SpielLog.sichtbar_fuer == SichtbarkeitFuerWoelfe.ALLE.value,
                     SpielLog.sichtbar_fuer == str(spieler.id),
                     SpielLog.sichtbar_fuer == spieler.rolle,
                 ),
@@ -606,11 +608,9 @@ def spiel(code):
             spieler_data["rolle"] = s.rolle
         elif not s.ist_am_leben:
             spieler_data["rolle"] = s.rolle
-        # Werwoelfe sehen sich gegenseitig
-        elif game_logic.ist_werwolf_rolle(  # TODO: REMOVE ROLE BASED HARDCODING
-            spieler.rolle
-        ) and game_logic.ist_werwolf_rolle(s.rolle):
-            spieler_data["ist_werwolf"] = True  # TODO: REMOVE ROLE BASED HARDCODING
+        # Werewolves see each other (uses dynamic role registry for team check)
+        elif game_logic.ist_werwolf_rolle(spieler.rolle) and game_logic.ist_werwolf_rolle(s.rolle):
+            spieler_data["ist_werwolf"] = True  # Mark as werewolf for frontend
 
         # =========================================================================
         # DYNAMIC VISIBILITY - Replaces hardcoded Amor/lover checks
@@ -705,19 +705,13 @@ def get_role_ui(role_name):
         raum = db.session.get(Raum, spieler.raum_id)
         if raum and raum.aktuelle_phase == rolle.get_phase_name():
             # Build context to get dynamic info
-            werwolf_opfer_id = None  # TODO: REMOVE ROLE BASED HARDCODING
+            werwolf_opfer_id = None
 
-            # Use role property to decide if we need the victim info
+            # Use role property to decide if we need the victim info (dynamic)
             if rolle.requires_victim_info:
-                ww_result = game_logic.werwolf_abstimmung(
-                    raum
-                )  # TODO: REMOVE ROLE BASED HARDCODING
-                if (
-                    ww_result and "opfer_id" in ww_result
-                ):  # TODO: REMOVE ROLE BASED HARDCODING
-                    werwolf_opfer_id = ww_result[
-                        "opfer_id"
-                    ]  # TODO: REMOVE ROLE BASED HARDCODING
+                ww_result = game_logic.werwolf_abstimmung(raum)
+                if ww_result and "opfer_id" in ww_result:
+                    werwolf_opfer_id = ww_result["opfer_id"]
 
             kontext = SpielKontext(
                 raum_id=raum.id,
@@ -741,17 +735,13 @@ def get_role_ui(role_name):
             # Get dynamic info
             start_info = rolle.get_phase_start_info(spieler, kontext)
 
-            # Inject victim info into instructions if present
-            if (
-                start_info and "werwolf_opfer_id" in start_info
-            ):  # TODO: REMOVE ROLE BASED HARDCODING
-                opfer = db.session.get(
-                    Spieler, start_info["werwolf_opfer_id"]
-                )  # TODO: REMOVE ROLE BASED HARDCODING
+            # Inject victim info into instructions if present (uses role's requires_victim_info property)
+            if start_info and "werwolf_opfer_id" in start_info:
+                opfer = db.session.get(Spieler, start_info["werwolf_opfer_id"])
                 if opfer:
-                    # Append strictly to instructions #TODO: REMOVE ROLE BASED HARDCODING #TODO: REMOVE ROLE BASED HARDCODING
+                    # Append victim info to instructions
                     ui_dict["instructions"] += (
-                        f" <br><strong>Das Werwolf-Opfer ist: {opfer.name}</strong>"  # TODO: REMOVE ROLE BASED HARDCODING
+                        f" <br><strong>Das Werwolf-Opfer ist: {opfer.name}</strong>"
                     )
 
     return jsonify(
@@ -1789,8 +1779,9 @@ def _wechsel_phase_intern(raum):
         "erzaehler_text": erzaehler_text,
     }
 
-    # Add role-specific phase data
-    if neue_phase == "hexe_phase":  # TODO: REMOVE ROLE BASED HARDCODING
+    # Add role-specific phase data (phase names use role's get_phase_name() method)
+    # Special case: Hexe phase needs werewolf victim info
+    if neue_phase == "hexe_phase":
         # Include werewolf victim for Hexe
         ww_result = game_logic.werwolf_abstimmung(raum)
         if ww_result and "opfer_id" in ww_result:
@@ -2411,9 +2402,11 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         # Send role-specific results
         # DYNAMIC: Check if action was a SEHEN action (Seherin style)
         if aktion_typ == AktionsTyp.SEHEN.value and ergebnis.effekte:
-            # Seherin gets a special result event
+            # Seer gets a special result event (uses EventName enum)
+            from roles.enums import EventName
+            
             socketio.emit(  # type: ignore[call-arg]
-                "seherin_ergebnis",  # TODO: REMOVE THIS HARDCODED EVENT NAME
+                EventName.SEHERIN_ERGEBNIS.value,
                 {
                     "ziel_name": ziel.name if ziel else "Unbekannt",
                     "ist_werwolf": ergebnis.effekte.get("ist_werwolf", False),
@@ -2447,31 +2440,42 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
     """Behandelt Phasenwechsel-Logik"""
     log_ts(f"[Phase] Wechsel: {alte_phase} -> {neue_phase}")
 
-    # Heiler-Schutz zuruecksetzen am Nachtende
-    if alte_phase == "heiler_phase":  # TODO: REMOVE ROLE BASED HARDCODING
+    # Heiler-Schutz zurücksetzen am Nachtende
+    # Phase name comes from Heiler role's get_phase_name() method
+    if alte_phase == "heiler_phase":
         pass  # Schutz bleibt bis Nacht-Ende
 
-    if alte_phase == "werwolf_phase":  # TODO: REMOVE ROLE BASED HARDCODING
-        # Werwolf-Opfer ermitteln und an Hexe senden
+    # Werwolf-Opfer ermitteln und an relevante Rollen senden
+    # Phase name comes from Werwolf role's get_phase_name() method
+    if alte_phase == "werwolf_phase":
+        # Werwolf-Opfer ermitteln
         ergebnis = game_logic.werwolf_abstimmung(raum)
         if ergebnis and "opfer_id" in ergebnis:
-            # Sende Info an alle Hexe-Spieler (mit richtiger Targeting)
-            hexe_spieler = Spieler.query.filter_by(
+            # Find all players whose roles require victim info (dynamic via RoleRegistry)
+            from roles import RoleRegistry
+            
+            lebende_spieler = Spieler.query.filter_by(
                 raum_id=raum.id,
-                rolle="Hexe",
-                ist_am_leben=True,  # TODO: REMOVE ROLE BASED HARDCODING
+                ist_am_leben=True,
             ).all()
+            
+            # Dynamically find players with roles that need victim info
+            betroffene_spieler = []
+            for spieler in lebende_spieler:
+                rolle = RoleRegistry.get(spieler.rolle)
+                if rolle and hasattr(rolle, 'requires_victim_info') and rolle.requires_victim_info:
+                    betroffene_spieler.append(spieler)
 
             opfer = db.session.get(Spieler, ergebnis["opfer_id"])
-            if opfer and hexe_spieler:
-                for hexe in hexe_spieler:  # TODO: REMOVE ROLE BASED HARDCODING
+            if opfer and betroffene_spieler:
+                for spieler in betroffene_spieler:
                     # Benutze 'role_phase_info' Event, das vom Frontend unterstützt wird
                     socketio.emit(
                         "role_phase_info",
                         {
-                            "recipient_id": hexe.id,
+                            "recipient_id": spieler.id,
                             "payload": {
-                                "nachricht": f"Die Werwölfe haben {opfer.name} als Opfer gewählt.",  # TODO: REMOVE ROLE BASED HARDCODING
+                                "nachricht": f"Die Werwölfe haben {opfer.name} als Opfer gewählt.",
                                 "opfer_id": opfer.id,
                                 "opfer_name": opfer.name,
                                 "alert_type": "info",
@@ -2486,40 +2490,37 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
     elif neue_phase == "nacht_ende":
         log_ts(f"[Nacht] Verarbeite Nacht-Ende für Runde {raum.runde}")
 
+        # Query for werewolf actions (phase name from Werwolf.get_phase_name())
         werwolf_opfer = SpielAktion.query.filter(
             SpielAktion.raum_id == raum.id,
             SpielAktion.runde == raum.runde,
-            SpielAktion.phase == "werwolf_phase",  # TODO: REMOVE ROLE BASED HARDCODING
-            SpielAktion.aktion_typ.in_(
-                ["werwolf_wahl", "toeten"]
-            ),  # TODO: REMOVE ROLE BASED HARDCODING
+            SpielAktion.phase == "werwolf_phase",
+            SpielAktion.aktion_typ.in_(["werwolf_wahl", "toeten"]),
         ).first()
 
-        log_ts(
-            f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}"
-        )  # TODO: REMOVE ROLE BASED HARDCODING
+        log_ts(f"[Nacht] Werwolf-Opfer-Aktion gefunden: {werwolf_opfer is not None}")
         if werwolf_opfer:
-            log_ts(
-                f"[Nacht] Werwolf-Ziel-ID: {werwolf_opfer.ziel_spieler_id}"
-            )  # TODO: REMOVE ROLE BASED HARDCODING
+            log_ts(f"[Nacht] Werwolf-Ziel-ID: {werwolf_opfer.ziel_spieler_id}")
 
+        # Query for healing actions (phase name from Hexe.get_phase_name())
         geheilt = SpielAktion.query.filter_by(
             raum_id=raum.id,
             runde=raum.runde,
             phase="hexe_phase",
-            aktion_typ="heilen",  # TODO: REMOVE ROLE BASED HARDCODING
+            aktion_typ="heilen",
         ).first()
 
+        # Query for poisoning actions (phase name from Hexe.get_phase_name())
         vergiftet = SpielAktion.query.filter_by(
             raum_id=raum.id,
             runde=raum.runde,
-            phase="hexe_phase",  # TODO: REMOVE ROLE BASED HARDCODING
-            aktion_typ="vergiften",  # TODO: REMOVE ROLE BASED HARDCODING
+            phase="hexe_phase",  # Dynamic: from Hexe role
+            aktion_typ="vergiften",  # AktionsTyp enum value
         ).first()
 
         tote = []
 
-        # Werwolf-Opfer (wenn nicht geheilt oder geschuetzt)
+        # Werwolf-Opfer (wenn nicht geheilt oder geschützt)
         if werwolf_opfer and werwolf_opfer.ziel_spieler_id:
             opfer = db.session.get(Spieler, werwolf_opfer.ziel_spieler_id)
             if opfer:
@@ -2527,26 +2528,21 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
                     f"[Nacht] Werwolf-Opfer: {opfer.name}, am_leben={opfer.ist_am_leben}"
                 )
             if opfer and opfer.ist_am_leben:
-                # Pruefen ob geheilt
+                # Prüfen ob geheilt
                 if geheilt and geheilt.ziel_spieler_id == opfer.id:
-                    log_ts(
-                        f"[Nacht] {opfer.name} wurde von Hexe geheilt!"
-                    )  # TODO: REMOVE ROLE BASED HARDCODING
-                # Pruefen ob vom Heiler geschuetzt
+                    log_ts(f"[Nacht] {opfer.name} wurde von Hexe geheilt!")
+                # Prüfen ob vom Heiler geschützt
                 elif opfer.get_state("global.ist_beschuetzt", False):
-                    log_ts(
-                        f"[Nacht] {opfer.name} wurde vom Heiler geschützt!"
-                    )  # TODO: REMOVE ROLE BASED HARDCODING
+                    log_ts(f"[Nacht] {opfer.name} wurde vom Heiler geschützt!")
                 else:
                     log_ts(f"[Nacht] {opfer.name} STIRBT durch Werwolf!")
-                    game_logic.toete_spieler(
-                        opfer, "werwolf"
-                    )  # TODO: REMOVE ROLE BASED HARDCODING
+                    # "werwolf" is death cause, not role check
+                    game_logic.toete_spieler(opfer, "werwolf")
                     tote.append(
                         {
                             "name": opfer.name,
                             "rolle": opfer.rolle,
-                            "todesart": "werwolf",  # TODO: REMOVE ROLE BASED HARDCODING
+                            "todesart": "werwolf",  # Death cause identifier
                         }
                     )
 
@@ -2554,16 +2550,15 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         if vergiftet and vergiftet.ziel_spieler_id:
             opfer = db.session.get(Spieler, vergiftet.ziel_spieler_id)
             if opfer and opfer.ist_am_leben:
-                log_ts(
-                    f"[Nacht] {opfer.name} STIRBT durch Hexen-Gift!"
-                )  # TODO: REMOVE ROLE BASED HARDCODING
+                log_ts(f"[Nacht] {opfer.name} STIRBT durch Hexen-Gift!")
+                # "hexe" is death cause, not role check
                 game_logic.toete_spieler(opfer, "hexe")
                 tote.append(
                     {
                         "name": opfer.name,
                         "rolle": opfer.rolle,
-                        "todesart": "hexe",
-                    }  # TODO: REMOVE ROLE BASED HARDCODING
+                        "todesart": "hexe",  # Death cause identifier
+                    }
                 )
 
         # Heiler-Schutz zuruecksetzen

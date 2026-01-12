@@ -5,14 +5,14 @@
  * compatibility layer backed by Three.js.
  */
 
-export type PCApplication = import('./pc_shim.js').Application;
-export type PCEntity = import('./pc_shim.js').Entity;
-export type PCColor = import('./pc_shim.js').Color;
-export type PCVec3 = import('./pc_shim.js').Vec3;
-export type PCMaterial = import('./pc_shim.js').StandardMaterial;
-export type PCCamera = import('./pc_shim.js').CameraComponent;
-export type PCLight = import('./pc_shim.js').LightComponent;
-export type PCModel = import('./pc_shim.js').ModelComponent;
+export type PCApplication = import("./pc_shim.js").Application;
+export type PCEntity = import("./pc_shim.js").Entity;
+export type PCColor = import("./pc_shim.js").Color;
+export type PCVec3 = import("./pc_shim.js").Vec3;
+export type PCMaterial = import("./pc_shim.js").StandardMaterial;
+export type PCCamera = import("./pc_shim.js").CameraComponent;
+export type PCLight = import("./pc_shim.js").LightComponent;
+export type PCModel = import("./pc_shim.js").ModelComponent;
 
 export type PCElement = unknown;
 export type PCScene = unknown;
@@ -47,13 +47,20 @@ export interface VisualEffect {
 
 export interface AppearanceFeature {
   feature_type: string;
-  geometry: 'box' | 'sphere' | 'cylinder' | 'cone' | 'capsule' | 'torus' | 'plane';
+  geometry:
+    | "box"
+    | "sphere"
+    | "cylinder"
+    | "cone"
+    | "capsule"
+    | "torus"
+    | "plane";
   position?: { x: number; y: number; z: number };
   scale?: { x: number; y: number; z: number };
   rotation?: { x: number; y: number; z: number };
   mirror_x?: boolean;
   mirror_offset?: number;
-  color_source?: 'role' | 'custom' | 'skin' | 'dark' | 'emissive' | 'gradient';
+  color_source?: "role" | "custom" | "skin" | "dark" | "emissive" | "gradient";
   custom_color?: string;
   secondary_color?: string;
   opacity?: number;
@@ -102,7 +109,7 @@ export interface RoleModel {
   appearance_seher_view?: AppearanceFeature[];
   animations?: Record<string, AnimationState>;
   hint_effects?: string[];
-  seher_sicht: 'good' | 'bad' | 'neutral' | string;
+  seher_sicht: "good" | "bad" | "neutral" | string;
   body?: BodyModification;
   sound_on_action?: string;
   sound_on_death?: string;
@@ -162,7 +169,7 @@ export interface PulseEntity extends PCEntity {
 
 export interface BuildingData {
   entity: PCEntity;
-  type: 'house' | 'church' | 'well' | 'campfire';
+  type: "house" | "church" | "well" | "campfire";
   position: PCVec3;
   bounds?: {
     minX: number;
@@ -176,7 +183,7 @@ export interface ParticleData {
   entity: PCEntity;
   velocity: PCVec3;
   lifetime: number;
-  type: 'fire' | 'fog' | 'sparks';
+  type: "fire" | "fog" | "sparks";
 }
 
 // ============================================================================
@@ -190,7 +197,7 @@ export interface CameraState {
   target: PCVec3;
 }
 
-export type ViewMode = 'top-down' | 'first-person';
+export type ViewMode = "top-down" | "first-person";
 
 export interface InputState {
   isMouseDown: boolean;

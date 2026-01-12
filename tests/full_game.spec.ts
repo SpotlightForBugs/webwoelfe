@@ -812,7 +812,7 @@ async function handlePhase(
     normalizedPhase.includes("prostituierte") ||
     normalizedPhase.includes("nutte")
   ) {
-    await handleHurePhase(players);
+    await handleHurePhase(players, phase);
     return;
   }
 
@@ -943,6 +943,20 @@ async function handlePhase(
 
   if (normalizedPhase.includes("henker")) {
     await handleHenkerPhase(players);
+    return;
+  }
+
+  // Group recognition phases (no action required - just skip)
+  if (
+    normalizedPhase.includes("drei_brueder") ||
+    normalizedPhase.includes("drei_brüder") ||
+    normalizedPhase.includes("zwei_schwestern") ||
+    normalizedPhase.includes("freimaurer") ||
+    normalizedPhase.includes("flüchtlinge") ||
+    normalizedPhase.includes("fluechtlinge")
+  ) {
+    log(`  👥 Gruppen-Erkennungs-Phase (${phase}): Warten auf Auto-Skip...`);
+    await sleep(PHASE_DELAY_MS);
     return;
   }
 
@@ -1104,71 +1118,146 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
-  // Hide any existing alert before action so we can detect new ones
-  await dieb.page.evaluate(() => {
-    const el = document.getElementById('status-nachricht');
-    if (el) {
-      el.style.display = 'none';
-      el.className = '';
-      el.textContent = '';
-    }
-  });
-
-  // Wait a bit for UI to load
-  await sleep(1000);
-
-  // Dieb can choose from leftover roles or skip
-  // Try various skip/pass buttons first
-  const skipBtn = dieb.page
-    .locator(
-      'button:has-text("Überspringen"), button:has-text("Behalten"), button:has-text("Weiter"), button:has-text("Passen")',
-    )
-    .first();
-  if (await skipBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await skipBtn.click();
-
-    // Wait for the action to be confirmed
-    const alertElement = dieb.page.locator('#status-nachricht');
-    await alertElement.waitFor({ state: 'visible', timeout: 30000 });
-
-    log("    Dieb behält seine Rolle");
-    return;
-  }
-
-  // No skip button - try to find and click on a role option/card
-  const roleCard = dieb.page.locator('.rolle-card, .role-option, .role-choice, [data-role]').first();
-  if (await roleCard.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await roleCard.click();
-    await sleep(500);
-
-    // Click confirm button after selecting role
-    const confirmBtn = dieb.page.locator('button:has-text("Rolle wählen"), button:has-text("Wählen"), button:has-text("Bestätigen")').first();
-    if (await confirmBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await confirmBtn.click();
+  try {
+    // Strategy 1: Wait for action buttons area
+    let actionPanel = dieb.page.locator('#action-panel, .action-panel').first();
+    let waitedForPanel = false;
+    
+    if (!(await actionPanel.isVisible({ timeout: 2000 }).catch(() => false))) {
+      log("    ℹ️ Action-Panel nicht direkt sichtbar, suche alternative Buttons...");
+    } else {
+      waitedForPanel = true;
+      log("    ℹ️ Action-Panel gefunden");
     }
 
-    // Wait for the action to be confirmed
-    const alertElement = dieb.page.locator('#status-nachricht');
-    await alertElement.waitFor({ state: 'visible', timeout: 30000 });
+    // Get all buttons and filter for role choices
+    const allButtons = await dieb.page.locator('button').all();
+    const roleChoiceButtons: { element: any; text: string }[] = [];
 
-    log("    Dieb hat eine Rolle gestohlen");
-    return;
+    // Common action button texts to exclude
+    const actionButtonTexts = [
+      'Bestätigen', 'Bestätigung', 'Confirm',
+      'Überspringen', 'Skip', 'Weiter', 'Continue', 'Next',
+      'Nichts tun', 'Do nothing', 'Abbrechen', 'Cancel',
+      'OK', 'Ja', 'Nein', 'Yes', 'No',
+      'Senden', 'Send', 'Ablehnen', 'Accept', 'Annehmen',
+      'Heilen', 'Heal', 'Töten', 'Kill', 'Vergiften', 'Poison',
+      'Wählen', 'Choose'  // Generic choice button - usually paired with role selection
+    ];
+
+    for (const btn of allButtons) {
+      const isVisible = await btn.isVisible({ timeout: 300 }).catch(() => false);
+      if (!isVisible) continue;
+
+      const text = (await btn.textContent({ timeout: 300 }).catch(() => '')) || '';
+      const trimmedText = text.trim();
+      
+      if (!trimmedText) continue;
+
+      // Check if this looks like a generic action button
+      const isGenericAction = actionButtonTexts.some(action => 
+        trimmedText.toLowerCase().includes(action.toLowerCase())
+      );
+
+      if (isGenericAction) {
+        // Skip generic action buttons, unless it's just "Wählen" and it's alone
+        if (trimmedText.toLowerCase() === 'wählen' && roleChoiceButtons.length === 0) {
+          // Might be a "choose" button for selected role - skip for now
+          continue;
+        }
+        continue;
+      }
+
+      // Check that button is in action area or not in erzähler/sidebar
+      const isInActionArea = await btn.evaluate(el => {
+        let parent = el.parentElement;
+        let depth = 0;
+        while (parent && depth < 6) {
+          if (parent.id === 'action-buttons' || parent.className?.includes('action')) {
+            return true;
+          }
+          if (parent.id?.includes('erzaehler') || parent.className?.includes('sidebar')) {
+            return false;
+          }
+          parent = parent.parentElement;
+          depth++;
+        }
+        return true; // Assume valid if no specific area detected
+      });
+
+      if (isInActionArea) {
+        roleChoiceButtons.push({ element: btn, text: trimmedText });
+      }
+    }
+
+    log(`    ℹ️ Gefundene Rollenwahlbuttons: ${roleChoiceButtons.length}`);
+    if (roleChoiceButtons.length > 0) {
+      roleChoiceButtons.forEach((btn, i) => log(`      ${i + 1}. ${btn.text}`));
+    }
+
+    if (roleChoiceButtons.length < 1) {
+      // Even if we don't find role buttons, try to find ANY clickable element that might be a choice
+      log(`    ⚠️ Keine Rollen-Buttons gefunden, versuche alternative Findung...`);
+      
+      // Try clicking on any card or element that represents a choice
+      const cards = await dieb.page.locator('[data-role], .role-option, .choice-button').all();
+      if (cards.length >= 2) {
+        log(`    ℹ️ Gefundene ${cards.length} Role-Cards, wähle eines...`);
+        const choice = randomChoice(cards);
+        await choice.click();
+        await sleep(1000);
+      } else {
+        log(`    ⚠️ Keine Rollenwahloptionen gefunden - Phase wird übersprungen`);
+        await sleep(PHASE_DELAY_MS);
+        return;
+      }
+    } else {
+      // We found role buttons - select randomly
+      if (roleChoiceButtons.length >= 2) {
+        const choice = randomChoice(roleChoiceButtons);
+        log(`    ✓ Dieb wählt: "${choice.text}"`);
+        await choice.element.click();
+        await sleep(800);
+      } else if (roleChoiceButtons.length === 1) {
+        // Only one button - might be a confirmation after showing two roles
+        log(`    ℹ️ Nur ein Button gefunden: "${roleChoiceButtons[0].text}", klicke...`);
+        await roleChoiceButtons[0].element.click();
+        await sleep(800);
+      }
+    }
+
+    // After selection, look for confirmation button
+    const confirmButtons = await dieb.page.locator(
+      'button:has-text("Bestätigen"), button:has-text("Confirm"), button:has-text("OK"), button.btn-primary, button:has-text("Wählen")'
+    ).all();
+
+    let confirmed = false;
+    for (const btn of confirmButtons) {
+      const isVisible = await btn.isVisible({ timeout: 500 }).catch(() => false);
+      const text = await btn.textContent({ timeout: 300 }).catch(() => '');
+      
+      if (isVisible && text) {
+        // Prefer "Bestätigen" or "OK" - skip "Wählen" if we have it
+        if (text.toLowerCase().includes('bestätig') || text.toLowerCase().includes('ok') || text.toLowerCase().includes('confirm')) {
+          log(`    ✓ Klicke Bestätigungsbutton: "${text.trim()}"`);
+          await btn.click();
+          confirmed = true;
+          await sleep(500);
+          break;
+        }
+      }
+    }
+
+    if (!confirmed) {
+      log(`    ℹ️ Kein Bestätigungsbutton gefunden - Aktion möglicherweise bereits abgeschlossen`);
+    }
+
+  } catch (e) {
+    const errorMsg = e instanceof Error ? e.message : String(e);
+    log(`    ⚠️ Fehler bei Dieb-Phase: ${errorMsg}`);
   }
 
-  // Fallback - click the main action button if available
-  const actionBtn = dieb.page.locator('#action-buttons button').first();
-  if (await actionBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await actionBtn.click();
-
-    // Wait for the action to be confirmed
-    const alertElement = dieb.page.locator('#status-nachricht');
-    await alertElement.waitFor({ state: 'visible', timeout: 30000 });
-
-    log("    Dieb hat Aktion ausgeführt");
-    return;
-  }
-
-  log("    ⚠️ Keine Interaktion für Dieb gefunden - Phase muss manuell weitergehen");
+  await sleep(PHASE_DELAY_MS);
 }
 
 async function handleDoppelgaengerPhase(
@@ -1210,7 +1299,7 @@ async function handlePriesterPhase(players: PlayerWindow[]): Promise<void> {
   }
 
   // Dunkler Priester needs to select TWO players to make them fall in love
-  const otherPlayers = players.filter((p) => p !== priester);
+  const otherPlayers = players.filter((p) => p !== priester && p.isAlive);
   if (otherPlayers.length < 2) {
     log("    Zu wenige Spieler für Dunkler Priester");
     return;
@@ -1221,20 +1310,62 @@ async function handlePriesterPhase(players: PlayerWindow[]): Promise<void> {
   const target1 = shuffled[0];
   const target2 = shuffled[1];
 
-  // Select first player
-  await selectTargetAndConfirm(priester.page, target1.name, [
-    "Verlieben",
-    "Wählen",
-  ]);
-  await sleep(300);
+  try {
+    // Dunkler Priester muss 2 Spieler auswählen (wie Amor)
+    // Klicke auf ersten Spieler
+    const card1 = priester.page.locator(
+      `.spieler-card[data-name="${target1.name}"]`,
+    );
+    if (await card1.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await card1.click();
+      log(`    Erster Liebhaber ausgewählt: ${target1.name}`);
+      await sleep(500);
+    } else {
+      // Fallback: Suche nach Text
+      const card1Alt = priester.page
+        .locator(`.spieler-card:has-text("${target1.name}")`)
+        .first();
+      if (await card1Alt.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await card1Alt.click();
+        log(`    Erster Liebhaber ausgewählt: ${target1.name}`);
+        await sleep(500);
+      }
+    }
 
-  // Select second player
-  await selectTargetAndConfirm(priester.page, target2.name, [
-    "Verlieben",
-    "Wählen",
-  ]);
+    // Klicke auf zweiten Spieler
+    const card2 = priester.page.locator(
+      `.spieler-card[data-name="${target2.name}"]`,
+    );
+    if (await card2.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await card2.click();
+      log(`    Zweiter Liebhaber ausgewählt: ${target2.name}`);
+      await sleep(500);
+    } else {
+      // Fallback: Suche nach Text
+      const card2Alt = priester.page
+        .locator(`.spieler-card:has-text("${target2.name}")`)
+        .first();
+      if (await card2Alt.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await card2Alt.click();
+        log(`    Zweiter Liebhaber ausgewählt: ${target2.name}`);
+        await sleep(500);
+      }
+    }
 
-  log(`    Dunkler Priester verliebt ${target1.name} und ${target2.name}`);
+    // Warte kurz bis die UI aktualisiert ist (2/2 Spieler ausgewählt)
+    await sleep(800);
+
+    // Jetzt sollte der "Verlieben" Button erscheinen
+    const actionBtn = priester.page.locator('button:has-text("Verlieben")').first();
+    if (await actionBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await actionBtn.click();
+      log(`    🖤 Dunkler Priester verliebt ${target1.name} und ${target2.name}`);
+    } else {
+      log("    ❌ Verlieben-Button nicht gefunden");
+    }
+  } catch (error) {
+    log(`    ❌ Fehler bei Dunkler Priester: ${error}`);
+  }
 }
 
 async function handleWildesKindPhase(players: PlayerWindow[]): Promise<void> {
@@ -1336,6 +1467,7 @@ async function handleSeherVariantPhase(
   const target = getRandomTarget(players, seher, !shouldTargetWrong());
   const success = await selectTargetAndConfirm(seher.page, target.name, [
     "Aura sehen",
+    "Vision",
     "Sehen",
     "Wählen",
     "Prüfen",
@@ -1475,14 +1607,33 @@ async function handleHeilerVariantPhase(
   );
 }
 
-async function handleHurePhase(players: PlayerWindow[]): Promise<void> {
+async function handleHurePhase(players: PlayerWindow[], phaseName?: string): Promise<void> {
   log("  💋 Hure/Prostituierte-Phase: Besuche Spieler... ()");
 
-  const hure = findPlayerByRole(players, ["Hure", "Prostituierte", "Nutte"]);
+  // If phase name is provided, try to match specific variant first
+  let hure: PlayerWindow | undefined;
+  if (phaseName) {
+    const normalizedPhaseName = phaseName.toLowerCase().replace(/_/g, "");
+    if (normalizedPhaseName.includes("hure")) {
+      hure = findPlayerByRole(players, ["Hure"]);
+    } else if (normalizedPhaseName.includes("nutte")) {
+      hure = findPlayerByRole(players, ["Nutte"]);
+    } else if (normalizedPhaseName.includes("prostituierte")) {
+      hure = findPlayerByRole(players, ["Prostituierte"]);
+    }
+  }
+  
+  // Fallback to any matching role
+  if (!hure) {
+    hure = findPlayerByRole(players, ["Hure", "Prostituierte", "Nutte"]);
+  }
+  
   if (!hure) {
     log("    Keine Hure im Spiel");
     return;
   }
+
+  log(`    Gefunden: ${hure.name} (${hure.rolle})`);
 
   if (shouldSkipAction()) {
     log("    ⚠️ [RANDOM] Hure überspringt");
@@ -1491,7 +1642,7 @@ async function handleHurePhase(players: PlayerWindow[]): Promise<void> {
 
   const target = getRandomTarget(players, hure, !shouldTargetWrong());
   await selectTargetAndConfirm(hure.page, target.name, ["Besuchen", "Wählen"]);
-  log(`    Hure besucht ${target.name} (am Leben: ${target.isAlive})`);
+  log(`    ${hure.rolle} besucht ${target.name} (am Leben: ${target.isAlive})`);
 }
 
 // ============================================================================
@@ -2034,12 +2185,32 @@ async function handleHenkerPhase(players: PlayerWindow[]): Promise<void> {
     return;
   }
 
+  log(`    DEBUG: Henker gefunden: ${henker.name} (Rolle: ${henker.rolle})`);
+
   if (shouldSkipAction()) {
     log("    ⚠️ [RANDOM] Henker überspringt");
     return;
   }
 
   const target = getRandomTarget(players, henker, !shouldTargetWrong());
+  log(`    DEBUG: Ziel ausgewählt: ${target.name}`);
+  
+  // Wait for UI to be ready
+  await sleep(1000);
+  
+  // Check if Henker's page is active for this phase
+  const hasUI = await henker.page.evaluate(() => {
+    const panel = document.querySelector('.action-panel, .aktions-panel');
+    return panel !== null && panel.textContent?.includes('Henker');
+  }).catch(() => false);
+  
+  log(`    DEBUG: Hat Henker UI? ${hasUI}`);
+  
+  if (!hasUI) {
+    log("    ⚠️ Henker hat noch keine Aktions-UI, warte...");
+    await sleep(2000);
+  }
+
   await selectTargetAndConfirm(henker.page, target.name, [
     "Ziel wählen",
     "Wählen",

@@ -71,7 +71,9 @@ class MockRaum:
     runde: int = 1
 
 
-def create_kontext(lebende: List[MockSpieler], tote: List[MockSpieler] = None) -> SpielKontext:
+def create_kontext(
+    lebende: List[MockSpieler], tote: List[MockSpieler] = None
+) -> SpielKontext:
     """Create a SpielKontext for testing."""
     tote = tote or []
     return SpielKontext(
@@ -99,14 +101,15 @@ class TestVillageWinConditions:
             MockSpieler(2, "Bob", "Seherin"),
             MockSpieler(3, "Charlie", "Hexe"),
         ]
-        
-        with patch('game_logic.hole_lebende_spieler', return_value=lebende):
-            with patch('game_logic.Spieler') as mock_spieler:
+
+        with patch("game_logic.hole_lebende_spieler", return_value=lebende):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = lebende
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 assert result is not None
                 assert result["team"] == "dorf"
 
@@ -117,14 +120,15 @@ class TestVillageWinConditions:
             MockSpieler(1, "Alice", "Dorfbewohner"),
             MockSpieler(2, "Bob", "Flötenspieler"),  # Solo role
         ]
-        
-        with patch('game_logic.hole_lebende_spieler', return_value=lebende):
-            with patch('game_logic.Spieler') as mock_spieler:
+
+        with patch("game_logic.hole_lebende_spieler", return_value=lebende):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = lebende
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 # Game should continue or solo wins
                 # Village doesn't auto-win with solo alive
                 if result is not None:
@@ -133,14 +137,15 @@ class TestVillageWinConditions:
     def test_village_wins_single_survivor(self):
         """Village wins with single villager survivor and no threats."""
         lebende = [MockSpieler(1, "Alice", "Dorfbewohner")]
-        
-        with patch('game_logic.hole_lebende_spieler', return_value=lebende):
-            with patch('game_logic.Spieler') as mock_spieler:
+
+        with patch("game_logic.hole_lebende_spieler", return_value=lebende):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = lebende
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 assert result is not None
                 assert result["team"] == "dorf"
 
@@ -160,14 +165,15 @@ class TestWerewolfWinConditions:
             MockSpieler(2, "Wolf2", "Werwolf"),
             MockSpieler(3, "Villager", "Dorfbewohner"),
         ]
-        
-        with patch('game_logic.hole_lebende_spieler', return_value=lebende):
-            with patch('game_logic.Spieler') as mock_spieler:
+
+        with patch("game_logic.hole_lebende_spieler", return_value=lebende):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = lebende
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 assert result is not None
                 assert result["team"] == "werwolf"
 
@@ -177,28 +183,30 @@ class TestWerewolfWinConditions:
             MockSpieler(1, "Wolf1", "Werwolf"),
             MockSpieler(2, "Villager", "Dorfbewohner"),
         ]
-        
-        with patch('game_logic.hole_lebende_spieler', return_value=lebende):
-            with patch('game_logic.Spieler') as mock_spieler:
+
+        with patch("game_logic.hole_lebende_spieler", return_value=lebende):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = lebende
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 assert result is not None
                 assert result["team"] == "werwolf"
 
     def test_werewolves_win_last_survivor(self):
         """Werewolf wins as last survivor."""
         lebende = [MockSpieler(1, "Wolf", "Werwolf")]
-        
-        with patch('game_logic.hole_lebende_spieler', return_value=lebende):
-            with patch('game_logic.Spieler') as mock_spieler:
+
+        with patch("game_logic.hole_lebende_spieler", return_value=lebende):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = lebende
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 assert result is not None
                 # Single wolf = wolf majority
                 assert result["team"] == "werwolf"
@@ -216,19 +224,20 @@ class TestLoversWinConditions:
         """Lovers win when they are the last 2 survivors."""
         lover1 = MockSpieler(1, "Lover1", "Werwolf")
         lover2 = MockSpieler(2, "Lover2", "Dorfbewohner")
-        
+
         lover1.set_state("global.verliebt_mit_id", 2)
         lover2.set_state("global.verliebt_mit_id", 1)
-        
+
         lebende = [lover1, lover2]
-        
-        with patch('game_logic.hole_lebende_spieler', return_value=lebende):
-            with patch('game_logic.Spieler') as mock_spieler:
+
+        with patch("game_logic.hole_lebende_spieler", return_value=lebende):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = lebende
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 assert result is not None
                 assert result["team"] == "verliebte"
 
@@ -237,19 +246,20 @@ class TestLoversWinConditions:
         # Wolf + Villager lovers
         lover1 = MockSpieler(1, "WolfLover", "Werwolf")
         lover2 = MockSpieler(2, "VillageLover", "Seherin")
-        
+
         lover1.set_state("global.verliebt_mit_id", 2)
         lover2.set_state("global.verliebt_mit_id", 1)
-        
+
         lebende = [lover1, lover2]
-        
-        with patch('game_logic.hole_lebende_spieler', return_value=lebende):
-            with patch('game_logic.Spieler') as mock_spieler:
+
+        with patch("game_logic.hole_lebende_spieler", return_value=lebende):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = lebende
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 assert result is not None
                 assert result["team"] == "verliebte"
 
@@ -258,16 +268,17 @@ class TestLoversWinConditions:
         player1 = MockSpieler(1, "Player1", "Werwolf")
         player2 = MockSpieler(2, "Player2", "Dorfbewohner")
         # No lover state set
-        
+
         lebende = [player1, player2]
-        
-        with patch('game_logic.hole_lebende_spieler', return_value=lebende):
-            with patch('game_logic.Spieler') as mock_spieler:
+
+        with patch("game_logic.hole_lebende_spieler", return_value=lebende):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = lebende
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 # Should be werewolf win, not lovers
                 assert result is not None
                 assert result["team"] == "werwolf"
@@ -284,19 +295,19 @@ class TestSoloWinConditions:
     def test_solo_role_berechne_gewinn(self):
         """Solo roles should implement berechne_gewinn correctly."""
         from roles import RoleRegistry
-        
+
         solo_roles = ["Flötenspieler", "Henker", "Selbstmörder"]
-        
+
         for role_name in solo_roles:
             role = RoleRegistry.get(role_name)
             if role:
                 # Solo roles should have Team.SOLO
-                assert role.info.team == Team.SOLO, \
-                    f"{role_name} should be Team.SOLO"
-                
+                assert role.info.team == Team.SOLO, f"{role_name} should be Team.SOLO"
+
                 # Should have berechne_gewinn method
-                assert hasattr(role, 'berechne_gewinn'), \
+                assert hasattr(role, "berechne_gewinn"), (
                     f"{role_name} should have berechne_gewinn method"
+                )
 
 
 # ============================================================================
@@ -309,13 +320,14 @@ class TestEdgeCases:
 
     def test_no_survivors_draw(self):
         """No survivors results in a draw."""
-        with patch('game_logic.hole_lebende_spieler', return_value=[]):
-            with patch('game_logic.Spieler') as mock_spieler:
+        with patch("game_logic.hole_lebende_spieler", return_value=[]):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = []
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 assert result is not None
                 assert result["gewinner"] == "niemand"
 
@@ -324,14 +336,15 @@ class TestEdgeCases:
         # Neutral roles don't win on their own typically
         lebende = [MockSpieler(1, "Neutral", "Dorfbewohner")]
         lebende[0].rolle = "Dorfbewohner"  # Assuming neutral fallback
-        
-        with patch('game_logic.hole_lebende_spieler', return_value=lebende):
-            with patch('game_logic.Spieler') as mock_spieler:
+
+        with patch("game_logic.hole_lebende_spieler", return_value=lebende):
+            with patch("game_logic.Spieler") as mock_spieler:
                 mock_spieler.query.filter_by.return_value.all.return_value = lebende
-                
+
                 from game_logic import pruefe_spielende
+
                 result = pruefe_spielende(MockRaum())
-                
+
                 # Should result in village win
                 assert result is not None
 
@@ -347,35 +360,39 @@ class TestTeamCounting:
     def test_counts_all_werewolf_variants(self):
         """Werewolf role should be in WERWOLF team."""
         from roles import RoleRegistry
-        
+
         # Only "Werwolf" is core WERWOLF team
         # Note: "Weißer Wolf" is SOLO (acts with wolves but wins alone)
         # "Urwolf" is a wolf variant that may or may not exist
         werwolf = RoleRegistry.get("Werwolf")
         assert werwolf is not None
         assert werwolf.info.team == Team.WERWOLF, "Werwolf should be in WERWOLF team"
-        
+
         # Check that Weißer Wolf is correctly categorized as SOLO
         weisser_wolf = RoleRegistry.get("Weißer Wolf")
         if weisser_wolf:
-            assert weisser_wolf.info.team == Team.SOLO, \
+            assert weisser_wolf.info.team == Team.SOLO, (
                 "Weißer Wolf should be in SOLO team (wins alone)"
+            )
             # But should have WERWOLF kategorie for display purposes
             from roles.enums import Kategorie
-            assert weisser_wolf.info.kategorie == Kategorie.WERWOLF, \
+
+            assert weisser_wolf.info.kategorie == Kategorie.WERWOLF, (
                 "Weißer Wolf should have WERWOLF kategorie"
+            )
 
     def test_counts_all_village_roles(self):
         """All village roles should count as dorf team."""
         from roles import RoleRegistry
-        
+
         village_roles = ["Dorfbewohner", "Seherin", "Hexe", "Jäger", "Heiler", "Amor"]
-        
+
         for role_name in village_roles:
             role = RoleRegistry.get(role_name)
             if role:
-                assert role.info.team == Team.DORF, \
+                assert role.info.team == Team.DORF, (
                     f"{role_name} should be in DORF team"
+                )
 
 
 # ============================================================================
@@ -390,17 +407,17 @@ class TestWinConditionPriority:
         """Solo wins should be checked before team majority wins."""
         # This tests the order of checks in pruefe_spielende
         # Solo wins should have priority over team wins
-        
+
         # Create a scenario where both could apply
         # E.g., Flötenspieler has all enchanted AND wolves have majority
         # Flötenspieler should win
-        
+
         from roles import RoleRegistry
-        
+
         floetenspieler = RoleRegistry.get("Flötenspieler")
         if floetenspieler:
             # Verify the role has berechne_gewinn
-            assert hasattr(floetenspieler, 'berechne_gewinn')
+            assert hasattr(floetenspieler, "berechne_gewinn")
 
     def test_lovers_checked_before_team_majority(self):
         """Lovers win should be checked appropriately in order."""
@@ -409,7 +426,7 @@ class TestWinConditionPriority:
         # 2. Solo wins (berechne_gewinn)
         # 3. Lovers (2 survivors linked)
         # 4. Team majority
-        
+
         # This is a documentation test - the order is defined in game_logic.py
         pass
 
@@ -437,7 +454,7 @@ class TestInfectionWinConditions:
         # Create vampires vs village scenario
         # Note: Vampir role may not exist in all configurations
         from roles import RoleRegistry
-        
+
         vampir = RoleRegistry.get("Vampir")
         if vampir:
             assert vampir.info.team == Team.VAMPIR

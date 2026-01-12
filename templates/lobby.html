@@ -516,11 +516,12 @@ spiel_name }}{% endblock %} {% block content %}
 
   // Load Three.js first, then Village3DThree
   const loadThreeJS = async () => {
-    if (typeof window.THREE !== 'undefined') {
+    if (typeof window.THREE !== "undefined") {
       return;
     }
     // Load Three.js as ES module
-    const threeModule = await import('https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js');
+    const threeModule =
+      await import("https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js");
     window.THREE = threeModule;
   };
 
@@ -586,13 +587,14 @@ spiel_name }}{% endblock %} {% block content %}
       }
 
       // Now load Village3DThree (which imports pc_shim.js that needs window.THREE)
-      const module = await import("{{ versioned_url('static', filename='js/village3d/dist/Village3DThree.js') }}");
+      const module =
+        await import("{{ versioned_url('static', filename='js/village3d/dist/Village3DThree.js') }}");
       const Village3DThree = module.default;
 
       window.village3dLobby = new Village3DThree(
         "village-3d-lobby-container",
         "{{ raum.code }}",
-        { lobbyMode: true, startView: 'orbit' } // Simplified view for lobby
+        { lobbyMode: true, startView: "orbit" }, // Simplified view for lobby
       );
 
       // Initiale Spieler laden mit Verzögerung für vollständige Initialisierung
@@ -612,7 +614,7 @@ spiel_name }}{% endblock %} {% block content %}
   const socket = io();
   const raumCode = "{{ raum.code }}";
   const erzaehlerModus = "{{ raum.erzaehler_modus }}";
-  
+
   // Track if game has started to avoid unnecessary API calls during transition
   let gameStarted = false;
   let navigationTimeout = null;
@@ -620,7 +622,7 @@ spiel_name }}{% endblock %} {% block content %}
 
   // Raum beitreten
   socket.emit("raum_beitreten", { code: raumCode });
-  
+
   // Start fallback polling for game start
   startGamePoll();
 
@@ -642,7 +644,7 @@ spiel_name }}{% endblock %} {% block content %}
     if (typeof initSitzordnungFromSpieler === "function") {
       initSitzordnungFromSpieler();
     }
-    
+
     // 3D Dorf aktualisieren (Online-Modus)
     if (window.scheduleVillageUpdate) {
       window.scheduleVillageUpdate();
@@ -718,19 +720,21 @@ spiel_name }}{% endblock %} {% block content %}
   // Fallback: Poll the server to see if game has started and redirect if needed
   function startGamePoll() {
     if (pollInterval) clearInterval(pollInterval);
-    
+
     pollInterval = setInterval(async () => {
       if (gameStarted) {
         clearInterval(pollInterval);
         return;
       }
-      
+
       try {
         const response = await fetch(`/api/raum/${raumCode}/status`);
         if (response.ok) {
           const data = await response.json();
           if (data.spiel_gestartet) {
-            console.log("[Lobby] Game started detected via HTTP poll, navigating...");
+            console.log(
+              "[Lobby] Game started detected via HTTP poll, navigating...",
+            );
             gameStarted = true;
             clearInterval(pollInterval);
             window.location.href = "/spiel/" + raumCode;
@@ -873,7 +877,7 @@ spiel_name }}{% endblock %} {% block content %}
   async function updateRollenVorschau() {
     // Don't fetch if game has already started (we're navigating away)
     if (gameStarted) return;
-    
+
     try {
       const response = await fetch(`/api/rollen_vorschau/${raumCode}`);
       if (!response.ok) return; // Silently ignore HTTP errors during transitions

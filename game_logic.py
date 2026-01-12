@@ -74,13 +74,13 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
 
         # Berechne Anzahl via Lambda
         anzahl = dist.count_func(effektive_anzahl)
-        
+
         # Enforce min/max constraints
         if anzahl > 0:
             # Check Max
             if dist.max_role_count is not None and anzahl > dist.max_role_count:
                 anzahl = dist.max_role_count
-                
+
             # Check Min
             if anzahl < dist.min_role_count:
                 continue
@@ -130,11 +130,16 @@ def verteile_rollen(raum: Raum) -> dict:
 
     # CHECK FOR TEST MODE: Use custom role distribution for comprehensive testing
     import os
+
     test_mode = os.environ.get("TEST_RANDOM_ROLES", "false").lower() == "true"
-    
+
     if test_mode:
-        logger.info(f"[TEST MODE] Using random role distribution for comprehensive testing")
-        rollen_verteilung = _generate_random_role_distribution(spieler_anzahl, bool(erzaehler))
+        logger.info(
+            f"[TEST MODE] Using random role distribution for comprehensive testing"
+        )
+        rollen_verteilung = _generate_random_role_distribution(
+            spieler_anzahl, bool(erzaehler)
+        )
     else:
         rollen_verteilung = berechne_rollen(
             spieler_anzahl + (1 if erzaehler else 0), mit_erzaehler=bool(erzaehler)
@@ -168,40 +173,42 @@ def verteile_rollen(raum: Raum) -> dict:
     return ergebnis
 
 
-def _generate_random_role_distribution(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
+def _generate_random_role_distribution(
+    spieler_anzahl: int, mit_erzaehler: bool = False
+) -> dict:
     """
     Generates a random role distribution for testing ALL roles in the game.
     This ensures comprehensive test coverage across all implemented roles.
     """
     from roles import RoleRegistry
-    
+
     effektive_anzahl = spieler_anzahl
     if mit_erzaehler:
         effektive_anzahl -= 1
-    
+
     if effektive_anzahl <= 0:
         return {"Erzaehler": 1} if mit_erzaehler else {}
-    
+
     # Get all available non-erzaehler roles
     alle_rollen = []
     for role in RoleRegistry.get_all():
         if role.info.name != "Erzaehler":
             alle_rollen.append(role.info.name)
-    
+
     # Shuffle to randomize role selection
     random.shuffle(alle_rollen)
-    
+
     # Essential roles for game to work
     rollen_verteilung = {}
     remaining = effektive_anzahl
-    
+
     # Always add 1-2 werewolves
     werewolf_count = 1 if effektive_anzahl < 10 else 2
     if "Werwolf" in alle_rollen:
         rollen_verteilung["Werwolf"] = werewolf_count
         remaining -= werewolf_count
         alle_rollen.remove("Werwolf")
-    
+
     # Fill with random unique roles (one of each for maximum coverage)
     for rolle in alle_rollen[:remaining]:
         if rolle != "Dorfbewohner":  # Save Dorfbewohner as filler
@@ -209,14 +216,14 @@ def _generate_random_role_distribution(spieler_anzahl: int, mit_erzaehler: bool 
             remaining -= 1
             if remaining == 0:
                 break
-    
+
     # Fill remaining with Dorfbewohner
     if remaining > 0:
         rollen_verteilung["Dorfbewohner"] = remaining
-    
+
     if mit_erzaehler:
         rollen_verteilung["Erzaehler"] = 1
-    
+
     logger.info(f"[TEST MODE] Generated random distribution: {rollen_verteilung}")
     return rollen_verteilung
 
@@ -442,7 +449,9 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
             kontext = SpielKontext(
                 raum_id=spieler.raum_id,
                 runde=raum.runde,
-                phase=Phase.TAG_ABSTIMMUNG if "tag" in raum.aktuelle_phase else Phase.NACHT,
+                phase=Phase.TAG_ABSTIMMUNG
+                if "tag" in raum.aktuelle_phase
+                else Phase.NACHT,
                 aktiver_spieler_id=spieler.id,
                 lebende_spieler=[s.id for s in alle_spieler if s.ist_am_leben],
                 tote_spieler=[s.id for s in alle_spieler if not s.ist_am_leben],
@@ -474,11 +483,11 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
     alle_lebenden = Spieler.query.filter_by(
         raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
     ).all()
-    
+
     for anderer_spieler in alle_lebenden:
         if anderer_spieler.id == spieler.id:
             continue  # Skip the dying player
-            
+
         anderer_role = RoleRegistry.get(anderer_spieler.rolle)
         if anderer_role and hasattr(anderer_role, "handle_anderer_stirbt"):
             try:
@@ -489,33 +498,38 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
                 kontext = SpielKontext(
                     raum_id=raum.id,
                     runde=raum.runde,
-                    phase=Phase.TAG_ABSTIMMUNG if "tag" in raum.aktuelle_phase else Phase.NACHT,
+                    phase=Phase.TAG_ABSTIMMUNG
+                    if "tag" in raum.aktuelle_phase
+                    else Phase.NACHT,
                     aktiver_spieler_id=anderer_spieler.id,
                     lebende_spieler=[s.id for s in alle_spieler if s.ist_am_leben],
                     tote_spieler=[s.id for s in alle_spieler if not s.ist_am_leben],
                 )
-                
+
                 result = anderer_role.handle_anderer_stirbt(
                     anderer_spieler, spieler, todesart, kontext
                 )
-                
+
                 if result and result.erfolg:
                     # Apply state updates
-                    if hasattr(result, 'state_updates') and result.state_updates:
+                    if hasattr(result, "state_updates") and result.state_updates:
                         for state_key, state_value in result.state_updates.items():
                             anderer_spieler.set_state(state_key, state_value)
-                    
+
                     # Check if this triggered a death (e.g., Wildes Kind transforms)
                     if result.effekte.get("stirbt"):
-                        res = toete_spieler(anderer_spieler, result.effekte.get("todesart", "folgeeffekt"))
+                        res = toete_spieler(
+                            anderer_spieler,
+                            result.effekte.get("todesart", "folgeeffekt"),
+                        )
                         tote.extend(res["tote"])
                         folge_aktionen.extend(res["folge_aktionen"])
-                    
+
                     # Add follow-up actions
                     for effect_key, effect_value in result.effekte.items():
                         if effect_value is True and effect_key not in ("stirbt",):
                             folge_aktionen.append(effect_key)
-                    
+
                     if result.nachricht:
                         log_eintrag(
                             raum.id,
@@ -523,7 +537,9 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
                             sichtbar_fuer=result.log_sichtbar_fuer or "alle",
                         )
             except Exception as e:
-                logger.error(f"Error calling handle_anderer_stirbt for {anderer_spieler.rolle}: {e}")
+                logger.error(
+                    f"Error calling handle_anderer_stirbt for {anderer_spieler.rolle}: {e}"
+                )
 
     db.session.commit()
     return {"tote": tote, "folge_aktionen": folge_aktionen}
@@ -532,7 +548,7 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
 def pruefe_spielende(raum: Raum) -> Optional[dict]:
     """
     Prüft ob das Spiel vorbei ist.
-    
+
     Uses dynamic win conditions from role definitions instead of hardcoded logic.
     Win condition priority:
     1. No survivors -> draw
@@ -581,13 +597,15 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
     zombie = team_counts.get("zombie", 0)
     solo = team_counts.get("solo", 0)
     neutral = team_counts.get("neutral", 0)
-    
+
     # Calculate non-wolf villager side (includes neutral roles that side with village)
     village_side = dorfbewohner + neutral
     # Evil factions combined
     evil_factions = werwoelfe + vampir + zombie
 
-    logger.debug(f"Team counts: WW={werwoelfe}, Dorf={dorfbewohner}, Vampir={vampir}, Zombie={zombie}, Solo={solo}, Neutral={neutral}")
+    logger.debug(
+        f"Team counts: WW={werwoelfe}, Dorf={dorfbewohner}, Vampir={vampir}, Zombie={zombie}, Solo={solo}, Neutral={neutral}"
+    )
 
     # 1. Check role-specific win conditions (highest priority)
     # This handles Solo roles, special win conditions, etc.

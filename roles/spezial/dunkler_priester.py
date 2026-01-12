@@ -5,7 +5,7 @@ Der Dunkle Priester verkuppelt wie Amor zwei Spieler,
 gehört aber selbst zu den Werwölfen.
 """
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     RollenModell,
     AppearanceFeature,
@@ -14,6 +14,10 @@ from ..base import (
     AktionsErgebnis,
     SpielKontext,
     DistributionConfig,
+    StateField,
+    StateType,
+    GlobalStateDefinition,
+    StateVisualEffect,
 )
 from ..enums import Team, Kategorie, AktionsTyp, SichtTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -38,6 +42,34 @@ class DunklerPriester(Role):
 
     Gewinnbedingung: Werwölfe gewinnen.
     """
+
+    def state_fields(self) -> List[StateField]:
+        """Definiert die Zustandsfelder des Dunklen Priesters."""
+        return [
+            StateField(
+                "hat_verkuppelt", StateType.BOOL, False, "Hat bereits Verliebte gewählt"
+            ),
+        ]
+
+    def global_state_definitions(self) -> List[GlobalStateDefinition]:
+        """Definiert den Verliebt-State der auf andere Spieler gesetzt wird."""
+        return [
+            GlobalStateDefinition(
+                key="global.dunkle_liebe_mit_id",
+                name="Dunkle Liebe",
+                typ=StateType.PLAYER_ID,
+                beschreibung="ID des Partners mit dem der Spieler durch dunkle Magie verliebt ist",
+                visual_effect=StateVisualEffect.HEART,
+                css_class="dunkle-liebe-partner",
+                icon="🖤",
+                query_name="dunkle_verliebte",
+                defined_by="DunklerPriester",
+                visible_to=["partner", "source_role"],
+                reveals_role=True,
+                snapshot_role_on_set=True,
+                snapshot_key="global.dunkle_liebe_rolle_snapshot",
+            ),
+        ]
 
     @property
     def info(self) -> RollenInfo:
@@ -74,7 +106,7 @@ class DunklerPriester(Role):
 
     @property
     def aktions_typ(self) -> AktionsTyp:
-        return AktionsTyp.WAEHLEN
+        return AktionsTyp.VERLIEBEN
 
     @property
     def sichtbar_als(self) -> SichtTyp:
@@ -102,15 +134,41 @@ class DunklerPriester(Role):
             buttons=[
                 UIButton(
                     label="Verlieben",
-                    action_type="waehlen",
+                    action_type="priester_verlieben",
                     icon="fa-solid fa-heart",
                     css_class="btn-danger",
+                    requires_confirmation=True,
                 )
             ],
-            requires_target=True,  # Need to select 2 players? UI handling for 2 targets might be tricky with standard flag.
-            allow_multiple_targets=True,  # Set to True for 2 targets
+            requires_target=True,
+            allow_multiple_targets=True,
+            min_targets=2,
+            max_targets=2,
             can_skip=False,
         )
+
+    def execute_action(
+        self,
+        action_type: str,
+        spieler: "Spieler",
+        targets: List["Spieler"],
+        kontext: "SpielKontext",
+    ) -> Optional[AktionsErgebnis]:
+        """
+        Execute Dunkler Priester actions dynamically with multi-target support.
+
+        Handles:
+        - priester_verlieben: Connect two players as dark lovers
+        """
+        if action_type == "priester_verlieben":
+            if len(targets) != 2:
+                return AktionsErgebnis(
+                    erfolg=False,
+                    nachricht=f"Du musst genau 2 Spieler wählen, nicht {len(targets)}.",
+                )
+            return self.verlieben(spieler, targets[0], targets[1], kontext)
+
+        return None
 
     def verlieben(
         self,
@@ -120,9 +178,10 @@ class DunklerPriester(Role):
         kontext: SpielKontext,
     ) -> AktionsErgebnis:
         """
-        Verkuppelt zwei Spieler (wie Amor).
+        Verkuppelt zwei Spieler (wie Amor, aber dunkle Magie).
         """
-        if getattr(spieler, "dunkler_priester_verkuppelt", False):
+        # Check if already matched
+        if self.get_state(spieler, "hat_verkuppelt"):
             return AktionsErgebnis(
                 erfolg=False,
                 nachricht="Du hast bereits zwei Spieler verkuppelt!",
@@ -134,16 +193,34 @@ class DunklerPriester(Role):
                 nachricht="Du musst zwei verschiedene Spieler wählen!",
             )
 
-        spieler.dunkler_priester_verkuppelt = True
+        if (
+            ziel1.id not in kontext.lebende_spieler
+            or ziel2.id not in kontext.lebende_spieler
+        ):
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Beide Spieler müssen am Leben sein.",
+            )
+
+        # Mark as used
+        self.set_state(spieler, "hat_verkuppelt", True)
 
         return AktionsErgebnis(
             erfolg=True,
             nachricht=f"Dunkle Magie verbindet {ziel1.name} und {ziel2.name}! "
             f"Sie sind nun verliebt und sterben gemeinsam.",
             effekte={
-                "verliebt": [ziel1.id, ziel2.id],
                 "dunkle_liebe": True,
             },
+            # Use multi_target_updates like Amor does
+            multi_target_updates={
+                ziel1.id: {"global.verliebt_mit_id": ziel2.id},
+                ziel2.id: {"global.verliebt_mit_id": ziel1.id},
+            },
+            additional_logs=[
+                {"text": f"Du bist verliebt in {ziel2.name}! (Dunkle Liebe)", "sichtbar_fuer": str(ziel1.id)},
+                {"text": f"Du bist verliebt in {ziel1.name}! (Dunkle Liebe)", "sichtbar_fuer": str(ziel2.id)},
+            ],
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
 

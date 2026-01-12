@@ -1365,7 +1365,36 @@ async function handlePriesterPhase(players: PlayerWindow[]): Promise<void> {
       await actionBtn.click();
       log(`    🖤 Dunkler Priester verliebt ${target1.name} und ${target2.name}`);
     } else {
-      log("    ❌ Verlieben-Button nicht gefunden");
+      // Fallback: Hole IDs aus den Karten und sende direkt via Socket
+      log("    Button nicht gefunden, versuche direkte Socket-Aktion...");
+
+      const id1 = await priester.page
+        .locator(`.spieler-card[data-name="${target1.name}"]`)
+        .getAttribute("data-id")
+        .catch(() => null);
+      const id2 = await priester.page
+        .locator(`.spieler-card[data-name="${target2.name}"]`)
+        .getAttribute("data-id")
+        .catch(() => null);
+
+      if (id1 && id2) {
+        await priester.page.evaluate(
+          ([playerId1, playerId2]) => {
+            if ((window as any).socket) {
+              (window as any).socket.emit("aktion_ausfuehren", {
+                aktion: "priester_verlieben",
+                ziel_id: [parseInt(playerId1), parseInt(playerId2)],
+              });
+            }
+          },
+          [id1, id2],
+        );
+        log(
+          `    🖤 Dunkler Priester verliebt ${target1.name} (ID:${id1}) und ${target2.name} (ID:${id2}) via Socket`,
+        );
+      } else {
+        log(`    ❌ Konnte Spieler-IDs nicht finden`);
+      }
     }
   } catch (error) {
     log(`    ❌ Fehler bei Dunkler Priester: ${error}`);
@@ -2537,7 +2566,6 @@ async function handleAmorPhase(players: PlayerWindow[]): Promise<void> {
     await sleep(800);
 
     // Jetzt sollte der "Verlieben" Button erscheinen
-    // Die Aktion heißt 'armor_verlieben' (nicht 'amor_verlieben'!)
     const actionBtn = amor.page.locator('button:has-text("Verlieben")').first();
     if (await actionBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await actionBtn.click();
@@ -2560,7 +2588,7 @@ async function handleAmorPhase(players: PlayerWindow[]): Promise<void> {
           ([playerId1, playerId2]) => {
             if ((window as any).socket) {
               (window as any).socket.emit("aktion_ausfuehren", {
-                aktion: "armor_verlieben",
+                aktion: "amor_verlieben",
                 ziel_id: [parseInt(playerId1), parseInt(playerId2)],
               });
             }

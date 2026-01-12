@@ -2744,12 +2744,23 @@ async function selectTargetAndConfirm(
 
   // Now click on the target card
   await targetCard.click();
-  await sleep(500); // Wait for button to become enabled
+  // Wait for the action area to update after selecting a target
+  const actionButtonsContainer = page.locator('#action-buttons');
+  await actionButtonsContainer.isVisible({ timeout: 1500 }).catch(() => false);
+  await page
+    .locator('#action-buttons button.btn, #village3d-action-buttons button')
+    .first()
+    .isVisible({ timeout: 1500 })
+    .catch(() => false);
 
   // Find and click action button
   let buttonClicked = false;
   for (const text of buttonTexts) {
-    const btn = page.locator(`button:has-text("${text}")`).first();
+    const btn = page
+      .locator(
+        `#action-buttons button:has-text("${text}"), #village3d-action-buttons button:has-text("${text}")`,
+      )
+      .first();
     // Wait for button to be visible AND enabled (not disabled)
     if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
       // Wait for button to be enabled
@@ -2763,14 +2774,30 @@ async function selectTargetAndConfirm(
   }
 
   if (!buttonClicked) {
+    // Prefer buttons in the action panel/HUD, not random buttons (e.g., chat send)
     const genericBtn = page
       .locator(
-        'button:has-text("Bestätigen"), button:has-text("OK"), button.btn-primary:not([disabled])',
+        [
+          '#action-buttons button.btn:not([disabled])',
+          '#village3d-action-buttons button:not([disabled])',
+        ].join(', '),
       )
+      .filter({ hasNotText: 'Überspringen' })
       .first();
-    if (await genericBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+
+    if (await genericBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
       await genericBtn.click();
       buttonClicked = true;
+    } else {
+      const okBtn = page
+        .locator(
+          '#action-buttons button:has-text("Bestätigen"), #action-buttons button:has-text("OK"), #village3d-action-buttons button:has-text("Bestätigen"), #village3d-action-buttons button:has-text("OK")',
+        )
+        .first();
+      if (await okBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+        await okBtn.click();
+        buttonClicked = true;
+      }
     }
   }
 

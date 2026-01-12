@@ -1916,7 +1916,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   // Event Handler
   
   // GENERIC PHASE UPDATE (New System)
-  socket.on('phase_update', function(data) {
+  socket.on('phase_update', async function(data) {
       console.log('[Phase] Update:', data);
       aktuellePhase = data.phase;
       activeRole = data.active_role;
@@ -1924,9 +1924,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       window.aktuellePhase = aktuellePhase;
       window.activeRole = activeRole;
       
-      // Load role UI config if it's our turn
+      // Load role UI config if it's our turn - await to ensure it's ready for player interactions
       if (activeRole === spielerRolle) {
-          loadRoleUI(spielerRolle).then(ui => phaseUiConfig = ui);
+          phaseUiConfig = await loadRoleUI(spielerRolle);
+          console.log('[Phase] Loaded UI config for our role:', spielerRolle, phaseUiConfig);
       } else {
           phaseUiConfig = null;  // Clear when not our turn
       }
@@ -1964,13 +1965,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       aktuelleRunde = data.runde || aktuelleRunde;
       window.aktuellePhase = aktuellePhase;
       window.aktuelleRunde = aktuelleRunde;
-      updatePhase(data.phase, data.runde);
-      if (data.erzaehler_text) {
-          updateErzaehlerText(data.erzaehler_text);
-      }
       
       // =========================================================================
-      // DYNAMIC PHASE INFO - Replaces hardcoded role checks
+      // DYNAMIC PHASE INFO - Load BEFORE updatePhase() so UI config is available
       // =========================================================================
       // Fetch dynamic phase info from server (includes victim info for Hexe, etc.)
       try {
@@ -1981,6 +1978,14 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               // Store phase type for UI decisions
               window.isNightPhase = phaseInfo.is_night;
               window.activeRole = phaseInfo.active_role;
+              
+              // Load UI config if it's our turn (BEFORE updatePhase calls updateActionButtons)
+              if (phaseInfo.active_role === spielerRolle) {
+                  phaseUiConfig = await loadRoleUI(spielerRolle);
+                  console.log('[Phase] Loaded UI config for our role:', spielerRolle, phaseUiConfig);
+              } else {
+                  phaseUiConfig = null;
+              }
               
               // Handle victim info dynamically (for Hexe and similar roles)
               if (phaseInfo.victim_info) {
@@ -2008,6 +2013,12 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           }
       } catch (error) {
           console.warn('[Phase Info] Error fetching phase info:', error);
+      }
+      
+      // NOW update the phase UI (after phaseUiConfig is loaded)
+      await updatePhase(data.phase, data.runde);
+      if (data.erzaehler_text) {
+          updateErzaehlerText(data.erzaehler_text);
       }
 
       // Schließe alle bestehenden Erzähler-Overlays um Überlappung zu vermeiden
@@ -2318,7 +2329,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   });
 
   // Funktionen
-    function selectSpieler(id) {
+    async function selectSpieler(id) {
       const p = alleSpieler.find(s => s.id === id);
       if (!p) return;
       if (!p.istAmLeben) return;
@@ -2328,6 +2339,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
         const isNarrator = !!p.istErzaehler;
         const isSelf = id === spielerId;
         if (isNarrator || isSelf) return;
+      }
+
+      // Ensure phaseUiConfig is loaded before processing selection
+      // This fixes race condition where click happens before async config load completes
+      if (!phaseUiConfig && spielerRolle) {
+          console.log('[selectSpieler] Loading UI config for role:', spielerRolle);
+          phaseUiConfig = await loadRoleUI(spielerRolle);
       }
 
       // General self-target check from role config
@@ -2973,22 +2991,30 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // =================================================================
           // DYNAMIC BUTTON GENERATION FROM ROLE UI
           // =================================================================
-          if (roleUI && roleUI.buttons && roleUI.buttons.length > 0) {
-              // Generate buttons from role UI definition
-              html = roleUI.buttons.map(btn => {
+          // Check for new 'actions' API first, then fallback to legacy 'buttons'
+          const actionSource = (roleUI && roleUI.actions && roleUI.actions.length > 0) 
+              ? roleUI.actions 
+              : (roleUI && roleUI.buttons && roleUI.buttons.length > 0 ? roleUI.buttons : null);
+              
+          if (actionSource) {
+              // Generate buttons from role UI definition (works with both actions and buttons)
+              html = actionSource.map(btn => {
                   const btnClass = btn.css_class || 'btn-primary';
                   const icon = btn.icon ? `<i class="${btn.icon}"></i>` : '';
                   const disabled = (count < min) ? 'disabled' : '';
                   const title = (count < min) ? `title="Wähle mindestens ${min} Spieler"` : '';
-                  return `<button class="btn ${btnClass}" ${disabled} ${title} onclick="aktion('${btn.action_type}')">${icon} ${btn.label}</button>`;
+                  // Use action_id for actions API, action_type for legacy buttons
+                  const actionType = btn.action_id || btn.action_type;
+                  return `<button class="btn ${btnClass}" ${disabled} ${title} onclick="aktion('${actionType}')">${icon} ${btn.label}</button>`;
               }).join('\n');
 
-            hudButtons = roleUI.buttons.map(btn => {
+            hudButtons = actionSource.map(btn => {
+              const actionType = btn.action_id || btn.action_type;
               return {
                 label: btn.label,
                 title: (count < min) ? `Wähle mindestens ${min} Spieler` : '',
                 disabled: (count < min),
-                action: () => aktion(btn.action_type)
+                action: () => aktion(actionType)
               };
             });
 

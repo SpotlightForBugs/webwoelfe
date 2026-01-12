@@ -69,9 +69,14 @@ class GameLogicFullCycleTest(unittest.TestCase):
 
             # Basic 8-player game
             roles = [
-                "Werwolf", "Werwolf",
-                "Seherin", "Hexe", "Jäger",
-                "Dorfbewohner", "Dorfbewohner", "Dorfbewohner"
+                "Werwolf",
+                "Werwolf",
+                "Seherin",
+                "Hexe",
+                "Jäger",
+                "Dorfbewohner",
+                "Dorfbewohner",
+                "Dorfbewohner",
             ]
 
             players: list[Spieler] = []
@@ -98,6 +103,7 @@ class GameLogicFullCycleTest(unittest.TestCase):
 
         with self.app.app_context():
             from models import db
+
             raum = db.session.get(Raum, raum_id)
             phase_roles = game_logic.phasennamen_zu_rollen_mapping()
 
@@ -136,7 +142,9 @@ class GameLogicFullCycleTest(unittest.TestCase):
             # Verify that hat_spieler_mit_rolle works
             self.assertTrue(game_logic.hat_spieler_mit_rolle(raum, "Werwolf"))
             self.assertTrue(game_logic.hat_spieler_mit_rolle(raum, "Seherin"))
-            self.assertFalse(game_logic.hat_spieler_mit_rolle(raum, "Amor"))  # Not in our setup
+            self.assertFalse(
+                game_logic.hat_spieler_mit_rolle(raum, "Amor")
+            )  # Not in our setup
 
     def test_phase_list_has_correct_structure(self):
         """Core phases should be in correct order."""
@@ -148,18 +156,20 @@ class GameLogicFullCycleTest(unittest.TestCase):
         # nacht_start should come before tag phases
         nacht_idx = PHASEN.index("nacht_start")
         tag_idx = PHASEN.index("tag_abstimmung")
-        self.assertLess(nacht_idx, tag_idx, "nacht_start should come before tag_abstimmung")
+        self.assertLess(
+            nacht_idx, tag_idx, "nacht_start should come before tag_abstimmung"
+        )
 
     def test_role_phases_are_separate_from_core(self):
         """Role-specific phases should NOT be in the core phase list."""
         phase_roles = game_logic.phasennamen_zu_rollen_mapping()
-        
+
         # Role phases (like werwolf_phase) are NOT core phases
         for role_phase in phase_roles.keys():
             self.assertNotIn(
-                role_phase, 
-                PHASEN, 
-                f"Role phase '{role_phase}' should not be in core PHASEN list"
+                role_phase,
+                PHASEN,
+                f"Role phase '{role_phase}' should not be in core PHASEN list",
             )
 
 

@@ -40,7 +40,7 @@ class DynamicPhaseMappingTests(unittest.TestCase):
 
     def test_mapping_phase_names_follow_convention(self):
         """All role phase names should follow the naming convention.
-        
+
         Role-specific phases are NOT in the core PHASEN list.
         They follow the pattern: role_name_phase (lowercase, underscores).
         """
@@ -50,31 +50,29 @@ class DynamicPhaseMappingTests(unittest.TestCase):
             # All role phases should end with _phase
             self.assertTrue(
                 phase_name.endswith("_phase"),
-                f"Phase '{phase_name}' should end with '_phase'"
+                f"Phase '{phase_name}' should end with '_phase'",
             )
             # All role phases should be lowercase with underscores
             self.assertEqual(
                 phase_name,
                 phase_name.lower(),
-                f"Phase '{phase_name}' should be lowercase"
+                f"Phase '{phase_name}' should be lowercase",
             )
             # No spaces allowed
             self.assertNotIn(
-                " ",
-                phase_name,
-                f"Phase '{phase_name}' should not contain spaces"
+                " ", phase_name, f"Phase '{phase_name}' should not contain spaces"
             )
 
     def test_core_phases_are_separate_from_role_phases(self):
         """Core phases should be distinct from role phases."""
         mapping = phasennamen_zu_rollen_mapping()
-        
+
         # Core phases should NOT be in the role mapping
         for core_phase in PHASEN:
             self.assertNotIn(
                 core_phase,
                 mapping,
-                f"Core phase '{core_phase}' should not be in role mapping"
+                f"Core phase '{core_phase}' should not be in role mapping",
             )
 
 

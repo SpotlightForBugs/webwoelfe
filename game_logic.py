@@ -74,13 +74,13 @@ def berechne_rollen(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
 
         # Berechne Anzahl via Lambda
         anzahl = dist.count_func(effektive_anzahl)
-        
+
         # Enforce min/max constraints
         if anzahl > 0:
             # Check Max
             if dist.max_role_count is not None and anzahl > dist.max_role_count:
                 anzahl = dist.max_role_count
-                
+
             # Check Min
             if anzahl < dist.min_role_count:
                 continue
@@ -130,11 +130,16 @@ def verteile_rollen(raum: Raum) -> dict:
 
     # CHECK FOR TEST MODE: Use custom role distribution for comprehensive testing
     import os
+
     test_mode = os.environ.get("TEST_RANDOM_ROLES", "false").lower() == "true"
-    
+
     if test_mode:
-        logger.info(f"[TEST MODE] Using random role distribution for comprehensive testing")
-        rollen_verteilung = _generate_random_role_distribution(spieler_anzahl, bool(erzaehler))
+        logger.info(
+            f"[TEST MODE] Using random role distribution for comprehensive testing"
+        )
+        rollen_verteilung = _generate_random_role_distribution(
+            spieler_anzahl, bool(erzaehler)
+        )
     else:
         rollen_verteilung = berechne_rollen(
             spieler_anzahl + (1 if erzaehler else 0), mit_erzaehler=bool(erzaehler)
@@ -168,40 +173,42 @@ def verteile_rollen(raum: Raum) -> dict:
     return ergebnis
 
 
-def _generate_random_role_distribution(spieler_anzahl: int, mit_erzaehler: bool = False) -> dict:
+def _generate_random_role_distribution(
+    spieler_anzahl: int, mit_erzaehler: bool = False
+) -> dict:
     """
     Generates a random role distribution for testing ALL roles in the game.
     This ensures comprehensive test coverage across all implemented roles.
     """
     from roles import RoleRegistry
-    
+
     effektive_anzahl = spieler_anzahl
     if mit_erzaehler:
         effektive_anzahl -= 1
-    
+
     if effektive_anzahl <= 0:
         return {"Erzaehler": 1} if mit_erzaehler else {}
-    
+
     # Get all available non-erzaehler roles
     alle_rollen = []
     for role in RoleRegistry.get_all():
         if role.info.name != "Erzaehler":
             alle_rollen.append(role.info.name)
-    
+
     # Shuffle to randomize role selection
     random.shuffle(alle_rollen)
-    
+
     # Essential roles for game to work
     rollen_verteilung = {}
     remaining = effektive_anzahl
-    
+
     # Always add 1-2 werewolves
     werewolf_count = 1 if effektive_anzahl < 10 else 2
     if "Werwolf" in alle_rollen:
         rollen_verteilung["Werwolf"] = werewolf_count
         remaining -= werewolf_count
         alle_rollen.remove("Werwolf")
-    
+
     # Fill with random unique roles (one of each for maximum coverage)
     for rolle in alle_rollen[:remaining]:
         if rolle != "Dorfbewohner":  # Save Dorfbewohner as filler
@@ -209,14 +216,14 @@ def _generate_random_role_distribution(spieler_anzahl: int, mit_erzaehler: bool 
             remaining -= 1
             if remaining == 0:
                 break
-    
+
     # Fill remaining with Dorfbewohner
     if remaining > 0:
         rollen_verteilung["Dorfbewohner"] = remaining
-    
+
     if mit_erzaehler:
         rollen_verteilung["Erzaehler"] = 1
-    
+
     logger.info(f"[TEST MODE] Generated random distribution: {rollen_verteilung}")
     return rollen_verteilung
 
@@ -484,7 +491,11 @@ def toete_spieler(spieler: Spieler, todesart: str) -> dict:
     return {"tote": tote, "folge_aktionen": folge_aktionen}
 
 
-def pruefe_spielende(raum: Raum) -> Optional[dict]: #TODO: only depend on the roles files win conditions. This hardcoded logic is not scalable or acceptable. 
+def pruefe_spielende(
+    raum: Raum,
+) -> Optional[
+    dict
+]:  # TODO: only depend on the roles files win conditions. This hardcoded logic is not scalable or acceptable.
     """
     Prüft ob das Spiel vorbei ist.
     """

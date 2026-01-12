@@ -995,7 +995,7 @@ def create_wings(wing_type: str = "angel", color: str = "#FFFFFF") -> List[Appea
     return wings.get(wing_type, [])
 
 
-def create_tail(tail_type: str = "wolf", color: str = None) -> AppearanceFeature:
+def create_tail(tail_type: str = "wolf", color: str = None) -> Optional[AppearanceFeature]:
     """Create animal tails."""
     tails = {
         "wolf": AppearanceFeature(

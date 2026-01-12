@@ -5,7 +5,7 @@ Die zwei Schwestern erkennen sich in der ersten Nacht
 und können sich jede Nacht kurz absprechen.
 """
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     RollenModell,
     AppearanceFeature,

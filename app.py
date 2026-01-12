@@ -118,16 +118,44 @@ def inject_cache_buster():
     return dict(versioned_url=versioned_url)
 
 
+def _build_automatische_phasen() -> set:
+    """
+    Dynamically build AUTOMATISCHE_PHASEN from registered roles.
+    
+    A phase is automatic if:
+    1. It's a core phase (nacht_start, nacht_ende, tag_start, tag_ende, rollen_verteilt)
+    2. OR the role that owns the phase has is_automatic_phase = True
+    """
+    phasen = {
+        "rollen_verteilt",  # Info-Phase nach Spielstart
+        "nacht_start",  # Übergang Tag -> Nacht
+        "nacht_ende",  # Übergang Nacht -> Tag
+        "tag_start",  # Übergang Nacht -> Tag
+        "tag_ende",  # Übergang am Tagesende
+    }
+    
+    try:
+        from roles import RoleRegistry
+        
+        # Add role-specific automatic phases
+        for role in RoleRegistry.get_all():
+            try:
+                if role.is_automatic_phase:
+                    phase_name = role.get_phase_name()
+                    if phase_name:
+                        phasen.add(phase_name)
+                        logger.debug(f"[PhaseManager] Added automatic phase: {phase_name} ({role.info.name})")
+            except Exception as e:
+                logger.debug(f"[PhaseManager] Could not check is_automatic_phase for {role.info.name}: {e}")
+    except Exception as e:
+        logger.warning(f"[PhaseManager] Could not load automatic phases from roles: {e}")
+    
+    return phasen
+
+
 # Automatic phases that advance immediately after audio (no player interaction needed)
-# These are pure transition/info phases
-AUTOMATISCHE_PHASEN = {
-    "rollen_verteilt",  # Info-Phase nach Spielstart
-    "nacht_start",  # Übergang Tag -> Nacht
-    "nacht_ende",  # Übergang Nacht -> Tag
-    "tag_start",  # Übergang Nacht -> Tag
-    "tag_ende",  # Übergang am Tagesende
-    "tratschweib_phase",  # Tratschweib erhält automatisch Information
-}
+# Dynamically built from roles that have is_automatic_phase = True
+AUTOMATISCHE_PHASEN = _build_automatische_phasen()
 
 # Spielname als Konstante
 SPIEL_NAME = "Webwölfe"

@@ -96,26 +96,11 @@ class Dorfbewohner(Role):
         )
 
     def get_win_conditions(self) -> List["WinCondition"]:
-        """Dorf gewinnt wenn alle Werwölfe tot sind."""
-        from ..base import WinCondition
-
-        def check_dorf_win(spieler: "Spieler", kontext: SpielKontext) -> bool:
-            wolves = [
-                uid
-                for uid in kontext.lebende_spieler
-                if kontext.spieler_teams.get(uid) == Team.WERWOLF
-            ]
-            return len(wolves) == 0
-
-        return [
-            WinCondition(
-                id="dorf_win",
-                check_func=check_dorf_win,
-                team_override=Team.DORF,
-                priority=10,
-                description="Alle Werwölfe wurden eliminiert.",
-            )
-        ]
+        """Dorf gewinnt über Team-Level Win Conditions (nicht hier)."""
+        # Village win condition is handled at the TEAM level in pruefe_spielende()
+        # Individual roles should not define team-wide win conditions
+        # Only SOLO roles should define individual win conditions here
+        return []
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """

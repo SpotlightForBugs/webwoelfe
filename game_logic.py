@@ -5,7 +5,7 @@ from typing import List, Tuple, Optional
 from models import db, Raum, Spieler, SpielAktion, SpielLog, ErzaehlerEvent
 from logger import logger
 from roles.base import SpielKontext
-from roles.enums import Phase
+from roles.enums import Phase, Team
 
 # Get PHASEN from centralized module
 from phases import get_phase_list
@@ -565,35 +565,35 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
         tote_spieler=tote_spieler_ids,
     )
 
-    # Count teams dynamically from role definitions
-    team_counts: dict[str, int] = {}
+    # Count teams dynamically - no hardcoded team names
+    team_counts: dict[Team, int] = {}
     for s in lebende:
         role = RoleRegistry.get(s.rolle)
-        if role:
-            team_value = role.info.team.value
-        else:
-            team_value = "dorf"  # Fallback for unknown roles
-        team_counts[team_value] = team_counts.get(team_value, 0) + 1
+        team = role.info.team if role else Team.DORF
+        team_counts[team] = team_counts.get(team, 0) + 1
 
-    werwoelfe = team_counts.get("werwolf", 0)
-    dorfbewohner = team_counts.get("dorf", 0)
-    vampir = team_counts.get("vampir", 0)
-    zombie = team_counts.get("zombie", 0)
-    solo = team_counts.get("solo", 0)
-    neutral = team_counts.get("neutral", 0)
-    
-    # Calculate non-wolf villager side (includes neutral roles that side with village)
-    village_side = dorfbewohner + neutral
-    # Evil factions combined
-    evil_factions = werwoelfe + vampir + zombie
-
-    logger.debug(f"Team counts: WW={werwoelfe}, Dorf={dorfbewohner}, Vampir={vampir}, Zombie={zombie}, Solo={solo}, Neutral={neutral}")
+    # Log team counts dynamically
+    team_log = ", ".join(f"{t.value}={c}" for t, c in team_counts.items())
+    logger.debug(f"Team counts: {team_log}")
 
     # 1. Check role-specific win conditions (highest priority)
-    # This handles Solo roles, special win conditions, etc.
+    # Each role can define custom win conditions via get_win_conditions() or berechne_gewinn()
     for s in lebende:
         role = RoleRegistry.get(s.rolle)
         if role:
+            # Check custom win conditions
+            for win_cond in role.get_win_conditions():
+                if win_cond.check_func(s, kontext):
+                    winning_team = win_cond.team_override or role.info.team
+                    logger.info(f"Game over: {s.rolle} wins via {win_cond.id} ({winning_team.value})")
+                    return {
+                        "gewinner": s.rolle.lower().replace(" ", "_"),
+                        "nachricht": win_cond.description or f"{s.rolle} hat gewonnen!",
+                        "team": winning_team.value,
+                        "spieler_id": s.id,
+                    }
+            
+            # Check berechne_gewinn (legacy/simple solo wins)
             gewonnen_team = role.berechne_gewinn(s, kontext)
             if gewonnen_team:
                 logger.info(f"Game over: {s.rolle} wins ({gewonnen_team.value})")
@@ -604,8 +604,7 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
                     "spieler_id": s.id,
                 }
 
-    # 2. Check lovers win condition
-    # Lovers win if they are the last 2 survivors
+    # 2. Check lovers win condition (special team override)
     if len(lebende) == 2:
         s1, s2 = lebende[0], lebende[1]
         if s1.get_state("global.verliebt_mit_id") == s2.id:
@@ -613,44 +612,52 @@ def pruefe_spielende(raum: Raum) -> Optional[dict]:
             return {
                 "gewinner": "verliebte",
                 "nachricht": "Die Verliebten haben als einzige überlebt und gewinnen gemeinsam!",
-                "team": "verliebte",
+                "team": Team.VERLIEBTE.value,
             }
 
-    # 3. Check team majority wins
-    # Werewolves win if they have majority
-    if werwoelfe > 0 and werwoelfe >= village_side + solo:
-        logger.info("Game over: Werewolves win by majority")
-        return {
-            "gewinner": "werwolf",
-            "nachricht": "Die Werwölfe haben die Überhand gewonnen!",
-            "team": "werwolf",
-        }
+    # 3. Check team majority wins dynamically
+    # Get evil teams and good teams from Team enum configuration
+    evil_teams = [t for t in Team if t.is_evil]
+    good_teams = [t for t in Team if t.sides_with_village]
+    
+    # Count totals
+    evil_count = sum(team_counts.get(t, 0) for t in evil_teams)
+    good_count = sum(team_counts.get(t, 0) for t in good_teams)
+    solo_count = team_counts.get(Team.SOLO, 0)
+    
+    # Check each evil team for majority win (sorted by priority - lower = higher priority)
+    evil_priority = sorted(evil_teams, key=lambda t: t.priority)
+    
+    for evil_team in evil_priority:
+        evil_team_count = team_counts.get(evil_team, 0)
+        if evil_team_count == 0:
+            continue
+            
+        # Check if higher priority evil teams exist (they must be eliminated first)
+        higher_priority_exists = any(
+            team_counts.get(t, 0) > 0 
+            for t in evil_priority if t.priority < evil_team.priority
+        )
+        
+        if higher_priority_exists:
+            continue
+            
+        # This evil team wins if they have majority over good + solo
+        if evil_team_count >= good_count + solo_count:
+            logger.info(f"Game over: {evil_team.value} wins by majority")
+            return {
+                "gewinner": evil_team.value,
+                "nachricht": evil_team.win_message,
+                "team": evil_team.value,
+            }
 
-    # Vampires win if they are majority and no werewolves
-    if vampir > 0 and werwoelfe == 0 and vampir >= village_side + solo:
-        logger.info("Game over: Vampires win by majority")
-        return {
-            "gewinner": "vampir",
-            "nachricht": "Die Vampire haben das Dorf übernommen!",
-            "team": "vampir",
-        }
-
-    # Zombies win if they are majority and no werewolves
-    if zombie > 0 and werwoelfe == 0 and zombie >= village_side + solo:
-        logger.info("Game over: Zombies win by majority")
-        return {
-            "gewinner": "zombie",
-            "nachricht": "Die Zombies haben alle infiziert!",
-            "team": "zombie",
-        }
-
-    # 4. Village wins if all evil factions are eliminated
-    if evil_factions == 0 and solo == 0:
+    # 4. Village wins if all evil teams are eliminated
+    if evil_count == 0 and solo_count == 0:
         logger.info("Game over: Villagers win - all threats eliminated")
         return {
-            "gewinner": "dorf",
-            "nachricht": "Alle Bedrohungen wurden vernichtet. Das Dorf hat gewonnen!",
-            "team": "dorf",
+            "gewinner": Team.DORF.value,
+            "nachricht": Team.DORF.win_message,
+            "team": Team.DORF.value,
         }
 
     # Game continues

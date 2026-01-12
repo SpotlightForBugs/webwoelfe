@@ -410,6 +410,7 @@ export default class Village3DThree {
     
     // Enhanced environment and effects
     this.createEnhancedEnvironment();
+    this.createVillageAccents();
     this.createEnhancedAtmosphericEffects();
     this.createGroundFog();
   }
@@ -1007,6 +1008,92 @@ export default class Village3DThree {
       const rx = Math.cos(angle) * radius;
       const rz = Math.sin(angle) * radius;
       this.createRock(rx, rz);
+    }
+  }
+
+  /**
+   * Create accent props for both lobby and game modes (lanterns and path stones)
+   */
+  private createVillageAccents(): void {
+    if (!this.app) return;
+    const pc = window.pc;
+
+    // Lanterns around the gathering ring
+    const lanternCount = this.isLobbyMode ? 4 : 8;
+    const lanternRadius = this.isLobbyMode ? 12 : 18;
+    for (let i = 0; i < lanternCount; i++) {
+      const angle = (i / lanternCount) * Math.PI * 2 + Math.random() * 0.4;
+      const x = Math.cos(angle) * lanternRadius;
+      const z = Math.sin(angle) * lanternRadius;
+
+      const lantern = new pc.Entity('Lantern');
+      const post = new pc.Entity('LanternPost');
+      post.addComponent('model', { type: 'cylinder' });
+      post.setLocalScale(0.25, 2.2, 0.25);
+      post.setLocalPosition(0, 1.1, 0);
+
+      const postMat = new pc.StandardMaterial();
+      postMat.diffuse = new pc.Color(0.08, 0.07, 0.06);
+      postMat.specular = new pc.Color(0.02, 0.02, 0.02);
+      postMat.update();
+      (post.model as PCModel).material = postMat;
+      lantern.addChild(post);
+
+      const glow = new pc.Entity('LanternGlow');
+      glow.addComponent('model', { type: 'sphere' });
+      glow.setLocalScale(0.35, 0.35, 0.35);
+      glow.setLocalPosition(0, 2.1, 0);
+
+      const glowMat = new pc.StandardMaterial();
+      glowMat.emissive = this.isNight
+        ? new pc.Color(1, 0.55, 0.25)
+        : new pc.Color(0.7, 0.6, 0.45);
+      glowMat.emissiveIntensity = this.isNight ? 2.4 : 1.2;
+      glowMat.useLighting = false;
+      glowMat.blendType = pc.BLEND_ADDITIVE;
+      glowMat.update();
+      (glow.model as PCModel).material = glowMat;
+      lantern.addChild(glow);
+
+      const light = new pc.Entity('LanternLight');
+      light.addComponent('light', {
+        type: 'point',
+        color: this.isNight ? new pc.Color(1, 0.55, 0.25) : new pc.Color(0.8, 0.75, 0.6),
+        intensity: this.isNight ? 1.2 : 0.6,
+        range: this.isNight ? 10 : 7,
+        castShadows: false,
+      });
+      light.setLocalPosition(0, 2.1, 0);
+      lantern.addChild(light);
+
+      lantern.setPosition(x, 0, z);
+      lantern.setLocalEulerAngles(0, Math.random() * 360, 0);
+      this.app.root.addChild(lantern);
+    }
+
+    // Scattered path stones for subtle ground detail
+    const stoneCount = this.isLobbyMode ? 16 : 28;
+    for (let i = 0; i < stoneCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = this.isLobbyMode ? 6 + Math.random() * 14 : 8 + Math.random() * 22;
+      const stone = new pc.Entity('PathStone');
+      stone.addComponent('model', { type: 'cylinder' });
+      const scale = 0.4 + Math.random() * 0.6;
+      stone.setLocalScale(scale * 1.4, 0.12 + Math.random() * 0.08, scale * 1.1);
+      stone.setPosition(Math.cos(angle) * radius, 0.05, Math.sin(angle) * radius);
+      stone.setLocalEulerAngles(
+        Math.random() * 10,
+        Math.random() * 360,
+        Math.random() * 10
+      );
+
+      const stoneMat = new pc.StandardMaterial();
+      const base = 0.12 + Math.random() * 0.08;
+      stoneMat.diffuse = new pc.Color(base, base * 0.95, base * 0.9);
+      stoneMat.specular = new pc.Color(0.03, 0.03, 0.03);
+      stoneMat.update();
+      (stone.model as PCModel).material = stoneMat;
+      this.app.root.addChild(stone);
     }
   }
 

@@ -105,7 +105,8 @@ function getRandomTarget(
 }
 
 // Player names
-const PLAYER_NAMES = [ //TODO: Generate those automatically so that we always have enough unique names.
+const PLAYER_NAMES = [
+  //TODO: Generate those automatically so that we always have enough unique names.
   "Wolfgang",
   "Maria",
   "Hans",
@@ -163,8 +164,6 @@ interface GameState {
 // UTILITIES
 // ============================================================================
 
-
-
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -218,23 +217,23 @@ test.describe("Full Game Simulation", () => {
 
     const headlessBrowser = HEADLESS_OTHERS
       ? await chromium.launch({
-        headless: true,
-        args: [
-          "--disable-web-security",
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--no-first-run",
-          "--disable-extensions",
-          "--disable-default-apps",
-          "--disable-sync",
-          "--disable-translate",
-          "--hide-scrollbars",
-          "--mute-audio",
-          "--no-default-browser-check",
-          "--safebrowsing-disable-auto-update",
-        ],
-      })
+          headless: true,
+          args: [
+            "--disable-web-security",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--no-first-run",
+            "--disable-extensions",
+            "--disable-default-apps",
+            "--disable-sync",
+            "--disable-translate",
+            "--hide-scrollbars",
+            "--mute-audio",
+            "--no-default-browser-check",
+            "--safebrowsing-disable-auto-update",
+          ],
+        })
       : null;
 
     // Create shared context for the host (keeps the main window visible)
@@ -251,7 +250,7 @@ test.describe("Full Game Simulation", () => {
 
       // Ensure window is maximized/visible (optional, handled by browser usually)
 
-      await hostPage.goto(BASE_URL, { waitUntil: 'domcontentloaded' }); // Faster than networkidle
+      await hostPage.goto(BASE_URL, { waitUntil: "domcontentloaded" }); // Faster than networkidle
 
       // Close pre-alpha modal if present
       const closeModalBtn = hostPage.locator("[data-close-modal]").first();
@@ -344,22 +343,27 @@ test.describe("Full Game Simulation", () => {
             if (msg.type() === "error") {
               const text = msg.text();
               // Ignore some common noise and handled warnings
-              if (!text.includes("favicon") &&
+              if (
+                !text.includes("favicon") &&
                 !text.includes("ERR_BLOCKED_BY_CLIENT") &&
                 !text.includes("Viewport height is too small") &&
-                !text.includes("saveSitzordnung") &&  // Race condition during navigation
-                !text.includes("Failed to fetch")) {  // Network errors during cleanup
+                !text.includes("saveSitzordnung") && // Race condition during navigation
+                !text.includes("Failed to fetch")
+              ) {
+                // Network errors during cleanup
                 console.error(`🚨 CONSOLE ERROR [${playerName}]: ${text}`);
                 throw new Error(`Console Error in ${playerName}: ${text}`);
               }
             }
           });
 
-          await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }); // Faster than networkidle
+          await page.goto(BASE_URL, { waitUntil: "domcontentloaded" }); // Faster than networkidle
 
           // Close modal if present
           const closeModal = page.locator("[data-close-modal]").first();
-          if (await closeModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+          if (
+            await closeModal.isVisible({ timeout: 1000 }).catch(() => false)
+          ) {
             await closeModal.click();
             await page.waitForTimeout(200);
           }
@@ -411,8 +415,8 @@ test.describe("Full Game Simulation", () => {
       await sleep(2000);
       for (const player of players) {
         await player.page.waitForURL(/\/spiel\//, {
-          timeout: 15000,  // Increased timeout for slower servers
-          waitUntil: 'domcontentloaded' // Don't wait for external resources (fonts, CDN, etc.)
+          timeout: 15000, // Increased timeout for slower servers
+          waitUntil: "domcontentloaded", // Don't wait for external resources (fonts, CDN, etc.)
         });
 
         // VERIFY VILLAGE 3D (TS-based) - Wait for async initialization (optional feature)
@@ -420,19 +424,19 @@ test.describe("Full Game Simulation", () => {
           await player.page.waitForFunction(
             () => {
               const v3d = (window as any).village3d;
-              return v3d !== undefined && typeof v3d.setPlayers === 'function';
+              return v3d !== undefined && typeof v3d.setPlayers === "function";
             },
-            { timeout: 3000 }
+            { timeout: 3000 },
           );
           // log(`✓ Village3D (TS) initialized for ${player.name}`);
         } catch (e) {
-          log(`⚠️  Village3D (TS) not initialized for ${player.name} (non-critical, continuing...)`);
+          log(
+            `⚠️  Village3D (TS) not initialized for ${player.name} (non-critical, continuing...)`,
+          );
         }
       }
 
       log("✓ Spiel gestartet!\n");
-
-
 
       // ========================================================================
       // PHASE 4: Extract Roles
@@ -443,9 +447,7 @@ test.describe("Full Game Simulation", () => {
       for (const player of players) {
         try {
           // Extract role from the game page
-          const rolleElement = player.page
-            .locator(".rolle-badge")
-            .first();
+          const rolleElement = player.page.locator(".rolle-badge").first();
           if (
             await rolleElement.isVisible({ timeout: 2000 }).catch(() => false)
           ) {
@@ -574,8 +576,12 @@ test.describe("Full Game Simulation", () => {
           // We cannot and should not try to skip phases manually.
           // The server has a 30 second fallback timeout for stuck phases.
           if (samePhaseCount > MAX_SAME_PHASE) {
-            log(`  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`);
-            throw new Error(`Game stuck in phase: ${currentPhase} - Auto-advance failed.`);
+            log(
+              `  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`,
+            );
+            throw new Error(
+              `Game stuck in phase: ${currentPhase} - Auto-advance failed.`,
+            );
           }
           // Warte auf Phasenwechsel
           await sleep(2000);
@@ -657,7 +663,7 @@ test.describe("Full Game Simulation", () => {
       log("==========================================\n");
 
       // Wait indefinitely
-      await new Promise(() => { });
+      await new Promise(() => {});
     } catch (error) {
       log(`❌ Fehler: ${error}`);
       throw error;
@@ -1068,22 +1074,22 @@ async function handleWerwolfPhase(
       target = randomChoice(validTargets);
     }
 
-    let success = await selectTargetAndConfirm(
-      wolf.page,
-      target.name,
-      ["Töten", "Wählen", "Angreifen"],
-    );
+    let success = await selectTargetAndConfirm(wolf.page, target.name, [
+      "Töten",
+      "Wählen",
+      "Angreifen",
+    ]);
 
     // If the action failed (invalid target), retry with a valid target
     if (!success && isInvalidTarget && validTargets.length > 0) {
       log(`    🔄 ${wolf.name} Server hat abgelehnt, wähle gültiges Ziel...`);
       await sleep(500);
       const validTarget = randomChoice(validTargets);
-      success = await selectTargetAndConfirm(
-        wolf.page,
-        validTarget.name,
-        ["Töten", "Wählen", "Angreifen"],
-      );
+      success = await selectTargetAndConfirm(wolf.page, validTarget.name, [
+        "Töten",
+        "Wählen",
+        "Angreifen",
+      ]);
       if (success) {
         log(`    ✓ ${wolf.name} stimmt für ${validTarget.name}`);
       }
@@ -1098,11 +1104,10 @@ async function handleWerwolfPhase(
       log(
         `    ⚠️ [RANDOM] ${wolf.name} versucht erneut zu wählen (wird abgelehnt)`,
       );
-      await selectTargetAndConfirm(
-        wolf.page,
-        randomChoice(validTargets).name,
-        ["Töten", "Wählen"],
-      );
+      await selectTargetAndConfirm(wolf.page, randomChoice(validTargets).name, [
+        "Töten",
+        "Wählen",
+      ]);
     }
 
     await sleep(300); // Random delay
@@ -1124,48 +1129,79 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
 
   try {
     // Strategy 1: Wait for action buttons area
-    let actionPanel = dieb.page.locator('#action-panel, .action-panel').first();
+    let actionPanel = dieb.page.locator("#action-panel, .action-panel").first();
     let waitedForPanel = false;
-    
+
     if (!(await actionPanel.isVisible({ timeout: 2000 }).catch(() => false))) {
-      log("    ℹ️ Action-Panel nicht direkt sichtbar, suche alternative Buttons...");
+      log(
+        "    ℹ️ Action-Panel nicht direkt sichtbar, suche alternative Buttons...",
+      );
     } else {
       waitedForPanel = true;
       log("    ℹ️ Action-Panel gefunden");
     }
 
     // Get all buttons and filter for role choices
-    const allButtons = await dieb.page.locator('button').all();
+    const allButtons = await dieb.page.locator("button").all();
     const roleChoiceButtons: { element: any; text: string }[] = [];
 
     // Common action button texts to exclude
     const actionButtonTexts = [
-      'Bestätigen', 'Bestätigung', 'Confirm',
-      'Überspringen', 'Skip', 'Weiter', 'Continue', 'Next',
-      'Nichts tun', 'Do nothing', 'Abbrechen', 'Cancel',
-      'OK', 'Ja', 'Nein', 'Yes', 'No',
-      'Senden', 'Send', 'Ablehnen', 'Accept', 'Annehmen',
-      'Heilen', 'Heal', 'Töten', 'Kill', 'Vergiften', 'Poison',
-      'Wählen', 'Choose'  // Generic choice button - usually paired with role selection
+      "Bestätigen",
+      "Bestätigung",
+      "Confirm",
+      "Überspringen",
+      "Skip",
+      "Weiter",
+      "Continue",
+      "Next",
+      "Nichts tun",
+      "Do nothing",
+      "Abbrechen",
+      "Cancel",
+      "OK",
+      "Ja",
+      "Nein",
+      "Yes",
+      "No",
+      "Senden",
+      "Send",
+      "Ablehnen",
+      "Accept",
+      "Annehmen",
+      "Heilen",
+      "Heal",
+      "Töten",
+      "Kill",
+      "Vergiften",
+      "Poison",
+      "Wählen",
+      "Choose", // Generic choice button - usually paired with role selection
     ];
 
     for (const btn of allButtons) {
-      const isVisible = await btn.isVisible({ timeout: 300 }).catch(() => false);
+      const isVisible = await btn
+        .isVisible({ timeout: 300 })
+        .catch(() => false);
       if (!isVisible) continue;
 
-      const text = (await btn.textContent({ timeout: 300 }).catch(() => '')) || '';
+      const text =
+        (await btn.textContent({ timeout: 300 }).catch(() => "")) || "";
       const trimmedText = text.trim();
-      
+
       if (!trimmedText) continue;
 
       // Check if this looks like a generic action button
-      const isGenericAction = actionButtonTexts.some(action => 
-        trimmedText.toLowerCase().includes(action.toLowerCase())
+      const isGenericAction = actionButtonTexts.some((action) =>
+        trimmedText.toLowerCase().includes(action.toLowerCase()),
       );
 
       if (isGenericAction) {
         // Skip generic action buttons, unless it's just "Wählen" and it's alone
-        if (trimmedText.toLowerCase() === 'wählen' && roleChoiceButtons.length === 0) {
+        if (
+          trimmedText.toLowerCase() === "wählen" &&
+          roleChoiceButtons.length === 0
+        ) {
           // Might be a "choose" button for selected role - skip for now
           continue;
         }
@@ -1173,14 +1209,20 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
       }
 
       // Check that button is in action area or not in erzähler/sidebar
-      const isInActionArea = await btn.evaluate(el => {
+      const isInActionArea = await btn.evaluate((el) => {
         let parent = el.parentElement;
         let depth = 0;
         while (parent && depth < 6) {
-          if (parent.id === 'action-buttons' || parent.className?.includes('action')) {
+          if (
+            parent.id === "action-buttons" ||
+            parent.className?.includes("action")
+          ) {
             return true;
           }
-          if (parent.id?.includes('erzaehler') || parent.className?.includes('sidebar')) {
+          if (
+            parent.id?.includes("erzaehler") ||
+            parent.className?.includes("sidebar")
+          ) {
             return false;
           }
           parent = parent.parentElement;
@@ -1201,17 +1243,23 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
 
     if (roleChoiceButtons.length < 1) {
       // Even if we don't find role buttons, try to find ANY clickable element that might be a choice
-      log(`    ⚠️ Keine Rollen-Buttons gefunden, versuche alternative Findung...`);
-      
+      log(
+        `    ⚠️ Keine Rollen-Buttons gefunden, versuche alternative Findung...`,
+      );
+
       // Try clicking on any card or element that represents a choice
-      const cards = await dieb.page.locator('[data-role], .role-option, .choice-button').all();
+      const cards = await dieb.page
+        .locator("[data-role], .role-option, .choice-button")
+        .all();
       if (cards.length >= 2) {
         log(`    ℹ️ Gefundene ${cards.length} Role-Cards, wähle eines...`);
         const choice = randomChoice(cards);
         await choice.click();
         await sleep(1000);
       } else {
-        log(`    ⚠️ Keine Rollenwahloptionen gefunden - Phase wird übersprungen`);
+        log(
+          `    ⚠️ Keine Rollenwahloptionen gefunden - Phase wird übersprungen`,
+        );
         await sleep(PHASE_DELAY_MS);
         return;
       }
@@ -1224,25 +1272,35 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
         await sleep(800);
       } else if (roleChoiceButtons.length === 1) {
         // Only one button - might be a confirmation after showing two roles
-        log(`    ℹ️ Nur ein Button gefunden: "${roleChoiceButtons[0].text}", klicke...`);
+        log(
+          `    ℹ️ Nur ein Button gefunden: "${roleChoiceButtons[0].text}", klicke...`,
+        );
         await roleChoiceButtons[0].element.click();
         await sleep(800);
       }
     }
 
     // After selection, look for confirmation button
-    const confirmButtons = await dieb.page.locator(
-      'button:has-text("Bestätigen"), button:has-text("Confirm"), button:has-text("OK"), button.btn-primary, button:has-text("Wählen")'
-    ).all();
+    const confirmButtons = await dieb.page
+      .locator(
+        'button:has-text("Bestätigen"), button:has-text("Confirm"), button:has-text("OK"), button.btn-primary, button:has-text("Wählen")',
+      )
+      .all();
 
     let confirmed = false;
     for (const btn of confirmButtons) {
-      const isVisible = await btn.isVisible({ timeout: 500 }).catch(() => false);
-      const text = await btn.textContent({ timeout: 300 }).catch(() => '');
-      
+      const isVisible = await btn
+        .isVisible({ timeout: 500 })
+        .catch(() => false);
+      const text = await btn.textContent({ timeout: 300 }).catch(() => "");
+
       if (isVisible && text) {
         // Prefer "Bestätigen" or "OK" - skip "Wählen" if we have it
-        if (text.toLowerCase().includes('bestätig') || text.toLowerCase().includes('ok') || text.toLowerCase().includes('confirm')) {
+        if (
+          text.toLowerCase().includes("bestätig") ||
+          text.toLowerCase().includes("ok") ||
+          text.toLowerCase().includes("confirm")
+        ) {
           log(`    ✓ Klicke Bestätigungsbutton: "${text.trim()}"`);
           await btn.click();
           confirmed = true;
@@ -1253,9 +1311,10 @@ async function handleDiebPhase(players: PlayerWindow[]): Promise<void> {
     }
 
     if (!confirmed) {
-      log(`    ℹ️ Kein Bestätigungsbutton gefunden - Aktion möglicherweise bereits abgeschlossen`);
+      log(
+        `    ℹ️ Kein Bestätigungsbutton gefunden - Aktion möglicherweise bereits abgeschlossen`,
+      );
     }
-
   } catch (e) {
     const errorMsg = e instanceof Error ? e.message : String(e);
     log(`    ⚠️ Fehler bei Dieb-Phase: ${errorMsg}`);
@@ -1360,10 +1419,14 @@ async function handlePriesterPhase(players: PlayerWindow[]): Promise<void> {
     await sleep(800);
 
     // Jetzt sollte der "Verlieben" Button erscheinen
-    const actionBtn = priester.page.locator('button:has-text("Verlieben")').first();
+    const actionBtn = priester.page
+      .locator('button:has-text("Verlieben")')
+      .first();
     if (await actionBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await actionBtn.click();
-      log(`    🖤 Dunkler Priester verliebt ${target1.name} und ${target2.name}`);
+      log(
+        `    🖤 Dunkler Priester verliebt ${target1.name} und ${target2.name}`,
+      );
     } else {
       log("    ❌ Verlieben-Button nicht gefunden");
     }
@@ -1583,9 +1646,7 @@ async function handleHeilerVariantPhase(
     ? ["Leibwächter"]
     : ["Heiler"];
 
-  log(
-    `  💉 ${roleNames[0]}-Phase: Wähle Spieler zum Schützen... ()`,
-  );
+  log(`  💉 ${roleNames[0]}-Phase: Wähle Spieler zum Schützen... ()`);
 
   const heiler = findPlayerByRole(players, roleNames);
   if (!heiler) {
@@ -1611,7 +1672,10 @@ async function handleHeilerVariantPhase(
   );
 }
 
-async function handleHurePhase(players: PlayerWindow[], phaseName?: string): Promise<void> {
+async function handleHurePhase(
+  players: PlayerWindow[],
+  phaseName?: string,
+): Promise<void> {
   log("  💋 Hure/Prostituierte-Phase: Besuche Spieler... ()");
 
   // If phase name is provided, try to match specific variant first
@@ -1626,12 +1690,12 @@ async function handleHurePhase(players: PlayerWindow[], phaseName?: string): Pro
       hure = findPlayerByRole(players, ["Prostituierte"]);
     }
   }
-  
+
   // Fallback to any matching role
   if (!hure) {
     hure = findPlayerByRole(players, ["Hure", "Prostituierte", "Nutte"]);
   }
-  
+
   if (!hure) {
     log("    Keine Hure im Spiel");
     return;
@@ -1764,7 +1828,9 @@ async function handleMordlustigerPhase(players: PlayerWindow[]): Promise<void> {
   }
 
   // Check if the skip button is visible (Mordlustiger can skip)
-  const skipBtn = mordlustiger.page.locator('button:has-text("Überspringen")').first();
+  const skipBtn = mordlustiger.page
+    .locator('button:has-text("Überspringen")')
+    .first();
   if (await skipBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
     // Randomly decide to skip or act
     if (seededRandom() > 0.5) {
@@ -2198,18 +2264,20 @@ async function handleHenkerPhase(players: PlayerWindow[]): Promise<void> {
 
   const target = getRandomTarget(players, henker, !shouldTargetWrong());
   log(`    DEBUG: Ziel ausgewählt: ${target.name}`);
-  
+
   // Wait for UI to be ready
   await sleep(1500);
-  
+
   // Check if Henker's page is active for this phase
-  const hasUI = await henker.page.evaluate(() => {
-    const panel = document.querySelector('.action-panel, .aktions-panel');
-    return panel !== null && panel.textContent?.includes('Henker');
-  }).catch(() => false);
-  
+  const hasUI = await henker.page
+    .evaluate(() => {
+      const panel = document.querySelector(".action-panel, .aktions-panel");
+      return panel !== null && panel.textContent?.includes("Henker");
+    })
+    .catch(() => false);
+
   log(`    DEBUG: Hat Henker UI? ${hasUI}`);
-  
+
   if (!hasUI) {
     log("    ⚠️ Henker hat noch keine Aktions-UI, warte...");
     await sleep(2000);
@@ -2275,7 +2343,7 @@ async function handleDiskussionPhase(players: PlayerWindow[]): Promise<void> {
             await chatInput.fill(randomChoice(chatMessages));
             await chatInput.press("Enter");
           }
-        } catch (e) { }
+        } catch (e) {}
         await sleep(50);
       }
     }
@@ -2599,31 +2667,43 @@ async function validateWerwolfVisibility(
 
     // Check that this wolf can see all other werewolves
     for (const otherWolf of allWerwolfe) {
-      const card = wolf.page.locator(`.spieler-card[data-name="${otherWolf.name}"]`);
+      const card = wolf.page.locator(
+        `.spieler-card[data-name="${otherWolf.name}"]`,
+      );
 
       // Verify card exists
       if (!(await card.isVisible({ timeout: 2000 }).catch(() => false))) {
-        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see player card for ${otherWolf.name}`);
+        throw new Error(
+          `❌ HARD ERROR: ${wolf.name} cannot see player card for ${otherWolf.name}`,
+        );
       }
 
       // Check if card has werwolf visibility class OR is self (ist-ich class)
-      const hasWolfClass = await card.evaluate((el) =>
-        el.classList.contains('werwolf-team-sichtbar') || el.classList.contains('ist-ich')
+      const hasWolfClass = await card.evaluate(
+        (el) =>
+          el.classList.contains("werwolf-team-sichtbar") ||
+          el.classList.contains("ist-ich"),
       );
 
       // Get data-rolle attribute (should contain werewolf role)
-      const dataRolle = await card.getAttribute('data-rolle');
+      const dataRolle = await card.getAttribute("data-rolle");
 
       if (!hasWolfClass && wolf.name !== otherWolf.name) {
-        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see ${otherWolf.name} as werewolf (missing werwolf-team-sichtbar class)`);
+        throw new Error(
+          `❌ HARD ERROR: ${wolf.name} cannot see ${otherWolf.name} as werewolf (missing werwolf-team-sichtbar class)`,
+        );
       }
 
       if (wolf.name === otherWolf.name && !hasWolfClass) {
-        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see themselves as werewolf (missing ist-ich class)`);
+        throw new Error(
+          `❌ HARD ERROR: ${wolf.name} cannot see themselves as werewolf (missing ist-ich class)`,
+        );
       }
 
       if (otherWolf.isAlive && !dataRolle) {
-        throw new Error(`❌ HARD ERROR: ${wolf.name} cannot see role data for ${otherWolf.name} (data-rolle attribute is empty)`);
+        throw new Error(
+          `❌ HARD ERROR: ${wolf.name} cannot see role data for ${otherWolf.name} (data-rolle attribute is empty)`,
+        );
       }
     }
 
@@ -2637,12 +2717,16 @@ async function validateWerwolfVisibility(
 /**
  * Validate that lovers (Verliebte) can see each other's roles
  */
-async function validateVerliebteVisibility(players: PlayerWindow[]): Promise<void> {
+async function validateVerliebteVisibility(
+  players: PlayerWindow[],
+): Promise<void> {
   log("    🔍 VALIDATION: Checking Verliebte visibility...");
 
   // Find players with verliebt-partner class on other cards
-  for (const player of players.filter(p => p.isAlive)) {
-    const partnerCards = await player.page.locator('.spieler-card.verliebt-partner').count();
+  for (const player of players.filter((p) => p.isAlive)) {
+    const partnerCards = await player.page
+      .locator(".spieler-card.verliebt-partner")
+      .count();
 
     if (partnerCards > 0) {
       // This player is verliebt, check they can see their partner
@@ -2650,25 +2734,37 @@ async function validateVerliebteVisibility(players: PlayerWindow[]): Promise<voi
 
       // There should be exactly 1 partner card
       if (partnerCards !== 1) {
-        throw new Error(`❌ HARD ERROR: ${player.name} has ${partnerCards} partner cards, expected 1`);
+        throw new Error(
+          `❌ HARD ERROR: ${player.name} has ${partnerCards} partner cards, expected 1`,
+        );
       }
 
-      const partnerCard = player.page.locator('.spieler-card.verliebt-partner').first();
+      const partnerCard = player.page
+        .locator(".spieler-card.verliebt-partner")
+        .first();
 
       // Partner card must be visible
-      if (!(await partnerCard.isVisible({ timeout: 2000 }).catch(() => false))) {
-        throw new Error(`❌ HARD ERROR: ${player.name} cannot see partner card`);
+      if (
+        !(await partnerCard.isVisible({ timeout: 2000 }).catch(() => false))
+      ) {
+        throw new Error(
+          `❌ HARD ERROR: ${player.name} cannot see partner card`,
+        );
       }
 
       // Partner card must have data-rolle attribute (shows the role)
-      const partnerRolle = await partnerCard.getAttribute('data-rolle');
-      const partnerName = await partnerCard.getAttribute('data-name');
+      const partnerRolle = await partnerCard.getAttribute("data-rolle");
+      const partnerName = await partnerCard.getAttribute("data-name");
 
       if (!partnerRolle) {
-        throw new Error(`❌ HARD ERROR: ${player.name} cannot see partner's role (data-rolle empty for ${partnerName})`);
+        throw new Error(
+          `❌ HARD ERROR: ${player.name} cannot see partner's role (data-rolle empty for ${partnerName})`,
+        );
       }
 
-      log(`    ✅ ${player.name} can see partner ${partnerName} with role ${partnerRolle}`);
+      log(
+        `    ✅ ${player.name} can see partner ${partnerName} with role ${partnerRolle}`,
+      );
 
       // Validate nametags
       await validateNametags(player.page, [player]);
@@ -2681,22 +2777,33 @@ async function validateVerliebteVisibility(players: PlayerWindow[]): Promise<voi
 /**
  * Validate that nametags stay visible and don't disappear after a second
  */
-async function validateNametags(page: Page, players: PlayerWindow[]): Promise<void> {
-  for (const player of players.filter(p => p.isAlive)) {
+async function validateNametags(
+  page: Page,
+  players: PlayerWindow[],
+): Promise<void> {
+  for (const player of players.filter((p) => p.isAlive)) {
     const card = page.locator(`.spieler-card[data-name="${player.name}"]`);
-    const nameElement = card.locator('.spieler-name');
+    const nameElement = card.locator(".spieler-name");
 
     // Check visibility at t=0
-    const visible1 = await nameElement.isVisible({ timeout: 1000 }).catch(() => false);
+    const visible1 = await nameElement
+      .isVisible({ timeout: 1000 })
+      .catch(() => false);
     if (!visible1) {
-      throw new Error(`❌ HARD ERROR: Nametag for ${player.name} is not visible initially`);
+      throw new Error(
+        `❌ HARD ERROR: Nametag for ${player.name} is not visible initially`,
+      );
     }
 
     // Wait 1.5 seconds and check again
     await sleep(1500);
-    const visible2 = await nameElement.isVisible({ timeout: 500 }).catch(() => false);
+    const visible2 = await nameElement
+      .isVisible({ timeout: 500 })
+      .catch(() => false);
     if (!visible2) {
-      throw new Error(`❌ HARD ERROR: Nametag for ${player.name} disappeared after 1.5 seconds`);
+      throw new Error(
+        `❌ HARD ERROR: Nametag for ${player.name} disappeared after 1.5 seconds`,
+      );
     }
   }
 }
@@ -2725,24 +2832,32 @@ async function selectTargetAndConfirm(
 ): Promise<boolean> {
   // Wait for the current phase to finish loading on this specific page
   // This ensures SocketIO phase_update has been received and processed
-  await page.waitForFunction(
-    () => {
-      const panel = document.getElementById('action-panel');
-      if (!panel) return false;
-      // Panel must be visible OR we're in a passive phase
-      const style = window.getComputedStyle(panel);
-      return style.display !== 'none' || !!(window as any).istErzaehler;
-    },
-    { timeout: 10000 }
-  ).catch(() => {
-    console.log('[selectTargetAndConfirm] Warning: Action panel did not become visible within timeout');
-  });
+  await page
+    .waitForFunction(
+      () => {
+        const panel = document.getElementById("action-panel");
+        if (!panel) return false;
+        // Panel must be visible OR we're in a passive phase
+        const style = window.getComputedStyle(panel);
+        return style.display !== "none" || !!(window as any).istErzaehler;
+      },
+      { timeout: 10000 },
+    )
+    .catch(() => {
+      console.log(
+        "[selectTargetAndConfirm] Warning: Action panel did not become visible within timeout",
+      );
+    });
 
   // Wait for action buttons container to be populated
-  const actionButtonsContainer = page.locator('#action-buttons');
-  await actionButtonsContainer.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
-    console.log('[selectTargetAndConfirm] Warning: Action buttons not visible');
-  });
+  const actionButtonsContainer = page.locator("#action-buttons");
+  await actionButtonsContainer
+    .waitFor({ state: "visible", timeout: 5000 })
+    .catch(() => {
+      console.log(
+        "[selectTargetAndConfirm] Warning: Action buttons not visible",
+      );
+    });
 
   // First, check if target card is visible
   let targetCard = page.locator(`.spieler-card[data-name="${targetName}"]`);
@@ -2759,11 +2874,11 @@ async function selectTargetAndConfirm(
 
   // Hide any existing alert before action so we can detect new ones
   await page.evaluate(() => {
-    const el = document.getElementById('status-nachricht');
+    const el = document.getElementById("status-nachricht");
     if (el) {
-      el.style.display = 'none';
-      el.className = '';
-      el.textContent = '';
+      el.style.display = "none";
+      el.className = "";
+      el.textContent = "";
     }
   });
 
@@ -2771,11 +2886,15 @@ async function selectTargetAndConfirm(
   await targetCard.click();
   // Wait for buttons to appear/update after selecting a target
   await page
-    .locator('#action-buttons button.btn:not([disabled]), #village3d-action-buttons button:not([disabled])')
+    .locator(
+      "#action-buttons button.btn:not([disabled]), #village3d-action-buttons button:not([disabled])",
+    )
     .first()
-    .waitFor({ state: 'visible', timeout: 3000 })
+    .waitFor({ state: "visible", timeout: 3000 })
     .catch(() => {
-      console.log('[selectTargetAndConfirm] Warning: No enabled action button appeared');
+      console.log(
+        "[selectTargetAndConfirm] Warning: No enabled action button appeared",
+      );
     });
 
   // Find and click action button
@@ -2789,7 +2908,9 @@ async function selectTargetAndConfirm(
     // Wait for button to be visible AND enabled (not disabled)
     if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
       // Wait for button to be enabled
-      const isEnabled = await btn.isEnabled({ timeout: 2000 }).catch(() => false);
+      const isEnabled = await btn
+        .isEnabled({ timeout: 2000 })
+        .catch(() => false);
       if (isEnabled) {
         await btn.click();
         buttonClicked = true;
@@ -2803,11 +2924,11 @@ async function selectTargetAndConfirm(
     const genericBtn = page
       .locator(
         [
-          '#action-buttons button.btn:not([disabled])',
-          '#village3d-action-buttons button:not([disabled])',
-        ].join(', '),
+          "#action-buttons button.btn:not([disabled])",
+          "#village3d-action-buttons button:not([disabled])",
+        ].join(", "),
       )
-      .filter({ hasNotText: 'Überspringen' })
+      .filter({ hasNotText: "Überspringen" })
       .first();
 
     if (await genericBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
@@ -2829,16 +2950,16 @@ async function selectTargetAndConfirm(
   // If still no button found, retry once after a delay (role UI might load asynchronously)
   if (!buttonClicked) {
     await sleep(2500);
-    
+
     // Retry with generic button
     const retryBtn = page
       .locator(
         [
-          '#action-buttons button.btn:not([disabled])',
-          '#village3d-action-buttons button:not([disabled])',
-        ].join(', '),
+          "#action-buttons button.btn:not([disabled])",
+          "#village3d-action-buttons button:not([disabled])",
+        ].join(", "),
       )
-      .filter({ hasNotText: 'Überspringen' })
+      .filter({ hasNotText: "Überspringen" })
       .first();
 
     if (await retryBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
@@ -2848,21 +2969,23 @@ async function selectTargetAndConfirm(
   }
 
   if (!buttonClicked) {
-    throw new Error(`No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`);
+    throw new Error(
+      `No action button found for "${targetName}" (checked: ${buttonTexts.join(", ")})`,
+    );
   }
 
   // Wait for the status alert to become visible (no timeout - wait until it happens)
   // The UI shows alerts via #status-nachricht with class alert-success or alert-error
-  const alertElement = page.locator('#status-nachricht');
+  const alertElement = page.locator("#status-nachricht");
 
   // Wait for the alert to be visible and have content
-  await alertElement.waitFor({ state: 'visible', timeout: 5000 });
+  await alertElement.waitFor({ state: "visible", timeout: 5000 });
 
   // Check what type of alert it is
-  const alertClass = await alertElement.getAttribute('class');
+  const alertClass = await alertElement.getAttribute("class");
   const alertText = await alertElement.textContent();
 
-  if (alertClass?.includes('alert-error')) {
+  if (alertClass?.includes("alert-error")) {
     throw new Error(`Server rejected action: ${alertText}`);
   }
 

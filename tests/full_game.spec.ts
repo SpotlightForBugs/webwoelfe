@@ -2196,7 +2196,7 @@ async function handleHenkerPhase(players: PlayerWindow[]): Promise<void> {
   log(`    DEBUG: Ziel ausgewählt: ${target.name}`);
   
   // Wait for UI to be ready
-  await sleep(1000);
+  await sleep(1500);
   
   // Check if Henker's page is active for this phase
   const hasUI = await henker.page.evaluate(() => {
@@ -2744,23 +2744,28 @@ async function selectTargetAndConfirm(
 
   // Now click on the target card
   await targetCard.click();
-  await sleep(300);
+  await sleep(500); // Wait for button to become enabled
 
   // Find and click action button
   let buttonClicked = false;
   for (const text of buttonTexts) {
     const btn = page.locator(`button:has-text("${text}")`).first();
+    // Wait for button to be visible AND enabled (not disabled)
     if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await btn.click();
-      buttonClicked = true;
-      break;
+      // Wait for button to be enabled
+      const isEnabled = await btn.isEnabled({ timeout: 2000 }).catch(() => false);
+      if (isEnabled) {
+        await btn.click();
+        buttonClicked = true;
+        break;
+      }
     }
   }
 
   if (!buttonClicked) {
     const genericBtn = page
       .locator(
-        'button:has-text("Bestätigen"), button:has-text("OK"), button.btn-primary',
+        'button:has-text("Bestätigen"), button:has-text("OK"), button.btn-primary:not([disabled])',
       )
       .first();
     if (await genericBtn.isVisible({ timeout: 500 }).catch(() => false)) {

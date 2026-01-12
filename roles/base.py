@@ -2719,6 +2719,34 @@ class Role(ABC):
         """Welche Aktion führt diese Rolle aus?"""
         return AktionsTyp.KEINE
 
+    @property
+    def is_automatic_phase(self) -> bool:
+        """
+        Gibt an, ob die Phase automatisch weitergeht (nach Audio).
+        
+        Eine Phase ist automatisch wenn:
+        - aktions_typ == AktionsTyp.KEINE
+        - UI hat keine Aktions-Buttons (nur Info-Anzeige)
+        
+        Überschreiben falls die Rolle spezielle Logik benötigt.
+        
+        Returns:
+            True wenn Phase automatisch weitergehen soll
+        """
+        # Default: Automatisch wenn keine Aktion erforderlich
+        if self.aktions_typ == AktionsTyp.KEINE:
+            return True
+        
+        # Prüfe UI-Definition: Wenn keine Buttons, dann automatisch
+        try:
+            ui_def = self.get_ui_definition()
+            if ui_def and len(ui_def.buttons) == 0:
+                return True
+        except:
+            pass
+        
+        return False
+
     @abstractmethod
     def is_active_on_first_night(self) -> bool:
         """Determines if the role acts on the first night."""
@@ -2746,6 +2774,30 @@ class Role(ABC):
     def erlaubte_ziele(self) -> str:
         """Welche Spieler können als Ziel gewählt werden?"""
         return "lebende"  # lebende, tote, alle, andere, nachbarn, werwolf
+
+    def erlaubt_private_nachrichten(self) -> bool:
+        """
+        Erlaubt diese Rolle private Nachrichten?
+        
+        Returns:
+            True wenn private Nachrichten erlaubt sind
+        """
+        return False
+    
+    def erlaubte_chat_partner(
+        self, spieler: "Spieler", kontext: "SpielKontext"
+    ) -> List["Spieler"]:
+        """
+        Gibt die Liste der erlaubten Chat-Partner für private Nachrichten zurück.
+        
+        Args:
+            spieler: Der Spieler mit dieser Rolle
+            kontext: Spielkontext
+            
+        Returns:
+            Liste der Spieler, mit denen private Nachrichten erlaubt sind
+        """
+        return []  # Default: Keine privaten Nachrichten
 
     # === TRIGGER-METHODEN (werden bei Events aufgerufen) ===
 

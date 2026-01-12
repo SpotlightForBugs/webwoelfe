@@ -2091,6 +2091,51 @@ def handle_chat(data):
         return
 
     nachricht = data.get("nachricht", "")[:500]
+    ziel_spieler_id = data.get("ziel_spieler_id")  # Optional: für private Nachrichten
+
+    # Wenn Ziel-Spieler angegeben -> Private Nachricht
+    if ziel_spieler_id:
+        # Validiere ob private Nachrichten erlaubt sind
+        from roles import RoleRegistry
+        
+        rolle_obj = RoleRegistry.get(spieler.rolle)
+        if not rolle_obj or not rolle_obj.erlaubt_private_nachrichten():
+            emit("fehler", {"nachricht": "Deine Rolle erlaubt keine privaten Nachrichten"})
+            return
+        
+        # Hole erlaubte Chat-Partner
+        kontext = SpielKontext.from_raum(raum)
+        erlaubte_partner = rolle_obj.erlaubte_chat_partner(spieler, kontext)
+        erlaubte_ids = [p.id for p in erlaubte_partner]
+        
+        if ziel_spieler_id not in erlaubte_ids:
+            emit("fehler", {"nachricht": "Du darfst mit diesem Spieler nicht privat chatten"})
+            return
+        
+        ziel_spieler = db.session.get(Spieler, ziel_spieler_id)
+        if not ziel_spieler or ziel_spieler.raum_id != raum.id:
+            emit("fehler", {"nachricht": "Spieler nicht gefunden"})
+            return
+        
+        # Sende private Nachricht nur an Sender und Empfänger
+        nachricht_data = {
+            "von": spieler.name,
+            "von_id": spieler.id,
+            "an": ziel_spieler.name,
+            "an_id": ziel_spieler.id,
+            "nachricht": nachricht,
+            "ist_privat": True,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # An Sender
+        emit("chat_privat", nachricht_data, room=request.sid)
+        # An Empfänger
+        if ziel_spieler.socket_id:
+            emit("chat_privat", nachricht_data, room=ziel_spieler.socket_id)
+        
+        log_ts(f"[Chat] Private Nachricht: {spieler.name} -> {ziel_spieler.name}")
+        return
 
     # SICHER: Keine sensiblen Daten im Chat
     if not spieler.ist_am_leben:

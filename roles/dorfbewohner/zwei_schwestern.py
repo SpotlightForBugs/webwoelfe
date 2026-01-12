@@ -43,8 +43,8 @@ class ZweiSchwestern(Role):
             kategorie=Kategorie.DORFBEWOHNER,
             beschreibung=(
                 "Du bist eine der zwei Schwestern. In der ersten Nacht "
-                "erkennt ihr euch gegenseitig. Ihr dürft jede Nacht "
-                "kurz die Augen öffnen und euch absprechen."
+                "erkennt ihr euch gegenseitig. Danach könnt ihr über "
+                "private Nachrichten kommunizieren."
             ),
             icon="fa-solid fa-user-group",
             farbe="#f472b6",
@@ -70,21 +70,53 @@ class ZweiSchwestern(Role):
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.KEINE
 
+    @property
+    def is_automatic_phase(self) -> bool:
+        """
+        Zwei Schwestern Phase ist automatisch - reine Info-Phase.
+        Spieler sehen sich, können chatten, aber keine Aktionen ausführen.
+        """
+        return True
+
     def is_active_on_first_night(self) -> bool:
         """Zwei Schwestern act on first night (recognize each other)."""
         return True
 
     def is_active_on_every_night(self) -> bool:
-        """Zwei Schwestern act every night (chat)."""
+        """Zwei Schwestern only act on first night. After that they use private chat."""
+        return False
+
+    def erlaubt_private_nachrichten(self) -> bool:
+        """Zwei Schwestern dürfen private Nachrichten schreiben."""
         return True
+    
+    def erlaubte_chat_partner(
+        self, spieler: "Spieler", kontext: "SpielKontext"
+    ) -> List["Spieler"]:
+        """
+        Zwei Schwestern dürfen nur mit ihrer Schwester chatten.
+        
+        Findet die andere Schwester basierend auf der Rolle.
+        """
+        from typing import List, TYPE_CHECKING
+        if TYPE_CHECKING:
+            from models import Spieler as SpielerType
+        
+        # Finde alle lebenden Spieler mit der Rolle "Zwei Schwestern"
+        alle_schwestern = [
+            s for s in kontext.lebende_spieler_objekte
+            if s.rolle == "Zwei Schwestern" and s.id != spieler.id
+        ]
+        
+        return alle_schwestern
 
     def get_ui_definition(self) -> "RollenUI":
         """Returns the UI definition for Zwei Schwestern action panel."""
         from ..base import RollenUI
 
         return RollenUI(
-            title="Zwei Schwestern - Absprache",
-            instructions="Ihr kennt euch und dürft euch absprechen.",
+            title="Zwei Schwestern",
+            instructions="Du erkennst deine Schwester! Ihr könnt euch ab jetzt über private Nachrichten absprechen.",
             buttons=[],
             requires_target=False,
             allow_multiple_targets=False,

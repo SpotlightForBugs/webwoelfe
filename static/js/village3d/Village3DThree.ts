@@ -2811,6 +2811,7 @@ export default class Village3DThree {
     let hasMoved = false;
     let lastX = 0;
     let lastY = 0;
+    let suppressClick = false;
     const stopDrag = () => {
       if (!isDragging) return;
       isDragging = false;
@@ -2822,6 +2823,7 @@ export default class Village3DThree {
       if (e.button === 0) { // Left click
         isDragging = true;
         hasMoved = false;
+        suppressClick = false;
         lastX = e.clientX;
         lastY = e.clientY;
         this.canvas!.style.cursor = 'grabbing';
@@ -2837,6 +2839,7 @@ export default class Village3DThree {
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
           this.pick(x, y);
+          suppressClick = true;
         }
         stopDrag();
       }
@@ -2880,6 +2883,10 @@ export default class Village3DThree {
 
     // Click fallback
     this.canvas.addEventListener('click', (e: MouseEvent) => {
+      if (suppressClick) {
+        suppressClick = false;
+        return;
+      }
       if (hasMoved) return;
       const rect = this.canvas!.getBoundingClientRect();
       const x = e.clientX - rect.left;

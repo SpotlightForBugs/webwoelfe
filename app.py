@@ -2927,7 +2927,7 @@ def server_fehler(e):
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", "8888"))
+    port = int(os.environ.get("PORT", "5001"))
     debug_mode = os.environ.get("FLASK_DEBUG", "1") == "1"
     # use_reloader=False verhindert gevent fork-Fehler
     socketio.run(app, debug=debug_mode, host="0.0.0.0", port=port, use_reloader=False)

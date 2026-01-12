@@ -108,15 +108,82 @@ def get_active_roles_ordered(raum: "Raum") -> List[Any]:
             if role.info.name not in role_map:
                 role_map[role.info.name] = (role, [])
             role_map[role.info.name][1].append(s)
-            
-    # Sortiere nach Priorität (aufsteigend = früher)
-    # TODO: Dependencies (requires_roles) berücksichtigen? 
-    # Current phase_generator did topo sort.
-    # For now, simple priority sort is usually enough if priorities are well set.
-    # If dependencies are needed, we can port the topo sort logic.
     
-    sorted_roles = sorted(role_map.values(), key=lambda x: x[0].info.prioritaet)
+    # Sort by priority and respect dependencies (topological sort)
+    # Roles with dependencies must come after their required roles
+    sorted_roles = _topological_sort_roles(role_map)
     return sorted_roles
+
+
+def _topological_sort_roles(role_map: Dict[str, tuple]) -> List[Any]:
+    """
+    Sorts roles respecting dependencies using topological sort.
+    Falls back to priority-based sort if no dependencies or circular deps detected.
+    
+    Args:
+        role_map: Dict of role_name -> (role_obj, [players])
+    
+    Returns:
+        List of (role_obj, [players]) tuples sorted by dependencies then priority
+    """
+    from collections import defaultdict, deque
+    
+    # Build dependency graph
+    # in_degree[role_name] = number of roles it depends on (that must come before)
+    in_degree = defaultdict(int)
+    graph = defaultdict(list)  # role_name -> [roles that depend on it]
+    role_priorities = {}  # for secondary sorting
+    
+    # Initialize all roles
+    for role_name, (role_obj, players) in role_map.items():
+        in_degree[role_name] = 0
+        role_priorities[role_name] = role_obj.info.prioritaet
+    
+    # Build the graph based on requires_roles
+    for role_name, (role_obj, players) in role_map.items():
+        required_roles = getattr(role_obj.info, 'requires_roles', [])
+        for required in required_roles:
+            # Only consider dependencies if the required role is active in this game
+            if required in role_map:
+                graph[required].append(role_name)
+                in_degree[role_name] += 1
+    
+    # Topological sort using Kahn's algorithm
+    # Start with roles that have no dependencies
+    queue = deque()
+    for role_name in role_map.keys():
+        if in_degree[role_name] == 0:
+            queue.append(role_name)
+    
+    # Sort queue by priority for consistent ordering
+    queue = deque(sorted(queue, key=lambda r: role_priorities[r]))
+    
+    sorted_names = []
+    while queue:
+        # Pop role with highest priority (lowest priority number)
+        current = queue.popleft()
+        sorted_names.append(current)
+        
+        # Process roles that depend on current role
+        dependents = sorted(graph[current], key=lambda r: role_priorities[r])
+        for dependent in dependents:
+            in_degree[dependent] -= 1
+            if in_degree[dependent] == 0:
+                queue.append(dependent)
+        
+        # Re-sort queue by priority
+        queue = deque(sorted(queue, key=lambda r: role_priorities[r]))
+    
+    # Check for circular dependencies
+    if len(sorted_names) != len(role_map):
+        logger.warning(f"Circular dependency detected in role dependencies! "
+                      f"Sorted: {len(sorted_names)}, Total: {len(role_map)}. "
+                      f"Falling back to priority-based sort.")
+        # Fallback to simple priority sort
+        sorted_names = sorted(role_map.keys(), key=lambda r: role_priorities[r])
+    
+    # Convert back to (role_obj, players) format
+    return [role_map[name] for name in sorted_names]
 
 def is_role_done(raum: "Raum", role: Any, spieler_liste: List["Spieler"]) -> bool:
     """
@@ -131,32 +198,38 @@ def is_role_done(raum: "Raum", role: Any, spieler_liste: List["Spieler"]) -> boo
     aktionen = SpielAktion.query.filter_by(
         raum_id=raum.id,
         runde=raum.runde
-        # phase filter weg lassen oder 'nacht'? 
-        # Da wir generic 'nacht' nutzen, filtern wir danach.
     ).filter(SpielAktion.von_spieler_id.in_(player_ids)).all()
-    
-    # 1. Gruppen-Rollen (Werwolf): EINE Aktion reicht (gewöhnlich) oder Mehrheit?
-    # Werwolf logic: Alle müssen voten oder Einer 'finalisiert'?
-    # Vereinfachung: Wenn 1 Aktion existiert (Targets chosen), ist Rolle fertig.
-    # TODO: Abstimmungs-Logik für Werwölfe (ActionType 'vote' vs 'kill').
-    # Wenn AktionsTyp 'abstimmung' -> warten bis timer oder alle gestimmt.
-    # Wenn AktionsTyp 'kill' -> fertig.
     
     # Dynamically check if role acts as a group using the role's property
     is_group_action = getattr(role, 'is_group_action', False)
     
     if is_group_action:
-        # Check if ALL members acted
-        # (Assuming every member must vote/ack)
-        acted_ids = {a.von_spieler_id for a in aktionen}
-        needed_count = len(spieler_liste)
+        # Group voting logic (e.g., Werewolves)
+        # Two scenarios:
+        # 1. Voting phase: Wait until timer expires or all voted
+        # 2. Direct kill: One action is enough (consensus reached)
         
-        # If any player acted "skip" (if wolves can skip?), logic might differ.
-        # But for group roles, usually all vote.
-        is_done = len(acted_ids) >= needed_count
-        if not is_done:
-            logger.debug(f"Role {role.info.name} waiting for group action ({len(acted_ids)}/{needed_count})")
-        return is_done
+        ui_def = role.get_ui_definition()
+        action_type = getattr(ui_def, 'action_type', 'kill')  # Default to 'kill'
+        
+        if action_type == 'vote':
+            # Voting: Need all members to vote OR timer to expire
+            # For now, require all members (timer handled elsewhere)
+            acted_ids = {a.von_spieler_id for a in aktionen}
+            needed_count = len(spieler_liste)
+            
+            is_done = len(acted_ids) >= needed_count
+            if not is_done:
+                logger.debug(f"Role {role.info.name} voting: {len(acted_ids)}/{needed_count} voted")
+            return is_done
+        else:
+            # Direct action (kill/select): One action represents group consensus
+            # Check if ANY action exists (indicating the group decided)
+            if aktionen:
+                logger.debug(f"Role {role.info.name} group action completed")
+                return True
+            logger.debug(f"Role {role.info.name} waiting for group consensus")
+            return False
 
     else:
         # Individual Actions: Check if ALL players acted

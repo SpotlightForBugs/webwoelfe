@@ -471,7 +471,8 @@ from narrator import ERZAEHLER_EVENTS, hole_erzaehler_text, get_all_narrator_eve
 # Subtile visuelle/akustische Hinweise zur Werwolf-Erkennung
 # Prozentbasiert, nicht spezifisch, ausbalanciert
 # ============================================================================
-# Todo: add sounds and fallback to descriptions via tts if no audio available.
+# Audio-Dateien werden automatisch mit TTS generiert wenn nicht vorhanden.
+# Verwende audio.hole_hinweis_audio() für automatischen Fallback.
 HINWEIS_TYPEN = {
     "augen_flackern": {
         "name": "Augen-Flackern",
@@ -486,7 +487,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Ein kurzer Schatten huscht über den Spieler",
         "dauer_ms": 300,
         "css_class": "hint-shadow",
-        "audio": "shadow_swoosh.mp3",  # TODO: Add sound
+        "audio": "shadow_swoosh.mp3",  # TTS-Fallback verfügbar
         "verdaechtigkeit": 0.2,
     },
     "heulen_fern": {
@@ -494,7 +495,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Ein leises, fernes Wolfsheulen ist zu hören",
         "dauer_ms": 2000,
         "css_class": None,
-        "audio": "distant_howl.mp3",  # TODO: Add sound
+        "audio": "distant_howl.mp3",  # TTS-Fallback verfügbar
         "verdaechtigkeit": 0.4,
     },
     "mond_schein": {
@@ -526,7 +527,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Ein Kratzgeräusch ist zu hören",
         "dauer_ms": 1000,
         "css_class": None,
-        "audio": "scratch.mp3",  # TODO: Add sound
+        "audio": "scratch.mp3",  # TTS-Fallback verfügbar
         "verdaechtigkeit": 0.35,
     },
     "herzschlag": {
@@ -534,7 +535,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Ein schneller Herzschlag pulsiert",
         "dauer_ms": 1500,
         "css_class": "hint-heartbeat",
-        "audio": "heartbeat_fast.mp3",  # TODO: Add sound
+        "audio": "heartbeat_fast.mp3",  # TTS-Fallback verfügbar
         "verdaechtigkeit": 0.3,
     },
     "gluehen": {
@@ -550,7 +551,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Unverständliches Flüstern ist zu hören",
         "dauer_ms": 1200,
         "css_class": None,
-        "audio": "whisper.mp3",  # TODO: Add sound
+        "audio": "whisper.mp3",  # TTS-Fallback verfügbar
         "verdaechtigkeit": 0.25,
     },
     "selbst_verdaechtigung": {
@@ -558,7 +559,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Der Spieler macht sich selbst verdächtig (Selbstmörder)",
         "dauer_ms": 1000,
         "css_class": "hint-sus-self",
-        "audio": "suspicious.mp3",  # TODO: Add sound
+        "audio": "suspicious.mp3",  # TTS-Fallback verfügbar
         "verdaechtigkeit": 0.5,  # Spieler-kontrolliert
     },
     "stolpern": {
@@ -566,7 +567,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Der Spieler scheint zu stolpern",
         "dauer_ms": 500,
         "css_class": "hint-stumble",
-        "audio": "stumble.mp3",  # TODO: Add sound
+        "audio": "stumble.mp3",  # TTS-Fallback verfügbar
         "verdaechtigkeit": 0.1,
     },
     "kichern": {
@@ -574,7 +575,7 @@ HINWEIS_TYPEN = {
         "beschreibung": "Ein leises, böses Kichern",
         "dauer_ms": 800,
         "css_class": None,
-        "audio": "evil_chuckle.mp3",  # TODO: Add sound
+        "audio": "evil_chuckle.mp3",  # TTS-Fallback verfügbar
         "verdaechtigkeit": 0.45,
     },
 }

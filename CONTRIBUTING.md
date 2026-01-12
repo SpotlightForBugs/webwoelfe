@@ -141,17 +141,102 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/Spotli
 
 ### Your First Code Contribution
 
-<!-- TODO
-include Setup of env, IDE and typical getting started instructions?
+#### Setting Up Your Development Environment
 
--->
+Before you start contributing, you need to set up your local development environment:
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/SpotlightForBugs/webwoelfe.git
+   cd webwoelfe
+   ```
+
+2. **Install Python dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Install Node.js dependencies** (for frontend assets)
+   ```bash
+   npm install
+   ```
+
+4. **Set up the database**
+   ```bash
+   flask db upgrade
+   ```
+
+5. **Generate CSS** (if needed)
+   ```bash
+   python generate_css.py
+   ```
+
+6. **Run the development server**
+   ```bash
+   python app.py
+   ```
+   The application will be available at `http://localhost:5000`
+
+#### Recommended IDE Setup
+
+- **VS Code** with Python and Pylance extensions
+- **PyCharm** with the Flask plugin
+- Configure your IDE to use the project's `pyrightconfig.json` for type checking
+
+#### Project Structure Overview
+
+- `app.py` - Main Flask application entry point
+- `game_logic.py` - Core game mechanics and phase transitions
+- `models.py` - Database models and game state
+- `roles/` - Role definitions organized by category
+- `static/` - Frontend assets (JS, CSS, images, audio)
+- `templates/` - HTML templates
+- `tests/` - Test suite
+
+#### Running Tests
+
+```bash
+# Python tests
+pytest tests/
+
+# Playwright tests
+npx playwright test
+```
 
 ### Improving The Documentation
 
-<!-- TODO
-Updating, improving and correcting the documentation
+Good documentation is crucial for the project's success. We welcome contributions that:
 
--->
+#### Types of Documentation Improvements
+
+- **Fix typos and grammatical errors** - Even small fixes help!
+- **Clarify existing explanations** - If something was confusing to you, it might be confusing to others
+- **Add missing documentation** - Document undocumented features or functions
+- **Update outdated information** - Keep docs in sync with code changes
+- **Add code examples** - Practical examples help users understand features
+- **Translate documentation** - Help make the project accessible to more users
+
+#### Where Documentation Lives
+
+- **README.md** - Project overview and quick start guide
+- **CONTRIBUTING.md** - This file - contribution guidelines
+- **Wiki** - Detailed documentation at [github.com/SpotlightForBugs/webwoelfe/wiki](https://github.com/SpotlightForBugs/webwoelfe/wiki)
+- **Code comments** - Inline documentation in Python files
+- **Docstrings** - Python function and class documentation
+
+#### Documentation Style Guidelines
+
+- Use clear, concise language
+- Include code examples where appropriate
+- Use proper Markdown formatting
+- For German text, use proper umlauts (ä, ö, ü, ß)
+- Keep documentation up-to-date when making code changes
+
+#### How to Contribute Documentation
+
+1. For README/CONTRIBUTING changes: Edit the file directly and submit a PR
+2. For Wiki changes: Request write access or open an issue with the proposed content
+3. For code documentation: Include docstring updates in your code PRs
 
 ## Styleguides
 

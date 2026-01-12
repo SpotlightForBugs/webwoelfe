@@ -31,6 +31,11 @@
 
 set -e
 
+# Activate Python virtual environment if it exists
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+fi
+
 # Parse arguments
 PLAYERS=""
 HL_FLAG=""

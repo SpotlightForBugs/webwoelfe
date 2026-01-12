@@ -2359,7 +2359,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       if (window.village3d) window.village3d.setSelectedPlayer?.(null);
   }
 
-  function updatePhase(phase, runde, displayInfo) {
+  async function updatePhase(phase, runde, displayInfo) {
       const phaseEl = document.getElementById('phase-name');
       const isNacht = phase.includes('nacht') || phase.includes('phase');
       
@@ -2373,17 +2373,30 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           rundeEl.textContent = 'Runde ' + runde;
       }
 
-      // Nacht-Overlay
+      // Nacht-Overlay (server-authoritative phase determination)
       const overlay = document.getElementById('nacht-overlay');
-      //TODO: MAKE THIS SERVER SIDE!
-      const knownDayPhases = ['tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt'];
-      const isDayPhase = knownDayPhases.includes(phase) || phase.includes('tag') || phase.includes('abstimmung') || phase.includes('diskussion');
-      const isNightMode = !isDayPhase && (phase.includes('nacht') || phase.includes('phase') || phase.endsWith('_phase'));
-
-      if (isNightMode && !sollteAktivSein()) {
-          overlay.classList.add('aktiv');
-      } else {
-          overlay.classList.remove('aktiv');
+      try {
+        const response = await fetch(`/api/phase/is-day?phase=${encodeURIComponent(phase)}`);
+        const data = await response.json();
+        const isNightMode = data.success && data.is_night;
+        
+        if (isNightMode && !sollteAktivSein()) {
+            overlay.classList.add('aktiv');
+        } else {
+            overlay.classList.remove('aktiv');
+        }
+      } catch (e) {
+        console.error('Failed to check phase type:', e);
+        // Fallback to client-side logic
+        const knownDayPhases = ['tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt'];
+        const isDayPhase = knownDayPhases.includes(phase) || phase.includes('tag') || phase.includes('abstimmung') || phase.includes('diskussion');
+        const isNightMode = !isDayPhase && (phase.includes('nacht') || phase.includes('phase') || phase.endsWith('_phase'));
+        
+        if (isNightMode && !sollteAktivSein()) {
+            overlay.classList.add('aktiv');
+        } else {
+            overlay.classList.remove('aktiv');
+        }
       }
 
       updateActionButtons();

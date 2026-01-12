@@ -211,11 +211,6 @@
           </div>
         </div>
 
-        <div class="alert alert-info" role="status" style="margin-bottom: 1rem">
-          <strong>Kein Vorwissen nötig!</strong> Rollen und Regeln werden
-          automatisch erklärt, sobald der Erzähler das Spiel startet. Du musst
-          nur deine Freunde einladen.
-        </div>
 
         <!-- ============================================ -->
         <!-- ROLLEN-WIZARD - IMMER SICHTBAR -->
@@ -1121,7 +1116,7 @@
       }
 
       // Generate HTML from roles grouped by extension
-      container.innerHTML = generateRoleSelectionHTML(
+      container.innerHTML = await generateRoleSelectionHTML(
         data.grouped_by_extension,
       );
 
@@ -1141,7 +1136,7 @@
     }
   }
 
-  function generateRoleSelectionHTML(grouped) {
+  async function generateRoleSelectionHTML(grouped) {
     const extensionInfo = {
       base: {
         name: "Basisspiel",
@@ -1179,8 +1174,17 @@
 
     let html = "";
 
-    // Define the correct order for extensions //TODO: move to backend!
-    const extensionOrder = ['base', 'neumond', 'gemeinde', 'charaktere', 'sonderedition'];
+    // Fetch extension order from backend (moved from frontend)
+    let extensionOrder = ['base', 'neumond', 'gemeinde', 'charaktere', 'sonderedition'];
+    try {
+      const response = await fetch('/api/config/extension-order');
+      const data = await response.json();
+      if (data.success) {
+        extensionOrder = data.extension_order;
+      }
+    } catch (e) {
+      console.error('Failed to fetch extension order:', e);
+    }
     
     // Sort extensions: predefined order first, then alphabetical for any others
     const sortedExtensions = Object.keys(grouped).sort((a, b) => {
@@ -1206,13 +1210,36 @@
 
       // Dynamically generate description if not manually provided or to override
       if (roles && roles.length > 0) {
-            //TODO: pick Random!
-          const previewRoles = roles.slice(0, 4).map(r => r.name);
-          let desc = previewRoles.join(", ");
-          if (roles.length > 4) {
+          // Use random selection from backend API
+          try {
+            const response = await fetch(`/api/roles/preview?extension_pack=${extPack}&count=4`);
+            const data = await response.json();
+            if (data.success && data.roles.length > 0) {
+              const previewRoles = data.roles.map(r => r.name);
+              let desc = previewRoles.join(", ");
+              if (data.has_more) {
+                desc += " & mehr";
+              }
+              info.desc = desc;
+            } else {
+              // Fallback to first 4
+              const previewRoles = roles.slice(0, 4).map(r => r.name);
+              let desc = previewRoles.join(", ");
+              if (roles.length > 4) {
+                desc += " & mehr";
+              }
+              info.desc = desc;
+            }
+          } catch (e) {
+            console.error('Failed to fetch role preview:', e);
+            // Fallback to first 4
+            const previewRoles = roles.slice(0, 4).map(r => r.name);
+            let desc = previewRoles.join(", ");
+            if (roles.length > 4) {
               desc += " & mehr";
+            }
+            info.desc = desc;
           }
-          info.desc = desc;
       } else {
           info.desc = "Keine Rollen verfügbar";
       }

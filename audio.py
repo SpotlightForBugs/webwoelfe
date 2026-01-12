@@ -388,6 +388,56 @@ async def generiere_hinweis_audio_mit_tts():
             print(f"  Hinweis-Audio erstellt: {name}")
 
 
+def hole_hinweis_audio(audio_dateiname: str | None, beschreibung: str) -> str | None:
+    """
+    Holt Hinweis-Audio mit automatischem TTS-Fallback.
+    
+    Args:
+        audio_dateiname: Dateiname des gewünschten Audios (z.B. "shadow_swoosh.mp3")
+        beschreibung: Textbeschreibung des Hinweises für TTS-Fallback
+    
+    Returns:
+        Pfad zur Audio-Datei oder None wenn kein Audio benötigt
+    """
+    if audio_dateiname is None:
+        return None
+    
+    # Prüfe ob statische Audio-Datei existiert
+    audio_pfad = Path(f"static/audio/hints/{audio_dateiname}")
+    if audio_pfad.exists():
+        return str(audio_pfad)
+    
+    # Fallback: Generiere TTS-Audio aus Beschreibung
+    logger.info(f"[HINT-AUDIO] Statische Datei {audio_dateiname} nicht gefunden, generiere TTS-Fallback")
+    
+    # Extrahiere Dateinamen ohne Extension für Cache
+    name_ohne_ext = audio_dateiname.replace(".mp3", "")
+    
+    # Verwende Beschreibung für TTS
+    try:
+        audio_hash = generiere_audio_hash(beschreibung, "de-DE-KatjaNeural", "fluestern")
+        tts_datei = AUDIO_CACHE_DIR / f"hint_{audio_hash}.mp3"
+        
+        if not tts_datei.exists():
+            # Generiere TTS synchron
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            communicate = edge_tts.Communicate(
+                text=beschreibung, 
+                voice="de-DE-KatjaNeural", 
+                rate="-20%", 
+                volume="-10%"
+            )
+            loop.run_until_complete(communicate.save(str(tts_datei)))
+            loop.close()
+            logger.info(f"[HINT-AUDIO] TTS-Fallback erstellt: {tts_datei}")
+        
+        return str(tts_datei)
+    except Exception as e:
+        logger.error(f"[HINT-AUDIO] TTS-Fallback fehlgeschlagen: {e}")
+        return None
+
+
 async def generiere_erzaehler_audio_cache():
     """
     Pre-generiert alle Erzähler-Audio-Dateien für den Online-Modus.

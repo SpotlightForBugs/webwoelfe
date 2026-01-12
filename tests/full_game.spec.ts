@@ -595,6 +595,10 @@ test.describe("Full Game Simulation", () => {
           break;
         }
 
+        // Wait for role UI and phase mapping to load on client side
+        // This ensures action panels are visible before we try to interact
+        await sleep(1500);
+
         // Handle phase-specific actions
         await handlePhase(
           gameState.phase,
@@ -2719,6 +2723,27 @@ async function selectTargetAndConfirm(
   targetName: string,
   buttonTexts: string[],
 ): Promise<boolean> {
+  // Wait for the current phase to finish loading on this specific page
+  // This ensures SocketIO phase_update has been received and processed
+  await page.waitForFunction(
+    () => {
+      const panel = document.getElementById('action-panel');
+      if (!panel) return false;
+      // Panel must be visible OR we're in a passive phase
+      const style = window.getComputedStyle(panel);
+      return style.display !== 'none' || !!(window as any).istErzaehler;
+    },
+    { timeout: 10000 }
+  ).catch(() => {
+    console.log('[selectTargetAndConfirm] Warning: Action panel did not become visible within timeout');
+  });
+
+  // Wait for action buttons container to be populated
+  const actionButtonsContainer = page.locator('#action-buttons');
+  await actionButtonsContainer.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
+    console.log('[selectTargetAndConfirm] Warning: Action buttons not visible');
+  });
+
   // First, check if target card is visible
   let targetCard = page.locator(`.spieler-card[data-name="${targetName}"]`);
 
@@ -2744,14 +2769,14 @@ async function selectTargetAndConfirm(
 
   // Now click on the target card
   await targetCard.click();
-  // Wait for the action area to update after selecting a target
-  const actionButtonsContainer = page.locator('#action-buttons');
-  await actionButtonsContainer.isVisible({ timeout: 1500 }).catch(() => false);
+  // Wait for buttons to appear/update after selecting a target
   await page
-    .locator('#action-buttons button.btn, #village3d-action-buttons button')
+    .locator('#action-buttons button.btn:not([disabled]), #village3d-action-buttons button:not([disabled])')
     .first()
-    .isVisible({ timeout: 1500 })
-    .catch(() => false);
+    .waitFor({ state: 'visible', timeout: 3000 })
+    .catch(() => {
+      console.log('[selectTargetAndConfirm] Warning: No enabled action button appeared');
+    });
 
   // Find and click action button
   let buttonClicked = false;
@@ -2798,6 +2823,27 @@ async function selectTargetAndConfirm(
         await okBtn.click();
         buttonClicked = true;
       }
+    }
+  }
+
+  // If still no button found, retry once after a delay (role UI might load asynchronously)
+  if (!buttonClicked) {
+    await sleep(2500);
+    
+    // Retry with generic button
+    const retryBtn = page
+      .locator(
+        [
+          '#action-buttons button.btn:not([disabled])',
+          '#village3d-action-buttons button:not([disabled])',
+        ].join(', '),
+      )
+      .filter({ hasNotText: 'Überspringen' })
+      .first();
+
+    if (await retryBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await retryBtn.click();
+      buttonClicked = true;
     }
   }
 

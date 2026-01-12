@@ -1382,6 +1382,55 @@ def check_if_phase_is_day():
 _aktive_hinweise = {}  # raum_id -> {spieler_id: (hinweis_typ, intensitaet)}
 
 
+@app.route("/api/debug/roles/random-selection", methods=["POST"])
+def debug_random_role_selection():
+    """
+    DEBUG ENDPOINT: Randomly select roles for testing.
+    This allows the test suite to explore different role combinations.
+    """
+    import os
+    if not os.environ.get("FLASK_ENV") == "development":
+        return jsonify({"error": "Only available in development mode"}), 403
+    
+    data = request.get_json()
+    player_count = data.get("player_count", 8)
+    
+    # Get all available roles from registry
+    from roles import RoleRegistry
+    all_roles = [role.info.name for role in RoleRegistry.get_all()]
+    
+    # Randomly select roles, ensuring we have enough for all players
+    random.shuffle(all_roles)
+    selected_roles = {}
+    
+    # Always include essential roles for a working game
+    essential_roles = ["Werwolf", "Dorfbewohner"]
+    remaining = player_count
+    
+    # Add 1-2 Werewolves depending on player count
+    werewolf_count = 1 if player_count < 10 else 2
+    selected_roles["Werwolf"] = werewolf_count
+    remaining -= werewolf_count
+    
+    # Fill the rest with random roles
+    available_for_random = [r for r in all_roles if r not in essential_roles and r != "Erzaehler"]
+    random.shuffle(available_for_random)
+    
+    for role in available_for_random[:min(remaining - 1, len(available_for_random))]:
+        selected_roles[role] = 1
+        remaining -= 1
+    
+    # Fill any remaining slots with Dorfbewohner
+    if remaining > 0:
+        selected_roles["Dorfbewohner"] = remaining
+    
+    return jsonify({
+        "success": True,
+        "roles": selected_roles,
+        "total": sum(selected_roles.values())
+    })
+
+
 @app.route("/api/village/<code>")
 def api_village(code):
     """

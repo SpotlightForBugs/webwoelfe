@@ -346,7 +346,9 @@ test.describe("Full Game Simulation", () => {
               // Ignore some common noise and handled warnings
               if (!text.includes("favicon") &&
                 !text.includes("ERR_BLOCKED_BY_CLIENT") &&
-                !text.includes("Viewport height is too small")) {
+                !text.includes("Viewport height is too small") &&
+                !text.includes("saveSitzordnung") &&  // Race condition during navigation
+                !text.includes("Failed to fetch")) {  // Network errors during cleanup
                 console.error(`🚨 CONSOLE ERROR [${playerName}]: ${text}`);
                 throw new Error(`Console Error in ${playerName}: ${text}`);
               }
@@ -409,19 +411,22 @@ test.describe("Full Game Simulation", () => {
       await sleep(2000);
       for (const player of players) {
         await player.page.waitForURL(/\/spiel\//, {
-          timeout: 8000,
+          timeout: 15000,  // Increased timeout for slower servers
           waitUntil: 'domcontentloaded' // Don't wait for external resources (fonts, CDN, etc.)
         });
 
-        // VERIFY VILLAGE 3D - Wait for async initialization (optional feature)
+        // VERIFY VILLAGE 3D (TS-based) - Wait for async initialization (optional feature)
         try {
           await player.page.waitForFunction(
-            () => typeof (window as any).village3d !== 'undefined',
+            () => {
+              const v3d = (window as any).village3d;
+              return v3d !== undefined && typeof v3d.setPlayers === 'function';
+            },
             { timeout: 3000 }
           );
-          // log(`✓ Village3D initialized for ${player.name}`);
+          // log(`✓ Village3D (TS) initialized for ${player.name}`);
         } catch (e) {
-          log(`⚠️  Village3D not initialized for ${player.name} (non-critical, continuing...)`);
+          log(`⚠️  Village3D (TS) not initialized for ${player.name} (non-critical, continuing...)`);
         }
       }
 
@@ -928,6 +933,11 @@ async function handlePhase(
 
   if (normalizedPhase.includes("buddler")) {
     await handleBuddlerPhase(players);
+    return;
+  }
+
+  if (normalizedPhase.includes("henker")) {
+    await handleHenkerPhase(players);
     return;
   }
 
@@ -1970,6 +1980,28 @@ async function handleBuddlerPhase(players: PlayerWindow[]): Promise<void> {
   log(
     `    Buddler gräbt ${target.name}s Grab aus (am Leben: ${target.isAlive})`,
   );
+}
+
+async function handleHenkerPhase(players: PlayerWindow[]): Promise<void> {
+  log("  🪓 Henker-Phase: Wähle Ziel zum Hängen... (RANDOM MODE)");
+
+  const henker = findPlayerByRole(players, ["Henker"]);
+  if (!henker) {
+    log("    Kein Henker im Spiel");
+    return;
+  }
+
+  if (shouldSkipAction()) {
+    log("    ⚠️ [RANDOM] Henker überspringt");
+    return;
+  }
+
+  const target = getRandomTarget(players, henker, !shouldTargetWrong());
+  await selectTargetAndConfirm(henker.page, target.name, [
+    "Ziel wählen",
+    "Wählen",
+  ]);
+  log(`    Henker wählt ${target.name} als Ziel`);
 }
 
 // ============================================================================

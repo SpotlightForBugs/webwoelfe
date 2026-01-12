@@ -10,6 +10,7 @@ from ..base import (
     Role,
     RollenInfo,
     AktionsErgebnis,
+    RollenUI,
     SpielKontext,
     StateField,
     StateType,

@@ -258,5 +258,5 @@ fi
 export TEST_RANDOM_ROLES=true
 echo "   (Zufällige Rollenauswahl aktiviert für umfassende Tests)"
 
-PLAYERS=$PLAYERS HL=$HL_FLAG SEED=$SEED npx playwright test tests/full_game.spec.ts --headed --timeout=0
+PLAYERS=$PLAYERS HL=$HL_FLAG SEED=$SEED npx playwright test tests/full_game.spec.ts --headed --timeout=0 --reporter=line
 

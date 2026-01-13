@@ -24,9 +24,7 @@ export default class Village3DThree {
   private isLobbyMode: boolean = false;
   
   // Camera
-  private targetCameraHeight: number = 15;
   private targetCameraRadius: number = 25;
-  private defaultCameraHeight: number = 15;
   private defaultCameraRadius: number = 25;
   
   // Sky and celestial bodies
@@ -89,8 +87,6 @@ export default class Village3DThree {
   private sleepingPlayers: Set<number> = new Set();
   
   // Camera state for top-down view
-  private cameraHeight: number = 15;
-  private cameraRadius: number = 25;
   private targetPosition: PCVec3 | null = null;
   private cameraPanX: number = 0;
   private cameraPanZ: number = 0;
@@ -161,11 +157,9 @@ export default class Village3DThree {
     
     // Camera defaults based on mode
     if (this.isLobbyMode) {
-      this.defaultCameraHeight = 20;
       this.defaultCameraRadius = 30;
     }
     
-    this.targetCameraHeight = this.defaultCameraHeight;
     this.targetCameraRadius = this.defaultCameraRadius;
     
     this.loadRoleDataFromAPI();
@@ -332,16 +326,13 @@ export default class Village3DThree {
         : new pc.Color(0.1, 0.1, 0.15),
       farClip: 1000,
     });
-    this.camera.setPosition(0, this.targetCameraHeight, this.targetCameraRadius);
-    this.camera.lookAt(0, 0, 0);
+    // Top-down view: position camera above the scene looking straight down
+    const initialHeight = this.targetCameraRadius * 1.5;
+    this.camera.setPosition(0, initialHeight, 0);
+    this.camera.setEulerAngles(-90, 0, 0);
     this.app.root.addChild(this.camera);
     
     // Initialize camera tracking variables
-    this.cameraHeight = this.defaultCameraHeight;
-    this.cameraRadius = this.defaultCameraRadius;
-    this.targetCameraHeight = this.cameraHeight;
-    this.targetCameraRadius = this.cameraRadius;
-    
     const pc2 = window.pc;
     this.targetPosition = new pc2.Vec3(0, 0, 0);
 
@@ -2725,10 +2716,16 @@ export default class Village3DThree {
    * Reset camera to default position
    */
   resetCamera(): void {
-    this.targetCameraHeight = this.defaultCameraHeight;
     this.targetCameraRadius = this.defaultCameraRadius;
     this.cameraPanX = 0;
     this.cameraPanZ = 0;
+    
+    // Immediately apply the camera position for top-down view
+    if (this.camera && this.viewMode !== 'first-person') {
+      const height = this.targetCameraRadius * 1.5;
+      this.camera.setPosition(0, height, 0);
+      this.camera.setEulerAngles(-90, 0, 0);
+    }
   }
 
   /**

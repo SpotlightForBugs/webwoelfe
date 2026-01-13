@@ -980,48 +980,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     font-style: italic;
   }
 
-  .nacht-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    /* Reduced opacity layout to show the 3D scene */
-    background: radial-gradient(circle, transparent 30%, rgba(0, 0, 20, 0.7) 100%);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    pointer-events: none; /* Allow interaction with 3D scene */
-  }
-
-  .nacht-overlay.aktiv {
-    display: flex;
-  }
-
-  .nacht-content {
-    position: absolute;
-    top: 5%;
-    width: 100%;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.9);
-    pointer-events: none;
-  }
-
-  .nacht-content h2 {
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-    text-shadow: 0 0 10px rgba(0,0,0,0.8);
-    font-weight: 300;
-    letter-spacing: 2px;
-  }
-
-  .mond-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.2rem;
-    text-shadow: 0 0 15px rgba(255, 255, 200, 0.5);
-  }
-
   /* Erzähler-Panel */
   .erzaehler-panel {
     background: linear-gradient(
@@ -1940,15 +1898,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     </div>
   </div>
 </div>
-
-<!-- Nacht Overlay -->
-<div class="nacht-overlay" id="nacht-overlay">
-  <div class="nacht-content">
-    <div class="mond-icon"><i class="fa-solid fa-moon"></i></div>
-    <h2>Die Nacht bricht an...</h2>
-    <p>Schlafe friedlich, Dorfbewohner.</p>
-  </div>
-</div>
 {% endblock %} {% block scripts %}
 <script>
   const socket = io();
@@ -2049,9 +1998,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   // Legacy Handler (Backward Compatibility)
   socket.on('phase_geaendert', async function(data) {
-      // Wenn eine neue Nacht beginnt oder die Phase im Mapping fehlt, laden wir das Mapping neu
-      // Dies behebt das Problem, dass die UI nicht weiß, dass sie für eine bestimmte Rolle (die jetzt aktiv wurde)
-      // den Nacht-Overlay ausblenden muss.
+      // Refresh mapping when a new night begins or when phase is missing from mapping
+      // This ensures UI knows which role is active for proper action button visibility
       if (data.phase === 'nacht_start' || (data.phase.includes('phase') && !phaseRoleMapping[data.phase])) {
           console.log('[Phase] Refreshing mapping for phase:', data.phase);
           await loadPhaseRoleMapping();
@@ -2500,31 +2448,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           rundeEl.textContent = 'Runde ' + runde;
       }
 
-      // Nacht-Overlay (server-authoritative phase determination)
-      const overlay = document.getElementById('nacht-overlay');
-      try {
-        const response = await fetch(`/api/phase/is-day?phase=${encodeURIComponent(phase)}`);
-        const data = await response.json();
-        const isNightMode = data.success && data.is_night;
-        
-        if (isNightMode && !sollteAktivSein()) {
-            overlay.classList.add('aktiv');
-        } else {
-            overlay.classList.remove('aktiv');
-        }
-      } catch (e) {
-        console.error('Failed to check phase type:', e);
-        // Fallback to client-side logic
-        const knownDayPhases = ['tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt'];
-        const isDayPhase = knownDayPhases.includes(phase) || phase.includes('tag') || phase.includes('abstimmung') || phase.includes('diskussion');
-        const isNightMode = !isDayPhase && (phase.includes('nacht') || phase.includes('phase') || phase.endsWith('_phase'));
-        
-        if (isNightMode && !sollteAktivSein()) {
-            overlay.classList.add('aktiv');
-        } else {
-            overlay.classList.remove('aktiv');
-        }
-      }
+      // Night/day transition handled by Village3D via VillageIntegration
+      // No separate overlay needed - 3D scene provides visual feedback
 
       updateActionButtons();
   }

@@ -2451,11 +2451,14 @@ export default class Village3DThree {
     if (this.moon) this.moon.enabled = isNight;
     if (this.moonGlow) this.moonGlow.enabled = isNight;
     
-    // Update fog - Düsterwald: thick, oppressive mist
+    // Update fog - Düsterwald: atmospheric mist with extended render distance
+    // Lobby mode uses even further fog to show more terrain
+    const fogEndNight = this.isLobbyMode ? 120 : 75;
+    const fogEndDay = this.isLobbyMode ? 150 : 100;
     this.setSceneSettings({
       fog: isNight ? 'linear' : 'linear',
-      fogStart: isNight ? 12 : 20,
-      fogEnd: isNight ? 55 : 80,
+      fogStart: isNight ? 15 : 25,
+      fogEnd: isNight ? fogEndNight : fogEndDay,
       fogColor: isNight 
         ? new window.pc.Color(0.015, 0.02, 0.04)
         : new window.pc.Color(0.25, 0.28, 0.32)

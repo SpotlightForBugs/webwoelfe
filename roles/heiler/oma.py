@@ -68,7 +68,7 @@ class Oma(Role):
             avatar_gradient_from="#fda4af",
             avatar_gradient_to="#f43f5e",
             avatar_border_color="#fb7185",
-            badge_emoji="👵",
+            badge_emoji="fas fa-person",
         )
 
     @property

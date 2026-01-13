@@ -72,7 +72,7 @@ class Hahn(Role):
             avatar_gradient_from="#dc2626",
             avatar_gradient_to="#991b1b",
             avatar_border_color="#ef4444",
-            badge_emoji="🐓",
+            badge_emoji="fa-solid fa-feather",
         )
 
     @property

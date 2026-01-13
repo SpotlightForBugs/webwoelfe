@@ -54,7 +54,7 @@ class Putzfrau(Role):
             avatar_gradient_from="#06b6d4",
             avatar_gradient_to="#0891b2",
             avatar_border_color="#22d3ee",
-            badge_emoji="🧹",
+            badge_emoji="fas fa-broom",
         )
 
     @property
@@ -114,7 +114,7 @@ class Putzfrau(Role):
 
         return AktionsErgebnis(
             erfolg=True,
-            nachricht=f"🧹 Beim Aufräumen des Hauses von {gestorbener.name} hast du entdeckt: Er/Sie war {rollen_name} (Team: {team})!",
+            nachricht=f"Beim Aufräumen des Hauses von {gestorbener.name} hast du entdeckt: Er/Sie war {rollen_name} (Team: {team})!",
             effekte={
                 "rolle_enthuellt": True,
                 "enthuellte_rolle": rollen_name,
@@ -148,13 +148,13 @@ class Putzfrau(Role):
             logs = []
             for enth in enthuellungen:
                  logs.append({
-                     "text": f"🧹 Die Putzfrau hat beim Aufräumen eine Rolle entdeckt: {enth['rolle']}",
+                     "text": f"Die Putzfrau hat beim Aufräumen eine Rolle entdeckt: {enth['rolle']}",
                      "sichtbar_fuer": "alle"
                  })
             
             return AktionsErgebnis(
                 erfolg=True,
-                nachricht=f"🧹 Die Putzfrau hat {len(enthuellungen)} Rolle(n) beim Aufräumen entdeckt!",
+                nachricht=f"Die Putzfrau hat {len(enthuellungen)} Rolle(n) beim Aufräumen entdeckt!",
                 effekte={"enthuellungen": enthuellungen},
                 additional_logs=logs
             )

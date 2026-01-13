@@ -76,7 +76,7 @@ class Engel(Role):
             avatar_gradient_from="#fef3c7",
             avatar_gradient_to="#fde68a",
             avatar_border_color="#fef08a",
-            badge_emoji="😇",
+            badge_emoji="fas fa-face-smile-halo",
         )
 
     @property

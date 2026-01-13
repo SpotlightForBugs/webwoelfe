@@ -58,7 +58,7 @@ class Medium(Role):
             avatar_gradient_from="#c084fc",
             avatar_gradient_to="#9333ea",
             avatar_border_color="#d8b4fe",
-            badge_emoji="👻",
+            badge_emoji="fa-solid fa-ghost",
         )
 
     @property

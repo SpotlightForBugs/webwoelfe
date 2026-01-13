@@ -75,7 +75,7 @@ class Hexe(Role):
             avatar_gradient_from="#d946ef",
             avatar_gradient_to="#a21caf",
             avatar_border_color="#f0abfc",
-            badge_emoji="🧪",
+            badge_emoji="fas fa-flask",
             distribution=DistributionConfig(
                 min_players=5,
                 count_func=lambda n: 1,

@@ -71,7 +71,7 @@ class Tonks(Role):
             avatar_gradient_from="#a855f7",
             avatar_gradient_to="#7e22ce",
             avatar_border_color="#c084fc",
-            badge_emoji="🎭",
+            badge_emoji="fas fa-masks",
         )
 
     @property

@@ -69,7 +69,7 @@ class Tratschweib(Role):
             avatar_gradient_from="#e11d48",
             avatar_gradient_to="#be123c",
             avatar_border_color="#fb7185",
-            badge_emoji="🗣️",
+            badge_emoji="fa-solid fa-comment",
         )
 
     @property

@@ -69,7 +69,7 @@ class Griesgram(Role):
             avatar_gradient_from="#6b7280",
             avatar_gradient_to="#4b5563",
             avatar_border_color="#9ca3af",
-            badge_emoji="😠",
+            badge_emoji="fas fa-face-angry",
         )
 
     def is_active_on_first_night(self) -> bool:

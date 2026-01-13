@@ -45,7 +45,13 @@ class Jaeger(Role):
 
     def state_fields(self) -> List[StateField]:
         return [
-            StateField("schuss_verfuegbar", StateType.BOOL, True, "Schuss bereit", icon="🔫"),
+            StateField(
+                "schuss_verfuegbar",
+                StateType.BOOL,
+                True,
+                "Schuss bereit",
+                icon="fa-solid fa-gun",
+            ),
         ]
 
     @property
@@ -68,7 +74,7 @@ class Jaeger(Role):
             avatar_gradient_from="#f97316",
             avatar_gradient_to="#c2410c",
             avatar_border_color="#fb923c",
-            badge_emoji="🔫",
+            badge_emoji="fas fa-gun",
             distribution=DistributionConfig(
                 min_players=5,
                 count_func=lambda n: 1,

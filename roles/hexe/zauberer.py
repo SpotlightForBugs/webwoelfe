@@ -69,7 +69,7 @@ class Zauberer(Role):
             avatar_gradient_from="#3b0764",
             avatar_gradient_to="#2e1065",
             avatar_border_color="#581c87",
-            badge_emoji="🧙‍♂️",
+            badge_emoji="fa-solid fa-hat-wizard",
         )
 
     @property

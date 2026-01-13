@@ -421,15 +421,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     border-color: {{ style.avatar_border_color }};
   }
 
-  /* Badge emoji */
-  .spieler-avatar[data-role="{{ css_name }}"]::after {
-    content: "{{ style.badge_emoji }}";
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    font-size: 1rem;
-    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
-  }
+  /* Role badge icon is rendered as an <i> element inside .spieler-avatar */
   {% endfor %}
   {% endif %}
 
@@ -466,13 +458,14 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   .spieler-card.tot::after {
-    content: "💀";
+    content: "\f54c";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(-15deg);
     font-size: 2rem;
-    font-weight: bold;
     color: var(--accent-red);
     text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
   }
@@ -507,6 +500,22 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     border-radius: 50%;
     padding: 3px;
     z-index: 2;
+  }
+
+  .spieler-avatar .role-badge-icon {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    z-index: 2;
+    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
   }
 
   .spieler-name {
@@ -1716,9 +1725,14 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                  {% endif %}
             >
               <span class="avatar-initial">{{ s.name[0]|upper }}</span>
+              {% if kennt_rolle and s.rolle and rollen_styles[s.rolle|css_class].badge_emoji %}
+                <i class="role-badge-icon {{ rollen_styles[s.rolle|css_class].badge_emoji }}" aria-hidden="true"></i>
+              {% endif %}
               {% for effect in spieler_effekte %}
-                {% if effect.icon %}
-                <span class="rolle-icon effect-icon" title="{{ effect.name }}">{{ effect.icon }}</span>
+                {% if effect.icon_class %}
+                  <span class="rolle-icon effect-icon" title="{{ effect.name }}"><i class="{{ effect.icon_class }}" aria-hidden="true"></i></span>
+                {% elif effect.icon %}
+                  <span class="rolle-icon effect-icon" title="{{ effect.name }}">{{ effect.icon }}</span>
                 {% endif %}
               {% endfor %}
             </div>
@@ -2149,6 +2163,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       const bgStyle = config.gradient || 
           `linear-gradient(135deg, ${config.color || '#4a90d9'} 0%, ${adjustColor(config.color || '#4a90d9', -30)} 100%)`;
+
+        const iconHtml = config.icon_class
+          ? `<i class="${config.icon_class}" aria-hidden="true"></i>`
+          : (config.icon || '');
       
       overlay.innerHTML = `
           <div style="
@@ -2160,7 +2178,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               box-shadow: 0 0 60px ${hexToRgba(config.color || '#4a90d9', 0.6)};
               animation: ${config.animation || 'pulse'} 1s ease-in-out;
           ">
-              ${config.icon ? `<div style="font-size: 4rem; margin-bottom: 1rem;">${config.icon}</div>` : ''}
+            ${iconHtml ? `<div style="font-size: 4rem; margin-bottom: 1rem;">${iconHtml}</div>` : ''}
               <h2 style="color: white; font-size: 2rem; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
                   ${config.title || ''}
               </h2>
@@ -2929,7 +2947,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       const mappedRole = phaseRoleMapping[aktuellePhase];
       if (mappedRole) {
           // Normalize for comparison (case-insensitive)
-          return mappedRole.toLowerCase() === spielerRolle.toLowerCase();
+          // Handle both string and object formats
+          const mr = (typeof mappedRole === 'object' && mappedRole.role_name) ? mappedRole.role_name : mappedRole;
+          if (typeof mr === 'string') {
+              return mr.toLowerCase() === spielerRolle.toLowerCase();
+          }
       }
 
       // Fallback: Check if phase name matches role name
@@ -2941,6 +2963,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
           if (simplePhaseName === simpleRoleName) {
               console.log('[Phase Check] Fallback match found:', aktuellePhase);
+              return true;
+          }
+          
+          // Special case for Aurenseherin (sometimes issues with spelling/mapping)
+          if (simplePhaseName === 'aurenseherin' && simpleRoleName.includes('aurenseherin')) {
               return true;
           }
       }
@@ -3289,7 +3316,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
                       if (container) {
                           // Zeige Stimmenanzahl
-                          container.innerHTML = `<span style="color: var(--accent-red);">🗳️ ${stimmen} Stimme${stimmen > 1 ? 'n' : ''}</span>`;
+                          container.innerHTML = `<span style="color: var(--accent-red);"><i class="fa-solid fa-check-to-slot" aria-hidden="true"></i> ${stimmen} Stimme${stimmen > 1 ? 'n' : ''}</span>`;
                       }
 
                       // Zeige Badge
@@ -3322,7 +3349,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   // Socket-Event für Echtzeit-Stimmen-Updates
   socket.on('stimme_abgegeben', function(data) {
-      addLog(`🗳️ ${data.waehler_name} stimmt für ${data.ziel_name}`);
+      addLog(`<i class="fa-solid fa-check-to-slot" aria-hidden="true"></i> ${data.waehler_name} stimmt für ${data.ziel_name}`);
 
       // Update Voter-Dot
       const dot = document.querySelector(`.voter-dot[data-player-id="${data.waehler_id}"]`);
@@ -3717,7 +3744,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       btn.innerHTML = `
         <span>${p.name}</span>
-        <span class="meta">${isAlive ? '' : '💀'}${isNarrator ? ' Erz.' : ''}</span>
+        <span class="meta">${isAlive ? '' : '<i class="fa-solid fa-skull" aria-hidden="true"></i>'}${isNarrator ? ' Erz.' : ''}</span>
       `;
 
       btn.addEventListener('click', () => {

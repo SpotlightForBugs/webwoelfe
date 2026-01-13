@@ -69,7 +69,7 @@ class Inquisitor(Role):
             avatar_gradient_from="#1e3a8a",
             avatar_gradient_to="#172554",
             avatar_border_color="#2563eb",
-            badge_emoji="⚖️",
+            badge_emoji="fa-solid fa-scale-balanced",
         )
 
     @property

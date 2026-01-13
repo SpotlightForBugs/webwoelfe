@@ -48,8 +48,20 @@ class Wolfsjunge(Role):
 
     def state_fields(self) -> List[StateField]:
         return [
-            StateField("vorbild_id", StateType.PLAYER_ID, None, "ID des Vorbilds", icon="👤"),
-            StateField("verwandelt", StateType.BOOL, False, "Zum Werwolf verwandelt", icon="🐺"),
+            StateField(
+                "vorbild_id",
+                StateType.PLAYER_ID,
+                None,
+                "ID des Vorbilds",
+                icon="fa-solid fa-user",
+            ),
+            StateField(
+                "verwandelt",
+                StateType.BOOL,
+                False,
+                "Zum Werwolf verwandelt",
+                icon="fa-solid fa-paw",
+            ),
         ]
 
     @property
@@ -80,7 +92,7 @@ class Wolfsjunge(Role):
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",
             avatar_border_color="#ca8a04",
-            badge_emoji="🐾",
+            badge_emoji="fa-solid fa-paw",
         )
 
     @property

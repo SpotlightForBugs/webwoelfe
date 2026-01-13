@@ -28,26 +28,26 @@ HL_FLAG=""
 if [ -z "$DOCKER_CONTAINER" ] && [ -z "$COOLIFY_DEPLOYMENT" ]; then
     if [ -f "instance/webwoelfe.db" ]; then
         rm instance/webwoelfe.db
-        echo "🗑️  Alte Datenbankdatei gelöscht (Development Mode)"
+        echo "[CLEAN] Alte Datenbankdatei gelöscht (Development Mode)"
     fi
 else
-    echo "📦 Production/Docker Mode: Datenbankdatei wird beibehalten"
+    echo "[INFO] Production/Docker Mode: Datenbankdatei wird beibehalten"
 fi
 
 # Build TypeScript if node_modules exists
 if [ -d "node_modules" ]; then
-    echo "🔨 Building TypeScript modules..."
+    echo "[BUILD] Building TypeScript modules..."
     npm run build
     if [ $? -ne 0 ]; then
-        echo "⚠️  TypeScript build failed, continuing anyway..."
+        echo "[WARN] TypeScript build failed, continuing anyway..."
     else
-        echo "✅ TypeScript build completed"
+        echo "[OK] TypeScript build completed"
     fi
 elif command -v npm &> /dev/null; then
-    echo "📦 Installing npm dependencies and building..."
+    echo "[PKG] Installing npm dependencies and building..."
     npm install && npm run build
 else
-    echo "⚠️  Node.js/npm not found, skipping TypeScript build"
+    echo "[WARN] Node.js/npm not found, skipping TypeScript build"
 fi
 
 # operating system aware venv activation
@@ -77,11 +77,11 @@ done
 PLAYERS=${PLAYERS:-8}
 
 if [ "$PLAYERS" -lt 5 ]; then
-    echo "⚠️  Mindestens 5 Spieler benötigt. Setze auf 5."
+    echo "[WARN] Mindestens 5 Spieler benötigt. Setze auf 5."
     PLAYERS=5
 fi
 
-echo "🐺 Webwölfe - Game Setup"
+echo "Webwölfe - Game Setup"
 echo "========================"
 echo "Spieleranzahl: $PLAYERS"
 echo ""
@@ -90,7 +90,7 @@ echo ""
 SERVER_PID=""
 PORT=5001
 if ! curl -s http://localhost:$PORT > /dev/null 2>&1; then
-    echo "🚀 Starte Flask-Server auf Port $PORT..."
+    echo "[START] Starte Flask-Server auf Port $PORT..."
     
     # Aktiviere venv falls vorhanden
     if [ -f "venv/bin/activate" ]; then
@@ -121,7 +121,7 @@ if ! curl -s http://localhost:$PORT > /dev/null 2>&1; then
     
     if ! curl -s http://localhost:$PORT > /dev/null 2>&1; then
         echo ""
-        echo "❌ Flask-Server konnte nicht gestartet werden"
+        echo "[ERROR] Flask-Server konnte nicht gestartet werden"
         exit 1
     fi
 else
@@ -132,7 +132,7 @@ fi
 cleanup() {
     if [ -n "$SERVER_PID" ]; then
         echo ""
-        echo "🛑 Beende Flask-Server (PID: $SERVER_PID)..."
+        echo "[STOP] Beende Flask-Server (PID: $SERVER_PID)..."
         kill $SERVER_PID 2>/dev/null || true
     fi
 }
@@ -140,13 +140,13 @@ trap cleanup EXIT
 
 # Check if Playwright is installed
 if ! command -v npx &> /dev/null; then
-    echo "❌ npx nicht gefunden. Installiere Node.js"
+    echo "[ERROR] npx nicht gefunden. Installiere Node.js"
     exit 1
 fi
 
 # Run the Playwright setup script
 echo ""
-echo "🚀 Starte Browser-Fenster..."
+echo "[START] Starte Browser-Fenster..."
 if [ -n "$HL_FLAG" ]; then
     echo "   (Headless-Modus: Ein Fenster sichtbar, Rest headless)"
 fi

@@ -68,7 +68,7 @@ class Dorfdepp(Role):
             avatar_gradient_from="#a78bfa",
             avatar_gradient_to="#7c3aed",
             avatar_border_color="#c4b5fd",
-            badge_emoji="🤪",
+            badge_emoji="fas fa-face-grin-squint-tears",
         )
 
     @property

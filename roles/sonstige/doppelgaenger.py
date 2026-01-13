@@ -82,7 +82,7 @@ class Doppelgaenger(Role):
             avatar_gradient_from="#6366f1",
             avatar_gradient_to="#4338ca",
             avatar_border_color="#818cf8",
-            badge_emoji="👥",
+            badge_emoji="fas fa-people",
         )
 
     @property

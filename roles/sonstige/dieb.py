@@ -68,7 +68,7 @@ class Dieb(Role):
             avatar_gradient_from="#1e293b",
             avatar_gradient_to="#0f172a",
             avatar_border_color="#334155",
-            badge_emoji="🎭",
+            badge_emoji="fas fa-masks",
         )
 
     @property

@@ -74,7 +74,7 @@ class WeisserWolf(Role):
             avatar_gradient_from="#f5f5f4",
             avatar_gradient_to="#d6d3d1",
             avatar_border_color="#e7e5e4",
-            badge_emoji="🐺",
+            badge_emoji="fa-solid fa-paw",
         )
 
     @property

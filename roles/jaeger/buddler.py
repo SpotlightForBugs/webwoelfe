@@ -67,7 +67,7 @@ class Buddler(Role):
             avatar_gradient_from="#78716c",
             avatar_gradient_to="#57534e",
             avatar_border_color="#a8a29e",
-            badge_emoji="⛏️",
+            badge_emoji="fa-solid fa-person-digging",
         )
 
     @property

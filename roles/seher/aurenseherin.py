@@ -63,7 +63,7 @@ class Aurenseherin(Role):
             avatar_gradient_from="#a78bfa",
             avatar_gradient_to="#7c3aed",
             avatar_border_color="#c4b5fd",
-            badge_emoji="✨",
+            badge_emoji="fa-solid fa-star",
         )
 
     @property
@@ -118,7 +118,7 @@ class Aurenseherin(Role):
 
             return AktionsErgebnis(
                 erfolg=True,
-                nachricht=f"{ziel.name} hat eine {'dunkle 🌑' if ist_boese else 'helle ☀️'} Aura.",
+                nachricht=f"{ziel.name} hat eine {'dunkle' if ist_boese else 'helle'} Aura.",
                 ziel_spieler_id=ziel.id,
                 effekte={"aura_gesehen": ziel.id, "ist_boese": ist_boese},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",

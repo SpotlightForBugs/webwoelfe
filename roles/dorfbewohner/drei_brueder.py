@@ -65,7 +65,7 @@ class DreiBrueder(Role):
             avatar_gradient_from="#4f46e5",
             avatar_gradient_to="#312e81",
             avatar_border_color="#6366f1",
-            badge_emoji="👨‍👦‍👦",
+            badge_emoji="fas fa-people",
         )
 
     @property

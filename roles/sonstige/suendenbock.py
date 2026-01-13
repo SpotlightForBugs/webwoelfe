@@ -54,7 +54,7 @@ class Suendenbock(Role):
             avatar_gradient_from="#a8a29e",
             avatar_gradient_to="#78716c",
             avatar_border_color="#d6d3d1",
-            badge_emoji="🐐",
+            badge_emoji="fas fa-goat",
         )
 
     @property
@@ -105,7 +105,7 @@ class Suendenbock(Role):
         if unentschieden and opfer.id == spieler.id:
             return AktionsErgebnis(
                 erfolg=True,
-                nachricht="⚖️ Das Dorf konnte sich nicht einigen! Als Sündenbock musst DU sterben!",
+                nachricht="Das Dorf konnte sich nicht einigen! Als Sündenbock musst DU sterben!",
                 effekte={
                     "tod": True,
                     "todesursache": "Unentschieden bei Abstimmung",
@@ -135,7 +135,7 @@ class Suendenbock(Role):
 
         return AktionsErgebnis(
             erfolg=True,
-            nachricht="🔇 Du stirbst für die Unentschlossenheit der anderen! Aber du darfst bestimmen, wer morgen NICHT abstimmen darf!",
+            nachricht="Du stirbst für die Unentschlossenheit der anderen! Aber du darfst bestimmen, wer morgen NICHT abstimmen darf!",
             effekte={
                 "waehle_blockierte_spieler": True,
                 "verfuegbare_ziele": lebende_spieler,
@@ -159,7 +159,7 @@ class Suendenbock(Role):
         # Markiere die gewählten Spieler als blockiert
         return AktionsErgebnis(
             erfolg=True,
-            nachricht=f"🚫 Du hast {len(blockierte_ids)} Spieler vom Abstimmen in der nächsten Runde ausgeschlossen!",
+            nachricht=f"Du hast {len(blockierte_ids)} Spieler vom Abstimmen in der nächsten Runde ausgeschlossen!",
             effekte={
                 "abstimmung_blockiert": blockierte_ids,
                 "blockiert_fuer_runde": getattr(kontext, "aktuelle_runde", 1) + 1,

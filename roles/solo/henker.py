@@ -70,7 +70,7 @@ class Henker(Role):
             avatar_gradient_from="#525252",
             avatar_gradient_to="#262626",
             avatar_border_color="#737373",
-            badge_emoji="🪓",
+            badge_emoji="fa-solid fa-gavel",
         )
 
     @property

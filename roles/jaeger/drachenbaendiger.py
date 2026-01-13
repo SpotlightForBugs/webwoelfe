@@ -68,7 +68,7 @@ class Drachenbaendiger(Role):
             avatar_gradient_from="#7c3aed",
             avatar_gradient_to="#5b21b6",
             avatar_border_color="#8b5cf6",
-            badge_emoji="🐉",
+            badge_emoji="fa-solid fa-dragon",
         )
 
     @property

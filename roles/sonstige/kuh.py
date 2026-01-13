@@ -86,7 +86,7 @@ class Kuh(Role):
                 beschreibung="Der Spieler hat Milch von der Kuh getrunken",
                 visual_config=VisualEffectConfig(
                     css_class="hat-milch",
-                    icon="🥛",
+                    icon_class="fa-solid fa-glass-water",
                     tooltip="Hat Milch getrunken",
                     # Nur der Spieler selbst und Erzähler sehen es
                     show_to=lambda viewer, target: viewer.id == target.id
@@ -102,7 +102,7 @@ class Kuh(Role):
                 beschreibung="Der Spieler wurde durch giftige Milch vergiftet",
                 visual_config=VisualEffectConfig(
                     css_class="vergiftet",
-                    icon="☠️",
+                    icon_class="fa-solid fa-skull-crossbones",
                     animation="shake",
                     tooltip="Durch Milch vergiftet!",
                 ),
@@ -173,7 +173,7 @@ class Kuh(Role):
                 erfolg=True,
                 nachricht=(
                     "Du trinkst die Milch... Sie schmeckt seltsam! "
-                    "Dir wird schlecht - die Milch war vergiftet! ☠️"
+                    "Dir wird schlecht - die Milch war vergiftet!"
                 ),
                 effekte={
                     "vergiftet": True,
@@ -186,7 +186,7 @@ class Kuh(Role):
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht=(
-                    "Du trinkst die frische Milch. Mmmmh, lecker! 🥛 "
+                    "Du trinkst die frische Milch. Mmmmh, lecker! "
                     "Du fühlst dich gestärkt."
                 ),
                 effekte={
@@ -526,7 +526,7 @@ class Kuh(Role):
             beschreibung=(
                 "Du bist die Dorfkuh! Jede Nacht muhst du laut und alle "
                 "hören es. Du bietest den Dorfbewohnern deine Milch an - "
-                "aber Vorsicht: 20% der Milch ist giftig! Muhhhh! 🐄"
+                "aber Vorsicht: 20% der Milch ist giftig! Muhhhh!"
             ),
             icon="fa-solid fa-cow",
             farbe="#8B4513",  # Braun
@@ -543,7 +543,7 @@ class Kuh(Role):
             avatar_gradient_from="#8B4513",
             avatar_gradient_to="#654321",
             avatar_border_color="#A0522D",
-            badge_emoji="🐄",
+            badge_emoji="fa-solid fa-cow",
         )
 
     @property

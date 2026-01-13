@@ -71,7 +71,7 @@ class Amor(Role):
                 beschreibung="ID des Partners mit dem der Spieler verliebt ist",
                 visual_effect=StateVisualEffect.HEART,
                 css_class="verliebt-partner",
-                icon="💕",
+                icon="fa-solid fa-heart",
                 query_name="verliebte",
                 defined_by="Amor",
                 # Dynamic visibility: Partners + Amor see lovers
@@ -105,7 +105,7 @@ class Amor(Role):
             avatar_gradient_from="#ec4899",
             avatar_gradient_to="#be185d",
             avatar_border_color="#f9a8d4",
-            badge_emoji="💘",
+            badge_emoji="fa-solid fa-heart",
             distribution=DistributionConfig(
                 min_players=5,
                 # 1 Amor ab 8 Spielern
@@ -267,9 +267,9 @@ class Amor(Role):
                     "overlay": {
                         "title": "Du bist verliebt!",
                         "subtitle": "Dein Seelenpartner ist:",
-                        "highlight": f"{ziel2.name} 💘",
+                        "highlight": f"{ziel2.name}",
                         "content": "Eure Schicksale sind verbunden. Stirbt einer, stirbt auch der andere!",
-                        "icon": "💕",
+                        "icon_class": "fa-solid fa-heart",
                         "color": "#ec4899",
                         "gradient": "linear-gradient(135deg, #ff69b4 0%, #ff1493 50%, #c71585 100%)",
                         "animation": "heartbeat",
@@ -279,9 +279,9 @@ class Amor(Role):
                     "overlay": {
                         "title": "Du bist verliebt!",
                         "subtitle": "Dein Seelenpartner ist:",
-                        "highlight": f"{ziel1.name} 💘",
+                        "highlight": f"{ziel1.name}",
                         "content": "Eure Schicksale sind verbunden. Stirbt einer, stirbt auch der andere!",
-                        "icon": "💕",
+                        "icon_class": "fa-solid fa-heart",
                         "color": "#ec4899",
                         "gradient": "linear-gradient(135deg, #ff69b4 0%, #ff1493 50%, #c71585 100%)",
                         "animation": "heartbeat",

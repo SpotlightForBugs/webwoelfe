@@ -67,7 +67,7 @@ class Jesus(Role):
             avatar_gradient_from="#fbbf24",
             avatar_gradient_to="#d97706",
             avatar_border_color="#fcd34d",
-            badge_emoji="✝️",
+            badge_emoji="fas fa-cross",
         )
 
     def is_active_on_first_night(self) -> bool:

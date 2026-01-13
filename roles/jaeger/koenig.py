@@ -67,7 +67,7 @@ class Koenig(Role):
             avatar_gradient_from="#ca8a04",
             avatar_gradient_to="#a16207",
             avatar_border_color="#eab308",
-            badge_emoji="👑",
+            badge_emoji="fa-solid fa-crown",
         )
 
     @property

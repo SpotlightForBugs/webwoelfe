@@ -69,7 +69,7 @@ class Werwolfseherin(Role):
             avatar_gradient_from="#b91c1c",
             avatar_gradient_to="#7f1d1d",
             avatar_border_color="#ef4444",
-            badge_emoji="👁️",
+            badge_emoji="fa-solid fa-eye",
         )
 
     @property

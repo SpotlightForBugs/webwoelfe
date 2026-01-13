@@ -69,7 +69,7 @@ class Tanklastwagenfahrer(Role):
             avatar_gradient_from="#64748b",
             avatar_gradient_to="#475569",
             avatar_border_color="#94a3b8",
-            badge_emoji="🚛",
+            badge_emoji="fa-solid fa-truck",
         )
 
     @property

@@ -98,6 +98,15 @@
         line-height: 1.6;
       }
 
+      /* Font Awesome v5 compatibility: allow legacy `fas` strings */
+      .fas {
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+      }
+      .fas::before {
+        content: var(--fa);
+      }
+
       h1,
       h2,
       h3,

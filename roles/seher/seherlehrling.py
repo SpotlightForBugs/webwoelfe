@@ -58,7 +58,7 @@ class Seherlehrling(Role):
             avatar_gradient_from="#8b5cf6",
             avatar_gradient_to="#6d28d9",
             avatar_border_color="#a78bfa",
-            badge_emoji="🎓",
+            badge_emoji="fa-solid fa-graduation-cap",
         )
 
     @property

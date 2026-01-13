@@ -68,7 +68,7 @@ class Sandmann(Role):
             avatar_gradient_from="#ddd6fe",
             avatar_gradient_to="#c4b5fd",
             avatar_border_color="#ede9fe",
-            badge_emoji="💤",
+            badge_emoji="fa-solid fa-bed",
         )
 
     @property

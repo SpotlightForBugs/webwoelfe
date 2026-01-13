@@ -554,6 +554,11 @@ export class VillageEnhancementManager {
       radius: 15,
       lookAtY: 2
     };
+    
+    // Event für externe Kamera-Steuerung (z.B. Village3DThree)
+    window.dispatchEvent(new CustomEvent('village3d:cameraFocus', {
+      detail: { x, z, cameraState: this.targetCameraState }
+    }));
   }
 
   /**

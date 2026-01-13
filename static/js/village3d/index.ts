@@ -9,6 +9,7 @@ export { PlayerAvatarBuilder } from './PlayerAvatarBuilder.js';
 export { AppearanceFeatureRenderer } from './AppearanceFeatureRenderer.js';
 export { PlayerHouseBuilder } from './PlayerHouseBuilder.js';
 export { VillageEnhancementManager } from './VillageEnhancements.js';
+export { VillageIntegration } from './VillageIntegration.js';
 
 // Export types
 export type {

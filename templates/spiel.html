@@ -1549,7 +1549,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     <!-- Hauptbereich -->
     <div class="main-area">
       <!-- Phase Banner removed as per user request -->
-      <div style="margin-bottom:10px;"></div>
+      <div style="margin-bottom: 10px"></div>
 
       <!-- 3D Dorf Ansicht - Haupt-Interaktionsfläche -->
       <div
@@ -1634,8 +1634,12 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
         <!-- 3D HUD Overlay (only UI needed in fullscreen mode) -->
         <div id="village3d-hud" class="village3d-hud">
           <div class="village3d-topbar">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <button class="v3d-icon-btn" onclick="window.toggleLeftSidebar?.()" title="Panel links umschalten">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <button
+                class="v3d-icon-btn"
+                onclick="window.toggleLeftSidebar?.()"
+                title="Panel links umschalten"
+              >
                 <i class="fa-solid fa-bars"></i>
               </button>
               <div>
@@ -1643,64 +1647,109 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                 <div id="village3d-round-info" class="v3d-round">Runde ...</div>
               </div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span id="village3d-role-badge" class="village3d-role-badge">Warte...</span>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <span id="village3d-role-badge" class="village3d-role-badge"
+                >Warte...</span
+              >
               {% if spieler.ist_erzaehler %}
-              <button class="v3d-icon-btn" onclick="naechstePhase()" title="Nächste Phase">
+              <button
+                class="v3d-icon-btn"
+                onclick="naechstePhase()"
+                title="Nächste Phase"
+              >
                 <i class="fa-solid fa-forward"></i>
               </button>
               {% endif %}
-              <button class="v3d-icon-btn" onclick="window.toggleRightSidebar?.()" title="Panel rechts umschalten">
+              <button
+                class="v3d-icon-btn"
+                onclick="window.toggleRightSidebar?.()"
+                title="Panel rechts umschalten"
+              >
                 <i class="fa-solid fa-comments"></i>
               </button>
             </div>
           </div>
 
-          <div id="village3d-toast" style="
-            position: absolute;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            max-width: 720px;
-            width: calc(100% - 24px);
-            padding: 10px 12px;
-            border-radius: 12px;
-            background: rgba(0,0,0,0.65);
-            border: 1px solid rgba(255,255,255,0.12);
-            color: rgba(255,255,255,0.95);
-            display: none;
-            pointer-events: none;
-            z-index: 30;
-          "></div>
+          <div
+            id="village3d-toast"
+            style="
+              position: absolute;
+              top: 60px;
+              left: 50%;
+              transform: translateX(-50%);
+              max-width: 720px;
+              width: calc(100% - 24px);
+              padding: 10px 12px;
+              border-radius: 12px;
+              background: rgba(0, 0, 0, 0.65);
+              border: 1px solid rgba(255, 255, 255, 0.12);
+              color: rgba(255, 255, 255, 0.95);
+              display: none;
+              pointer-events: none;
+              z-index: 30;
+            "
+          ></div>
 
           <div id="village3d-left-panel" class="village3d-panel left">
-            <div class="village3d-panel-title"><i class="fa-solid fa-bullseye"></i> Ziele</div>
+            <div class="village3d-panel-title">
+              <i class="fa-solid fa-bullseye"></i> Ziele
+            </div>
             <div id="village3d-player-list" class="village3d-player-list"></div>
 
-            <div class="village3d-panel-title"><i class="fa-solid fa-masks-theater"></i> Deine Rolle</div>
-            <div id="village3d-role-desc" style="color: rgba(255,255,255,0.9); font-size: 0.95rem; line-height: 1.35;">
+            <div class="village3d-panel-title">
+              <i class="fa-solid fa-masks-theater"></i> Deine Rolle
+            </div>
+            <div
+              id="village3d-role-desc"
+              style="
+                color: rgba(255, 255, 255, 0.9);
+                font-size: 0.95rem;
+                line-height: 1.35;
+              "
+            >
               {% if rolle_info %}
-                <div style="font-weight: 700; margin-bottom: 6px; color: {{ rolle_info.farbe }};">
-                  <i class="{{ rolle_info.icon }}"></i> {{ spieler.rolle }}
-                </div>
-                <div style="color: rgba(255,255,255,0.85);">{{ rolle_info.beschreibung }}</div>
+              <div
+                style="font-weight: 700; margin-bottom: 6px; color: {{ rolle_info.farbe }};"
+              >
+                <i class="{{ rolle_info.icon }}"></i> {{ spieler.rolle }}
+              </div>
+              <div style="color: rgba(255, 255, 255, 0.85)">
+                {{ rolle_info.beschreibung }}
+              </div>
               {% else %}
-                <div style="color: rgba(255,255,255,0.75);">Warte auf Rolleninfo...</div>
+              <div style="color: rgba(255, 255, 255, 0.75)">
+                Warte auf Rolleninfo...
+              </div>
               {% endif %}
             </div>
           </div>
 
           <div id="village3d-right-panel" class="village3d-panel right">
-            <div class="village3d-panel-title"><i class="fa-solid fa-comments"></i> Chat</div>
-            <div id="village3d-chat-messages" class="village3d-chat-messages"></div>
+            <div class="village3d-panel-title">
+              <i class="fa-solid fa-comments"></i> Chat
+            </div>
+            <div
+              id="village3d-chat-messages"
+              class="village3d-chat-messages"
+            ></div>
             <div class="village3d-chat-input-row">
-              <input id="village3d-chat-input" placeholder="Nachricht..." onkeydown="if(event.key==='Enter'){ window.sendChatMessage?.(); }" />
+              <input
+                id="village3d-chat-input"
+                placeholder="Nachricht..."
+                onkeydown="
+                  if (event.key === 'Enter') {
+                    window.sendChatMessage?.();
+                  }
+                "
+              />
               <button onclick="window.sendChatMessage?.()">Senden</button>
             </div>
           </div>
 
           <div class="village3d-bottombar">
-            <div id="village3d-action-hint" class="village3d-action-hint">Warte auf deine Aktion...</div>
+            <div id="village3d-action-hint" class="village3d-action-hint">
+              Warte auf deine Aktion...
+            </div>
             <div id="village3d-action-buttons"></div>
           </div>
         </div>
@@ -1710,7 +1759,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       {% if rolle_info %}
       <div class="card mb-3 fade-in delay-1">
         <h4 style="color: {{ rolle_info.farbe }}; margin-bottom: 0.5rem;">
-          <i class="{{ rolle_info.icon }}"></i> <span class="rolle-badge">{{ spieler.rolle }}</span>
+          <i class="{{ rolle_info.icon }}"></i>
+          <span class="rolle-badge">{{ spieler.rolle }}</span>
         </h4>
         <p>{{ rolle_info.beschreibung }}</p>
       </div>
@@ -1727,21 +1777,17 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       <div class="card fade-in delay-2">
         <h3 class="mb-2"><i class="fa-solid fa-users"></i> Spieler</h3>
         <div class="spieler-grid" id="spieler-grid">
-          {% for s in alle_spieler %}
-         
-          {% set spieler_effekte = player_effects.get(s.id, []) if player_effects else [] %}
-
-          {# Build dynamic CSS classes from ALL effects (including visibility) #}
-          {% set dynamic_css = [] %}
-          {% for effect in spieler_effekte %}
-            {% if effect.css_class %}
-              {% set _ = dynamic_css.append(effect.css_class) %}
-            {% endif %}
-          {% endfor %}
-
-          {# Check if player knows this player's role (for data-rolle attribute) #}
-          {% set ist_werwolf_sichtbar = spieler_effekte|selectattr('key', 'equalto', 'visibility.werwolf_team')|list|length > 0 %}
-          {% set kennt_rolle = spieler.ist_erzaehler or s.id == spieler.id or not s.ist_am_leben or ist_werwolf_sichtbar %}
+          {% for s in alle_spieler %} {% set spieler_effekte =
+          player_effects.get(s.id, []) if player_effects else [] %} {# Build
+          dynamic CSS classes from ALL effects (including visibility) #} {% set
+          dynamic_css = [] %} {% for effect in spieler_effekte %} {% if
+          effect.css_class %} {% set _ = dynamic_css.append(effect.css_class) %}
+          {% endif %} {% endfor %} {# Check if player knows this player's role
+          (for data-rolle attribute) #} {% set ist_werwolf_sichtbar =
+          spieler_effekte|selectattr('key', 'equalto',
+          'visibility.werwolf_team')|list|length > 0 %} {% set kennt_rolle =
+          spieler.ist_erzaehler or s.id == spieler.id or not s.ist_am_leben or
+          ist_werwolf_sichtbar %}
 
           <div
             class="spieler-card
@@ -1752,38 +1798,59 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                          rolle-{{ s.rolle|css_class if kennt_rolle and s.rolle else 'unbekannt' }}"
             data-id="{{ s.id }}"
             data-name="{{ s.name }}"
-            {# Nur anzeigen, wenn Spieler diese Rolle sehen darf #}
+            {#
+            Nur
+            anzeigen,
+            wenn
+            Spieler
+            diese
+            Rolle
+            sehen
+            darf
+            #}
             data-rolle="{{ s.rolle if kennt_rolle and s.rolle else '' }}"
             data-ist-erzaehler="{{ s.ist_erzaehler|lower }}"
             data-ist-verliebt="{{ 'true' if s.ist_verliebt else 'false' }}"
             onclick="selectSpieler({{ s.id }})"
           >
-            <div class="spieler-avatar"
-                 {% if kennt_rolle and s.rolle %}
-                 data-role="{{ s.rolle|css_class }}"
-                 data-team="{{ rollen_styles[s.rolle|css_class].team if rollen_styles[s.rolle|css_class] else '' }}"
-                 {% endif %}
+            <div
+              class="spieler-avatar"
+              {%
+              if
+              kennt_rolle
+              and
+              s.rolle
+              %}
+              data-role="{{ s.rolle|css_class }}"
+              data-team="{{ rollen_styles[s.rolle|css_class].team if rollen_styles[s.rolle|css_class] else '' }}"
+              {%
+              endif
+              %}
             >
               <span class="avatar-initial">{{ s.name[0]|upper }}</span>
-              {% if kennt_rolle and s.rolle and rollen_styles[s.rolle|css_class].badge_emoji %}
-                <i class="role-badge-icon {{ rollen_styles[s.rolle|css_class].badge_emoji }}" aria-hidden="true"></i>
-              {% endif %}
-              {% for effect in spieler_effekte %}
-                {% if effect.icon_class %}
-                  <span class="rolle-icon effect-icon" title="{{ effect.name }}"><i class="{{ effect.icon_class }}" aria-hidden="true"></i></span>
-                {% elif effect.icon %}
-                  <span class="rolle-icon effect-icon" title="{{ effect.name }}">{{ effect.icon }}</span>
-                {% endif %}
-              {% endfor %}
+              {% if kennt_rolle and s.rolle and
+              rollen_styles[s.rolle|css_class].badge_emoji %}
+              <i
+                class="role-badge-icon {{ rollen_styles[s.rolle|css_class].badge_emoji }}"
+                aria-hidden="true"
+              ></i>
+              {% endif %} {% for effect in spieler_effekte %} {% if
+              effect.icon_class %}
+              <span class="rolle-icon effect-icon" title="{{ effect.name }}"
+                ><i class="{{ effect.icon_class }}" aria-hidden="true"></i
+              ></span>
+              {% elif effect.icon %}
+              <span class="rolle-icon effect-icon" title="{{ effect.name }}"
+                >{{ effect.icon }}</span
+              >
+              {% endif %} {% endfor %}
             </div>
             <div class="spieler-name">{{ s.name }}</div>
             {% if s.id == spieler.id %}
             <div class="spieler-label selbst">(Du)</div>
-            {% endif %}
-            {% if s.ist_erzaehler %}
+            {% endif %} {% if s.ist_erzaehler %}
             <div class="spieler-label erzaehler">(Erzähler)</div>
-            {% endif %}
-            {% if spieler.ist_erzaehler and s.rolle %}
+            {% endif %} {% if spieler.ist_erzaehler and s.rolle %}
             <div class="spieler-rolle-tag">{{ s.rolle }}</div>
             {% endif %}
           </div>
@@ -1858,7 +1925,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
         <div class="mt-2" style="font-size: 0.875rem">
           {% for item in role_state_display %}
           <div>
-            <i class="{{ item.icon }}"></i> {{ item.label }}: {{ item.display_value }}
+            <i class="{{ item.icon }}"></i> {{ item.label }}: {{
+            item.display_value }}
           </div>
           {% endfor %}
         </div>
@@ -1930,19 +1998,19 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   let activeRole = null;        // Currently active role from server
   let aktuellePhase = "{{ raum.aktuelle_phase }}";
   let aktuelleRunde = {{ raum.runde }};
-  
+
   // Parse Phase Data safely
   let phaseData = {};
   try {
       phaseData = JSON.parse('{}');
   } catch(e) { console.error('Error parsing phase data', e); }
-  
+
   activeRole = phaseData.active_role || '';
-  
+
   let nachtPhasen = ['nacht_start', 'seherin_phase', 'werwolf_phase', 'hexe_phase', 'amor_phase']; // Default fallback
 
   // Dynamic role UI configuration (loaded from backend API)
-  
+
   // Load role UI config when we have an active role
   // Load initial UI config if we're the active role
   if (spielerRolle && activeRole === spielerRolle) {
@@ -1959,16 +2027,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   socket.emit('raum_beitreten', { code: raumCode });
 
   // Event Handler
-  
+
   // GENERIC PHASE UPDATE (New System)
   socket.on('phase_update', async function(data) {
       console.log('[Phase] Update:', data);
       aktuellePhase = data.phase;
       activeRole = data.active_role;
-      
+
       window.aktuellePhase = aktuellePhase;
       window.activeRole = activeRole;
-      
+
       // Load role UI config if it's our turn - await to ensure it's ready for player interactions
       if (activeRole === spielerRolle) {
           phaseUiConfig = await loadRoleUI(spielerRolle);
@@ -1976,20 +2044,20 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       } else {
           phaseUiConfig = null;  // Clear when not our turn
       }
-      
+
       updatePhase(data.phase, data.runde || aktuelleRunde, data.display_info);
-      
+
       // Clear legacy overlays if needed
       closeAllErzaehlungOverlays();
   });
-  
+
   // PRIVATE PHASE INFO (New System)
   socket.on('private_phase_info', function(data) {
       if (data.recipient_id && data.recipient_id !== spielerId) return;
-      
+
       const payload = data.payload;
       console.log("[PRIVATE PHASE INFO]", payload);
-      
+
       // Generic info display
       if (payload.nachricht) {
           showAlert(payload.nachricht, 'info');
@@ -2009,7 +2077,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       aktuelleRunde = data.runde || aktuelleRunde;
       window.aktuellePhase = aktuellePhase;
       window.aktuelleRunde = aktuelleRunde;
-      
+
       // =========================================================================
       // DYNAMIC PHASE INFO - Load BEFORE updatePhase() so UI config is available
       // =========================================================================
@@ -2017,12 +2085,12 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       try {
           const phaseInfoResponse = await fetch(`/api/game/${raumCode}/phase-info`);
           const phaseInfo = await phaseInfoResponse.json();
-          
+
           if (phaseInfo.success) {
               // Store phase type for UI decisions
               window.isNightPhase = phaseInfo.is_night;
               window.activeRole = phaseInfo.active_role;
-              
+
               // Load UI config if it's our turn (BEFORE updatePhase calls updateActionButtons)
               if (phaseInfo.active_role === spielerRolle) {
                   phaseUiConfig = await loadRoleUI(spielerRolle);
@@ -2030,17 +2098,17 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               } else {
                   phaseUiConfig = null;
               }
-              
+
               // Handle victim info dynamically (for Hexe and similar roles)
               if (phaseInfo.victim_info) {
                   window.werwolfOpferId = phaseInfo.victim_info.id;
                   window.werwolfOpferName = phaseInfo.victim_info.name;
-                  
+
                   // Show victim alert to the active role
                   if (spielerRolle === phaseInfo.active_role) {
                       showAlert(`<i class="fa-solid fa-paw"></i> Das Werwolf-Opfer ist: <strong>${phaseInfo.victim_info.name}</strong>`, 'danger', 10000);
                   }
-                  
+
                   // Highlight victim in Village3D
                   if (window.village3d && typeof window.village3d.highlightVictim === 'function') {
                       window.village3d.highlightVictim(phaseInfo.victim_info.id);
@@ -2049,7 +2117,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   // Clear victim info
                   window.werwolfOpferId = null;
                   window.werwolfOpferName = null;
-                  
+
                   if (window.village3d && typeof window.village3d.clearVictimHighlight === 'function') {
                       window.village3d.clearVictimHighlight();
                   }
@@ -2058,7 +2126,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       } catch (error) {
           console.warn('[Phase Info] Error fetching phase info:', error);
       }
-      
+
       // NOW update the phase UI (after phaseUiConfig is loaded)
       await updatePhase(data.phase, data.runde);
       if (data.erzaehler_text) {
@@ -2071,7 +2139,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   socket.on('rolle_erhalten', async function(data) {
       showAlert('Deine Rolle: ' + data.rolle, 'success');
-      
+
       // Load phase mapping when game starts (role is assigned)
       console.log('[Init] Game started - loading phase mapping');
       await loadPhaseRoleMapping();
@@ -2087,7 +2155,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   socket.on('private_info', function(data) {
       if (data.recipient_id && data.recipient_id !== spielerId) return;
-      
+
       const payload = data.payload;
       if (!payload) return;
 
@@ -2106,10 +2174,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   socket.on('role_phase_info', function(data) {
       if (data.recipient_id && data.recipient_id !== spielerId) return;
-      
+
       const payload = data.payload;
       console.log("[ROLE PHASE INFO]", payload);
-      
+
       // Generic handler - all role info uses nachricht field
       if (payload.overlay) {
           showRoleOverlay(payload.overlay);
@@ -2142,16 +2210,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   socket.on('spiel_log', function(data) {
       // Check visibility - only show if visible to this player
       const sichtbarFuer = data.sichtbar_fuer;
-      if (sichtbarFuer !== 'alle' && 
-          sichtbarFuer !== String(spielerId) && 
+      if (sichtbarFuer !== 'alle' &&
+          sichtbarFuer !== String(spielerId) &&
           sichtbarFuer !== spielerRolle) {
           return; // Not visible to this player
       }
-      
+
       // Add to log with timestamp from server
       const container = document.getElementById('log-list');
       if (!container) return;
-      
+
       const entry = document.createElement('div');
       entry.className = 'log-entry';
       entry.innerHTML = `
@@ -2164,7 +2232,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   /**
    * Generic role overlay display - replaces role-specific overlays like showVerliebteReveal
-   * 
+   *
    * @param {Object} config - Overlay configuration from backend
    * @param {string} config.title - Main title text
    * @param {string} config.subtitle - Subtitle text (optional)
@@ -2191,13 +2259,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           animation: fadeIn 0.5s ease;
       `;
 
-      const bgStyle = config.gradient || 
+      const bgStyle = config.gradient ||
           `linear-gradient(135deg, ${config.color || '#4a90d9'} 0%, ${adjustColor(config.color || '#4a90d9', -30)} 100%)`;
 
         const iconHtml = config.icon_class
           ? `<i class="${config.icon_class}" aria-hidden="true"></i>`
           : (config.icon || '');
-      
+
       overlay.innerHTML = `
           <div style="
               background: ${bgStyle};
@@ -2437,7 +2505,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   async function updatePhase(phase, runde, displayInfo) {
       const phaseEl = document.getElementById('phase-name');
       const isNacht = phase.includes('nacht') || phase.includes('phase');
-      
+
       if (phaseEl) {
           phaseEl.innerHTML = `<i class="fa-solid fa-${isNacht && !phase.includes('tag') ? 'moon' : 'sun'}"></i> ${phase.replace(/_/g, ' ')}`;
       }
@@ -2481,19 +2549,19 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   // Track which audio files we've sent audio_fertig for to prevent duplicates
   // Key: "phase:audioFile"
   let lastAudioFertigSent = new Set();
-  
+
   // Schließt alle Erzähler-Overlays - properly cleans up to prevent event handlers from firing
   function closeAllErzaehlungOverlays() {
       document.querySelectorAll('.erzaehlung-overlay').forEach(overlay => {
           // Mark overlay as being closed to prevent event handlers
           overlay.dataset.closing = 'true';
-          
+
           // Clear any auto-advance timeouts stored on overlay
           if (overlay.autoAdvanceTimeout) {
               clearTimeout(overlay.autoAdvanceTimeout);
               overlay.autoAdvanceTimeout = null;
           }
-          
+
           // Stoppe Audio falls vorhanden
           const audio = overlay.querySelector('audio');
           if (audio) {
@@ -2505,14 +2573,14 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               const clone = audio.cloneNode(false);
               audio.parentNode?.replaceChild(clone, audio);
           }
-          
+
           // Clear any update intervals
           const autoAdvanceBar = overlay.querySelector('[id$="-auto-advance"]');
           if (autoAdvanceBar && autoAdvanceBar.updateInterval) {
               clearInterval(autoAdvanceBar.updateInterval);
               autoAdvanceBar.updateInterval = null;
           }
-          
+
           // Remove overlay
           overlay.remove();
       });
@@ -2525,13 +2593,13 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           console.error('[Audio] ERROR: Cannot emit audio_fertig without audio file!');
           return false;
       }
-      
+
       const key = `${phase}:${audioFile}`;
       if (lastAudioFertigSent.has(key)) {
           console.log('[Audio] Skipping duplicate audio_fertig for:', key);
           return false;
       }
-      
+
       lastAudioFertigSent.add(key);
       socket.emit('audio_fertig', { phase: phase, audio_file: audioFile });
       console.log('[Audio] Sent audio_fertig for phase:', phase, 'file:', audioFile);
@@ -2542,7 +2610,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       // Note: We DON'T clear lastAudioFertigSent here because we want to prevent
       // duplicate sends even across different erzaehlungen. The server will
       // handle phase changes and clear its tracking.
-      
+
       // Schließe bestehende Overlays bevor ein neues gezeigt wird
       closeAllErzaehlungOverlays();
 
@@ -2648,7 +2716,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           const playBtn = document.getElementById(playerId + '-btn');
           const playIcon = document.getElementById(playerId + '-icon');
           const waveform = document.getElementById(playerId + '-waveform');
-          
+
           // Track when audio actually starts playing and its duration
           let audioStartTime = null;
           let audioDuration = 0;
@@ -2691,20 +2759,20 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   console.log('[Audio] Ignoring ended event - overlay is being closed');
                   return;
               }
-              
+
               // Verify audio actually completed (not just seeked to end)
               if (audio.currentTime < audio.duration - 0.5) {
                   console.log('[Audio] Ignoring ended - audio did not complete naturally');
                   return;
               }
-              
+
               // Clear auto-advance timeout since audio finished naturally
               if (audioAutoAdvanceTimeout) {
                   clearTimeout(audioAutoAdvanceTimeout);
                   audioAutoAdvanceTimeout = null;
                   console.log('[Audio] Cleared auto-advance timeout (audio ended naturally)');
               }
-              
+
               playIcon.className = 'fa-solid fa-redo';
               playBtn.classList.remove('playing');
               waveform.querySelectorAll('.audio-waveform-bar').forEach(bar => bar.classList.remove('active'));
@@ -2785,7 +2853,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   }, 400);
               }
           }, autoAdvanceDuration);
-          
+
           // Store timeout on notification for cleanup
           notification.autoAdvanceTimeout = audioAutoAdvanceTimeout;
 
@@ -2858,7 +2926,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   let phaseRoleMapping = {};
   let roleUICache = {};
-  
+
   // Load phase→role mapping from game API on init
 
 
@@ -2919,11 +2987,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       }
 
       const allowSelf = phaseUiConfig.allow_self_target !== false; // Default true if undefined (safest for legacy)
-      
+
       document.querySelectorAll('.spieler-card').forEach(card => {
           const id = parseInt(card.getAttribute('data-id'));
           const isSelf = id === spielerId;
-          
+
           if (isSelf && !allowSelf) {
              card.classList.add('disabled-target');
           } else {
@@ -2972,7 +3040,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               console.log('[Phase Check] Fallback match found:', aktuellePhase);
               return true;
           }
-          
+
           // Special case for Aurenseherin (sometimes issues with spelling/mapping)
           if (simplePhaseName === 'aurenseherin' && simpleRoleName.includes('aurenseherin')) {
               return true;
@@ -3026,10 +3094,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // DYNAMIC BUTTON GENERATION FROM ROLE UI
           // =================================================================
           // Check for new 'actions' API first, then fallback to legacy 'buttons'
-          const actionSource = (roleUI && roleUI.actions && roleUI.actions.length > 0) 
-              ? roleUI.actions 
+          const actionSource = (roleUI && roleUI.actions && roleUI.actions.length > 0)
+              ? roleUI.actions
               : (roleUI && roleUI.buttons && roleUI.buttons.length > 0 ? roleUI.buttons : null);
-              
+
           if (actionSource) {
               // Generate buttons from role UI definition (works with both actions and buttons)
               html = actionSource.map(btn => {
@@ -3826,7 +3894,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     }).then(([villageModule, integrationModule]) => {
       const Village3DThree = villageModule.default;
       const VillageIntegration = integrationModule.VillageIntegration;
-      
+
       if (typeof Village3DThree !== 'undefined') {
         const village3d = new Village3DThree('village-3d', raumCode, {
           startView: 'orbit',
@@ -3844,7 +3912,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               raumCode
             );
             window.villageIntegration = villageIntegration;
-            
+
             // UI-Elemente setzen
             const phaseOverlay = document.getElementById('village3d-phase-overlay');
             const eliminationText = document.getElementById('village3d-elimination-text');
@@ -3872,7 +3940,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               // Sortiere nach ID für konsistente Positionen zwischen Lobby und Spiel
               spielerDaten.sort((a, b) => a.id - b.id);
               village3d.setPlayers(spielerDaten);
-              
+
               // Spielerhäuser über VillageIntegration erstellen
               if (villageIntegration) {
                 villageIntegration.initializePlayerHouses(spielerDaten);
@@ -3889,7 +3957,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Global speichern für Hints
           window.village3d = village3d;
           updateCameraButtonUI(village3d.getViewMode?.() || 'orbit');
-          
+
           // Keep HUD overlay hidden unless we are in fullscreen 3D mode
           village3d.updateTopBar(aktuellePhase, aktuelleRunde);
           village3d.updateRoleBadge(spielerRolle);

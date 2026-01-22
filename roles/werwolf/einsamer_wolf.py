@@ -149,7 +149,21 @@ class EinsamerWolf(Role):
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("einsamer_wolf_angriff", spieler, [ziel] if ziel else [], kontext)
+        """Direct handling - don't call execute_action to avoid recursion."""
+        if not ziel:
+            return AktionsErgebnis(
+                erfolg=True,
+                nachricht="Du schleichst durch die Nacht, findest aber kein Opfer.",
+            )
+        if ziel.id in kontext.tote_spieler:
+            return AktionsErgebnis(erfolg=False, nachricht="Dieses Ziel ist bereits tot.")
+        return AktionsErgebnis(
+            erfolg=True,
+            nachricht=f"Du greifst {ziel.name} alleine an!",
+            ziel_spieler_id=ziel.id,
+            effekte={"toeten": ziel.id, "todesursache": "einsamer_wolf"},
+            log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
 
     def gewinnt_mit_woelfen(self) -> bool:
         return False

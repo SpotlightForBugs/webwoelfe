@@ -152,7 +152,17 @@ class TeenagerWerwolf(Role):
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("teenager_verweigern", spieler, [], kontext)
+        """Direct handling - don't call execute_action to avoid recursion."""
+        if self.get_state(spieler, "hat_verweigert"):
+            return AktionsErgebnis(erfolg=False, nachricht="Du hast bereits einmal rebelliert!")
+        self.set_state(spieler, "hat_verweigert", True)
+        return AktionsErgebnis(
+            erfolg=True,
+            nachricht="Du verweigerst den Angriff! Das Opfer wird verschont.",
+            effekte={"angriff_verweigert": True},
+            state_updates={"teenager_werwolf.hat_verweigert": True},
+            log_sichtbar_fuer="werwolf",
+        )
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """

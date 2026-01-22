@@ -130,7 +130,23 @@ class Aurenseherin(Role):
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("aurenseherin_sehen", spieler, [ziel] if ziel else [], kontext)
+        """Direct handling - don't call execute_action to avoid recursion."""
+        if not ziel:
+            return AktionsErgebnis(erfolg=False, nachricht="Du musst einen Spieler wählen.")
+        from ..registry import RoleRegistry
+        from ..enums import Team
+        ziel_rolle = RoleRegistry.get(ziel.rolle)
+        ist_boese = False
+        if ziel_rolle:
+            team = ziel_rolle.info.team
+            ist_boese = team in [Team.WERWOLF, Team.SOLO]
+        return AktionsErgebnis(
+            erfolg=True,
+            nachricht=f"{ziel.name} hat eine {'dunkle' if ist_boese else 'helle'} Aura.",
+            ziel_spieler_id=ziel.id,
+            effekte={"aura_gesehen": ziel.id, "ist_boese": ist_boese},
+            log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """

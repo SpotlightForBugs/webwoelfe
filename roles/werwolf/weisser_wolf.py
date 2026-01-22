@@ -158,7 +158,30 @@ class WeisserWolf(Role):
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("weisser_wolf_toeten", spieler, [ziel] if ziel else [], kontext)
+        # Direct handling - don't call execute_action to avoid recursion
+        if kontext.runde % 2 != 0:
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Du kannst nur jede zweite Nacht zuschlagen.",
+            )
+        if not ziel:
+            return AktionsErgebnis(
+                erfolg=True,
+                nachricht="Du verschonst deine Brüder heute Nacht.",
+            )
+        ziel_team = kontext.spieler_teams.get(ziel.id, Team.DORF)
+        if ziel_team != Team.WERWOLF:
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Du kannst nur andere Werwölfe töten!",
+            )
+        return AktionsErgebnis(
+            erfolg=True,
+            nachricht=f"Du tötest {ziel.name}! Ein Konkurrent weniger...",
+            ziel_spieler_id=ziel.id,
+            effekte={"toeten": ziel.id, "todesursache": "weisser_wolf"},
+            log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
 
     def berechne_gewinn(
         self, spieler: "Spieler", kontext: SpielKontext

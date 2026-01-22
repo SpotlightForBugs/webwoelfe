@@ -160,7 +160,22 @@ class Wolfsjunge(Role):
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("wolfsjunge_waehlen", spieler, [ziel] if ziel else [], kontext)
+        # Direct handling - don't call execute_action to avoid recursion
+        if kontext.runde != 1:
+            return AktionsErgebnis(erfolg=False, nachricht="Du hast dein Vorbild bereits gewählt.")
+        if not ziel:
+            return AktionsErgebnis(erfolg=False, nachricht="Du musst ein Vorbild wählen!")
+        if ziel.id == spieler.id:
+            return AktionsErgebnis(erfolg=False, nachricht="Du kannst dich nicht selbst wählen.")
+        self.set_state(spieler, "vorbild_id", ziel.id)
+        return AktionsErgebnis(
+            erfolg=True,
+            nachricht=f"{ziel.name} ist nun dein Vorbild!",
+            ziel_spieler_id=ziel.id,
+            effekte={"vorbild_gewaehlt": ziel.id},
+            state_updates={"wolfsjunge.vorbild_id": ziel.id},
+            log_sichtbar_fuer=f"spieler_{spieler.id}",
+        )
 
     def on_spieler_stirbt(
         self,

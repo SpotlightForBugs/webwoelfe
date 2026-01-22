@@ -187,8 +187,20 @@ class Urwolf(Role):
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
     ) -> Optional[AktionsErgebnis]:
-        """Legacy handler - routes to execute_action."""
-        return self.execute_action("urwolf_infizieren", spieler, [ziel] if ziel else [], kontext)
+        """Direct handling - don't call execute_action to avoid recursion."""
+        if not self.get_state(spieler, "infektion_verfuegbar", True):
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht="Du hast deine Infektion bereits verbraucht!",
+            )
+        self.set_state(spieler, "infektion_verfuegbar", False)
+        return AktionsErgebnis(
+            erfolg=True,
+            nachricht="Du infizierst das Opfer! Es wird zum Werwolf werden.",
+            effekte={"urwolf_infiziert": True, "todesursache_verhindert": True, "verwandlung": "Werwolf"},
+            state_updates={"urwolf.infektion_verfuegbar": False},
+            log_sichtbar_fuer="werwolf",
+        )
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """

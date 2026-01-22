@@ -158,9 +158,10 @@ class Vampir(Role):
             nachricht=f"Du beißt {ziel.name}! In der nächsten Nacht wird "
             f"er als Vampir erwachen!",
             ziel_spieler_id=ziel.id,
-            effekte={  # TODO: MIGRATION!!!!!
+            effekte={
                 "vampir_gebissen": ziel.id,
                 "team_wechsel": Team.VAMPIR.value,
+                "verwandlung": "Vampir",  # Converts target to Vampir role
             },
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

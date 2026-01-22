@@ -40,17 +40,15 @@ def get_next_phase_state(raum: "Raum") -> PhaseState:
         return get_next_night_step(raum)
         
     # 4. Tag-Zyklus
-    # (Hier könnte man auch eine Tag-Queue implementieren, 
-    # aber Tag-Phasen sind meist statisch: Diskussion -> Abstimmung -> Hinrichtung)
+    # Tag-Phasen verwenden die vereinheitlichten Phase-Enum-Werte
+    # tag_abstimmung kombiniert Diskussion + Abstimmung (siehe phases.py)
     if current_phase == "tag_start":
-        return PhaseState("diskussion")
-    if current_phase == "diskussion":
-        return PhaseState("abstimmung")
-    if current_phase == "abstimmung":
-        return PhaseState("hinrichtung")
-    if current_phase == "hinrichtung":
-        return PhaseState("tag_ende")
-    if current_phase == "tag_ende":
+        return PhaseState(Phase.TAG_ABSTIMMUNG.value)
+    if current_phase == Phase.TAG_ABSTIMMUNG.value or current_phase == "diskussion" or current_phase == "abstimmung":
+        return PhaseState(Phase.HINRICHTUNG.value)
+    if current_phase == Phase.HINRICHTUNG.value or current_phase == "hinrichtung":
+        return PhaseState(Phase.TAG_ENDE.value)
+    if current_phase == Phase.TAG_ENDE.value or current_phase == "tag_ende":
         return get_next_night_step(raum)
         
     # Fallback

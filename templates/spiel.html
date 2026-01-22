@@ -2034,11 +2034,45 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   });
 
   socket.on('spieler_gestorben', function(data) {
-      const card = document.querySelector(`[data-id="${data.spieler_id}"]`);
-      if (card) {
-          card.classList.add('tot');
-      }
       addLog(`${data.spieler_name} ist gestorben (${data.todesart})`);
+      
+      // Use unified player state update
+      if (typeof window.updatePlayerState === 'function') {
+          window.updatePlayerState(data.spieler_id, { isAlive: false });
+      } else {
+          // Fallback for legacy code
+          const card = document.querySelector(`[data-id="${data.spieler_id}"]`);
+          if (card) card.classList.add('tot');
+          if (window.village3d) window.village3d.updatePlayerStatus?.(data.spieler_id, false);
+          window.updateVillage3DPlayerList?.();
+      }
+  });
+
+  // Handle role conversion (Vampir bite, Zombie conversion, etc.)
+  socket.on('rolle_geaendert', async function(data) {
+      console.log('[Role Change] Player role changed:', data);
+      // Only the affected player receives this event
+      if (data.spieler_id === spielerId) {
+          spielerRolle = data.neue_rolle;
+          window.spielerRolle = spielerRolle;
+          
+          // Show dramatic conversion notification
+          showAlert(`Du wurdest in ein(e) <strong>${data.neue_rolle}</strong> verwandelt!`, 'warning', 10000);
+          
+          // Reload role UI for new abilities
+          phaseUiConfig = await loadRoleUI(spielerRolle);
+          
+          // Update role display
+          const rolleDisplay = document.getElementById('spieler-rolle-anzeige');
+          if (rolleDisplay) {
+              rolleDisplay.textContent = data.neue_rolle;
+          }
+          
+          // Use unified player state update for consistency
+          if (typeof window.updatePlayerState === 'function') {
+              window.updatePlayerState(data.spieler_id, { rolle: data.neue_rolle });
+          }
+      }
   });
 
   socket.on('private_info', function(data) {
@@ -3679,6 +3713,47 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     window.updateVillage3DPlayerList?.();
   };
 
+  /**
+   * Unified player state update function.
+   * Updates both the main UI player cards and Village3D HUD.
+   * Call this whenever player state changes (death, role change, etc.)
+   * @param {number} playerId - The ID of the player to update
+   * @param {Object} updates - Object with state updates: { isAlive, rolle, etc. }
+   */
+  window.updatePlayerState = function(playerId, updates = {}) {
+    // Update alleSpieler array (single source of truth)
+    const playerIndex = (alleSpieler || []).findIndex(p => p.id === playerId);
+    if (playerIndex !== -1) {
+      if (updates.isAlive !== undefined) {
+        alleSpieler[playerIndex].istAmLeben = updates.isAlive;
+      }
+      if (updates.rolle !== undefined) {
+        alleSpieler[playerIndex].rolle = updates.rolle;
+      }
+    }
+
+    // Update main UI player card
+    const card = document.querySelector(`[data-id="${playerId}"]`);
+    if (card) {
+      if (updates.isAlive === false) {
+        card.classList.add('tot');
+      }
+      if (updates.rolle !== undefined) {
+        card.setAttribute('data-rolle', updates.rolle);
+      }
+    }
+
+    // Update Village3D
+    if (window.village3d) {
+      if (updates.isAlive !== undefined) {
+        window.village3d.updatePlayerStatus?.(playerId, updates.isAlive);
+      }
+    }
+
+    // Refresh Village3D HUD player list
+    window.updateVillage3DPlayerList?.();
+  };
+
   // HUD player list (lets players play without watching the 3D scene)
   window.updateVillage3DPlayerList = function() {
     const list = document.getElementById('village3d-player-list');
@@ -3779,9 +3854,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       if (typeof THREE !== 'undefined') {
         return;
       }
-      // Load Three.js as ES module
-      const threeModule = await import('https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js');
-      window.THREE = threeModule;
+      // Try local version first, fallback to CDN for offline support
+      try {
+        const threeModule = await import('{{ url_for('static', filename='js/vendor/three.module.min.js') }}');
+        window.THREE = threeModule;
+        console.log('[Village3D] Three.js loaded from local');
+      } catch (localError) {
+        console.warn('[Village3D] Local Three.js failed, falling back to CDN:', localError);
+        const threeModule = await import('https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js');
+        window.THREE = threeModule;
+      }
     };
 
     loadThreeJS().then(() => {
@@ -3860,11 +3942,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               village3d.showVoteIndicator(data.ziel_id, data.waehler_name);
           });
 
-          // Show death effect in 3D
-          socket.on('spieler_gestorben', function(data) {
-              village3d.updatePlayerStatus(data.spieler_id, false);
-              window.updateVillage3DPlayerList?.();
-          });
+          // Note: spieler_gestorben is handled by the main socket handler
+          // which calls window.updatePlayerState() to sync all UIs
       }
   }).catch(err => {
       console.warn('3D Village konnte nicht geladen werden:', err);

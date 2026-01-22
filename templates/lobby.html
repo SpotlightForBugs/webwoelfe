@@ -519,9 +519,16 @@ spiel_name }}{% endblock %} {% block content %}
     if (typeof window.THREE !== 'undefined') {
       return;
     }
-    // Load Three.js as ES module
-    const threeModule = await import('https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js');
-    window.THREE = threeModule;
+    // Try local version first, fallback to CDN for offline support
+    try {
+      const threeModule = await import('{{ url_for('static', filename='js/vendor/three.module.min.js') }}');
+      window.THREE = threeModule;
+      console.log('[Village3D] Three.js loaded from local');
+    } catch (localError) {
+      console.warn('[Village3D] Local Three.js failed, falling back to CDN:', localError);
+      const threeModule = await import('https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js');
+      window.THREE = threeModule;
+    }
   };
 
   // Funktion um 3D Dorf mit aktuellen Spielern zu aktualisieren

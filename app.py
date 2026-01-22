@@ -35,6 +35,7 @@ from models import (
 )
 from constants import TEAMS, SPIEL_REGELN, get_recommended_roles
 from roles import get_rollen_nach_erweiterung, ERWEITERUNG_INFO, KATEGORIE_INFO
+from roles.base import SpielKontext
 from logger import logger
 import game_logic
 import secrets
@@ -244,6 +245,30 @@ def _apply_action_effects(ergebnis, spieler, targets, raum, kontext):
         phase_name = effekte["trigger_phase"]
         log_ts(f"[Effekt] Triggering special phase: {phase_name}")
         raum.aktuelle_phase = phase_name
+
+    # Handle team change effects (e.g., Vampir, Zombie, Wolfsjunge conversions)
+    if "team_wechsel" in effekte:
+        new_team = effekte["team_wechsel"]
+        target_id = ergebnis.ziel_spieler_id
+        if target_id:
+            ziel = db.session.get(Spieler, target_id)
+            if ziel:
+                log_ts(f"[Effekt] Team change: {ziel.name} -> {new_team}")
+                ziel.set_state("global.team", new_team)
+                # If there's also a role conversion (verwandlung)
+                if "verwandlung" in effekte:
+                    new_role = effekte["verwandlung"]
+                    log_ts(f"[Effekt] Role conversion: {ziel.name} -> {new_role}")
+                    ziel.rolle = new_role
+                    socketio.emit(
+                        "rolle_geaendert",
+                        {
+                            "spieler_id": ziel.id,
+                            "neue_rolle": new_role,
+                            "neues_team": new_team,
+                        },
+                        room=f"player_{ziel.id}",  # pyright: ignore[reportCallIssue]
+                    )
 
     # Handle state updates from the result
     if ergebnis.state_updates:
@@ -1870,11 +1895,27 @@ def _wechsel_phase_intern(raum):
         )
 
     # Build phase data for emission
+    # Determine active role from scheduler for night phases
+    from scheduler import get_next_phase_state
+    active_role = None
+    display_info = None
+    
+    # For night phases, check what role is currently active
+    if neue_phase == "nacht" or neue_phase.endswith("_phase"):
+        try:
+            phase_state = get_next_phase_state(raum)
+            active_role = phase_state.active_role
+            display_info = phase_state.display_info
+        except Exception as e:
+            log_ts(f"[Phase] Error getting active role: {e}")
+    
     phase_data = {
         "phase": neue_phase,
         "runde": raum.runde,
         "alte_phase": alte_phase,
         "erzaehler_text": erzaehler_text,
+        "active_role": active_role,  # For frontend to know whose turn it is
+        "display_info": display_info,
     }
 
     # Add role-specific phase data (phase names use role's get_phase_name() method)
@@ -1890,6 +1931,15 @@ def _wechsel_phase_intern(raum):
                 log_ts(f"[Hexe] Opfer-Info mitgesendet: {opfer.name} (ID: {opfer.id})")
 
     socketio.emit("phase_geaendert", phase_data, room=raum.code)  # pyright: ignore[reportCallIssue]
+    
+    # Also emit the new phase_update event for modern frontend handlers
+    # This provides a cleaner API with explicit active_role
+    socketio.emit("phase_update", {
+        "phase": neue_phase,
+        "runde": raum.runde,
+        "active_role": active_role,
+        "display_info": display_info,
+    }, room=raum.code)  # pyright: ignore[reportCallIssue]
 
     # Zufällige Hinweise generieren
     try:

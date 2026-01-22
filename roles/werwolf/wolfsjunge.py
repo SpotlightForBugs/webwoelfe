@@ -111,6 +111,7 @@ class Wolfsjunge(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Wolfsjunge - Vorbild wählen",
             instructions="Wähle dein Vorbild. Wenn es stirbt, wirst du zum Werwolf.",
@@ -136,14 +137,20 @@ class Wolfsjunge(Role):
         # Handle both prefixed and unprefixed action types
         if action_type in ("wolfsjunge_waehlen", "waehlen"):
             if kontext.runde != 1:
-                return AktionsErgebnis(erfolg=False, nachricht="Du hast dein Vorbild bereits gewählt.")
+                return AktionsErgebnis(
+                    erfolg=False, nachricht="Du hast dein Vorbild bereits gewählt."
+                )
 
             if not targets:
-                return AktionsErgebnis(erfolg=False, nachricht="Du musst ein Vorbild wählen!")
+                return AktionsErgebnis(
+                    erfolg=False, nachricht="Du musst ein Vorbild wählen!"
+                )
 
             ziel = targets[0]
             if ziel.id == spieler.id:
-                return AktionsErgebnis(erfolg=False, nachricht="Du kannst dich nicht selbst wählen.")
+                return AktionsErgebnis(
+                    erfolg=False, nachricht="Du kannst dich nicht selbst wählen."
+                )
 
             self.set_state(spieler, "vorbild_id", ziel.id)
             return AktionsErgebnis(
@@ -158,15 +165,25 @@ class Wolfsjunge(Role):
         return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
         # Direct handling - don't call execute_action to avoid recursion
         if kontext.runde != 1:
-            return AktionsErgebnis(erfolg=False, nachricht="Du hast dein Vorbild bereits gewählt.")
+            return AktionsErgebnis(
+                erfolg=False, nachricht="Du hast dein Vorbild bereits gewählt."
+            )
         if not ziel:
-            return AktionsErgebnis(erfolg=False, nachricht="Du musst ein Vorbild wählen!")
+            return AktionsErgebnis(
+                erfolg=False, nachricht="Du musst ein Vorbild wählen!"
+            )
         if ziel.id == spieler.id:
-            return AktionsErgebnis(erfolg=False, nachricht="Du kannst dich nicht selbst wählen.")
+            return AktionsErgebnis(
+                erfolg=False, nachricht="Du kannst dich nicht selbst wählen."
+            )
         self.set_state(spieler, "vorbild_id", ziel.id)
         return AktionsErgebnis(
             erfolg=True,

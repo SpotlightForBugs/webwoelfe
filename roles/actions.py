@@ -1,80 +1,113 @@
 """
-Action Registry - Maps UI button actions to role handlers.
+Action Registry - Dynamic action routing for role handlers.
 
-This module provides the mapping between frontend action types
-(like "hexe_heilen") and the actual role methods that execute them.
+This module provides dynamic action routing between frontend actions
+and role handlers. NO HARDCODED MAPPINGS - everything is discovered
+dynamically from role definitions.
 """
 
-from typing import Callable, Dict, Optional, Any, TYPE_CHECKING
+from typing import Callable, Dict, Optional, Any, Set, TYPE_CHECKING
 from dataclasses import dataclass
+from logger import logger
 
 if TYPE_CHECKING:
     from .base import AktionsErgebnis, SpielKontext
     from models import Spieler
 
 
-# Action type normalization map - maps frontend action names to canonical forms
-ACTION_TYPE_ALIASES: Dict[str, str] = {
-    # Hexe actions
-    "hexe_heilen": "heilen",
-    "hexe_vergiften": "vergiften",
-    "hexe_toeten": "vergiften",
-    # Werwolf actions
-    "werwolf_toeten": "toeten",
-    "werwolf_angreifen": "toeten",
-    # Seherin actions
-    "seherin_sehen": "sehen",
-    # Heiler actions
-    "heiler_heilen": "heilen",
-    "heiler_schuetzen": "schuetzen",
-    # Jäger actions
-    "jaeger_schiessen": "schiessen",
-    "jaeger_toeten": "schiessen",
-    # Amor actions
-    "amor_verlieben": "verlieben",
-    "amor_waehlen": "waehlen",
-    # Common patterns
-    "nichts": "skip",
-    "ueberspringen": "skip",
-    "keine_aktion": "skip",
-}
+def extract_action_parts(action_type: str) -> tuple:
+    """
+    Extract role prefix and action from an action type string.
+    
+    Examples:
+        "hexe_heilen" -> ("hexe", "heilen")
+        "heilen" -> (None, "heilen")
+        "amor_verlieben" -> ("amor", "verlieben")
+        "jaeger_schuss" -> ("jaeger", "schuss")
+        "skip" -> (None, "skip")
+    
+    Returns:
+        Tuple of (role_prefix, action_name)
+    """
+    if not action_type:
+        return (None, "skip")
+    
+    if "_" in action_type:
+        parts = action_type.split("_", 1)
+        return (parts[0].lower(), parts[1])
+    
+    return (None, action_type)
 
 
 def normalize_action_type(action_type: str) -> str:
     """
-    Normalize an action type to its canonical form.
+    Normalize an action type to its base form.
     
-    This handles various naming conventions used by the frontend.
+    This handles role prefixes and common variations dynamically,
+    without hardcoded mappings.
     
     Args:
-        action_type: The raw action type string
+        action_type: The raw action type string (e.g., "hexe_heilen", "heilen")
         
     Returns:
-        Normalized action type
+        Normalized action type (e.g., "heilen")
     """
     if not action_type:
         return "skip"
     
-    # Check direct alias
-    if action_type in ACTION_TYPE_ALIASES:
-        return ACTION_TYPE_ALIASES[action_type]
+    # Handle explicit skip variations
+    skip_variations = {"nichts", "ueberspringen", "keine_aktion", "skip", "überspringen"}
+    if action_type.lower() in skip_variations:
+        return "skip"
     
-    # Try lowercase version
-    lower = action_type.lower()
-    if lower in ACTION_TYPE_ALIASES:
-        return ACTION_TYPE_ALIASES[lower]
+    # Extract action part (handles "hexe_heilen" -> "heilen")
+    _, action = extract_action_parts(action_type)
     
-    # If action has role prefix (e.g., "hexe_heilen"), extract the action part
-    if "_" in action_type:
-        parts = action_type.split("_", 1)
-        if len(parts) == 2:
-            action_part = parts[1]
-            # Check if the action part is in aliases
-            if action_part in ACTION_TYPE_ALIASES:
-                return ACTION_TYPE_ALIASES[action_part]
-            return action_part
+    return action
+
+
+def find_matching_action(role, action_type: str) -> Optional[str]:
+    """
+    Find a matching action in the role's UI definition.
     
-    return action_type
+    Checks both the original action_type and its normalized form
+    against the role's buttons and actions.
+    
+    Args:
+        role: The role instance
+        action_type: The action type from frontend
+        
+    Returns:
+        The matched action_type from the role's definition, or None
+    """
+    try:
+        ui = role.get_ui_definition()
+        if not ui:
+            return None
+        
+        _, normalized = extract_action_parts(action_type)
+        
+        # Check RoleAction entries first
+        for action in ui.actions:
+            if (action.action_id == action_type or 
+                action.action_type == action_type or
+                action.action_id == normalized or
+                action.action_type == normalized):
+                return action.action_id
+        
+        # Check legacy UIButton entries
+        for button in ui.buttons:
+            btn_type = button.action_type
+            if btn_type == action_type or btn_type == normalized:
+                return btn_type
+            # Also check if button's action matches our normalized form
+            _, btn_normalized = extract_action_parts(btn_type)
+            if btn_normalized == normalized:
+                return btn_type
+        
+        return None
+    except Exception:
+        return None
 
 
 @dataclass

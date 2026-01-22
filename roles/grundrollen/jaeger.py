@@ -147,12 +147,14 @@ class Jaeger(Role):
         Execute Jäger actions dynamically.
 
         Handles:
-        - jaeger_schuss: The last shot when dying
+        - jaeger_schuss / schuss: The last shot when dying
         """
-        if action_type == "jaeger_schuss":
+        # Handle both prefixed and unprefixed action types
+        if action_type in ("jaeger_schuss", "schuss"):
             return self._execute_schuss(spieler, targets[0] if targets else None, kontext)
 
-        return None
+        # Delegate to parent for skip handling etc.
+        return super().execute_action(action_type, spieler, targets, kontext)
 
     def _execute_schuss(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: "SpielKontext"

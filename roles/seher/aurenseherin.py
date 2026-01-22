@@ -104,7 +104,8 @@ class Aurenseherin(Role):
         targets: List["Spieler"],
         kontext: "SpielKontext",
     ) -> Optional[AktionsErgebnis]:
-        if action_type == "aurenseherin_sehen":
+        # Handle both prefixed and unprefixed action types
+        if action_type in ("aurenseherin_sehen", "sehen"):
             if not targets:
                 return AktionsErgebnis(erfolg=False, nachricht="Du musst einen Spieler wählen.")
 
@@ -123,7 +124,8 @@ class Aurenseherin(Role):
                 effekte={"aura_gesehen": ziel.id, "ist_boese": ist_boese},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        return None
+        # Delegate to parent for skip handling etc.
+        return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None

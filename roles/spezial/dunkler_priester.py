@@ -158,9 +158,10 @@ class DunklerPriester(Role):
         Execute Dunkler Priester actions dynamically with multi-target support.
 
         Handles:
-        - priester_verlieben: Connect two players as dark lovers
+        - priester_verlieben / verlieben: Connect two players as dark lovers
         """
-        if action_type == "priester_verlieben":
+        # Handle both prefixed and unprefixed action types
+        if action_type in ("priester_verlieben", "verlieben"):
             if len(targets) != 2:
                 return AktionsErgebnis(
                     erfolg=False,
@@ -168,7 +169,8 @@ class DunklerPriester(Role):
                 )
             return self.verlieben(spieler, targets[0], targets[1], kontext)
 
-        return None
+        # Delegate to parent for skip handling etc.
+        return super().execute_action(action_type, spieler, targets, kontext)
 
     def verlieben(
         self,

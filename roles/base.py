@@ -3182,8 +3182,11 @@ class Role(ABC):
         This is the main entry point for all role actions, replacing
         hardcoded action handlers in app.py.
 
-        NEW: First looks up RoleAction by action_id/action_type and calls
-        the handler method. Falls back to on_nacht_aktion for legacy.
+        The method tries multiple strategies to find the right handler:
+        1. Check RoleAction definitions for explicit handler
+        2. Check UIButton definitions and route to on_nacht_aktion
+        3. Look for a method with the action name directly
+        4. Fall back to on_nacht_aktion with the action parameter
 
         Args:
             action_type: The action identifier (e.g., "heilen", "vergiften")
@@ -3194,14 +3197,17 @@ class Role(ABC):
         Returns:
             AktionsErgebnis or None if action not handled
         """
-        from .actions import normalize_action_type
+        from .actions import normalize_action_type, extract_action_parts, find_matching_action
         
-        # Normalize the action type for consistent handling
+        # Extract both original and normalized forms
         original_action = action_type
-        normalized_action = normalize_action_type(action_type) if action_type else "skip"
+        _, normalized_action = extract_action_parts(action_type) if action_type else (None, "skip")
+        
+        logger.debug(f"[execute_action] {self.info.name}: action='{action_type}' normalized='{normalized_action}'")
         
         # Handle generic "skip" action
-        if normalized_action == "skip" or action_type == "skip" or action_type == "nichts":
+        skip_values = {"skip", "nichts", "ueberspringen", "überspringen", "keine_aktion"}
+        if normalized_action in skip_values or action_type in skip_values:
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht="Du hast die Aktion übersprungen.",
@@ -3209,10 +3215,11 @@ class Role(ABC):
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
 
-        # NEW: Look up RoleAction by action_id and call handler
+        ziel = targets[0] if len(targets) == 1 else None
         ui_def = self.get_ui_definition()
+        
+        # Strategy 1: Check RoleAction definitions
         for action in ui_def.actions:
-            # Check against both original and normalized action types
             if (action.action_id == action_type or 
                 action.action_type == action_type or
                 action.action_id == normalized_action or
@@ -3220,13 +3227,9 @@ class Role(ABC):
                 handler_name = action.handler
                 if hasattr(self, handler_name):
                     handler = getattr(self, handler_name)
-                    # Determine target based on targets list
-                    ziel = targets[0] if len(targets) == 1 else None
-                    # Call handler with appropriate args
                     try:
                         return handler(spieler, ziel, kontext)
                     except TypeError:
-                        # Handler might have different signature, try without ziel
                         try:
                             return handler(spieler, kontext)
                         except Exception as e:
@@ -3235,72 +3238,61 @@ class Role(ABC):
                                 erfolg=False,
                                 nachricht=f"Fehler bei {handler_name}: {str(e)}",
                             )
-                else:
-                    logger.warning(
-                        f"Role {self.info.name} action {action_type} has handler "
-                        f"'{handler_name}' but method not found"
-                    )
 
-        # NEW: Also check UIButtons (legacy system still used by most roles)
-        # UIButtons don't have explicit handlers, so route to on_nacht_aktion
+        # Strategy 2: Check UIButtons and route to on_nacht_aktion with action param
+        matched_button = None
         for button in ui_def.buttons:
-            btn_action_type = button.action_type
-            if (btn_action_type == action_type or 
-                btn_action_type == normalized_action or
-                btn_action_type == original_action):
-                # Found matching button - route to on_nacht_aktion with the action
-                ziel = targets[0] if len(targets) == 1 else None
+            btn_type = button.action_type
+            _, btn_normalized = extract_action_parts(btn_type)
+            
+            # Match by exact type, normalized type, or normalized button type
+            if (btn_type == action_type or 
+                btn_type == normalized_action or
+                btn_normalized == normalized_action):
+                matched_button = button
+                break
+        
+        if matched_button:
+            logger.debug(f"[execute_action] Matched button: {matched_button.action_type}")
+            # Route to on_nacht_aktion with action parameter
+            return self._call_on_nacht_aktion(spieler, ziel, kontext, normalized_action)
+        
+        # Strategy 3: Look for a direct method with the action name
+        for method_name in [normalized_action, action_type, original_action]:
+            if hasattr(self, method_name) and callable(getattr(self, method_name)):
+                method = getattr(self, method_name)
                 try:
-                    result = self.on_nacht_aktion(spieler, ziel, kontext, aktion=normalized_action)
-                    if result is None:
-                        # Role didn't handle it, but button exists - create success
-                        return AktionsErgebnis(
-                            erfolg=True,
-                            nachricht="Aktion ausgeführt.",
-                            effekte={"aktion_ausgefuehrt": True},
-                        )
-                    return result
-                except TypeError:
-                    # Handler might not accept aktion kwarg
-                    try:
-                        result = self.on_nacht_aktion(spieler, ziel, kontext)
-                        if result is None:
-                            return AktionsErgebnis(
-                                erfolg=True,
-                                nachricht="Aktion ausgeführt.",
-                                effekte={"aktion_ausgefuehrt": True},
-                            )
-                        return result
-                    except Exception as e:
-                        logger.error(f"on_nacht_aktion failed for button {btn_action_type}: {e}")
-                        return AktionsErgebnis(
-                            erfolg=False,
-                            nachricht=f"Fehler bei Aktion: {str(e)}",
-                        )
-
-        # LEGACY: route to on_nacht_aktion for backwards compatibility
+                    return method(spieler, ziel, kontext)
+                except Exception as e:
+                    logger.debug(f"Direct method {method_name} failed: {e}")
+        
+        # Strategy 4: Fall back to on_nacht_aktion for any action
+        logger.debug(f"[execute_action] Falling back to on_nacht_aktion for {normalized_action}")
+        return self._call_on_nacht_aktion(spieler, ziel, kontext, normalized_action)
+    
+    def _call_on_nacht_aktion(
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: "SpielKontext",
+        aktion: str
+    ) -> Optional[AktionsErgebnis]:
+        """
+        Helper to call on_nacht_aktion with proper signature handling.
+        """
         import inspect
-
-        kwargs = {}
+        
         try:
             sig = inspect.signature(self.on_nacht_aktion)
             if "aktion" in sig.parameters:
-                # Pass normalized action to on_nacht_aktion
-                kwargs["aktion"] = normalized_action
-        except Exception:
-            # Fallback if signature inspection fails (e.g. on some decorated methods)
-            pass
-
-        ziel = targets[0] if len(targets) == 1 else None
-        
-        try:
-            result = self.on_nacht_aktion(spieler, ziel, kontext, **kwargs)
+                result = self.on_nacht_aktion(spieler, ziel, kontext, aktion=aktion)
+            else:
+                result = self.on_nacht_aktion(spieler, ziel, kontext)
             
-            # If result is None, return an error to prevent phase hang
             if result is None:
                 return AktionsErgebnis(
                     erfolg=False,
-                    nachricht=f"Aktion '{normalized_action}' nicht verarbeitet.",
+                    nachricht=f"Aktion '{aktion}' nicht verarbeitet von {self.info.name}.",
                 )
             return result
         except Exception as e:

@@ -133,7 +133,8 @@ class Wolfsjunge(Role):
         targets: List["Spieler"],
         kontext: "SpielKontext",
     ) -> Optional[AktionsErgebnis]:
-        if action_type == "wolfsjunge_waehlen":
+        # Handle both prefixed and unprefixed action types
+        if action_type in ("wolfsjunge_waehlen", "waehlen"):
             if kontext.runde != 1:
                 return AktionsErgebnis(erfolg=False, nachricht="Du hast dein Vorbild bereits gewählt.")
 
@@ -153,7 +154,8 @@ class Wolfsjunge(Role):
                 state_updates={"wolfsjunge.vorbild_id": ziel.id},
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        return None
+        # Delegate to parent for skip handling etc.
+        return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None

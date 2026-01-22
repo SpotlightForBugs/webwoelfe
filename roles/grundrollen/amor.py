@@ -207,9 +207,10 @@ class Amor(Role):
         This replaces the hardcoded 'amor_verlieben' handler in app.py.
 
         Handles:
-        - amor_verlieben: Connect two players as lovers
+        - amor_verlieben / verlieben: Connect two players as lovers
         """
-        if action_type == "amor_verlieben":
+        # Handle both prefixed and unprefixed action types
+        if action_type in ("amor_verlieben", "verlieben"):
             if len(targets) != 2:
                 return AktionsErgebnis(
                     erfolg=False,
@@ -217,7 +218,8 @@ class Amor(Role):
                 )
             return self.verlieben(spieler, targets[0], targets[1], kontext)
 
-        return None
+        # Delegate to parent for skip handling etc.
+        return super().execute_action(action_type, spieler, targets, kontext)
 
     def verlieben(
         self,

@@ -133,7 +133,8 @@ class TeenagerWerwolf(Role):
         targets: List["Spieler"],
         kontext: "SpielKontext",
     ) -> Optional[AktionsErgebnis]:
-        if action_type == "teenager_verweigern":
+        # Handle both prefixed and unprefixed action types
+        if action_type in ("teenager_verweigern", "verweigern"):
             if self.get_state(spieler, "hat_verweigert"):
                 return AktionsErgebnis(erfolg=False, nachricht="Du hast bereits einmal rebelliert!")
 
@@ -145,7 +146,8 @@ class TeenagerWerwolf(Role):
                 state_updates={"teenager_werwolf.hat_verweigert": True},
                 log_sichtbar_fuer="werwolf",
             )
-        return None
+        # Delegate to parent for skip handling etc.
+        return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None

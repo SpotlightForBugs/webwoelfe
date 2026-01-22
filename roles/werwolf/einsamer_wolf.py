@@ -121,7 +121,8 @@ class EinsamerWolf(Role):
         targets: List["Spieler"],
         kontext: "SpielKontext",
     ) -> Optional[AktionsErgebnis]:
-        if action_type == "einsamer_wolf_angriff":
+        # Handle both prefixed and unprefixed action types
+        if action_type in ("einsamer_wolf_angriff", "angriff"):
             if not targets:
                 return AktionsErgebnis(
                     erfolg=True,
@@ -142,7 +143,8 @@ class EinsamerWolf(Role):
                 },
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        return None
+        # Delegate to parent for skip handling etc.
+        return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None

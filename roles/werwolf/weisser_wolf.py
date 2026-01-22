@@ -120,7 +120,8 @@ class WeisserWolf(Role):
         targets: List["Spieler"],
         kontext: "SpielKontext",
     ) -> Optional[AktionsErgebnis]:
-        if action_type == "weisser_wolf_toeten":
+        # Handle both prefixed and unprefixed action types
+        if action_type in ("weisser_wolf_toeten", "toeten"):
             if kontext.runde % 2 != 0:
                 return AktionsErgebnis(
                     erfolg=False,
@@ -151,7 +152,8 @@ class WeisserWolf(Role):
                 },
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
-        return None
+        # Delegate to parent for skip handling etc.
+        return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None

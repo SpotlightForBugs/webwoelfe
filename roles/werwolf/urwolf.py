@@ -158,7 +158,8 @@ class Urwolf(Role):
         kontext: "SpielKontext",
     ) -> Optional[AktionsErgebnis]:
         """Execute Urwolf infection action."""
-        if action_type == "urwolf_infizieren":
+        # Handle both prefixed and unprefixed action types
+        if action_type in ("urwolf_infizieren", "infizieren"):
             if not self.get_state(spieler, "infektion_verfuegbar", True):
                 return AktionsErgebnis(
                     erfolg=False,
@@ -180,7 +181,8 @@ class Urwolf(Role):
                 state_updates={"urwolf.infektion_verfuegbar": False},
                 log_sichtbar_fuer="werwolf",
             )
-        return None
+        # Delegate to parent for skip handling etc.
+        return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
         self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None

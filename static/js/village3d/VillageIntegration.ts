@@ -2,7 +2,7 @@
  * VillageIntegration - Verbindet VillageEnhancementManager mit dem Rest der App
  * 
  * Diese Klasse:
- * - Hört auf Socket.io Events (phase_geaendert, spieler_gestorben, etc.)
+ * - Hört auf Socket.io Events (phase_update, spieler_gestorben, etc.)
  * - Ruft die entsprechenden Methoden im VillageEnhancementManager auf
  * - Hört auf CustomEvents und aktualisiert die UI
  * 
@@ -150,13 +150,7 @@ export class VillageIntegration {
   // ============================================================================
 
   private setupSocketListeners(): void {
-    // Phase geändert
-    this.socket.on('phase_geaendert', async (data: unknown) => {
-      const phaseData = data as PhaseChangedData;
-      await this.handlePhaseChanged(phaseData);
-    });
-
-    // Phase Update (neues System)
+    // Unified Phase Update - single source of truth
     this.socket.on('phase_update', async (data: unknown) => {
       const phaseData = data as PhaseChangedData;
       await this.handlePhaseChanged(phaseData);

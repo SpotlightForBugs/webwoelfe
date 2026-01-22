@@ -1960,26 +1960,69 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   // Event Handler
   
-  // GENERIC PHASE UPDATE (New System)
+  // UNIFIED PHASE UPDATE - Single source of truth for all phase changes
   socket.on('phase_update', async function(data) {
       console.log('[Phase] Update:', data);
+      
+      // Refresh mapping when a new night begins or when phase is missing from mapping
+      if (data.phase === 'nacht_start' || (data.phase.includes('phase') && !phaseRoleMapping[data.phase])) {
+          console.log('[Phase] Refreshing mapping for phase:', data.phase);
+          await loadPhaseRoleMapping();
+      }
+      
       aktuellePhase = data.phase;
+      aktuelleRunde = data.runde || aktuelleRunde;
       activeRole = data.active_role;
       
       window.aktuellePhase = aktuellePhase;
+      window.aktuelleRunde = aktuelleRunde;
       window.activeRole = activeRole;
+      window.isNightPhase = data.phase.includes('nacht') || 
+                           (data.phase.includes('phase') && 
+                            !data.phase.includes('tag') && 
+                            !data.phase.includes('abstimmung'));
       
-      // Load role UI config if it's our turn - await to ensure it's ready for player interactions
+      // Load role UI config if it's our turn
       if (activeRole === spielerRolle) {
           phaseUiConfig = await loadRoleUI(spielerRolle);
           console.log('[Phase] Loaded UI config for our role:', spielerRolle, phaseUiConfig);
       } else {
-          phaseUiConfig = null;  // Clear when not our turn
+          phaseUiConfig = null;
       }
       
-      updatePhase(data.phase, data.runde || aktuelleRunde, data.display_info);
+      // Handle victim info (for Hexe phase - data comes from server now)
+      if (data.werwolf_opfer_id) {
+          window.werwolfOpferId = data.werwolf_opfer_id;
+          window.werwolfOpferName = data.werwolf_opfer_name;
+          
+          // Show victim alert to the active role
+          if (spielerRolle === activeRole) {
+              showAlert(`<i class="fa-solid fa-paw"></i> Das Werwolf-Opfer ist: <strong>${data.werwolf_opfer_name}</strong>`, 'danger', 10000);
+          }
+          
+          // Highlight victim in Village3D
+          if (window.village3d && typeof window.village3d.highlightVictim === 'function') {
+              window.village3d.highlightVictim(data.werwolf_opfer_id);
+          }
+      } else {
+          // Clear victim info
+          window.werwolfOpferId = null;
+          window.werwolfOpferName = null;
+          
+          if (window.village3d && typeof window.village3d.clearVictimHighlight === 'function') {
+              window.village3d.clearVictimHighlight();
+          }
+      }
       
-      // Clear legacy overlays if needed
+      // Update the phase UI
+      await updatePhase(data.phase, data.runde, data.display_info);
+      
+      // Handle narrator text if present
+      if (data.erzaehler_text) {
+          updateErzaehlerText(data.erzaehler_text);
+      }
+      
+      // Clear any stale overlays
       closeAllErzaehlungOverlays();
   });
   
@@ -1994,79 +2037,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       if (payload.nachricht) {
           showAlert(payload.nachricht, 'info');
       }
-  });
-
-  // Legacy Handler (Backward Compatibility)
-  socket.on('phase_geaendert', async function(data) {
-      // Refresh mapping when a new night begins or when phase is missing from mapping
-      // This ensures UI knows which role is active for proper action button visibility
-      if (data.phase === 'nacht_start' || (data.phase.includes('phase') && !phaseRoleMapping[data.phase])) {
-          console.log('[Phase] Refreshing mapping for phase:', data.phase);
-          await loadPhaseRoleMapping();
-      }
-
-      aktuellePhase = data.phase;
-      aktuelleRunde = data.runde || aktuelleRunde;
-      window.aktuellePhase = aktuellePhase;
-      window.aktuelleRunde = aktuelleRunde;
-      
-      // =========================================================================
-      // DYNAMIC PHASE INFO - Load BEFORE updatePhase() so UI config is available
-      // =========================================================================
-      // Fetch dynamic phase info from server (includes victim info for Hexe, etc.)
-      try {
-          const phaseInfoResponse = await fetch(`/api/game/${raumCode}/phase-info`);
-          const phaseInfo = await phaseInfoResponse.json();
-          
-          if (phaseInfo.success) {
-              // Store phase type for UI decisions
-              window.isNightPhase = phaseInfo.is_night;
-              window.activeRole = phaseInfo.active_role;
-              
-              // Load UI config if it's our turn (BEFORE updatePhase calls updateActionButtons)
-              if (phaseInfo.active_role === spielerRolle) {
-                  phaseUiConfig = await loadRoleUI(spielerRolle);
-                  console.log('[Phase] Loaded UI config for our role:', spielerRolle, phaseUiConfig);
-              } else {
-                  phaseUiConfig = null;
-              }
-              
-              // Handle victim info dynamically (for Hexe and similar roles)
-              if (phaseInfo.victim_info) {
-                  window.werwolfOpferId = phaseInfo.victim_info.id;
-                  window.werwolfOpferName = phaseInfo.victim_info.name;
-                  
-                  // Show victim alert to the active role
-                  if (spielerRolle === phaseInfo.active_role) {
-                      showAlert(`<i class="fa-solid fa-paw"></i> Das Werwolf-Opfer ist: <strong>${phaseInfo.victim_info.name}</strong>`, 'danger', 10000);
-                  }
-                  
-                  // Highlight victim in Village3D
-                  if (window.village3d && typeof window.village3d.highlightVictim === 'function') {
-                      window.village3d.highlightVictim(phaseInfo.victim_info.id);
-                  }
-              } else {
-                  // Clear victim info
-                  window.werwolfOpferId = null;
-                  window.werwolfOpferName = null;
-                  
-                  if (window.village3d && typeof window.village3d.clearVictimHighlight === 'function') {
-                      window.village3d.clearVictimHighlight();
-                  }
-              }
-          }
-      } catch (error) {
-          console.warn('[Phase Info] Error fetching phase info:', error);
-      }
-      
-      // NOW update the phase UI (after phaseUiConfig is loaded)
-      await updatePhase(data.phase, data.runde);
-      if (data.erzaehler_text) {
-          updateErzaehlerText(data.erzaehler_text);
-      }
-
-      // Schließe alle bestehenden Erzähler-Overlays um Überlappung zu vermeiden
-      closeAllErzaehlungOverlays();
   });
 
   socket.on('rolle_erhalten', async function(data) {
@@ -3980,7 +3950,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           window.updateVillage3DPlayerList?.();
 
           // VillageIntegration mit Village3D verbinden
-          // This handles all socket events (phase_geaendert, hinweis_zeigen, etc.)
+          // This handles all socket events (phase_update, hinweis_zeigen, etc.)
           if (villageIntegration) {
             villageIntegration.setVillage3D(village3d);
           }

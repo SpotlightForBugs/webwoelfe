@@ -1930,16 +1930,8 @@ def _wechsel_phase_intern(raum):
                 phase_data["werwolf_opfer_name"] = opfer.name
                 log_ts(f"[Hexe] Opfer-Info mitgesendet: {opfer.name} (ID: {opfer.id})")
 
-    socketio.emit("phase_geaendert", phase_data, room=raum.code)  # pyright: ignore[reportCallIssue]
-    
-    # Also emit the new phase_update event for modern frontend handlers
-    # This provides a cleaner API with explicit active_role
-    socketio.emit("phase_update", {
-        "phase": neue_phase,
-        "runde": raum.runde,
-        "active_role": active_role,
-        "display_info": display_info,
-    }, room=raum.code)  # pyright: ignore[reportCallIssue]
+    # Unified phase event - contains all data for frontend
+    socketio.emit("phase_update", phase_data, room=raum.code)  # pyright: ignore[reportCallIssue]
 
     # Zufällige Hinweise generieren
     try:

@@ -76,7 +76,10 @@ class Amor(Role):
                 query_name="verliebte",
                 defined_by="Amor",
                 # Dynamic visibility: Partners + Amor see lovers
-                visible_to=["partner", "source_role"],  # Partners see each other, Amor sees all lovers
+                visible_to=[
+                    "partner",
+                    "source_role",
+                ],  # Partners see each other, Amor sees all lovers
                 reveals_role=True,  # Partners see each other's roles
                 snapshot_role_on_set=True,  # Store role at time of amor's action
                 snapshot_key="global.verliebt_rolle_snapshot",
@@ -190,8 +193,7 @@ class Amor(Role):
 
         # Single target not supported - needs execute_action with list
         return AktionsErgebnis(
-            erfolg=False,
-            nachricht="Amor muss zwei Spieler gleichzeitig wählen."
+            erfolg=False, nachricht="Amor muss zwei Spieler gleichzeitig wählen."
         )
 
     def execute_action(
@@ -260,8 +262,14 @@ class Amor(Role):
                 ziel2.id: {"global.verliebt_mit_id": ziel1.id},
             },
             additional_logs=[
-                {"text": f"Du bist verliebt in {ziel2.name}!", "sichtbar_fuer": str(ziel1.id)},
-                {"text": f"Du bist verliebt in {ziel1.name}!", "sichtbar_fuer": str(ziel2.id)},
+                {
+                    "text": f"Du bist verliebt in {ziel2.name}!",
+                    "sichtbar_fuer": str(ziel1.id),
+                },
+                {
+                    "text": f"Du bist verliebt in {ziel1.name}!",
+                    "sichtbar_fuer": str(ziel2.id),
+                },
             ],
             log_sichtbar_fuer="erzaehler",
             private_infos={

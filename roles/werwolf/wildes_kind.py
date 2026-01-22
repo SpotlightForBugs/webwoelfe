@@ -104,6 +104,7 @@ class WildesKind(Role):
     @property
     def aktions_typ(self) -> "AktionsTyp":
         from ..enums import AktionsTyp
+
         return AktionsTyp.WAEHLEN
 
     @property
@@ -118,6 +119,7 @@ class WildesKind(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Wildes Kind - Vorbild wählen",
             instructions="Wähle dein Vorbild. Wenn es stirbt, wirst du zum Werwolf.",
@@ -175,9 +177,15 @@ class WildesKind(Role):
         return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("wildes_kind_waehlen", spieler, [ziel] if ziel else [], kontext)
+        return self.execute_action(
+            "wildes_kind_waehlen", spieler, [ziel] if ziel else [], kontext
+        )
 
     def on_spieler_stirbt(
         self,

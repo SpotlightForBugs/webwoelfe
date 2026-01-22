@@ -81,6 +81,7 @@ class EinsamerWolf(Role):
     @property
     def aktions_typ(self) -> "AktionsTyp":
         from ..enums import AktionsTyp
+
         return AktionsTyp.TOETEN
 
     @property
@@ -99,6 +100,7 @@ class EinsamerWolf(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Einsamer Wolf - Alleine jagen",
             instructions="Wähle dein Opfer. Du jagst alleine.",
@@ -131,7 +133,9 @@ class EinsamerWolf(Role):
 
             ziel = targets[0]
             if ziel.id in kontext.tote_spieler:
-                return AktionsErgebnis(erfolg=False, nachricht="Dieses Ziel ist bereits tot.")
+                return AktionsErgebnis(
+                    erfolg=False, nachricht="Dieses Ziel ist bereits tot."
+                )
 
             return AktionsErgebnis(
                 erfolg=True,
@@ -147,9 +151,15 @@ class EinsamerWolf(Role):
         return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("einsamer_wolf_angriff", spieler, [ziel] if ziel else [], kontext)
+        return self.execute_action(
+            "einsamer_wolf_angriff", spieler, [ziel] if ziel else [], kontext
+        )
 
     def gewinnt_mit_woelfen(self) -> bool:
         return False

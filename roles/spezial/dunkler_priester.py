@@ -220,8 +220,14 @@ class DunklerPriester(Role):
                 ziel2.id: {"global.verliebt_mit_id": ziel1.id},
             },
             additional_logs=[
-                {"text": f"Du bist verliebt in {ziel2.name}! (Dunkle Liebe)", "sichtbar_fuer": str(ziel1.id)},
-                {"text": f"Du bist verliebt in {ziel1.name}! (Dunkle Liebe)", "sichtbar_fuer": str(ziel2.id)},
+                {
+                    "text": f"Du bist verliebt in {ziel2.name}! (Dunkle Liebe)",
+                    "sichtbar_fuer": str(ziel1.id),
+                },
+                {
+                    "text": f"Du bist verliebt in {ziel1.name}! (Dunkle Liebe)",
+                    "sichtbar_fuer": str(ziel2.id),
+                },
             ],
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )

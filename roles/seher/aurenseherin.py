@@ -82,6 +82,7 @@ class Aurenseherin(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Aurenseherin - Aura sehen",
             instructions="Wähle einen Spieler, um seine Aura zu sehen.",
@@ -107,7 +108,9 @@ class Aurenseherin(Role):
         # Handle both prefixed and unprefixed action types
         if action_type in ("aurenseherin_sehen", "sehen"):
             if not targets:
-                return AktionsErgebnis(erfolg=False, nachricht="Du musst einen Spieler wählen.")
+                return AktionsErgebnis(
+                    erfolg=False, nachricht="Du musst einen Spieler wählen."
+                )
 
             ziel = targets[0]
             ziel_rolle = RoleRegistry.get(ziel.rolle)
@@ -128,9 +131,15 @@ class Aurenseherin(Role):
         return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
-        return self.execute_action("aurenseherin_sehen", spieler, [ziel] if ziel else [], kontext)
+        return self.execute_action(
+            "aurenseherin_sehen", spieler, [ziel] if ziel else [], kontext
+        )
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """

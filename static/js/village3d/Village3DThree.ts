@@ -24,8 +24,11 @@ export default class Village3DThree {
   private isLobbyMode: boolean = false;
   
   // Camera
-  private targetCameraRadius: number = 25;
-  private defaultCameraRadius: number = 25;
+  private targetCameraRadius: number = 20;
+  private defaultCameraRadius: number = 20;
+  
+  // Camera angle for isometric-style view (degrees from vertical)
+  private cameraAngle: number = 55; // 0 = top-down, 90 = horizontal
   
   // Sky and celestial bodies
   private skyDome: PCEntity | null = null;
@@ -155,9 +158,10 @@ export default class Village3DThree {
     this.firstPersonPlayerId = options.firstPersonPlayerId ?? null;
     this.firstPersonHeight = options.firstPersonHeight ?? this.firstPersonHeight;
     
-    // Camera defaults based on mode
+    // Camera defaults based on mode - lobby needs to see more players
     if (this.isLobbyMode) {
-      this.defaultCameraRadius = 30;
+      this.defaultCameraRadius = 25;
+      this.cameraAngle = 50; // Slightly steeper for lobby overview
     }
     
     this.targetCameraRadius = this.defaultCameraRadius;
@@ -324,12 +328,17 @@ export default class Village3DThree {
       clearColor: this.isLobbyMode 
         ? new pc.Color(0.35, 0.45, 0.55) 
         : new pc.Color(0.1, 0.1, 0.15),
-      farClip: 1000,
+      farClip: 500,
+      nearClip: 0.5,
+      fov: 45,
     });
-    // Top-down view: position camera above the scene looking straight down
-    const initialHeight = this.targetCameraRadius * 1.5;
-    this.camera.setPosition(0, initialHeight, 0);
-    this.camera.setEulerAngles(-90, 0, 0);
+    // Isometric-style view: camera positioned at an angle for better depth perception
+    const cameraAngleRad = (this.cameraAngle * Math.PI) / 180;
+    const cameraDistance = this.targetCameraRadius;
+    const initialHeight = cameraDistance * Math.cos(cameraAngleRad);
+    const initialOffset = cameraDistance * Math.sin(cameraAngleRad);
+    this.camera.setPosition(0, initialHeight + 8, initialOffset);
+    this.camera.lookAt(0, 0, 0);
     this.app.root.addChild(this.camera);
     
     // Initialize camera tracking variables
@@ -2578,10 +2587,16 @@ export default class Village3DThree {
     if (!this.camera) return;
     const pc = window.pc;
     
-    // Top-down view: camera positioned directly above, looking straight down
+    // Isometric-style view: camera at an angle looking toward center
+    const cameraAngleRad = (this.cameraAngle * Math.PI) / 180;
+    const cameraDistance = this.targetCameraRadius;
+    
+    // Calculate camera position with pan offset
+    const cameraHeight = cameraDistance * Math.cos(cameraAngleRad) + 8;
+    const cameraOffset = cameraDistance * Math.sin(cameraAngleRad);
+    
     const targetX = this.cameraPanX;
-    const targetZ = this.cameraPanZ;
-    const cameraHeight = this.targetCameraRadius * 1.5; // Use radius to control zoom level
+    const targetZ = this.cameraPanZ + cameraOffset; // Offset backwards from look target
 
     if (!this.targetPosition) {
       this.targetPosition = new pc.Vec3(targetX, cameraHeight, targetZ);
@@ -2590,16 +2605,17 @@ export default class Village3DThree {
     }
 
     const currentPos = this.camera.getPosition();
-    const lerpFactor = Math.min(dt * 3, 1);
+    const lerpFactor = Math.min(dt * 4, 1);
 
-    this.camera.setPosition(
-      currentPos.x + (this.targetPosition.x - currentPos.x) * lerpFactor,
-      currentPos.y + (this.targetPosition.y - currentPos.y) * lerpFactor,
-      currentPos.z + (this.targetPosition.z - currentPos.z) * lerpFactor
-    );
+    const newX = currentPos.x + (this.targetPosition.x - currentPos.x) * lerpFactor;
+    const newY = currentPos.y + (this.targetPosition.y - currentPos.y) * lerpFactor;
+    const newZ = currentPos.z + (this.targetPosition.z - currentPos.z) * lerpFactor;
+    
+    this.camera.setPosition(newX, newY, newZ);
 
-    // Look straight down
-    this.camera.setEulerAngles(-90, 0, 0);
+    // Look at the center/pan target
+    const lookTarget = new pc.Vec3(this.cameraPanX, 0, this.cameraPanZ);
+    this.camera.lookAt(lookTarget);
   }
 
   private updateFirstPersonCamera(): void {
@@ -2720,11 +2736,15 @@ export default class Village3DThree {
     this.cameraPanX = 0;
     this.cameraPanZ = 0;
     
-    // Immediately apply the camera position for top-down view
+    // Immediately apply the camera position for isometric view
     if (this.camera && this.viewMode !== 'first-person') {
-      const height = this.targetCameraRadius * 1.5;
-      this.camera.setPosition(0, height, 0);
-      this.camera.setEulerAngles(-90, 0, 0);
+      const pc = window.pc;
+      const cameraAngleRad = (this.cameraAngle * Math.PI) / 180;
+      const cameraDistance = this.targetCameraRadius;
+      const height = cameraDistance * Math.cos(cameraAngleRad) + 8;
+      const offset = cameraDistance * Math.sin(cameraAngleRad);
+      this.camera.setPosition(0, height, offset);
+      this.camera.lookAt(new pc.Vec3(0, 0, 0));
     }
   }
 

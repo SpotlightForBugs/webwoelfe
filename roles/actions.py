@@ -13,6 +13,70 @@ if TYPE_CHECKING:
     from models import Spieler
 
 
+# Action type normalization map - maps frontend action names to canonical forms
+ACTION_TYPE_ALIASES: Dict[str, str] = {
+    # Hexe actions
+    "hexe_heilen": "heilen",
+    "hexe_vergiften": "vergiften",
+    "hexe_toeten": "vergiften",
+    # Werwolf actions
+    "werwolf_toeten": "toeten",
+    "werwolf_angreifen": "toeten",
+    # Seherin actions
+    "seherin_sehen": "sehen",
+    # Heiler actions
+    "heiler_heilen": "heilen",
+    "heiler_schuetzen": "schuetzen",
+    # Jäger actions
+    "jaeger_schiessen": "schiessen",
+    "jaeger_toeten": "schiessen",
+    # Amor actions
+    "amor_verlieben": "verlieben",
+    "amor_waehlen": "waehlen",
+    # Common patterns
+    "nichts": "skip",
+    "ueberspringen": "skip",
+    "keine_aktion": "skip",
+}
+
+
+def normalize_action_type(action_type: str) -> str:
+    """
+    Normalize an action type to its canonical form.
+    
+    This handles various naming conventions used by the frontend.
+    
+    Args:
+        action_type: The raw action type string
+        
+    Returns:
+        Normalized action type
+    """
+    if not action_type:
+        return "skip"
+    
+    # Check direct alias
+    if action_type in ACTION_TYPE_ALIASES:
+        return ACTION_TYPE_ALIASES[action_type]
+    
+    # Try lowercase version
+    lower = action_type.lower()
+    if lower in ACTION_TYPE_ALIASES:
+        return ACTION_TYPE_ALIASES[lower]
+    
+    # If action has role prefix (e.g., "hexe_heilen"), extract the action part
+    if "_" in action_type:
+        parts = action_type.split("_", 1)
+        if len(parts) == 2:
+            action_part = parts[1]
+            # Check if the action part is in aliases
+            if action_part in ACTION_TYPE_ALIASES:
+                return ACTION_TYPE_ALIASES[action_part]
+            return action_part
+    
+    return action_type
+
+
 @dataclass
 class ActionHandler:
     """Describes an action handler."""
@@ -130,7 +194,16 @@ class ActionRegistry:
         """
         from .base import AktionsErgebnis
 
+        # Normalize the action type first
+        original_action = action_type
+        normalized_action = normalize_action_type(action_type)
+        
+        # Try exact match first
         handler = cls._handlers.get(action_type)
+        if not handler:
+            # Try normalized version
+            handler = cls._handlers.get(normalized_action)
+        
         if handler:
             try:
                 return handler(spieler, ziel, kontext)
@@ -146,12 +219,30 @@ class ActionRegistry:
         if len(parts) == 2:
             role_guess = parts[0].title()
             method_guess = parts[1]
+            
+            # Also try normalized version
+            normalized_method = normalize_action_type(method_guess)
 
             from .registry import RoleRegistry
 
             role = RoleRegistry.get(role_guess)
             if role:
+                # Try exact method name first
                 method = getattr(role, method_guess, None)
+                if not method:
+                    # Try normalized method name
+                    method = getattr(role, normalized_method, None)
+                if not method:
+                    # Try on_nacht_aktion with action parameter
+                    if hasattr(role, "on_nacht_aktion"):
+                        try:
+                            return role.on_nacht_aktion(spieler, ziel, kontext, aktion=normalized_action)
+                        except Exception as e:
+                            return AktionsErgebnis(
+                                erfolg=False,
+                                nachricht=f"Fehler bei Aktion: {str(e)}",
+                            )
+                            
                 if method:
                     try:
                         return method(spieler, ziel, kontext)
@@ -163,7 +254,7 @@ class ActionRegistry:
 
         return AktionsErgebnis(
             erfolg=False,
-            nachricht=f"Unbekannte Aktion: {action_type}",
+            nachricht=f"Unbekannte Aktion: {action_type} (normalisiert: {normalized_action})",
         )
 
     @classmethod

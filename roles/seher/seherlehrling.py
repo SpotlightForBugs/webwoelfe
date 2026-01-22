@@ -90,7 +90,6 @@ class Seherlehrling(Role):
         self,
         spieler: "Spieler",
         opfer: "Spieler",
-        todesursache: str,
         kontext: SpielKontext,
     ) -> Optional[AktionsErgebnis]:
         """

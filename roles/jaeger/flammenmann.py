@@ -14,6 +14,8 @@ from ..base import (
     AktionsErgebnis,
     SpielKontext,
     DistributionConfig,
+    RoleAction,
+    UIButton,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
@@ -76,6 +78,19 @@ class Flammenmann(Role):
     def aktions_typ(self) -> AktionsTyp:
         return AktionsTyp.TOETEN
 
+    @property
+    def role_actions(self) -> list["RoleAction"]:
+        """Define the day action for burning."""
+        return [
+            RoleAction(
+                action_type="anzuenden",
+                handler=self.anzuenden,
+                phase="tag",
+                requires_target=False,
+                is_one_time=True,
+            ),
+        ]
+
     def is_active_on_first_night(self) -> bool:
         """Flammenmann does not act at night."""
         return False
@@ -91,7 +106,15 @@ class Flammenmann(Role):
         return RollenUI(
             title="Flammenmann - Tagaktion",
             instructions="Du kannst einmal am Tag dein Haus anzünden und deine Nachbarn töten.",
-            buttons=[],
+            buttons=[
+                UIButton(
+                    id="anzuenden",
+                    label="Haus anzünden!",
+                    icon="fa-solid fa-fire",
+                    aktion="anzuenden",
+                    bestaetigung="VORSICHT: Deine Nachbarn (links und rechts) werden sterben! Fortfahren?",
+                ),
+            ],
             requires_target=False,
             allow_multiple_targets=False,
             can_skip=True,

@@ -210,7 +210,20 @@ class Hexe(Role):
                 log_sichtbar_fuer=f"spieler_{spieler.id}",
             )
 
-        return None
+        # Handle skip action
+        elif aktion == "skip" or aktion == "nichts" or aktion is None:
+            return AktionsErgebnis(
+                True,
+                "Du hast nichts getan.",
+                effekte={"skip": True, "aktion_ausgefuehrt": True},
+                log_sichtbar_fuer=f"spieler_{spieler.id}",
+            )
+
+        # Unknown action - return error instead of None to prevent phase hang
+        return AktionsErgebnis(
+            False,
+            f"Unbekannte Aktion: {aktion}",
+        )
 
     def get_modell_definition(self, spieler: "Spieler") -> RollenModell:
         """

@@ -3194,8 +3194,14 @@ class Role(ABC):
         Returns:
             AktionsErgebnis or None if action not handled
         """
+        from .actions import normalize_action_type
+        
+        # Normalize the action type for consistent handling
+        original_action = action_type
+        normalized_action = normalize_action_type(action_type) if action_type else "skip"
+        
         # Handle generic "skip" action
-        if action_type == "skip":
+        if normalized_action == "skip" or action_type == "skip" or action_type == "nichts":
             return AktionsErgebnis(
                 erfolg=True,
                 nachricht="Du hast die Aktion übersprungen.",
@@ -3206,7 +3212,11 @@ class Role(ABC):
         # NEW: Look up RoleAction by action_id and call handler
         ui_def = self.get_ui_definition()
         for action in ui_def.actions:
-            if action.action_id == action_type or action.action_type == action_type:
+            # Check against both original and normalized action types
+            if (action.action_id == action_type or 
+                action.action_type == action_type or
+                action.action_id == normalized_action or
+                action.action_type == normalized_action):
                 handler_name = action.handler
                 if hasattr(self, handler_name):
                     handler = getattr(self, handler_name)
@@ -3217,7 +3227,14 @@ class Role(ABC):
                         return handler(spieler, ziel, kontext)
                     except TypeError:
                         # Handler might have different signature, try without ziel
-                        return handler(spieler, kontext)
+                        try:
+                            return handler(spieler, kontext)
+                        except Exception as e:
+                            logger.error(f"Handler {handler_name} failed: {e}")
+                            return AktionsErgebnis(
+                                erfolg=False,
+                                nachricht=f"Fehler bei {handler_name}: {str(e)}",
+                            )
                 else:
                     logger.warning(
                         f"Role {self.info.name} action {action_type} has handler "
@@ -3231,21 +3248,30 @@ class Role(ABC):
         try:
             sig = inspect.signature(self.on_nacht_aktion)
             if "aktion" in sig.parameters:
-                kwargs["aktion"] = action_type
+                # Pass normalized action to on_nacht_aktion
+                kwargs["aktion"] = normalized_action
         except Exception:
             # Fallback if signature inspection fails (e.g. on some decorated methods)
             pass
 
-        if len(targets) == 1:
-            return self.on_nacht_aktion(spieler, targets[0], kontext, **kwargs)
-        elif len(targets) == 0:
-            return self.on_nacht_aktion(spieler, None, kontext, **kwargs)
-        else:
-            # Multi-target: roles should override to handle this
-            logger.warning(
-                f"Role {self.info.name} received multi-target action but doesn't handle it"
+        ziel = targets[0] if len(targets) == 1 else None
+        
+        try:
+            result = self.on_nacht_aktion(spieler, ziel, kontext, **kwargs)
+            
+            # If result is None, return an error to prevent phase hang
+            if result is None:
+                return AktionsErgebnis(
+                    erfolg=False,
+                    nachricht=f"Aktion '{normalized_action}' nicht verarbeitet.",
+                )
+            return result
+        except Exception as e:
+            logger.error(f"on_nacht_aktion failed for {self.info.name}: {e}")
+            return AktionsErgebnis(
+                erfolg=False,
+                nachricht=f"Fehler bei Aktion: {str(e)}",
             )
-            return None
 
     def get_triggered_phases(self) -> List[SpecialPhaseConfig]:
         """

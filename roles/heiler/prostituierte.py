@@ -68,7 +68,7 @@ class Prostituierte(Role):
             avatar_gradient_from="#f43f5e",
             avatar_gradient_to="#be123c",
             avatar_border_color="#fb7185",
-            badge_emoji="💋",
+            badge_emoji="fas fa-heart",
         )
 
     @property

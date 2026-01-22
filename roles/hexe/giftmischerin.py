@@ -59,7 +59,7 @@ class Giftmischerin(Role):
             avatar_gradient_from="#84cc16",
             avatar_gradient_to="#4d7c0f",
             avatar_border_color="#a3e635",
-            badge_emoji="🧪",
+            badge_emoji="fa-solid fa-flask",
         )
 
     @property

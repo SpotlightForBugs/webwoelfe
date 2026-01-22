@@ -45,22 +45,22 @@ PORT=5001
 # ============================================================================
 # KILL EXISTING PROCESSES
 # ============================================================================
-echo "🔪 Beende laufende Prozesse..."
+echo "[STOP] Beende laufende Prozesse..."
 
 # delete the db file to start fresh (only in development, not in Docker/production)
 if [ -z "$DOCKER_CONTAINER" ] && [ -z "$COOLIFY_DEPLOYMENT" ]; then
     if [ -f "instance/webwoelfe.db" ]; then
         rm instance/webwoelfe.db
-        echo "🗑️  Alte Datenbankdatei gelöscht (Development Mode)"
+        echo "[CLEAN] Alte Datenbankdatei gelöscht (Development Mode)"
     fi
 else
-    echo "📦 Production/Docker Mode: Datenbankdatei wird beibehalten"
+    echo "[INFO] Production/Docker Mode: Datenbankdatei wird beibehalten"
 fi
 
 # Kill any existing Python/Flask processes on our port
 kill_by_port() {
     local port=$1
-    echo "   Pruefe Port $port..."
+    echo "   Prüfe Port $port..."
     
     if command -v lsof &> /dev/null; then
         # Unix/Linux/MacOS
@@ -101,23 +101,23 @@ echo "✓ Bestehende Prozesse beendet"
 # delete the db file to start fresh
 if [ -f "instance/webwoelfe.db" ]; then
     rm instance/webwoelfe.db
-    echo "🗑️  Alte Datenbankdatei gelöscht"
+    echo "[CLEAN] Alte Datenbankdatei gelöscht"
 fi
 
 # Build TypeScript if node_modules exists
 if [ -d "node_modules" ]; then
-    echo "🔨 Building TypeScript modules..."
+    echo "[BUILD] Building TypeScript modules..."
     npm run build
     if [ $? -ne 0 ]; then
-        echo "⚠️  TypeScript build failed, continuing anyway..."
+        echo "[WARN] TypeScript build failed, continuing anyway..."
     else
-        echo "✅ TypeScript build completed"
+        echo "[OK] TypeScript build completed"
     fi
 elif command -v npm &> /dev/null; then
-    echo "📦 Installing npm dependencies and building..."
+    echo "[PKG] Installing npm dependencies and building..."
     npm install && npm run build
 else
-    echo "⚠️  Node.js/npm not found, skipping TypeScript build"
+    echo "[WARN] Node.js/npm not found, skipping TypeScript build"
 fi
 
 # operating system aware venv activation
@@ -150,12 +150,12 @@ done
 PLAYERS=${PLAYERS:-8}
 
 if [ "$PLAYERS" -lt 5 ]; then
-    echo "⚠️  Mindestens 5 Spieler benötigt. Setze auf 5."
+    echo "[WARN] Mindestens 5 Spieler benötigt. Setze auf 5."
     PLAYERS=5
 fi
 
 echo ""
-echo "🐺 Webwölfe - Full Game Simulation "
+echo "Webwölfe - Full Game Simulation "
 echo "==================================="
 echo "Spieleranzahl: $PLAYERS"
 if [ -n "$SEED" ]; then
@@ -166,7 +166,7 @@ echo ""
 # Check if Flask app is running, start it if not
 SERVER_PID=""
 if ! curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
-    echo "🚀 Starte Flask-Server auf Port $PORT..."
+    echo "[START] Starte Flask-Server auf Port $PORT..."
 
     # Aktiviere venv falls vorhanden
     if [ -f "venv/bin/activate" ]; then
@@ -207,7 +207,7 @@ if ! curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
 
     if ! curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
         echo ""
-        echo "❌ Flask-Server konnte nicht gestartet werden"
+        echo "[ERROR] Flask-Server konnte nicht gestartet werden"
         exit 1
     fi
 else
@@ -217,7 +217,7 @@ fi
 # Cleanup-Funktion um Server und Browser zu beenden
 cleanup() {
     echo ""
-    echo "🛑 Räume auf..."
+    echo "[CLEANUP] Räume auf..."
 
     if [ -n "$SERVER_PID" ]; then
         echo "   Beende Flask-Server (PID: $SERVER_PID / Port: $PORT)..."
@@ -243,13 +243,13 @@ trap cleanup EXIT INT TERM
 
 # Check if Playwright is installed
 if ! command -v npx &> /dev/null; then
-    echo "❌ npx nicht gefunden. Installiere Node.js"
+    echo "[ERROR] npx nicht gefunden. Installiere Node.js"
     exit 1
 fi
 
 # Run the Playwright full game simulation script
 echo ""
-echo "🚀 Starte Browser-Fenster und Spielsimulation..."
+echo "[START] Starte Browser-Fenster und Spielsimulation..."
 if [ -n "$HL_FLAG" ]; then
     echo "   (Headless-Modus: Ein Fenster sichtbar, Rest headless)"
 fi
@@ -258,5 +258,5 @@ fi
 export TEST_RANDOM_ROLES=true
 echo "   (Zufällige Rollenauswahl aktiviert für umfassende Tests)"
 
-PLAYERS=$PLAYERS HL=$HL_FLAG SEED=$SEED npx playwright test tests/full_game.spec.ts --headed --timeout=0
+PLAYERS=$PLAYERS HL=$HL_FLAG SEED=$SEED npx playwright test tests/full_game.spec.ts --headed --timeout=0 --reporter=line
 

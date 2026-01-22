@@ -15,8 +15,10 @@ from ..base import (
     Role,
     RollenInfo,
     AktionsErgebnis,
+    RollenUI,
     SpielKontext,
     DistributionConfig,
+    WinCondition,
     # Factory functions
     create_wolf_ears,
     create_claws,
@@ -67,7 +69,7 @@ class Werwolf(Role):
             avatar_gradient_from="#b91c1c",
             avatar_gradient_to="#7f1d1d",
             avatar_border_color="#ef4444",
-            badge_emoji="🐺",
+            badge_emoji="fa-solid fa-paw",
             distribution=DistributionConfig(
                 min_players=5,
                 # ~20% Werwölfe, min 1

@@ -72,7 +72,7 @@ class ErgebeneMagd(Role):
             avatar_gradient_from="#14b8a6",
             avatar_gradient_to="#0f766e",
             avatar_border_color="#2dd4bf",
-            badge_emoji="🧹",
+            badge_emoji="fas fa-broom",
         )
 
     @property

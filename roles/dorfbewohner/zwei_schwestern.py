@@ -63,7 +63,7 @@ class ZweiSchwestern(Role):
             avatar_gradient_from="#f472b6",
             avatar_gradient_to="#db2777",
             avatar_border_color="#f9a8d4",
-            badge_emoji="👭",
+            badge_emoji="fas fa-user-group",
         )
 
     @property

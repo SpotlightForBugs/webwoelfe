@@ -66,7 +66,7 @@ class Seherin(Role):
             avatar_gradient_from="#7c3aed",
             avatar_gradient_to="#5b21b6",
             avatar_border_color="#a78bfa",
-            badge_emoji="👁️",
+            badge_emoji="fa-solid fa-eye",
             distribution=DistributionConfig(
                 min_players=5,
                 # 1 Seherin ab 5 Spielern

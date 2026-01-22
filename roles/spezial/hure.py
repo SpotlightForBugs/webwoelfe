@@ -58,7 +58,7 @@ class Hure(Role):
             avatar_gradient_from="#f43f5e",
             avatar_gradient_to="#be123c",
             avatar_border_color="#fb7185",
-            badge_emoji="💋",
+            badge_emoji="fa-solid fa-heart",
         )
 
     def is_active_on_first_night(self) -> bool:

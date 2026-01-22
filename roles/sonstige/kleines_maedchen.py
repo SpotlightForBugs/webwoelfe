@@ -55,7 +55,7 @@ class KleinesMaedchen(Role):
             avatar_gradient_from="#fbbf24",
             avatar_gradient_to="#f59e0b",
             avatar_border_color="#fcd34d",
-            badge_emoji="👧",
+            badge_emoji="fas fa-child",
         )
 
     @property
@@ -127,7 +127,7 @@ class KleinesMaedchen(Role):
             # Das Kleine Mädchen wird erwischt und stirbt
             return AktionsErgebnis(
                 erfolg=True,
-                nachricht="😱 Du hast geblinzelt und wurdest ERWISCHT! Die Werwölfe haben dich bemerkt!",
+                nachricht="Du hast geblinzelt und wurdest ERWISCHT! Die Werwölfe haben dich bemerkt!",
                 effekte={
                     "tod": True,
                     "todesursache": "Von Werwölfen erwischt beim Blinzeln",
@@ -140,7 +140,7 @@ class KleinesMaedchen(Role):
                 werwolf_namen = [str(wid) for wid in werwoelfe]
                 return AktionsErgebnis(
                     erfolg=True,
-                    nachricht=f"🔍 Du hast vorsichtig geblinzelt und {len(werwoelfe)} Werwolf/Werwölfe gesehen!",
+                    nachricht=f"Du hast vorsichtig geblinzelt und {len(werwoelfe)} Werwolf/Werwölfe gesehen!",
                     effekte={"gesehene_werwoelfe": werwoelfe, "erwischt": False},
                 )
             else:

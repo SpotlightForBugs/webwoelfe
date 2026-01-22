@@ -15,6 +15,7 @@ from ..base import (
     Role,
     RollenInfo,
     AktionsErgebnis,
+    RollenUI,
     SpielKontext,
     StateField,
     StateType,
@@ -54,7 +55,13 @@ class Urwolf(Role):
     def state_fields(self) -> List[StateField]:
         """Definiert die Zustandsfelder des Urwolfs."""
         return [
-            StateField("infektion_verfuegbar", StateType.BOOL, True, "Kann noch infizieren", icon="🦠"),
+            StateField(
+                "infektion_verfuegbar",
+                StateType.BOOL,
+                True,
+                "Kann noch infizieren",
+                icon="fa-solid fa-virus",
+            ),
         ]
 
     def global_state_definitions(self) -> List[GlobalStateDefinition]:
@@ -67,7 +74,7 @@ class Urwolf(Role):
                 beschreibung="Spieler wurde vom Urwolf infiziert",
                 visual_effect=StateVisualEffect.INFECTED,
                 css_class="infiziert",
-                icon="🦠",
+                icon="fa-solid fa-virus",
                 query_name="infizierte",
                 defined_by="Urwolf",
             ),
@@ -101,7 +108,7 @@ class Urwolf(Role):
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
             avatar_border_color="#b91c1c",
-            badge_emoji="🐺",
+            badge_emoji="fa-solid fa-paw",
         )
 
     @property
@@ -117,10 +124,7 @@ class Urwolf(Role):
         """Urwolf stimmt mit dem Rudel ab."""
         return True
 
-    @property
-    def shared_phase_name(self) -> str:
-        """Urwolf teilt sich die werwolf_phase mit dem Rudel."""
-        return "werwolf_phase"
+
 
     def is_active_on_first_night(self) -> bool:
         return True

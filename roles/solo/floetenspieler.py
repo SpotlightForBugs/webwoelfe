@@ -59,7 +59,7 @@ class Floetenspieler(Role):
                 beschreibung="Spieler wurde vom Flötenspieler verzaubert",
                 visual_effect=StateVisualEffect.ENCHANTED,
                 css_class="verzaubert",
-                icon="🎵",
+                icon="fa-solid fa-music",
                 query_name="verzauberte",
                 defined_by="Floetenspieler",
             ),
@@ -93,7 +93,7 @@ class Floetenspieler(Role):
             avatar_gradient_from="#8b5cf6",
             avatar_gradient_to="#5b21b6",
             avatar_border_color="#a78bfa",
-            badge_emoji="🎵",
+            badge_emoji="fa-solid fa-music",
         )
 
     @property

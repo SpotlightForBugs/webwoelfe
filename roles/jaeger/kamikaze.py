@@ -60,7 +60,7 @@ class Kamikaze(Role):
             avatar_gradient_from="#f97316",
             avatar_gradient_to="#c2410c",
             avatar_border_color="#fb923c",
-            badge_emoji="💣",
+            badge_emoji="fa-solid fa-bomb",
         )
 
     @property

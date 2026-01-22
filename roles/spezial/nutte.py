@@ -67,7 +67,7 @@ class Nutte(Role):
             avatar_gradient_from="#ec4899",
             avatar_gradient_to="#be185d",
             avatar_border_color="#f472b6",
-            badge_emoji="👠",
+            badge_emoji="fa-solid fa-shoe-prints",
         )
 
     def is_active_on_first_night(self) -> bool:

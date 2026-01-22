@@ -75,7 +75,7 @@ class Polarwolf(Role):
             avatar_gradient_from="#e0f2fe",
             avatar_gradient_to="#0ea5e9",
             avatar_border_color="#38bdf8",
-            badge_emoji="❄️",
+            badge_emoji="fa-solid fa-snowflake",
         )
 
     @property

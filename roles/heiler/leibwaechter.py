@@ -57,7 +57,7 @@ class Leibwaechter(Role):
             avatar_gradient_from="#0ea5e9",
             avatar_gradient_to="#0284c7",
             avatar_border_color="#38bdf8",
-            badge_emoji="🛡️",
+            badge_emoji="fas fa-shield",
         )
 
     @property

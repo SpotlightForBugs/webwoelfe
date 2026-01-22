@@ -68,7 +68,7 @@ class Chemielaborant(Role):
             avatar_gradient_from="#10b981",
             avatar_gradient_to="#047857",
             avatar_border_color="#34d399",
-            badge_emoji="🧪",
+            badge_emoji="fa-solid fa-flask",
         )
 
     @property

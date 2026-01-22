@@ -67,7 +67,7 @@ class Zahnarzt(Role):
             avatar_gradient_from="#ffffff",
             avatar_gradient_to="#e5e7eb",
             avatar_border_color="#d1d5db",
-            badge_emoji="🦷",
+            badge_emoji="fa-solid fa-tooth",
         )
 
     def is_active_on_first_night(self) -> bool:

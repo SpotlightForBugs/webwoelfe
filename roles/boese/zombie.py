@@ -67,7 +67,7 @@ class Zombie(Role):
             avatar_gradient_from="#4ade80",
             avatar_gradient_to="#166534",
             avatar_border_color="#22c55e",
-            badge_emoji="🧟",
+            badge_emoji="fas fa-skull",
         )
 
     @property

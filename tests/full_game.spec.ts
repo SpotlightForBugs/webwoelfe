@@ -175,7 +175,8 @@ function log(message: string) {
     minute: "2-digit",
     second: "2-digit",
   });
-  console.log(`[${timestamp}] ${message}`);
+  // Use process.stdout.write for immediate, unbuffered output
+  process.stdout.write(`[${timestamp}] ${message}\n`);
 }
 
 // ============================================================================

@@ -71,7 +71,7 @@ class ParanormalerErmittlerbillig(Role):
             avatar_gradient_from="#a3a3a3",
             avatar_gradient_to="#737373",
             avatar_border_color="#d4d4d4",
-            badge_emoji="🔮",
+            badge_emoji="fa-solid fa-magnifying-glass",
         )
 
     @property

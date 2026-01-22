@@ -71,7 +71,7 @@ class Vampir(Role):
             avatar_gradient_from="#7c2d12",
             avatar_gradient_to="#451a03",
             avatar_border_color="#9a3412",
-            badge_emoji="🧛",
+            badge_emoji="fas fa-user-secret",
         )
 
     @property

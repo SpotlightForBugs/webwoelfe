@@ -331,6 +331,78 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     font-size: 0.95rem;
   }
 
+  /* ============================================================
+     PHASE & ELIMINATION OVERLAYS
+     ============================================================ */
+  .village3d-phase-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .village3d-phase-overlay.is-visible {
+    opacity: 1;
+  }
+
+  .village3d-phase-overlay .phase-overlay-content {
+    text-align: center;
+    padding: 2rem 3rem;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--phase-color, #d4a574);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--phase-color, #d4a574);
+  }
+
+  .village3d-phase-overlay .phase-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--phase-color, #d4a574);
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+
+  .village3d-phase-overlay .phase-title i {
+    margin-right: 0.5rem;
+  }
+
+  .village3d-phase-overlay .phase-description {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0;
+  }
+
+  .village3d-elimination-text {
+    position: absolute;
+    bottom: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    text-align: center;
+    padding: 1rem 2rem;
+    background: rgba(139, 0, 0, 0.85);
+    border: 2px solid #8b0000;
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 30px rgba(139, 0, 0, 0.5);
+  }
+
+  .village3d-elimination-text.is-visible {
+    opacity: 1;
+  }
+
   /* HUD visibility is controlled via .is-visible (showFullscreenUI) */
 
   /* Fullscreen button styling */
@@ -421,15 +493,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     border-color: {{ style.avatar_border_color }};
   }
 
-  /* Badge emoji */
-  .spieler-avatar[data-role="{{ css_name }}"]::after {
-    content: "{{ style.badge_emoji }}";
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    font-size: 1rem;
-    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
-  }
+  /* Role badge icon is rendered as an <i> element inside .spieler-avatar */
   {% endfor %}
   {% endif %}
 
@@ -466,13 +530,14 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   }
 
   .spieler-card.tot::after {
-    content: "💀";
+    content: "\f54c";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(-15deg);
     font-size: 2rem;
-    font-weight: bold;
     color: var(--accent-red);
     text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
   }
@@ -507,6 +572,22 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     border-radius: 50%;
     padding: 3px;
     z-index: 2;
+  }
+
+  .spieler-avatar .role-badge-icon {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    z-index: 2;
+    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
   }
 
   .spieler-name {
@@ -897,48 +978,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   .chat-msg.tot {
     opacity: 0.6;
     font-style: italic;
-  }
-
-  .nacht-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    /* Reduced opacity layout to show the 3D scene */
-    background: radial-gradient(circle, transparent 30%, rgba(0, 0, 20, 0.7) 100%);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    pointer-events: none; /* Allow interaction with 3D scene */
-  }
-
-  .nacht-overlay.aktiv {
-    display: flex;
-  }
-
-  .nacht-content {
-    position: absolute;
-    top: 5%;
-    width: 100%;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.9);
-    pointer-events: none;
-  }
-
-  .nacht-content h2 {
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-    text-shadow: 0 0 10px rgba(0,0,0,0.8);
-    font-weight: 300;
-    letter-spacing: 2px;
-  }
-
-  .mond-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.2rem;
-    text-shadow: 0 0 15px rgba(255, 255, 200, 0.5);
   }
 
   /* Erzähler-Panel */
@@ -1582,6 +1621,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           Auswählen
         </div>
 
+        <!-- Phase Overlay (für Phasenwechsel-Animationen) -->
+        <div id="village3d-phase-overlay" class="village3d-phase-overlay">
+          <!-- Wird dynamisch befüllt von VillageIntegration -->
+        </div>
+
+        <!-- Eliminierungs-Text (für Todes-Animationen) -->
+        <div id="village3d-elimination-text" class="village3d-elimination-text">
+          <!-- Wird dynamisch befüllt von VillageIntegration -->
+        </div>
+
         <!-- 3D HUD Overlay (only UI needed in fullscreen mode) -->
         <div id="village3d-hud" class="village3d-hud">
           <div class="village3d-topbar">
@@ -1716,9 +1765,14 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                  {% endif %}
             >
               <span class="avatar-initial">{{ s.name[0]|upper }}</span>
+              {% if kennt_rolle and s.rolle and rollen_styles[s.rolle|css_class].badge_emoji %}
+                <i class="role-badge-icon {{ rollen_styles[s.rolle|css_class].badge_emoji }}" aria-hidden="true"></i>
+              {% endif %}
               {% for effect in spieler_effekte %}
-                {% if effect.icon %}
-                <span class="rolle-icon effect-icon" title="{{ effect.name }}">{{ effect.icon }}</span>
+                {% if effect.icon_class %}
+                  <span class="rolle-icon effect-icon" title="{{ effect.name }}"><i class="{{ effect.icon_class }}" aria-hidden="true"></i></span>
+                {% elif effect.icon %}
+                  <span class="rolle-icon effect-icon" title="{{ effect.name }}">{{ effect.icon }}</span>
                 {% endif %}
               {% endfor %}
             </div>
@@ -1844,15 +1898,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     </div>
   </div>
 </div>
-
-<!-- Nacht Overlay -->
-<div class="nacht-overlay" id="nacht-overlay">
-  <div class="nacht-content">
-    <div class="mond-icon"><i class="fa-solid fa-moon"></i></div>
-    <h2>Die Nacht bricht an...</h2>
-    <p>Schlafe friedlich, Dorfbewohner.</p>
-  </div>
-</div>
 {% endblock %} {% block scripts %}
 <script>
   const socket = io();
@@ -1953,9 +1998,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   // Legacy Handler (Backward Compatibility)
   socket.on('phase_geaendert', async function(data) {
-      // Wenn eine neue Nacht beginnt oder die Phase im Mapping fehlt, laden wir das Mapping neu
-      // Dies behebt das Problem, dass die UI nicht weiß, dass sie für eine bestimmte Rolle (die jetzt aktiv wurde)
-      // den Nacht-Overlay ausblenden muss.
+      // Refresh mapping when a new night begins or when phase is missing from mapping
+      // This ensures UI knows which role is active for proper action button visibility
       if (data.phase === 'nacht_start' || (data.phase.includes('phase') && !phaseRoleMapping[data.phase])) {
           console.log('[Phase] Refreshing mapping for phase:', data.phase);
           await loadPhaseRoleMapping();
@@ -2183,6 +2227,10 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       const bgStyle = config.gradient || 
           `linear-gradient(135deg, ${config.color || '#4a90d9'} 0%, ${adjustColor(config.color || '#4a90d9', -30)} 100%)`;
+
+        const iconHtml = config.icon_class
+          ? `<i class="${config.icon_class}" aria-hidden="true"></i>`
+          : (config.icon || '');
       
       overlay.innerHTML = `
           <div style="
@@ -2194,7 +2242,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               box-shadow: 0 0 60px ${hexToRgba(config.color || '#4a90d9', 0.6)};
               animation: ${config.animation || 'pulse'} 1s ease-in-out;
           ">
-              ${config.icon ? `<div style="font-size: 4rem; margin-bottom: 1rem;">${config.icon}</div>` : ''}
+            ${iconHtml ? `<div style="font-size: 4rem; margin-bottom: 1rem;">${iconHtml}</div>` : ''}
               <h2 style="color: white; font-size: 2rem; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
                   ${config.title || ''}
               </h2>
@@ -2434,31 +2482,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           rundeEl.textContent = 'Runde ' + runde;
       }
 
-      // Nacht-Overlay (server-authoritative phase determination)
-      const overlay = document.getElementById('nacht-overlay');
-      try {
-        const response = await fetch(`/api/phase/is-day?phase=${encodeURIComponent(phase)}`);
-        const data = await response.json();
-        const isNightMode = data.success && data.is_night;
-        
-        if (isNightMode && !sollteAktivSein()) {
-            overlay.classList.add('aktiv');
-        } else {
-            overlay.classList.remove('aktiv');
-        }
-      } catch (e) {
-        console.error('Failed to check phase type:', e);
-        // Fallback to client-side logic
-        const knownDayPhases = ['tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt'];
-        const isDayPhase = knownDayPhases.includes(phase) || phase.includes('tag') || phase.includes('abstimmung') || phase.includes('diskussion');
-        const isNightMode = !isDayPhase && (phase.includes('nacht') || phase.includes('phase') || phase.endsWith('_phase'));
-        
-        if (isNightMode && !sollteAktivSein()) {
-            overlay.classList.add('aktiv');
-        } else {
-            overlay.classList.remove('aktiv');
-        }
-      }
+      // Night/day transition handled by Village3D via VillageIntegration
+      // No separate overlay needed - 3D scene provides visual feedback
 
       updateActionButtons();
   }
@@ -2963,7 +2988,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       const mappedRole = phaseRoleMapping[aktuellePhase];
       if (mappedRole) {
           // Normalize for comparison (case-insensitive)
-          return mappedRole.toLowerCase() === spielerRolle.toLowerCase();
+          // Handle both string and object formats
+          const mr = (typeof mappedRole === 'object' && mappedRole.role_name) ? mappedRole.role_name : mappedRole;
+          if (typeof mr === 'string') {
+              return mr.toLowerCase() === spielerRolle.toLowerCase();
+          }
       }
 
       // Fallback: Check if phase name matches role name
@@ -2975,6 +3004,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
           if (simplePhaseName === simpleRoleName) {
               console.log('[Phase Check] Fallback match found:', aktuellePhase);
+              return true;
+          }
+          
+          // Special case for Aurenseherin (sometimes issues with spelling/mapping)
+          if (simplePhaseName === 'aurenseherin' && simpleRoleName.includes('aurenseherin')) {
               return true;
           }
       }
@@ -3323,7 +3357,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
                       if (container) {
                           // Zeige Stimmenanzahl
-                          container.innerHTML = `<span style="color: var(--accent-red);">🗳️ ${stimmen} Stimme${stimmen > 1 ? 'n' : ''}</span>`;
+                          container.innerHTML = `<span style="color: var(--accent-red);"><i class="fa-solid fa-check-to-slot" aria-hidden="true"></i> ${stimmen} Stimme${stimmen > 1 ? 'n' : ''}</span>`;
                       }
 
                       // Zeige Badge
@@ -3356,7 +3390,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
   // Socket-Event für Echtzeit-Stimmen-Updates
   socket.on('stimme_abgegeben', function(data) {
-      addLog(`🗳️ ${data.waehler_name} stimmt für ${data.ziel_name}`);
+      addLog(`<i class="fa-solid fa-check-to-slot" aria-hidden="true"></i> ${data.waehler_name} stimmt für ${data.ziel_name}`);
 
       // Update Voter-Dot
       const dot = document.querySelector(`.voter-dot[data-player-id="${data.waehler_id}"]`);
@@ -3792,7 +3826,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
       btn.innerHTML = `
         <span>${p.name}</span>
-        <span class="meta">${isAlive ? '' : '💀'}${isNarrator ? ' Erz.' : ''}</span>
+        <span class="meta">${isAlive ? '' : '<i class="fa-solid fa-skull" aria-hidden="true"></i>'}${isNarrator ? ' Erz.' : ''}</span>
       `;
 
       btn.addEventListener('click', () => {
@@ -3867,15 +3901,37 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
     };
 
     loadThreeJS().then(() => {
-      return import('{{ versioned_url('static', filename='js/village3d/dist/Village3DThree.js') }}');
-    }).then(module => {
-      const Village3DThree = module.default;
+      return Promise.all([
+        import('{{ versioned_url('static', filename='js/village3d/dist/Village3DThree.js') }}'),
+        import('{{ versioned_url('static', filename='js/village3d/dist/VillageIntegration.js') }}')
+      ]);
+    }).then(([villageModule, integrationModule]) => {
+      const Village3DThree = villageModule.default;
+      const VillageIntegration = integrationModule.VillageIntegration;
+      
       if (typeof Village3DThree !== 'undefined') {
         const village3d = new Village3DThree('village-3d', raumCode, {
           startView: 'orbit',
           firstPersonPlayerId: spielerId,
           onPlayerClick: (playerId) => selectSpieler(playerId),
         });
+
+          // VillageIntegration initialisieren (verbindet Socket-Events mit 3D)
+          let villageIntegration = null;
+          if (VillageIntegration && village3d.materialCache) {
+            villageIntegration = new VillageIntegration(
+              village3d.materialCache,
+              village3d.app,
+              socket,
+              raumCode
+            );
+            window.villageIntegration = villageIntegration;
+            
+            // UI-Elemente setzen
+            const phaseOverlay = document.getElementById('village3d-phase-overlay');
+            const eliminationText = document.getElementById('village3d-elimination-text');
+            villageIntegration.setUIElements(phaseOverlay, eliminationText);
+          }
 
           // Spieler-Klick-Handler für Aktionen (fallback, already passed above)
           village3d.onPlayerClick = (playerId) => {
@@ -3898,6 +3954,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               // Sortiere nach ID für konsistente Positionen zwischen Lobby und Spiel
               spielerDaten.sort((a, b) => a.id - b.id);
               village3d.setPlayers(spielerDaten);
+              
+              // Spielerhäuser über VillageIntegration erstellen
+              if (villageIntegration) {
+                villageIntegration.initializePlayerHouses(spielerDaten);
+              }
           }
 
           // Initiale Tag/Nacht-Einstellung
@@ -3918,32 +3979,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           // Populate HUD list now that village3d is available
           window.updateVillage3DPlayerList?.();
 
-          // Update bei Phasenwechsel
-          socket.on('phase_geaendert', function(data) {
-              const newIsNight = data.phase.includes('nacht') ||
-                                (data.phase.includes('phase') &&
-                                 !data.phase.includes('tag') &&
-                                 !data.phase.includes('abstimmung'));
-              village3d.setTimeOfDay(newIsNight);
-          });
-
-          // Hint-Anzeige in 3D
-          socket.on('hinweis_zeigen', function(data) {
-              const pId = data.spielerId || data.spieler_id;
-              const type = data.hintTyp || data.type || data.typ;
-              if (pId && type) {
-                  village3d.showHint(pId, type);
-              }
-          });
-
-          // Spieler-Highlight bei Abstimmung - Show vote in 3D
-          socket.on('stimme_abgegeben', function(data) {
-              village3d.highlightPlayer(data.ziel_id, 'red');
-              village3d.showVoteIndicator(data.ziel_id, data.waehler_name);
-          });
-
-          // Note: spieler_gestorben is handled by the main socket handler
-          // which calls window.updatePlayerState() to sync all UIs
+          // VillageIntegration mit Village3D verbinden
+          // This handles all socket events (phase_geaendert, hinweis_zeigen, etc.)
+          if (villageIntegration) {
+            villageIntegration.setVillage3D(village3d);
+          }
       }
   }).catch(err => {
       console.warn('3D Village konnte nicht geladen werden:', err);

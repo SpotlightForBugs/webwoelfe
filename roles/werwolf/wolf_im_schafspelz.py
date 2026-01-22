@@ -79,7 +79,7 @@ class WolfimSchafspelz(Role):
             avatar_gradient_from="#fef3c7",
             avatar_gradient_to="#d97706",
             avatar_border_color="#fcd34d",
-            badge_emoji="🐑",
+            badge_emoji="fa-solid fa-sheep",
         )
 
     @property

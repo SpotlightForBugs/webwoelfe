@@ -72,7 +72,7 @@ class Demoskopin(Role):
             avatar_gradient_from="#06b6d4",
             avatar_gradient_to="#0891b2",
             avatar_border_color="#22d3ee",
-            badge_emoji="📊",
+            badge_emoji="fa-solid fa-chart-column",
         )
 
     @property

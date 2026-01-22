@@ -85,7 +85,7 @@ class Selbstmoerder(Role):
             avatar_gradient_from="#78716c",
             avatar_gradient_to="#44403c",
             avatar_border_color="#a8a29e",
-            badge_emoji="💀",
+            badge_emoji="fa-solid fa-skull",
         )
 
     def is_active_on_first_night(self) -> bool:

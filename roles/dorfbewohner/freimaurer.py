@@ -62,7 +62,7 @@ class Freimaurer(Role):
             avatar_gradient_from="#3b82f6",
             avatar_gradient_to="#1d4ed8",
             avatar_border_color="#60a5fa",
-            badge_emoji="🏛️",
+            badge_emoji="fas fa-gopuram",
         )
 
     @property

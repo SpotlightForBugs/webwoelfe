@@ -101,7 +101,7 @@ class DunklerPriester(Role):
             avatar_gradient_from="#18181b",
             avatar_gradient_to="#09090b",
             avatar_border_color="#27272a",
-            badge_emoji="🖤",
+            badge_emoji="fa-solid fa-moon",
         )
 
     @property

@@ -69,7 +69,7 @@ class Flammenmann(Role):
             avatar_gradient_from="#ea580c",
             avatar_gradient_to="#c2410c",
             avatar_border_color="#f97316",
-            badge_emoji="🔥",
+            badge_emoji="fa-solid fa-fire",
         )
 
     @property

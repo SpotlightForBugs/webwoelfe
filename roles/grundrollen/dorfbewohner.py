@@ -59,7 +59,7 @@ class Dorfbewohner(Role):
             avatar_gradient_from="#0369a1",
             avatar_gradient_to="#075985",
             avatar_border_color="#0ea5e9",
-            badge_emoji="🏠",
+            badge_emoji="fas fa-house",
             distribution=DistributionConfig(
                 min_players=0,
                 count_func=lambda n: 0,  # Wird als Filler berechnet

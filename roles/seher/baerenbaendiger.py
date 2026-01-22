@@ -73,7 +73,7 @@ class Baerenbaendiger(Role):
             avatar_gradient_from="#78350f",
             avatar_gradient_to="#451a03",
             avatar_border_color="#92400e",
-            badge_emoji="🐻",
+            badge_emoji="fa-solid fa-paw",
         )
 
     @property

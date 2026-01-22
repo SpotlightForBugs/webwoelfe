@@ -520,7 +520,7 @@ class Hund(Role):
             avatar_gradient_from="#a16207",
             avatar_gradient_to="#713f12",
             avatar_border_color="#ca8a04",
-            badge_emoji="🐕",
+            badge_emoji="fas fa-dog",
         )
 
     @property

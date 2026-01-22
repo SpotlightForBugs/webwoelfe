@@ -69,7 +69,7 @@ class Gaukler(Role):
             avatar_gradient_from="#c026d3",
             avatar_gradient_to="#a21caf",
             avatar_border_color="#d946ef",
-            badge_emoji="🎭",
+            badge_emoji="fa-solid fa-masks-theater",
         )
 
     @property

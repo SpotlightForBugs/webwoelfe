@@ -47,7 +47,13 @@ class TeenagerWerwolf(Role):
 
     def state_fields(self) -> List[StateField]:
         return [
-            StateField("hat_verweigert", StateType.BOOL, False, "Hat bereits verweigert", icon="✋"),
+            StateField(
+                "hat_verweigert",
+                StateType.BOOL,
+                False,
+                "Hat bereits verweigert",
+                icon="fa-solid fa-hand",
+            ),
         ]
 
     @property
@@ -75,7 +81,7 @@ class TeenagerWerwolf(Role):
             avatar_gradient_from="#7f1d1d",
             avatar_gradient_to="#450a0a",
             avatar_border_color="#b91c1c",
-            badge_emoji="🐺",
+            badge_emoji="fa-solid fa-paw",
         )
 
     @property

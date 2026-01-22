@@ -61,7 +61,7 @@ class Rabe(Role):
                 beschreibung="Spieler wurde vom Raben markiert (+2 Stimmen gegen sich)",
                 visual_effect=StateVisualEffect.MARKED,
                 css_class="rabe-markiert",
-                icon="🐦‍⬛",
+                icon="fa-solid fa-crow",
                 query_name="markierte",
                 defined_by="Rabe",
             ),
@@ -100,7 +100,7 @@ class Rabe(Role):
             avatar_gradient_from="#1f2937",
             avatar_gradient_to="#030712",
             avatar_border_color="#374151",
-            badge_emoji="🐦‍⬛",
+            badge_emoji="fa-solid fa-crow",
         )
 
     def is_active_on_first_night(self) -> bool:

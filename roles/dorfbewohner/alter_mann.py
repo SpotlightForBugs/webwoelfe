@@ -72,7 +72,7 @@ class AlterMann(Role):
             avatar_gradient_from="#9ca3af",
             avatar_gradient_to="#4b5563",
             avatar_border_color="#d1d5db",
-            badge_emoji="👴",
+            badge_emoji="fas fa-person-cane",
         )
 
     @property

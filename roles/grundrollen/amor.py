@@ -24,6 +24,7 @@ from ..base import (
     get_spieler_state,
     set_spieler_state,
     DistributionConfig,
+    WinCondition,
     # Factory functions
     create_wings,
     create_weapon,
@@ -324,9 +325,8 @@ class Amor(Role):
         """
         return None
 
-    def get_win_conditions(self) -> List["WinCondition"]:
+    def get_win_conditions(self) -> List[WinCondition]:
         """Verliebte gewinnen wenn sie die letzten sind."""
-        from ..base import WinCondition, get_spieler_state
 
         def check_lovers_win(spieler: "Spieler", kontext: SpielKontext) -> bool:
             # Hole alle Spieler-Objekte (langsam aber nötig für State-Check)

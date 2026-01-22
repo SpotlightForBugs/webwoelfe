@@ -2894,6 +2894,27 @@ class Role(ABC):
         """
         return None
 
+    def handle_anderer_stirbt(
+        self, spieler: "Spieler", opfer: "Spieler", todesart: str, kontext: "SpielKontext"
+    ) -> Optional[AktionsErgebnis]:
+        """
+        Trigger: Ein anderer Spieler stirbt.
+
+        Diese Methode wird für ALLE lebenden Spieler aufgerufen wenn jemand stirbt.
+        Ermöglicht Reaktionen auf den Tod anderer (z.B. Wildes Kind verwandelt sich,
+        Verliebte sterben mit).
+
+        Args:
+            spieler: Der Spieler mit dieser Rolle (der lebt und reagiert)
+            opfer: Der gestorbene Spieler
+            todesart: Art des Todes ("werwolf", "hexe", "hinrichtung", "liebeskummer", etc.)
+            kontext: Spielkontext
+
+        Returns:
+            AktionsErgebnis mit möglichen Effekten (z.B. stirbt, verwandlung)
+        """
+        return None
+
     def on_hinrichtung(
         self, spieler: "Spieler", verurteilter: "Spieler", kontext: "SpielKontext"
     ) -> Optional[AktionsErgebnis]:

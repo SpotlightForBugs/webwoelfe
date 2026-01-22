@@ -194,9 +194,8 @@ class Werwolf(Role):
             log_sichtbar_fuer=f"spieler_{spieler.id}",
         )
 
-    def get_win_conditions(self) -> List["WinCondition"]:
+    def get_win_conditions(self) -> List[WinCondition]:
         """Werwölfe gewinnen wenn sie die Mehrheit stellen."""
-        from ..base import WinCondition
 
         def check_werwolf_dominance(spieler: "Spieler", kontext: SpielKontext) -> bool:
             wolves = [

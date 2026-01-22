@@ -5,7 +5,7 @@ Der Dorfbewohner hat keine speziellen Fähigkeiten,
 aber seine Stimme in der Abstimmung ist entscheidend.
 """
 
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from ..base import (
     AppearanceFeature,
     RollenModell,
@@ -14,13 +14,18 @@ from ..base import (
     HintEffect3D,
     Role,
     RollenInfo,
+    RollenUI,
     AktionsErgebnis,
     SpielKontext,
     DistributionConfig,
+    WinCondition,
     create_death_marker,
 )
 from ..enums import Team, Kategorie, AktionsTyp, Erweiterung
 from ..registry import RoleRegistry
+
+if TYPE_CHECKING:
+    from models import Spieler
 
 
 @RoleRegistry.register
@@ -83,9 +88,7 @@ class Dorfbewohner(Role):
         """Dorfbewohner does not act every night."""
         return False
 
-    def get_ui_definition(self) -> "RollenUI":
-        from ..base import RollenUI
-
+    def get_ui_definition(self) -> RollenUI:
         return RollenUI(
             title="Dorfbewohner - Schlafen",
             instructions="Du schläfst friedlich. Du hast keine nächtliche Aktion.",
@@ -95,7 +98,7 @@ class Dorfbewohner(Role):
             can_skip=True,
         )
 
-    def get_win_conditions(self) -> List["WinCondition"]:
+    def get_win_conditions(self) -> List[WinCondition]:
         """Dorf gewinnt über Team-Level Win Conditions (nicht hier)."""
         # Village win condition is handled at the TEAM level in pruefe_spielende()
         # Individual roles should not define team-wide win conditions

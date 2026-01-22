@@ -18,65 +18,71 @@ if TYPE_CHECKING:
 def extract_action_parts(action_type: str) -> tuple:
     """
     Extract role prefix and action from an action type string.
-    
+
     Examples:
         "hexe_heilen" -> ("hexe", "heilen")
         "heilen" -> (None, "heilen")
         "amor_verlieben" -> ("amor", "verlieben")
         "jaeger_schuss" -> ("jaeger", "schuss")
         "skip" -> (None, "skip")
-    
+
     Returns:
         Tuple of (role_prefix, action_name)
     """
     if not action_type:
         return (None, "skip")
-    
+
     if "_" in action_type:
         parts = action_type.split("_", 1)
         return (parts[0].lower(), parts[1])
-    
+
     return (None, action_type)
 
 
 def normalize_action_type(action_type: str) -> str:
     """
     Normalize an action type to its base form.
-    
+
     This handles role prefixes and common variations dynamically,
     without hardcoded mappings.
-    
+
     Args:
         action_type: The raw action type string (e.g., "hexe_heilen", "heilen")
-        
+
     Returns:
         Normalized action type (e.g., "heilen")
     """
     if not action_type:
         return "skip"
-    
+
     # Handle explicit skip variations
-    skip_variations = {"nichts", "ueberspringen", "keine_aktion", "skip", "überspringen"}
+    skip_variations = {
+        "nichts",
+        "ueberspringen",
+        "keine_aktion",
+        "skip",
+        "überspringen",
+    }
     if action_type.lower() in skip_variations:
         return "skip"
-    
+
     # Extract action part (handles "hexe_heilen" -> "heilen")
     _, action = extract_action_parts(action_type)
-    
+
     return action
 
 
 def find_matching_action(role, action_type: str) -> Optional[str]:
     """
     Find a matching action in the role's UI definition.
-    
+
     Checks both the original action_type and its normalized form
     against the role's buttons and actions.
-    
+
     Args:
         role: The role instance
         action_type: The action type from frontend
-        
+
     Returns:
         The matched action_type from the role's definition, or None
     """
@@ -84,17 +90,19 @@ def find_matching_action(role, action_type: str) -> Optional[str]:
         ui = role.get_ui_definition()
         if not ui:
             return None
-        
+
         _, normalized = extract_action_parts(action_type)
-        
+
         # Check RoleAction entries first
         for action in ui.actions:
-            if (action.action_id == action_type or 
-                action.action_type == action_type or
-                action.action_id == normalized or
-                action.action_type == normalized):
+            if (
+                action.action_id == action_type
+                or action.action_type == action_type
+                or action.action_id == normalized
+                or action.action_type == normalized
+            ):
                 return action.action_id
-        
+
         # Check legacy UIButton entries
         for button in ui.buttons:
             btn_type = button.action_type
@@ -104,7 +112,7 @@ def find_matching_action(role, action_type: str) -> Optional[str]:
             _, btn_normalized = extract_action_parts(btn_type)
             if btn_normalized == normalized:
                 return btn_type
-        
+
         return None
     except Exception:
         return None
@@ -230,13 +238,13 @@ class ActionRegistry:
         # Normalize the action type first
         original_action = action_type
         normalized_action = normalize_action_type(action_type)
-        
+
         # Try exact match first
         handler = cls._handlers.get(action_type)
         if not handler:
             # Try normalized version
             handler = cls._handlers.get(normalized_action)
-        
+
         if handler:
             try:
                 return handler(spieler, ziel, kontext)
@@ -252,7 +260,7 @@ class ActionRegistry:
         if len(parts) == 2:
             role_guess = parts[0].title()
             method_guess = parts[1]
-            
+
             # Also try normalized version
             normalized_method = normalize_action_type(method_guess)
 
@@ -269,13 +277,15 @@ class ActionRegistry:
                     # Try on_nacht_aktion with action parameter
                     if hasattr(role, "on_nacht_aktion"):
                         try:
-                            return role.on_nacht_aktion(spieler, ziel, kontext, aktion=normalized_action)
+                            return role.on_nacht_aktion(
+                                spieler, ziel, kontext, aktion=normalized_action
+                            )
                         except Exception as e:
                             return AktionsErgebnis(
                                 erfolg=False,
                                 nachricht=f"Fehler bei Aktion: {str(e)}",
                             )
-                            
+
                 if method:
                     try:
                         return method(spieler, ziel, kontext)

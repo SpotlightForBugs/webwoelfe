@@ -162,3 +162,4 @@ venv
 
 temp_*
 .playwright-mcp
+.cache_ggshield

@@ -149,6 +149,15 @@ def _auto_discover_roles():
 # Führe Auto-Discovery beim Import aus
 _auto_discover_roles()
 
+# Registriere automatisch alle Actions aus den Rollen-UI-Definitionen
+# Dies muss NACH _auto_discover_roles() passieren!
+try:
+    from .actions import _auto_register_from_roles
+    _auto_register_from_roles()
+    print("[Rollen] Action-Registry automatisch gefüllt")
+except Exception as e:
+    print(f"[Rollen] Warnung: Konnte Actions nicht automatisch registrieren: {e}")
+
 
 # ============================================================================
 # DYNAMISCHE ROLLEN-ZUGRIFFSFUNKTIONEN

@@ -3241,6 +3241,43 @@ class Role(ABC):
                         f"'{handler_name}' but method not found"
                     )
 
+        # NEW: Also check UIButtons (legacy system still used by most roles)
+        # UIButtons don't have explicit handlers, so route to on_nacht_aktion
+        for button in ui_def.buttons:
+            btn_action_type = button.action_type
+            if (btn_action_type == action_type or 
+                btn_action_type == normalized_action or
+                btn_action_type == original_action):
+                # Found matching button - route to on_nacht_aktion with the action
+                ziel = targets[0] if len(targets) == 1 else None
+                try:
+                    result = self.on_nacht_aktion(spieler, ziel, kontext, aktion=normalized_action)
+                    if result is None:
+                        # Role didn't handle it, but button exists - create success
+                        return AktionsErgebnis(
+                            erfolg=True,
+                            nachricht="Aktion ausgeführt.",
+                            effekte={"aktion_ausgefuehrt": True},
+                        )
+                    return result
+                except TypeError:
+                    # Handler might not accept aktion kwarg
+                    try:
+                        result = self.on_nacht_aktion(spieler, ziel, kontext)
+                        if result is None:
+                            return AktionsErgebnis(
+                                erfolg=True,
+                                nachricht="Aktion ausgeführt.",
+                                effekte={"aktion_ausgefuehrt": True},
+                            )
+                        return result
+                    except Exception as e:
+                        logger.error(f"on_nacht_aktion failed for button {btn_action_type}: {e}")
+                        return AktionsErgebnis(
+                            erfolg=False,
+                            nachricht=f"Fehler bei Aktion: {str(e)}",
+                        )
+
         # LEGACY: route to on_nacht_aktion for backwards compatibility
         import inspect
 

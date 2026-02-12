@@ -93,14 +93,14 @@ def inject_css_reader():
 @app.context_processor
 def inject_cache_buster():
     """Inject a function to add cache busting query parameters to static files."""
-    
+
     def versioned_url(endpoint, **values):
         """
         Generate a URL with a cache-busting query parameter based on file modification time.
         Usage in templates: {{ versioned_url('static', filename='js/dist/hints.js') }}
         """
-        if endpoint == 'static' and 'filename' in values:
-            filename = values['filename']
+        if endpoint == "static" and "filename" in values:
+            filename = values["filename"]
             try:
                 if app.static_folder is None:
                     raise ValueError("Static folder is not configured")
@@ -108,21 +108,21 @@ def inject_cache_buster():
                 if os.path.exists(filepath):
                     # Get file modification time as cache buster
                     mtime = int(os.path.getmtime(filepath))
-                    values['v'] = mtime
+                    values["v"] = mtime
             except Exception as e:
                 logger.warning(f"Could not get mtime for {filename}: {e}")
                 # Fallback to timestamp if file doesn't exist or error
-                values['v'] = int(datetime.now(timezone.utc).timestamp())
-        
+                values["v"] = int(datetime.now(timezone.utc).timestamp())
+
         return url_for(endpoint, **values)
-    
+
     return dict(versioned_url=versioned_url)
 
 
 def _build_automatische_phasen() -> set:
     """
     Dynamically build AUTOMATISCHE_PHASEN from registered roles.
-    
+
     A phase is automatic if:
     1. It's a core phase (nacht_start, nacht_ende, tag_start, tag_ende, rollen_verteilt)
     2. OR the role that owns the phase has is_automatic_phase = True
@@ -134,10 +134,10 @@ def _build_automatische_phasen() -> set:
         "tag_start",  # Übergang Nacht -> Tag
         "tag_ende",  # Übergang am Tagesende
     }
-    
+
     try:
         from roles import RoleRegistry
-        
+
         # Add role-specific automatic phases
         for role in RoleRegistry.get_all():
             try:
@@ -145,12 +145,18 @@ def _build_automatische_phasen() -> set:
                     phase_name = role.get_phase_name()
                     if phase_name:
                         phasen.add(phase_name)
-                        logger.debug(f"[PhaseManager] Added automatic phase: {phase_name} ({role.info.name})")
+                        logger.debug(
+                            f"[PhaseManager] Added automatic phase: {phase_name} ({role.info.name})"
+                        )
             except Exception as e:
-                logger.debug(f"[PhaseManager] Could not check is_automatic_phase for {role.info.name}: {e}")
+                logger.debug(
+                    f"[PhaseManager] Could not check is_automatic_phase for {role.info.name}: {e}"
+                )
     except Exception as e:
-        logger.warning(f"[PhaseManager] Could not load automatic phases from roles: {e}")
-    
+        logger.warning(
+            f"[PhaseManager] Could not load automatic phases from roles: {e}"
+        )
+
     return phasen
 
 
@@ -614,7 +620,7 @@ def spiel(code):
     else:
         # Uses SichtbarkeitFuerWoelfe.ALLE enum value for visibility check
         from roles.enums import SichtbarkeitFuerWoelfe
-        
+
         logs = (
             SpielLog.query.filter(
                 SpielLog.raum_id == raum.id,
@@ -664,10 +670,14 @@ def spiel(code):
         elif not s.ist_am_leben:
             spieler_data["rolle"] = s.rolle
         # Werewolves see each other (uses dynamic role registry for team check)
-        elif game_logic.ist_werwolf_rolle(spieler.rolle) and game_logic.ist_werwolf_rolle(s.rolle):
+        elif game_logic.ist_werwolf_rolle(
+            spieler.rolle
+        ) and game_logic.ist_werwolf_rolle(s.rolle):
             spieler_data["ist_werwolf"] = True  # Mark as werewolf for frontend
             # Add CSS class for werewolf visibility
-            spieler_data.setdefault("effect_classes", []).append("werwolf-team-sichtbar")
+            spieler_data.setdefault("effect_classes", []).append(
+                "werwolf-team-sichtbar"
+            )
 
         # =========================================================================
         # DYNAMIC VISIBILITY - Replaces hardcoded Amor/lover checks
@@ -682,20 +692,24 @@ def spiel(code):
         player_effects = get_player_visual_effects(
             s, global_state_defs, viewer_id=spieler.id, viewer_rolle=spieler.rolle
         )
-        
+
         # Add werewolf visibility effect if both are werewolves
-        if game_logic.ist_werwolf_rolle(spieler.rolle) and game_logic.ist_werwolf_rolle(s.rolle):
+        if game_logic.ist_werwolf_rolle(spieler.rolle) and game_logic.ist_werwolf_rolle(
+            s.rolle
+        ):
             # Inject werewolf visibility effect
-            player_effects.append({
-                "key": "visibility.werwolf_team",
-                "value": True,
-                "css_class": "werwolf-team-sichtbar",
-                "icon": None,
-                "visual_effect": None,
-                "name": "Werwolf-Team sichtbar",
-                "reveals_role": False,
-            })
-        
+            player_effects.append(
+                {
+                    "key": "visibility.werwolf_team",
+                    "value": True,
+                    "css_class": "werwolf-team-sichtbar",
+                    "icon": None,
+                    "visual_effect": None,
+                    "name": "Werwolf-Team sichtbar",
+                    "reveals_role": False,
+                }
+            )
+
         # Store effects for template
         all_player_effects[s.id] = player_effects
 
@@ -1347,23 +1361,32 @@ def hole_aktuellen_spieler() -> Optional[Spieler]:
 # CONFIGURATION APIs - Server-side logic for frontend
 # ============================================================================
 
+
 @app.route("/api/config/extension-order", methods=["GET"])
 def get_extension_order():
     """
     Get the correct order for extension packs.
     Moved from frontend to ensure consistency.
     """
-    return jsonify({
-        "success": True,
-        "extension_order": ['base', 'neumond', 'gemeinde', 'charaktere', 'sonderedition'],
-        "extension_info": {
-            "base": {"name": "Basis", "icon": "fa-home", "required": True},
-            "neumond": {"name": "Neumond", "icon": "fa-moon"},
-            "gemeinde": {"name": "Gemeinde", "icon": "fa-users"},
-            "charaktere": {"name": "Charaktere", "icon": "fa-user-friends"},
-            "sonderedition": {"name": "Sonderedition", "icon": "fa-star"}
+    return jsonify(
+        {
+            "success": True,
+            "extension_order": [
+                "base",
+                "neumond",
+                "gemeinde",
+                "charaktere",
+                "sonderedition",
+            ],
+            "extension_info": {
+                "base": {"name": "Basis", "icon": "fa-home", "required": True},
+                "neumond": {"name": "Neumond", "icon": "fa-moon"},
+                "gemeinde": {"name": "Gemeinde", "icon": "fa-users"},
+                "charaktere": {"name": "Charaktere", "icon": "fa-user-friends"},
+                "sonderedition": {"name": "Sonderedition", "icon": "fa-star"},
+            },
         }
-    })
+    )
 
 
 @app.route("/api/roles/preview", methods=["GET"])
@@ -1371,34 +1394,40 @@ def get_random_role_preview():
     """
     Get random role previews for extension packs.
     Replaces frontend logic that just took first 4 roles.
-    
+
     Query Parameters:
     - extension_pack: Filter by extension pack
     - count: Number of roles to return (default: 4)
     """
     import random
     from roles import RoleRegistry
-    
+
     extension_pack = request.args.get("extension_pack")
     count = int(request.args.get("count", 4))
-    
+
     # Get roles for the extension pack
     all_roles = RoleRegistry.get_all()
     if extension_pack:
-        filtered_roles = [r for r in all_roles if r.info.extension_pack == extension_pack]
+        filtered_roles = [
+            r for r in all_roles if r.info.extension_pack == extension_pack
+        ]
     else:
         filtered_roles = all_roles
-    
+
     # Randomly select roles
     preview_count = min(count, len(filtered_roles))
-    selected_roles = random.sample(filtered_roles, preview_count) if filtered_roles else []
-    
-    return jsonify({
-        "success": True,
-        "roles": [{"name": r.info.name, "id": r.info.id} for r in selected_roles],
-        "total_in_pack": len(filtered_roles),
-        "has_more": len(filtered_roles) > count
-    })
+    selected_roles = (
+        random.sample(filtered_roles, preview_count) if filtered_roles else []
+    )
+
+    return jsonify(
+        {
+            "success": True,
+            "roles": [{"name": r.info.name, "id": r.info.id} for r in selected_roles],
+            "total_in_pack": len(filtered_roles),
+            "has_more": len(filtered_roles) > count,
+        }
+    )
 
 
 @app.route("/api/phase/is-day", methods=["GET"])
@@ -1406,45 +1435,49 @@ def check_if_phase_is_day():
     """
     Server-authoritative phase type determination.
     Replaces client-side hardcoded phase list.
-    
+
     Query Parameters:
     - phase: Phase name to check
     """
     phase = request.args.get("phase", "")
-    
+
     # Definitive day phases
     day_phases = {
-        'tag_start', 'diskussion', 'abstimmung', 'hinrichtung', 
-        'tag_ende', 'spiel_ende', 'lobby', 'rollen_verteilt'
+        "tag_start",
+        "diskussion",
+        "abstimmung",
+        "hinrichtung",
+        "tag_ende",
+        "spiel_ende",
+        "lobby",
+        "rollen_verteilt",
     }
-    
+
     # Check explicit day phases
     is_day = phase in day_phases
-    
+
     # Check patterns for day/night classification
     if not is_day:
         is_day = (
-            'tag' in phase.lower() or 
-            'abstimmung' in phase.lower() or 
-            'diskussion' in phase.lower()
+            "tag" in phase.lower()
+            or "abstimmung" in phase.lower()
+            or "diskussion" in phase.lower()
         )
-    
+
     # Night mode is everything else that has phase indicators
-    is_night = (
-        not is_day and (
-            'nacht' in phase.lower() or 
-            'phase' in phase.lower() or 
-            phase.endswith('_phase')
-        )
+    is_night = not is_day and (
+        "nacht" in phase.lower() or "phase" in phase.lower() or phase.endswith("_phase")
     )
-    
-    return jsonify({
-        "success": True,
-        "phase": phase,
-        "is_day": is_day,
-        "is_night": is_night,
-        "phase_type": "day" if is_day else ("night" if is_night else "neutral")
-    })
+
+    return jsonify(
+        {
+            "success": True,
+            "phase": phase,
+            "is_day": is_day,
+            "is_night": is_night,
+            "phase_type": "day" if is_day else ("night" if is_night else "neutral"),
+        }
+    )
 
 
 # ============================================================================
@@ -1463,46 +1496,52 @@ def debug_random_role_selection():
     This allows the test suite to explore different role combinations.
     """
     import os
+
     if not os.environ.get("FLASK_ENV") == "development":
         return jsonify({"error": "Only available in development mode"}), 403
-    
+
     data = request.get_json()
     player_count = data.get("player_count", 8)
-    
+
     # Get all available roles from registry
     from roles import RoleRegistry
+
     all_roles = [role.info.name for role in RoleRegistry.get_all()]
-    
+
     # Randomly select roles, ensuring we have enough for all players
     random.shuffle(all_roles)
     selected_roles = {}
-    
+
     # Always include essential roles for a working game
     essential_roles = ["Werwolf", "Dorfbewohner"]
     remaining = player_count
-    
+
     # Add 1-2 Werewolves depending on player count
     werewolf_count = 1 if player_count < 10 else 2
     selected_roles["Werwolf"] = werewolf_count
     remaining -= werewolf_count
-    
+
     # Fill the rest with random roles
-    available_for_random = [r for r in all_roles if r not in essential_roles and r != "Erzaehler"]
+    available_for_random = [
+        r for r in all_roles if r not in essential_roles and r != "Erzaehler"
+    ]
     random.shuffle(available_for_random)
-    
-    for role in available_for_random[:min(remaining - 1, len(available_for_random))]:
+
+    for role in available_for_random[: min(remaining - 1, len(available_for_random))]:
         selected_roles[role] = 1
         remaining -= 1
-    
+
     # Fill any remaining slots with Dorfbewohner
     if remaining > 0:
         selected_roles["Dorfbewohner"] = remaining
-    
-    return jsonify({
-        "success": True,
-        "roles": selected_roles,
-        "total": sum(selected_roles.values())
-    })
+
+    return jsonify(
+        {
+            "success": True,
+            "roles": selected_roles,
+            "total": sum(selected_roles.values()),
+        }
+    )
 
 
 @app.route("/api/village/<code>")
@@ -1897,9 +1936,10 @@ def _wechsel_phase_intern(raum):
     # Build phase data for emission
     # Determine active role from scheduler for night phases
     from scheduler import get_next_phase_state
+
     active_role = None
     display_info = None
-    
+
     # For night phases, check what role is currently active
     if neue_phase == "nacht" or neue_phase.endswith("_phase"):
         try:
@@ -1908,7 +1948,7 @@ def _wechsel_phase_intern(raum):
             display_info = phase_state.display_info
         except Exception as e:
             log_ts(f"[Phase] Error getting active role: {e}")
-    
+
     phase_data = {
         "phase": neue_phase,
         "runde": raum.runde,
@@ -2080,10 +2120,13 @@ def handle_aktion(data):
     # Validate player can act - dead players can only act if their role allows it (e.g., Jäger)
     if not spieler.ist_am_leben:
         from roles import RoleRegistry
+        from roles.base import Role
 
         rolle_obj = RoleRegistry.get(spieler.rolle)
-        # Check if role has on_eigener_tod that enables post-death action
-        can_act_when_dead = rolle_obj and hasattr(rolle_obj, "on_eigener_tod")
+        # Check if role actually overrides on_eigener_tod (base class always has it but returns None)
+        can_act_when_dead = (
+            rolle_obj and type(rolle_obj).on_eigener_tod is not Role.on_eigener_tod
+        )
         if not can_act_when_dead:
             emit("fehler", {"nachricht": "Du bist tot und kannst nicht handeln"})
             return
@@ -2116,10 +2159,16 @@ def handle_aktion(data):
             "ziel_name": ergebnis.get("ziel_name"),
         }
 
-        # Determine effect from role's action type
+        # Determine effect from the actual action type used (not the role's static aktions_typ,
+        # because roles like Hexe have KEINE as static type but use heilen/vergiften dynamically)
         rolle_obj = RoleRegistry.get(spieler.rolle)
         effekt = None
-        if rolle_obj:
+
+        # First try: match the actual action_typ string against the mapping
+        effekt = AKTION_TYP_EFFEKT.get(aktion_typ)
+
+        # Second try: use the role's static aktions_typ as fallback
+        if not effekt and rolle_obj:
             aktions_typ_enum = rolle_obj.aktions_typ
             if hasattr(aktions_typ_enum, "value"):
                 effekt = AKTION_TYP_EFFEKT.get(aktions_typ_enum.value)
@@ -2167,26 +2216,32 @@ def handle_chat(data):
     if ziel_spieler_id:
         # Validiere ob private Nachrichten erlaubt sind
         from roles import RoleRegistry
-        
+
         rolle_obj = RoleRegistry.get(spieler.rolle)
         if not rolle_obj or not rolle_obj.erlaubt_private_nachrichten():
-            emit("fehler", {"nachricht": "Deine Rolle erlaubt keine privaten Nachrichten"})
+            emit(
+                "fehler",
+                {"nachricht": "Deine Rolle erlaubt keine privaten Nachrichten"},
+            )
             return
-        
+
         # Hole erlaubte Chat-Partner
         kontext = SpielKontext.from_raum(raum)
         erlaubte_partner = rolle_obj.erlaubte_chat_partner(spieler, kontext)
         erlaubte_ids = [p.id for p in erlaubte_partner]
-        
+
         if ziel_spieler_id not in erlaubte_ids:
-            emit("fehler", {"nachricht": "Du darfst mit diesem Spieler nicht privat chatten"})
+            emit(
+                "fehler",
+                {"nachricht": "Du darfst mit diesem Spieler nicht privat chatten"},
+            )
             return
-        
+
         ziel_spieler = db.session.get(Spieler, ziel_spieler_id)
         if not ziel_spieler or ziel_spieler.raum_id != raum.id:
             emit("fehler", {"nachricht": "Spieler nicht gefunden"})
             return
-        
+
         # Sende private Nachricht nur an Sender und Empfänger
         nachricht_data = {
             "von": spieler.name,
@@ -2195,15 +2250,15 @@ def handle_chat(data):
             "an_id": ziel_spieler.id,
             "nachricht": nachricht,
             "ist_privat": True,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        
+
         # An Sender
         emit("chat_privat", nachricht_data, room=request.sid)
         # An Empfänger
         if ziel_spieler.socket_id:
             emit("chat_privat", nachricht_data, room=ziel_spieler.socket_id)
-        
+
         log_ts(f"[Chat] Private Nachricht: {spieler.name} -> {ziel_spieler.name}")
         return
 
@@ -2440,27 +2495,31 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
 
     from roles import RoleRegistry
     from roles.base import SpielKontext
-    from roles.enums import Phase, AktionsTyp
+    from roles.enums import Phase, AktionsTyp, Team
 
     # Get the player's role class
     rolle_obj = RoleRegistry.get(spieler.rolle)
     if not rolle_obj:
         log_ts(f"[Aktion] FEHLER: Rolle {spieler.rolle} nicht gefunden")
-        return False
+        return {"erfolg": False, "nachricht": f"Rolle {spieler.rolle} nicht gefunden"}
 
     # Build SpielKontext
-    lebende = [
-        s.id
-        for s in Spieler.query.filter_by(
-            raum_id=raum.id, ist_am_leben=True, ist_erzaehler=False
-        ).all()
-    ]
-    tote = [
-        s.id
-        for s in Spieler.query.filter_by(
-            raum_id=raum.id, ist_am_leben=False, ist_erzaehler=False
-        ).all()
-    ]
+    alle_spieler = Spieler.query.filter_by(raum_id=raum.id, ist_erzaehler=False).all()
+    lebende = [s.id for s in alle_spieler if s.ist_am_leben]
+    tote = [s.id for s in alle_spieler if not s.ist_am_leben]
+
+    # Build spieler_rollen and spieler_teams maps for role lookups
+    spieler_rollen = {}
+    spieler_namen = {}
+    spieler_teams = {}
+    for s in alle_spieler:
+        spieler_rollen[s.id] = s.rolle
+        spieler_namen[s.id] = s.name
+        s_role = RoleRegistry.get(s.rolle)
+        if s_role:
+            spieler_teams[s.id] = s_role.info.team
+        else:
+            spieler_teams[s.id] = Team.DORF
 
     # Get existing actions this round for "already voted" checks
     existing_actions = SpielAktion.query.filter_by(
@@ -2500,6 +2559,9 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         tote_spieler=tote,
         aktionen_diese_runde=aktionen_liste,
         werwolf_opfer_id=werwolf_opfer_id,
+        spieler_rollen=spieler_rollen,
+        spieler_namen=spieler_namen,
+        spieler_teams=spieler_teams,
     )
 
     # Build target list (handle both single and multi-target)
@@ -2589,7 +2651,7 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
         if aktion_typ == AktionsTyp.SEHEN.value and ergebnis.effekte:
             # Seer gets a special result event (uses EventName enum)
             from roles.enums import EventName
-            
+
             socketio.emit(  # type: ignore[call-arg]
                 EventName.SEHERIN_ERGEBNIS.value,
                 {
@@ -2638,17 +2700,21 @@ def handle_phase_wechsel(raum, alte_phase, neue_phase):
         if ergebnis and "opfer_id" in ergebnis:
             # Find all players whose roles require victim info (dynamic via RoleRegistry)
             from roles import RoleRegistry
-            
+
             lebende_spieler = Spieler.query.filter_by(
                 raum_id=raum.id,
                 ist_am_leben=True,
             ).all()
-            
+
             # Dynamically find players with roles that need victim info
             betroffene_spieler = []
             for spieler in lebende_spieler:
                 rolle = RoleRegistry.get(spieler.rolle)
-                if rolle and hasattr(rolle, 'requires_victim_info') and rolle.requires_victim_info:
+                if (
+                    rolle
+                    and hasattr(rolle, "requires_victim_info")
+                    and rolle.requires_victim_info
+                ):
                     betroffene_spieler.append(spieler)
 
             opfer = db.session.get(Spieler, ergebnis["opfer_id"])

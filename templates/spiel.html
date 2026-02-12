@@ -3854,33 +3854,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       window.location.href = '/';
     }
   });
-    const loadThreeJS = async () => {
-      if (typeof THREE !== 'undefined') {
-        return;
-      }
-      // Try local version first, fallback to CDN for offline support
-      try {
-        const threeModule = await import('{{ url_for('static', filename='js/vendor/three.module.min.js') }}');
-        window.THREE = threeModule;
-        console.log('[Village3D] Three.js loaded from local');
-      } catch (localError) {
-        console.warn('[Village3D] Local Three.js failed, falling back to CDN:', localError);
-        const threeModule = await import('https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js');
-        window.THREE = threeModule;
-      }
-    };
-
-    loadThreeJS().then(() => {
-      return Promise.all([
-        import('{{ versioned_url('static', filename='js/village3d/dist/Village3DThree.js') }}'),
-        import('{{ versioned_url('static', filename='js/village3d/dist/VillageIntegration.js') }}')
-      ]);
-    }).then(([villageModule, integrationModule]) => {
-      const Village3DThree = villageModule.default;
+    // Load Babylon.js Village3D
+    Promise.all([
+      import('{{ url_for('static', filename='js/village3d_babylon.js') }}'),
+      import('{{ url_for('static', filename='js/village3d_integration.js') }}')
+    ]).then(([villageModule, integrationModule]) => {
+      const Village3DBabylon = villageModule.default;
       const VillageIntegration = integrationModule.VillageIntegration;
       
-      if (typeof Village3DThree !== 'undefined') {
-        const village3d = new Village3DThree('village-3d', raumCode, {
+      if (typeof Village3DBabylon !== 'undefined') {
+        const village3d = new Village3DBabylon('village-3d', raumCode, {
           startView: 'orbit',
           firstPersonPlayerId: spielerId,
           onPlayerClick: (playerId) => selectSpieler(playerId),
@@ -3888,19 +3871,9 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
           // VillageIntegration initialisieren (verbindet Socket-Events mit 3D)
           let villageIntegration = null;
-          if (VillageIntegration && village3d.materialCache) {
-            villageIntegration = new VillageIntegration(
-              village3d.materialCache,
-              village3d.app,
-              socket,
-              raumCode
-            );
+          if (VillageIntegration) {
+            villageIntegration = new VillageIntegration(socket, village3d);
             window.villageIntegration = villageIntegration;
-            
-            // UI-Elemente setzen
-            const phaseOverlay = document.getElementById('village3d-phase-overlay');
-            const eliminationText = document.getElementById('village3d-elimination-text');
-            villageIntegration.setUIElements(phaseOverlay, eliminationText);
           }
 
           // Spieler-Klick-Handler für Aktionen (fallback, already passed above)
@@ -3924,11 +3897,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
               // Sortiere nach ID für konsistente Positionen zwischen Lobby und Spiel
               spielerDaten.sort((a, b) => a.id - b.id);
               village3d.setPlayers(spielerDaten);
-              
-              // Spielerhäuser über VillageIntegration erstellen
-              if (villageIntegration) {
-                villageIntegration.initializePlayerHouses(spielerDaten);
-              }
           }
 
           // Initiale Tag/Nacht-Einstellung
@@ -3948,12 +3916,6 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           village3d.showFullscreenUI(isFullscreen3D);
           // Populate HUD list now that village3d is available
           window.updateVillage3DPlayerList?.();
-
-          // VillageIntegration mit Village3D verbinden
-          // This handles all socket events (phase_update, hinweis_zeigen, etc.)
-          if (villageIntegration) {
-            villageIntegration.setVillage3D(village3d);
-          }
       }
   }).catch(err => {
       console.warn('3D Village konnte nicht geladen werden:', err);

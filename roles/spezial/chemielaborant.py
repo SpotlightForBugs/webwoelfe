@@ -97,7 +97,7 @@ class Chemielaborant(Role):
         )
 
     def on_eigener_tod(
-        self, spieler: "Spieler", kontext: SpielKontext
+        self, spieler: "Spieler", todesursache: str, kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
         """
         Bei Tod explodieren die Chemikalien und töten Nachbarn.

@@ -91,6 +91,7 @@ class Seherlehrling(Role):
         spieler: "Spieler",
         opfer: "Spieler",
         kontext: SpielKontext,
+        todesursache: str = "",
     ) -> Optional[AktionsErgebnis]:
         """
         Prüft ob die Seherin stirbt und der Lehrling übernimmt.

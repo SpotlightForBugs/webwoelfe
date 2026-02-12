@@ -157,21 +157,25 @@ class Zombie(Role):
         )
 
     def on_spieler_stirbt(
-        self, spieler: "Spieler", gestorbener_id: int, kontext: SpielKontext
+        self,
+        spieler: "Spieler",
+        gestorbener: "Spieler",
+        kontext: SpielKontext,
+        todesursache: str = "",
     ) -> Optional[AktionsErgebnis]:
         """
         Wenn ein Infizierter stirbt, wird er zum Zombie.
         """
         infizierte: List[int] = getattr(spieler, "zombie_infiziert", [])
 
-        if gestorbener_id not in infizierte:
+        if gestorbener.id not in infizierte:
             return None
 
         return AktionsErgebnis(
             erfolg=True,
             nachricht="Ein Infizierter ist gestorben - er erhebt sich als ZOMBIE!",
             effekte={
-                "zombie_verwandlung": gestorbener_id,
+                "zombie_verwandlung": gestorbener.id,
                 "team_wechsel": Team.ZOMBIE.value,
                 "untot": True,
             },

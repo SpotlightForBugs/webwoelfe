@@ -104,6 +104,7 @@ class WildesKind(Role):
     @property
     def aktions_typ(self) -> "AktionsTyp":
         from ..enums import AktionsTyp
+
         return AktionsTyp.WAEHLEN
 
     @property
@@ -118,6 +119,7 @@ class WildesKind(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Wildes Kind - Vorbild wählen",
             instructions="Wähle dein Vorbild. Wenn es stirbt, wirst du zum Werwolf.",
@@ -175,15 +177,25 @@ class WildesKind(Role):
         return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
         """Direct handling - don't call execute_action to avoid recursion."""
         if kontext.runde != 1:
-            return AktionsErgebnis(erfolg=False, nachricht="Du hast dein Vorbild bereits gewählt.")
+            return AktionsErgebnis(
+                erfolg=False, nachricht="Du hast dein Vorbild bereits gewählt."
+            )
         if not ziel:
-            return AktionsErgebnis(erfolg=False, nachricht="Du musst ein Vorbild wählen!")
+            return AktionsErgebnis(
+                erfolg=False, nachricht="Du musst ein Vorbild wählen!"
+            )
         if ziel.id == spieler.id:
-            return AktionsErgebnis(erfolg=False, nachricht="Du kannst dich nicht selbst wählen.")
+            return AktionsErgebnis(
+                erfolg=False, nachricht="Du kannst dich nicht selbst wählen."
+            )
         self.set_state(spieler, "vorbild_id", ziel.id)
         return AktionsErgebnis(
             erfolg=True,
@@ -199,6 +211,7 @@ class WildesKind(Role):
         spieler: "Spieler",
         gestorbener: "Spieler",
         kontext: SpielKontext,
+        todesursache: str = "",
     ) -> Optional[AktionsErgebnis]:
         """Wenn das Vorbild stirbt, wird das Wilde Kind zum Werwolf."""
         vorbild_id = self.get_state(spieler, "vorbild_id")

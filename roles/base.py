@@ -207,7 +207,7 @@ class GlobalStateDefinition:
 
     Wird von Rollen definiert und beim Registry-Laden gesammelt.
     Ermöglicht dynamische Queries statt hardcoded Checks.
-    
+
     Visibility Control:
         - visible_to: Who can see that this state is active on a player
         - reveals_role: If True, the target's role is revealed to viewers
@@ -233,24 +233,24 @@ class GlobalStateDefinition:
 
     # Targeting config for complex targeting
     targeting_config: Optional[TargetingConfig] = None
-    
+
     # =========================================================================
     # DYNAMIC VISIBILITY CONTROL - Replaces hardcoded role checks in app.py
     # =========================================================================
-    
+
     # Who can see this state on a player?
     # Options: "all", "self", "source_role", "partner", "team", "erzaehler"
     # "partner" = the player referenced in the state value (for PLAYER_ID types)
     # Can be a single string or a list for multiple visibility rules (OR logic)
     visible_to: Union[str, List[str]] = "all"
-    
+
     # If True, viewers who can see this state also see the target's role
     reveals_role: bool = False
-    
+
     # If True, snapshot the role at time of state assignment
     # (useful for converted players - shows what they were before conversion)
     snapshot_role_on_set: bool = False
-    
+
     # Additional key to store the snapshotted role (e.g., "global.verliebt_rolle_snapshot")
     snapshot_key: Optional[str] = None
 
@@ -351,7 +351,9 @@ class AppearanceFeature:
     animation_amplitude: float = 1.0
 
     # Particle Effects (for auras, magic, fire, etc.)
-    particle_effect: Optional[str] = None  # "sparks", "smoke", "fire", "magic", "hearts"
+    particle_effect: Optional[str] = (
+        None  # "sparks", "smoke", "fire", "magic", "hearts"
+    )
     particle_color: Optional[str] = None
     particle_rate: float = 10.0  # Particles per second
 
@@ -654,7 +656,9 @@ class RollenModell:
             "beschreibung": self.beschreibung,
             "body": self.body.to_dict() if self.body else None,
             "appearance_self_alive": [f.to_dict() for f in self.appearance_self_alive],
-            "appearance_others_alive": [f.to_dict() for f in self.appearance_others_alive],
+            "appearance_others_alive": [
+                f.to_dict() for f in self.appearance_others_alive
+            ],
             "appearance_dead": [f.to_dict() for f in self.appearance_dead],
             "appearance_seher_view": [f.to_dict() for f in self.appearance_seher_view],
             "animations": {k: v.to_dict() for k, v in self.animations.items()},
@@ -670,6 +674,7 @@ class RollenModell:
 # FACTORY FUNCTIONS FOR COMMON 3D APPEARANCE FEATURES
 # These make it easy to create standard appearance elements in role files
 # =============================================================================
+
 
 def create_wolf_ears(color: str = None, scale: float = 1.0) -> List[AppearanceFeature]:
     """Create wolf ear features (pair of pointed ears on head)."""
@@ -697,25 +702,29 @@ def create_wolf_ears(color: str = None, scale: float = 1.0) -> List[AppearanceFe
     ]
 
 
-def create_claws(color: str = "#333333", count_per_hand: int = 3) -> List[AppearanceFeature]:
+def create_claws(
+    color: str = "#333333", count_per_hand: int = 3
+) -> List[AppearanceFeature]:
     """Create claw features on both hands."""
     claws = []
     for hand in ["left", "right"]:
         base_x = -0.45 if hand == "left" else 0.45
         for i in range(count_per_hand):
             offset_x = (i - (count_per_hand - 1) / 2) * 0.025
-            claws.append(AppearanceFeature(
-                feature_type=f"claw_{hand}_{i}",
-                geometry="cone",
-                position={"x": base_x + offset_x, "y": 0.52, "z": 0.08},
-                scale={"x": 0.025, "y": 0.08, "z": 0.025},
-                rotation={"x": 60, "y": 0, "z": 0},
-                color_source="custom",
-                custom_color=color,
-                metallic=True,
-                roughness=0.3,
-                description=f"{hand.title()} hand claw {i+1}",
-            ))
+            claws.append(
+                AppearanceFeature(
+                    feature_type=f"claw_{hand}_{i}",
+                    geometry="cone",
+                    position={"x": base_x + offset_x, "y": 0.52, "z": 0.08},
+                    scale={"x": 0.025, "y": 0.08, "z": 0.025},
+                    rotation={"x": 60, "y": 0, "z": 0},
+                    color_source="custom",
+                    custom_color=color,
+                    metallic=True,
+                    roughness=0.3,
+                    description=f"{hand.title()} hand claw {i + 1}",
+                )
+            )
     return claws
 
 
@@ -749,7 +758,9 @@ def create_fangs(color: str = "#FFFEF0") -> List[AppearanceFeature]:
     ]
 
 
-def create_glowing_eyes(color: str = "#FF3333", intensity: float = 0.6) -> AppearanceFeature:
+def create_glowing_eyes(
+    color: str = "#FF3333", intensity: float = 0.6
+) -> AppearanceFeature:
     """Create glowing eyes effect."""
     return AppearanceFeature(
         feature_type="eye_glow",
@@ -769,7 +780,9 @@ def create_glowing_eyes(color: str = "#FF3333", intensity: float = 0.6) -> Appea
     )
 
 
-def create_witch_hat(color: str = "#1a1a1a", brim: bool = True) -> List[AppearanceFeature]:
+def create_witch_hat(
+    color: str = "#1a1a1a", brim: bool = True
+) -> List[AppearanceFeature]:
     """Create a pointed witch/wizard hat."""
     features = [
         AppearanceFeature(
@@ -783,15 +796,17 @@ def create_witch_hat(color: str = "#1a1a1a", brim: bool = True) -> List[Appearan
         ),
     ]
     if brim:
-        features.append(AppearanceFeature(
-            feature_type="hat_brim",
-            geometry="cylinder",
-            position={"x": 0, "y": 2.15, "z": 0},
-            scale={"x": 0.55, "y": 0.04, "z": 0.55},
-            color_source="custom",
-            custom_color=color,
-            description="Witch hat brim",
-        ))
+        features.append(
+            AppearanceFeature(
+                feature_type="hat_brim",
+                geometry="cylinder",
+                position={"x": 0, "y": 2.15, "z": 0},
+                scale={"x": 0.55, "y": 0.04, "z": 0.55},
+                color_source="custom",
+                custom_color=color,
+                description="Witch hat brim",
+            )
+        )
     return features
 
 
@@ -808,7 +823,9 @@ def create_pointed_hat(color: str = "#4B0082") -> AppearanceFeature:
     )
 
 
-def create_aura(color: str, intensity: float = 0.5, pulsing: bool = True) -> AppearanceFeature:
+def create_aura(
+    color: str, intensity: float = 0.5, pulsing: bool = True
+) -> AppearanceFeature:
     """Create a magical aura around the character."""
     return AppearanceFeature(
         feature_type="aura",
@@ -830,7 +847,9 @@ def create_aura(color: str, intensity: float = 0.5, pulsing: bool = True) -> App
     )
 
 
-def create_potion_bottles(positions: List[str] = None, colors: List[str] = None) -> List[AppearanceFeature]:
+def create_potion_bottles(
+    positions: List[str] = None, colors: List[str] = None
+) -> List[AppearanceFeature]:
     """Create potion bottles on belt."""
     if positions is None:
         positions = ["left", "right"]
@@ -840,22 +859,24 @@ def create_potion_bottles(positions: List[str] = None, colors: List[str] = None)
     features = []
     for i, (pos, color) in enumerate(zip(positions, colors)):
         x = -0.35 if pos == "left" else 0.35
-        features.append(AppearanceFeature(
-            feature_type=f"potion_{pos}",
-            geometry="cylinder",
-            position={"x": x, "y": 0.7, "z": 0.2},
-            scale={"x": 0.06, "y": 0.15, "z": 0.06},
-            color_source="custom",
-            custom_color=color,
-            opacity=0.8,
-            emissive=True,
-            emissive_intensity=0.3,
-            light_source=True,
-            light_color=color,
-            light_intensity=0.2,
-            light_range=0.5,
-            description=f"Potion bottle ({pos})",
-        ))
+        features.append(
+            AppearanceFeature(
+                feature_type=f"potion_{pos}",
+                geometry="cylinder",
+                position={"x": x, "y": 0.7, "z": 0.2},
+                scale={"x": 0.06, "y": 0.15, "z": 0.06},
+                color_source="custom",
+                custom_color=color,
+                opacity=0.8,
+                emissive=True,
+                emissive_intensity=0.3,
+                light_source=True,
+                light_color=color,
+                light_intensity=0.2,
+                light_range=0.5,
+                description=f"Potion bottle ({pos})",
+            )
+        )
     return features
 
 
@@ -902,7 +923,9 @@ def create_halo(color: str = "#FFD700") -> AppearanceFeature:
     )
 
 
-def create_wings(wing_type: str = "angel", color: str = "#FFFFFF") -> List[AppearanceFeature]:
+def create_wings(
+    wing_type: str = "angel", color: str = "#FFFFFF"
+) -> List[AppearanceFeature]:
     """Create wing pairs on the back."""
     wings = {
         "angel": [
@@ -995,7 +1018,9 @@ def create_wings(wing_type: str = "angel", color: str = "#FFFFFF") -> List[Appea
     return wings.get(wing_type, [])
 
 
-def create_tail(tail_type: str = "wolf", color: str = None) -> Optional[AppearanceFeature]:
+def create_tail(
+    tail_type: str = "wolf", color: str = None
+) -> Optional[AppearanceFeature]:
     """Create animal tails."""
     tails = {
         "wolf": AppearanceFeature(
@@ -1046,7 +1071,9 @@ def create_tail(tail_type: str = "wolf", color: str = None) -> Optional[Appearan
     return tails.get(tail_type)
 
 
-def create_horns(horn_type: str = "demon", color: str = "#2a2a2a") -> List[AppearanceFeature]:
+def create_horns(
+    horn_type: str = "demon", color: str = "#2a2a2a"
+) -> List[AppearanceFeature]:
     """Create various horn types."""
     horns = {
         "demon": [
@@ -1461,20 +1488,23 @@ def create_crown(style: str = "gold") -> List[AppearanceFeature]:
     for i in range(5):
         angle = (i / 5) * 360
         import math
+
         rad = math.radians(angle)
         x = math.sin(rad) * 0.15
         z = math.cos(rad) * 0.15
-        features.append(AppearanceFeature(
-            feature_type=f"crown_point_{i}",
-            geometry="cone",
-            position={"x": x, "y": 2.2, "z": z},
-            scale={"x": 0.04, "y": 0.12, "z": 0.04},
-            color_source="custom",
-            custom_color=color,
-            metallic=True,
-            roughness=0.2,
-            description=f"Crown point {i+1}",
-        ))
+        features.append(
+            AppearanceFeature(
+                feature_type=f"crown_point_{i}",
+                geometry="cone",
+                position={"x": x, "y": 2.2, "z": z},
+                scale={"x": 0.04, "y": 0.12, "z": 0.04},
+                color_source="custom",
+                custom_color=color,
+                metallic=True,
+                roughness=0.2,
+                description=f"Crown point {i + 1}",
+            )
+        )
     return features
 
 
@@ -1555,7 +1585,9 @@ def create_robe(color: str = "#2F1B0C") -> AppearanceFeature:
     )
 
 
-def create_book(color: str = "#4a3020", glowing: bool = False) -> List[AppearanceFeature]:
+def create_book(
+    color: str = "#4a3020", glowing: bool = False
+) -> List[AppearanceFeature]:
     """Create a book held in hand or floating."""
     features = [
         AppearanceFeature(
@@ -1582,22 +1614,24 @@ def create_book(color: str = "#4a3020", glowing: bool = False) -> List[Appearanc
         ),
     ]
     if glowing:
-        features.append(AppearanceFeature(
-            feature_type="book_glow",
-            geometry="sphere",
-            position={"x": -0.4, "y": 0.8, "z": 0.15},
-            scale={"x": 0.2, "y": 0.1, "z": 0.25},
-            color_source="custom",
-            custom_color="#9966ff",
-            opacity=0.3,
-            emissive=True,
-            emissive_intensity=0.5,
-            light_source=True,
-            light_color="#9966ff",
-            light_intensity=0.3,
-            light_range=1.5,
-            description="Book magical glow",
-        ))
+        features.append(
+            AppearanceFeature(
+                feature_type="book_glow",
+                geometry="sphere",
+                position={"x": -0.4, "y": 0.8, "z": 0.15},
+                scale={"x": 0.2, "y": 0.1, "z": 0.25},
+                color_source="custom",
+                custom_color="#9966ff",
+                opacity=0.3,
+                emissive=True,
+                emissive_intensity=0.5,
+                light_source=True,
+                light_color="#9966ff",
+                light_intensity=0.3,
+                light_range=1.5,
+                description="Book magical glow",
+            )
+        )
     return features
 
 
@@ -1790,15 +1824,13 @@ def get_player_visual_effects(
         # Suche GlobalStateDefinition
         if key in global_state_defs:
             gsd = global_state_defs[key]
-            
+
             # Check visibility rules
-            is_visible = _check_visibility(
-                gsd, spieler, value, viewer_id, viewer_rolle
-            )
-            
+            is_visible = _check_visibility(gsd, spieler, value, viewer_id, viewer_rolle)
+
             if not is_visible:
                 continue
-            
+
             effect_dict = {
                 "key": key,
                 "value": value,
@@ -1810,7 +1842,7 @@ def get_player_visual_effects(
                 "name": gsd.name,
                 "reveals_role": gsd.reveals_role,
             }
-            
+
             # If this state reveals role, include it
             if gsd.reveals_role:
                 # Prefer snapshot if available
@@ -1822,7 +1854,7 @@ def get_player_visual_effects(
                         effect_dict["revealed_role"] = spieler.rolle
                 else:
                     effect_dict["revealed_role"] = spieler.rolle
-            
+
             effects.append(effect_dict)
 
     return effects
@@ -1837,27 +1869,31 @@ def _check_visibility(
 ) -> bool:
     """
     Prüft ob ein Viewer einen bestimmten State auf einem Spieler sehen kann.
-    
+
     Args:
         gsd: Die GlobalStateDefinition
         target: Der Spieler auf dem der State ist
         state_value: Der Wert des States
         viewer_id: ID des Viewers
         viewer_rolle: Rolle des Viewers
-        
+
     Returns:
         True wenn sichtbar, False sonst
     """
     visible_to = gsd.visible_to
-    
+
     # Handle list values (OR logic - visible if ANY rule matches)
     if isinstance(visible_to, list):
         return any(
-            _check_single_visibility(rule, gsd, target, state_value, viewer_id, viewer_rolle)
+            _check_single_visibility(
+                rule, gsd, target, state_value, viewer_id, viewer_rolle
+            )
             for rule in visible_to
         )
-    
-    return _check_single_visibility(visible_to, gsd, target, state_value, viewer_id, viewer_rolle)
+
+    return _check_single_visibility(
+        visible_to, gsd, target, state_value, viewer_id, viewer_rolle
+    )
 
 
 def _check_single_visibility(
@@ -1871,35 +1907,35 @@ def _check_single_visibility(
     """Check a single visibility rule."""
     if rule == "all":
         return True
-    
+
     if viewer_id is None:
         # No viewer specified - only "all" visibility passes
         return rule == "all"
-    
+
     if rule == "self":
         # Only the player with the state can see it
         return viewer_id == target.id
-    
+
     if rule == "partner":
         # Only the partner (referenced in state value) can see it
         # For PLAYER_ID types, the value IS the partner ID
         if gsd.typ == StateType.PLAYER_ID:
             return viewer_id == state_value or viewer_id == target.id
         return viewer_id == target.id
-    
+
     if rule == "source_role":
         # Only the role that defined this state can see it
         return viewer_rolle == gsd.defined_by
-    
+
     if rule == "erzaehler":
         # Only Erzähler - but Erzähler is not a rolle, it's a flag
         # This would need special handling in app.py
         return False
-    
+
     if rule == "team":
         # Would need team lookup - for now, allow all
         return True
-    
+
     return True
 
 
@@ -2129,7 +2165,6 @@ class SpielKontext:
         """Alias für Runde (wird von einigen Rollen verwendet)."""
         return self.runde
 
-
     def hat_spieler_rolle(self, spieler_id: int, rolle: str) -> bool:
         """Prüft, ob ein Spieler eine bestimmte Rolle hat."""
         return self.spieler_rollen.get(spieler_id) == rolle
@@ -2138,16 +2173,16 @@ class SpielKontext:
     def from_raum(cls, raum: Any) -> "SpielKontext":
         """
         Erstellt einen SpielKontext aus einem Raum-Objekt.
-        
+
         Args:
             raum: Das Raum-Objekt (models.Raum)
-            
+
         Returns:
             Neuer SpielKontext
         """
         # Import local to avoid circular deps
         from .enums import Phase
-        
+
         # Phase validation
         phase_val = raum.aktuelle_phase
         try:
@@ -2156,37 +2191,50 @@ class SpielKontext:
         except (ValueError, TypeError):
             # Keep as string if no match (runtime compatibility)
             pass
-            
+
         # Collect player IDs
         lebende = []
         tote = []
         spieler_rollen = {}
         spieler_namen = {}
-        
+        spieler_teams = {}
+
         # Verify access to spieler list (handle detached sessions if needed)
         players = getattr(raum, "spieler", [])
-        
+
+        from .registry import RoleRegistry
+
         for s in players:
             if s.ist_erzaehler:
                 continue
-                
+
             if s.ist_am_leben:
                 lebende.append(s.id)
             else:
                 tote.append(s.id)
-                
+
             spieler_rollen[s.id] = s.rolle
             spieler_namen[s.id] = s.name
-            
+
+            # Populate team from role registry
+            role_obj = RoleRegistry.get(s.rolle)
+            if role_obj:
+                spieler_teams[s.id] = role_obj.info.team
+            else:
+                from .enums import Team as TeamEnum
+
+                spieler_teams[s.id] = TeamEnum.DORF
+
         return cls(
             raum_id=raum.id,
             runde=raum.runde,
-            phase=phase_val, # type: ignore
-            aktiver_spieler_id=0, # Not context-specific
+            phase=phase_val,  # type: ignore
+            aktiver_spieler_id=0,  # Not context-specific
             lebende_spieler=lebende,
             tote_spieler=tote,
             spieler_rollen=spieler_rollen,
-            spieler_namen=spieler_namen
+            spieler_namen=spieler_namen,
+            spieler_teams=spieler_teams,
         )
 
 
@@ -2194,10 +2242,10 @@ class SpielKontext:
 class RoleAction:
     """
     A role action tied to a handler method.
-    
+
     Every RoleAction maps directly to a handler method on the Role class.
     This enables fully dynamic action handling without hardcoded switches.
-    
+
     Example:
         RoleAction(
             action_id="heilen",
@@ -2207,11 +2255,12 @@ class RoleAction:
             action_type="heilen"
         )
     """
-    action_id: str              # Unique identifier
-    label: str                  # UI button text
-    handler: str                # Method name on Role to call
-    action_type: str            # AktionsTyp value (for compatibility)
-    icon: str = ""              # FontAwesome icon class
+
+    action_id: str  # Unique identifier
+    label: str  # UI button text
+    handler: str  # Method name on Role to call
+    action_type: str  # AktionsTyp value (for compatibility)
+    icon: str = ""  # FontAwesome icon class
     css_class: str = "btn-primary"
     requires_target: bool = True
     target_filter: str = "lebende"  # lebende, tote, alle, andere, nachbarn
@@ -2219,15 +2268,18 @@ class RoleAction:
     tooltip: Optional[str] = None
     # Condition function (spieler, kontext) -> bool
     enabled_condition: Optional[Callable[["Spieler", SpielKontext], bool]] = None
-    
+
     def is_enabled(self, spieler: "Spieler", kontext: "SpielKontext") -> bool:
         """Check if this action is currently enabled."""
         if self.enabled_condition is not None:
             return self.enabled_condition(spieler, kontext)
         return True
-    
-    def to_dict(self, spieler: Optional["Spieler"] = None, 
-                kontext: Optional["SpielKontext"] = None) -> Dict[str, Any]:
+
+    def to_dict(
+        self,
+        spieler: Optional["Spieler"] = None,
+        kontext: Optional["SpielKontext"] = None,
+    ) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         result = {
             "action_id": self.action_id,
@@ -2306,8 +2358,8 @@ class RollenUI:
         result = self.to_dict()
         # Replace actions with context-aware versions
         result["actions"] = [
-            a.to_dict(spieler, kontext) 
-            for a in self.actions 
+            a.to_dict(spieler, kontext)
+            for a in self.actions
             if a.is_enabled(spieler, kontext)
         ]
         return result
@@ -2724,20 +2776,20 @@ class Role(ABC):
     def is_automatic_phase(self) -> bool:
         """
         Gibt an, ob die Phase automatisch weitergeht (nach Audio).
-        
+
         Eine Phase ist automatisch wenn:
         - aktions_typ == AktionsTyp.KEINE
         - UI hat keine Aktions-Buttons (nur Info-Anzeige)
-        
+
         Überschreiben falls die Rolle spezielle Logik benötigt.
-        
+
         Returns:
             True wenn Phase automatisch weitergehen soll
         """
         # Default: Automatisch wenn keine Aktion erforderlich
         if self.aktions_typ == AktionsTyp.KEINE:
             return True
-        
+
         # Prüfe UI-Definition: Wenn keine Buttons, dann automatisch
         try:
             ui_def = self.get_ui_definition()
@@ -2745,7 +2797,7 @@ class Role(ABC):
                 return True
         except:
             pass
-        
+
         return False
 
     @abstractmethod
@@ -2779,22 +2831,22 @@ class Role(ABC):
     def erlaubt_private_nachrichten(self) -> bool:
         """
         Erlaubt diese Rolle private Nachrichten?
-        
+
         Returns:
             True wenn private Nachrichten erlaubt sind
         """
         return False
-    
+
     def erlaubte_chat_partner(
         self, spieler: "Spieler", kontext: "SpielKontext"
     ) -> List["Spieler"]:
         """
         Gibt die Liste der erlaubten Chat-Partner für private Nachrichten zurück.
-        
+
         Args:
             spieler: Der Spieler mit dieser Rolle
             kontext: Spielkontext
-            
+
         Returns:
             Liste der Spieler, mit denen private Nachrichten erlaubt sind
         """
@@ -2863,7 +2915,11 @@ class Role(ABC):
         return None
 
     def on_spieler_stirbt(
-        self, spieler: "Spieler", opfer: "Spieler", kontext: "SpielKontext"
+        self,
+        spieler: "Spieler",
+        opfer: "Spieler",
+        kontext: "SpielKontext",
+        todesursache: str = "",
     ) -> Optional[AktionsErgebnis]:
         """
         Trigger: Ein Spieler stirbt.
@@ -2872,6 +2928,7 @@ class Role(ABC):
             spieler: Der Spieler mit dieser Rolle (Observer)
             opfer: Der gestorbene Spieler
             kontext: Spielkontext
+            todesursache: Art des Todes (optional, for backward compat)
         """
         return None
 
@@ -2895,7 +2952,11 @@ class Role(ABC):
         return None
 
     def handle_anderer_stirbt(
-        self, spieler: "Spieler", opfer: "Spieler", todesart: str, kontext: "SpielKontext"
+        self,
+        spieler: "Spieler",
+        opfer: "Spieler",
+        todesart: str,
+        kontext: "SpielKontext",
     ) -> Optional[AktionsErgebnis]:
         """
         Trigger: Ein anderer Spieler stirbt.
@@ -2903,6 +2964,8 @@ class Role(ABC):
         Diese Methode wird für ALLE lebenden Spieler aufgerufen wenn jemand stirbt.
         Ermöglicht Reaktionen auf den Tod anderer (z.B. Wildes Kind verwandelt sich,
         Verliebte sterben mit).
+
+        By default, delegates to on_spieler_stirbt so roles only need to override one method.
 
         Args:
             spieler: Der Spieler mit dieser Rolle (der lebt und reagiert)
@@ -2913,7 +2976,9 @@ class Role(ABC):
         Returns:
             AktionsErgebnis mit möglichen Effekten (z.B. stirbt, verwandlung)
         """
-        return None
+        # Delegate to on_spieler_stirbt by default so roles that override
+        # on_spieler_stirbt still work when called via handle_anderer_stirbt
+        return self.on_spieler_stirbt(spieler, opfer, kontext, todesursache=todesart)
 
     def on_hinrichtung(
         self, spieler: "Spieler", verurteilter: "Spieler", kontext: "SpielKontext"
@@ -3197,16 +3262,30 @@ class Role(ABC):
         Returns:
             AktionsErgebnis or None if action not handled
         """
-        from .actions import normalize_action_type, extract_action_parts, find_matching_action
-        
+        from .actions import (
+            normalize_action_type,
+            extract_action_parts,
+            find_matching_action,
+        )
+
         # Extract both original and normalized forms
         original_action = action_type
-        _, normalized_action = extract_action_parts(action_type) if action_type else (None, "skip")
-        
-        logger.debug(f"[execute_action] {self.info.name}: action='{action_type}' normalized='{normalized_action}'")
-        
+        _, normalized_action = (
+            extract_action_parts(action_type) if action_type else (None, "skip")
+        )
+
+        logger.debug(
+            f"[execute_action] {self.info.name}: action='{action_type}' normalized='{normalized_action}'"
+        )
+
         # Handle generic "skip" action
-        skip_values = {"skip", "nichts", "ueberspringen", "überspringen", "keine_aktion"}
+        skip_values = {
+            "skip",
+            "nichts",
+            "ueberspringen",
+            "überspringen",
+            "keine_aktion",
+        }
         if normalized_action in skip_values or action_type in skip_values:
             return AktionsErgebnis(
                 erfolg=True,
@@ -3217,13 +3296,15 @@ class Role(ABC):
 
         ziel = targets[0] if len(targets) == 1 else None
         ui_def = self.get_ui_definition()
-        
+
         # Strategy 1: Check RoleAction definitions
         for action in ui_def.actions:
-            if (action.action_id == action_type or 
-                action.action_type == action_type or
-                action.action_id == normalized_action or
-                action.action_type == normalized_action):
+            if (
+                action.action_id == action_type
+                or action.action_type == action_type
+                or action.action_id == normalized_action
+                or action.action_type == normalized_action
+            ):
                 handler_name = action.handler
                 if hasattr(self, handler_name):
                     handler = getattr(self, handler_name)
@@ -3244,19 +3325,23 @@ class Role(ABC):
         for button in ui_def.buttons:
             btn_type = button.action_type
             _, btn_normalized = extract_action_parts(btn_type)
-            
+
             # Match by exact type, normalized type, or normalized button type
-            if (btn_type == action_type or 
-                btn_type == normalized_action or
-                btn_normalized == normalized_action):
+            if (
+                btn_type == action_type
+                or btn_type == normalized_action
+                or btn_normalized == normalized_action
+            ):
                 matched_button = button
                 break
-        
+
         if matched_button:
-            logger.debug(f"[execute_action] Matched button: {matched_button.action_type}")
+            logger.debug(
+                f"[execute_action] Matched button: {matched_button.action_type}"
+            )
             # Route to on_nacht_aktion with action parameter
             return self._call_on_nacht_aktion(spieler, ziel, kontext, normalized_action)
-        
+
         # Strategy 3: Look for a direct method with the action name
         for method_name in [normalized_action, action_type, original_action]:
             if hasattr(self, method_name) and callable(getattr(self, method_name)):
@@ -3265,30 +3350,32 @@ class Role(ABC):
                     return method(spieler, ziel, kontext)
                 except Exception as e:
                     logger.debug(f"Direct method {method_name} failed: {e}")
-        
+
         # Strategy 4: Fall back to on_nacht_aktion for any action
-        logger.debug(f"[execute_action] Falling back to on_nacht_aktion for {normalized_action}")
+        logger.debug(
+            f"[execute_action] Falling back to on_nacht_aktion for {normalized_action}"
+        )
         return self._call_on_nacht_aktion(spieler, ziel, kontext, normalized_action)
-    
+
     def _call_on_nacht_aktion(
         self,
         spieler: "Spieler",
         ziel: Optional["Spieler"],
         kontext: "SpielKontext",
-        aktion: str
+        aktion: str,
     ) -> Optional[AktionsErgebnis]:
         """
         Helper to call on_nacht_aktion with proper signature handling.
         """
         import inspect
-        
+
         try:
             sig = inspect.signature(self.on_nacht_aktion)
             if "aktion" in sig.parameters:
                 result = self.on_nacht_aktion(spieler, ziel, kontext, aktion=aktion)
             else:
                 result = self.on_nacht_aktion(spieler, ziel, kontext)
-            
+
             if result is None:
                 return AktionsErgebnis(
                     erfolg=False,
@@ -3384,26 +3471,45 @@ class Role(ABC):
                 "anzeige_name": raw_model.anzeige_name,
                 "beschreibung": raw_model.beschreibung,
                 "seher_sicht": raw_model.seher_sicht,
-                "appearance_self_alive": [f.to_dict() if hasattr(f, 'to_dict') else f.__dict__ for f in raw_model.appearance_self_alive] if raw_model.appearance_self_alive else [],
-                "appearance_others_alive": [f.to_dict() if hasattr(f, 'to_dict') else f.__dict__ for f in raw_model.appearance_others_alive] if raw_model.appearance_others_alive else [],
-                "appearance_dead": [f.to_dict() if hasattr(f, 'to_dict') else f.__dict__ for f in raw_model.appearance_dead] if raw_model.appearance_dead else [],
+                "appearance_self_alive": [
+                    f.to_dict() if hasattr(f, "to_dict") else f.__dict__
+                    for f in raw_model.appearance_self_alive
+                ]
+                if raw_model.appearance_self_alive
+                else [],
+                "appearance_others_alive": [
+                    f.to_dict() if hasattr(f, "to_dict") else f.__dict__
+                    for f in raw_model.appearance_others_alive
+                ]
+                if raw_model.appearance_others_alive
+                else [],
+                "appearance_dead": [
+                    f.to_dict() if hasattr(f, "to_dict") else f.__dict__
+                    for f in raw_model.appearance_dead
+                ]
+                if raw_model.appearance_dead
+                else [],
             }
 
             # Include body modifications if present
             if raw_model.body:
-                model_def["body"] = raw_model.body.to_dict() if hasattr(raw_model.body, 'to_dict') else raw_model.body.__dict__
+                model_def["body"] = (
+                    raw_model.body.to_dict()
+                    if hasattr(raw_model.body, "to_dict")
+                    else raw_model.body.__dict__
+                )
 
             # Include animations if present
             if raw_model.animations:
                 model_def["animations"] = {
-                    k: (v.to_dict() if hasattr(v, 'to_dict') else v.__dict__)
+                    k: (v.to_dict() if hasattr(v, "to_dict") else v.__dict__)
                     for k, v in raw_model.animations.items()
                 }
 
             # Include hint effects if present
             if raw_model.hint_effects:
                 model_def["hint_effects"] = [
-                    (e.to_dict() if hasattr(e, 'to_dict') else e.__dict__)
+                    (e.to_dict() if hasattr(e, "to_dict") else e.__dict__)
                     for e in raw_model.hint_effects
                 ]
 
@@ -3417,7 +3523,12 @@ class Role(ABC):
             # Fallback to basic model definition if get_modell_definition fails
             logger.debug(f"Could not get model definition for {self.info.name}: {e}")
             model_def = {
-                "modell_id": self.info.name.lower().replace(" ", "_").replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss"),
+                "modell_id": self.info.name.lower()
+                .replace(" ", "_")
+                .replace("ä", "ae")
+                .replace("ö", "oe")
+                .replace("ü", "ue")
+                .replace("ß", "ss"),
                 "anzeige_name": self.info.name,
                 "beschreibung": f"{self.info.name} appearance",
                 "appearance_self_alive": [],

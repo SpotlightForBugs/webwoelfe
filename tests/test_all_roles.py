@@ -300,7 +300,9 @@ class TestHund(unittest.TestCase):
         herrchen = MockSpieler(id=2, name="Max", rolle="Dorfbewohner")
         kontext = create_mock_kontext(lebende_spieler=[1, 3, 4])
 
-        ergebnis = self.hund.on_spieler_stirbt(spieler, herrchen, "werwolf", kontext)
+        ergebnis = self.hund.on_spieler_stirbt(
+            spieler, herrchen, kontext, todesursache="werwolf"
+        )
 
         self.assertIsNotNone(ergebnis)
         self.assertTrue(ergebnis.effekte.get("verwandlung", False))
@@ -316,7 +318,9 @@ class TestHund(unittest.TestCase):
         herrchen = MockSpieler(id=2, name="Max", rolle="Dorfbewohner")
         kontext = create_mock_kontext(lebende_spieler=[1, 3, 4])
 
-        ergebnis = self.hund.on_spieler_stirbt(spieler, herrchen, "werwolf", kontext)
+        ergebnis = self.hund.on_spieler_stirbt(
+            spieler, herrchen, kontext, todesursache="werwolf"
+        )
 
         self.assertIsNotNone(ergebnis)
         self.assertEqual(ergebnis.log_sichtbar_fuer, "erzaehler")

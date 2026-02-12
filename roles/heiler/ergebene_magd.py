@@ -104,8 +104,8 @@ class ErgebeneMagd(Role):
         self,
         spieler: "Spieler",
         opfer: "Spieler",
-        todesursache: str,
         kontext: SpielKontext,
+        todesursache: str = "",
     ) -> Optional[AktionsErgebnis]:
         """
         Prüft ob eine wichtige Rolle stirbt und übernimmt sie.

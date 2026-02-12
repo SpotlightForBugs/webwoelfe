@@ -118,7 +118,7 @@ class Koenig(Role):
         )
 
     def on_eigener_tod(
-        self, spieler: "Spieler", kontext: SpielKontext
+        self, spieler: "Spieler", todesursache: str, kontext: SpielKontext
     ) -> Optional[AktionsErgebnis]:
         """
         Bei Tod des Königs wird ein neuer gewählt.

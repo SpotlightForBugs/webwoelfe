@@ -108,11 +108,10 @@ class Flammenmann(Role):
             instructions="Du kannst einmal am Tag dein Haus anzünden und deine Nachbarn töten.",
             buttons=[
                 UIButton(
-                    id="anzuenden",
                     label="Haus anzünden!",
+                    action_type="anzuenden",
                     icon="fa-solid fa-fire",
-                    aktion="anzuenden",
-                    bestaetigung="VORSICHT: Deine Nachbarn (links und rechts) werden sterben! Fortfahren?",
+                    requires_confirmation=True,
                 ),
             ],
             requires_target=False,

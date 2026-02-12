@@ -168,8 +168,8 @@ class Nutte(Role):
         self,
         spieler: "Spieler",
         gestorbener: "Spieler",
-        todesursache: str,
         kontext: SpielKontext,
+        todesursache: str = "",
     ) -> Optional[AktionsErgebnis]:
         """
         Wenn der Gastgeber stirbt, stirbt die Nutte mit.

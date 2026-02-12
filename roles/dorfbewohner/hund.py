@@ -638,8 +638,8 @@ class Hund(Role):
         self,
         spieler: "Spieler",
         opfer: "Spieler",
-        todesursache: str,
         kontext: SpielKontext,
+        todesursache: str = "",
     ) -> Optional[AktionsErgebnis]:
         """
         Prüft ob das Herrchen stirbt und löst Verwandlung aus.

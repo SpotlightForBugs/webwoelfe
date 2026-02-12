@@ -40,15 +40,15 @@ export class VillageIntegration {
   #bindSocketEvents() {
     const s = this.#socket;
 
-    s.on('phase_update',         (d) => this.#onPhaseUpdate(d));
-    s.on('spieler_gestorben',    (d) => this.#onSpielerGestorben(d));
-    s.on('stimme_abgegeben',     (d) => this.#onStimmeAbgegeben(d));
-    s.on('hinweis_zeigen',       (d) => this.#onHinweisZeigen(d));
-    s.on('abstimmung_ergebnis',  (d) => this.#onAbstimmungErgebnis(d));
-    s.on('spiel_ende',           (d) => this.#onSpielEnde(d));
-    s.on('nacht_ergebnis',       (d) => this.#onNachtErgebnis(d));
-    s.on('chat_nachricht',       (d) => this.#onChatNachricht(d));
-    s.on('aktion_bestaetigt',    (d) => this.#onAktionBestaetigt(d));
+    s.on("phase_update", (d) => this.#onPhaseUpdate(d));
+    s.on("spieler_gestorben", (d) => this.#onSpielerGestorben(d));
+    s.on("stimme_abgegeben", (d) => this.#onStimmeAbgegeben(d));
+    s.on("hinweis_zeigen", (d) => this.#onHinweisZeigen(d));
+    s.on("abstimmung_ergebnis", (d) => this.#onAbstimmungErgebnis(d));
+    s.on("spiel_ende", (d) => this.#onSpielEnde(d));
+    s.on("nacht_ergebnis", (d) => this.#onNachtErgebnis(d));
+    s.on("chat_nachricht", (d) => this.#onChatNachricht(d));
+    s.on("aktion_bestaetigt", (d) => this.#onAktionBestaetigt(d));
   }
 
   // ===========================================================================
@@ -91,7 +91,7 @@ export class VillageIntegration {
     }
 
     // Notify UI
-    this.#dispatch('village3d:phaseOverlay', {
+    this.#dispatch("village3d:phaseOverlay", {
       phase,
       runde,
       display_info,
@@ -102,7 +102,7 @@ export class VillageIntegration {
     });
 
     // Top bar (only if the village exposes it)
-    if (typeof this.#village.updateTopBar === 'function') {
+    if (typeof this.#village.updateTopBar === "function") {
       this.#village.updateTopBar(phase, runde);
     }
   }
@@ -121,7 +121,7 @@ export class VillageIntegration {
 
     // Camera focus on the dying player
     this.#village.focusOnPlayer(spieler_id);
-    this.#dispatch('village3d:cameraFocus', { spieler_id });
+    this.#dispatch("village3d:cameraFocus", { spieler_id });
 
     // Short pause so the camera arrives before the status changes
     await delay(500);
@@ -130,10 +130,15 @@ export class VillageIntegration {
 
     // Death text
     const text = display_text || `${spieler_name} ist gestorben.`;
-    this.#dispatch('village3d:eliminationText', { spieler_id, spieler_name, todesart, text });
+    this.#dispatch("village3d:eliminationText", {
+      spieler_id,
+      spieler_name,
+      todesart,
+      text,
+    });
 
     // Visual effect
-    this.#village.showActionEffect(spieler_id, 'attack');
+    this.#village.showActionEffect(spieler_id, "attack");
   }
 
   /**
@@ -149,7 +154,7 @@ export class VillageIntegration {
     const { waehler_name, ziel_id } = data;
 
     this.#village.showVoteIndicator(ziel_id, waehler_name);
-    this.#village.highlightPlayer(ziel_id, '#ffd700');
+    this.#village.highlightPlayer(ziel_id, "#ffd700");
   }
 
   /**
@@ -164,7 +169,7 @@ export class VillageIntegration {
    */
   #onHinweisZeigen(data) {
     const playerId = data.spielerId ?? data.spieler_id;
-    const type     = data.hintTyp   ?? data.type ?? data.typ;
+    const type = data.hintTyp ?? data.type ?? data.typ;
 
     if (playerId != null && type) {
       this.#village.showHint(playerId, type);
@@ -185,17 +190,17 @@ export class VillageIntegration {
 
     if (hingerichtet_id) {
       this.#village.focusOnPlayer(hingerichtet_id);
-      this.#dispatch('village3d:cameraFocus', { spieler_id: hingerichtet_id });
+      this.#dispatch("village3d:cameraFocus", { spieler_id: hingerichtet_id });
 
       await delay(500);
 
       this.#village.updatePlayerStatus(hingerichtet_id, false);
 
       const text = display_text || `${hingerichtet_name} wurde hingerichtet.`;
-      this.#dispatch('village3d:eliminationText', {
+      this.#dispatch("village3d:eliminationText", {
         spieler_id: hingerichtet_id,
         spieler_name: hingerichtet_name,
-        todesart: 'vote',
+        todesart: "vote",
         text,
       });
     }
@@ -211,11 +216,12 @@ export class VillageIntegration {
    * }} data
    */
   #onSpielEnde(data) {
-    this.#dispatch('village3d:gameEnd', {
-      gewinner:        data.gewinner,
-      display_title:   data.display_title   || 'Spiel beendet',
-      display_message: data.display_message || `${data.gewinner} haben gewonnen!`,
-      spieler:         data.spieler || [],
+    this.#dispatch("village3d:gameEnd", {
+      gewinner: data.gewinner,
+      display_title: data.display_title || "Spiel beendet",
+      display_message:
+        data.display_message || `${data.gewinner} haben gewonnen!`,
+      spieler: data.spieler || [],
     });
   }
 
@@ -229,14 +235,14 @@ export class VillageIntegration {
 
     for (const death of tote) {
       this.#village.focusOnPlayer(death.id);
-      this.#dispatch('village3d:cameraFocus', { spieler_id: death.id });
+      this.#dispatch("village3d:cameraFocus", { spieler_id: death.id });
 
       await delay(500);
 
       this.#village.updatePlayerStatus(death.id, false);
 
       const text = death.display_text || `${death.name} wurde getötet.`;
-      this.#dispatch('village3d:eliminationText', {
+      this.#dispatch("village3d:eliminationText", {
         spieler_id: death.id,
         spieler_name: death.name,
         todesart: death.todesart,
@@ -292,15 +298,15 @@ export class VillageIntegration {
     this.#abort.abort();
 
     const events = [
-      'phase_update',
-      'spieler_gestorben',
-      'stimme_abgegeben',
-      'hinweis_zeigen',
-      'abstimmung_ergebnis',
-      'spiel_ende',
-      'nacht_ergebnis',
-      'chat_nachricht',
-      'aktion_bestaetigt',
+      "phase_update",
+      "spieler_gestorben",
+      "stimme_abgegeben",
+      "hinweis_zeigen",
+      "abstimmung_ergebnis",
+      "spiel_ende",
+      "nacht_ergebnis",
+      "chat_nachricht",
+      "aktion_bestaetigt",
     ];
 
     for (const ev of events) {

@@ -11,46 +11,46 @@ class HintSystem {
     this.hinweisHistory = [];
     this.usesRemaining = {};
     this.village3d = null;
-    this.modus = 'online';
+    this.modus = "online";
     this.audioErlaubt = false;
 
     // CSS-Klassen für visuelle Hinweise (2D Fallback)
     this.visualHints = {
-      augen_flackern: 'hint-eyes-flicker',
-      schatten: 'hint-shadow',
-      mond_schein: 'hint-moonlight',
-      nervoes: 'hint-nervous',
-      blick_abwenden: 'hint-look-away',
-      gluehen: 'hint-glow',
-      selbst_verdaechtigung: 'hint-sus-self',
-      stolpern: 'hint-stumble',
-      herzschlag: 'hint-heartbeat',
+      augen_flackern: "hint-eyes-flicker",
+      schatten: "hint-shadow",
+      mond_schein: "hint-moonlight",
+      nervoes: "hint-nervous",
+      blick_abwenden: "hint-look-away",
+      gluehen: "hint-glow",
+      selbst_verdaechtigung: "hint-sus-self",
+      stolpern: "hint-stumble",
+      herzschlag: "hint-heartbeat",
     };
 
     // 3D-Effekt-Mapping für Village3D
     this.effekt3D = {
-      augen_flackern: 'eyes_glow_red',
-      schatten: 'shadow_pass',
-      mond_schein: 'moonbeam',
-      nervoes: 'character_shake',
-      blick_abwenden: 'look_away',
-      gluehen: 'aura_glow',
-      selbst_verdaechtigung: 'suspicious_behavior',
-      stolpern: 'character_stumble',
-      herzschlag: 'heartbeat_pulse',
+      augen_flackern: "eyes_glow_red",
+      schatten: "shadow_pass",
+      mond_schein: "moonbeam",
+      nervoes: "character_shake",
+      blick_abwenden: "look_away",
+      gluehen: "aura_glow",
+      selbst_verdaechtigung: "suspicious_behavior",
+      stolpern: "character_stumble",
+      herzschlag: "heartbeat_pulse",
     };
 
     // Nachricht-Vorlagen für synchronisierte Hinweise (ALLE sehen diese!)
     this.hinweisNachrichten = {
-      augen_flackern: 'Die Augen von {spieler} flackern kurz seltsam...',
-      schatten: 'Ein Schatten huscht über {spieler}...',
-      mond_schein: 'Mondlicht fällt auf {spieler}...',
-      nervoes: '{spieler} wirkt nervös...',
-      blick_abwenden: '{spieler} wendet den Blick ab...',
-      gluehen: 'Ein mystisches Glühen umgibt {spieler}...',
-      selbst_verdaechtigung: '{spieler} verhält sich verdächtig!',
-      stolpern: '{spieler} stolpert kurz...',
-      herzschlag: 'Das Herz von {spieler} schlägt schneller...',
+      augen_flackern: "Die Augen von {spieler} flackern kurz seltsam...",
+      schatten: "Ein Schatten huscht über {spieler}...",
+      mond_schein: "Mondlicht fällt auf {spieler}...",
+      nervoes: "{spieler} wirkt nervös...",
+      blick_abwenden: "{spieler} wendet den Blick ab...",
+      gluehen: "Ein mystisches Glühen umgibt {spieler}...",
+      selbst_verdaechtigung: "{spieler} verhält sich verdächtig!",
+      stolpern: "{spieler} stolpert kurz...",
+      herzschlag: "Das Herz von {spieler} schlägt schneller...",
     };
 
     this.init();
@@ -58,12 +58,12 @@ class HintSystem {
 
   /** Initialisiert das Hinweis-System */
   init() {
-    const modusElement = document.querySelector('[data-spiel-modus]');
+    const modusElement = document.querySelector("[data-spiel-modus]");
     if (modusElement) {
       const modus = modusElement.dataset.spielModus;
       if (modus) {
         this.modus = modus;
-        this.audioErlaubt = modus === 'gruppe';
+        this.audioErlaubt = modus === "gruppe";
       }
     }
 
@@ -75,8 +75,10 @@ class HintSystem {
   /** Setzt den Spiel-Modus */
   setModus(modus) {
     this.modus = modus;
-    this.audioErlaubt = modus === 'gruppe';
-    console.log(`Hinweis-System: Modus=${modus}, Audio=${this.audioErlaubt ? 'an' : 'aus'}`);
+    this.audioErlaubt = modus === "gruppe";
+    console.log(
+      `Hinweis-System: Modus=${modus}, Audio=${this.audioErlaubt ? "an" : "aus"}`,
+    );
   }
 
   /** Verbindet mit der 3D-Visualisierung */
@@ -135,8 +137,11 @@ class HintSystem {
       this.showVisualHint(spielerId, hintTyp);
     }
 
-    if (this.modus === 'online' && this.hinweisNachrichten[hintTyp]) {
-      const nachricht = this.hinweisNachrichten[hintTyp].replace('{spieler}', spielerName);
+    if (this.modus === "online" && this.hinweisNachrichten[hintTyp]) {
+      const nachricht = this.hinweisNachrichten[hintTyp].replace(
+        "{spieler}",
+        spielerName,
+      );
       this.showHintMessage(nachricht, hintTyp);
     }
 
@@ -151,16 +156,16 @@ class HintSystem {
 
   /** Zeigt eine Hinweis-Nachricht an (für alle Spieler synchronisiert) */
   showHintMessage(nachricht, hintTyp) {
-    let messageContainer = document.getElementById('hint-messages');
+    let messageContainer = document.getElementById("hint-messages");
 
     if (!messageContainer) {
-      messageContainer = document.createElement('div');
-      messageContainer.id = 'hint-messages';
-      messageContainer.className = 'hint-messages-container';
+      messageContainer = document.createElement("div");
+      messageContainer.id = "hint-messages";
+      messageContainer.className = "hint-messages-container";
       document.body.appendChild(messageContainer);
     }
 
-    const msgElement = document.createElement('div');
+    const msgElement = document.createElement("div");
     msgElement.className = `hint-message hint-message-${hintTyp}`;
     msgElement.innerHTML = `
       <i class="fa-solid fa-eye"></i>
@@ -168,10 +173,10 @@ class HintSystem {
     `;
 
     messageContainer.appendChild(msgElement);
-    setTimeout(() => msgElement.classList.add('show'), 10);
+    setTimeout(() => msgElement.classList.add("show"), 10);
 
     setTimeout(() => {
-      msgElement.classList.remove('show');
+      msgElement.classList.remove("show");
       setTimeout(() => msgElement.remove(), 500);
     }, 4000);
   }
@@ -181,7 +186,7 @@ class HintSystem {
    * (für Selbstmörder, Gerber, Dorfdepp, Engel)
    */
   initSelfSuspicionButton(spielerId, spielerName, rolle, socket) {
-    const kannVerdaechtigen = ['Selbstmörder', 'Gerber', 'Dorfdepp', 'Engel'];
+    const kannVerdaechtigen = ["Selbstmörder", "Gerber", "Dorfdepp", "Engel"];
     if (!kannVerdaechtigen.includes(rolle)) return;
 
     const maxUses = { Selbstmörder: 3, Gerber: 2, Dorfdepp: 2, Engel: 2 };
@@ -189,20 +194,21 @@ class HintSystem {
 
     const buttonContainer =
       document.getElementById(`spieler-${spielerId}-actions`) ||
-      document.getElementById('eigene-aktionen');
+      document.getElementById("eigene-aktionen");
     if (!buttonContainer) return;
 
-    const btn = document.createElement('button');
-    btn.className = 'btn-verdaechtig btn btn-outline-warning';
+    const btn = document.createElement("button");
+    btn.className = "btn-verdaechtig btn btn-outline-warning";
     btn.id = `btn-verdaechtig-${spielerId}`;
     btn.innerHTML = `
       <i class="fa-solid fa-face-grimace"></i>
       Verdächtig wirken
       <span class="badge bg-secondary ms-2">${this.usesRemaining[spielerId]}</span>
     `;
-    btn.title = 'Sende einen subtilen Hinweis an alle Spieler, um verdächtig zu wirken!';
+    btn.title =
+      "Sende einen subtilen Hinweis an alle Spieler, um verdächtig zu wirken!";
 
-    btn.addEventListener('click', () => {
+    btn.addEventListener("click", () => {
       this.triggerSelfSuspicion(spielerId, spielerName, socket);
     });
 
@@ -222,21 +228,27 @@ class HintSystem {
 
     const btn = document.getElementById(`btn-verdaechtig-${spielerId}`);
     if (btn) {
-      const usesSpan = btn.querySelector('.uses-left');
+      const usesSpan = btn.querySelector(".uses-left");
       if (usesSpan) {
         usesSpan.textContent = String(this.usesRemaining[spielerId]);
       }
       if (this.usesRemaining[spielerId] <= 0) {
         btn.disabled = true;
-        btn.title = 'Keine Verdächtigungen mehr übrig';
+        btn.title = "Keine Verdächtigungen mehr übrig";
       }
     }
 
-    const hinweise = ['selbst_verdaechtigung', 'nervoes', 'stolpern', 'blick_abwenden'];
-    const zufallsHinweis = hinweise[Math.floor(Math.random() * hinweise.length)];
+    const hinweise = [
+      "selbst_verdaechtigung",
+      "nervoes",
+      "stolpern",
+      "blick_abwenden",
+    ];
+    const zufallsHinweis =
+      hinweise[Math.floor(Math.random() * hinweise.length)];
 
     // WICHTIG: Sende an SERVER, nicht lokal anzeigen!
-    socket.emit('hinweis_senden', {
+    socket.emit("hinweis_senden", {
       spielerId,
       spielerName,
       hintTyp: zufallsHinweis,
@@ -258,10 +270,10 @@ class HintSystem {
   /** Sendet einen Hinweis-Request an den Server */
   sendHintRequest(socket, spielerId, hintTyp) {
     if (!socket) {
-      console.warn('Kein Socket für Hinweis-Request');
+      console.warn("Kein Socket für Hinweis-Request");
       return;
     }
-    socket.emit('hinweis_senden', { spielerId, hintTyp });
+    socket.emit("hinweis_senden", { spielerId, hintTyp });
   }
 
   /** Gibt die Hinweis-Historie zurück (für Debug/Stats) */
@@ -278,11 +290,11 @@ class HintSystem {
 // Globale Variable + auto-init
 export default HintSystem;
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.HintSystem = HintSystem;
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
       window.hintSystem = new HintSystem();
     });
   } else {

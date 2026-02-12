@@ -11,14 +11,19 @@
 // ---------------------------------------------------------------------------
 // CDN loader – ensures BABYLON, BABYLON.GUI, and BABYLON loaders are present
 // ---------------------------------------------------------------------------
-const BABYLON_CDN = 'https://cdn.jsdelivr.net/npm/babylonjs@7.37.2/babylon.js';
-const LOADERS_CDN = 'https://cdn.jsdelivr.net/npm/babylonjs-loaders@7.37.2/babylonjs.loaders.min.js';
-const GUI_CDN     = 'https://cdn.jsdelivr.net/npm/babylonjs-gui@7.37.2/babylon.gui.min.js';
+const BABYLON_CDN = "https://cdn.jsdelivr.net/npm/babylonjs@7.37.2/babylon.js";
+const LOADERS_CDN =
+  "https://cdn.jsdelivr.net/npm/babylonjs-loaders@7.37.2/babylonjs.loaders.min.js";
+const GUI_CDN =
+  "https://cdn.jsdelivr.net/npm/babylonjs-gui@7.37.2/babylon.gui.min.js";
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement('script');
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const s = document.createElement("script");
     s.src = src;
     s.onload = resolve;
     s.onerror = reject;
@@ -27,18 +32,21 @@ function loadScript(src) {
 }
 
 async function ensureBabylon() {
-  if (typeof BABYLON === 'undefined') await loadScript(BABYLON_CDN);
-  if (typeof BABYLON.SceneLoader === 'undefined' || !BABYLON.SceneLoader._registeredPlugins?.['.glb']) {
+  if (typeof BABYLON === "undefined") await loadScript(BABYLON_CDN);
+  if (
+    typeof BABYLON.SceneLoader === "undefined" ||
+    !BABYLON.SceneLoader._registeredPlugins?.[".glb"]
+  ) {
     await loadScript(LOADERS_CDN);
   }
-  if (typeof BABYLON.GUI === 'undefined') await loadScript(GUI_CDN);
+  if (typeof BABYLON.GUI === "undefined") await loadScript(GUI_CDN);
 }
 
 // ---------------------------------------------------------------------------
 // Utility helpers
 // ---------------------------------------------------------------------------
 function hexToColor3(hex) {
-  if (!hex || !hex.startsWith('#')) return new BABYLON.Color3(0.5, 0.5, 0.5);
+  if (!hex || !hex.startsWith("#")) return new BABYLON.Color3(0.5, 0.5, 0.5);
   const r = parseInt(hex.slice(1, 3), 16) / 255;
   const g = parseInt(hex.slice(3, 5), 16) / 255;
   const b = parseInt(hex.slice(5, 7), 16) / 255;
@@ -54,36 +62,84 @@ function lerpColor3(a, b, t) {
   return new BABYLON.Color3(
     a.r + (b.r - a.r) * t,
     a.g + (b.g - a.g) * t,
-    a.b + (b.b - a.b) * t
+    a.b + (b.b - a.b) * t,
   );
 }
 
-function lerpNumber(a, b, t) { return a + (b - a) * t; }
+function lerpNumber(a, b, t) {
+  return a + (b - a) * t;
+}
 
-function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
 
 // Role → color map (fallback; real colors fetched from /api/roles)
 const DEFAULT_ROLE_COLORS = {
-  'werwolf': '#950706', 'seherin': '#4a90d9', 'hexe': '#8b5cf6',
-  'jaeger': '#16a34a', 'amor': '#ec4899', 'dorfbewohner': '#6b7280',
-  'erzaehler': '#d4a574',
+  werwolf: "#950706",
+  seherin: "#4a90d9",
+  hexe: "#8b5cf6",
+  jaeger: "#16a34a",
+  amor: "#ec4899",
+  dorfbewohner: "#6b7280",
+  erzaehler: "#d4a574",
 };
 
 // Character model pool (a–r = 18 models)
-const CHAR_LETTERS = 'abcdefghijklmnopqr'.split('');
+const CHAR_LETTERS = "abcdefghijklmnopqr".split("");
 
 // House blueprint definitions (which wall/roof GLBs to combine)
 const HOUSE_BLUEPRINTS = [
-  { walls: ['wall.glb','wall-window-shutters.glb','wall-doorway-round.glb','wall-window-small.glb'],
-    roof: 'roof-gable.glb', chimney: true },
-  { walls: ['wall-wood.glb','wall-wood-window-round.glb','wall-wood-door.glb','wall-wood.glb'],
-    roof: 'roof-high-gable.glb', chimney: false },
-  { walls: ['wall.glb','wall-window-glass.glb','wall-doorway-square.glb','wall-window-stone.glb'],
-    roof: 'roof.glb', chimney: true },
-  { walls: ['wall-wood.glb','wall-wood.glb','wall-wood-door.glb','wall-wood-window-round.glb'],
-    roof: 'roof-point.glb', chimney: false },
-  { walls: ['wall.glb','wall-window-shutters.glb','wall-doorway-round.glb','wall.glb'],
-    roof: 'roof-gable-detail.glb', chimney: true },
+  {
+    walls: [
+      "wall.glb",
+      "wall-window-shutters.glb",
+      "wall-doorway-round.glb",
+      "wall-window-small.glb",
+    ],
+    roof: "roof-gable.glb",
+    chimney: true,
+  },
+  {
+    walls: [
+      "wall-wood.glb",
+      "wall-wood-window-round.glb",
+      "wall-wood-door.glb",
+      "wall-wood.glb",
+    ],
+    roof: "roof-high-gable.glb",
+    chimney: false,
+  },
+  {
+    walls: [
+      "wall.glb",
+      "wall-window-glass.glb",
+      "wall-doorway-square.glb",
+      "wall-window-stone.glb",
+    ],
+    roof: "roof.glb",
+    chimney: true,
+  },
+  {
+    walls: [
+      "wall-wood.glb",
+      "wall-wood.glb",
+      "wall-wood-door.glb",
+      "wall-wood-window-round.glb",
+    ],
+    roof: "roof-point.glb",
+    chimney: false,
+  },
+  {
+    walls: [
+      "wall.glb",
+      "wall-window-shutters.glb",
+      "wall-doorway-round.glb",
+      "wall.glb",
+    ],
+    roof: "roof-gable-detail.glb",
+    chimney: true,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -101,17 +157,17 @@ export class Village3DBabylon {
     this._options = options;
     this._lobbyMode = !!options.lobbyMode;
     this.onPlayerClick = options.onPlayerClick || null;
-    this._startView = options.startView || 'top-down';
+    this._startView = options.startView || "top-down";
     this._firstPersonPlayerId = options.firstPersonPlayerId || null;
     this._firstPersonHeight = options.firstPersonHeight || 2.0;
 
     // State
     this._players = [];
-    this._playerNodes = new Map();   // id → { root, character, label, pedestal, ... }
+    this._playerNodes = new Map(); // id → { root, character, label, pedestal, ... }
     this._isNight = false;
-    this._timeTransition = 0;        // 0 = day, 1 = night
-    this._timeTarget = 0;            // 0 = day, 1 = night
-    this._viewMode = 'top-down';     // 'top-down' | 'first-person'
+    this._timeTransition = 0; // 0 = day, 1 = night
+    this._timeTarget = 0; // 0 = day, 1 = night
+    this._viewMode = "top-down"; // 'top-down' | 'first-person'
     this._selectedPlayerId = null;
     this._victimPlayerId = null;
     this._sleepingPlayers = new Set();
@@ -123,7 +179,7 @@ export class Village3DBabylon {
     this._arcCamera = null;
     this._fpCamera = null;
     this._activeCamera = null;
-    this._advancedTexture = null;     // GUI AdvancedDynamicTexture
+    this._advancedTexture = null; // GUI AdvancedDynamicTexture
 
     // Lighting refs
     this._dirLight = null;
@@ -144,8 +200,8 @@ export class Village3DBabylon {
     this._starSystem = null;
 
     // Caches
-    this._glbCache = new Map();       // path → Promise<result>
-    this._houseBlueprintNodes = [];   // pre-assembled house meshes
+    this._glbCache = new Map(); // path → Promise<result>
+    this._houseBlueprintNodes = []; // pre-assembled house meshes
     this._roleColors = { ...DEFAULT_ROLE_COLORS };
 
     // HUD state (delegates to HTML overlay in spiel.html)
@@ -171,15 +227,18 @@ export class Village3DBabylon {
     await ensureBabylon();
 
     const container = document.getElementById(this._containerId);
-    if (!container) { console.error('[Village3D] Container not found:', this._containerId); return; }
+    if (!container) {
+      console.error("[Village3D] Container not found:", this._containerId);
+      return;
+    }
 
     // Create canvas
-    const canvas = document.createElement('canvas');
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.outline = 'none';
-    canvas.style.display = 'block';
-    canvas.id = this._containerId + '-canvas';
+    const canvas = document.createElement("canvas");
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.outline = "none";
+    canvas.style.display = "block";
+    canvas.id = this._containerId + "-canvas";
     container.appendChild(canvas);
     this._canvas = canvas;
 
@@ -189,7 +248,9 @@ export class Village3DBabylon {
       stencil: true,
       antialias: true,
     });
-    this._engine.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio, 2));
+    this._engine.setHardwareScalingLevel(
+      1 / Math.min(window.devicePixelRatio, 2),
+    );
 
     // Scene
     const scene = new BABYLON.Scene(this._engine);
@@ -225,7 +286,8 @@ export class Village3DBabylon {
     this._createStars();
 
     // GUI overlay texture
-    this._advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI', true, scene);
+    this._advancedTexture =
+      BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene);
 
     // Input
     this._setupPicking();
@@ -239,16 +301,16 @@ export class Village3DBabylon {
 
     // Resize
     this._resizeHandler = () => this._engine.resize();
-    window.addEventListener('resize', this._resizeHandler);
+    window.addEventListener("resize", this._resizeHandler);
 
     // WebGL context loss
-    canvas.addEventListener('webglcontextlost', (e) => {
+    canvas.addEventListener("webglcontextlost", (e) => {
       e.preventDefault();
-      console.warn('[Village3D] WebGL context lost');
+      console.warn("[Village3D] WebGL context lost");
       this._engine.stopRenderLoop();
     });
-    canvas.addEventListener('webglcontextrestored', () => {
-      console.info('[Village3D] WebGL context restored');
+    canvas.addEventListener("webglcontextrestored", () => {
+      console.info("[Village3D] WebGL context restored");
       this._engine.runRenderLoop(() => {
         if (this._destroyed) return;
         this._updateTransitions();
@@ -266,7 +328,7 @@ export class Village3DBabylon {
     this.materialCache = new Map();
     this.app = null; // no PlayCanvas app
 
-    console.info('[Village3D-Babylon] Initialized');
+    console.info("[Village3D-Babylon] Initialized");
   }
 
   // =========================================================================
@@ -275,9 +337,14 @@ export class Village3DBabylon {
 
   _createCameras(canvas) {
     // ArcRotateCamera for top-down/orbit
-    const arc = new BABYLON.ArcRotateCamera('arcCam',
-      -Math.PI / 2, Math.PI / 3.5, 30,
-      new BABYLON.Vector3(0, 1, 0), this._scene);
+    const arc = new BABYLON.ArcRotateCamera(
+      "arcCam",
+      -Math.PI / 2,
+      Math.PI / 3.5,
+      30,
+      new BABYLON.Vector3(0, 1, 0),
+      this._scene,
+    );
     arc.lowerRadiusLimit = 8;
     arc.upperRadiusLimit = 60;
     arc.lowerBetaLimit = 0.2;
@@ -292,22 +359,25 @@ export class Village3DBabylon {
     this._arcCamera = arc;
 
     // UniversalCamera for first-person
-    const fp = new BABYLON.UniversalCamera('fpCam',
-      new BABYLON.Vector3(0, this._firstPersonHeight, 0), this._scene);
+    const fp = new BABYLON.UniversalCamera(
+      "fpCam",
+      new BABYLON.Vector3(0, this._firstPersonHeight, 0),
+      this._scene,
+    );
     fp.speed = 0.3;
     fp.angularSensibility = 2000;
     fp.minZ = 0.1;
     this._fpCamera = fp;
 
     // Set default
-    if (this._startView === 'first-person') {
+    if (this._startView === "first-person") {
       this._scene.activeCamera = fp;
       fp.attachControl(canvas, true);
-      this._viewMode = 'first-person';
+      this._viewMode = "first-person";
       this._activeCamera = fp;
     } else {
       this._scene.activeCamera = arc;
-      this._viewMode = 'top-down';
+      this._viewMode = "top-down";
       this._activeCamera = arc;
     }
   }
@@ -320,16 +390,22 @@ export class Village3DBabylon {
     const scene = this._scene;
 
     // Hemisphere ambient
-    const hemi = new BABYLON.HemisphericLight('hemi',
-      new BABYLON.Vector3(0, 1, 0), scene);
+    const hemi = new BABYLON.HemisphericLight(
+      "hemi",
+      new BABYLON.Vector3(0, 1, 0),
+      scene,
+    );
     hemi.intensity = 0.5;
     hemi.diffuse = new BABYLON.Color3(0.5, 0.5, 0.55);
     hemi.groundColor = new BABYLON.Color3(0.15, 0.15, 0.12);
     this._hemiLight = hemi;
 
     // Directional (sun/moon)
-    const dir = new BABYLON.DirectionalLight('dir',
-      new BABYLON.Vector3(-0.5, -1, 0.3).normalize(), scene);
+    const dir = new BABYLON.DirectionalLight(
+      "dir",
+      new BABYLON.Vector3(-0.5, -1, 0.3).normalize(),
+      scene,
+    );
     dir.position = new BABYLON.Vector3(10, 20, -10);
     dir.intensity = 0.8;
     dir.diffuse = new BABYLON.Color3(0.8, 0.75, 0.65);
@@ -343,12 +419,15 @@ export class Village3DBabylon {
       sg.darkness = 0.4;
       this._shadowGen = sg;
     } catch (e) {
-      console.warn('[Village3D] Shadows not supported:', e);
+      console.warn("[Village3D] Shadows not supported:", e);
     }
 
     // Campfire point light (warm)
-    const fire = new BABYLON.PointLight('fireLight',
-      new BABYLON.Vector3(0, 1.2, 0), scene);
+    const fire = new BABYLON.PointLight(
+      "fireLight",
+      new BABYLON.Vector3(0, 1.2, 0),
+      scene,
+    );
     fire.diffuse = new BABYLON.Color3(1.0, 0.65, 0.25);
     fire.intensity = 1.0;
     fire.range = 18;
@@ -363,33 +442,44 @@ export class Village3DBabylon {
     const scene = this._scene;
 
     // Main ground disc
-    const ground = BABYLON.MeshBuilder.CreateDisc('ground', { radius: 40, tessellation: 64 }, scene);
+    const ground = BABYLON.MeshBuilder.CreateDisc(
+      "ground",
+      { radius: 40, tessellation: 64 },
+      scene,
+    );
     ground.rotation.x = Math.PI / 2;
     ground.receiveShadows = true;
 
-    const gMat = new BABYLON.StandardMaterial('groundMat', scene);
+    const gMat = new BABYLON.StandardMaterial("groundMat", scene);
     const gSize = 1024;
-    const gTex = new BABYLON.DynamicTexture('groundTex', gSize, scene, true);
+    const gTex = new BABYLON.DynamicTexture("groundTex", gSize, scene, true);
     const ctx = gTex.getContext();
     const half = gSize / 2;
 
     // Paint ground with smooth radial zones using gradients
     // 1) Base: dark earthy green everywhere
-    ctx.fillStyle = '#2a3520';
+    ctx.fillStyle = "#2a3520";
     ctx.fillRect(0, 0, gSize, gSize);
 
     // 2) Radial gradient: cobblestone center fading into grass
-    const centerGrad = ctx.createRadialGradient(half, half, 0, half, half, half * 0.45);
-    centerGrad.addColorStop(0, 'rgba(120, 110, 95, 0.9)');   // warm stone center
-    centerGrad.addColorStop(0.5, 'rgba(95, 85, 70, 0.7)');   // packed earth
-    centerGrad.addColorStop(0.8, 'rgba(60, 55, 40, 0.4)');   // transition
-    centerGrad.addColorStop(1, 'rgba(42, 53, 32, 0)');        // grass (transparent)
+    const centerGrad = ctx.createRadialGradient(
+      half,
+      half,
+      0,
+      half,
+      half,
+      half * 0.45,
+    );
+    centerGrad.addColorStop(0, "rgba(120, 110, 95, 0.9)"); // warm stone center
+    centerGrad.addColorStop(0.5, "rgba(95, 85, 70, 0.7)"); // packed earth
+    centerGrad.addColorStop(0.8, "rgba(60, 55, 40, 0.4)"); // transition
+    centerGrad.addColorStop(1, "rgba(42, 53, 32, 0)"); // grass (transparent)
     ctx.fillStyle = centerGrad;
     ctx.fillRect(0, 0, gSize, gSize);
 
     // 3) Dirt path ring where houses sit
     ctx.lineWidth = 28;
-    ctx.strokeStyle = 'rgba(85, 75, 60, 0.5)';
+    ctx.strokeStyle = "rgba(85, 75, 60, 0.5)";
     ctx.beginPath();
     ctx.arc(half, half, half * 0.48, 0, Math.PI * 2);
     ctx.stroke();
@@ -398,7 +488,8 @@ export class Village3DBabylon {
     for (let i = 0; i < 3000; i++) {
       const x = Math.random() * gSize;
       const y = Math.random() * gSize;
-      const dx = x - half, dy = y - half;
+      const dx = x - half,
+        dy = y - half;
       const dist = Math.sqrt(dx * dx + dy * dy) / half;
       if (dist > 0.35) {
         // Grass tufts in outer area only - small circles, not rectangles
@@ -431,10 +522,14 @@ export class Village3DBabylon {
     this._ground = ground;
 
     // Village square (flat disc, slightly raised)
-    const square = BABYLON.MeshBuilder.CreateDisc('square', { radius: 5, tessellation: 32 }, scene);
+    const square = BABYLON.MeshBuilder.CreateDisc(
+      "square",
+      { radius: 5, tessellation: 32 },
+      scene,
+    );
     square.rotation.x = Math.PI / 2;
     square.position.y = 0.01;
-    const sqMat = new BABYLON.StandardMaterial('squareMat', scene);
+    const sqMat = new BABYLON.StandardMaterial("squareMat", scene);
     sqMat.diffuseColor = new BABYLON.Color3(0.35, 0.32, 0.28);
     sqMat.specularColor = BABYLON.Color3.Black();
     square.material = sqMat;
@@ -447,8 +542,12 @@ export class Village3DBabylon {
 
   _createSkybox() {
     const scene = this._scene;
-    const skybox = BABYLON.MeshBuilder.CreateBox('skybox', { size: 200 }, scene);
-    const skyMat = new BABYLON.StandardMaterial('skyMat', scene);
+    const skybox = BABYLON.MeshBuilder.CreateBox(
+      "skybox",
+      { size: 200 },
+      scene,
+    );
+    const skyMat = new BABYLON.StandardMaterial("skyMat", scene);
     skyMat.backFaceCulling = false;
     skyMat.disableLighting = true;
     skyMat.diffuseColor = BABYLON.Color3.Black();
@@ -469,24 +568,24 @@ export class Village3DBabylon {
     const scene = this._scene;
 
     // Moon billboard
-    const moon = BABYLON.MeshBuilder.CreatePlane('moon', { size: 5 }, scene);
+    const moon = BABYLON.MeshBuilder.CreatePlane("moon", { size: 5 }, scene);
     moon.position = new BABYLON.Vector3(-20, 30, -25);
     moon.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
-    const moonMat = new BABYLON.StandardMaterial('moonMat', scene);
+    const moonMat = new BABYLON.StandardMaterial("moonMat", scene);
     moonMat.disableLighting = true;
     moonMat.emissiveColor = new BABYLON.Color3(0.85, 0.88, 0.95);
     moonMat.alpha = 0.9;
     moonMat.backFaceCulling = false;
 
     // Procedural moon texture
-    const moonTex = new BABYLON.DynamicTexture('moonTex', 128, scene, false);
+    const moonTex = new BABYLON.DynamicTexture("moonTex", 128, scene, false);
     const mctx = moonTex.getContext();
     mctx.clearRect(0, 0, 128, 128);
     const grad = mctx.createRadialGradient(64, 64, 0, 64, 64, 60);
-    grad.addColorStop(0, 'rgba(220,225,235,1)');
-    grad.addColorStop(0.6, 'rgba(180,185,200,0.9)');
-    grad.addColorStop(0.85, 'rgba(120,125,145,0.4)');
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    grad.addColorStop(0, "rgba(220,225,235,1)");
+    grad.addColorStop(0.6, "rgba(180,185,200,0.9)");
+    grad.addColorStop(0.85, "rgba(120,125,145,0.4)");
+    grad.addColorStop(1, "rgba(0,0,0,0)");
     mctx.fillStyle = grad;
     mctx.fillRect(0, 0, 128, 128);
     // Craters
@@ -496,7 +595,7 @@ export class Village3DBabylon {
       const cr = 3 + Math.random() * 8;
       mctx.beginPath();
       mctx.arc(cx, cy, cr, 0, Math.PI * 2);
-      mctx.fillStyle = 'rgba(150,155,170,0.3)';
+      mctx.fillStyle = "rgba(150,155,170,0.3)";
       mctx.fill();
     }
     moonTex.update();
@@ -506,23 +605,23 @@ export class Village3DBabylon {
     this._moonBillboard = moon;
 
     // Sun billboard (pale, overcast)
-    const sun = BABYLON.MeshBuilder.CreatePlane('sun', { size: 6 }, scene);
+    const sun = BABYLON.MeshBuilder.CreatePlane("sun", { size: 6 }, scene);
     sun.position = new BABYLON.Vector3(20, 25, 20);
     sun.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
-    const sunMat = new BABYLON.StandardMaterial('sunMat', scene);
+    const sunMat = new BABYLON.StandardMaterial("sunMat", scene);
     sunMat.disableLighting = true;
     sunMat.emissiveColor = new BABYLON.Color3(0.9, 0.85, 0.7);
     sunMat.alpha = 0;
     sunMat.backFaceCulling = false;
 
-    const sunTex = new BABYLON.DynamicTexture('sunTex', 128, scene, false);
+    const sunTex = new BABYLON.DynamicTexture("sunTex", 128, scene, false);
     const sctx = sunTex.getContext();
     sctx.clearRect(0, 0, 128, 128);
     const sgrad = sctx.createRadialGradient(64, 64, 0, 64, 64, 60);
-    sgrad.addColorStop(0, 'rgba(255,245,220,1)');
-    sgrad.addColorStop(0.3, 'rgba(255,235,190,0.7)');
-    sgrad.addColorStop(0.7, 'rgba(200,190,160,0.2)');
-    sgrad.addColorStop(1, 'rgba(0,0,0,0)');
+    sgrad.addColorStop(0, "rgba(255,245,220,1)");
+    sgrad.addColorStop(0.3, "rgba(255,235,190,0.7)");
+    sgrad.addColorStop(0.7, "rgba(200,190,160,0.2)");
+    sgrad.addColorStop(1, "rgba(0,0,0,0)");
     sctx.fillStyle = sgrad;
     sctx.fillRect(0, 0, 128, 128);
     sunTex.update();
@@ -543,11 +642,23 @@ export class Village3DBabylon {
     // Stone ring
     for (let i = 0; i < 10; i++) {
       const ang = (i / 10) * Math.PI * 2;
-      const stone = BABYLON.MeshBuilder.CreateBox('fStone' + i, { width: 0.4, height: 0.3, depth: 0.35 }, scene);
-      stone.position = new BABYLON.Vector3(Math.cos(ang) * 0.8, 0.15, Math.sin(ang) * 0.8);
+      const stone = BABYLON.MeshBuilder.CreateBox(
+        "fStone" + i,
+        { width: 0.4, height: 0.3, depth: 0.35 },
+        scene,
+      );
+      stone.position = new BABYLON.Vector3(
+        Math.cos(ang) * 0.8,
+        0.15,
+        Math.sin(ang) * 0.8,
+      );
       stone.rotation.y = ang + Math.random() * 0.5;
-      const sMat = new BABYLON.StandardMaterial('fStoneMat' + i, scene);
-      sMat.diffuseColor = new BABYLON.Color3(0.25 + Math.random() * 0.1, 0.22 + Math.random() * 0.08, 0.18);
+      const sMat = new BABYLON.StandardMaterial("fStoneMat" + i, scene);
+      sMat.diffuseColor = new BABYLON.Color3(
+        0.25 + Math.random() * 0.1,
+        0.22 + Math.random() * 0.08,
+        0.18,
+      );
       sMat.specularColor = BABYLON.Color3.Black();
       stone.material = sMat;
       if (this._shadowGen) this._shadowGen.addShadowCaster(stone);
@@ -556,11 +667,19 @@ export class Village3DBabylon {
     // Logs
     for (let i = 0; i < 4; i++) {
       const ang = (i / 4) * Math.PI * 2 + 0.3;
-      const log = BABYLON.MeshBuilder.CreateCylinder('fLog' + i, { diameter: 0.18, height: 1.0 }, scene);
-      log.position = new BABYLON.Vector3(Math.cos(ang) * 0.3, 0.2, Math.sin(ang) * 0.3);
+      const log = BABYLON.MeshBuilder.CreateCylinder(
+        "fLog" + i,
+        { diameter: 0.18, height: 1.0 },
+        scene,
+      );
+      log.position = new BABYLON.Vector3(
+        Math.cos(ang) * 0.3,
+        0.2,
+        Math.sin(ang) * 0.3,
+      );
       log.rotation.z = Math.PI / 2 - 0.2;
       log.rotation.y = ang;
-      const lMat = new BABYLON.StandardMaterial('fLogMat' + i, scene);
+      const lMat = new BABYLON.StandardMaterial("fLogMat" + i, scene);
       lMat.diffuseColor = new BABYLON.Color3(0.3, 0.18, 0.08);
       lMat.specularColor = BABYLON.Color3.Black();
       log.material = lMat;
@@ -568,7 +687,7 @@ export class Village3DBabylon {
 
     // Fire particle system
     const fireEmitter = new BABYLON.Vector3(0, 0.4, 0);
-    const flame = new BABYLON.ParticleSystem('flame', 120, scene);
+    const flame = new BABYLON.ParticleSystem("flame", 120, scene);
     flame.emitter = fireEmitter;
     flame.minEmitBox = new BABYLON.Vector3(-0.2, 0, -0.2);
     flame.maxEmitBox = new BABYLON.Vector3(0.2, 0, 0.2);
@@ -591,7 +710,7 @@ export class Village3DBabylon {
     this._campfireFlame = flame;
 
     // Smoke
-    const smoke = new BABYLON.ParticleSystem('smoke', 40, scene);
+    const smoke = new BABYLON.ParticleSystem("smoke", 40, scene);
     smoke.emitter = new BABYLON.Vector3(0, 1.0, 0);
     smoke.minEmitBox = new BABYLON.Vector3(-0.15, 0, -0.15);
     smoke.maxEmitBox = new BABYLON.Vector3(0.15, 0, 0.15);
@@ -614,7 +733,7 @@ export class Village3DBabylon {
     this._campfireSmoke = smoke;
 
     // Embers
-    const embers = new BABYLON.ParticleSystem('embers', 30, scene);
+    const embers = new BABYLON.ParticleSystem("embers", 30, scene);
     embers.emitter = fireEmitter;
     embers.minEmitBox = new BABYLON.Vector3(-0.3, 0, -0.3);
     embers.maxEmitBox = new BABYLON.Vector3(0.3, 0, 0.3);
@@ -645,29 +764,43 @@ export class Village3DBabylon {
     const scene = this._scene;
 
     // Well at center offset
-    this._loadGLB('/static/models/village/fountain-center.glb').then(result => {
-      if (result && result.meshes) {
-        const root = result.meshes[0];
-        root.position = new BABYLON.Vector3(2.5, 0, -1.5);
-        root.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
-      }
-    }).catch(() => {
-      // Fallback: procedural well
-      const well = BABYLON.MeshBuilder.CreateCylinder('well', { diameter: 1.2, height: 0.8, tessellation: 12 }, scene);
-      well.position = new BABYLON.Vector3(2.5, 0.4, -1.5);
-      const wMat = new BABYLON.StandardMaterial('wellMat', scene);
-      wMat.diffuseColor = new BABYLON.Color3(0.35, 0.3, 0.25);
-      wMat.specularColor = BABYLON.Color3.Black();
-      well.material = wMat;
-    });
+    this._loadGLB("/static/models/village/fountain-center.glb")
+      .then((result) => {
+        if (result && result.meshes) {
+          const root = result.meshes[0];
+          root.position = new BABYLON.Vector3(2.5, 0, -1.5);
+          root.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
+        }
+      })
+      .catch(() => {
+        // Fallback: procedural well
+        const well = BABYLON.MeshBuilder.CreateCylinder(
+          "well",
+          { diameter: 1.2, height: 0.8, tessellation: 12 },
+          scene,
+        );
+        well.position = new BABYLON.Vector3(2.5, 0.4, -1.5);
+        const wMat = new BABYLON.StandardMaterial("wellMat", scene);
+        wMat.diffuseColor = new BABYLON.Color3(0.35, 0.3, 0.25);
+        wMat.specularColor = BABYLON.Color3.Black();
+        well.material = wMat;
+      });
 
     // Benches
     for (let i = 0; i < 3; i++) {
       const ang = (i / 3) * Math.PI * 2 + 0.5;
-      const bench = BABYLON.MeshBuilder.CreateBox('bench' + i, { width: 1.2, height: 0.35, depth: 0.4 }, scene);
-      bench.position = new BABYLON.Vector3(Math.cos(ang) * 3.5, 0.17, Math.sin(ang) * 3.5);
+      const bench = BABYLON.MeshBuilder.CreateBox(
+        "bench" + i,
+        { width: 1.2, height: 0.35, depth: 0.4 },
+        scene,
+      );
+      bench.position = new BABYLON.Vector3(
+        Math.cos(ang) * 3.5,
+        0.17,
+        Math.sin(ang) * 3.5,
+      );
       bench.rotation.y = ang + Math.PI / 2;
-      const bMat = new BABYLON.StandardMaterial('benchMat' + i, scene);
+      const bMat = new BABYLON.StandardMaterial("benchMat" + i, scene);
       bMat.diffuseColor = new BABYLON.Color3(0.35, 0.22, 0.1);
       bMat.specularColor = BABYLON.Color3.Black();
       bench.material = bMat;
@@ -680,7 +813,8 @@ export class Village3DBabylon {
 
   _createGraveyardArea() {
     const scene = this._scene;
-    const gx = -18, gz = 15;
+    const gx = -18,
+      gz = 15;
 
     // Iron fence around graveyard
     const fencePositions = [
@@ -697,50 +831,69 @@ export class Village3DBabylon {
       { x: gx + 3, z: gz + 5, ry: Math.PI / 2 },
     ];
     for (const fp of fencePositions) {
-      this._loadGLB('/static/models/graveyard/iron-fence.glb').then(r => {
-        if (!r) return;
-        const root = r.meshes[0];
-        root.position = new BABYLON.Vector3(fp.x, 0, fp.z);
-        root.rotation.y = fp.ry;
-      }).catch(() => {});
+      this._loadGLB("/static/models/graveyard/iron-fence.glb")
+        .then((r) => {
+          if (!r) return;
+          const root = r.meshes[0];
+          root.position = new BABYLON.Vector3(fp.x, 0, fp.z);
+          root.rotation.y = fp.ry;
+        })
+        .catch(() => {});
     }
 
     // Gravestones
-    const stoneModels = ['gravestone-cross.glb', 'gravestone-round.glb', 'gravestone-wide.glb',
-                          'gravestone-broken.glb', 'gravestone-decorative.glb'];
+    const stoneModels = [
+      "gravestone-cross.glb",
+      "gravestone-round.glb",
+      "gravestone-wide.glb",
+      "gravestone-broken.glb",
+      "gravestone-decorative.glb",
+    ];
     for (let i = 0; i < 8; i++) {
       const sx = gx - 3 + (i % 4) * 2 + (Math.random() - 0.5) * 0.5;
       const sz = gz - 2 + Math.floor(i / 4) * 3 + (Math.random() - 0.5) * 0.5;
       const model = stoneModels[i % stoneModels.length];
-      this._loadGLB(`/static/models/graveyard/${model}`).then(r => {
-        if (!r) return;
-        r.meshes[0].position = new BABYLON.Vector3(sx, 0, sz);
-        r.meshes[0].rotation.y = Math.random() * 0.3 - 0.15;
-      }).catch(() => {
-        // Fallback procedural gravestone
-        const gs = BABYLON.MeshBuilder.CreateBox('grave' + i, { width: 0.4, height: 0.8, depth: 0.15 }, scene);
-        gs.position = new BABYLON.Vector3(sx, 0.4, sz);
-        gs.rotation.y = Math.random() * 0.3;
-        const gm = new BABYLON.StandardMaterial('graveMat' + i, scene);
-        gm.diffuseColor = new BABYLON.Color3(0.35, 0.35, 0.38);
-        gm.specularColor = BABYLON.Color3.Black();
-        gs.material = gm;
-      });
+      this._loadGLB(`/static/models/graveyard/${model}`)
+        .then((r) => {
+          if (!r) return;
+          r.meshes[0].position = new BABYLON.Vector3(sx, 0, sz);
+          r.meshes[0].rotation.y = Math.random() * 0.3 - 0.15;
+        })
+        .catch(() => {
+          // Fallback procedural gravestone
+          const gs = BABYLON.MeshBuilder.CreateBox(
+            "grave" + i,
+            { width: 0.4, height: 0.8, depth: 0.15 },
+            scene,
+          );
+          gs.position = new BABYLON.Vector3(sx, 0.4, sz);
+          gs.rotation.y = Math.random() * 0.3;
+          const gm = new BABYLON.StandardMaterial("graveMat" + i, scene);
+          gm.diffuseColor = new BABYLON.Color3(0.35, 0.35, 0.38);
+          gm.specularColor = BABYLON.Color3.Black();
+          gs.material = gm;
+        });
     }
 
     // Crypt
-    this._loadGLB('/static/models/graveyard/crypt.glb').then(r => {
-      if (!r) return;
-      r.meshes[0].position = new BABYLON.Vector3(gx + 1, 0, gz + 3);
-      r.meshes[0].scaling = new BABYLON.Vector3(1.3, 1.3, 1.3);
-    }).catch(() => {
-      const crypt = BABYLON.MeshBuilder.CreateBox('crypt', { width: 3, height: 2.5, depth: 2 }, scene);
-      crypt.position = new BABYLON.Vector3(gx + 1, 1.25, gz + 3);
-      const cm = new BABYLON.StandardMaterial('cryptMat', scene);
-      cm.diffuseColor = new BABYLON.Color3(0.3, 0.28, 0.3);
-      cm.specularColor = BABYLON.Color3.Black();
-      crypt.material = cm;
-    });
+    this._loadGLB("/static/models/graveyard/crypt.glb")
+      .then((r) => {
+        if (!r) return;
+        r.meshes[0].position = new BABYLON.Vector3(gx + 1, 0, gz + 3);
+        r.meshes[0].scaling = new BABYLON.Vector3(1.3, 1.3, 1.3);
+      })
+      .catch(() => {
+        const crypt = BABYLON.MeshBuilder.CreateBox(
+          "crypt",
+          { width: 3, height: 2.5, depth: 2 },
+          scene,
+        );
+        crypt.position = new BABYLON.Vector3(gx + 1, 1.25, gz + 3);
+        const cm = new BABYLON.StandardMaterial("cryptMat", scene);
+        cm.diffuseColor = new BABYLON.Color3(0.3, 0.28, 0.3);
+        cm.specularColor = BABYLON.Color3.Black();
+        crypt.material = cm;
+      });
   }
 
   // =========================================================================
@@ -749,8 +902,12 @@ export class Village3DBabylon {
 
   _createForestRing() {
     const scene = this._scene;
-    const treeModels = ['tree.glb', 'tree-crooked.glb', 'tree-high-crooked.glb'];
-    const pineModels = ['pine.glb', 'pine-crooked.glb', 'pine-fall.glb'];
+    const treeModels = [
+      "tree.glb",
+      "tree-crooked.glb",
+      "tree-high-crooked.glb",
+    ];
+    const pineModels = ["pine.glb", "pine-crooked.glb", "pine-fall.glb"];
 
     // Dense ring of trees
     for (let i = 0; i < 50; i++) {
@@ -765,35 +922,39 @@ export class Village3DBabylon {
         ? `/static/models/graveyard/${models[Math.floor(Math.random() * models.length)]}`
         : `/static/models/village/${models[Math.floor(Math.random() * models.length)]}`;
 
-      this._loadGLB(modelPath).then(r => {
-        if (!r) return;
-        const root = r.meshes[0];
-        root.position = new BABYLON.Vector3(tx, 0, tz);
-        const s = 0.8 + Math.random() * 0.6;
-        root.scaling = new BABYLON.Vector3(s, s, s);
-        root.rotation.y = Math.random() * Math.PI * 2;
-        if (this._shadowGen) this._shadowGen.addShadowCaster(root);
-      }).catch(() => {
-        // Fallback procedural tree
-        this._createProceduralTree(tx, tz, 1.0 + Math.random() * 1.5);
-      });
+      this._loadGLB(modelPath)
+        .then((r) => {
+          if (!r) return;
+          const root = r.meshes[0];
+          root.position = new BABYLON.Vector3(tx, 0, tz);
+          const s = 0.8 + Math.random() * 0.6;
+          root.scaling = new BABYLON.Vector3(s, s, s);
+          root.rotation.y = Math.random() * Math.PI * 2;
+          if (this._shadowGen) this._shadowGen.addShadowCaster(root);
+        })
+        .catch(() => {
+          // Fallback procedural tree
+          this._createProceduralTree(tx, tz, 1.0 + Math.random() * 1.5);
+        });
     }
 
     // Scattered rocks
-    const rockModels = ['rock-large.glb', 'rock-small.glb', 'rock-wide.glb'];
+    const rockModels = ["rock-large.glb", "rock-small.glb", "rock-wide.glb"];
     for (let i = 0; i < 15; i++) {
       const ang = Math.random() * Math.PI * 2;
       const rad = 16 + Math.random() * 18;
       const rx = Math.cos(ang) * rad;
       const rz = Math.sin(ang) * rad;
       const model = rockModels[i % rockModels.length];
-      this._loadGLB(`/static/models/village/${model}`).then(r => {
-        if (!r) return;
-        r.meshes[0].position = new BABYLON.Vector3(rx, 0, rz);
-        r.meshes[0].rotation.y = Math.random() * Math.PI * 2;
-        const s = 0.6 + Math.random() * 0.8;
-        r.meshes[0].scaling = new BABYLON.Vector3(s, s, s);
-      }).catch(() => {});
+      this._loadGLB(`/static/models/village/${model}`)
+        .then((r) => {
+          if (!r) return;
+          r.meshes[0].position = new BABYLON.Vector3(rx, 0, rz);
+          r.meshes[0].rotation.y = Math.random() * Math.PI * 2;
+          const s = 0.6 + Math.random() * 0.8;
+          r.meshes[0].scaling = new BABYLON.Vector3(s, s, s);
+        })
+        .catch(() => {});
     }
 
     // Fences along paths
@@ -801,34 +962,51 @@ export class Village3DBabylon {
       const ang = (i / 6) * Math.PI * 2 + 0.2;
       const fx = Math.cos(ang) * 16;
       const fz = Math.sin(ang) * 16;
-      this._loadGLB('/static/models/village/fence-broken.glb').then(r => {
-        if (!r) return;
-        r.meshes[0].position = new BABYLON.Vector3(fx, 0, fz);
-        r.meshes[0].rotation.y = ang + Math.PI / 2;
-      }).catch(() => {});
+      this._loadGLB("/static/models/village/fence-broken.glb")
+        .then((r) => {
+          if (!r) return;
+          r.meshes[0].position = new BABYLON.Vector3(fx, 0, fz);
+          r.meshes[0].rotation.y = ang + Math.PI / 2;
+        })
+        .catch(() => {});
     }
   }
 
   _createProceduralTree(x, z, scale) {
     const scene = this._scene;
     // Trunk
-    const trunk = BABYLON.MeshBuilder.CreateCylinder('trunk', {
-      diameterTop: 0.15 * scale, diameterBottom: 0.3 * scale,
-      height: 2.5 * scale, tessellation: 6
-    }, scene);
+    const trunk = BABYLON.MeshBuilder.CreateCylinder(
+      "trunk",
+      {
+        diameterTop: 0.15 * scale,
+        diameterBottom: 0.3 * scale,
+        height: 2.5 * scale,
+        tessellation: 6,
+      },
+      scene,
+    );
     trunk.position = new BABYLON.Vector3(x, 1.25 * scale, z);
-    const tMat = new BABYLON.StandardMaterial('trunkMat', scene);
+    const tMat = new BABYLON.StandardMaterial("trunkMat", scene);
     tMat.diffuseColor = new BABYLON.Color3(0.25, 0.15, 0.08);
     tMat.specularColor = BABYLON.Color3.Black();
     trunk.material = tMat;
 
     // Foliage
-    const foliage = BABYLON.MeshBuilder.CreateSphere('foliage', {
-      diameter: 2.0 * scale, segments: 6
-    }, scene);
+    const foliage = BABYLON.MeshBuilder.CreateSphere(
+      "foliage",
+      {
+        diameter: 2.0 * scale,
+        segments: 6,
+      },
+      scene,
+    );
     foliage.position = new BABYLON.Vector3(x, 3.0 * scale, z);
-    const fMat = new BABYLON.StandardMaterial('foliageMat', scene);
-    fMat.diffuseColor = new BABYLON.Color3(0.08 + Math.random() * 0.06, 0.2 + Math.random() * 0.1, 0.05);
+    const fMat = new BABYLON.StandardMaterial("foliageMat", scene);
+    fMat.diffuseColor = new BABYLON.Color3(
+      0.08 + Math.random() * 0.06,
+      0.2 + Math.random() * 0.1,
+      0.05,
+    );
     fMat.specularColor = BABYLON.Color3.Black();
     foliage.material = fMat;
 
@@ -849,28 +1027,42 @@ export class Village3DBabylon {
       const lx = Math.cos(ang) * 8;
       const lz = Math.sin(ang) * 8;
 
-      this._loadGLB('/static/models/graveyard/lightpost-single.glb').then(r => {
-        if (!r) return;
-        r.meshes[0].position = new BABYLON.Vector3(lx, 0, lz);
-      }).catch(() => {
-        // Fallback: simple pole + sphere
-        const pole = BABYLON.MeshBuilder.CreateCylinder('lpole' + i, { diameter: 0.1, height: 2.5 }, scene);
-        pole.position = new BABYLON.Vector3(lx, 1.25, lz);
-        const pMat = new BABYLON.StandardMaterial('lpoleMat' + i, scene);
-        pMat.diffuseColor = new BABYLON.Color3(0.15, 0.12, 0.1);
-        pMat.specularColor = BABYLON.Color3.Black();
-        pole.material = pMat;
+      this._loadGLB("/static/models/graveyard/lightpost-single.glb")
+        .then((r) => {
+          if (!r) return;
+          r.meshes[0].position = new BABYLON.Vector3(lx, 0, lz);
+        })
+        .catch(() => {
+          // Fallback: simple pole + sphere
+          const pole = BABYLON.MeshBuilder.CreateCylinder(
+            "lpole" + i,
+            { diameter: 0.1, height: 2.5 },
+            scene,
+          );
+          pole.position = new BABYLON.Vector3(lx, 1.25, lz);
+          const pMat = new BABYLON.StandardMaterial("lpoleMat" + i, scene);
+          pMat.diffuseColor = new BABYLON.Color3(0.15, 0.12, 0.1);
+          pMat.specularColor = BABYLON.Color3.Black();
+          pole.material = pMat;
 
-        const lamp = BABYLON.MeshBuilder.CreateSphere('llamp' + i, { diameter: 0.25 }, scene);
-        lamp.position = new BABYLON.Vector3(lx, 2.6, lz);
-        const lMat = new BABYLON.StandardMaterial('llampMat' + i, scene);
-        lMat.emissiveColor = new BABYLON.Color3(1.0, 0.75, 0.3);
-        lMat.disableLighting = true;
-        lamp.material = lMat;
-      });
+          const lamp = BABYLON.MeshBuilder.CreateSphere(
+            "llamp" + i,
+            { diameter: 0.25 },
+            scene,
+          );
+          lamp.position = new BABYLON.Vector3(lx, 2.6, lz);
+          const lMat = new BABYLON.StandardMaterial("llampMat" + i, scene);
+          lMat.emissiveColor = new BABYLON.Color3(1.0, 0.75, 0.3);
+          lMat.disableLighting = true;
+          lamp.material = lMat;
+        });
 
       // Warm point light for each lantern
-      const ll = new BABYLON.PointLight('lantern' + i, new BABYLON.Vector3(lx, 2.8, lz), scene);
+      const ll = new BABYLON.PointLight(
+        "lantern" + i,
+        new BABYLON.Vector3(lx, 2.8, lz),
+        scene,
+      );
       ll.diffuse = new BABYLON.Color3(1.0, 0.75, 0.35);
       ll.intensity = 0.8;
       ll.range = 6;
@@ -884,7 +1076,7 @@ export class Village3DBabylon {
 
   _createFireflies() {
     const scene = this._scene;
-    const ff = new BABYLON.ParticleSystem('fireflies', 60, scene);
+    const ff = new BABYLON.ParticleSystem("fireflies", 60, scene);
     ff.emitter = new BABYLON.Vector3(0, 1.5, 0);
     ff.minEmitBox = new BABYLON.Vector3(-20, 0.5, -20);
     ff.maxEmitBox = new BABYLON.Vector3(20, 3, 20);
@@ -913,7 +1105,7 @@ export class Village3DBabylon {
 
   _createStars() {
     const scene = this._scene;
-    const stars = new BABYLON.ParticleSystem('stars', 200, scene);
+    const stars = new BABYLON.ParticleSystem("stars", 200, scene);
     stars.emitter = new BABYLON.Vector3(0, 80, 0);
     stars.minEmitBox = new BABYLON.Vector3(-80, -5, -80);
     stars.maxEmitBox = new BABYLON.Vector3(80, 5, 80);
@@ -943,38 +1135,48 @@ export class Village3DBabylon {
   _loadGLB(path) {
     if (this._glbCache.has(path)) {
       // Instantiate from cached container
-      return this._glbCache.get(path).then(container => {
+      return this._glbCache.get(path).then((container) => {
         if (!container) return null;
-        const instances = container.instantiateModelsToScene(name => name + '_i' + Date.now());
+        const instances = container.instantiateModelsToScene(
+          (name) => name + "_i" + Date.now(),
+        );
         if (!instances || instances.rootNodes.length === 0) return null;
         const root = instances.rootNodes[0];
         // Collect all descendant meshes for callers that iterate r.meshes
         const allMeshes = [root];
-        root.getChildMeshes(false).forEach(m => allMeshes.push(m));
+        root.getChildMeshes(false).forEach((m) => allMeshes.push(m));
         return { meshes: allMeshes };
       });
     }
 
-    const dir = path.substring(0, path.lastIndexOf('/') + 1);
-    const file = path.substring(path.lastIndexOf('/') + 1);
+    const dir = path.substring(0, path.lastIndexOf("/") + 1);
+    const file = path.substring(path.lastIndexOf("/") + 1);
 
-    const promise = BABYLON.SceneLoader.LoadAssetContainerAsync(dir, file, this._scene).then(container => {
-      return container;
-    }).catch(err => {
-      console.warn(`[Village3D] Failed to load ${path}:`, err.message || err);
-      return null;
-    });
+    const promise = BABYLON.SceneLoader.LoadAssetContainerAsync(
+      dir,
+      file,
+      this._scene,
+    )
+      .then((container) => {
+        return container;
+      })
+      .catch((err) => {
+        console.warn(`[Village3D] Failed to load ${path}:`, err.message || err);
+        return null;
+      });
 
     this._glbCache.set(path, promise);
 
     // For first load, also instantiate
-    return promise.then(container => {
+    return promise.then((container) => {
       if (!container) return null;
-      const instances = container.instantiateModelsToScene(name => name + '_i0');
+      const instances = container.instantiateModelsToScene(
+        (name) => name + "_i0",
+      );
       if (!instances || instances.rootNodes.length === 0) return null;
       const root = instances.rootNodes[0];
       const allMeshes = [root];
-      root.getChildMeshes(false).forEach(m => allMeshes.push(m));
+      root.getChildMeshes(false).forEach((m) => allMeshes.push(m));
       return { meshes: allMeshes };
     });
   }
@@ -985,7 +1187,7 @@ export class Village3DBabylon {
 
   async _loadRoleColors() {
     try {
-      const resp = await fetch('/api/roles');
+      const resp = await fetch("/api/roles");
       if (resp.ok) {
         const data = await resp.json();
         if (data.roles) {
@@ -1002,9 +1204,19 @@ export class Village3DBabylon {
   }
 
   _getRoleColor(rolle) {
-    if (!rolle) return '#6b7280';
-    const key = rolle.toLowerCase().replace(/\s+/g, '_').replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss');
-    return this._roleColors[key] || this._roleColors[rolle.toLowerCase()] || '#6b7280';
+    if (!rolle) return "#6b7280";
+    const key = rolle
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/ä/g, "ae")
+      .replace(/ö/g, "oe")
+      .replace(/ü/g, "ue")
+      .replace(/ß/g, "ss");
+    return (
+      this._roleColors[key] ||
+      this._roleColors[rolle.toLowerCase()] ||
+      "#6b7280"
+    );
   }
 
   // =========================================================================
@@ -1038,7 +1250,7 @@ export class Village3DBabylon {
       const z = Math.sin(angle) * radius;
 
       // Root transform node
-      const root = new BABYLON.TransformNode('player_' + p.id, this._scene);
+      const root = new BABYLON.TransformNode("player_" + p.id, this._scene);
       root.position = new BABYLON.Vector3(x, 0, z);
       root.metadata = { playerId: p.id };
 
@@ -1049,12 +1261,21 @@ export class Village3DBabylon {
       this._buildPlayerCharacter(p, root, angle, idx);
 
       // Pedestal / selection ring
-      const pedestal = BABYLON.MeshBuilder.CreateTorus('pedestal_' + p.id, {
-        diameter: 1.6, thickness: 0.1, tessellation: 32
-      }, this._scene);
+      const pedestal = BABYLON.MeshBuilder.CreateTorus(
+        "pedestal_" + p.id,
+        {
+          diameter: 1.6,
+          thickness: 0.1,
+          tessellation: 32,
+        },
+        this._scene,
+      );
       pedestal.position = new BABYLON.Vector3(0, 0.05, 1.5);
       pedestal.parent = root;
-      const pedMat = new BABYLON.StandardMaterial('pedMat_' + p.id, this._scene);
+      const pedMat = new BABYLON.StandardMaterial(
+        "pedMat_" + p.id,
+        this._scene,
+      );
       const roleColor = hexToColor3(this._getRoleColor(p.rolle));
       pedMat.emissiveColor = roleColor;
       pedMat.diffuseColor = roleColor;
@@ -1089,55 +1310,68 @@ export class Village3DBabylon {
       // Camera needs to see the ring at `radius` + houses behind (~3 units)
       // With an ArcRotateCamera, radius ~= viewing distance from target
       this._arcCamera.radius = radius + 12;
-      this._arcCamera.beta = Math.PI / 3.5;  // ~51 degrees from vertical
+      this._arcCamera.beta = Math.PI / 3.5; // ~51 degrees from vertical
       this._arcCamera.target = new BABYLON.Vector3(0, 1, 0); // slightly above ground
     }
   }
 
   _buildPlayerHouse(player, rootNode, angle, idx) {
     const bp = HOUSE_BLUEPRINTS[idx % HOUSE_BLUEPRINTS.length];
-    const houseRoot = new BABYLON.TransformNode('house_' + player.id, this._scene);
+    const houseRoot = new BABYLON.TransformNode(
+      "house_" + player.id,
+      this._scene,
+    );
     houseRoot.parent = rootNode;
     houseRoot.position = new BABYLON.Vector3(0, 0, -1.5);
     // Rotate house to face center
     houseRoot.rotation.y = angle + Math.PI;
 
     const wallPositions = [
-      { x: 0, z: -0.5, ry: 0 },    // back
-      { x: 0.5, z: 0, ry: Math.PI / 2 },  // right
-      { x: 0, z: 0.5, ry: Math.PI },  // front (door)
+      { x: 0, z: -0.5, ry: 0 }, // back
+      { x: 0.5, z: 0, ry: Math.PI / 2 }, // right
+      { x: 0, z: 0.5, ry: Math.PI }, // front (door)
       { x: -0.5, z: 0, ry: -Math.PI / 2 }, // left
     ];
 
     bp.walls.forEach((wallFile, wi) => {
-      this._loadGLB(`/static/models/village/${wallFile}`).then(r => {
-        if (!r || this._destroyed) return;
-        const m = r.meshes[0];
-        m.parent = houseRoot;
-        m.position = new BABYLON.Vector3(wallPositions[wi].x, 0, wallPositions[wi].z);
-        m.rotation.y = wallPositions[wi].ry;
-        if (this._shadowGen) this._shadowGen.addShadowCaster(m);
-      }).catch(() => {});
+      this._loadGLB(`/static/models/village/${wallFile}`)
+        .then((r) => {
+          if (!r || this._destroyed) return;
+          const m = r.meshes[0];
+          m.parent = houseRoot;
+          m.position = new BABYLON.Vector3(
+            wallPositions[wi].x,
+            0,
+            wallPositions[wi].z,
+          );
+          m.rotation.y = wallPositions[wi].ry;
+          if (this._shadowGen) this._shadowGen.addShadowCaster(m);
+        })
+        .catch(() => {});
     });
 
     // Roof
-    this._loadGLB(`/static/models/village/${bp.roof}`).then(r => {
-      if (!r || this._destroyed) return;
-      const m = r.meshes[0];
-      m.parent = houseRoot;
-      m.position.y = 1.0;
-      if (this._shadowGen) this._shadowGen.addShadowCaster(m);
-    }).catch(() => {});
-
-    // Chimney
-    if (bp.chimney) {
-      this._loadGLB('/static/models/village/chimney-base.glb').then(r => {
+    this._loadGLB(`/static/models/village/${bp.roof}`)
+      .then((r) => {
         if (!r || this._destroyed) return;
         const m = r.meshes[0];
         m.parent = houseRoot;
-        m.position = new BABYLON.Vector3(0.2, 1.3, -0.2);
-        m.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
-      }).catch(() => {});
+        m.position.y = 1.0;
+        if (this._shadowGen) this._shadowGen.addShadowCaster(m);
+      })
+      .catch(() => {});
+
+    // Chimney
+    if (bp.chimney) {
+      this._loadGLB("/static/models/village/chimney-base.glb")
+        .then((r) => {
+          if (!r || this._destroyed) return;
+          const m = r.meshes[0];
+          m.parent = houseRoot;
+          m.position = new BABYLON.Vector3(0.2, 1.3, -0.2);
+          m.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+        })
+        .catch(() => {});
     }
 
     const nodeInfo = this._playerNodes.get(player.id);
@@ -1151,79 +1385,92 @@ export class Village3DBabylon {
     // Position character in front of house (toward center)
     const charPos = new BABYLON.Vector3(0, 0, 1.5);
 
-    this._loadGLB(charPath).then(r => {
-      if (!r || this._destroyed) return;
-      const m = r.meshes[0];
-      m.parent = rootNode;
-      m.position = charPos.clone();
-      // Face center
-      m.rotation.y = angle + Math.PI;
-      m.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
+    this._loadGLB(charPath)
+      .then((r) => {
+        if (!r || this._destroyed) return;
+        const m = r.meshes[0];
+        m.parent = rootNode;
+        m.position = charPos.clone();
+        // Face center
+        m.rotation.y = angle + Math.PI;
+        m.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
 
-      // Tint based on role
-      if (player.rolle) {
-        const color = hexToColor3(this._getRoleColor(player.rolle));
-        r.meshes.forEach(mesh => {
-          if (mesh.material) {
-            const tinted = mesh.material.clone('tint_' + mesh.name);
-            tinted.diffuseColor = BABYLON.Color3.Lerp(
-              tinted.diffuseColor || BABYLON.Color3.White(), color, 0.35);
-            mesh.material = tinted;
-          }
-        });
-      }
-
-      if (this._shadowGen) this._shadowGen.addShadowCaster(m);
-
-      // Picking: make clickable
-      r.meshes.forEach(mesh => {
-        if (mesh.isPickable !== undefined) {
-          mesh.isPickable = true;
+        // Tint based on role
+        if (player.rolle) {
+          const color = hexToColor3(this._getRoleColor(player.rolle));
+          r.meshes.forEach((mesh) => {
+            if (mesh.material) {
+              const tinted = mesh.material.clone("tint_" + mesh.name);
+              tinted.diffuseColor = BABYLON.Color3.Lerp(
+                tinted.diffuseColor || BABYLON.Color3.White(),
+                color,
+                0.35,
+              );
+              mesh.material = tinted;
+            }
+          });
         }
-        mesh.metadata = { playerId: player.id };
+
+        if (this._shadowGen) this._shadowGen.addShadowCaster(m);
+
+        // Picking: make clickable
+        r.meshes.forEach((mesh) => {
+          if (mesh.isPickable !== undefined) {
+            mesh.isPickable = true;
+          }
+          mesh.metadata = { playerId: player.id };
+        });
+
+        // Store character ref
+        const nodeInfo = this._playerNodes.get(player.id);
+        if (nodeInfo) nodeInfo.character = m;
+      })
+      .catch(() => {
+        // Fallback: procedural character
+        const body = BABYLON.MeshBuilder.CreateCapsule(
+          "char_" + player.id,
+          {
+            radius: 0.35,
+            height: 1.6,
+          },
+          this._scene,
+        );
+        body.parent = rootNode;
+        body.position = new BABYLON.Vector3(charPos.x, 0.8, charPos.z);
+        body.rotation.y = angle + Math.PI;
+        const mat = new BABYLON.StandardMaterial(
+          "charMat_" + player.id,
+          this._scene,
+        );
+        mat.diffuseColor = hexToColor3(this._getRoleColor(player.rolle));
+        mat.specularColor = BABYLON.Color3.Black();
+        body.material = mat;
+        body.isPickable = true;
+        body.metadata = { playerId: player.id };
+        if (this._shadowGen) this._shadowGen.addShadowCaster(body);
+
+        const nodeInfo = this._playerNodes.get(player.id);
+        if (nodeInfo) nodeInfo.character = body;
       });
-
-      // Store character ref
-      const nodeInfo = this._playerNodes.get(player.id);
-      if (nodeInfo) nodeInfo.character = m;
-    }).catch(() => {
-      // Fallback: procedural character
-      const body = BABYLON.MeshBuilder.CreateCapsule('char_' + player.id, {
-        radius: 0.35, height: 1.6
-      }, this._scene);
-      body.parent = rootNode;
-      body.position = new BABYLON.Vector3(charPos.x, 0.8, charPos.z);
-      body.rotation.y = angle + Math.PI;
-      const mat = new BABYLON.StandardMaterial('charMat_' + player.id, this._scene);
-      mat.diffuseColor = hexToColor3(this._getRoleColor(player.rolle));
-      mat.specularColor = BABYLON.Color3.Black();
-      body.material = mat;
-      body.isPickable = true;
-      body.metadata = { playerId: player.id };
-      if (this._shadowGen) this._shadowGen.addShadowCaster(body);
-
-      const nodeInfo = this._playerNodes.get(player.id);
-      if (nodeInfo) nodeInfo.character = body;
-    });
   }
 
   _createPlayerLabel(player, rootNode) {
     if (!this._advancedTexture) return null;
 
-    const rect = new BABYLON.GUI.Rectangle('labelRect_' + player.id);
-    rect.width = '140px';
-    rect.height = '32px';
+    const rect = new BABYLON.GUI.Rectangle("labelRect_" + player.id);
+    rect.width = "140px";
+    rect.height = "32px";
     rect.cornerRadius = 8;
-    rect.color = 'rgba(255,255,255,0.6)';
+    rect.color = "rgba(255,255,255,0.6)";
     rect.thickness = 1;
-    rect.background = 'rgba(0,0,0,0.7)';
+    rect.background = "rgba(0,0,0,0.7)";
     this._advancedTexture.addControl(rect);
 
-    const text = new BABYLON.GUI.TextBlock('labelText_' + player.id);
+    const text = new BABYLON.GUI.TextBlock("labelText_" + player.id);
     text.text = player.name;
-    text.color = 'white';
+    text.color = "white";
     text.fontSize = 14;
-    text.fontWeight = 'bold';
+    text.fontWeight = "bold";
     rect.addControl(text);
 
     // Link to 3D position
@@ -1232,8 +1479,8 @@ export class Village3DBabylon {
 
     // Narrator gets gold label
     if (player.ist_erzaehler) {
-      rect.background = 'rgba(212,165,116,0.7)';
-      text.color = '#000';
+      rect.background = "rgba(212,165,116,0.7)";
+      text.color = "#000";
     }
 
     return rect;
@@ -1251,7 +1498,7 @@ export class Village3DBabylon {
     if (info.character) {
       const greyOut = (node) => {
         if (node.material) {
-          const gMat = node.material.clone('dead_' + node.name);
+          const gMat = node.material.clone("dead_" + node.name);
           gMat.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.35);
           gMat.alpha = 0.5;
           node.material = gMat;
@@ -1268,10 +1515,12 @@ export class Village3DBabylon {
       info.houseRoot.rotation.z = 0.05;
       const darken = (node) => {
         if (node.material) {
-          const dMat = node.material.clone('deadHouse_' + node.name);
+          const dMat = node.material.clone("deadHouse_" + node.name);
           dMat.diffuseColor = BABYLON.Color3.Lerp(
             dMat.diffuseColor || BABYLON.Color3.White(),
-            new BABYLON.Color3(0.1, 0.1, 0.12), 0.6);
+            new BABYLON.Color3(0.1, 0.1, 0.12),
+            0.6,
+          );
           node.material = dMat;
         }
         if (node.getChildren) {
@@ -1289,13 +1538,17 @@ export class Village3DBabylon {
 
     // Dim label
     if (info.label) {
-      info.label.background = 'rgba(50,50,50,0.7)';
+      info.label.background = "rgba(50,50,50,0.7)";
       info.label.alpha = 0.5;
     }
 
     // Ghost particle rising
     const rootPos = info.root.position;
-    const ghost = new BABYLON.ParticleSystem('ghost_' + playerId, 20, this._scene);
+    const ghost = new BABYLON.ParticleSystem(
+      "ghost_" + playerId,
+      20,
+      this._scene,
+    );
     ghost.emitter = new BABYLON.Vector3(rootPos.x, 1.5, rootPos.z + 1.5);
     ghost.minEmitBox = new BABYLON.Vector3(-0.2, 0, -0.2);
     ghost.maxEmitBox = new BABYLON.Vector3(0.2, 0, 0.2);
@@ -1317,7 +1570,9 @@ export class Village3DBabylon {
     ghost.start();
 
     // Auto-dispose
-    setTimeout(() => { ghost.dispose(); }, 5000);
+    setTimeout(() => {
+      ghost.dispose();
+    }, 5000);
   }
 
   // =========================================================================
@@ -1349,26 +1604,26 @@ export class Village3DBabylon {
     // Fog
     this._scene.fogDensity = lerpNumber(0.015, 0.035, t);
     this._scene.fogColor = lerpColor3(
-      new BABYLON.Color3(0.45, 0.45, 0.5),  // day fog (light grey-blue)
+      new BABYLON.Color3(0.45, 0.45, 0.5), // day fog (light grey-blue)
       new BABYLON.Color3(0.05, 0.05, 0.12), // night fog
-      t
+      t,
     );
 
     // Sky
     if (this._skyMat) {
       this._skyMat.emissiveColor = lerpColor3(
-        new BABYLON.Color3(0.30, 0.32, 0.38),
+        new BABYLON.Color3(0.3, 0.32, 0.38),
         new BABYLON.Color3(0.02, 0.02, 0.06),
-        t
+        t,
       );
     }
 
     // Clear color
     this._scene.clearColor = new BABYLON.Color4(
-      lerpNumber(0.30, 0.02, t),
-      lerpNumber(0.30, 0.02, t),
+      lerpNumber(0.3, 0.02, t),
+      lerpNumber(0.3, 0.02, t),
       lerpNumber(0.36, 0.06, t),
-      1
+      1,
     );
 
     // Directional light
@@ -1377,7 +1632,7 @@ export class Village3DBabylon {
       this._dirLight.diffuse = lerpColor3(
         new BABYLON.Color3(0.85, 0.8, 0.7), // day (warm sunlight)
         new BABYLON.Color3(0.3, 0.35, 0.55), // night (moonlight)
-        t
+        t,
       );
     }
 
@@ -1387,7 +1642,7 @@ export class Village3DBabylon {
       this._hemiLight.diffuse = lerpColor3(
         new BABYLON.Color3(0.55, 0.55, 0.6),
         new BABYLON.Color3(0.12, 0.12, 0.2),
-        t
+        t,
       );
     }
 
@@ -1395,7 +1650,9 @@ export class Village3DBabylon {
     if (this._campfireLight) {
       this._campfireLight.intensity = lerpNumber(1.0, 3.0, t);
       // Flicker
-      const flicker = Math.sin(Date.now() * 0.008) * 0.3 + Math.sin(Date.now() * 0.013) * 0.15;
+      const flicker =
+        Math.sin(Date.now() * 0.008) * 0.3 +
+        Math.sin(Date.now() * 0.013) * 0.15;
       this._campfireLight.intensity += flicker * t;
     }
 
@@ -1477,7 +1734,7 @@ export class Village3DBabylon {
           info.pedestalMat.alpha = 0.6;
         }
       }
-      this._canvas.style.cursor = 'default';
+      this._canvas.style.cursor = "default";
     }
 
     this._hoveredPlayerId = playerId;
@@ -1487,7 +1744,7 @@ export class Village3DBabylon {
       const info = this._playerNodes.get(playerId);
       if (info && info.pedestal && info.pedestalMat && info.isAlive) {
         info.pedestalMat.alpha = 1.0;
-        this._canvas.style.cursor = 'pointer';
+        this._canvas.style.cursor = "pointer";
       }
     }
   }
@@ -1497,7 +1754,7 @@ export class Village3DBabylon {
   // =========================================================================
 
   resetCamera() {
-    if (this._viewMode === 'first-person') {
+    if (this._viewMode === "first-person") {
       this.exitFirstPerson();
     }
     const r = this._playerRadius || 12;
@@ -1511,12 +1768,15 @@ export class Village3DBabylon {
     const info = this._playerNodes.get(playerId);
     if (!info) return;
     const pos = info.root.position;
-    if (this._viewMode === 'top-down') {
+    if (this._viewMode === "top-down") {
       this._arcCamera.target = new BABYLON.Vector3(pos.x, 1, pos.z);
       this._arcCamera.radius = 10;
     } else {
       this._fpCamera.position = new BABYLON.Vector3(
-        pos.x, this._firstPersonHeight, pos.z + 3);
+        pos.x,
+        this._firstPersonHeight,
+        pos.z + 3,
+      );
       this._fpCamera.setTarget(new BABYLON.Vector3(pos.x, 1.2, pos.z));
     }
   }
@@ -1526,7 +1786,7 @@ export class Village3DBabylon {
   }
 
   toggleViewMode(playerId) {
-    if (this._viewMode === 'top-down') {
+    if (this._viewMode === "top-down") {
       return this.enterFirstPerson(playerId);
     } else {
       return this.exitFirstPerson();
@@ -1538,19 +1798,24 @@ export class Village3DBabylon {
   }
 
   enterFirstPerson(playerId) {
-    const pid = playerId || this._firstPersonPlayerId || this._findFirstAlivePlayer();
+    const pid =
+      playerId || this._firstPersonPlayerId || this._findFirstAlivePlayer();
     if (pid === null) return this._viewMode;
 
     const info = this._playerNodes.get(pid);
     if (!info) return this._viewMode;
 
-    this._viewMode = 'first-person';
+    this._viewMode = "first-person";
     this._scene.activeCamera = this._fpCamera;
     this._arcCamera.detachControl();
     this._fpCamera.attachControl(this._canvas, true);
 
     const pos = info.root.position;
-    this._fpCamera.position = new BABYLON.Vector3(pos.x, this._firstPersonHeight, pos.z + 1.5);
+    this._fpCamera.position = new BABYLON.Vector3(
+      pos.x,
+      this._firstPersonHeight,
+      pos.z + 1.5,
+    );
     this._fpCamera.setTarget(BABYLON.Vector3.Zero());
     this._activeCamera = this._fpCamera;
 
@@ -1558,7 +1823,7 @@ export class Village3DBabylon {
   }
 
   exitFirstPerson() {
-    this._viewMode = 'top-down';
+    this._viewMode = "top-down";
     this._scene.activeCamera = this._arcCamera;
     this._fpCamera.detachControl();
     this._arcCamera.attachControl(this._canvas, true);
@@ -1595,7 +1860,7 @@ export class Village3DBabylon {
   // HIGHLIGHT / SELECTION
   // =========================================================================
 
-  highlightPlayer(playerId, color = '#ffd54a') {
+  highlightPlayer(playerId, color = "#ffd54a") {
     const info = this._playerNodes.get(playerId);
     if (!info || !info.pedestal) return;
 
@@ -1619,7 +1884,7 @@ export class Village3DBabylon {
     this._effectTimers.push(timer);
   }
 
-  setSelectedPlayer(playerId, color = '#ffd54a') {
+  setSelectedPlayer(playerId, color = "#ffd54a") {
     // Clear old selection
     if (this._selectedPlayerId !== null) {
       const oldInfo = this._playerNodes.get(this._selectedPlayerId);
@@ -1683,10 +1948,12 @@ export class Village3DBabylon {
     if (!info) return;
 
     const colors = {
-      'target': '#ff4444', 'heal': '#44ff44', 'protect': '#4488ff',
-      'investigate': '#aa44ff',
+      target: "#ff4444",
+      heal: "#44ff44",
+      protect: "#4488ff",
+      investigate: "#aa44ff",
     };
-    const color = colors[type] || '#ffffff';
+    const color = colors[type] || "#ffffff";
     this.highlightPlayer(playerId, color);
   }
 
@@ -1696,20 +1963,22 @@ export class Village3DBabylon {
 
     // Create a floating text above the player
     if (!this._advancedTexture) return;
-    const voteLabel = new BABYLON.GUI.Rectangle('vote_' + playerId + '_' + Date.now());
-    voteLabel.width = '90px';
-    voteLabel.height = '22px';
+    const voteLabel = new BABYLON.GUI.Rectangle(
+      "vote_" + playerId + "_" + Date.now(),
+    );
+    voteLabel.width = "90px";
+    voteLabel.height = "22px";
     voteLabel.cornerRadius = 6;
-    voteLabel.background = 'rgba(218,165,32,0.85)';
-    voteLabel.color = 'rgba(255,255,255,0.6)';
+    voteLabel.background = "rgba(218,165,32,0.85)";
+    voteLabel.color = "rgba(255,255,255,0.6)";
     voteLabel.thickness = 1;
     this._advancedTexture.addControl(voteLabel);
 
     const vt = new BABYLON.GUI.TextBlock();
     vt.text = voterName;
-    vt.color = '#1a1a1a';
+    vt.color = "#1a1a1a";
     vt.fontSize = 11;
-    vt.fontWeight = 'bold';
+    vt.fontWeight = "bold";
     voteLabel.addControl(vt);
 
     voteLabel.linkWithMesh(info.root);
@@ -1725,29 +1994,32 @@ export class Village3DBabylon {
     const info = this._playerNodes.get(playerId);
     if (!info || !this._advancedTexture) return;
 
-    const truncated = message.length > 40 ? message.slice(0, 37) + '...' : message;
+    const truncated =
+      message.length > 40 ? message.slice(0, 37) + "..." : message;
 
-    const bubble = new BABYLON.GUI.Rectangle('chat_' + playerId + '_' + Date.now());
-    bubble.width = '160px';
+    const bubble = new BABYLON.GUI.Rectangle(
+      "chat_" + playerId + "_" + Date.now(),
+    );
+    bubble.width = "160px";
     bubble.adaptHeightToChildren = true;
     bubble.cornerRadius = 10;
-    bubble.background = 'rgba(0,0,0,0.75)';
-    bubble.color = 'rgba(255,255,255,0.3)';
+    bubble.background = "rgba(0,0,0,0.75)";
+    bubble.color = "rgba(255,255,255,0.3)";
     bubble.thickness = 1;
-    bubble.paddingTop = '4px';
-    bubble.paddingBottom = '4px';
-    bubble.paddingLeft = '6px';
-    bubble.paddingRight = '6px';
+    bubble.paddingTop = "4px";
+    bubble.paddingBottom = "4px";
+    bubble.paddingLeft = "6px";
+    bubble.paddingRight = "6px";
     this._advancedTexture.addControl(bubble);
 
     const bt = new BABYLON.GUI.TextBlock();
     bt.text = truncated;
-    bt.color = 'white';
+    bt.color = "white";
     bt.fontSize = 11;
     bt.textWrapping = BABYLON.GUI.TextWrapping.WordWrap;
     bt.resizeToFit = true;
-    bt.paddingTop = '4px';
-    bt.paddingBottom = '4px';
+    bt.paddingTop = "4px";
+    bt.paddingBottom = "4px";
     bubble.addControl(bt);
 
     bubble.linkWithMesh(info.root);
@@ -1770,15 +2042,39 @@ export class Village3DBabylon {
     const charPos = new BABYLON.Vector3(pos.x, 1.2, pos.z + 1.5);
 
     const effectConfigs = {
-      'heal': { color1: [0.2, 0.9, 0.3, 1], color2: [0.1, 0.7, 0.2, 0.7], dir: [0, 2, 0], size: [0.1, 0.3] },
-      'attack': { color1: [1, 0.2, 0.1, 1], color2: [0.8, 0.1, 0, 0.8], dir: [1, 1, 1], size: [0.15, 0.4] },
-      'protect': { color1: [0.3, 0.5, 1, 0.8], color2: [0.2, 0.3, 0.9, 0.5], dir: [0, 1.5, 0], size: [0.2, 0.5] },
-      'poison': { color1: [0.6, 0.1, 0.8, 1], color2: [0.4, 0, 0.6, 0.7], dir: [0, 1, 0], size: [0.1, 0.3] },
+      heal: {
+        color1: [0.2, 0.9, 0.3, 1],
+        color2: [0.1, 0.7, 0.2, 0.7],
+        dir: [0, 2, 0],
+        size: [0.1, 0.3],
+      },
+      attack: {
+        color1: [1, 0.2, 0.1, 1],
+        color2: [0.8, 0.1, 0, 0.8],
+        dir: [1, 1, 1],
+        size: [0.15, 0.4],
+      },
+      protect: {
+        color1: [0.3, 0.5, 1, 0.8],
+        color2: [0.2, 0.3, 0.9, 0.5],
+        dir: [0, 1.5, 0],
+        size: [0.2, 0.5],
+      },
+      poison: {
+        color1: [0.6, 0.1, 0.8, 1],
+        color2: [0.4, 0, 0.6, 0.7],
+        dir: [0, 1, 0],
+        size: [0.1, 0.3],
+      },
     };
 
-    const cfg = effectConfigs[effectType] || effectConfigs['heal'];
+    const cfg = effectConfigs[effectType] || effectConfigs["heal"];
 
-    const ps = new BABYLON.ParticleSystem('effect_' + effectType, 50, this._scene);
+    const ps = new BABYLON.ParticleSystem(
+      "effect_" + effectType,
+      50,
+      this._scene,
+    );
     ps.emitter = charPos;
     ps.minEmitBox = new BABYLON.Vector3(-0.3, 0, -0.3);
     ps.maxEmitBox = new BABYLON.Vector3(0.3, 0, 0.3);
@@ -1791,7 +2087,11 @@ export class Village3DBabylon {
     ps.maxLifeTime = 1.5;
     ps.emitRate = 40;
     ps.direction1 = new BABYLON.Vector3(-cfg.dir[0], cfg.dir[1], -cfg.dir[2]);
-    ps.direction2 = new BABYLON.Vector3(cfg.dir[0], cfg.dir[1] * 1.5, cfg.dir[2]);
+    ps.direction2 = new BABYLON.Vector3(
+      cfg.dir[0],
+      cfg.dir[1] * 1.5,
+      cfg.dir[2],
+    );
     ps.gravity = new BABYLON.Vector3(0, -0.5, 0);
     ps.minEmitPower = 0.5;
     ps.maxEmitPower = 1.5;
@@ -1799,13 +2099,19 @@ export class Village3DBabylon {
     ps.targetStopDuration = 1.5;
     ps.start();
 
-    setTimeout(() => { ps.dispose(); }, 3000);
+    setTimeout(() => {
+      ps.dispose();
+    }, 3000);
 
     // Protect: also show a translucent sphere shield
-    if (effectType === 'protect') {
-      const shield = BABYLON.MeshBuilder.CreateSphere('shield_' + playerId, { diameter: 2.0, segments: 16 }, this._scene);
+    if (effectType === "protect") {
+      const shield = BABYLON.MeshBuilder.CreateSphere(
+        "shield_" + playerId,
+        { diameter: 2.0, segments: 16 },
+        this._scene,
+      );
       shield.position = charPos.clone();
-      const sMat = new BABYLON.StandardMaterial('shieldMat', this._scene);
+      const sMat = new BABYLON.StandardMaterial("shieldMat", this._scene);
       sMat.diffuseColor = new BABYLON.Color3(0.3, 0.5, 1.0);
       sMat.emissiveColor = new BABYLON.Color3(0.2, 0.3, 0.8);
       sMat.alpha = 0.2;
@@ -1844,9 +2150,16 @@ export class Village3DBabylon {
       info.character.rotation.z = 0.3;
       // Zzz particles
       if (!info.sleepParticles) {
-        const zps = new BABYLON.ParticleSystem('zzz_' + playerId, 5, this._scene);
+        const zps = new BABYLON.ParticleSystem(
+          "zzz_" + playerId,
+          5,
+          this._scene,
+        );
         zps.emitter = new BABYLON.Vector3(
-          info.root.position.x, 2.2, info.root.position.z + 1.5);
+          info.root.position.x,
+          2.2,
+          info.root.position.z + 1.5,
+        );
         zps.minEmitBox = BABYLON.Vector3.Zero();
         zps.maxEmitBox = BABYLON.Vector3.Zero();
         zps.color1 = new BABYLON.Color4(0.7, 0.7, 0.9, 0.6);
@@ -1882,31 +2195,38 @@ export class Village3DBabylon {
 
   showFullscreenUI(show) {
     this._hudVisible = !!show;
-    const hud = document.getElementById('village3d-hud');
+    const hud = document.getElementById("village3d-hud");
     if (hud) {
-      hud.classList.toggle('is-visible', this._hudVisible);
+      hud.classList.toggle("is-visible", this._hudVisible);
     }
   }
 
   toggleLeftSidebar() {
     this._leftSidebarVisible = !this._leftSidebarVisible;
-    const panel = document.getElementById('village3d-left-panel');
-    if (panel) panel.classList.toggle('is-collapsed', !this._leftSidebarVisible);
+    const panel = document.getElementById("village3d-left-panel");
+    if (panel)
+      panel.classList.toggle("is-collapsed", !this._leftSidebarVisible);
   }
 
   toggleRightSidebar() {
     this._rightSidebarVisible = !this._rightSidebarVisible;
-    const panel = document.getElementById('village3d-right-panel');
-    if (panel) panel.classList.toggle('is-collapsed', !this._rightSidebarVisible);
+    const panel = document.getElementById("village3d-right-panel");
+    if (panel)
+      panel.classList.toggle("is-collapsed", !this._rightSidebarVisible);
   }
 
   updateTopBar(phase, round) {
-    const phaseEl = document.getElementById('village3d-phase-name');
-    const roundEl = document.getElementById('village3d-round-info');
+    const phaseEl = document.getElementById("village3d-phase-name");
+    const roundEl = document.getElementById("village3d-round-info");
     if (phaseEl) {
-      const isNight = phase && (phase.includes('nacht') || (phase.includes('phase') && !phase.includes('tag')));
-      const icon = isNight ? 'fa-moon' : 'fa-sun';
-      const displayName = phase ? phase.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '...';
+      const isNight =
+        phase &&
+        (phase.includes("nacht") ||
+          (phase.includes("phase") && !phase.includes("tag")));
+      const icon = isNight ? "fa-moon" : "fa-sun";
+      const displayName = phase
+        ? phase.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+        : "...";
       phaseEl.innerHTML = `<i class="fa-solid ${icon}"></i> ${displayName}`;
     }
     if (roundEl && round !== undefined) {
@@ -1915,9 +2235,9 @@ export class Village3DBabylon {
   }
 
   updateRoleBadge(role, color = null) {
-    const badge = document.getElementById('village3d-role-badge');
+    const badge = document.getElementById("village3d-role-badge");
     if (!badge) return;
-    badge.textContent = role || 'Warte...';
+    badge.textContent = role || "Warte...";
     if (color) {
       badge.style.borderColor = color;
       badge.style.background = `${color}33`;
@@ -1925,31 +2245,33 @@ export class Village3DBabylon {
   }
 
   addChatMessage(from, text, isDead = false) {
-    const container = document.getElementById('village3d-chat-messages');
+    const container = document.getElementById("village3d-chat-messages");
     if (!container) return;
-    const row = document.createElement('div');
-    row.className = 'village3d-chat-row';
-    if (isDead) row.style.opacity = '0.5';
+    const row = document.createElement("div");
+    row.className = "village3d-chat-row";
+    if (isDead) row.style.opacity = "0.5";
     row.innerHTML = `<strong>${from}:</strong> ${text}`;
     container.appendChild(row);
     container.scrollTop = container.scrollHeight;
   }
 
   updateActionButtons(buttons) {
-    const container = document.getElementById('village3d-action-buttons');
+    const container = document.getElementById("village3d-action-buttons");
     if (!container) return;
-    container.innerHTML = '';
+    container.innerHTML = "";
     if (!buttons || buttons.length === 0) return;
 
-    buttons.forEach(btn => {
-      const el = document.createElement('button');
-      el.className = 'v3d-icon-btn';
-      el.style.marginRight = '8px';
-      el.style.padding = '8px 14px';
+    buttons.forEach((btn) => {
+      const el = document.createElement("button");
+      el.className = "v3d-icon-btn";
+      el.style.marginRight = "8px";
+      el.style.padding = "8px 14px";
       el.textContent = btn.label;
       if (btn.title) el.title = btn.title;
       if (btn.disabled) el.disabled = true;
-      el.addEventListener('click', () => { if (btn.action) btn.action(); });
+      el.addEventListener("click", () => {
+        if (btn.action) btn.action();
+      });
       container.appendChild(el);
     });
   }
@@ -1966,8 +2288,13 @@ export class Village3DBabylon {
     this._effectTimers = [];
 
     // Dispose particles
-    [this._campfireFlame, this._campfireSmoke, this._campfireEmbers,
-     this._fireflySystem, this._starSystem].forEach(ps => {
+    [
+      this._campfireFlame,
+      this._campfireSmoke,
+      this._campfireEmbers,
+      this._fireflySystem,
+      this._starSystem,
+    ].forEach((ps) => {
       if (ps) ps.dispose();
     });
 
@@ -1995,10 +2322,10 @@ export class Village3DBabylon {
 
     // Remove resize handler
     if (this._resizeHandler) {
-      window.removeEventListener('resize', this._resizeHandler);
+      window.removeEventListener("resize", this._resizeHandler);
     }
 
-    console.info('[Village3D-Babylon] Destroyed');
+    console.info("[Village3D-Babylon] Destroyed");
   }
 }
 

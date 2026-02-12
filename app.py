@@ -97,7 +97,7 @@ def inject_cache_buster():
     def versioned_url(endpoint, **values):
         """
         Generate a URL with a cache-busting query parameter based on file modification time.
-        Usage in templates: {{ versioned_url('static', filename='js/dist/hints.js') }}
+        Usage in templates: {{ versioned_url('static', filename='js/hints.js') }}
         """
         if endpoint == "static" and "filename" in values:
             filename = values["filename"]
@@ -132,6 +132,7 @@ def _build_automatische_phasen() -> set:
         "nacht_start",  # Übergang Tag -> Nacht
         "nacht_ende",  # Übergang Nacht -> Tag
         "tag_start",  # Übergang Nacht -> Tag
+        "hinrichtung",  # Ergebnis der Abstimmung → auto-advance zu tag_ende
         "tag_ende",  # Übergang am Tagesende
     }
 
@@ -166,11 +167,6 @@ AUTOMATISCHE_PHASEN = _build_automatische_phasen()
 
 # Spielname als Konstante
 SPIEL_NAME = "Webwölfe"
-
-# Phasen-Konfiguration
-# Wartezeit zwischen automatischen Phasenwechseln (in Sekunden)
-# Mindestens 30 Sekunden um Audio-Erzählung vollständig abzuspielen
-PHASE_WECHSEL_DELAY = int(os.environ.get("PHASE_DELAY", "45"))
 
 # Minimum delay before accepting audio_fertig (in seconds)
 # This prevents duplicate events from the same client but allows quick phase transitions
@@ -1769,26 +1765,9 @@ def handle_spiel_starten(data):
                     room=raum.code,  # pyright: ignore[reportCallIssue]
                 )
 
-            # Starte Fallback-Timer für automatische Phasen-Progression
-            # (gleiche Logik wie in _wechsel_phase_intern für AUTOMATISCHE_PHASEN)
-            # WICHTIG: Muss gevent verwenden, da threading mit monkey-patching nicht kooperativ yieldet!
-            raum_code = raum.code
-            phase_bei_start = raum.aktuelle_phase
-
-            def auto_advance_initial():
-                # Warte auf Fallback-Timeout (falls Audio nicht abgespielt wird)
-                gevent.sleep(PHASE_WECHSEL_DELAY)
-                with app.app_context():
-                    raum_aktuell = Raum.query.filter_by(code=raum_code).first()
-                    if raum_aktuell and raum_aktuell.aktuelle_phase == phase_bei_start:
-                        # Phase wurde noch nicht gewechselt (Audio-Event kam nicht an)
-                        # FEHLER: Fallback sollte nie notwendig sein!
-                        logger.error(
-                            f"[Phase] FALLBACK-TIMEOUT für {phase_bei_start} - Dies ist ein Fehler! Audio-Event kam nicht an."
-                        )
-                        _wechsel_phase_intern(raum_aktuell)
-
-            gevent.spawn(auto_advance_initial)
+            # Phase advance for rollen_verteilt is handled by audio_fertig:
+            # Server sends narration → clients play → clients confirm → phase advances.
+            # No fallback timer needed.
     else:
         emit("fehler", {"nachricht": "Spiel konnte nicht gestartet werden"})
 
@@ -1803,11 +1782,14 @@ def handle_phase_weiter():
 
     raum = db.session.get(Raum, spieler.raum_id)
     if not raum:
+        emit("fehler", {"nachricht": "Raum nicht gefunden"})
         return
 
     # Im Online-Modus darf der Admin/Creator die Phase weiterschalten (automatisch vom Client getriggert).
     # Im Gruppen-Modus darf nur der Erzähler manuell weiterschalten.
-    is_admin = raum.erzaehler_id == spieler.id
+    is_admin = (
+        raum.erzaehler_id == spieler.id if raum.erzaehler_id else spieler.ist_erzaehler
+    )
     if raum.modus != "online" and not spieler.ist_erzaehler:
         emit("fehler", {"nachricht": "Nur der Erzaehler kann die Phase wechseln"})
         return
@@ -1903,6 +1885,14 @@ def _wechsel_phase_intern(raum):
     # Phase-spezifische Aktionen
     handle_phase_wechsel(raum, alte_phase, neue_phase)
 
+    # If handle_phase_wechsel detected game end, the phase is now "spiel_ende".
+    # Stop all further processing (no phase_update, no narration, no fallback timer).
+    if raum.aktuelle_phase == "spiel_ende":
+        log_ts(
+            "[Phase] Game ended during phase transition. Stopping further processing."
+        )
+        return
+
     # Erzähler-Text für Gruppen-Modus
     erzaehler_text = None
     if raum.modus == "gruppe" and neue_phase in ERZAEHLER_EVENTS:
@@ -1979,32 +1969,10 @@ def _wechsel_phase_intern(raum):
     except Exception as e:
         log_ts(f"Fehler bei Hinweis-Generierung: {e}")
 
-    # Check if this is an automatic transition phase (uses module-level AUTOMATISCHE_PHASEN)
-    ist_automatische_phase = neue_phase in AUTOMATISCHE_PHASEN
-
-    if raum.modus == "online" and ist_automatische_phase:
-        # Markiere Raum als "wartet auf Audio"
-        # Der Client sendet 'audio_fertig' wenn Audio abgespielt wurde
-        # Fallback: Nach PHASE_WECHSEL_DELAY Sekunden automatisch weiter
-        raum_code = raum.code
-        phase_bei_start = neue_phase
-
-        import gevent
-
-        def auto_advance_fallback():
-            # Warte auf Fallback-Timeout (falls Audio nicht abgespielt wird)
-            gevent.sleep(PHASE_WECHSEL_DELAY)
-            with app.app_context():
-                raum_aktuell = Raum.query.filter_by(code=raum_code).first()
-                if raum_aktuell and raum_aktuell.aktuelle_phase == phase_bei_start:
-                    # Phase wurde noch nicht gewechselt (Audio-Event kam nicht an)
-                    # FEHLER: Fallback sollte nie notwendig sein!
-                    logger.error(
-                        f"[Phase] FALLBACK-TIMEOUT für {phase_bei_start} - Dies ist ein Fehler! Audio-Event kam nicht an."
-                    )
-                    _wechsel_phase_intern(raum_aktuell)
-
-        gevent.spawn(auto_advance_fallback)
+    # Automatic phases are advanced by the audio_fertig mechanism:
+    # Server sends narration audio → clients play it → clients send audio_fertig →
+    # once threshold of players confirm, _wechsel_phase_intern is called.
+    # No fallback timer needed — the audio_fertig handler is the sole authority.
 
 
 # Socket-Handler für Audio-Fertig-Event
@@ -2039,8 +2007,9 @@ def handle_audio_fertig(data):
     if tracking_key not in _audio_fertig_players:
         _audio_fertig_players[tracking_key] = set()
 
-    # Add this player to confirmed set
-    _audio_fertig_players[tracking_key].add(spieler.id)
+    # Only count alive, non-narrator players for audio tracking
+    if spieler.ist_am_leben and not spieler.ist_erzaehler:
+        _audio_fertig_players[tracking_key].add(spieler.id)
     confirmed_players = _audio_fertig_players[tracking_key]
 
     # Get all alive players who should see this phase
@@ -2065,15 +2034,14 @@ def handle_audio_fertig(data):
         )
         return
 
-    # Clear tracking for this phase
-    if tracking_key in _audio_fertig_players:
-        del _audio_fertig_players[tracking_key]
-
     log_ts(f"[Audio] Threshold met for {gemeldete_phase}, advancing phase")
 
     # Check if this is an automatic phase or needs action
     if gemeldete_phase in AUTOMATISCHE_PHASEN:
         log_ts(f"[Audio] Automatic phase {gemeldete_phase}, advancing immediately")
+        # Clear tracking only when we're actually advancing
+        if tracking_key in _audio_fertig_players:
+            del _audio_fertig_players[tracking_key]
         _wechsel_phase_intern(raum)
     else:
         # Interactive phase - check if all actions are complete
@@ -2096,9 +2064,14 @@ def handle_audio_fertig(data):
                     )
                     should_advance = True
                 else:
-                    log_ts(f"[Audio] Actions pending for {gemeldete_phase}, waiting")
+                    log_ts(
+                        f"[Audio] Actions pending for {gemeldete_phase}, keeping audio tracking"
+                    )
 
         if should_advance:
+            # Clear tracking now that we're actually advancing
+            if tracking_key in _audio_fertig_players:
+                del _audio_fertig_players[tracking_key]
             _wechsel_phase_intern(raum)
 
 
@@ -2608,17 +2581,19 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
             return {"erfolg": False, "nachricht": ergebnis.nachricht}
     except Exception as e:
         log_ts(f"[Aktion] execute_action error: {e}")
-        # Fall through to legacy handler
+        import traceback
+
+        traceback.print_exc()
+        return {"erfolg": False, "nachricht": f"Fehler bei Aktion: {e}"}
 
     # Check if the current phase matches the role's phase (for night actions)
     rolle_phase = rolle_obj.get_phase_name()
     if raum.aktuelle_phase != rolle_phase:
-        # Not the right phase for this role's normal action
+        # Not the right phase for this role's normal action - reject it
         log_ts(
-            f"[Aktion] Phase mismatch: expected={rolle_phase}, current={raum.aktuelle_phase}"
+            f"[Aktion] Phase mismatch: expected={rolle_phase}, current={raum.aktuelle_phase}. Rejecting action."
         )
-        # Still allow special actions that aren't phase-dependent
-        pass
+        return {"erfolg": False, "nachricht": "Nicht deine Phase"}
 
     # Legacy fallback: use on_nacht_aktion for single-target actions
     ziel = targets[0] if len(targets) == 1 else None
@@ -2636,11 +2611,17 @@ def verarbeite_aktion(spieler, raum, aktion_typ, ziel_id):
     ergebnis = rolle_obj.on_nacht_aktion(spieler, ziel, kontext, **call_kwargs)
 
     if ergebnis and ergebnis.erfolg:
-        # Register the action
-        rolle_phase = rolle_obj.get_phase_name()
+        # Register the action under the CURRENT phase (raum.aktuelle_phase),
+        # NOT the role's canonical phase name. pruefe_phase_abschluss checks
+        # by raum.aktuelle_phase, so the phase names must match.
         first_target_id = targets[0].id if targets else None
         game_logic.registriere_aktion(
-            raum.id, raum.runde, rolle_phase, aktion_typ, spieler.id, first_target_id
+            raum.id,
+            raum.runde,
+            raum.aktuelle_phase,
+            aktion_typ,
+            spieler.id,
+            first_target_id,
         )
 
         # Apply effects using centralized handler

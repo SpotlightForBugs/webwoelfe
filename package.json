@@ -1,29 +1,12 @@
 {
-  "name": "webwoelfe-village3d",
+  "name": "webwoelfe",
   "version": "1.0.0",
-  "description": "3D Village Renderer for Webwölfe",
-  "scripts": {
-    "build:village3d": "tsc --project static/js/village3d/tsconfig.json",
-    "build:hints": "tsc --project static/js/tsconfig.json",
-    "watch:village3d": "tsc --project static/js/village3d/tsconfig.json --watch",
-    "watch:hints": "tsc --project static/js/tsconfig.json --watch",
-    "clean:village3d": "rimraf static/js/village3d/dist",
-    "clean:hints": "rimraf static/js/dist",
-    "clean": "npm run clean:village3d && npm run clean:hints",
-    "prebuild": "npm run clean",
-    "build": "npm run build:village3d && npm run build:hints"
-  },
+  "description": "Webwölfe - Werwölfe von Düsterwald Online",
+  "scripts": {},
   "dependencies": {
     "@playwright/test": "^1.57.0"
   },
-  "devDependencies": {
-    "@types/node": "^25.0.6",
-    "@types/socket.io-client": "^1.4.36",
-    "@types/three": "^0.182.0",
-    "rimraf": "^6.0.1",
-    "three": "^0.182.0",
-    "typescript": "^5.7.3"
-  },
+  "devDependencies": {},
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"

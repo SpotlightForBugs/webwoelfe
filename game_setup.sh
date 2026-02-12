@@ -34,22 +34,6 @@ else
     echo "[INFO] Production/Docker Mode: Datenbankdatei wird beibehalten"
 fi
 
-# Build TypeScript if node_modules exists
-if [ -d "node_modules" ]; then
-    echo "[BUILD] Building TypeScript modules..."
-    npm run build
-    if [ $? -ne 0 ]; then
-        echo "[WARN] TypeScript build failed, continuing anyway..."
-    else
-        echo "[OK] TypeScript build completed"
-    fi
-elif command -v npm &> /dev/null; then
-    echo "[PKG] Installing npm dependencies and building..."
-    npm install && npm run build
-else
-    echo "[WARN] Node.js/npm not found, skipping TypeScript build"
-fi
-
 # operating system aware venv activation
 if [ -f ".venv/Scripts/activate" ]; then
     # Windows

@@ -39,8 +39,7 @@ services:
       # Secret key - should be set via Coolify environment variables
       - FLASK_SECRET_KEY=${FLASK_SECRET_KEY:-change-me-in-production}
 
-      # Phase timing configuration (optional)
-      - PHASE_DELAY=${PHASE_DELAY:-45}
+      # Audio timing configuration (optional)
       - AUDIO_MIN_DELAY=${AUDIO_MIN_DELAY:-1.0}
       - AUDIO_THRESHOLD=${AUDIO_THRESHOLD:-0.8}
 

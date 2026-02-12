@@ -74,6 +74,13 @@ CORE_PHASE_EVENTS: Dict[str, NarratorEvent] = {
         bedingung={"phase": "tag_abstimmung"},
         einmalig=False,
     ),
+    "hinrichtung": NarratorEvent(
+        event_id="hinrichtung",
+        text="Das Urteil ist gesprochen.",
+        anweisung="Das Ergebnis der Abstimmung wird verkündet.",
+        bedingung={"phase": "hinrichtung"},
+        einmalig=False,
+    ),
     "tag_ende": NarratorEvent(
         event_id="tag_ende",
         text="Der Tag neigt sich dem Ende. Die Sonne geht unter.",

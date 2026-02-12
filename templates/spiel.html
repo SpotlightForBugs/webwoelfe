@@ -1792,8 +1792,8 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       </div>
 
       <!-- Aktions-Panel -->
-      <div class="action-panel fade-in delay-3" id="action-panel">
-        <div class="action-buttons" id="action-buttons">
+      <div class="action-panel fade-in delay-3" id="action-panel" data-testid="action-panel">
+        <div class="action-buttons" id="action-buttons" data-testid="action-buttons">
           <!-- Werden dynamisch basierend auf Phase/Rolle gefüllt -->
         </div>
       </div>
@@ -1952,8 +1952,46 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   // Expose for test automation
   window.aktuellePhase = aktuellePhase;
   window.aktuelleRunde = aktuelleRunde;
+  window.spielerRolle = spielerRolle;
   window.activeRole = activeRole;
   window.socket = socket;
+
+  // Structured test API - single source of truth for test automation
+  window.__testApi = {
+    get phase() { return aktuellePhase; },
+    get round() { return aktuelleRunde; },
+    get role() { return spielerRolle; },
+    get team() { return spielerTeam; },
+    get playerId() { return spielerId; },
+    get isNarrator() { return istErzaehler; },
+    get isActive() { return sollteAktivSein(); },
+    get isAlive() {
+      const me = alleSpieler.find(s => s.id === spielerId);
+      return me ? me.istAmLeben : false;
+    },
+    get gameEnded() { return aktuellePhase === 'spiel_ende'; },
+    get selectedTarget() { return selectedSpielerId; },
+    get selectedTargets() { return selectedSpielerIds; },
+    get uiConfig() { return phaseUiConfig; },
+    getVisibleActions() {
+      const btns = document.querySelectorAll('#action-buttons button:not([disabled])');
+      return Array.from(btns).map(b => ({
+        text: b.textContent.trim(),
+        testId: b.getAttribute('data-testid') || '',
+        disabled: b.disabled,
+      }));
+    },
+    getSelectablePlayers() {
+      const cards = document.querySelectorAll('.spieler-card:not(.disabled-target):not(.ist-tot)');
+      return Array.from(cards).map(c => ({
+        id: parseInt(c.getAttribute('data-id')),
+        name: c.getAttribute('data-name'),
+      }));
+    },
+    selectPlayer(id) { selectSpieler(id); },
+    clickAction(actionType) { aktion(actionType); },
+    vote(targetId) { castVoteSocket(targetId); },
+  };
 
   // Raum beitreten
   socket.emit('raum_beitreten', { code: raumCode });
@@ -2282,55 +2320,11 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
   // (Legacy handler removed - see showVotingOverlay section)
 
   function populateVotingButtons() {
-      const container = document.getElementById('voting-buttons');
-      if (!container) return;
-
-      container.innerHTML = '';
-      alleSpieler.forEach(s => {
-          // Skip erzähler and dead players and self
-          if (s.istErzaehler || !s.istAmLeben || s.id === spielerId) return;
-
-          const btn = document.createElement('button');
-          btn.className = 'voting-btn';
-          btn.setAttribute('data-spieler-id', s.id);
-          btn.textContent = s.name;
-          btn.onclick = function() {
-              // Toggle selection
-              document.querySelectorAll('.voting-btn').forEach(b => b.classList.remove('selected'));
-              btn.classList.add('selected');
-              // Emit vote
-              socket.emit('spieler_abstimmen', { ziel_id: s.id });
-          };
-          container.appendChild(btn);
-      });
-
-      // Add "Enthalten" button
-      const enthaltBtn = document.createElement('button');
-      enthaltBtn.className = 'voting-btn';
-      enthaltBtn.style.borderColor = 'var(--text-muted)';
-      enthaltBtn.textContent = '⊘ Enthalten';
-      enthaltBtn.onclick = function() {
-          document.querySelectorAll('.voting-btn').forEach(b => b.classList.remove('selected'));
-          enthaltBtn.classList.add('selected');
-          socket.emit('spieler_abstimmen', { ziel_id: null });
-      };
-      container.appendChild(enthaltBtn);
+      // Legacy - voting now handled by standard action panel
   }
 
   function updateVotingButtons(zielStimmen) {
-      if (!zielStimmen) return;
-      // Update vote counts on buttons
-      document.querySelectorAll('.voting-btn').forEach(btn => {
-          const spielerName = btn.textContent.replace(/\s*\(\d+\)$/, ''); // Remove old count
-          const stimmen = zielStimmen[spielerName] || 0;
-          if (stimmen > 0) {
-              btn.textContent = `${spielerName} (${stimmen})`;
-              btn.style.borderColor = 'var(--accent-red)';
-          } else {
-              btn.textContent = spielerName;
-              btn.style.borderColor = '';
-          }
-      });
+      // Legacy - voting now handled by standard action panel
   }
 
   // Note: timer_update and stimme_abgegeben handlers are in the voting overlay section
@@ -2942,11 +2936,16 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
       // Phasen ohne spieler-spezifische Aktionen -> kein Mapping nötig
       const passivePhases = [
           'rollen_verteilt', 'nacht_start', 'nacht_ende',
-          'tag_start', 'tag_abstimmung', 'hinrichtung', 'tag_ende',
+          'tag_start', 'hinrichtung', 'tag_ende',
           'lobby', 'spiel_ende'
       ];
       if (passivePhases.includes(aktuellePhase)) {
           return false;
+      }
+
+      // Voting phases: ALL alive non-narrator players can act
+      if (aktuellePhase === 'tag_abstimmung' || aktuellePhase === 'diskussion_abstimmung' || aktuellePhase === 'abstimmung') {
+          return !istErzaehler;
       }
 
       // Special handling for wolf phases - all wolves can act
@@ -3043,7 +3042,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
                   const title = (count < min) ? `title="Wähle mindestens ${min} Spieler"` : '';
                   // Use action_id for actions API, action_type for legacy buttons
                   const actionType = btn.action_id || btn.action_type;
-                  return `<button class="btn ${btnClass}" ${disabled} ${title} onclick="aktion('${actionType}')">${icon} ${btn.label}</button>`;
+                  return `<button class="btn ${btnClass}" data-testid="action-btn-${actionType}" ${disabled} ${title} onclick="aktion('${actionType}')">${icon} ${btn.label}</button>`;
               }).join('\n');
 
             hudButtons = actionSource.map(btn => {
@@ -3058,7 +3057,7 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
 
               // Add skip button if allowed
               if (roleUI.can_skip) {
-                  html += `\n<button class="btn btn-ghost" onclick="aktion('skip', null)">Überspringen</button>`;
+                  html += `\n<button class="btn btn-ghost" data-testid="action-btn-skip" onclick="aktion('skip', null)">Überspringen</button>`;
               hudButtons.push({
                 label: 'Überspringen',
                 disabled: false,
@@ -3069,15 +3068,15 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
             setVillage3DActionHint('Wähle deine Aktion.');
           } else {
               // Fallback to hardcoded buttons for special cases
-              if (aktuellePhase === 'abstimmung') {
+              if (aktuellePhase === 'abstimmung' || aktuellePhase === 'tag_abstimmung') {
                   html = `
-                      <button class="btn btn-primary" onclick="aktion('tag_wahl')"><i class="fa-solid fa-check"></i> Abstimmen</button>
-                      <button class="btn btn-ghost" onclick="aktion('tag_wahl', null)">Enthalten</button>
+                      <button class="btn btn-primary" data-testid="action-btn-tag_wahl" onclick="voteForSelected()"><i class="fa-solid fa-check"></i> Abstimmen</button>
+                      <button class="btn btn-ghost" data-testid="action-btn-enthalten" onclick="castVoteSocket(null)">Enthalten</button>
                   `;
 
               hudButtons = [
-                { label: 'Abstimmen', disabled: false, action: () => aktion('tag_wahl') },
-                { label: 'Enthalten', disabled: false, action: () => aktion('tag_wahl', null) }
+                { label: 'Abstimmen', disabled: false, action: () => voteForSelected() },
+                { label: 'Enthalten', disabled: false, action: () => castVoteSocket(null) }
               ];
               setVillage3DActionHint('Gib deine Stimme ab.');
               } else if (aktuellePhase === 'diskussion_abstimmung') {
@@ -3456,6 +3455,18 @@ raum.runde }} | {{ spiel_name }}{% endblock %} {% block head %}
           aktion: typ,
           ziel_id: ziel
       });
+  }
+
+  function castVoteSocket(targetId) {
+      socket.emit('spieler_abstimmen', { ziel_id: targetId });
+  }
+
+  function voteForSelected() {
+      if (!selectedSpielerId) {
+          showAlert('Wähle einen Spieler zum Abstimmen!', 'error');
+          return;
+      }
+      castVoteSocket(selectedSpielerId);
   }
 
   function naechstePhase() {

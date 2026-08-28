@@ -362,10 +362,10 @@ class SpielerPosition(db.Model):
 class SeherinEnthuellung(db.Model):
     """
     Snapshot der Seherin-Enthüllungen.
-    
+
     NOTE: Despite the name, this works for all seer-type roles (uses SeherFaehigkeit enum).
     Each seer role uses RoleRegistry and implements get_seer_result() method.
-    
+
     Speichert was die Seherin ZUM ZEITPUNKT der Enthüllung gesehen hat.
     Auch wenn sich die Rolle später ändert (z.B. durch Infektion),
     bleibt die ursprüngliche Enthüllung erhalten.
@@ -1048,14 +1048,14 @@ def berechne_balance_statistik(spieler_anzahl: int) -> dict:
     for rolle_name, anzahl in rollen.items():
         if rolle_name == "Erzaehler":
             continue
-        
+
         # Use RoleRegistry to get role's team dynamically
         rolle = RoleRegistry.get(rolle_name)
         if not rolle:
             # Fallback for unknown roles
             team_andere += anzahl
             continue
-            
+
         team = rolle.info.team.value
 
         if team == "dorf":
@@ -1076,9 +1076,7 @@ def berechne_balance_statistik(spieler_anzahl: int) -> dict:
         "team_solo": team_solo,
         "team_andere": team_andere,
         "dorf_prozent": round(team_dorf / total * 100, 1) if total > 0 else 0,
-        "werwolf_prozent": round(team_werwolf / total * 100, 1)
-        if total > 0
-        else 0,
+        "werwolf_prozent": round(team_werwolf / total * 100, 1) if total > 0 else 0,
         "solo_prozent": round(team_solo / total * 100, 1) if total > 0 else 0,
         "andere_prozent": round(team_andere / total * 100, 1) if total > 0 else 0,
         "rollen": rollen,

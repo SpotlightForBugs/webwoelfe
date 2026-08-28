@@ -105,7 +105,8 @@ function getRandomTarget(
 }
 
 // Player names
-const PLAYER_NAMES = [ //TODO: Generate those automatically so that we always have enough unique names.
+const PLAYER_NAMES = [
+  //TODO: Generate those automatically so that we always have enough unique names.
   "Wolfgang",
   "Maria",
   "Hans",
@@ -163,8 +164,6 @@ interface GameState {
 // UTILITIES
 // ============================================================================
 
-
-
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -219,23 +218,23 @@ test.describe("Full Game Simulation", () => {
 
     const headlessBrowser = HEADLESS_OTHERS
       ? await chromium.launch({
-        headless: true,
-        args: [
-          "--disable-web-security",
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--no-first-run",
-          "--disable-extensions",
-          "--disable-default-apps",
-          "--disable-sync",
-          "--disable-translate",
-          "--hide-scrollbars",
-          "--mute-audio",
-          "--no-default-browser-check",
-          "--safebrowsing-disable-auto-update",
-        ],
-      })
+          headless: true,
+          args: [
+            "--disable-web-security",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--no-first-run",
+            "--disable-extensions",
+            "--disable-default-apps",
+            "--disable-sync",
+            "--disable-translate",
+            "--hide-scrollbars",
+            "--mute-audio",
+            "--no-default-browser-check",
+            "--safebrowsing-disable-auto-update",
+          ],
+        })
       : null;
 
     // Create shared context for the host (keeps the main window visible)
@@ -252,7 +251,7 @@ test.describe("Full Game Simulation", () => {
 
       // Ensure window is maximized/visible (optional, handled by browser usually)
 
-      await hostPage.goto(BASE_URL, { waitUntil: 'domcontentloaded' }); // Faster than networkidle
+      await hostPage.goto(BASE_URL, { waitUntil: "domcontentloaded" }); // Faster than networkidle
 
       // Close pre-alpha modal if present
       const closeModalBtn = hostPage.locator("[data-close-modal]").first();
@@ -345,22 +344,27 @@ test.describe("Full Game Simulation", () => {
             if (msg.type() === "error") {
               const text = msg.text();
               // Ignore some common noise and handled warnings
-              if (!text.includes("favicon") &&
+              if (
+                !text.includes("favicon") &&
                 !text.includes("ERR_BLOCKED_BY_CLIENT") &&
                 !text.includes("Viewport height is too small") &&
-                !text.includes("saveSitzordnung") &&  // Race condition during navigation
-                !text.includes("Failed to fetch")) {  // Network errors during cleanup
+                !text.includes("saveSitzordnung") && // Race condition during navigation
+                !text.includes("Failed to fetch")
+              ) {
+                // Network errors during cleanup
                 console.error(`🚨 CONSOLE ERROR [${playerName}]: ${text}`);
                 throw new Error(`Console Error in ${playerName}: ${text}`);
               }
             }
           });
 
-          await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }); // Faster than networkidle
+          await page.goto(BASE_URL, { waitUntil: "domcontentloaded" }); // Faster than networkidle
 
           // Close modal if present
           const closeModal = page.locator("[data-close-modal]").first();
-          if (await closeModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+          if (
+            await closeModal.isVisible({ timeout: 1000 }).catch(() => false)
+          ) {
             await closeModal.click();
             await page.waitForTimeout(200);
           }
@@ -410,28 +414,34 @@ test.describe("Full Game Simulation", () => {
 
       // Wait for all players to be in the game (parallel)
       await sleep(2000);
-      await Promise.all(players.map(async (player) => {
-        await player.page.waitForURL(/\/spiel\//, {
-          timeout: 15000,
-          waitUntil: 'domcontentloaded'
-        });
-      }));
+      await Promise.all(
+        players.map(async (player) => {
+          await player.page.waitForURL(/\/spiel\//, {
+            timeout: 15000,
+            waitUntil: "domcontentloaded",
+          });
+        }),
+      );
 
       // Wait for game JS to initialize (window.aktuellePhase must be set)
-      await Promise.all(players.map(async (player) => {
-        try {
-          await player.page.waitForFunction(
-            () => typeof (window as any).aktuellePhase === 'string' && (window as any).aktuellePhase !== '',
-            { timeout: 10000 }
-          );
-        } catch (e) {
-          log(`⚠️  Game JS not fully initialized for ${player.name} - aktuellePhase not set`);
-        }
-      }));
+      await Promise.all(
+        players.map(async (player) => {
+          try {
+            await player.page.waitForFunction(
+              () =>
+                typeof (window as any).aktuellePhase === "string" &&
+                (window as any).aktuellePhase !== "",
+              { timeout: 10000 },
+            );
+          } catch (e) {
+            log(
+              `⚠️  Game JS not fully initialized for ${player.name} - aktuellePhase not set`,
+            );
+          }
+        }),
+      );
 
       log("✓ Spiel gestartet!\n");
-
-
 
       // ========================================================================
       // PHASE 4: Extract Roles
@@ -439,30 +449,38 @@ test.describe("Full Game Simulation", () => {
       log("🎭 Ermittle Rollenverteilung...");
       await sleep(2000);
 
-      await Promise.all(players.map(async (player) => {
-        try {
-          // Primary: read from window.spielerRolle (always available)
-          const rolle = await player.page.evaluate(() => {
-            return (window as any).spielerRolle || '';
-          });
-          if (rolle) {
-            player.rolle = rolle;
-          } else {
-            // Fallback: try DOM element
-            const rolleElement = player.page.locator(".rolle-badge").first();
-            if (await rolleElement.isVisible({ timeout: 2000 }).catch(() => false)) {
-              const rolleText = await rolleElement.textContent();
-              player.rolle = rolleText?.trim().replace(/^(Rolle: |Du bist )/, "") || "Unbekannt";
+      await Promise.all(
+        players.map(async (player) => {
+          try {
+            // Primary: read from window.spielerRolle (always available)
+            const rolle = await player.page.evaluate(() => {
+              return (window as any).spielerRolle || "";
+            });
+            if (rolle) {
+              player.rolle = rolle;
             } else {
-              player.rolle = "Unbekannt";
+              // Fallback: try DOM element
+              const rolleElement = player.page.locator(".rolle-badge").first();
+              if (
+                await rolleElement
+                  .isVisible({ timeout: 2000 })
+                  .catch(() => false)
+              ) {
+                const rolleText = await rolleElement.textContent();
+                player.rolle =
+                  rolleText?.trim().replace(/^(Rolle: |Du bist )/, "") ||
+                  "Unbekannt";
+              } else {
+                player.rolle = "Unbekannt";
+              }
             }
+            log(`  ${player.name}: ${player.rolle}`);
+          } catch (e) {
+            player.rolle = "Unbekannt";
+            log(`  ${player.name}: Rolle konnte nicht ermittelt werden`);
           }
-          log(`  ${player.name}: ${player.rolle}`);
-        } catch (e) {
-          player.rolle = "Unbekannt";
-          log(`  ${player.name}: Rolle konnte nicht ermittelt werden`);
-        }
-      }));
+        }),
+      );
 
       // Categorize players - werewolf pack (kennen sich gegenseitig)
       const WEREWOLF_PACK_ROLES = [
@@ -572,8 +590,12 @@ test.describe("Full Game Simulation", () => {
           // We cannot and should not try to skip phases manually.
           // The server has a 30 second fallback timeout for stuck phases.
           if (samePhaseCount > MAX_SAME_PHASE) {
-            log(`  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`);
-            throw new Error(`Game stuck in phase: ${currentPhase} - Auto-advance failed.`);
+            log(
+              `  ❌ Phase ${currentPhase} stuck for too long (> ${MAX_SAME_PHASE} iterations)!`,
+            );
+            throw new Error(
+              `Game stuck in phase: ${currentPhase} - Auto-advance failed.`,
+            );
           }
           // Warte auf Phasenwechsel
           await sleep(2000);
@@ -598,10 +620,7 @@ test.describe("Full Game Simulation", () => {
         await sleep(1500);
 
         // Handle phase-specific actions
-        await handlePhase(
-          gameState.phase,
-          players,
-        );
+        await handlePhase(gameState.phase, players);
 
         // Wait for phase transition (Server wechselt nach Aktion automatisch)
         await sleep(AUDIO_WAIT_MS);
@@ -652,7 +671,7 @@ test.describe("Full Game Simulation", () => {
       log("==========================================\n");
 
       // Wait indefinitely
-      await new Promise(() => { });
+      await new Promise(() => {});
     } catch (error) {
       log(`❌ Fehler: ${error}`);
       throw error;
@@ -727,15 +746,13 @@ async function handleVotingPhase(players: PlayerWindow[]): Promise<void> {
       if (!testApi || !testApi.isActive) continue;
 
       // Get selectable targets
-      const targets = await voter.page.evaluate(() => {
+      const targets = (await voter.page.evaluate(() => {
         const api = (window as any).__testApi;
         return api ? api.getSelectablePlayers() : [];
-      }) as { id: number; name: string }[];
+      })) as { id: number; name: string }[];
 
       // Filter out self and narrators
-      const validTargets = targets.filter(
-        (t) => t.name !== voter.name,
-      );
+      const validTargets = targets.filter((t) => t.name !== voter.name);
 
       if (validTargets.length > 0) {
         // Select a target and vote
@@ -869,12 +886,9 @@ async function performPlayerAction(
     for (let i = 0; i < targetCount; i++) {
       if (validTargets.length === 0) break;
       const target = validTargets[i];
-      await page.evaluate(
-        (targetId) => {
-          (window as any).__testApi.selectPlayer(targetId);
-        },
-        target.id,
-      );
+      await page.evaluate((targetId) => {
+        (window as any).__testApi.selectPlayer(targetId);
+      }, target.id);
       log(`    ${player.name} -> Ziel: ${target.name}`);
       await sleep(300);
     }
@@ -886,7 +900,7 @@ async function performPlayerAction(
   // Re-read actions (they may have become enabled after target selection)
   const currentActions = await page.evaluate(() => {
     const btns = document.querySelectorAll(
-      '#action-buttons button:not([disabled])',
+      "#action-buttons button:not([disabled])",
     );
     return Array.from(btns).map((b) => ({
       text: (b as HTMLButtonElement).textContent?.trim() || "",
@@ -902,15 +916,12 @@ async function performPlayerAction(
   // Pick the first non-skip action, or skip if that's all there is
   const preferredAction =
     currentActions.find(
-      (a) =>
-        !a.text.includes("Überspringen") && !a.text.includes("Enthalten"),
+      (a) => !a.text.includes("Überspringen") && !a.text.includes("Enthalten"),
     ) || currentActions[0];
 
   // Click the action button
   if (preferredAction.testId) {
-    await page
-      .locator(`[data-testid="${preferredAction.testId}"]`)
-      .click();
+    await page.locator(`[data-testid="${preferredAction.testId}"]`).click();
   } else {
     await page
       .locator(
@@ -959,10 +970,7 @@ async function checkGameEnd(hostPage: Page): Promise<boolean> {
       const api = (window as any).__testApi;
       if (api && api.gameEnded) return true;
       const phase = (window as any).aktuellePhase;
-      return (
-        (window as any).spielEnde === true ||
-        phase === "spiel_ende"
-      );
+      return (window as any).spielEnde === true || phase === "spiel_ende";
     });
   } catch {
     return false;

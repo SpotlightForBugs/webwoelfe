@@ -12,7 +12,7 @@ gunicorn>=21.2.0
 edge-tts>=6.1.0
 pillow>=12.2.0
 requests>=2.32.0
-python-dotenv>=1.2.1
+python-dotenv>=1.2.2
 Flask-Minify; sys_platform == "win32" 
 Flask-Minify; sys_platform == "darwin"
 Flask-Minify[go]; sys_platform == "linux"

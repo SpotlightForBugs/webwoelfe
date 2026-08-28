@@ -82,6 +82,7 @@ class Aurenseherin(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Aurenseherin - Aura sehen",
             instructions="Wähle einen Spieler, um seine Aura zu sehen.",
@@ -107,7 +108,9 @@ class Aurenseherin(Role):
         # Handle both prefixed and unprefixed action types
         if action_type in ("aurenseherin_sehen", "sehen"):
             if not targets:
-                return AktionsErgebnis(erfolg=False, nachricht="Du musst einen Spieler wählen.")
+                return AktionsErgebnis(
+                    erfolg=False, nachricht="Du musst einen Spieler wählen."
+                )
 
             ziel = targets[0]
             ziel_rolle = RoleRegistry.get(ziel.rolle)
@@ -128,13 +131,20 @@ class Aurenseherin(Role):
         return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
         """Direct handling - don't call execute_action to avoid recursion."""
         if not ziel:
-            return AktionsErgebnis(erfolg=False, nachricht="Du musst einen Spieler wählen.")
+            return AktionsErgebnis(
+                erfolg=False, nachricht="Du musst einen Spieler wählen."
+            )
         from ..registry import RoleRegistry
         from ..enums import Team
+
         ziel_rolle = RoleRegistry.get(ziel.rolle)
         ist_boese = False
         if ziel_rolle:

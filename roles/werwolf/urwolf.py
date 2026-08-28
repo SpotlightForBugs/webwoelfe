@@ -124,8 +124,6 @@ class Urwolf(Role):
         """Urwolf stimmt mit dem Rudel ab."""
         return True
 
-
-
     def is_active_on_first_night(self) -> bool:
         return True
 
@@ -134,6 +132,7 @@ class Urwolf(Role):
 
     def get_ui_definition(self) -> "RollenUI":
         from ..base import RollenUI, UIButton
+
         return RollenUI(
             title="Urwolf - Infizieren",
             instructions="Du kannst einmalig das Opfer infizieren statt zu töten.",
@@ -185,7 +184,11 @@ class Urwolf(Role):
         return super().execute_action(action_type, spieler, targets, kontext)
 
     def on_nacht_aktion(
-        self, spieler: "Spieler", ziel: Optional["Spieler"], kontext: SpielKontext, aktion: str = None
+        self,
+        spieler: "Spieler",
+        ziel: Optional["Spieler"],
+        kontext: SpielKontext,
+        aktion: str = None,
     ) -> Optional[AktionsErgebnis]:
         """Direct handling - don't call execute_action to avoid recursion."""
         if not self.get_state(spieler, "infektion_verfuegbar", True):
@@ -197,7 +200,11 @@ class Urwolf(Role):
         return AktionsErgebnis(
             erfolg=True,
             nachricht="Du infizierst das Opfer! Es wird zum Werwolf werden.",
-            effekte={"urwolf_infiziert": True, "todesursache_verhindert": True, "verwandlung": "Werwolf"},
+            effekte={
+                "urwolf_infiziert": True,
+                "todesursache_verhindert": True,
+                "verwandlung": "Werwolf",
+            },
             state_updates={"urwolf.infektion_verfuegbar": False},
             log_sichtbar_fuer="werwolf",
         )

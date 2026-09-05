@@ -34,25 +34,25 @@
     <!-- FontAwesome Icons -->
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css"
+      integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
 
     <!-- Theme CSS (Logo colors) - Inlined -->
     <style>
-    {{ read_css('css/theme.css') }}
+      {{ read_css('css/theme.css') }}
     </style>
 
     <!-- Hint System CSS - Inlined -->
     <style>
-    {{ read_css('css/hints.css') }}
+      {{ read_css('css/hints.css') }}
     </style>
 
     <!-- Character Styling CSS - Inlined -->
     <style>
-    {{ read_css('css/characters.css') }}
+      {{ read_css('css/characters.css') }}
     </style>
 
     <style>
@@ -558,7 +558,10 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
-    <script type="module" src="{{ versioned_url('static', filename='js/hints.js') }}"></script>
+    <script
+      type="module"
+      src="{{ versioned_url('static', filename='js/hints.js') }}"
+    ></script>
 
     <!-- Anti-DevTools Schutz - Verhindert Spicken via F12 -->
     {% if not debug and not true %} {# Disabled for now using 'and not true' #}
@@ -700,8 +703,6 @@
         });
       })();
     </script>
-    {% endif %}
-
-    {% block scripts %}{% endblock %}
+    {% endif %} {% block scripts %}{% endblock %}
   </body>
 </html>

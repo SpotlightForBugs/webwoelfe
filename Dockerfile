@@ -1,5 +1,5 @@
 # Production Dockerfile for Coolify deployment
-FROM python:3.11-slim
+FROM python:3.15-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
